@@ -3,13 +3,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import type { TargetAndTransition } from "framer-motion";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 28 },
   visible: { opacity: 1, y: 0 },
 };
 
-const floatingCard = (delay: number) => ({
+const floatingCard = (delay: number): { animate: TargetAndTransition } => ({
   animate: {
     y: [0, -8, 0],
     transition: {
