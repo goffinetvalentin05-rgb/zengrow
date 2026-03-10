@@ -69,6 +69,7 @@ export default function PublicReservationForm({
   closureEndDate,
   closureMessage,
 }: PublicReservationFormProps) {
+  const todayDate = new Date().toISOString().slice(0, 10);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
@@ -89,8 +90,16 @@ export default function PublicReservationForm({
       return [];
     }
     const baseSlots = generateTimeSlotsForDate(reservationDate, openingHours, slotInterval);
-    return baseSlots.filter((slot) => !blockedSet.has(`${reservationDate}|${slot}`));
-  }, [reservationDate, openingHours, slotInterval, blockedSet, closureStartDate, closureEndDate]);
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    return baseSlots.filter((slot) => {
+      if (blockedSet.has(`${reservationDate}|${slot}`)) return false;
+      if (reservationDate !== todayDate) return true;
+      const [hours, minutes] = slot.split(":").map(Number);
+      const slotMinutes = hours * 60 + minutes;
+      return slotMinutes >= currentMinutes;
+    });
+  }, [reservationDate, openingHours, slotInterval, blockedSet, closureStartDate, closureEndDate, todayDate]);
 
   const capacityBySlot = useMemo(() => {
     if (!reservationDate) return {};
@@ -277,6 +286,7 @@ export default function PublicReservationForm({
                 type="date"
                 value={reservationDate}
                 onChange={(event) => setReservationDate(event.target.value)}
+                min={todayDate}
                 required
               />
             </div>
@@ -294,8 +304,14 @@ export default function PublicReservationForm({
               >
                 <option value="">Sélectionnez une heure</option>
                 {generatedSlots.map((slot) => (
-                  <option key={slot} value={slot} disabled={(capacityBySlot[slot] ?? 0) < guests}>
-                    {slot} - {capacityBySlot[slot] ?? restaurantCapacity} places restantes
+                  <option
+                    key={slot}
+                    value={slot}
+                    disabled={(capacityBySlot[slot] ?? 0) <= 0 || (capacityBySlot[slot] ?? 0) < guests}
+                  >
+                    {(capacityBySlot[slot] ?? 0) <= 0
+                      ? `${slot} - Complet`
+                      : `${slot} - ${capacityBySlot[slot] ?? restaurantCapacity} places restantes`}
                   </option>
                 ))}
               </Select>
