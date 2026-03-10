@@ -25,6 +25,7 @@ type ReservationRow = {
 
 type ReservationsManagerProps = {
   initialReservations: ReservationRow[];
+  initialShowManualForm?: boolean;
 };
 
 const editableStatuses = ["pending", "confirmed", "rejected", "completed", "cancelled", "no-show"] as const;
@@ -37,7 +38,7 @@ function sortReservations(values: ReservationRow[]) {
   return [...values].sort((a, b) => reservationDateTimeValue(b) - reservationDateTimeValue(a));
 }
 
-export default function ReservationsManager({ initialReservations }: ReservationsManagerProps) {
+export default function ReservationsManager({ initialReservations, initialShowManualForm = false }: ReservationsManagerProps) {
   const supabase = createClient();
   const [reservations, setReservations] = useState(sortReservations(initialReservations));
   const [filterDate, setFilterDate] = useState("");
@@ -45,7 +46,7 @@ export default function ReservationsManager({ initialReservations }: Reservation
   const [savingId, setSavingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
-  const [showManualForm, setShowManualForm] = useState(false);
+  const [showManualForm, setShowManualForm] = useState(initialShowManualForm);
   const [manualGuestName, setManualGuestName] = useState("");
   const [manualGuestPhone, setManualGuestPhone] = useState("");
   const [manualGuestEmail, setManualGuestEmail] = useState("");

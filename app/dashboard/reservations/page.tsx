@@ -2,9 +2,15 @@ import ReservationsManager from "@/src/components/dashboard/reservations-manager
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 
-export default async function DashboardReservationsPage() {
+type DashboardReservationsPageProps = {
+  searchParams?: Promise<{ new?: string }>;
+};
+
+export default async function DashboardReservationsPage({ searchParams }: DashboardReservationsPageProps) {
   const supabase = await createClient();
   const restaurant = await requireRestaurant();
+  const params = searchParams ? await searchParams : undefined;
+  const shouldOpenManualForm = params?.new === "1";
 
   const { data: reservations } = await supabase
     .from("reservations")
@@ -29,6 +35,9 @@ export default async function DashboardReservationsPage() {
   };
 
   return (
-    <ReservationsManager initialReservations={(reservations ?? []) as ReservationRow[]} />
+    <ReservationsManager
+      initialReservations={(reservations ?? []) as ReservationRow[]}
+      initialShowManualForm={shouldOpenManualForm}
+    />
   );
 }
