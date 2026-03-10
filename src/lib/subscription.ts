@@ -6,7 +6,6 @@ export type FeatureKey = "reservations" | "availability" | "reviews" | "feedback
 
 type RestaurantSubscriptionSnapshot = {
   id: string;
-  subscription_plan: SubscriptionPlan;
   subscription_status: SubscriptionStatus;
   trial_end_date: string | null;
   stripe_subscription_id: string | null;

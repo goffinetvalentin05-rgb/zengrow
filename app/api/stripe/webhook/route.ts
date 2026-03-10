@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     const customerId = typeof session.customer === "string" ? session.customer : null;
     const restaurantId = session.metadata?.restaurant_id ?? session.client_reference_id ?? null;
     const planRaw = session.metadata?.selected_plan;
-    let plan = planRaw === "starter" || planRaw === "pro" ? planRaw : null;
+    let plan: "starter" | "pro" | null = planRaw === "starter" || planRaw === "pro" ? planRaw : null;
 
     if (!plan && session.mode === "subscription" && session.line_items?.data?.length) {
       const priceId = session.line_items.data[0]?.price?.id ?? "";
