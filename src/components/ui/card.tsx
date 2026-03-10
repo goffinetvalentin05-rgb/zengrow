@@ -9,7 +9,7 @@ export function Card({ className, children }: DivProps) {
   return (
     <article
       className={cn(
-        "rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[0_8px_24px_rgba(15,23,42,0.04)]",
+        "rounded-2xl border border-[var(--border)] bg-[var(--surface)]",
         className,
       )}
     >

@@ -33,7 +33,7 @@ export default async function DashboardCustomersPage() {
   }));
 
   return (
-    <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_16px_36px_-28px_rgba(15,63,58,0.6)]">
+    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-5">
       <header className="mb-5">
         <h2 className="text-xl font-semibold text-[var(--foreground)]">Clients</h2>
         <p className="mt-1 text-sm text-[var(--muted-foreground)]">

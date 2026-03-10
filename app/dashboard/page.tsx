@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
 import PublicLinkCard from "@/src/components/dashboard/public-link-card";
 import StatusBadge from "@/src/components/dashboard/status-badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -63,26 +62,29 @@ export default async function DashboardPage() {
 
   return (
     <section className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="border-b border-[var(--border)] pb-6">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">Vue d&apos;ensemble</h2>
+          <p className="text-sm text-[var(--muted-foreground)]">Statistiques clés de votre activité du jour.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map((kpi) => (
-          <Card key={kpi.label} className="rounded-3xl">
-            <CardContent className="space-y-1 p-6">
+          <div key={kpi.label} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
                 {kpi.label}
               </p>
               <p className="text-4xl font-semibold text-[var(--foreground)]">{kpi.value}</p>
-            </CardContent>
-          </Card>
+          </div>
         ))}
+        </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_0.95fr]">
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <CardTitle>Prochaines réservations</CardTitle>
-            <CardDescription>Liste simple des prochaines tables à servir.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
+      <div className="grid gap-5 xl:grid-cols-[1.6fr_0.95fr]">
+        <section className="space-y-3 border-b border-[var(--border)] pb-6 xl:border-b-0 xl:border-r xl:pb-0 xl:pr-5">
+          <div>
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">Prochaines réservations</h3>
+            <p className="text-sm text-[var(--muted-foreground)]">Liste simple des prochaines tables à servir.</p>
+          </div>
             {(upcomingData ?? []).length === 0 ? (
               <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-5 text-sm text-[var(--muted-foreground)]">
                 Aucune réservation à venir pour le moment.
@@ -103,12 +105,11 @@ export default async function DashboardPage() {
                 </div>
               ))
             )}
-          </CardContent>
-        </Card>
+        </section>
 
-        <div className="space-y-4">
+        <section className="space-y-4">
           <PublicLinkCard link={publicLink} />
-        </div>
+        </section>
       </div>
     </section>
   );

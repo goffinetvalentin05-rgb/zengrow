@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Button from "@/src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 
 type PublicLinkCardProps = {
   link: string;
@@ -18,12 +17,14 @@ export default function PublicLinkCard({ link }: PublicLinkCardProps) {
   }
 
   return (
-    <Card className="rounded-3xl">
-      <CardHeader>
-        <CardTitle>Lien public de réservation</CardTitle>
-        <CardDescription>Partagez ce lien sur Google, Instagram, Facebook ou votre site.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <section className="space-y-3">
+      <div>
+        <h3 className="text-base font-semibold text-[var(--foreground)]">Lien public de réservation</h3>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+          Partagez ce lien sur Google, Instagram, Facebook ou votre site.
+        </p>
+      </div>
+      <div className="space-y-3">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--foreground)]/80">
           {link}
         </div>
@@ -40,7 +41,7 @@ export default function PublicLinkCard({ link }: PublicLinkCardProps) {
             Ouvrir
           </a>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
