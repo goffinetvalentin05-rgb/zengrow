@@ -94,7 +94,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
     try {
       const publicUrl = await uploadAsset(file, "logo");
       setLogoUrl(publicUrl);
-      setMessage("Logo charge.");
+      setMessage("Logo chargé.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Impossible de charger le logo.");
     } finally {
@@ -111,7 +111,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
     try {
       const publicUrl = await uploadAsset(file, "cover");
       setCoverImageUrl(publicUrl);
-      setMessage("Photo de couverture chargee.");
+      setMessage("Photo de couverture chargée.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Impossible de charger la couverture.");
     } finally {
@@ -169,7 +169,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
       return;
     }
 
-    setMessage("Parametres enregistres.");
+    setMessage("Paramètres enregistrés.");
     setIsSaving(false);
   }
 
@@ -178,7 +178,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
       <Card className="rounded-3xl">
         <CardHeader>
           <CardTitle>Informations restaurant</CardTitle>
-          <CardDescription>Informations generales de votre etablissement.</CardDescription>
+          <CardDescription>Informations générales de votre établissement.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div>
@@ -195,7 +195,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
       <Card className="rounded-3xl">
         <CardHeader>
           <CardTitle>Apparence de la page</CardTitle>
-          <CardDescription>Personnalisez votre page publique de reservation.</CardDescription>
+          <CardDescription>Personnalisez votre page publique de réservation.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
@@ -204,7 +204,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
                 Logo du restaurant
               </label>
               <Input type="file" accept="image/*" onChange={handleLogoUpload} />
-              {isUploadingLogo ? <p className="mt-1 text-xs text-[var(--muted-foreground)]">Upload...</p> : null}
+              {isUploadingLogo ? <p className="mt-1 text-xs text-[var(--muted-foreground)]">Envoi...</p> : null}
               {logoUrl ? (
                 <div className="mt-2 flex items-center gap-3">
                   <Image
@@ -224,7 +224,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
                 Photo de couverture
               </label>
               <Input type="file" accept="image/*" onChange={handleCoverUpload} />
-              {isUploadingCover ? <p className="mt-1 text-xs text-[var(--muted-foreground)]">Upload...</p> : null}
+              {isUploadingCover ? <p className="mt-1 text-xs text-[var(--muted-foreground)]">Envoi...</p> : null}
               {coverImageUrl ? (
                 <div className="mt-2 space-y-2">
                   <Image
@@ -279,7 +279,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
               <Input value={address} onChange={(event) => setAddress(event.target.value)} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Telephone</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Téléphone</label>
               <Input value={phone} onChange={(event) => setPhone(event.target.value)} />
             </div>
             <div className="md:col-span-2">
@@ -294,13 +294,13 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
 
           <div>
             <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
-              Message avant reservation
+              Message avant réservation
             </label>
             <Textarea
               className="min-h-20"
               value={preBookingMessage}
               onChange={(event) => setPreBookingMessage(event.target.value)}
-              placeholder="Ex: Pour les groupes de plus de 8 personnes, merci de nous contacter par telephone."
+              placeholder="Ex : Pour les groupes de plus de 8 personnes, merci de nous contacter par téléphone."
             />
           </div>
         </CardContent>
@@ -308,8 +308,8 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
 
       <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle>Reservation confirmation</CardTitle>
-          <CardDescription>Choisissez comment les nouvelles reservations sont confirmees.</CardDescription>
+          <CardTitle>Confirmation des réservations</CardTitle>
+          <CardDescription>Choisissez comment les nouvelles réservations sont confirmées.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--border)] p-4">
@@ -322,9 +322,9 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
               className="mt-1"
             />
             <span>
-              <span className="block text-sm font-semibold text-[var(--foreground)]">Manual confirmation</span>
+              <span className="block text-sm font-semibold text-[var(--foreground)]">Confirmation manuelle</span>
               <span className="block text-sm text-[var(--muted-foreground)]">
-                Restaurant must confirm or reject reservations.
+                Le restaurant doit confirmer ou refuser les réservations.
               </span>
             </span>
           </label>
@@ -339,9 +339,9 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
               className="mt-1"
             />
             <span>
-              <span className="block text-sm font-semibold text-[var(--foreground)]">Automatic confirmation</span>
+              <span className="block text-sm font-semibold text-[var(--foreground)]">Confirmation automatique</span>
               <span className="block text-sm text-[var(--muted-foreground)]">
-                Reservations are automatically confirmed if availability allows it.
+                Les réservations sont confirmées automatiquement si les disponibilités le permettent.
               </span>
             </span>
           </label>
@@ -351,12 +351,12 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
       <Card className="rounded-3xl">
         <CardHeader>
           <CardTitle>Reservations intelligentes</CardTitle>
-          <CardDescription>Reglez la capacite et la logique de chevauchement des reservations.</CardDescription>
+          <CardDescription>Réglez la capacité et la logique de chevauchement des réservations.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
-              Capacite maximale du restaurant
+              Capacité maximale du restaurant
             </label>
             <Input
               type="number"
@@ -367,7 +367,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
-              Limite max de personnes par reservation
+              Limite max de personnes par réservation
             </label>
             <Input
               type="number"
@@ -378,7 +378,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
-              Duree moyenne d&apos;une reservation (minutes)
+              Durée moyenne d&apos;une réservation (minutes)
             </label>
             <Input
               type="number"
@@ -390,7 +390,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
-              Intervalle entre creneaux (minutes)
+              Intervalle entre créneaux (minutes)
             </label>
             <Input
               type="number"
@@ -442,11 +442,11 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
       <Card className="rounded-3xl">
         <CardHeader>
           <CardTitle>Notifications</CardTitle>
-          <CardDescription>Email de reception des nouvelles reservations.</CardDescription>
+          <CardDescription>E-mail de réception des nouvelles réservations.</CardDescription>
         </CardHeader>
         <CardContent>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Email de reception</label>
+            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">E-mail de réception</label>
             <Input
               type="email"
               value={reservationAlertEmail}
@@ -458,7 +458,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={isSaving}>
-          {isSaving ? "Enregistrement..." : "Enregistrer les parametres"}
+          {isSaving ? "Enregistrement..." : "Enregistrer les paramètres"}
         </Button>
         {message && <p className="text-sm text-[var(--muted-foreground)]">{message}</p>}
       </div>

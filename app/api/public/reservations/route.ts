@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   const reservationTime = body.reservationTime?.trim();
 
   if (!restaurantId || !guestName || !reservationDate || !reservationTime || !Number.isInteger(guests) || guests <= 0) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json({ error: "Données invalides." }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   ]);
 
   if (restaurantError || !restaurant) {
-    return NextResponse.json({ error: "Restaurant not found" }, { status: 404 });
+    return NextResponse.json({ error: "Restaurant introuvable." }, { status: 404 });
   }
 
   const slotInterval = settings?.reservation_slot_interval ?? 30;
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
   const isSlotInOpeningHours = availableSlots.includes(reservationTime);
 
   if (!isSlotInOpeningHours || isBlocked) {
-    return NextResponse.json({ error: "Ce creneau n'est pas disponible." }, { status: 409 });
+    return NextResponse.json({ error: "Ce créneau n'est pas disponible." }, { status: 409 });
   }
 
   const confirmationMode =
@@ -89,14 +89,14 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (insertError || !reservation) {
-    const rawMessage = insertError?.message ?? "Impossible de creer la reservation.";
+    const rawMessage = insertError?.message ?? "Impossible de créer la réservation.";
     const normalizedMessage = rawMessage.toLowerCase();
     if (
       normalizedMessage.includes("capacity exceeded") ||
       normalizedMessage.includes("slot is full") ||
       normalizedMessage.includes("exceeds max party size")
     ) {
-      return NextResponse.json({ error: "Ce creneau n'est plus disponible." }, { status: 409 });
+      return NextResponse.json({ error: "Ce créneau n'est plus disponible." }, { status: 409 });
     }
     return NextResponse.json({ error: rawMessage }, { status: 400 });
   }

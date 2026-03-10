@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 
   const { data: existingRestaurant } = await supabase
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
   if (restaurantError || !restaurant) {
     return NextResponse.json(
-      { error: restaurantError?.message ?? "Could not create restaurant." },
+      { error: restaurantError?.message ?? "Impossible de créer le restaurant." },
       { status: 400 },
     );
   }

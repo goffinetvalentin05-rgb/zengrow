@@ -43,7 +43,7 @@ export default function SignupPage() {
     }
 
     if (!signupData.session) {
-      setInfo("Compte cree. Confirmez votre email puis connectez-vous.");
+      setInfo("Compte créé. Confirmez votre e-mail puis connectez-vous.");
       setIsLoading(false);
       return;
     }
@@ -59,7 +59,7 @@ export default function SignupPage() {
 
     if (!bootstrapResponse.ok) {
       const data = (await bootstrapResponse.json().catch(() => ({}))) as { error?: string };
-      setError(data.error ?? "Impossible de creer le restaurant.");
+      setError(data.error ?? "Impossible de créer le restaurant.");
       setIsLoading(false);
       return;
     }
@@ -70,8 +70,8 @@ export default function SignupPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
       <section className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6">
-        <h1 className="text-2xl font-semibold text-slate-900">Create account</h1>
-        <p className="mt-1 text-sm text-slate-600">Start accepting online reservations.</p>
+        <h1 className="text-2xl font-semibold text-slate-900">Créer un compte</h1>
+        <p className="mt-1 text-sm text-slate-600">Commencez à accepter des réservations en ligne.</p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div>
@@ -79,7 +79,7 @@ export default function SignupPage() {
               htmlFor="restaurantName"
               className="mb-1 block text-sm font-medium text-slate-700"
             >
-              Restaurant name
+              Nom du restaurant
             </label>
             <Input
               id="restaurantName"
@@ -104,7 +104,7 @@ export default function SignupPage() {
 
           <div>
             <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-              Password
+              Mot de passe
             </label>
             <Input
               id="password"
@@ -117,7 +117,7 @@ export default function SignupPage() {
           </div>
 
           <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? "Creating..." : "Create account"}
+            {isLoading ? "Création..." : "Créer un compte"}
           </Button>
         </form>
 

@@ -3,12 +3,12 @@ import Badge from "@/src/components/ui/badge";
 type ReservationStatus = "pending" | "confirmed" | "rejected" | "completed" | "cancelled" | "no-show";
 
 const labels: Record<ReservationStatus, string> = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  rejected: "Rejected",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  "no-show": "No-show",
+  pending: "En attente",
+  confirmed: "Confirmée",
+  rejected: "Refusée",
+  completed: "Terminée",
+  cancelled: "Annulée",
+  "no-show": "Absent",
 };
 
 const tones: Record<ReservationStatus, "neutral" | "success" | "warning" | "danger" | "info"> = {

@@ -41,7 +41,7 @@ export default async function FeedbackPage({ params, searchParams }: FeedbackPag
       isValidLink = true;
     }
   } catch (error) {
-    console.error("Feedback page error", error);
+    console.error("Erreur page retour", error);
   }
 
   if (!isValidLink) {
@@ -67,9 +67,9 @@ function InvalidFeedbackLink() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#ebf1ff_0,#f4f7fb_45%,#f4f7fb_100%)] px-4 py-10 md:py-16">
       <div className="mx-auto max-w-xl rounded-3xl border border-[var(--border)] bg-white p-6 text-center shadow-sm">
-        <h1 className="text-2xl font-semibold text-[var(--foreground)]">This feedback link is invalid.</h1>
+        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Ce lien de retour est invalide.</h1>
         <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-          Merci de reouvrir le lien depuis l&apos;email recu.
+          Merci de rouvrir le lien depuis l&apos;e-mail reçu.
         </p>
       </div>
     </main>

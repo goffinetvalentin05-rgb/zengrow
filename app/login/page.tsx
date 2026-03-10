@@ -39,7 +39,7 @@ export default function LoginPage() {
 
     if (!bootstrapResponse.ok) {
       const data = (await bootstrapResponse.json().catch(() => ({}))) as { error?: string };
-      setError(data.error ?? "Impossible de preparer le restaurant.");
+      setError(data.error ?? "Impossible de préparer le restaurant.");
       setIsLoading(false);
       return;
     }
@@ -58,8 +58,8 @@ export default function LoginPage() {
           className="h-11 w-auto object-contain"
           priority
         />
-        <h1 className="text-2xl font-semibold text-slate-900">Login</h1>
-        <p className="mt-1 text-sm text-slate-600">Access your dashboard.</p>
+        <h1 className="text-2xl font-semibold text-slate-900">Connexion</h1>
+        <p className="mt-1 text-sm text-slate-600">Accédez à votre tableau de bord.</p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div>
@@ -77,7 +77,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-              Password
+              Mot de passe
             </label>
             <Input
               id="password"
@@ -89,7 +89,7 @@ export default function LoginPage() {
           </div>
 
           <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? "Signing in..." : "Sign in"}
+            {isLoading ? "Connexion..." : "Se connecter"}
           </Button>
         </form>
 

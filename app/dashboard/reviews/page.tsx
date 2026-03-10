@@ -29,13 +29,13 @@ export default async function DashboardReviewsPage() {
         channel: "email",
         delay_minutes: automation?.delay_minutes ?? 90,
         google_review_url: automation?.google_review_url ?? "",
-        email_subject: automation?.email_subject ?? "How was your experience at {{restaurant_name}}?",
+        email_subject: automation?.email_subject ?? "Comment s'est passée votre expérience chez {{restaurant_name}} ?",
         email_message:
           automation?.email_message ??
-          "Thank you for visiting {{restaurant_name}}.\nWe would love to hear about your experience.",
+          "Merci pour votre visite chez {{restaurant_name}}.\nNous aimerions connaître votre expérience.",
         button_positive_label: automation?.button_positive_label ?? "Excellent",
-        button_neutral_label: automation?.button_neutral_label ?? "Average",
-        button_negative_label: automation?.button_negative_label ?? "Not great",
+        button_neutral_label: automation?.button_neutral_label ?? "Moyen",
+        button_negative_label: automation?.button_negative_label ?? "À améliorer",
         primary_color: automation?.primary_color ?? "#1F7A6C",
       }}
       initialFeedback={feedback ?? []}

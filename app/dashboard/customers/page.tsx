@@ -35,13 +35,13 @@ export default async function DashboardCustomersPage() {
   return (
     <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_16px_36px_-28px_rgba(15,63,58,0.6)]">
       <header className="mb-5">
-        <h2 className="text-xl font-semibold text-[var(--foreground)]">Customers</h2>
+        <h2 className="text-xl font-semibold text-[var(--foreground)]">Clients</h2>
         <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-          Liste simple des clients et de leur historique de reservation.
+          Liste simple des clients et de leur historique de réservation.
         </p>
       </header>
       {customers.length === 0 ? (
-        <EmptyState title="Aucun client pour le moment" description="Les profils se construisent depuis les reservations." />
+        <EmptyState title="Aucun client pour le moment" description="Les profils se construisent depuis les réservations." />
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
@@ -49,9 +49,9 @@ export default async function DashboardCustomersPage() {
               <tr>
                 <th className="px-4 py-3 font-semibold">Nom</th>
                 <th className="px-4 py-3 font-semibold">Email</th>
-                <th className="px-4 py-3 font-semibold">Telephone</th>
-                <th className="px-4 py-3 font-semibold">Reservations</th>
-                <th className="px-4 py-3 font-semibold">Derniere visite</th>
+                <th className="px-4 py-3 font-semibold">Téléphone</th>
+                <th className="px-4 py-3 font-semibold">Réservations</th>
+                <th className="px-4 py-3 font-semibold">Dernière visite</th>
                 <th className="px-4 py-3 font-semibold">Visites totales</th>
               </tr>
             </thead>

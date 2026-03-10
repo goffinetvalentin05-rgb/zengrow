@@ -66,7 +66,7 @@ export default function ReservationsManager({ initialReservations }: Reservation
 
     const payload = (await response.json()) as { error?: string };
     if (!response.ok) {
-      setMessage(payload.error ?? "Impossible de mettre a jour le status.");
+      setMessage(payload.error ?? "Impossible de mettre à jour le statut.");
       setSavingId(null);
       return;
     }
@@ -81,7 +81,7 @@ export default function ReservationsManager({ initialReservations }: Reservation
           : item,
       ),
     );
-    setMessage("Status mis a jour.");
+    setMessage("Statut mis à jour.");
     setSavingId(null);
   }
 
@@ -106,7 +106,7 @@ export default function ReservationsManager({ initialReservations }: Reservation
     }
 
     setReservations((current) => current.map((item) => (item.id === id ? data : item)));
-    setMessage("Note enregistree.");
+    setMessage("Note enregistrée.");
     setSavingId(null);
   }
 
@@ -114,9 +114,9 @@ export default function ReservationsManager({ initialReservations }: Reservation
     <section className="space-y-6">
       <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle>Reservations</CardTitle>
+          <CardTitle>Réservations</CardTitle>
           <CardDescription>
-            Vue claire des reservations, avec filtres rapides par date et statut.
+            Vue claire des réservations, avec filtres rapides par date et statut.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -157,7 +157,7 @@ export default function ReservationsManager({ initialReservations }: Reservation
                 {filteredReservations.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-4">
-                      <EmptyState title="Aucune reservation" description="Aucun resultat avec ces filtres." />
+                      <EmptyState title="Aucune réservation" description="Aucun résultat avec ces filtres." />
                     </td>
                   </tr>
                 ) : (
@@ -183,7 +183,7 @@ export default function ReservationsManager({ initialReservations }: Reservation
                                 onClick={() => updateStatus(reservation.id, "confirmed")}
                                 disabled={savingId === reservation.id}
                               >
-                                Confirm
+                                Confirmer
                               </Button>
                               <Button
                                 type="button"
@@ -192,7 +192,7 @@ export default function ReservationsManager({ initialReservations }: Reservation
                                 onClick={() => updateStatus(reservation.id, "rejected")}
                                 disabled={savingId === reservation.id}
                               >
-                                Reject
+                                Refuser
                               </Button>
                             </>
                           ) : null}
@@ -215,7 +215,7 @@ export default function ReservationsManager({ initialReservations }: Reservation
 
           <div className="space-y-3 pt-4 md:hidden">
             {filteredReservations.length === 0 ? (
-              <EmptyState title="Aucune reservation" description="Essayez d'ajuster vos filtres." />
+              <EmptyState title="Aucune réservation" description="Essayez d'ajuster vos filtres." />
             ) : (
               filteredReservations.map((reservation) => (
                 <button
@@ -229,7 +229,7 @@ export default function ReservationsManager({ initialReservations }: Reservation
                     <StatusBadge status={reservation.status} />
                   </div>
                   <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                    {reservation.reservation_date} a {reservation.reservation_time} - {reservation.guests} couverts
+                    {reservation.reservation_date} à {reservation.reservation_time} - {reservation.guests} couverts
                   </p>
                 </button>
               ))
@@ -241,18 +241,18 @@ export default function ReservationsManager({ initialReservations }: Reservation
       {selectedReservation ? (
         <Card className="rounded-3xl">
           <CardHeader>
-            <CardTitle>Detail reservation</CardTitle>
+          <CardTitle>Détail de la réservation</CardTitle>
             <CardDescription>Voir, modifier ou annuler rapidement.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-5 md:grid-cols-[1fr_1fr]">
             <div className="space-y-1">
               <p className="text-lg font-semibold text-[var(--foreground)]">{selectedReservation.guest_name}</p>
               <p className="text-sm text-[var(--muted-foreground)]">
-                {selectedReservation.reservation_date} a {selectedReservation.reservation_time}
+                {selectedReservation.reservation_date} à {selectedReservation.reservation_time}
               </p>
               <p className="text-sm text-[var(--muted-foreground)]">{selectedReservation.guests} couverts</p>
               <p className="text-sm text-[var(--muted-foreground)]">
-                Contact: {selectedReservation.guest_phone || selectedReservation.guest_email || "-"}
+                Contact : {selectedReservation.guest_phone || selectedReservation.guest_email || "-"}
               </p>
             </div>
 

@@ -81,7 +81,7 @@ export default function ReviewAutomationPanel({
     );
 
     setSaving(false);
-    setMessage(error ? error.message : "Automatisation mise a jour.");
+    setMessage(error ? error.message : "Automatisation mise à jour.");
   }
 
   async function sendTestReviewEmail() {
@@ -94,12 +94,12 @@ export default function ReviewAutomationPanel({
 
     const payload = (await response.json().catch(() => ({}))) as { error?: string };
     if (!response.ok) {
-      setMessage(payload.error ?? "Impossible d'envoyer l'email de test.");
+      setMessage(payload.error ?? "Impossible d'envoyer l'e-mail de test.");
       setSendingTest(false);
       return;
     }
 
-    setMessage("Email de test envoye. Verifiez votre boite de reception.");
+    setMessage("E-mail de test envoyé. Vérifiez votre boîte de réception.");
     setSendingTest(false);
   }
 
@@ -108,8 +108,8 @@ export default function ReviewAutomationPanel({
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card className="rounded-3xl">
           <CardHeader>
-            <CardTitle>Review Automation</CardTitle>
-            <CardDescription>Activez, configurez et previsualisez votre message post-visite.</CardDescription>
+            <CardTitle>Automatisation des avis</CardTitle>
+            <CardDescription>Activez, configurez et prévisualisez votre message post-visite.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
@@ -129,19 +129,19 @@ export default function ReviewAutomationPanel({
                     aria-disabled="true"
                   >
                     <span>SMS</span>
-                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold">Bientot</span>
+                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold">Bientôt</span>
                   </div>
                   <div
                     className="flex cursor-not-allowed items-center justify-between rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500"
                     aria-disabled="true"
                   >
                     <span>WhatsApp</span>
-                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold">Bientot</span>
+                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold">Bientôt</span>
                   </div>
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Delai apres visite</label>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Délai après visite</label>
                 <Select value={String(delayMinutes)} onChange={(event) => setDelayMinutes(Number(event.target.value))}>
                   <option value="30">30 min</option>
                   <option value="60">1 heure</option>
@@ -153,7 +153,7 @@ export default function ReviewAutomationPanel({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Lien Google review</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Lien Google Avis</label>
               <Input
                 value={googleReviewUrl}
                 onChange={(event) => setGoogleReviewUrl(event.target.value)}
@@ -162,17 +162,17 @@ export default function ReviewAutomationPanel({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Email subject</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Objet de l'e-mail</label>
               <Input
                 value={emailSubject}
                 onChange={(event) => setEmailSubject(event.target.value)}
-                placeholder="How was your experience at {{restaurant_name}}?"
+                placeholder="Comment s'est passée votre expérience chez {{restaurant_name}} ?"
               />
               <p className="mt-1 text-xs text-slate-500">Variable supportee: {"{{restaurant_name}}"}</p>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Email message</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Message de l'e-mail</label>
               <Textarea
                 className="min-h-32"
                 value={emailMessage}
@@ -183,21 +183,21 @@ export default function ReviewAutomationPanel({
 
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Excellent label</label>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Libellé excellent</label>
                 <Input value={positiveLabel} onChange={(event) => setPositiveLabel(event.target.value)} />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Average label</label>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Libellé moyen</label>
                 <Input value={neutralLabel} onChange={(event) => setNeutralLabel(event.target.value)} />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Not great label</label>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Libellé à améliorer</label>
                 <Input value={negativeLabel} onChange={(event) => setNegativeLabel(event.target.value)} />
               </div>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Primary email color</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Couleur principale de l'e-mail</label>
               <div className="flex items-center gap-2">
                 <Input
                   type="color"
@@ -214,7 +214,7 @@ export default function ReviewAutomationPanel({
                 {saving ? "Enregistrement..." : "Enregistrer la configuration"}
               </Button>
               <Button type="button" variant="secondary" onClick={sendTestReviewEmail} disabled={sendingTest}>
-                {sendingTest ? "Envoi du test..." : "Send test review email"}
+                {sendingTest ? "Envoi du test..." : "Envoyer un e-mail de test"}
               </Button>
             </div>
             {message && <p className="text-sm text-[var(--muted-foreground)]">{message}</p>}
@@ -223,8 +223,8 @@ export default function ReviewAutomationPanel({
 
         <Card className="rounded-3xl">
           <CardHeader>
-            <CardTitle>Apercu du message</CardTitle>
-            <CardDescription>Ce que le client recevra apres sa visite.</CardDescription>
+          <CardTitle>Aperçu du message</CardTitle>
+          <CardDescription>Ce que le client recevra après sa visite.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
@@ -256,13 +256,13 @@ export default function ReviewAutomationPanel({
 
       <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle>Private feedback</CardTitle>
-          <CardDescription>Derniers retours prives recus depuis les emails d&apos;avis.</CardDescription>
+          <CardTitle>Retours privés</CardTitle>
+          <CardDescription>Derniers retours privés reçus depuis les e-mails d&apos;avis.</CardDescription>
         </CardHeader>
         <CardContent>
           {initialFeedback.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--muted-foreground)]">
-              Aucun feedback prive pour le moment.
+              Aucun retour privé pour le moment.
             </p>
           ) : (
             <div className="space-y-3">

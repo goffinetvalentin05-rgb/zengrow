@@ -138,7 +138,7 @@ export default function PublicReservationForm({
     const payload = (await response.json().catch(() => ({}))) as { error?: string; status?: string };
 
     if (!response.ok) {
-      setError(payload.error ?? "Impossible d'enregistrer votre reservation.");
+      setError(payload.error ?? "Impossible d'enregistrer votre réservation.");
       setIsSubmitting(false);
       return;
     }
@@ -146,8 +146,8 @@ export default function PublicReservationForm({
     const isConfirmed = payload.status === "confirmed";
     setMessage(
       isConfirmed
-        ? "Votre reservation est confirmee. Un email de confirmation vous a ete envoye."
-        : "Votre demande de reservation a ete enregistree. Nous la confirmerons rapidement.",
+        ? "Votre réservation est confirmée. Un e-mail de confirmation vous a été envoyé."
+        : "Votre demande de réservation a été enregistrée. Nous la confirmerons rapidement.",
     );
     setGuestName("");
     setGuestEmail("");
@@ -184,19 +184,19 @@ export default function PublicReservationForm({
             ) : null}
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: primaryColor }}>
-                Reservation en ligne
+                Réservation en ligne
               </p>
               <h1 className="mt-1 text-3xl font-semibold text-slate-900">{restaurantName}</h1>
             </div>
           </div>
           {restaurantDescription && <p className="mt-3 text-sm text-slate-600">{restaurantDescription}</p>}
           <div className="mt-4 grid gap-2 rounded-2xl border border-[#E3F2EE] bg-[#F7FCFB] p-3 text-xs text-slate-600">
-            {restaurantAddress && <p>Adresse: {restaurantAddress}</p>}
-            {restaurantPhone && <p>Telephone: {restaurantPhone}</p>}
-            {restaurantEmail && <p>Email: {restaurantEmail}</p>}
+            {restaurantAddress && <p>Adresse : {restaurantAddress}</p>}
+            {restaurantPhone && <p>Téléphone : {restaurantPhone}</p>}
+            {restaurantEmail && <p>E-mail : {restaurantEmail}</p>}
             {(instagramUrl || facebookUrl || websiteUrl) && (
               <p>
-                Reseaux:{" "}
+                Réseaux :{" "}
                 {websiteUrl ? (
                   <a className="font-semibold hover:underline" href={websiteUrl} target="_blank" rel="noreferrer">
                     Site web
@@ -255,7 +255,7 @@ export default function PublicReservationForm({
                 onChange={(event) => setReservationTime(event.target.value)}
                 required
               >
-                <option value="">Selectionnez une heure</option>
+                <option value="">Sélectionnez une heure</option>
                 {generatedSlots.map((slot) => (
                   <option key={slot} value={slot} disabled={(capacityBySlot[slot] ?? 0) < guests}>
                     {slot} - {capacityBySlot[slot] ?? restaurantCapacity} places restantes
@@ -308,7 +308,7 @@ export default function PublicReservationForm({
 
             <div>
               <label htmlFor="phone" className="mb-1 block text-sm font-medium text-slate-700">
-                Telephone
+                Téléphone
               </label>
               <Input
                 id="phone"
@@ -325,7 +325,7 @@ export default function PublicReservationForm({
             className="w-full text-white"
             style={{ backgroundColor: ctaColor }}
           >
-            {isSubmitting ? "Enregistrement..." : "Reserver ma table"}
+            {isSubmitting ? "Enregistrement..." : "Réserver ma table"}
           </Button>
         </form>
 

@@ -20,7 +20,7 @@ export default function PublicLinkCard({ link }: PublicLinkCardProps) {
   return (
     <Card className="rounded-3xl">
       <CardHeader>
-        <CardTitle>Lien public de reservation</CardTitle>
+        <CardTitle>Lien public de réservation</CardTitle>
         <CardDescription>Partagez ce lien sur Google, Instagram, Facebook ou votre site.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -29,7 +29,7 @@ export default function PublicLinkCard({ link }: PublicLinkCardProps) {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" onClick={handleCopy}>
-            {copied ? "Lien copie" : "Copier le lien"}
+            {copied ? "Lien copié" : "Copier le lien"}
           </Button>
           <a
             href={link}

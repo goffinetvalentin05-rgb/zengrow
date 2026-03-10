@@ -106,14 +106,15 @@ export async function sendReviewRequestEmail({
   const applyRestaurantName = (value: string) =>
     value.replaceAll("{{restaurant_name}}", restaurantName).replaceAll("[Restaurant Name]", restaurantName);
 
-  const subject = applyRestaurantName(emailSubject || "How was your experience at {{restaurant_name}}?");
+  const subject =
+    applyRestaurantName(emailSubject || "Comment s'est passée votre expérience chez {{restaurant_name}} ?");
   const bodyMessage = applyRestaurantName(
     emailMessage ||
-      "Thank you for visiting {{restaurant_name}}.\nWe would love to hear about your experience.",
+      "Merci pour votre visite chez {{restaurant_name}}.\nNous aimerions connaître votre expérience.",
   );
   const positiveLabel = buttonPositiveLabel || "Excellent";
-  const neutralLabel = buttonNeutralLabel || "Average";
-  const negativeLabel = buttonNegativeLabel || "Not great";
+  const neutralLabel = buttonNeutralLabel || "Moyen";
+  const negativeLabel = buttonNegativeLabel || "À améliorer";
   const messageParagraphs = bodyMessage
     .split("\n")
     .map((line) => line.trim())
@@ -169,11 +170,11 @@ export async function sendMarketingCampaignEmail({
   subject,
   content,
   imageUrl,
-  ctaLabel = "Book your table",
+  ctaLabel = "Réserver une table",
   ctaUrl,
 }: MarketingCampaignEmailParams) {
   const resend = getResendClient();
-  const normalizedSubject = subject.trim() || "Latest updates from your restaurant";
+  const normalizedSubject = subject.trim() || "Dernières nouvelles de votre restaurant";
   const messageParagraphs = content
     .split("\n")
     .map((line) => line.trim())
@@ -199,7 +200,7 @@ export async function sendMarketingCampaignEmail({
           </div>
           <h1 style="margin:0 0 14px 0;color:#0f172a;font-size:22px;line-height:1.3;">${escapeHtml(normalizedSubject)}</h1>
           <div style="margin-bottom:18px;">${messageParagraphs}</div>
-          ${imageUrl ? `<img src="${imageUrl}" alt="Campaign image" style="display:block;width:100%;height:auto;border-radius:12px;border:1px solid #e2e8f0;margin:0 0 18px 0;" />` : ""}
+          ${imageUrl ? `<img src="${imageUrl}" alt="Image de campagne" style="display:block;width:100%;height:auto;border-radius:12px;border:1px solid #e2e8f0;margin:0 0 18px 0;" />` : ""}
           ${
             ctaUrl
               ? `<a href="${ctaUrl}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:#1F7A6C;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">${escapeHtml(ctaLabel)}</a>`

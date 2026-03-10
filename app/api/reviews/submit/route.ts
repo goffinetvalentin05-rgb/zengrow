@@ -13,11 +13,11 @@ export async function POST(request: NextRequest) {
   const message = (body.message || "").trim();
 
   if (!reservationId || !rating || rating < 1 || rating > 5) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json({ error: "Données invalides." }, { status: 400 });
   }
 
   if (rating <= 3 && !message) {
-    return NextResponse.json({ error: "Message is required for low ratings" }, { status: 400 });
+    return NextResponse.json({ error: "Un message est requis pour les notes basses." }, { status: 400 });
   }
 
   const supabase = createAdminClient();
@@ -29,11 +29,11 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (reservationError || !reservation) {
-    return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
+    return NextResponse.json({ error: "Réservation introuvable." }, { status: 404 });
   }
 
   if (reservation.status !== "completed") {
-    return NextResponse.json({ error: "Reservation is not completed" }, { status: 400 });
+    return NextResponse.json({ error: "La réservation n'est pas terminée." }, { status: 400 });
   }
 
   const { data: automation } = await supabase

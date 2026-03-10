@@ -62,20 +62,20 @@ export default function ReviewGateForm({ reservationId }: ReviewGateFormProps) {
         return;
       }
 
-      setSuccess("Merci ! Votre avis est enregistre.");
+      setSuccess("Merci ! Votre avis est enregistré.");
       setLoading(false);
       return;
     }
 
-    setSuccess("Merci pour votre retour prive. Nous allons nous ameliorer.");
+    setSuccess("Merci pour votre retour privé. Nous allons nous améliorer.");
     setLoading(false);
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-[var(--border)] bg-white p-6 shadow-sm">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Comment s&apos;est passee votre experience ?</h1>
-        <p className="mt-2 text-sm text-[var(--muted-foreground)]">Choisissez une note de 1 a 5 etoiles.</p>
+        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Comment s&apos;est passée votre expérience ?</h1>
+        <p className="mt-2 text-sm text-[var(--muted-foreground)]">Choisissez une note de 1 à 5 étoiles.</p>
       </div>
 
       <div className="flex gap-2">
@@ -87,7 +87,7 @@ export default function ReviewGateForm({ reservationId }: ReviewGateFormProps) {
             className={`h-10 w-10 rounded-full text-lg font-semibold transition ${
               rating >= star ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-500"
             }`}
-            aria-label={`${star} etoile${star > 1 ? "s" : ""}`}
+            aria-label={`${star} étoile${star > 1 ? "s" : ""}`}
           >
             ★
           </button>
@@ -97,7 +97,7 @@ export default function ReviewGateForm({ reservationId }: ReviewGateFormProps) {
       {showPrivateFeedback ? (
         <div className="space-y-2">
           <p className="text-sm text-[var(--foreground)]/85">
-            Desole que votre experience n&apos;ait pas ete parfaite. Pouvez-vous nous dire ce qui s&apos;est passe ?
+            Désolé que votre expérience n&apos;ait pas été parfaite. Pouvez-vous nous dire ce qui s&apos;est passé ?
           </p>
           <Textarea
             value={message}

@@ -14,12 +14,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 
   const body = (await request.json()) as { status?: string };
   if (!body.status || !allowedStatuses.has(body.status)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    return NextResponse.json({ error: "Statut invalide." }, { status: 400 });
   }
 
   const { data: reservation, error: reservationError } = await supabase
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     .single();
 
   if (reservationError || !reservation) {
-    return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
+    return NextResponse.json({ error: "Réservation introuvable." }, { status: 404 });
   }
 
   const { data: restaurant, error: restaurantError } = await supabase
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     .single();
 
   if (restaurantError || !restaurant) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "Accès interdit." }, { status: 403 });
   }
 
   const previousStatus = reservation.status;

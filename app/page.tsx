@@ -25,39 +25,39 @@ const floatingCard = (delay: number): { animate: TargetAndTransition } => ({
 const howItWorks = [
   {
     icon: "01",
-    title: "Partagez votre lien de reservation",
+    title: "Partagez votre lien de réservation",
     description:
       "Ajoutez votre lien ZenGrow sur votre site web, votre Instagram, votre profil Google ou votre page Facebook.",
   },
   {
     icon: "02",
-    title: "Les clients reservent leur table en ligne",
+    title: "Les clients réservent leur table en ligne",
     description:
-      "Ils choisissent simplement la date, l'heure et le nombre de personnes. La reservation apparait immediatement dans votre tableau de bord.",
+      "Ils choisissent simplement la date, l'heure et le nombre de personnes. La réservation apparaît immédiatement dans votre tableau de bord.",
   },
   {
     icon: "03",
-    title: "Recevez les reservations automatiquement",
+    title: "Recevez les réservations automatiquement",
     description:
-      "Toutes vos reservations sont centralisees dans un dashboard simple et clair.",
+      "Toutes vos réservations sont centralisées dans un tableau de bord simple et clair.",
   },
 ];
 
 const productFeatures = [
-  "Reservations en ligne",
-  "Lien de reservation unique",
-  "Gestion simple des disponibilites",
+  "Réservations en ligne",
+  "Lien de réservation unique",
+  "Gestion simple des disponibilités",
   "Confirmation automatique",
-  "Demandes d'avis Google automatisees",
-  "Base de donnees clients",
+  "Demandes d'avis Google automatisées",
+  "Base de données clients",
   "Tableau de bord clair",
 ];
 
 const featureGrid = [
   "Saint-Valentin",
-  "Menus de Noel",
-  "Soirees speciales",
-  "Evenements du restaurant",
+  "Menus de Noël",
+  "Soirées spéciales",
+  "Événements du restaurant",
 ];
 
 const plans = [
@@ -65,14 +65,14 @@ const plans = [
     name: "Starter",
     price: "35 CHF",
     popular: false,
-    cta: "Start with Starter",
-    tagline: "Ideal pour demarrer la reservation en ligne",
+    cta: "Commencer avec Starter",
+    tagline: "Idéal pour démarrer la réservation en ligne",
     features: [
-      "Reservations en ligne illimitees",
-      "Page de reservation personnalisee",
-      "Gestion des disponibilites",
+      "Réservations en ligne illimitées",
+      "Page de réservation personnalisée",
+      "Gestion des disponibilités",
       "Demandes d'avis Google automatiques",
-      "Feedback prive des clients",
+      "Retours privés des clients",
       "Base clients",
     ],
   },
@@ -80,11 +80,11 @@ const plans = [
     name: "Pro",
     price: "49 CHF",
     popular: true,
-    cta: "Start with Pro",
-    tagline: "Pour accelerer la croissance de votre restaurant",
+    cta: "Commencer avec Pro",
+    tagline: "Pour accélérer la croissance de votre restaurant",
     features: [
       "Tout le plan Starter",
-      "Campagnes email marketing",
+      "Campagnes e-mail marketing",
       "Segmentation clients",
       "Statistiques clients",
       "Export base clients",
@@ -108,10 +108,10 @@ export default function Home() {
           />
           <nav className="hidden items-center gap-8 text-sm text-[#0F3F3A]/70 md:flex">
             <a href="#how-it-works" className="transition hover:text-[#0F3F3A]">
-              Comment ca marche
+              Comment ça marche
             </a>
             <a href="#product" className="transition hover:text-[#0F3F3A]">
-              Fonctionnalites
+              Fonctionnalités
             </a>
             <a href="#pricing" className="transition hover:text-[#0F3F3A]">
               Tarifs
@@ -128,7 +128,7 @@ export default function Home() {
               href="/signup"
               className="inline-flex rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_-12px_rgba(31,122,108,0.8)] transition hover:scale-[1.02]"
             >
-              Creer mon restaurant
+              Créer mon restaurant
             </Link>
           </div>
         </div>
@@ -147,16 +147,16 @@ export default function Home() {
               className="space-y-7"
             >
               <span className="inline-flex rounded-full border border-[#CBE6DF] bg-white/70 px-3 py-1 text-xs font-semibold tracking-[0.18em] text-[#1F7A6C]">
-                SaaS pour restaurants
+                Optimisez les réservations de votre restaurant
               </span>
               <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-[3.4rem]">
-                La facon la plus simple de gerer les reservations de votre
+                La façon la plus simple de gérer les réservations de votre
                 restaurant.
               </h1>
               <p className="max-w-xl text-lg leading-8 text-[#0F3F3A]/70">
-                Vos clients reservent leur table en ligne en quelques secondes.
-                Vous recevez toutes les reservations dans un tableau de bord
-                clair, et ZenGrow automatise les demandes d&apos;avis Google apres
+                Vos clients réservent leur table en ligne en quelques secondes.
+                Vous recevez toutes les réservations dans un tableau de bord
+                clair, et ZenGrow automatise les demandes d&apos;avis Google après
                 chaque visite.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -164,17 +164,17 @@ export default function Home() {
                   href="/signup"
                   className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_-18px_rgba(31,122,108,0.9)] transition hover:scale-[1.01]"
                 >
-                  Creer mon restaurant
+                  Créer mon restaurant
                 </Link>
                 <a
                   href="#how-it-works"
                   className="inline-flex items-center justify-center rounded-full border border-[#CBE6DF] bg-white px-6 py-3 text-sm font-semibold text-[#0F3F3A] transition hover:border-[#A3D8CC] hover:bg-[#F0F9F7]"
                 >
-                  Voir comment ca fonctionne
+                  Voir comment ça fonctionne
                 </a>
               </div>
               <p className="text-sm text-[#0F3F3A]/60">
-                Installation en 5 minutes • Sans commission • Resiliation a tout
+                Installation en 5 minutes • Sans commission • Résiliation à tout
                 moment
               </p>
             </motion.div>
@@ -200,7 +200,7 @@ export default function Home() {
                   <div className="mb-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs uppercase tracking-[0.15em] text-[#0F3F3A]/45">
-                        ZenGrow Dashboard
+                        Tableau de bord ZenGrow
                       </p>
                       <p className="text-sm font-medium text-[#0F3F3A]/75">
                         Vue d&apos;ensemble du jour
@@ -213,7 +213,7 @@ export default function Home() {
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="rounded-2xl bg-white p-3 shadow-sm">
                       <p className="text-xs text-[#0F3F3A]/55">
-                        Reservations du jour
+                        Réservations du jour
                       </p>
                       <p className="mt-1 text-2xl font-semibold">37</p>
                     </div>
@@ -228,7 +228,7 @@ export default function Home() {
                   </div>
                   <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
                     <p className="text-xs font-medium text-[#0F3F3A]/55">
-                      Prochaines reservations
+                      Prochaines réservations
                     </p>
                     <div className="mt-3 space-y-2 text-sm">
                       <div className="flex items-center justify-between rounded-xl bg-[#F3FBF8] px-3 py-2">
@@ -246,26 +246,26 @@ export default function Home() {
 
               <motion.div
                 {...floatingCard(0)}
-                className="absolute -left-8 top-10 w-44 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)]"
+                className="absolute -left-10 -top-7 w-44 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)]"
               >
-                <p className="text-xs text-[#0F3F3A]/55">Carte reservation</p>
-                <p className="mt-1 text-sm font-semibold">Nouvelle reservation</p>
+                <p className="text-xs text-[#0F3F3A]/55">Carte réservation</p>
+                <p className="mt-1 text-sm font-semibold">Nouvelle réservation</p>
               </motion.div>
               <motion.div
                 {...floatingCard(0.6)}
-                className="absolute -right-6 top-28 w-48 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)]"
+                className="absolute -right-10 top-6 w-48 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)]"
               >
                 <p className="text-xs text-[#0F3F3A]/55">Carte avis Google</p>
                 <p className="mt-1 text-sm font-semibold">
-                  Demande d&apos;avis envoyee
+                  Demande d&apos;avis envoyée
                 </p>
               </motion.div>
               <motion.div
                 {...floatingCard(1.1)}
-                className="absolute -bottom-6 left-10 w-44 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)]"
+                className="absolute -bottom-9 right-8 w-44 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)]"
               >
-                <p className="text-xs text-[#0F3F3A]/55">Carte analytics</p>
-                <p className="mt-1 text-sm font-semibold">Reservations du jour</p>
+                <p className="text-xs text-[#0F3F3A]/55">Carte statistiques</p>
+                <p className="mt-1 text-sm font-semibold">Réservations du jour</p>
               </motion.div>
             </motion.div>
           </div>
@@ -281,7 +281,7 @@ export default function Home() {
         >
           <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8">
             <p className="text-center text-sm font-medium text-[#0F3F3A]/60">
-              Adopte par des restaurants
+              Adopté par des restaurants
             </p>
             <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-5">
               {["Luna Bistro", "Urban Table", "Casa Verde", "Nori House", "Atelier 19"].map(
@@ -297,15 +297,15 @@ export default function Home() {
             </div>
             <div className="mx-auto mt-10 max-w-4xl text-center">
               <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-                Les reservations ne devraient pas etre compliquees.
+                Les réservations ne devraient pas être compliquées.
               </h2>
               <p className="mt-5 text-base leading-8 text-[#0F3F3A]/70">
-                Entre les appels pendant le service, les reservations notees sur
-                papier ou les clients qui n&apos;arrivent pas a vous joindre, la
-                gestion des reservations peut vite devenir un casse-tete.
+                Entre les appels pendant le service, les réservations notées sur
+                papier ou les clients qui n&apos;arrivent pas à vous joindre, la
+                gestion des réservations peut vite devenir un casse-tête.
               </p>
               <p className="mt-4 text-base leading-8 text-[#0F3F3A]/70">
-                Et pourtant, pour un client, reserver une table devrait prendre
+                Et pourtant, pour un client, réserver une table devrait prendre
                 quelques secondes.
               </p>
               <p className="mt-4 text-base leading-8 text-[#0F3F3A]/70">
@@ -363,9 +363,9 @@ export default function Home() {
             >
               <div className="rounded-3xl bg-gradient-to-br from-[#F6FBFA] to-[#ECF8F5] p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <p className="text-sm font-semibold">ZenGrow Dashboard</p>
+                  <p className="text-sm font-semibold">Tableau de bord ZenGrow</p>
                   <span className="rounded-full bg-white px-3 py-1 text-xs text-[#1F7A6C]">
-                    Reservations
+                    Réservations
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -392,7 +392,7 @@ export default function Home() {
               className="self-center"
             >
               <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Tout ce dont vous avez besoin pour gerer vos reservations
+                Tout ce dont vous avez besoin pour gérer vos réservations
               </h2>
               <ul className="mt-7 space-y-3">
                 {productFeatures.map((feature) => (
@@ -424,17 +424,17 @@ export default function Home() {
               Transformez chaque visite en avis Google.
             </h2>
             <p className="relative mt-4 max-w-2xl text-[#0F3F3A]/70">
-              La plupart des clients satisfaits ne pensent pas a laisser un avis.
-              ZenGrow envoie automatiquement un message apres la visite pour
-              inviter vos clients a partager leur experience.
+              La plupart des clients satisfaits ne pensent pas à laisser un avis.
+              ZenGrow envoie automatiquement un message après la visite pour
+              inviter vos clients à partager leur expérience.
             </p>
             <p className="relative mt-4 max-w-2xl font-medium text-[#0F3F3A]/80">
-              Resultat : plus d&apos;avis, une meilleure note moyenne et plus de
-              visibilite sur Google.
+              Résultat : plus d&apos;avis, une meilleure note moyenne et plus de
+              visibilité sur Google.
             </p>
 
             <div className="relative mt-9 grid gap-4 md:grid-cols-3">
-              {["SMS envoye", "Message WhatsApp", "Avis recu"].map(
+              {["SMS envoyé", "Message WhatsApp", "Avis reçu"].map(
                 (card, index) => (
                   <motion.div
                     key={card}
@@ -447,7 +447,7 @@ export default function Home() {
                   >
                     <p className="text-sm font-semibold">{card}</p>
                     <p className="mt-2 text-sm text-[#0F3F3A]/65">
-                      Automatique, envoye au bon moment, sans relance manuelle.
+                      Automatique, envoyé au bon moment, sans relance manuelle.
                     </p>
                   </motion.div>
                 ),
@@ -469,8 +469,8 @@ export default function Home() {
               Construisez votre base de clients.
             </motion.h2>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#0F3F3A]/70">
-              Chaque reservation vous permet de recuperer des informations
-              precieuses : nom, email, telephone.
+              Chaque réservation vous permet de récupérer des informations
+              précieuses : nom, e-mail, téléphone.
             </p>
             <p className="mt-4 max-w-3xl text-base leading-8 text-[#0F3F3A]/70">
               Vous pouvez ensuite recontacter facilement vos clients pour :
@@ -508,11 +508,11 @@ export default function Home() {
             Simple et transparent
           </motion.h2>
           <p className="mt-4 max-w-2xl text-[#0F3F3A]/70">
-            Comparez les plans et choisissez l'offre adaptee a votre restaurant.
-            Le plan Pro est ideal pour accelerer votre croissance.
+            Comparez les plans et choisissez l'offre adaptée à votre restaurant.
+            Le plan Pro est idéal pour accélérer votre croissance.
           </p>
           <p className="mt-2 text-sm font-medium text-[#1F7A6C]">
-            Plus de reservations recurrentes, moins d'actions manuelles.
+            Plus de réservations récurrentes, moins d'actions manuelles.
           </p>
           <div className="mt-10 grid gap-5 md:grid-cols-2">
             {plans.map((plan, index) => (
@@ -531,14 +531,14 @@ export default function Home() {
               >
                 {plan.popular ? (
                   <div className="pointer-events-none absolute -top-8 right-[-58px] rotate-45 bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-16 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white shadow-md">
-                    Most popular
+                    Le plus populaire
                   </div>
                 ) : null}
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-semibold">{plan.name}</h3>
                   {plan.popular ? (
                     <span className="rounded-full bg-[#EAF8F4] px-3 py-1 text-xs font-semibold text-[#1F7A6C]">
-                      Most popular
+                      Le plus populaire
                     </span>
                   ) : null}
                 </div>
@@ -548,7 +548,7 @@ export default function Home() {
                 </p>
                 <p className="mt-1 text-sm text-[#0F3F3A]/65">/ mois</p>
                 <p className="mt-3 text-sm text-[#0F3F3A]/65">
-                  Cancel anytime. No setup fees.
+                  Résiliable à tout moment. Aucun frais d&apos;installation.
                 </p>
                 <ul className="mt-7 space-y-2.5">
                   {plan.features.map((feature) => (
@@ -585,17 +585,17 @@ export default function Home() {
             className="rounded-[36px] bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-8 py-12 text-center text-white md:px-12 md:py-16"
           >
             <h2 className="mx-auto max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl">
-              Pret a simplifier les reservations de votre restaurant ?
+              Prêt à simplifier les réservations de votre restaurant ?
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-white/90">
-              Creez votre compte ZenGrow en quelques minutes et commencez a
-              recevoir des reservations en ligne.
+              Créez votre compte ZenGrow en quelques minutes et commencez à
+              recevoir des réservations en ligne.
             </p>
             <Link
               href="/signup"
               className="mt-8 inline-flex rounded-full bg-white px-7 py-3 text-sm font-semibold text-[#0F3F3A] transition hover:scale-[1.02]"
             >
-              Creer mon restaurant
+              Créer mon restaurant
             </Link>
           </motion.div>
         </section>

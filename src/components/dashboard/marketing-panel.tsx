@@ -62,7 +62,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
     };
 
     if (!response.ok) {
-      setMessage(payload.error ?? "Impossible de creer la campagne.");
+      setMessage(payload.error ?? "Impossible de créer la campagne.");
       setSubmitting(false);
       return;
     }
@@ -71,8 +71,8 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
     const failedRecipients = payload.failedRecipients ?? 0;
     setMessage(
       failedRecipients > 0
-        ? `Campagne envoyee a ${sentRecipients} clients. ${failedRecipients} envois ont echoue.`
-        : `Campagne envoyee a ${sentRecipients} clients.`,
+        ? `Campagne envoyée à ${sentRecipients} clients. ${failedRecipients} envois ont échoué.`
+        : `Campagne envoyée à ${sentRecipients} clients.`,
     );
     setName("");
     setSubject("");
@@ -90,10 +90,10 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Marketing</CardTitle>
-            <CardDescription>Creez et envoyez des campagnes email a vos anciens clients.</CardDescription>
+            <CardDescription>Créez et envoyez des campagnes e-mail à vos anciens clients.</CardDescription>
           </div>
           <Button type="button" onClick={() => setShowForm((current) => !current)} variant={showForm ? "secondary" : "primary"}>
-            {showForm ? "Close" : "Create campaign"}
+            {showForm ? "Fermer" : "Créer une campagne"}
           </Button>
         </CardHeader>
       </Card>
@@ -101,36 +101,36 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
       {showForm && (
         <Card className="rounded-3xl">
           <CardHeader>
-            <CardTitle>Create campaign</CardTitle>
+            <CardTitle>Créer une campagne</CardTitle>
             <CardDescription>Configurez le message, l&apos;image et le segment de destinataires.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Campaign name</label>
-              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="March promo" />
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Nom de la campagne</label>
+              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Promo de mars" />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Subject</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Objet</label>
               <Input
                 value={subject}
                 onChange={(event) => setSubject(event.target.value)}
-                placeholder="Special menu this weekend"
+                placeholder="Menu spécial ce week-end"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Email content</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Contenu de l'e-mail</label>
               <Textarea
                 className="min-h-36"
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
-                placeholder="Tell your customers about your offer."
+                placeholder="Présentez votre offre à vos clients."
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Image URL (optional)</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">URL de l'image (optionnel)</label>
               <Input
                 value={imageUrl}
                 onChange={(event) => setImageUrl(event.target.value)}
@@ -139,21 +139,21 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Recipients</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Destinataires</label>
               <Select value={audience} onChange={(event) => setAudience(event.target.value as AudienceFilter)}>
-                <option value="all_customers">All customers</option>
-                <option value="visited_last_30_days">Customers who visited in the last 30 days</option>
-                <option value="visited_last_90_days">Customers who visited in the last 90 days</option>
-                <option value="visited_more_than_3_times">Customers who visited more than 3 times</option>
+                <option value="all_customers">Tous les clients</option>
+                <option value="visited_last_30_days">Clients venus ces 30 derniers jours</option>
+                <option value="visited_last_90_days">Clients venus ces 90 derniers jours</option>
+                <option value="visited_more_than_3_times">Clients venus plus de 3 fois</option>
               </Select>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <Button type="button" onClick={handleCreateCampaign} disabled={submitting}>
-                {submitting ? "Sending..." : "Send campaign"}
+                {submitting ? "Envoi..." : "Envoyer la campagne"}
               </Button>
               <Button type="button" variant="secondary" onClick={() => setShowForm(false)} disabled={submitting}>
-                Cancel
+                Annuler
               </Button>
             </div>
             {message && <p className="text-sm text-[var(--muted-foreground)]">{message}</p>}
@@ -163,13 +163,13 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
 
       <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle>Sent campaigns</CardTitle>
-          <CardDescription>Historique de vos campagnes email envoyees depuis ZenGrow.</CardDescription>
+          <CardTitle>Campagnes envoyées</CardTitle>
+          <CardDescription>Historique de vos campagnes e-mail envoyées depuis ZenGrow.</CardDescription>
         </CardHeader>
         <CardContent>
           {campaigns.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--muted-foreground)]">
-              Aucune campagne envoyee pour le moment.
+              Aucune campagne envoyée pour le moment.
             </p>
           ) : (
             <div className="space-y-3">
@@ -181,12 +181,12 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-semibold text-[var(--foreground)]">{campaign.name}</p>
                     <p className="text-xs text-[var(--muted-foreground)]">
-                      {campaign.sent_at ? `Sent ${campaign.sent_at.slice(0, 10)}` : "Not sent"}
+                      {campaign.sent_at ? `Envoyée le ${campaign.sent_at.slice(0, 10)}` : "Non envoyée"}
                     </p>
                   </div>
                   <p className="mt-1 text-sm text-[var(--foreground)]/80">{campaign.subject}</p>
                   <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-                    Created {campaign.created_at.slice(0, 10)} - Recipients {campaign.recipients_count}
+                    Créée le {campaign.created_at.slice(0, 10)} - Destinataires {campaign.recipients_count}
                   </p>
                 </div>
               ))}

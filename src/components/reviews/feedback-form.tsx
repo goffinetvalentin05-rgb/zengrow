@@ -60,7 +60,7 @@ export default function FeedbackForm({
     const payload = (await response.json().catch(() => ({}))) as { error?: string };
 
     if (!response.ok) {
-      console.error("Feedback submit failed", payload.error);
+      console.error("Echec envoi retour", payload.error);
       setError(payload.error || "Impossible d'envoyer votre retour.");
       setLoading(false);
       return;
@@ -72,9 +72,9 @@ export default function FeedbackForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-[var(--border)] bg-white p-6 shadow-sm">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Que pouvons-nous ameliorer ?</h1>
+        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Que pouvons-nous améliorer ?</h1>
         <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-          Votre feedback prive sera visible par le restaurant dans son tableau de bord ZenGrow.
+          Votre retour privé sera visible par le restaurant dans son tableau de bord ZenGrow.
         </p>
       </div>
 
@@ -84,7 +84,7 @@ export default function FeedbackForm({
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-[var(--foreground)]/85">Rating</label>
+        <label className="block text-sm font-medium text-[var(--foreground)]/85">Note</label>
         <Select value={String(rating)} onChange={(event) => setRating(Number(event.target.value))}>
           <option value="1">1/5</option>
           <option value="2">2/5</option>
@@ -97,12 +97,12 @@ export default function FeedbackForm({
       <Textarea
         value={message}
         onChange={(event) => setMessage(event.target.value)}
-        placeholder="Expliquez-nous ce qui pourrait etre mieux..."
+        placeholder="Expliquez-nous ce qui pourrait être mieux..."
         className="min-h-32"
       />
 
       <Button type="submit" disabled={loading}>
-        {loading ? "Envoi..." : "Envoyer mon feedback"}
+        {loading ? "Envoi..." : "Envoyer mon retour"}
       </Button>
 
       {error ? <p className="text-sm text-rose-600">{error}</p> : null}

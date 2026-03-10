@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 
   const { data: restaurant, error: restaurantError } = await supabase
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     .single();
 
   if (restaurantError || !restaurant) {
-    return NextResponse.json({ error: "Restaurant not found" }, { status: 404 });
+    return NextResponse.json({ error: "Restaurant introuvable." }, { status: 404 });
   }
 
   const { data: automation } = await supabase
@@ -54,13 +54,13 @@ export async function POST(request: Request) {
     .single();
 
   if (reservationError || !testReservation) {
-    return NextResponse.json({ error: reservationError?.message ?? "Could not create test reservation" }, { status: 400 });
+    return NextResponse.json({ error: reservationError?.message ?? "Impossible de créer une réservation de test." }, { status: 400 });
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || new URL(request.url).origin;
   const recipient = restaurant.email || user.email;
   if (!recipient) {
-    return NextResponse.json({ error: "No destination email found." }, { status: 400 });
+    return NextResponse.json({ error: "Aucune adresse e-mail de destination trouvée." }, { status: 400 });
   }
 
   try {
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Test review email failed", error);
-    return NextResponse.json({ error: "Email send failed" }, { status: 500 });
+    return NextResponse.json({ error: "Échec d'envoi de l'e-mail." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

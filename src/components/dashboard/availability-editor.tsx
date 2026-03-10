@@ -78,16 +78,16 @@ export default function AvailabilityEditor({
       .eq("restaurant_id", restaurantId);
 
     setSaving(false);
-    setMessage(error ? error.message : "Disponibilites enregistrees.");
+    setMessage(error ? error.message : "Disponibilités enregistrées.");
   }
 
   return (
     <section className="space-y-6">
       <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle>Horaires et disponibilites</CardTitle>
+          <CardTitle>Horaires et disponibilités</CardTitle>
           <CardDescription>
-            Configurez vos disponibilites jour par jour avec une interface simple.
+            Configurez vos disponibilités jour par jour avec une interface simple.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -98,7 +98,7 @@ export default function AvailabilityEditor({
               <div key={day} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{dayLabels[day]}</p>
-                  <Toggle checked={isOpen} onChange={(value) => toggleDay(day, value)} label={isOpen ? "Ouvert" : "Ferme"} />
+                  <Toggle checked={isOpen} onChange={(value) => toggleDay(day, value)} label={isOpen ? "Ouvert" : "Fermé"} />
                 </div>
 
                 {isOpen && (
@@ -124,7 +124,7 @@ export default function AvailabilityEditor({
                       </div>
                     ))}
                     <Button type="button" size="sm" variant="secondary" onClick={() => addRange(day)}>
-                      Ajouter un creneau
+                      Ajouter un créneau
                     </Button>
                   </div>
                 )}
@@ -136,12 +136,12 @@ export default function AvailabilityEditor({
 
       <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle>Parametres de reservation</CardTitle>
-          <CardDescription>Regles generales appliquees a toutes les reservations.</CardDescription>
+          <CardTitle>Paramètres de réservation</CardTitle>
+          <CardDescription>Règles générales appliquées à toutes les réservations.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Max guests per slot</label>
+            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Couverts max par créneau</label>
             <Input
               type="number"
               min={1}
@@ -150,7 +150,7 @@ export default function AvailabilityEditor({
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Slot interval</label>
+            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Intervalle des créneaux</label>
             <Select value={String(slotInterval)} onChange={(event) => setSlotInterval(Number(event.target.value))}>
               <option value="15">15 min</option>
               <option value="30">30 min</option>
@@ -159,7 +159,7 @@ export default function AvailabilityEditor({
             </Select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Reservation duration</label>
+            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Durée de réservation</label>
             <Select
               value={String(reservationDuration)}
               onChange={(event) => setReservationDuration(Number(event.target.value))}

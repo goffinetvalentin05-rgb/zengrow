@@ -30,7 +30,7 @@ export default async function DashboardLayout({
                   href="/dashboard/reservations"
                   className="inline-flex h-10 items-center rounded-xl bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-4 text-sm font-semibold text-white transition hover:opacity-95"
                 >
-                  Gerer les reservations
+                  Gérer les réservations
                 </Link>
                 <a
                   href={publicLink}

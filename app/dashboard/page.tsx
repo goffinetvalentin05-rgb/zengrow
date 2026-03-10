@@ -55,10 +55,10 @@ export default async function DashboardPage() {
   const servedGuestsTotal = (guestsServed ?? []).reduce((sum, row) => sum + (row.guests ?? 0), 0);
 
   const kpis = [
-    { label: "Reservations aujourd'hui", value: reservationsToday ?? 0 },
-    { label: "Reservations a venir", value: upcomingReservations ?? 0 },
+    { label: "Réservations aujourd'hui", value: reservationsToday ?? 0 },
+    { label: "Réservations à venir", value: upcomingReservations ?? 0 },
     { label: "Clients servis", value: servedGuestsTotal },
-    { label: "Avis recus", value: reviewsReceived ?? 0 },
+    { label: "Avis reçus", value: reviewsReceived ?? 0 },
   ];
 
   return (
@@ -79,13 +79,13 @@ export default async function DashboardPage() {
       <div className="grid gap-6 xl:grid-cols-[1.6fr_0.95fr]">
         <Card className="rounded-3xl">
           <CardHeader>
-            <CardTitle>Prochaines reservations</CardTitle>
-            <CardDescription>Liste simple des prochaines tables a servir.</CardDescription>
+            <CardTitle>Prochaines réservations</CardTitle>
+            <CardDescription>Liste simple des prochaines tables à servir.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {(upcomingData ?? []).length === 0 ? (
               <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-5 text-sm text-[var(--muted-foreground)]">
-                Aucune reservation a venir pour le moment.
+                Aucune réservation à venir pour le moment.
               </p>
             ) : (
               (upcomingData ?? []).map((reservation) => (
@@ -96,7 +96,7 @@ export default async function DashboardPage() {
                   <div>
                     <p className="font-semibold text-[var(--foreground)]">{reservation.guest_name ?? "Client"}</p>
                     <p className="text-xs text-[var(--muted-foreground)]">
-                      {reservation.reservation_date} a {reservation.reservation_time} - {reservation.guests} couverts
+                      {reservation.reservation_date} à {reservation.reservation_time} - {reservation.guests} couverts
                     </p>
                   </div>
                   <StatusBadge status={(reservation.status as "pending" | "confirmed") ?? "confirmed"} />

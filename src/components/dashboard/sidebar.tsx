@@ -24,13 +24,13 @@ type DashboardSidebarProps = {
 
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/dashboard/reservations", label: "Reservations", icon: Calendar },
-  { href: "/dashboard/availability", label: "Disponibilites", icon: CalendarDays },
+  { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
+  { href: "/dashboard/availability", label: "Disponibilités", icon: CalendarDays },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone },
   { href: "/dashboard/reviews", label: "Automatisation des avis", icon: Star },
-  { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquare },
+  { href: "/dashboard/feedback", label: "Retours clients", icon: MessageSquare },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
-  { href: "/dashboard/settings", label: "Parametres", icon: Settings },
+  { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];
 
 export default function DashboardSidebar({ reservationLink }: DashboardSidebarProps) {
@@ -79,13 +79,13 @@ export default function DashboardSidebar({ reservationLink }: DashboardSidebarPr
           rel="noreferrer"
           className="mt-3 inline-flex text-xs font-semibold text-[var(--primary)] hover:underline"
         >
-          Ouvrir la page de reservation
+          Ouvrir la page de réservation
         </a>
       </div>
 
       <div className="mt-auto pt-6">
         <Button type="button" variant="ghost" onClick={handleLogout} className="w-full justify-start">
-          Se deconnecter
+          Se déconnecter
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.push("/")} className="mt-2 w-full justify-start">
           Retour au site

@@ -73,7 +73,7 @@ export async function POST(request: Request) {
   const audience = payload.audience;
 
   if (!name || !subject || !content || !isAudienceFilter(audience)) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json({ error: "Données invalides." }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 
   const { data: restaurant, error: restaurantError } = await supabase
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     .single();
 
   if (restaurantError || !restaurant) {
-    return NextResponse.json({ error: "Restaurant not found" }, { status: 404 });
+    return NextResponse.json({ error: "Restaurant introuvable." }, { status: 404 });
   }
 
   const [{ data: restaurantUi }, { data: customers, error: customersError }] = await Promise.all([
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
 
   const recipients = selectRecipients((customers ?? []) as CustomerRecipient[], audience);
   if (recipients.length === 0) {
-    return NextResponse.json({ error: "No recipients found for this audience." }, { status: 400 });
+    return NextResponse.json({ error: "Aucun destinataire trouvé pour cette audience." }, { status: 400 });
   }
 
   const { data: campaign, error: campaignInsertError } = await supabase
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
     .single();
 
   if (campaignInsertError || !campaign) {
-    return NextResponse.json({ error: campaignInsertError?.message ?? "Failed to create campaign" }, { status: 500 });
+    return NextResponse.json({ error: campaignInsertError?.message ?? "Impossible de créer la campagne." }, { status: 500 });
   }
 
   const origin = new URL(request.url).origin;
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
         subject,
         content,
         imageUrl,
-        ctaLabel: "Book your table",
+        ctaLabel: "Réserver une table",
         ctaUrl,
       });
 

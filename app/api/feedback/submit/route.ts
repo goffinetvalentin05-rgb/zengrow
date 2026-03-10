@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   const message = (body.message || "").trim();
 
   if (!reservationId || !rating || rating < 1 || rating > 5 || !message) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json({ error: "Données invalides." }, { status: 400 });
   }
 
   try {
@@ -31,15 +31,15 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (reservationError || !reservation) {
-      return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
+      return NextResponse.json({ error: "Réservation introuvable." }, { status: 404 });
     }
 
     if (restaurantId && reservation.restaurant_id !== restaurantId) {
-      return NextResponse.json({ error: "Invalid reservation context" }, { status: 400 });
+      return NextResponse.json({ error: "Contexte de réservation invalide." }, { status: 400 });
     }
 
     if (reservation.status !== "completed") {
-      return NextResponse.json({ error: "Reservation is not completed" }, { status: 400 });
+      return NextResponse.json({ error: "La réservation n'est pas terminée." }, { status: 400 });
     }
 
     const { error: feedbackError } = await supabase.from("feedbacks").upsert(
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Feedback submit route failed", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Erreur interne du serveur." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
