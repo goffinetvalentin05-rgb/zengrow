@@ -12,6 +12,13 @@ export default async function DashboardReviewsPage() {
     .eq("restaurant_id", restaurant.id)
     .maybeSingle();
 
+  const { data: feedback } = await supabase
+    .from("customer_feedback")
+    .select("id, rating, message, created_at")
+    .eq("restaurant_id", restaurant.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
   return (
     <ReviewAutomationPanel
       restaurantId={restaurant.id}
@@ -24,6 +31,7 @@ export default async function DashboardReviewsPage() {
           "Merci pour votre visite chez {{restaurant_name}}. Votre avis Google nous aide enormement : {{google_review_url}}",
         google_review_url: automation?.google_review_url ?? "",
       }}
+      initialFeedback={feedback ?? []}
     />
   );
 }

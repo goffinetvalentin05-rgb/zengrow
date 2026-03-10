@@ -53,40 +53,50 @@ export async function sendReservationConfirmationEmail({
 
 type ReviewRequestParams = {
   to: string;
-  customerName: string;
   restaurantName: string;
-  reviewUrl: string;
+  googleReviewUrl: string;
+  feedbackOkayUrl: string;
+  feedbackBadUrl: string;
 };
 
 export async function sendReviewRequestEmail({
   to,
-  customerName,
   restaurantName,
-  reviewUrl,
+  googleReviewUrl,
+  feedbackOkayUrl,
+  feedbackBadUrl,
 }: ReviewRequestParams) {
   const resend = getResendClient();
 
   return resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: "Merci pour votre visite",
+    subject: `How was your experience at ${restaurantName}?`,
     html: `
-      <p>Bonjour ${customerName}</p>
-      <p>Merci pour votre visite chez ${restaurantName}.</p>
-      <p>Avant de vous demander un avis public, nous aimerions savoir comment s'est passee votre experience.</p>
-      <p>
-        <a href="${reviewUrl}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#1f7a6c;color:#ffffff;text-decoration:none;font-weight:600;">
-          Donner mon avis
+      <p>Bonjour,</p>
+      <p>Merci d'avoir visite ${restaurantName}.</p>
+      <p>Votre experience s'est-elle bien passee ?</p>
+      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="${googleReviewUrl}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#16a34a;color:#ffffff;text-decoration:none;font-weight:600;">
+          😊 Oui
         </a>
-      </p>
+        <a href="${feedbackOkayUrl}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#f59e0b;color:#ffffff;text-decoration:none;font-weight:600;">
+          😐 Bof
+        </a>
+        <a href="${feedbackBadUrl}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#dc2626;color:#ffffff;text-decoration:none;font-weight:600;">
+          😞 Non
+        </a>
+      </div>
     `,
     text: [
-      `Bonjour ${customerName}`,
+      "Bonjour,",
       "",
-      `Merci pour votre visite chez ${restaurantName}.`,
-      "Avant de vous demander un avis public, nous aimerions savoir comment s'est passee votre experience.",
+      `Merci d'avoir visite ${restaurantName}.`,
+      "Votre experience s'est-elle bien passee ?",
       "",
-      `Donner mon avis : ${reviewUrl}`,
+      `Oui: ${googleReviewUrl}`,
+      `Bof: ${feedbackOkayUrl}`,
+      `Non: ${feedbackBadUrl}`,
     ].join("\n"),
   });
 }

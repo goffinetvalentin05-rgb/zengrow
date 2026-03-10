@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
   const [{ data: settings }, { data: restaurants }] = await Promise.all([
     supabase
       .from("review_automation_settings")
-      .select("restaurant_id, is_enabled, channel, delay_minutes")
+      .select("restaurant_id, is_enabled, channel, delay_minutes, google_review_url")
       .in("restaurant_id", restaurantIds),
     supabase.from("restaurants").select("id, name").in("id", restaurantIds),
   ]);
@@ -67,14 +67,17 @@ export async function GET(request: NextRequest) {
     const sendAt = new Date(completedAt.getTime() + automation.delay_minutes * 60 * 1000);
     if (now < sendAt) continue;
 
-    const reviewUrl = `${appUrl}/review/${reservation.id}`;
+    const googleReviewUrl = automation.google_review_url || `${appUrl}/review/${reservation.id}`;
+    const feedbackOkayUrl = `${appUrl}/feedback/${reservation.id}?rating=3`;
+    const feedbackBadUrl = `${appUrl}/feedback/${reservation.id}?rating=1`;
 
     try {
       await sendReviewRequestEmail({
         to: reservation.guest_email as string,
-        customerName: reservation.guest_name || "Client",
         restaurantName: restaurant.name,
-        reviewUrl,
+        googleReviewUrl,
+        feedbackOkayUrl,
+        feedbackBadUrl,
       });
 
       await supabase
