@@ -5,7 +5,31 @@ import { getDefaultOpeningHours, slugifyRestaurantName } from "@/src/lib/utils";
 type Payload = {
   restaurantName?: string;
   requestedSlug?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  tableCount?: number;
+  maxPeople?: number;
+  averageMealDuration?: number;
+  description?: string;
+  instagram?: string;
+  website?: string;
 };
+
+function optionalTrim(value: string | undefined) {
+  const normalized = value?.trim();
+  return normalized && normalized.length > 0 ? normalized : null;
+}
+
+function positiveIntegerOrDefault(value: number | undefined, fallback: number) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return fallback;
+  }
+  const normalized = Math.trunc(value);
+  return normalized > 0 ? normalized : fallback;
+}
 
 async function buildUniqueSlug(supabase: Awaited<ReturnType<typeof createClient>>, base: string) {
   let candidate = base || "restaurant";
@@ -43,9 +67,32 @@ export async function POST(request: Request) {
 
   const metadataName = (user.user_metadata?.restaurant_name as string | undefined) ?? "";
   const metadataSlug = (user.user_metadata?.restaurant_slug as string | undefined) ?? "";
+  const metadataPhone = user.user_metadata?.restaurant_phone as string | undefined;
+  const metadataAddress = user.user_metadata?.restaurant_address as string | undefined;
+  const metadataCity = user.user_metadata?.restaurant_city as string | undefined;
+  const metadataCountry = user.user_metadata?.restaurant_country as string | undefined;
+  const metadataTableCount = user.user_metadata?.restaurant_table_count as number | undefined;
+  const metadataCapacity = user.user_metadata?.restaurant_capacity as number | undefined;
+  const metadataDuration = user.user_metadata?.reservation_duration as number | undefined;
+  const metadataDescription = user.user_metadata?.restaurant_description as string | undefined;
+  const metadataInstagram = user.user_metadata?.instagram_url as string | undefined;
+  const metadataWebsite = user.user_metadata?.website_url as string | undefined;
   const restaurantName = payload.restaurantName?.trim() || metadataName || "Mon restaurant";
   const slugBase = slugifyRestaurantName(payload.requestedSlug || metadataSlug || restaurantName);
   const slug = await buildUniqueSlug(supabase, slugBase);
+  const phone = optionalTrim(payload.phone ?? metadataPhone);
+  const address = optionalTrim(payload.address ?? metadataAddress);
+  const city = optionalTrim(payload.city ?? metadataCity);
+  const country = optionalTrim(payload.country ?? metadataCountry);
+  const description = optionalTrim(payload.description ?? metadataDescription);
+  const instagram = optionalTrim(payload.instagram ?? metadataInstagram);
+  const website = optionalTrim(payload.website ?? metadataWebsite);
+  const tableCount = positiveIntegerOrDefault(payload.tableCount ?? metadataTableCount, 12);
+  const maxPeople = positiveIntegerOrDefault(payload.maxPeople ?? metadataCapacity, 40);
+  const averageMealDuration = positiveIntegerOrDefault(
+    payload.averageMealDuration ?? metadataDuration,
+    90,
+  );
   const trialStartDate = new Date();
   const trialEndDate = new Date(trialStartDate.getTime() + 14 * 24 * 60 * 60 * 1000);
 
@@ -55,7 +102,12 @@ export async function POST(request: Request) {
       owner_id: user.id,
       name: restaurantName,
       slug,
-      email: user.email ?? null,
+      email: optionalTrim(payload.email) ?? user.email ?? null,
+      phone,
+      address,
+      city,
+      country,
+      description,
       subscription_status: "trial",
       trial_start_date: trialStartDate.toISOString(),
       trial_end_date: trialEndDate.toISOString(),
@@ -73,6 +125,11 @@ export async function POST(request: Request) {
   const { error: settingsError } = await supabase.from("restaurant_settings").insert({
     restaurant_id: restaurant.id,
     opening_hours: getDefaultOpeningHours(),
+    table_count: tableCount,
+    restaurant_capacity: maxPeople,
+    reservation_duration: averageMealDuration,
+    instagram_url: instagram,
+    website_url: website,
   });
 
   if (settingsError) {
