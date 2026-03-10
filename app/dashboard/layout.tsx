@@ -14,15 +14,15 @@ export default async function DashboardLayout({
   const publicLink = origin ? `${origin}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
 
   return (
-    <main className="min-h-screen bg-[var(--background)] p-4 md:p-6">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-6 lg:flex-row">
+    <main className="min-h-screen bg-[var(--background)] p-3 md:p-4">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-4 lg:flex-row">
         <DashboardSidebar
           reservationLink={publicLink}
           subscriptionPlan={restaurant.subscription_plan}
           subscriptionStatus={restaurant.subscription_status}
         />
-        <section className="flex-1 space-y-6">
-          <header className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] px-6 py-5 shadow-[0_16px_36px_-28px_rgba(15,63,58,0.55)]">
+        <section className="flex-1 space-y-4">
+          <header className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 shadow-[0_16px_36px_-28px_rgba(15,63,58,0.55)]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
