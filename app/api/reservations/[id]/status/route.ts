@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { sendReservationConfirmationEmail } from "@/lib/email";
+import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 
 const allowedStatuses = new Set(["pending", "confirmed", "rejected", "completed", "cancelled", "no-show"]);
 
@@ -34,13 +35,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
   const { data: restaurant, error: restaurantError } = await supabase
     .from("restaurants")
-    .select("id, name, owner_id")
+    .select("id, name, owner_id, subscription_status, trial_end_date, stripe_subscription_id")
     .eq("id", reservation.restaurant_id)
     .eq("owner_id", authData.user.id)
     .single();
 
   if (restaurantError || !restaurant) {
     return NextResponse.json({ error: "Accès interdit." }, { status: 403 });
+  }
+
+  const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
+  if (isRestaurantExpired(syncedRestaurant)) {
+    return NextResponse.json({ error: "Abonnement expiré. Mettez à jour votre formule." }, { status: 402 });
   }
 
   const previousStatus = reservation.status;

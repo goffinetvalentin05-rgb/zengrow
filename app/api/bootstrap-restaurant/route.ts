@@ -46,6 +46,8 @@ export async function POST(request: Request) {
   const restaurantName = payload.restaurantName?.trim() || metadataName || "Mon restaurant";
   const slugBase = slugifyRestaurantName(payload.requestedSlug || metadataSlug || restaurantName);
   const slug = await buildUniqueSlug(supabase, slugBase);
+  const trialStartDate = new Date();
+  const trialEndDate = new Date(trialStartDate.getTime() + 14 * 24 * 60 * 60 * 1000);
 
   const { data: restaurant, error: restaurantError } = await supabase
     .from("restaurants")
@@ -54,6 +56,9 @@ export async function POST(request: Request) {
       name: restaurantName,
       slug,
       email: user.email ?? null,
+      subscription_status: "trial",
+      trial_start_date: trialStartDate.toISOString(),
+      trial_end_date: trialEndDate.toISOString(),
     })
     .select("id, slug")
     .single();

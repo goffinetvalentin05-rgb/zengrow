@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Megaphone,
+  CreditCard,
   Settings,
   Star,
   Users,
@@ -20,22 +21,30 @@ import { cn } from "@/src/lib/utils";
 
 type DashboardSidebarProps = {
   reservationLink: string;
+  subscriptionPlan: "starter" | "pro" | null;
+  subscriptionStatus: "trial" | "active" | "expired";
 };
 
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
   { href: "/dashboard/availability", label: "Disponibilités", icon: CalendarDays },
-  { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone },
   { href: "/dashboard/reviews", label: "Automatisation des avis", icon: Star },
   { href: "/dashboard/feedback", label: "Retours clients", icon: MessageSquare },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
+  { href: "/dashboard/marketing", label: "Marketing Campaigns", icon: Megaphone, requiresPro: true },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
+  { href: "/dashboard/billing", label: "Facturation", icon: CreditCard },
 ];
 
-export default function DashboardSidebar({ reservationLink }: DashboardSidebarProps) {
+export default function DashboardSidebar({
+  reservationLink,
+  subscriptionPlan,
+  subscriptionStatus,
+}: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const hasProMarketingAccess = subscriptionStatus === "trial" || subscriptionPlan === "pro";
 
   async function handleLogout() {
     const supabase = createClient();
@@ -64,6 +73,7 @@ export default function DashboardSidebar({ reservationLink }: DashboardSidebarPr
             label={item.label}
             icon={item.icon}
             active={pathname === item.href}
+            locked={Boolean(item.requiresPro && !hasProMarketingAccess)}
           />
         ))}
       </nav>
@@ -100,11 +110,13 @@ function NavItem({
   label,
   icon: Icon,
   active,
+  locked,
 }: {
   href: string;
   label: string;
   icon: LucideIcon;
   active: boolean;
+  locked?: boolean;
 }) {
   return (
     <Link
@@ -124,6 +136,18 @@ function NavItem({
         )}
       />
       <span>{label}</span>
+      {locked ? (
+        <span
+          className={cn(
+            "ml-auto rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]",
+            active
+              ? "border-white/70 bg-white/20 text-white"
+              : "border-[var(--border)] bg-white text-[var(--muted-foreground)]",
+          )}
+        >
+          Pro
+        </span>
+      ) : null}
     </Link>
   );
 }

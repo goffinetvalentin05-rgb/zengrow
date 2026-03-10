@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/server";
+import { expireTrialIfNeeded, type SubscriptionPlan, type SubscriptionStatus } from "@/src/lib/subscription";
 
 export type Restaurant = {
   id: string;
@@ -10,6 +11,12 @@ export type Restaurant = {
   email: string | null;
   address: string | null;
   description: string | null;
+  subscription_plan: SubscriptionPlan;
+  subscription_status: SubscriptionStatus;
+  trial_start_date: string | null;
+  trial_end_date: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
 };
 
 export async function requireUser() {
@@ -29,7 +36,9 @@ export async function requireRestaurant() {
 
   const { data: restaurant } = await supabase
     .from("restaurants")
-    .select("id, owner_id, name, slug, phone, email, address, description")
+    .select(
+      "id, owner_id, name, slug, phone, email, address, description, subscription_plan, subscription_status, trial_start_date, trial_end_date, stripe_customer_id, stripe_subscription_id",
+    )
     .eq("owner_id", user.id)
     .maybeSingle();
 
@@ -37,5 +46,6 @@ export async function requireRestaurant() {
     redirect("/signup");
   }
 
-  return restaurant as Restaurant;
+  const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
+  return { ...restaurant, ...syncedRestaurant } as Restaurant;
 }

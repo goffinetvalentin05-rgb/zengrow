@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendMarketingCampaignEmail } from "@/lib/email";
+import { canAccessFeature, expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 import { createClient } from "@/src/lib/supabase/server";
 
 type AudienceFilter = "all_customers" | "visited_last_30_days" | "visited_last_90_days" | "visited_more_than_3_times";
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
 
   const { data: restaurant, error: restaurantError } = await supabase
     .from("restaurants")
-    .select("id, name, slug, owner_id")
+    .select("id, name, slug, owner_id, subscription_plan, subscription_status, trial_end_date, stripe_subscription_id")
     .eq("owner_id", user.id)
     .single();
 
@@ -96,12 +97,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Restaurant introuvable." }, { status: 404 });
   }
 
+  const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
+  if (isRestaurantExpired(syncedRestaurant)) {
+    return NextResponse.json({ error: "Abonnement expiré. Mettez à jour votre formule." }, { status: 402 });
+  }
+
+  if (
+    !canAccessFeature(
+      syncedRestaurant.subscription_plan,
+      "marketing",
+      syncedRestaurant.subscription_status,
+    )
+  ) {
+    return NextResponse.json({ error: "Le plan Pro est requis pour les campagnes marketing." }, { status: 403 });
+  }
+
   const [{ data: restaurantUi }, { data: customers, error: customersError }] = await Promise.all([
-    supabase.from("restaurant_settings").select("logo_url").eq("restaurant_id", restaurant.id).maybeSingle(),
+    supabase.from("restaurant_settings").select("logo_url").eq("restaurant_id", syncedRestaurant.id).maybeSingle(),
     supabase
       .from("customers")
       .select("id, full_name, email, total_visits, last_visit_at")
-      .eq("restaurant_id", restaurant.id),
+      .eq("restaurant_id", syncedRestaurant.id),
   ]);
 
   if (customersError) {
@@ -116,7 +132,7 @@ export async function POST(request: Request) {
   const { data: campaign, error: campaignInsertError } = await supabase
     .from("email_campaigns")
     .insert({
-      restaurant_id: restaurant.id,
+      restaurant_id: syncedRestaurant.id,
       name,
       subject,
       content,
@@ -130,7 +146,7 @@ export async function POST(request: Request) {
   }
 
   const origin = new URL(request.url).origin;
-  const ctaUrl = `${origin}/r/${restaurant.slug}`;
+  const ctaUrl = `${origin}/r/${syncedRestaurant.slug}`;
   const sentAtIso = new Date().toISOString();
   const successfulRecipients: { campaign_id: string; customer_id: string; email: string; sent_at: string }[] = [];
 
@@ -142,7 +158,7 @@ export async function POST(request: Request) {
     try {
       await sendMarketingCampaignEmail({
         to: recipient.email,
-        restaurantName: restaurant.name,
+        restaurantName: syncedRestaurant.name,
         restaurantLogoUrl: restaurantUi?.logo_url ?? null,
         subject,
         content,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendReviewRequestEmail } from "@/lib/email";
+import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 import { createClient } from "@/src/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
 
   const { data: restaurant, error: restaurantError } = await supabase
     .from("restaurants")
-    .select("id, owner_id, name, email")
+    .select("id, owner_id, name, email, subscription_status, trial_end_date, stripe_subscription_id")
     .eq("owner_id", user.id)
     .single();
 
@@ -23,17 +24,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Restaurant introuvable." }, { status: 404 });
   }
 
+  const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
+  if (isRestaurantExpired(syncedRestaurant)) {
+    return NextResponse.json({ error: "Abonnement expiré. Mettez à jour votre formule." }, { status: 402 });
+  }
+
   const { data: automation } = await supabase
     .from("review_automation_settings")
     .select(
       "google_review_url, email_subject, email_message, button_positive_label, button_neutral_label, button_negative_label, primary_color",
     )
-    .eq("restaurant_id", restaurant.id)
+    .eq("restaurant_id", syncedRestaurant.id)
     .maybeSingle();
   const { data: restaurantUi } = await supabase
     .from("restaurant_settings")
     .select("logo_url")
-    .eq("restaurant_id", restaurant.id)
+    .eq("restaurant_id", syncedRestaurant.id)
     .maybeSingle();
 
   const { data: testReservation, error: reservationError } = await supabase
@@ -41,7 +47,7 @@ export async function POST(request: Request) {
     .insert({
       restaurant_id: restaurant.id,
       guest_name: "Test review",
-      guest_email: user.email ?? restaurant.email ?? null,
+      guest_email: user.email ?? syncedRestaurant.email ?? null,
       guest_phone: null,
       guests: 1,
       reservation_date: new Date().toISOString().slice(0, 10),

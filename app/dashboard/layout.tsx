@@ -16,7 +16,11 @@ export default async function DashboardLayout({
   return (
     <main className="min-h-screen bg-[var(--background)] p-4 md:p-6">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6 lg:flex-row">
-        <DashboardSidebar reservationLink={publicLink} />
+        <DashboardSidebar
+          reservationLink={publicLink}
+          subscriptionPlan={restaurant.subscription_plan}
+          subscriptionStatus={restaurant.subscription_status}
+        />
         <section className="flex-1 space-y-6">
           <header className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] px-6 py-5 shadow-[0_16px_36px_-28px_rgba(15,63,58,0.55)]">
             <div className="flex flex-wrap items-center justify-between gap-3">

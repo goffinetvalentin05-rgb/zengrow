@@ -1,6 +1,9 @@
 import MarketingPanel from "@/src/components/dashboard/marketing-panel";
+import Link from "next/link";
 import { requireRestaurant } from "@/src/lib/auth";
+import { canAccessFeature } from "@/src/lib/subscription";
 import { createClient } from "@/src/lib/supabase/server";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 
 type CampaignListItem = {
   id: string;
@@ -14,6 +17,29 @@ type CampaignListItem = {
 export default async function DashboardMarketingPage() {
   const supabase = await createClient();
   const restaurant = await requireRestaurant();
+  if (!canAccessFeature(restaurant.subscription_plan, "marketing", restaurant.subscription_status)) {
+    return (
+      <section className="space-y-6">
+        <Card className="rounded-3xl">
+          <CardHeader>
+            <CardTitle>Marketing Campaigns</CardTitle>
+            <CardDescription>Disponible uniquement dans le plan Pro.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-[var(--foreground)]/75">
+              Passez au plan Pro pour créer et envoyer des campagnes e-mail à vos clients.
+            </p>
+            <Link
+              href="/dashboard/billing"
+              className="mt-4 inline-flex h-10 items-center rounded-xl bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-4 text-sm font-semibold text-white transition hover:opacity-95"
+            >
+              Voir les abonnements
+            </Link>
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
 
   const { data: campaignsData } = await supabase
     .from("email_campaigns")

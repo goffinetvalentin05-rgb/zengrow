@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendReservationConfirmationEmail } from "@/lib/email";
+import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 import { generateTimeSlotsForDate, OpeningHours } from "@/src/lib/utils";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
   const [{ data: restaurant, error: restaurantError }, { data: settings }, { data: blockedSlots }] = await Promise.all([
     supabase
       .from("restaurants")
-      .select("id, name, reservation_confirmation_mode")
+      .select("id, name, reservation_confirmation_mode, subscription_status, trial_end_date, stripe_subscription_id")
       .eq("id", restaurantId)
       .single(),
     supabase
@@ -58,6 +59,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Restaurant introuvable." }, { status: 404 });
   }
 
+  const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
+  if (isRestaurantExpired(syncedRestaurant)) {
+    return NextResponse.json({ error: "Les reservations sont suspendues pour ce restaurant." }, { status: 402 });
+  }
+
   const slotInterval = settings?.reservation_slot_interval ?? 30;
   const openingHours = (settings?.opening_hours as OpeningHours | null) ?? null;
   const availableSlots = generateTimeSlotsForDate(reservationDate, openingHours, slotInterval);
@@ -69,7 +75,7 @@ export async function POST(request: NextRequest) {
   }
 
   const confirmationMode =
-    restaurant.reservation_confirmation_mode === "automatic" ? "automatic" : "manual";
+    syncedRestaurant.reservation_confirmation_mode === "automatic" ? "automatic" : "manual";
   const status = confirmationMode === "automatic" ? "confirmed" : "pending";
 
   const { data: reservation, error: insertError } = await supabase

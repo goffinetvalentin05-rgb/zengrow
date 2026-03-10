@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendReviewRequestEmail } from "@/lib/email";
+import { isRestaurantExpired } from "@/src/lib/subscription";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 
 function isAuthorized(request: NextRequest) {
@@ -50,7 +51,10 @@ export async function GET(request: NextRequest) {
         "restaurant_id, is_enabled, channel, delay_minutes, google_review_url, email_subject, email_message, button_positive_label, button_neutral_label, button_negative_label, primary_color",
       )
       .in("restaurant_id", restaurantIds),
-    supabase.from("restaurants").select("id, name").in("id", restaurantIds),
+    supabase
+      .from("restaurants")
+      .select("id, name, subscription_status, trial_end_date, stripe_subscription_id")
+      .in("id", restaurantIds),
   ]);
   const { data: restaurantVisuals } = await supabase
     .from("restaurant_settings")
@@ -68,6 +72,7 @@ export async function GET(request: NextRequest) {
     const automation = settingsByRestaurant.get(reservation.restaurant_id);
 
     if (!restaurant || !automation) continue;
+    if (isRestaurantExpired(restaurant)) continue;
     if (!automation.is_enabled || automation.channel !== "email") continue;
 
     const completedAt = toCompletedAt(reservation.reservation_date, reservation.reservation_time);
