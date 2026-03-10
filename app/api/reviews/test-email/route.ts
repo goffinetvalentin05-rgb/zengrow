@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       reservation_date: new Date().toISOString().slice(0, 10),
       reservation_time: "19:00",
       status: "completed",
+      is_test: true,
       source: "test_review_email",
     })
     .select("id")
@@ -68,8 +69,8 @@ export async function POST(request: Request) {
       restaurantName: restaurant.name,
       restaurantLogoUrl: restaurantUi?.logo_url ?? null,
       googleReviewUrl: automation?.google_review_url || `${appUrl}/review/${testReservation.id}`,
-      feedbackNeutralUrl: `${appUrl}/feedback/${testReservation.id}`,
-      feedbackNegativeUrl: `${appUrl}/feedback/${testReservation.id}`,
+      feedbackNeutralUrl: `${appUrl}/feedback/${testReservation.id}?restaurantId=${restaurant.id}`,
+      feedbackNegativeUrl: `${appUrl}/feedback/${testReservation.id}?restaurantId=${restaurant.id}`,
       emailSubject: automation?.email_subject,
       emailMessage: automation?.email_message,
       buttonPositiveLabel: automation?.button_positive_label,

@@ -1,56 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendNegativeFeedbackEmail } from "@/lib/email";
-import { createAdminClient } from "@/src/lib/supabase/admin";
+import { createClient } from "@/src/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as {
     reservationId?: string;
+    restaurantId?: string;
     rating?: number;
     message?: string;
   };
 
   const reservationId = body.reservationId;
+  const restaurantId = body.restaurantId;
   const rating = body.rating;
   const message = (body.message || "").trim();
 
-  if (!reservationId || !rating || rating < 1 || rating > 5 || !message) {
+  if (!reservationId || !restaurantId || !rating || rating < 1 || rating > 5 || !message) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const supabase = createAdminClient();
-
-  const { data: reservation, error: reservationError } = await supabase
-    .from("reservations")
-    .select("id, restaurant_id, status")
-    .eq("id", reservationId)
-    .single();
-
-  if (reservationError || !reservation) {
-    return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
-  }
-
-  if (reservation.status !== "completed") {
-    return NextResponse.json({ error: "Reservation is not completed" }, { status: 400 });
-  }
-
-  const { error: feedbackError } = await supabase.from("customer_feedback").upsert(
+  const supabase = await createClient();
+  const { error: feedbackError } = await supabase.from("feedbacks").insert(
     {
-      restaurant_id: reservation.restaurant_id,
-      reservation_id: reservation.id,
-      rating,
+      restaurant_id: restaurantId,
+      reservation_id: reservationId,
       message,
     },
-    { onConflict: "reservation_id" },
   );
 
   if (feedbackError) {
+    console.error("Feedback insert failed", feedbackError);
     return NextResponse.json({ error: feedbackError.message }, { status: 500 });
   }
 
   const { data: restaurant } = await supabase
     .from("restaurants")
     .select("name, email")
-    .eq("id", reservation.restaurant_id)
+    .eq("id", restaurantId)
     .single();
 
   if (restaurant?.email) {

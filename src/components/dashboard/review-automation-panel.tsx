@@ -25,7 +25,6 @@ type ReviewAutomationPanelProps = {
   };
   initialFeedback: {
     id: string;
-    rating: number;
     message: string | null;
     created_at: string;
   }[];
@@ -270,7 +269,7 @@ export default function ReviewAutomationPanel({
               {initialFeedback.map((item) => (
                 <div key={item.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
-                    Note {item.rating}/5 · {item.created_at.slice(0, 10)}
+                    {item.created_at.slice(0, 10)}
                   </p>
                   <p className="mt-2 text-sm text-[var(--foreground)]/85">{item.message || "(Aucun message)"}</p>
                 </div>

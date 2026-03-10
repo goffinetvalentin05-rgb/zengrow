@@ -15,8 +15,8 @@ export default async function DashboardReviewsPage() {
     .maybeSingle();
 
   const { data: feedback } = await supabase
-    .from("customer_feedback")
-    .select("id, rating, message, created_at")
+    .from("feedbacks")
+    .select("id, message, created_at")
     .eq("restaurant_id", restaurant.id)
     .order("created_at", { ascending: false })
     .limit(20);

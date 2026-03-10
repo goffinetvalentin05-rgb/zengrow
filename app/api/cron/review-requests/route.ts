@@ -75,8 +75,8 @@ export async function GET(request: NextRequest) {
     if (now < sendAt) continue;
 
     const googleReviewUrl = automation.google_review_url || `${appUrl}/review/${reservation.id}`;
-    const feedbackNeutralUrl = `${appUrl}/feedback/${reservation.id}`;
-    const feedbackNegativeUrl = `${appUrl}/feedback/${reservation.id}`;
+    const feedbackNeutralUrl = `${appUrl}/feedback/${reservation.id}?restaurantId=${reservation.restaurant_id}`;
+    const feedbackNegativeUrl = `${appUrl}/feedback/${reservation.id}?restaurantId=${reservation.restaurant_id}`;
     const visual = visualsByRestaurant.get(reservation.restaurant_id);
 
     try {

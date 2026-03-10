@@ -6,10 +6,11 @@ import Textarea from "@/src/components/ui/textarea";
 
 type FeedbackFormProps = {
   reservationId: string;
+  restaurantId: string | null;
   initialRating: number;
 };
 
-export default function FeedbackForm({ reservationId, initialRating }: FeedbackFormProps) {
+export default function FeedbackForm({ reservationId, restaurantId, initialRating }: FeedbackFormProps) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +25,10 @@ export default function FeedbackForm({ reservationId, initialRating }: FeedbackF
       setError("Merci de preciser votre retour.");
       return;
     }
+    if (!restaurantId) {
+      setError("Lien invalide. Merci de reouvrir le lien depuis l'email.");
+      return;
+    }
 
     setLoading(true);
 
@@ -32,6 +37,7 @@ export default function FeedbackForm({ reservationId, initialRating }: FeedbackF
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         reservationId,
+        restaurantId,
         rating: initialRating,
         message: message.trim(),
       }),
@@ -40,14 +46,13 @@ export default function FeedbackForm({ reservationId, initialRating }: FeedbackF
     const payload = (await response.json().catch(() => ({}))) as { error?: string };
 
     if (!response.ok) {
+      console.error("Feedback submit failed", payload.error);
       setError(payload.error || "Impossible d'envoyer votre retour.");
       setLoading(false);
       return;
     }
 
-    setSuccess("Merci pour votre retour. Nous allons nous ameliorer.");
-    setLoading(false);
-    setMessage("");
+    window.location.href = "/feedback/thank-you";
   }
 
   return (
@@ -66,7 +71,7 @@ export default function FeedbackForm({ reservationId, initialRating }: FeedbackF
         className="min-h-32"
       />
 
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading || !restaurantId}>
         {loading ? "Envoi..." : "Envoyer mon feedback"}
       </Button>
 
