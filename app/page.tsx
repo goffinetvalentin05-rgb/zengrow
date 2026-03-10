@@ -111,14 +111,14 @@ const plans = [
 export default function Home() {
   return (
     <div className="overflow-x-hidden bg-[#F6FBFA] text-[#0F3F3A]">
-      <header className="sticky top-0 z-40 border-b border-[#DDEFEA]/70 bg-[#F6FBFA]/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-6 lg:px-8">
+      <header className="sticky top-0 z-40 border-b border-[#DDEFEA]/70 bg-[#F6FBFA]/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-8">
           <Image
             src="/Zengrow-logo.png"
             alt="Logo ZenGrow"
             width={165}
             height={46}
-            className="h-10 w-auto object-contain"
+            className="h-8 w-auto object-contain sm:h-10"
             priority
           />
           <nav className="hidden items-center gap-8 text-sm text-[#0F3F3A]/70 md:flex">
@@ -132,7 +132,7 @@ export default function Home() {
               Tarifs
             </a>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/login"
               className="hidden rounded-full px-4 py-2 text-sm font-medium text-[#0F3F3A]/80 transition hover:text-[#0F3F3A] sm:inline-flex"
@@ -141,14 +141,14 @@ export default function Home() {
             </Link>
             <Link
               href="/signup"
-              className="inline-flex rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_-12px_rgba(31,122,108,0.8)] transition hover:scale-[1.02]"
+              className="inline-flex rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-4 py-2 text-xs font-semibold text-white shadow-[0_10px_30px_-12px_rgba(31,122,108,0.8)] transition hover:scale-[1.02] sm:px-5 sm:py-2.5 sm:text-sm"
             >
               Créer mon restaurant
             </Link>
           </div>
         </div>
-        <div className="border-t border-[#DDEFEA]/70 px-6 py-3 md:hidden">
-          <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 text-sm font-medium text-[#0F3F3A]/80">
+        <div className="border-t border-[#DDEFEA]/70 px-4 py-3 md:hidden">
+          <nav className="mx-auto grid w-full max-w-7xl grid-cols-3 gap-2 text-center text-sm font-medium text-[#0F3F3A]/80">
             <a href="#how-it-works" className="transition hover:text-[#0F3F3A]">
               Comment ça marche
             </a>
@@ -163,10 +163,10 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="relative mx-auto w-full max-w-7xl px-6 pb-20 pt-14 md:pb-28 md:pt-20 lg:px-8">
+        <section className="relative mx-auto w-full max-w-7xl px-4 pb-14 pt-10 sm:px-6 md:pb-28 md:pt-20 lg:px-8">
           <div className="absolute left-1/2 top-20 -z-10 h-[450px] w-[min(90vw,700px)] -translate-x-1/2 rounded-full bg-gradient-to-br from-[#1F7A6C]/25 via-[#3DBE9F]/20 to-transparent blur-3xl" />
 
-          <div className="grid items-center gap-14 lg:grid-cols-2">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
             <motion.div
               initial="hidden"
               animate="visible"
@@ -174,7 +174,7 @@ export default function Home() {
               transition={{ duration: 0.65, ease: "easeOut" }}
               className="space-y-7"
             >
-              <span className="inline-flex rounded-full border border-[#CBE6DF] bg-white/70 px-3 py-1 text-xs font-semibold tracking-[0.18em] text-[#1F7A6C]">
+              <span className="inline-flex rounded-full border border-[#CBE6DF] bg-white/70 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-[#1F7A6C] sm:text-xs sm:tracking-[0.18em]">
                 Optimisez les réservations de votre restaurant
               </span>
               <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-[3.4rem]">
@@ -190,13 +190,13 @@ export default function Home() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/signup"
-                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_-18px_rgba(31,122,108,0.9)] transition hover:scale-[1.01]"
+                  className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_-18px_rgba(31,122,108,0.9)] transition hover:scale-[1.01] sm:w-auto"
                 >
                   Créer mon restaurant
                 </Link>
                 <a
                   href="#how-it-works"
-                  className="inline-flex items-center justify-center rounded-full border border-[#CBE6DF] bg-white px-6 py-3 text-sm font-semibold text-[#0F3F3A] transition hover:border-[#A3D8CC] hover:bg-[#F0F9F7]"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-[#CBE6DF] bg-white px-6 py-3 text-sm font-semibold text-[#0F3F3A] transition hover:border-[#A3D8CC] hover:bg-[#F0F9F7] sm:w-auto"
                 >
                   Voir comment ça fonctionne
                 </a>
@@ -211,7 +211,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 36 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut", delay: 0.15 }}
-              className="relative lg:pl-6"
+              className="relative mt-2 lg:pl-6"
             >
               <motion.div
                 initial={{ rotate: -1.5 }}
@@ -274,14 +274,14 @@ export default function Home() {
 
               <motion.div
                 {...floatingCard(0)}
-                className="absolute -left-10 -top-7 w-44 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)]"
+                className="absolute -left-10 -top-7 hidden w-44 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)] sm:block"
               >
                 <p className="text-xs text-[#0F3F3A]/55">Carte réservation</p>
                 <p className="mt-1 text-sm font-semibold">Nouvelle réservation</p>
               </motion.div>
               <motion.div
                 {...floatingCard(0.6)}
-                className="absolute -right-10 top-6 w-48 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)]"
+                className="absolute -right-10 top-6 hidden w-48 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)] sm:block"
               >
                 <p className="text-xs text-[#0F3F3A]/55">Carte avis Google</p>
                 <p className="mt-1 text-sm font-semibold">
@@ -290,7 +290,7 @@ export default function Home() {
               </motion.div>
               <motion.div
                 {...floatingCard(1.1)}
-                className="absolute -bottom-9 right-8 w-44 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)]"
+                className="absolute -bottom-9 right-8 hidden w-44 rounded-2xl border border-[#D9EEE8] bg-white p-3 shadow-[0_25px_50px_-35px_rgba(15,63,58,0.9)] sm:block"
               >
                 <p className="text-xs text-[#0F3F3A]/55">Carte statistiques</p>
                 <p className="mt-1 text-sm font-semibold">Réservations du jour</p>
@@ -300,7 +300,7 @@ export default function Home() {
         </section>
 
         <section className="border-y border-[#DDEFEA] bg-white/70">
-          <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
             <motion.div
               initial="hidden"
               whileInView="visible"
@@ -317,7 +317,7 @@ export default function Home() {
               </p>
             </motion.div>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
+            <div className="mt-8 grid gap-4 md:mt-10 md:grid-cols-3">
               {reservationPainPoints.map((item, index) => (
                 <motion.article
                   key={item.title}
@@ -341,7 +341,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.25 }}
               transition={{ duration: 0.5 }}
-              className="mt-10 rounded-[30px] border border-[#CFE9E2] bg-gradient-to-r from-[#F5FCFA] to-white p-7 md:flex md:items-center md:justify-between md:gap-8"
+              className="mt-8 rounded-[30px] border border-[#CFE9E2] bg-gradient-to-r from-[#F5FCFA] to-white p-6 md:mt-10 md:flex md:items-center md:justify-between md:gap-8 md:p-7"
             >
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#1F7A6C]">La solution ZenGrow</p>
@@ -351,7 +351,7 @@ export default function Home() {
               </div>
               <Link
                 href="/signup"
-                className="mt-5 inline-flex rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-95 md:mt-0"
+                className="mt-5 inline-flex w-full justify-center rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-95 md:mt-0 md:w-auto"
               >
                 Créer mon restaurant
               </Link>
@@ -359,7 +359,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+        <section id="how-it-works" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -397,7 +397,7 @@ export default function Home() {
         </section>
 
         <section id="product" className="bg-white/70">
-          <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-2 lg:px-8">
+          <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:px-8">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -453,7 +453,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -501,7 +501,7 @@ export default function Home() {
         </section>
 
         <section className="bg-white/70">
-          <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <motion.h2
               initial="hidden"
               whileInView="visible"
@@ -540,7 +540,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="pricing" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+        <section id="pricing" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <motion.h2
             initial="hidden"
             whileInView="visible"
@@ -574,7 +574,7 @@ export default function Home() {
                 }`}
               >
                 {plan.popular ? (
-                  <div className="pointer-events-none absolute -top-8 right-[-58px] rotate-45 bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-16 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white shadow-md">
+                  <div className="pointer-events-none absolute -top-8 right-[-58px] hidden rotate-45 bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-16 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white shadow-md sm:block">
                     Le plus populaire
                   </div>
                 ) : null}
@@ -620,7 +620,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mx-auto mb-20 max-w-7xl px-6 lg:px-8">
+        <section className="mx-auto mb-16 max-w-7xl px-4 sm:mb-20 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
