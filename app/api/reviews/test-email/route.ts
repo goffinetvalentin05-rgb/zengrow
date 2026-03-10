@@ -25,7 +25,14 @@ export async function POST(request: Request) {
 
   const { data: automation } = await supabase
     .from("review_automation_settings")
-    .select("google_review_url")
+    .select(
+      "google_review_url, email_subject, email_message, button_positive_label, button_neutral_label, button_negative_label, primary_color",
+    )
+    .eq("restaurant_id", restaurant.id)
+    .maybeSingle();
+  const { data: restaurantUi } = await supabase
+    .from("restaurant_settings")
+    .select("logo_url")
     .eq("restaurant_id", restaurant.id)
     .maybeSingle();
 
@@ -59,9 +66,16 @@ export async function POST(request: Request) {
     await sendReviewRequestEmail({
       to: recipient,
       restaurantName: restaurant.name,
+      restaurantLogoUrl: restaurantUi?.logo_url ?? null,
       googleReviewUrl: automation?.google_review_url || `${appUrl}/review/${testReservation.id}`,
-      feedbackOkayUrl: `${appUrl}/feedback/${testReservation.id}?rating=3`,
-      feedbackBadUrl: `${appUrl}/feedback/${testReservation.id}?rating=1`,
+      feedbackNeutralUrl: `${appUrl}/feedback/${testReservation.id}`,
+      feedbackNegativeUrl: `${appUrl}/feedback/${testReservation.id}`,
+      emailSubject: automation?.email_subject,
+      emailMessage: automation?.email_message,
+      buttonPositiveLabel: automation?.button_positive_label,
+      buttonNeutralLabel: automation?.button_neutral_label,
+      buttonNegativeLabel: automation?.button_negative_label,
+      primaryColor: automation?.primary_color,
     });
   } catch (error) {
     console.error("Test review email failed", error);

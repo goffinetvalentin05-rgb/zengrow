@@ -46,13 +46,20 @@ export async function GET(request: NextRequest) {
   const [{ data: settings }, { data: restaurants }] = await Promise.all([
     supabase
       .from("review_automation_settings")
-      .select("restaurant_id, is_enabled, channel, delay_minutes, google_review_url")
+      .select(
+        "restaurant_id, is_enabled, channel, delay_minutes, google_review_url, email_subject, email_message, button_positive_label, button_neutral_label, button_negative_label, primary_color",
+      )
       .in("restaurant_id", restaurantIds),
     supabase.from("restaurants").select("id, name").in("id", restaurantIds),
   ]);
+  const { data: restaurantVisuals } = await supabase
+    .from("restaurant_settings")
+    .select("restaurant_id, logo_url")
+    .in("restaurant_id", restaurantIds);
 
   const settingsByRestaurant = new Map((settings ?? []).map((item) => [item.restaurant_id, item]));
   const restaurantsById = new Map((restaurants ?? []).map((item) => [item.id, item]));
+  const visualsByRestaurant = new Map((restaurantVisuals ?? []).map((item) => [item.restaurant_id, item]));
 
   let sent = 0;
 
@@ -68,16 +75,24 @@ export async function GET(request: NextRequest) {
     if (now < sendAt) continue;
 
     const googleReviewUrl = automation.google_review_url || `${appUrl}/review/${reservation.id}`;
-    const feedbackOkayUrl = `${appUrl}/feedback/${reservation.id}?rating=3`;
-    const feedbackBadUrl = `${appUrl}/feedback/${reservation.id}?rating=1`;
+    const feedbackNeutralUrl = `${appUrl}/feedback/${reservation.id}`;
+    const feedbackNegativeUrl = `${appUrl}/feedback/${reservation.id}`;
+    const visual = visualsByRestaurant.get(reservation.restaurant_id);
 
     try {
       await sendReviewRequestEmail({
         to: reservation.guest_email as string,
         restaurantName: restaurant.name,
+        restaurantLogoUrl: visual?.logo_url ?? null,
         googleReviewUrl,
-        feedbackOkayUrl,
-        feedbackBadUrl,
+        feedbackNeutralUrl,
+        feedbackNegativeUrl,
+        emailSubject: automation.email_subject,
+        emailMessage: automation.email_message,
+        buttonPositiveLabel: automation.button_positive_label,
+        buttonNeutralLabel: automation.button_neutral_label,
+        buttonNegativeLabel: automation.button_negative_label,
+        primaryColor: automation.primary_color,
       });
 
       await supabase

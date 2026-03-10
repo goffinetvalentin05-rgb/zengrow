@@ -15,8 +15,13 @@ type ReviewAutomationPanelProps = {
     is_enabled: boolean;
     channel: "email";
     delay_minutes: number;
-    message_template: string;
     google_review_url: string;
+    email_subject: string;
+    email_message: string;
+    button_positive_label: string;
+    button_neutral_label: string;
+    button_negative_label: string;
+    primary_color: string;
   };
   initialFeedback: {
     id: string;
@@ -35,18 +40,24 @@ export default function ReviewAutomationPanel({
   const [isEnabled, setIsEnabled] = useState(initialSettings.is_enabled);
   const [channel] = useState<"email">("email");
   const [delayMinutes, setDelayMinutes] = useState(initialSettings.delay_minutes);
-  const [messageTemplate, setMessageTemplate] = useState(initialSettings.message_template);
   const [googleReviewUrl, setGoogleReviewUrl] = useState(initialSettings.google_review_url);
+  const [emailSubject, setEmailSubject] = useState(initialSettings.email_subject);
+  const [emailMessage, setEmailMessage] = useState(initialSettings.email_message);
+  const [positiveLabel, setPositiveLabel] = useState(initialSettings.button_positive_label);
+  const [neutralLabel, setNeutralLabel] = useState(initialSettings.button_neutral_label);
+  const [negativeLabel, setNegativeLabel] = useState(initialSettings.button_negative_label);
+  const [primaryColor, setPrimaryColor] = useState(initialSettings.primary_color);
   const [saving, setSaving] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  const previewSubject = useMemo(
+    () => emailSubject.replaceAll("{{restaurant_name}}", "Votre restaurant"),
+    [emailSubject],
+  );
   const previewMessage = useMemo(
-    () =>
-      messageTemplate
-        .replace("{{restaurant_name}}", "Votre restaurant")
-        .replace("{{google_review_url}}", googleReviewUrl || "https://g.page/votre-etablissement/review"),
-    [googleReviewUrl, messageTemplate],
+    () => emailMessage.replaceAll("{{restaurant_name}}", "Votre restaurant"),
+    [emailMessage],
   );
 
   async function saveSettings() {
@@ -59,8 +70,13 @@ export default function ReviewAutomationPanel({
         is_enabled: isEnabled,
         channel,
         delay_minutes: delayMinutes,
-        message_template: messageTemplate,
         google_review_url: googleReviewUrl || null,
+        email_subject: emailSubject,
+        email_message: emailMessage,
+        button_positive_label: positiveLabel,
+        button_neutral_label: neutralLabel,
+        button_negative_label: negativeLabel,
+        primary_color: primaryColor,
       },
       { onConflict: "restaurant_id" },
     );
@@ -147,15 +163,51 @@ export default function ReviewAutomationPanel({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Message envoye</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Email subject</label>
+              <Input
+                value={emailSubject}
+                onChange={(event) => setEmailSubject(event.target.value)}
+                placeholder="How was your experience at {{restaurant_name}}?"
+              />
+              <p className="mt-1 text-xs text-slate-500">Variable supportee: {"{{restaurant_name}}"}</p>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Email message</label>
               <Textarea
                 className="min-h-32"
-                value={messageTemplate}
-                onChange={(event) => setMessageTemplate(event.target.value)}
+                value={emailMessage}
+                onChange={(event) => setEmailMessage(event.target.value)}
               />
-              <p className="mt-1 text-xs text-slate-500">
-                Variables supportees: {"{{restaurant_name}}"} et {"{{google_review_url}}"}
-              </p>
+              <p className="mt-1 text-xs text-slate-500">Variable supportee: {"{{restaurant_name}}"}</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Excellent label</label>
+                <Input value={positiveLabel} onChange={(event) => setPositiveLabel(event.target.value)} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Average label</label>
+                <Input value={neutralLabel} onChange={(event) => setNeutralLabel(event.target.value)} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Not great label</label>
+                <Input value={negativeLabel} onChange={(event) => setNegativeLabel(event.target.value)} />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Primary email color</label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="color"
+                  className="h-10 w-16 p-1"
+                  value={primaryColor}
+                  onChange={(event) => setPrimaryColor(event.target.value)}
+                />
+                <Input value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} />
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -180,8 +232,23 @@ export default function ReviewAutomationPanel({
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
                 {channel.toUpperCase()}
               </p>
-              <div className="mt-3 rounded-2xl bg-white p-4 text-sm text-[var(--foreground)]/85">
-                {previewMessage}
+              <div className="mt-3 rounded-2xl bg-white p-4 text-sm text-[var(--foreground)]/85 space-y-3">
+                <p className="text-base font-semibold text-[var(--foreground)]">{previewSubject}</p>
+                <p className="whitespace-pre-line">{previewMessage}</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <span
+                    className="rounded-lg px-2 py-2 text-center text-xs font-semibold text-white"
+                    style={{ backgroundColor: primaryColor || "#1F7A6C" }}
+                  >
+                    {positiveLabel}
+                  </span>
+                  <span className="rounded-lg border border-[var(--border)] px-2 py-2 text-center text-xs font-semibold">
+                    {neutralLabel}
+                  </span>
+                  <span className="rounded-lg border border-[var(--border)] px-2 py-2 text-center text-xs font-semibold">
+                    {negativeLabel}
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>

@@ -54,49 +54,90 @@ export async function sendReservationConfirmationEmail({
 type ReviewRequestParams = {
   to: string;
   restaurantName: string;
+  restaurantLogoUrl?: string | null;
   googleReviewUrl: string;
-  feedbackOkayUrl: string;
-  feedbackBadUrl: string;
+  feedbackNeutralUrl: string;
+  feedbackNegativeUrl: string;
+  emailSubject?: string | null;
+  emailMessage?: string | null;
+  buttonPositiveLabel?: string | null;
+  buttonNeutralLabel?: string | null;
+  buttonNegativeLabel?: string | null;
+  primaryColor?: string | null;
 };
 
 export async function sendReviewRequestEmail({
   to,
   restaurantName,
+  restaurantLogoUrl,
   googleReviewUrl,
-  feedbackOkayUrl,
-  feedbackBadUrl,
+  feedbackNeutralUrl,
+  feedbackNegativeUrl,
+  emailSubject,
+  emailMessage,
+  buttonPositiveLabel,
+  buttonNeutralLabel,
+  buttonNegativeLabel,
+  primaryColor,
 }: ReviewRequestParams) {
   const resend = getResendClient();
+  const safeColor = primaryColor || "#1F7A6C";
+
+  const applyRestaurantName = (value: string) =>
+    value.replaceAll("{{restaurant_name}}", restaurantName).replaceAll("[Restaurant Name]", restaurantName);
+
+  const subject = applyRestaurantName(emailSubject || "How was your experience at {{restaurant_name}}?");
+  const bodyMessage = applyRestaurantName(
+    emailMessage ||
+      "Thank you for visiting {{restaurant_name}}.\nWe would love to hear about your experience.",
+  );
+  const positiveLabel = buttonPositiveLabel || "Excellent";
+  const neutralLabel = buttonNeutralLabel || "Average";
+  const negativeLabel = buttonNegativeLabel || "Not great";
+  const messageParagraphs = bodyMessage
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => `<p style="margin:0 0 10px 0;color:#334155;font-size:14px;line-height:1.6;">${line}</p>`)
+    .join("");
 
   return resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: `How was your experience at ${restaurantName}?`,
+    subject,
     html: `
-      <p>Bonjour,</p>
-      <p>Merci d'avoir visite ${restaurantName}.</p>
-      <p>Votre experience s'est-elle bien passee ?</p>
-      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="${googleReviewUrl}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#16a34a;color:#ffffff;text-decoration:none;font-weight:600;">
-          😊 Oui
-        </a>
-        <a href="${feedbackOkayUrl}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#f59e0b;color:#ffffff;text-decoration:none;font-weight:600;">
-          😐 Bof
-        </a>
-        <a href="${feedbackBadUrl}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#dc2626;color:#ffffff;text-decoration:none;font-weight:600;">
-          😞 Non
-        </a>
+      <div style="background:#f8fafc;padding:24px 12px;font-family:Arial,sans-serif;">
+        <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:24px;">
+          <div style="text-align:center;margin-bottom:16px;">
+            ${restaurantLogoUrl ? `<img src="${restaurantLogoUrl}" alt="${restaurantName}" style="height:44px;max-width:180px;object-fit:contain;margin:0 auto 10px;" />` : ""}
+            <p style="margin:0;color:#0f172a;font-size:18px;font-weight:700;">${restaurantName}</p>
+          </div>
+          <h1 style="margin:0 0 14px 0;color:#0f172a;font-size:22px;line-height:1.3;">${subject}</h1>
+          <div style="margin-bottom:18px;">${messageParagraphs}</div>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+            <tr>
+              <td style="padding:0 4px 8px 0;">
+                <a href="${googleReviewUrl}" style="display:block;text-align:center;padding:12px 10px;border-radius:10px;background:${safeColor};color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">${positiveLabel}</a>
+              </td>
+              <td style="padding:0 4px 8px 4px;">
+                <a href="${feedbackNeutralUrl}" style="display:block;text-align:center;padding:12px 10px;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;text-decoration:none;font-size:14px;font-weight:600;">${neutralLabel}</a>
+              </td>
+              <td style="padding:0 0 8px 4px;">
+                <a href="${feedbackNegativeUrl}" style="display:block;text-align:center;padding:12px 10px;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;text-decoration:none;font-size:14px;font-weight:600;">${negativeLabel}</a>
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
     `,
     text: [
-      "Bonjour,",
+      subject,
       "",
-      `Merci d'avoir visite ${restaurantName}.`,
-      "Votre experience s'est-elle bien passee ?",
+      bodyMessage,
       "",
-      `Oui: ${googleReviewUrl}`,
-      `Bof: ${feedbackOkayUrl}`,
-      `Non: ${feedbackBadUrl}`,
+      `${positiveLabel}: ${googleReviewUrl}`,
+      `${neutralLabel}: ${feedbackNeutralUrl}`,
+      `${negativeLabel}: ${feedbackNegativeUrl}`,
     ].join("\n"),
   });
 }

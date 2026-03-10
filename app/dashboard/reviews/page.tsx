@@ -8,7 +8,9 @@ export default async function DashboardReviewsPage() {
 
   const { data: automation } = await supabase
     .from("review_automation_settings")
-    .select("id, is_enabled, channel, delay_minutes, message_template, google_review_url")
+    .select(
+      "id, is_enabled, channel, delay_minutes, google_review_url, email_subject, email_message, button_positive_label, button_neutral_label, button_negative_label, primary_color",
+    )
     .eq("restaurant_id", restaurant.id)
     .maybeSingle();
 
@@ -26,10 +28,15 @@ export default async function DashboardReviewsPage() {
         is_enabled: automation?.is_enabled ?? false,
         channel: "email",
         delay_minutes: automation?.delay_minutes ?? 90,
-        message_template:
-          automation?.message_template ??
-          "Merci pour votre visite chez {{restaurant_name}}. Votre avis Google nous aide enormement : {{google_review_url}}",
         google_review_url: automation?.google_review_url ?? "",
+        email_subject: automation?.email_subject ?? "How was your experience at {{restaurant_name}}?",
+        email_message:
+          automation?.email_message ??
+          "Thank you for visiting {{restaurant_name}}.\nWe would love to hear about your experience.",
+        button_positive_label: automation?.button_positive_label ?? "Excellent",
+        button_neutral_label: automation?.button_neutral_label ?? "Average",
+        button_negative_label: automation?.button_negative_label ?? "Not great",
+        primary_color: automation?.primary_color ?? "#1F7A6C",
       }}
       initialFeedback={feedback ?? []}
     />
