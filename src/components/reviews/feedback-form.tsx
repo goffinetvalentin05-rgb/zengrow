@@ -2,15 +2,18 @@
 
 import { FormEvent, useState } from "react";
 import Button from "@/src/components/ui/button";
+import Input from "@/src/components/ui/input";
 import Textarea from "@/src/components/ui/textarea";
 
 type FeedbackFormProps = {
   reservationId: string;
-  restaurantId: string | null;
   initialRating: number;
+  initialName: string;
+  initialEmail: string;
 };
 
-export default function FeedbackForm({ reservationId, restaurantId, initialRating }: FeedbackFormProps) {
+export default function FeedbackForm({ reservationId, initialRating, initialName, initialEmail }: FeedbackFormProps) {
+  const [name, setName] = useState(initialName);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,8 +28,8 @@ export default function FeedbackForm({ reservationId, restaurantId, initialRatin
       setError("Merci de preciser votre retour.");
       return;
     }
-    if (!restaurantId) {
-      setError("Lien invalide. Merci de reouvrir le lien depuis l'email.");
+    if (!name.trim()) {
+      setError("Merci de renseigner votre nom.");
       return;
     }
 
@@ -37,8 +40,9 @@ export default function FeedbackForm({ reservationId, restaurantId, initialRatin
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         reservationId,
-        restaurantId,
         rating: initialRating,
+        customerName: name.trim(),
+        customerEmail: initialEmail,
         message: message.trim(),
       }),
     });
@@ -60,8 +64,13 @@ export default function FeedbackForm({ reservationId, restaurantId, initialRatin
       <div>
         <h1 className="text-2xl font-semibold text-[var(--foreground)]">Que pouvons-nous ameliorer ?</h1>
         <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-          Votre message est envoye directement au restaurant.
+          Votre feedback prive sera visible par le restaurant dans son tableau de bord ZenGrow.
         </p>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--foreground)]/85">Nom</label>
+        <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Votre nom" />
       </div>
 
       <Textarea
@@ -71,7 +80,7 @@ export default function FeedbackForm({ reservationId, restaurantId, initialRatin
         className="min-h-32"
       />
 
-      <Button type="submit" disabled={loading || !restaurantId}>
+      <Button type="submit" disabled={loading}>
         {loading ? "Envoi..." : "Envoyer mon feedback"}
       </Button>
 

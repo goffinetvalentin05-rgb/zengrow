@@ -1,55 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendNegativeFeedbackEmail } from "@/lib/email";
-import { createClient } from "@/src/lib/supabase/server";
+import { createAdminClient } from "@/src/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as {
     reservationId?: string;
-    restaurantId?: string;
     rating?: number;
+    customerName?: string;
+    customerEmail?: string;
     message?: string;
   };
 
   const reservationId = body.reservationId;
-  const restaurantId = body.restaurantId;
   const rating = body.rating;
+  const customerName = (body.customerName || "").trim();
+  const customerEmail = (body.customerEmail || "").trim();
   const message = (body.message || "").trim();
 
-  if (!reservationId || !restaurantId || !rating || rating < 1 || rating > 5 || !message) {
+  if (!reservationId || !rating || rating < 1 || rating > 5 || !message) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { error: feedbackError } = await supabase.from("feedbacks").insert(
+  const supabase = createAdminClient();
+  const { data: reservation, error: reservationError } = await supabase
+    .from("reservations")
+    .select("id, restaurant_id, guest_name, guest_email, status")
+    .eq("id", reservationId)
+    .single();
+
+  if (reservationError || !reservation) {
+    return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
+  }
+
+  if (reservation.status !== "completed") {
+    return NextResponse.json({ error: "Reservation is not completed" }, { status: 400 });
+  }
+
+  const { error: feedbackError } = await supabase.from("feedbacks").upsert(
     {
-      restaurant_id: restaurantId,
+      restaurant_id: reservation.restaurant_id,
       reservation_id: reservationId,
+      customer_name: customerName || reservation.guest_name || "Client",
+      customer_email: customerEmail || reservation.guest_email || null,
+      rating,
       message,
     },
+    { onConflict: "reservation_id" },
   );
 
   if (feedbackError) {
     console.error("Feedback insert failed", feedbackError);
     return NextResponse.json({ error: feedbackError.message }, { status: 500 });
-  }
-
-  const { data: restaurant } = await supabase
-    .from("restaurants")
-    .select("name, email")
-    .eq("id", restaurantId)
-    .single();
-
-  if (restaurant?.email) {
-    try {
-      await sendNegativeFeedbackEmail({
-        to: restaurant.email,
-        restaurantName: restaurant.name || "Restaurant",
-        rating,
-        message,
-      });
-    } catch (error) {
-      console.error("Negative feedback email failed", { reservationId, error });
-    }
   }
 
   return NextResponse.json({ ok: true });

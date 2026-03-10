@@ -7,6 +7,7 @@ import {
   Calendar,
   CalendarDays,
   LayoutDashboard,
+  MessageSquare,
   Megaphone,
   Settings,
   Star,
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/dashboard/availability", label: "Disponibilites", icon: CalendarDays },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone },
   { href: "/dashboard/reviews", label: "Automatisation des avis", icon: Star },
+  { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
   { href: "/dashboard/settings", label: "Parametres", icon: Settings },
 ];
