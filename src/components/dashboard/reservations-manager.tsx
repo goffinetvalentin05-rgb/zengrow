@@ -18,7 +18,7 @@ type ReservationRow = {
   guest_phone: string | null;
   guest_email: string | null;
   guests: number;
-  status: "pending" | "confirmed" | "cancelled" | "completed" | "no-show";
+  status: "pending" | "confirmed" | "rejected" | "cancelled" | "completed" | "no-show";
   internal_note: string | null;
   created_at: string;
 };
@@ -27,7 +27,7 @@ type ReservationsManagerProps = {
   initialReservations: ReservationRow[];
 };
 
-const editableStatuses = ["pending", "confirmed", "completed", "cancelled", "no-show"] as const;
+const editableStatuses = ["pending", "confirmed", "rejected", "completed", "cancelled", "no-show"] as const;
 
 export default function ReservationsManager({ initialReservations }: ReservationsManagerProps) {
   const supabase = createClient();
@@ -174,24 +174,28 @@ export default function ReservationsManager({ initialReservations }: Reservation
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => updateStatus(reservation.id, "confirmed")}
-                            disabled={savingId === reservation.id}
-                          >
-                            Confirmer
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="danger"
-                            onClick={() => updateStatus(reservation.id, "cancelled")}
-                            disabled={savingId === reservation.id}
-                          >
-                            Refuser
-                          </Button>
+                          {reservation.status === "pending" ? (
+                            <>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => updateStatus(reservation.id, "confirmed")}
+                                disabled={savingId === reservation.id}
+                              >
+                                Confirm
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="danger"
+                                onClick={() => updateStatus(reservation.id, "rejected")}
+                                disabled={savingId === reservation.id}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          ) : null}
                           <Button
                             type="button"
                             size="sm"

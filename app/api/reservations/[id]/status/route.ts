@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { sendReservationConfirmationEmail } from "@/lib/email";
 
-const allowedStatuses = new Set(["pending", "confirmed", "completed", "cancelled", "no-show"]);
+const allowedStatuses = new Set(["pending", "confirmed", "rejected", "completed", "cancelled", "no-show"]);
 
 type RouteParams = {
   params: Promise<{ id: string }>;

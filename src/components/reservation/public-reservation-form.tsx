@@ -2,7 +2,6 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import Image from "next/image";
-import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
@@ -64,7 +63,6 @@ export default function PublicReservationForm({
   websiteUrl,
   preBookingMessage,
 }: PublicReservationFormProps) {
-  const supabase = createClient();
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
@@ -124,25 +122,33 @@ export default function PublicReservationForm({
     setError(null);
     setIsSubmitting(true);
 
-    const { error } = await supabase.from("reservations").insert({
-      restaurant_id: restaurantId,
-      guest_name: guestName,
-      guest_email: guestEmail || null,
-      guest_phone: guestPhone || null,
-      guests,
-      reservation_date: reservationDate,
-      reservation_time: reservationTime,
-      source: "public_link",
-      status: "pending",
+    const response = await fetch("/api/public/reservations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        restaurantId,
+        guestName,
+        guestEmail,
+        guestPhone,
+        guests,
+        reservationDate,
+        reservationTime,
+      }),
     });
+    const payload = (await response.json().catch(() => ({}))) as { error?: string; status?: string };
 
-    if (error) {
-      setError(error.message);
+    if (!response.ok) {
+      setError(payload.error ?? "Impossible d'enregistrer votre reservation.");
       setIsSubmitting(false);
       return;
     }
 
-    setMessage("Votre demande de reservation a ete enregistree. Nous la confirmerons rapidement.");
+    const isConfirmed = payload.status === "confirmed";
+    setMessage(
+      isConfirmed
+        ? "Votre reservation est confirmee. Un email de confirmation vous a ete envoye."
+        : "Votre demande de reservation a ete enregistree. Nous la confirmerons rapidement.",
+    );
     setGuestName("");
     setGuestEmail("");
     setGuestPhone("");

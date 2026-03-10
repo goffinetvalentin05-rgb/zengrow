@@ -19,6 +19,12 @@ export default async function DashboardSettingsPage() {
     .eq("restaurant_id", restaurant.id)
     .single();
 
+  const { data: restaurantConfig } = await supabase
+    .from("restaurants")
+    .select("reservation_confirmation_mode")
+    .eq("id", restaurant.id)
+    .single();
+
   const safeSettings = settings ?? {
     reservation_alert_email: restaurant.email,
     reservation_duration: 90,
@@ -47,6 +53,7 @@ export default async function DashboardSettingsPage() {
         slug: restaurant.slug,
       }}
       settings={safeSettings}
+      confirmationMode={restaurantConfig?.reservation_confirmation_mode ?? "manual"}
       publicLink={publicLink}
     />
   );

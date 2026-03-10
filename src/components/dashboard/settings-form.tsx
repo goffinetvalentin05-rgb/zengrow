@@ -37,10 +37,11 @@ type SettingsData = {
 type SettingsFormProps = {
   restaurant: RestaurantData;
   settings: SettingsData;
+  confirmationMode: "manual" | "automatic";
   publicLink: string;
 };
 
-export default function SettingsForm({ restaurant, settings, publicLink }: SettingsFormProps) {
+export default function SettingsForm({ restaurant, settings, confirmationMode, publicLink }: SettingsFormProps) {
   const supabase = createClient();
   const [name, setName] = useState(restaurant.name);
   const [phone, setPhone] = useState(restaurant.phone ?? "");
@@ -61,6 +62,9 @@ export default function SettingsForm({ restaurant, settings, publicLink }: Setti
   const [facebookUrl, setFacebookUrl] = useState(settings.facebook_url ?? "");
   const [websiteUrl, setWebsiteUrl] = useState(settings.website_url ?? "");
   const [preBookingMessage, setPreBookingMessage] = useState(settings.pre_booking_message ?? "");
+  const [reservationConfirmationMode, setReservationConfirmationMode] = useState<"manual" | "automatic">(
+    confirmationMode,
+  );
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -130,6 +134,7 @@ export default function SettingsForm({ restaurant, settings, publicLink }: Setti
         email: email || null,
         address: address || null,
         description: description || null,
+        reservation_confirmation_mode: reservationConfirmationMode,
       })
       .eq("id", restaurant.id);
 
@@ -298,6 +303,48 @@ export default function SettingsForm({ restaurant, settings, publicLink }: Setti
               placeholder="Ex: Pour les groupes de plus de 8 personnes, merci de nous contacter par telephone."
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-3xl">
+        <CardHeader>
+          <CardTitle>Reservation confirmation</CardTitle>
+          <CardDescription>Choisissez comment les nouvelles reservations sont confirmees.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--border)] p-4">
+            <input
+              type="radio"
+              name="reservation-confirmation-mode"
+              value="manual"
+              checked={reservationConfirmationMode === "manual"}
+              onChange={() => setReservationConfirmationMode("manual")}
+              className="mt-1"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-[var(--foreground)]">Manual confirmation</span>
+              <span className="block text-sm text-[var(--muted-foreground)]">
+                Restaurant must confirm or reject reservations.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--border)] p-4">
+            <input
+              type="radio"
+              name="reservation-confirmation-mode"
+              value="automatic"
+              checked={reservationConfirmationMode === "automatic"}
+              onChange={() => setReservationConfirmationMode("automatic")}
+              className="mt-1"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-[var(--foreground)]">Automatic confirmation</span>
+              <span className="block text-sm text-[var(--muted-foreground)]">
+                Reservations are automatically confirmed if availability allows it.
+              </span>
+            </span>
+          </label>
         </CardContent>
       </Card>
 

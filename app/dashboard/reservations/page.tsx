@@ -23,7 +23,7 @@ export default async function DashboardReservationsPage() {
     guest_phone: string | null;
     guest_email: string | null;
     guests: number;
-    status: "pending" | "confirmed" | "cancelled" | "completed" | "no-show";
+    status: "pending" | "confirmed" | "rejected" | "cancelled" | "completed" | "no-show";
     internal_note: string | null;
     created_at: string;
   };
