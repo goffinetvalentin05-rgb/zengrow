@@ -61,9 +61,36 @@ const featureGrid = [
 ];
 
 const plans = [
-  { name: "Starter", price: "29 CHF", popular: false },
-  { name: "Pro", price: "49 CHF", popular: true },
-  { name: "Multi etablissements", price: "89 CHF", popular: false },
+  {
+    name: "Starter",
+    price: "35 CHF",
+    popular: false,
+    cta: "Start with Starter",
+    tagline: "Ideal pour demarrer la reservation en ligne",
+    features: [
+      "Reservations en ligne illimitees",
+      "Page de reservation personnalisee",
+      "Gestion des disponibilites",
+      "Demandes d'avis Google automatiques",
+      "Feedback prive des clients",
+      "Base clients",
+    ],
+  },
+  {
+    name: "Pro",
+    price: "49 CHF",
+    popular: true,
+    cta: "Start with Pro",
+    tagline: "Pour accelerer la croissance de votre restaurant",
+    features: [
+      "Tout le plan Starter",
+      "Campagnes email marketing",
+      "Segmentation clients",
+      "Statistiques clients",
+      "Export base clients",
+      "Automatisations marketing",
+    ],
+  },
 ];
 
 export default function Home() {
@@ -480,10 +507,14 @@ export default function Home() {
           >
             Simple et transparent
           </motion.h2>
-          <p className="mt-4 text-[#0F3F3A]/70">
-            Sans commission sur les reservations.
+          <p className="mt-4 max-w-2xl text-[#0F3F3A]/70">
+            Comparez les plans et choisissez l'offre adaptee a votre restaurant.
+            Le plan Pro est ideal pour accelerer votre croissance.
           </p>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <p className="mt-2 text-sm font-medium text-[#1F7A6C]">
+            Plus de reservations recurrentes, moins d'actions manuelles.
+          </p>
+          <div className="mt-10 grid gap-5 md:grid-cols-2">
             {plans.map((plan, index) => (
               <motion.article
                 key={plan.name}
@@ -492,12 +523,17 @@ export default function Home() {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45, delay: index * 0.08 }}
                 whileHover={{ y: -5 }}
-                className={`rounded-3xl border p-7 ${
+                className={`relative overflow-hidden rounded-3xl border p-7 ${
                   plan.popular
-                    ? "border-[#1F7A6C] bg-white shadow-[0_22px_50px_-30px_rgba(31,122,108,0.9)]"
+                    ? "scale-[1.02] border-[#1F7A6C] bg-gradient-to-b from-[#F7FFFC] to-white shadow-[0_28px_65px_-30px_rgba(31,122,108,0.95)]"
                     : "border-[#DDEFEA] bg-white"
                 }`}
               >
+                {plan.popular ? (
+                  <div className="pointer-events-none absolute -top-8 right-[-58px] rotate-45 bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-16 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white shadow-md">
+                    Most popular
+                  </div>
+                ) : null}
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-semibold">{plan.name}</h3>
                   {plan.popular ? (
@@ -506,10 +542,25 @@ export default function Home() {
                     </span>
                   ) : null}
                 </div>
+                <p className="mt-2 text-sm text-[#0F3F3A]/65">{plan.tagline}</p>
                 <p className="mt-6 text-5xl font-semibold tracking-tight">
                   {plan.price}
                 </p>
                 <p className="mt-1 text-sm text-[#0F3F3A]/65">/ mois</p>
+                <p className="mt-3 text-sm text-[#0F3F3A]/65">
+                  Cancel anytime. No setup fees.
+                </p>
+                <ul className="mt-7 space-y-2.5">
+                  {plan.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3 text-sm text-[#0F3F3A]/80"
+                    >
+                      <span className="mt-[7px] inline-block h-2 w-2 rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F]" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
                 <button
                   type="button"
                   className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${
@@ -518,7 +569,7 @@ export default function Home() {
                       : "border border-[#C9E6DF] text-[#0F3F3A] hover:bg-[#F1FAF8]"
                   }`}
                 >
-                  Choisir cette offre
+                  {plan.cta}
                 </button>
               </motion.article>
             ))}
