@@ -60,6 +60,21 @@ const featureGrid = [
   "Événements du restaurant",
 ];
 
+const reservationPainPoints = [
+  {
+    title: "Appels pendant le service",
+    description: "Vous perdez du temps en plein coup de feu pour répondre au téléphone.",
+  },
+  {
+    title: "Réservations perdues",
+    description: "Les notes papier et messages dispersés créent des oublis et des erreurs.",
+  },
+  {
+    title: "Clients qui abandonnent",
+    description: "Sans réservation en ligne simple, certains clients ne finalisent pas.",
+  },
+];
+
 const plans = [
   {
     name: "Starter",
@@ -131,6 +146,19 @@ export default function Home() {
               Créer mon restaurant
             </Link>
           </div>
+        </div>
+        <div className="border-t border-[#DDEFEA]/70 px-6 py-3 md:hidden">
+          <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 text-sm font-medium text-[#0F3F3A]/80">
+            <a href="#how-it-works" className="transition hover:text-[#0F3F3A]">
+              Comment ça marche
+            </a>
+            <a href="#pricing" className="transition hover:text-[#0F3F3A]">
+              Tarifs
+            </a>
+            <Link href="/login" className="transition hover:text-[#0F3F3A]">
+              Connexion
+            </Link>
+          </nav>
         </div>
       </header>
 
@@ -271,49 +299,65 @@ export default function Home() {
           </div>
         </section>
 
-        <motion.section
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.35 }}
-          variants={fadeInUp}
-          transition={{ duration: 0.6 }}
-          className="border-y border-[#DDEFEA] bg-white/70"
-        >
-          <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8">
-            <p className="text-center text-sm font-medium text-[#0F3F3A]/60">
-              Adopté par des restaurants
-            </p>
-            <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-5">
-              {["Luna Bistro", "Urban Table", "Casa Verde", "Nori House", "Atelier 19"].map(
-                (logo) => (
-                  <div
-                    key={logo}
-                    className="flex h-14 items-center justify-center rounded-2xl border border-[#E2F1ED] bg-white text-sm font-medium text-[#0F3F3A]/50"
-                  >
-                    {logo}
-                  </div>
-                ),
-              )}
-            </div>
-            <div className="mx-auto mt-10 max-w-4xl text-center">
+        <section className="border-y border-[#DDEFEA] bg-white/70">
+          <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={fadeInUp}
+              transition={{ duration: 0.6 }}
+              className="mx-auto max-w-4xl text-center"
+            >
               <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
                 Les réservations ne devraient pas être compliquées.
               </h2>
-              <p className="mt-5 text-base leading-8 text-[#0F3F3A]/70">
-                Entre les appels pendant le service, les réservations notées sur
-                papier ou les clients qui n&apos;arrivent pas à vous joindre, la
-                gestion des réservations peut vite devenir un casse-tête.
-              </p>
               <p className="mt-4 text-base leading-8 text-[#0F3F3A]/70">
-                Et pourtant, pour un client, réserver une table devrait prendre
-                quelques secondes.
+                ZenGrow remplace les frictions du quotidien par une expérience fluide pour votre équipe et vos clients.
               </p>
-              <p className="mt-4 text-base leading-8 text-[#0F3F3A]/70">
-                ZenGrow simplifie tout le processus pour vous et pour vos clients.
-              </p>
+            </motion.div>
+
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {reservationPainPoints.map((item, index) => (
+                <motion.article
+                  key={item.title}
+                  initial={{ opacity: 0, y: 22 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.45, delay: index * 0.08 }}
+                  className="rounded-3xl border border-[#E0EEEA] bg-white p-6 shadow-[0_20px_45px_-35px_rgba(15,63,58,1)]"
+                >
+                  <span className="inline-flex rounded-full bg-[#EAF8F4] px-3 py-1 text-xs font-semibold text-[#1F7A6C]">
+                    Problème fréquent
+                  </span>
+                  <h3 className="mt-4 text-lg font-semibold text-[#0F3F3A]">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-[#0F3F3A]/70">{item.description}</p>
+                </motion.article>
+              ))}
             </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 0.5 }}
+              className="mt-10 rounded-[30px] border border-[#CFE9E2] bg-gradient-to-r from-[#F5FCFA] to-white p-7 md:flex md:items-center md:justify-between md:gap-8"
+            >
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#1F7A6C]">La solution ZenGrow</p>
+                <p className="mt-2 text-lg font-semibold text-[#0F3F3A]">
+                  Réservations en ligne, disponibilité en temps réel et suivi client au même endroit.
+                </p>
+              </div>
+              <Link
+                href="/signup"
+                className="mt-5 inline-flex rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-95 md:mt-0"
+              >
+                Créer mon restaurant
+              </Link>
+            </motion.div>
           </div>
-        </motion.section>
+        </section>
 
         <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
           <motion.div
@@ -561,8 +605,8 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <button
-                  type="button"
+                <Link
+                  href="/signup"
                   className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${
                     plan.popular
                       ? "bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] text-white hover:opacity-95"
@@ -570,7 +614,7 @@ export default function Home() {
                   }`}
                 >
                   {plan.cta}
-                </button>
+                </Link>
               </motion.article>
             ))}
           </div>
