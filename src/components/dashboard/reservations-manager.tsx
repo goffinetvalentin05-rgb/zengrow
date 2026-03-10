@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/src/lib/supabase/client";
 import StatusBadge from "@/src/components/dashboard/status-badge";
 import Button from "@/src/components/ui/button";
@@ -29,14 +29,30 @@ type ReservationsManagerProps = {
 
 const editableStatuses = ["pending", "confirmed", "rejected", "completed", "cancelled", "no-show"] as const;
 
+function reservationDateTimeValue(reservation: ReservationRow) {
+  return new Date(`${reservation.reservation_date}T${reservation.reservation_time}`).getTime();
+}
+
+function sortReservations(values: ReservationRow[]) {
+  return [...values].sort((a, b) => reservationDateTimeValue(b) - reservationDateTimeValue(a));
+}
+
 export default function ReservationsManager({ initialReservations }: ReservationsManagerProps) {
   const supabase = createClient();
-  const [reservations, setReservations] = useState(initialReservations);
+  const [reservations, setReservations] = useState(sortReservations(initialReservations));
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | ReservationRow["status"]>("all");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [manualGuestName, setManualGuestName] = useState("");
+  const [manualGuestPhone, setManualGuestPhone] = useState("");
+  const [manualGuestEmail, setManualGuestEmail] = useState("");
+  const [manualReservationDate, setManualReservationDate] = useState("");
+  const [manualReservationTime, setManualReservationTime] = useState("");
+  const [manualGuests, setManualGuests] = useState(2);
+  const [manualNote, setManualNote] = useState("");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>(
     Object.fromEntries(
       initialReservations.map((reservation) => [reservation.id, reservation.internal_note ?? ""]),
@@ -110,16 +126,140 @@ export default function ReservationsManager({ initialReservations }: Reservation
     setSavingId(null);
   }
 
+  async function createManualReservation(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage(null);
+    setSavingId("manual-create");
+
+    const response = await fetch("/api/reservations/manual", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        guestName: manualGuestName,
+        guestPhone: manualGuestPhone,
+        guestEmail: manualGuestEmail,
+        reservationDate: manualReservationDate,
+        reservationTime: manualReservationTime,
+        guests: manualGuests,
+        note: manualNote,
+      }),
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as { error?: string; reservation?: ReservationRow };
+    if (!response.ok || !payload.reservation) {
+      setMessage(payload.error ?? "Impossible de créer la réservation.");
+      setSavingId(null);
+      return;
+    }
+
+    const createdReservation = payload.reservation;
+    setReservations((current) => sortReservations([createdReservation, ...current]));
+    setNoteDrafts((current) => ({
+      ...current,
+      [createdReservation.id]: createdReservation.internal_note ?? "",
+    }));
+    setSelectedReservationId(createdReservation.id);
+    setShowManualForm(false);
+    setManualGuestName("");
+    setManualGuestPhone("");
+    setManualGuestEmail("");
+    setManualReservationDate("");
+    setManualReservationTime("");
+    setManualGuests(2);
+    setManualNote("");
+    setMessage("Réservation ajoutée et confirmée.");
+    setSavingId(null);
+  }
+
   return (
     <section className="space-y-6">
       <Card className="rounded-3xl">
-        <CardHeader>
-          <CardTitle>Réservations</CardTitle>
-          <CardDescription>
-            Vue claire des réservations, avec filtres rapides par date et statut.
-          </CardDescription>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>Réservations</CardTitle>
+            <CardDescription>
+              Vue claire des réservations, avec filtres rapides par date et statut.
+            </CardDescription>
+          </div>
+          <Button type="button" variant={showManualForm ? "secondary" : "primary"} onClick={() => setShowManualForm((current) => !current)}>
+            {showManualForm ? "Fermer" : "Ajouter une réservation"}
+          </Button>
         </CardHeader>
         <CardContent className="space-y-5">
+          {showManualForm ? (
+            <form onSubmit={createManualReservation} className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Nom du client</label>
+                  <Input value={manualGuestName} onChange={(event) => setManualGuestName(event.target.value)} required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Téléphone</label>
+                  <Input value={manualGuestPhone} onChange={(event) => setManualGuestPhone(event.target.value)} required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Email (optionnel)</label>
+                  <Input
+                    type="email"
+                    value={manualGuestEmail}
+                    onChange={(event) => setManualGuestEmail(event.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Date</label>
+                  <Input
+                    type="date"
+                    value={manualReservationDate}
+                    onChange={(event) => setManualReservationDate(event.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Heure</label>
+                  <Input
+                    type="time"
+                    value={manualReservationTime}
+                    onChange={(event) => setManualReservationTime(event.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
+                    Nombre de personnes
+                  </label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={manualGuests}
+                    onChange={(event) => setManualGuests(Number(event.target.value))}
+                    required
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Note (optionnel)</label>
+                  <Textarea
+                    className="min-h-20"
+                    value={manualNote}
+                    onChange={(event) => setManualNote(event.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button type="submit" disabled={savingId === "manual-create"}>
+                  {savingId === "manual-create" ? "Enregistrement..." : "Enregistrer la réservation"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setShowManualForm(false)}
+                  disabled={savingId === "manual-create"}
+                >
+                  Annuler
+                </Button>
+              </div>
+            </form>
+          ) : null}
+
           <div className="grid gap-3 md:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Date</label>
@@ -241,7 +381,7 @@ export default function ReservationsManager({ initialReservations }: Reservation
       {selectedReservation ? (
         <Card className="rounded-3xl">
           <CardHeader>
-          <CardTitle>Détail de la réservation</CardTitle>
+            <CardTitle>Détail de la réservation</CardTitle>
             <CardDescription>Voir, modifier ou annuler rapidement.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-5 md:grid-cols-[1fr_1fr]">

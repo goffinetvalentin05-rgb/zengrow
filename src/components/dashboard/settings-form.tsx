@@ -19,7 +19,6 @@ type RestaurantData = {
 };
 
 type SettingsData = {
-  reservation_alert_email: string | null;
   reservation_duration: number | null;
   reservation_slot_interval: number | null;
   restaurant_capacity: number | null;
@@ -32,6 +31,9 @@ type SettingsData = {
   facebook_url: string | null;
   website_url: string | null;
   pre_booking_message: string | null;
+  closure_start_date: string | null;
+  closure_end_date: string | null;
+  closure_message: string | null;
 };
 
 type SettingsFormProps = {
@@ -49,7 +51,6 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
   const [address, setAddress] = useState(restaurant.address ?? "");
   const [description, setDescription] = useState(restaurant.description ?? "");
   const [slug, setSlug] = useState(restaurant.slug);
-  const [reservationAlertEmail, setReservationAlertEmail] = useState(settings.reservation_alert_email ?? email);
   const [restaurantCapacity, setRestaurantCapacity] = useState(settings.restaurant_capacity ?? 40);
   const [reservationDuration, setReservationDuration] = useState(settings.reservation_duration ?? 90);
   const [slotInterval, setSlotInterval] = useState(settings.reservation_slot_interval ?? 15);
@@ -62,6 +63,9 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
   const [facebookUrl, setFacebookUrl] = useState(settings.facebook_url ?? "");
   const [websiteUrl, setWebsiteUrl] = useState(settings.website_url ?? "");
   const [preBookingMessage, setPreBookingMessage] = useState(settings.pre_booking_message ?? "");
+  const [closureStartDate, setClosureStartDate] = useState(settings.closure_start_date ?? "");
+  const [closureEndDate, setClosureEndDate] = useState(settings.closure_end_date ?? "");
+  const [closureMessage, setClosureMessage] = useState(settings.closure_message ?? "");
   const [reservationConfirmationMode, setReservationConfirmationMode] = useState<"manual" | "automatic">(
     confirmationMode,
   );
@@ -148,7 +152,6 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
       .from("restaurant_settings")
       .upsert({
         restaurant_id: restaurant.id,
-        reservation_alert_email: reservationAlertEmail || null,
         restaurant_capacity: restaurantCapacity,
         reservation_duration: reservationDuration,
         reservation_slot_interval: slotInterval,
@@ -161,6 +164,9 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         facebook_url: facebookUrl || null,
         website_url: websiteUrl || null,
         pre_booking_message: preBookingMessage || null,
+        closure_start_date: closureStartDate || null,
+        closure_end_date: closureEndDate || null,
+        closure_message: closureMessage || null,
       }, { onConflict: "restaurant_id" });
 
     if (settingsError) {
@@ -441,16 +447,31 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
 
       <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>E-mail de réception des nouvelles réservations.</CardDescription>
+          <CardTitle>Fermeture temporaire</CardTitle>
+          <CardDescription>Bloquez les réservations pendant une période de fermeture.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">E-mail de réception</label>
+            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Date de début</label>
             <Input
-              type="email"
-              value={reservationAlertEmail}
-              onChange={(event) => setReservationAlertEmail(event.target.value)}
+              type="date"
+              value={closureStartDate}
+              onChange={(event) => setClosureStartDate(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Date de fin</label>
+            <Input type="date" value={closureEndDate} onChange={(event) => setClosureEndDate(event.target.value)} />
+          </div>
+          <div className="md:col-span-2">
+            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
+              Message (optionnel)
+            </label>
+            <Textarea
+              className="min-h-20"
+              value={closureMessage}
+              onChange={(event) => setClosureMessage(event.target.value)}
+              placeholder="Ex : Vacances d'ete"
             />
           </div>
         </CardContent>

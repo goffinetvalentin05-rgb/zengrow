@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
       .single(),
     supabase
       .from("restaurant_settings")
-      .select("opening_hours, reservation_slot_interval, reservation_duration, restaurant_capacity")
+      .select(
+        "opening_hours, reservation_slot_interval, reservation_duration, restaurant_capacity, closure_start_date, closure_end_date, closure_message",
+      )
       .eq("restaurant_id", restaurantId)
       .maybeSingle(),
     supabase
@@ -69,6 +71,22 @@ export async function POST(request: NextRequest) {
   const availableSlots = generateTimeSlotsForDate(reservationDate, openingHours, slotInterval);
   const isBlocked = Boolean(blockedSlots && blockedSlots.length > 0);
   const isSlotInOpeningHours = availableSlots.includes(reservationTime);
+  const isClosedPeriod =
+    Boolean(settings?.closure_start_date) &&
+    Boolean(settings?.closure_end_date) &&
+    reservationDate >= String(settings?.closure_start_date) &&
+    reservationDate <= String(settings?.closure_end_date);
+
+  if (isClosedPeriod) {
+    const closureMessage = settings?.closure_message?.trim();
+    const prefix = closureMessage ? `${closureMessage} - ` : "";
+    return NextResponse.json(
+      {
+        error: `${prefix}Le restaurant est fermé du ${settings?.closure_start_date} au ${settings?.closure_end_date}. Les réservations restent disponibles après cette période.`,
+      },
+      { status: 409 },
+    );
+  }
 
   if (!isSlotInOpeningHours || isBlocked) {
     return NextResponse.json({ error: "Ce créneau n'est pas disponible." }, { status: 409 });

@@ -22,7 +22,7 @@ export default async function DashboardMarketingPage() {
       <section className="space-y-6">
         <Card className="rounded-3xl">
           <CardHeader>
-            <CardTitle>Marketing Campaigns</CardTitle>
+            <CardTitle>Campagnes marketing</CardTitle>
             <CardDescription>Disponible uniquement dans le plan Pro.</CardDescription>
           </CardHeader>
           <CardContent>

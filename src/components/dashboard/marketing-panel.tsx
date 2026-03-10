@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -89,7 +90,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
       <Card className="rounded-3xl">
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Marketing</CardTitle>
+            <CardTitle>Campagnes marketing</CardTitle>
             <CardDescription>Créez et envoyez des campagnes e-mail à vos anciens clients.</CardDescription>
           </div>
           <Button type="button" onClick={() => setShowForm((current) => !current)} variant={showForm ? "secondary" : "primary"}>
@@ -120,7 +121,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Contenu de l'e-mail</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Contenu de l&apos;e-mail</label>
               <Textarea
                 className="min-h-36"
                 value={content}
@@ -130,7 +131,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">URL de l'image (optionnel)</label>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">URL de l&apos;image (optionnel)</label>
               <Input
                 value={imageUrl}
                 onChange={(event) => setImageUrl(event.target.value)}
@@ -174,9 +175,10 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
           ) : (
             <div className="space-y-3">
               {campaigns.map((campaign) => (
-                <div
+                <Link
                   key={campaign.id}
-                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4"
+                  href={`/dashboard/marketing/${campaign.id}`}
+                  className="block rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 transition hover:border-[#b7ddd4] hover:bg-[#f4fbf9]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-semibold text-[var(--foreground)]">{campaign.name}</p>
@@ -188,7 +190,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
                   <p className="mt-2 text-xs text-[var(--muted-foreground)]">
                     Créée le {campaign.created_at.slice(0, 10)} - Destinataires {campaign.recipients_count}
                   </p>
-                </div>
+                </Link>
               ))}
             </div>
           )}

@@ -32,7 +32,7 @@ const navItems = [
   { href: "/dashboard/reviews", label: "Automatisation des avis", icon: Star },
   { href: "/dashboard/feedback", label: "Retours clients", icon: MessageSquare },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
-  { href: "/dashboard/marketing", label: "Marketing Campaigns", icon: Megaphone, requiresPro: true },
+  { href: "/dashboard/marketing", label: "Campagnes marketing", icon: Megaphone, requiresPro: true },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { href: "/dashboard/billing", label: "Facturation", icon: CreditCard },
 ];

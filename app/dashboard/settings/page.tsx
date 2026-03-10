@@ -14,7 +14,7 @@ export default async function DashboardSettingsPage() {
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "reservation_alert_email, reservation_duration, reservation_slot_interval, restaurant_capacity, max_party_size, accent_color, button_color, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message",
+      "reservation_duration, reservation_slot_interval, restaurant_capacity, max_party_size, accent_color, button_color, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message",
     )
     .eq("restaurant_id", restaurant.id)
     .single();
@@ -26,7 +26,6 @@ export default async function DashboardSettingsPage() {
     .single();
 
   const safeSettings = settings ?? {
-    reservation_alert_email: restaurant.email,
     reservation_duration: 90,
     reservation_slot_interval: 30,
     restaurant_capacity: 40,
@@ -39,6 +38,9 @@ export default async function DashboardSettingsPage() {
     facebook_url: "",
     website_url: "",
     pre_booking_message: "",
+    closure_start_date: null,
+    closure_end_date: null,
+    closure_message: "",
   };
 
   return (

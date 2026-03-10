@@ -25,7 +25,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     supabase
       .from("restaurant_settings")
       .select(
-        "opening_hours, reservation_slot_interval, reservation_duration, restaurant_capacity, max_party_size, allow_phone, allow_email, logo_url, cover_image_url, accent_color, button_color, instagram_url, facebook_url, website_url, pre_booking_message",
+        "opening_hours, reservation_slot_interval, reservation_duration, restaurant_capacity, max_party_size, allow_phone, allow_email, logo_url, cover_image_url, accent_color, button_color, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message",
       )
       .eq("restaurant_id", restaurant.id)
       .single(),
@@ -56,6 +56,9 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     facebook_url: null,
     website_url: null,
     pre_booking_message: null,
+    closure_start_date: null,
+    closure_end_date: null,
+    closure_message: null,
   };
 
   return (
@@ -85,6 +88,9 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           facebookUrl={safeSettings.facebook_url}
           websiteUrl={safeSettings.website_url}
           preBookingMessage={safeSettings.pre_booking_message}
+          closureStartDate={safeSettings.closure_start_date}
+          closureEndDate={safeSettings.closure_end_date}
+          closureMessage={safeSettings.closure_message}
         />
       </div>
     </main>

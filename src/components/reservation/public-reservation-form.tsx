@@ -36,6 +36,9 @@ type PublicReservationFormProps = {
   facebookUrl?: string | null;
   websiteUrl?: string | null;
   preBookingMessage?: string | null;
+  closureStartDate?: string | null;
+  closureEndDate?: string | null;
+  closureMessage?: string | null;
 };
 
 export default function PublicReservationForm({
@@ -62,6 +65,9 @@ export default function PublicReservationForm({
   facebookUrl,
   websiteUrl,
   preBookingMessage,
+  closureStartDate,
+  closureEndDate,
+  closureMessage,
 }: PublicReservationFormProps) {
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -79,9 +85,12 @@ export default function PublicReservationForm({
 
   const generatedSlots = useMemo(() => {
     if (!reservationDate) return [];
+    if (closureStartDate && closureEndDate && reservationDate >= closureStartDate && reservationDate <= closureEndDate) {
+      return [];
+    }
     const baseSlots = generateTimeSlotsForDate(reservationDate, openingHours, slotInterval);
     return baseSlots.filter((slot) => !blockedSet.has(`${reservationDate}|${slot}`));
-  }, [reservationDate, openingHours, slotInterval, blockedSet]);
+  }, [reservationDate, openingHours, slotInterval, blockedSet, closureStartDate, closureEndDate]);
 
   const capacityBySlot = useMemo(() => {
     if (!reservationDate) return {};
@@ -122,6 +131,17 @@ export default function PublicReservationForm({
     setError(null);
     setIsSubmitting(true);
 
+    if (closureStartDate && closureEndDate && reservationDate >= closureStartDate && reservationDate <= closureEndDate) {
+      const closureLabel = closureMessage?.trim()
+        ? `${closureMessage.trim()} - `
+        : "";
+      setError(
+        `${closureLabel}Le restaurant est ferme du ${closureStartDate} au ${closureEndDate}. Les reservations restent disponibles apres cette periode.`,
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
     const response = await fetch("/api/public/reservations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -160,6 +180,17 @@ export default function PublicReservationForm({
 
   const primaryColor = accentColor || "#1F7A6C";
   const ctaColor = buttonColor || primaryColor;
+  const isDateInClosurePeriod = Boolean(
+    reservationDate &&
+      closureStartDate &&
+      closureEndDate &&
+      reservationDate >= closureStartDate &&
+      reservationDate <= closureEndDate,
+  );
+  const closureNotice =
+    closureStartDate && closureEndDate
+      ? `Le restaurant est ferme du ${closureStartDate} au ${closureEndDate}. Les reservations restent disponibles apres cette periode.`
+      : null;
 
   return (
     <section className="overflow-hidden rounded-3xl border border-[#DDEFEA] bg-white shadow-[0_20px_45px_-30px_rgba(15,63,58,0.55)]">
@@ -226,6 +257,11 @@ export default function PublicReservationForm({
         </header>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          {closureNotice ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {closureMessage?.trim() ? `${closureMessage.trim()} - ${closureNotice}` : closureNotice}
+            </div>
+          ) : null}
           {preBookingMessage ? (
             <div className="rounded-2xl border border-[#CFE9E2] bg-[#EFFAF7] px-4 py-3 text-sm text-slate-700">
               {preBookingMessage}
@@ -254,6 +290,7 @@ export default function PublicReservationForm({
                 value={reservationTime}
                 onChange={(event) => setReservationTime(event.target.value)}
                 required
+                disabled={isDateInClosurePeriod}
               >
                 <option value="">Sélectionnez une heure</option>
                 {generatedSlots.map((slot) => (
@@ -321,7 +358,7 @@ export default function PublicReservationForm({
 
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isDateInClosurePeriod}
             className="w-full text-white"
             style={{ backgroundColor: ctaColor }}
           >
