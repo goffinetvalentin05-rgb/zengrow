@@ -3,17 +3,26 @@
 import { FormEvent, useState } from "react";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
+import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
 
 type FeedbackFormProps = {
   reservationId: string;
+  restaurantId: string;
   initialRating: number;
   initialName: string;
   initialEmail: string;
 };
 
-export default function FeedbackForm({ reservationId, initialRating, initialName, initialEmail }: FeedbackFormProps) {
+export default function FeedbackForm({
+  reservationId,
+  restaurantId,
+  initialRating,
+  initialName,
+  initialEmail,
+}: FeedbackFormProps) {
   const [name, setName] = useState(initialName);
+  const [rating, setRating] = useState(initialRating);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +49,8 @@ export default function FeedbackForm({ reservationId, initialRating, initialName
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         reservationId,
-        rating: initialRating,
+        restaurantId,
+        rating,
         customerName: name.trim(),
         customerEmail: initialEmail,
         message: message.trim(),
@@ -71,6 +81,17 @@ export default function FeedbackForm({ reservationId, initialRating, initialName
       <div className="space-y-2">
         <label className="block text-sm font-medium text-[var(--foreground)]/85">Nom</label>
         <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Votre nom" />
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--foreground)]/85">Rating</label>
+        <Select value={String(rating)} onChange={(event) => setRating(Number(event.target.value))}>
+          <option value="1">1/5</option>
+          <option value="2">2/5</option>
+          <option value="3">3/5</option>
+          <option value="4">4/5</option>
+          <option value="5">5/5</option>
+        </Select>
       </div>
 
       <Textarea
