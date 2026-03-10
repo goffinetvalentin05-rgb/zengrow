@@ -66,6 +66,26 @@ type ReviewRequestParams = {
   primaryColor?: string | null;
 };
 
+type MarketingCampaignEmailParams = {
+  to: string;
+  restaurantName: string;
+  restaurantLogoUrl?: string | null;
+  subject: string;
+  content: string;
+  imageUrl?: string | null;
+  ctaLabel?: string;
+  ctaUrl?: string;
+};
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 export async function sendReviewRequestEmail({
   to,
   restaurantName,
@@ -139,6 +159,56 @@ export async function sendReviewRequestEmail({
       `${neutralLabel}: ${feedbackNeutralUrl}`,
       `${negativeLabel}: ${feedbackNegativeUrl}`,
     ].join("\n"),
+  });
+}
+
+export async function sendMarketingCampaignEmail({
+  to,
+  restaurantName,
+  restaurantLogoUrl,
+  subject,
+  content,
+  imageUrl,
+  ctaLabel = "Book your table",
+  ctaUrl,
+}: MarketingCampaignEmailParams) {
+  const resend = getResendClient();
+  const normalizedSubject = subject.trim() || "Latest updates from your restaurant";
+  const messageParagraphs = content
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map(
+      (line) =>
+        `<p style="margin:0 0 10px 0;color:#334155;font-size:14px;line-height:1.65;">${escapeHtml(line)}</p>`,
+    )
+    .join("");
+
+  const safeRestaurantName = escapeHtml(restaurantName);
+
+  return resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: normalizedSubject,
+    html: `
+      <div style="background:#f8fafc;padding:24px 12px;font-family:Arial,sans-serif;">
+        <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:24px;">
+          <div style="text-align:center;margin-bottom:16px;">
+            ${restaurantLogoUrl ? `<img src="${restaurantLogoUrl}" alt="${safeRestaurantName}" style="height:44px;max-width:180px;object-fit:contain;margin:0 auto 10px;" />` : ""}
+            <p style="margin:0;color:#0f172a;font-size:18px;font-weight:700;">${safeRestaurantName}</p>
+          </div>
+          <h1 style="margin:0 0 14px 0;color:#0f172a;font-size:22px;line-height:1.3;">${escapeHtml(normalizedSubject)}</h1>
+          <div style="margin-bottom:18px;">${messageParagraphs}</div>
+          ${imageUrl ? `<img src="${imageUrl}" alt="Campaign image" style="display:block;width:100%;height:auto;border-radius:12px;border:1px solid #e2e8f0;margin:0 0 18px 0;" />` : ""}
+          ${
+            ctaUrl
+              ? `<a href="${ctaUrl}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:#1F7A6C;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">${escapeHtml(ctaLabel)}</a>`
+              : ""
+          }
+        </div>
+      </div>
+    `,
+    text: [normalizedSubject, "", content, "", ctaUrl ? `${ctaLabel}: ${ctaUrl}` : ""].filter(Boolean).join("\n"),
   });
 }
 
