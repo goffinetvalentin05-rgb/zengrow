@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendReservationConfirmationEmail } from "@/lib/email";
 import { generateTimeSlotsForDate, OpeningHours } from "@/src/lib/utils";
-import { createAdminClient } from "@/src/lib/supabase/admin";
+import { createClient } from "@/src/lib/supabase/server";
 
 type ReservationPayload = {
   restaurantId?: string;
@@ -12,11 +12,6 @@ type ReservationPayload = {
   reservationDate?: string;
   reservationTime?: string;
 };
-
-function toMinutes(time: string) {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-}
 
 function normalize(value?: string) {
   const trimmed = value?.trim();
@@ -37,7 +32,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   const [{ data: restaurant, error: restaurantError }, { data: settings }, { data: blockedSlots }] = await Promise.all([
     supabase
@@ -64,8 +59,6 @@ export async function POST(request: NextRequest) {
   }
 
   const slotInterval = settings?.reservation_slot_interval ?? 30;
-  const reservationDuration = settings?.reservation_duration ?? 90;
-  const restaurantCapacity = settings?.restaurant_capacity ?? 40;
   const openingHours = (settings?.opening_hours as OpeningHours | null) ?? null;
   const availableSlots = generateTimeSlotsForDate(reservationDate, openingHours, slotInterval);
   const isBlocked = Boolean(blockedSlots && blockedSlots.length > 0);
@@ -73,31 +66,6 @@ export async function POST(request: NextRequest) {
 
   if (!isSlotInOpeningHours || isBlocked) {
     return NextResponse.json({ error: "Ce creneau n'est pas disponible." }, { status: 409 });
-  }
-
-  const { data: sameDayReservations, error: reservationsError } = await supabase
-    .from("reservations")
-    .select("reservation_time, guests")
-    .eq("restaurant_id", restaurantId)
-    .eq("reservation_date", reservationDate)
-    .in("status", ["pending", "confirmed"]);
-
-  if (reservationsError) {
-    return NextResponse.json({ error: reservationsError.message }, { status: 500 });
-  }
-
-  const newStart = toMinutes(reservationTime);
-  const newEnd = newStart + reservationDuration;
-
-  const usedSeats = (sameDayReservations ?? []).reduce((total, current) => {
-    const currentStart = toMinutes(current.reservation_time);
-    const currentEnd = currentStart + reservationDuration;
-    const overlaps = currentStart < newEnd && currentEnd > newStart;
-    return overlaps ? total + current.guests : total;
-  }, 0);
-
-  if (usedSeats + guests > restaurantCapacity) {
-    return NextResponse.json({ error: "Ce creneau n'est plus disponible." }, { status: 409 });
   }
 
   const confirmationMode =
@@ -121,7 +89,16 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (insertError || !reservation) {
-    return NextResponse.json({ error: insertError?.message ?? "Impossible de creer la reservation." }, { status: 400 });
+    const rawMessage = insertError?.message ?? "Impossible de creer la reservation.";
+    const normalizedMessage = rawMessage.toLowerCase();
+    if (
+      normalizedMessage.includes("capacity exceeded") ||
+      normalizedMessage.includes("slot is full") ||
+      normalizedMessage.includes("exceeds max party size")
+    ) {
+      return NextResponse.json({ error: "Ce creneau n'est plus disponible." }, { status: 409 });
+    }
+    return NextResponse.json({ error: rawMessage }, { status: 400 });
   }
 
   if (status === "confirmed" && guestEmail) {
