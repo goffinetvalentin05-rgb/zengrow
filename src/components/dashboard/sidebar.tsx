@@ -83,6 +83,9 @@ export default function DashboardSidebar({ reservationLink }: DashboardSidebarPr
         <Button type="button" variant="ghost" onClick={handleLogout} className="w-full justify-start">
           Se deconnecter
         </Button>
+        <Button asChild variant="ghost" className="mt-2 w-full justify-start">
+          <Link href="/">Retour au site</Link>
+        </Button>
       </div>
     </aside>
   );
