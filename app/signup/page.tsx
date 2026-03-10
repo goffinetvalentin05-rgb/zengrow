@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,10 +24,37 @@ export default function SignupPage() {
   const [description, setDescription] = useState("");
   const [instagram, setInstagram] = useState("");
   const [website, setWebsite] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [primaryColor, setPrimaryColor] = useState("#1F7A6C");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClient();
+
+  async function uploadAsset(file: File, type: "logo" | "banner", userId: string, slug: string) {
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const filePath = `${userId}/${slug}-${type}-${Date.now()}.${extension}`;
+
+    const { error: uploadError } = await supabase.storage.from("restaurant-assets").upload(filePath, file, {
+      upsert: true,
+    });
+
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+
+    const { data } = supabase.storage.from("restaurant-assets").getPublicUrl(filePath);
+    return data.publicUrl;
+  }
+
+  function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
+    setLogoFile(event.target.files?.[0] ?? null);
+  }
+
+  function handleBannerChange(event: ChangeEvent<HTMLInputElement>) {
+    setBannerFile(event.target.files?.[0] ?? null);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,6 +81,7 @@ export default function SignupPage() {
           restaurant_description: description,
           instagram_url: instagram,
           website_url: website,
+          primary_color: primaryColor,
         },
       },
     });
@@ -65,9 +93,35 @@ export default function SignupPage() {
     }
 
     if (!signupData.session) {
-      setInfo("Compte créé. Confirmez votre e-mail puis connectez-vous.");
+      const hasMedia = Boolean(logoFile) || Boolean(bannerFile);
+      setInfo(
+        hasMedia
+          ? "Compte créé. Confirmez votre e-mail puis connectez-vous. Vous pourrez ajouter le logo et la bannière après connexion."
+          : "Compte créé. Confirmez votre e-mail puis connectez-vous.",
+      );
       setIsLoading(false);
       return;
+    }
+
+    let logoUrl: string | null = null;
+    let bannerUrl: string | null = null;
+
+    if (logoFile || bannerFile) {
+      try {
+        const userId = signupData.user?.id ?? "owner";
+        const [uploadedLogoUrl, uploadedBannerUrl] = await Promise.all([
+          logoFile ? uploadAsset(logoFile, "logo", userId, slug) : Promise.resolve(null),
+          bannerFile ? uploadAsset(bannerFile, "banner", userId, slug) : Promise.resolve(null),
+        ]);
+        logoUrl = uploadedLogoUrl;
+        bannerUrl = uploadedBannerUrl;
+      } catch (uploadError) {
+        setError(
+          uploadError instanceof Error
+            ? `Compte créé, mais impossible de téléverser les images: ${uploadError.message}`
+            : "Compte créé, mais impossible de téléverser les images.",
+        );
+      }
     }
 
     const bootstrapResponse = await fetch("/api/bootstrap-restaurant", {
@@ -87,6 +141,9 @@ export default function SignupPage() {
         description,
         instagram,
         website,
+        logoUrl,
+        bannerUrl,
+        primaryColor,
       }),
     });
 
@@ -295,7 +352,62 @@ export default function SignupPage() {
               <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-[#1F7A6C]">
                 Personnalisation
               </h2>
+              <p className="mt-2 text-sm text-[#0F3F3A]/65">
+                Ces informations sont optionnelles. Vous pourrez les modifier plus tard dans les
+                paramètres.
+              </p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label htmlFor="logoFile" className="mb-1.5 block text-sm font-medium text-[#0F3F3A]/80">
+                    Logo du restaurant
+                  </label>
+                  <input
+                    id="logoFile"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="block h-11 w-full rounded-2xl border border-[#CEE8E2] bg-white px-3 py-2 text-sm text-[#0F3F3A] file:mr-3 file:rounded-full file:border-0 file:bg-[#EAF8F4] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-[#1F7A6C]"
+                  />
+                  {logoFile ? <p className="mt-1 text-xs text-[#0F3F3A]/60">{logoFile.name}</p> : null}
+                </div>
+                <div>
+                  <label
+                    htmlFor="bannerFile"
+                    className="mb-1.5 block text-sm font-medium text-[#0F3F3A]/80"
+                  >
+                    Bannière / image de couverture
+                  </label>
+                  <input
+                    id="bannerFile"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBannerChange}
+                    className="block h-11 w-full rounded-2xl border border-[#CEE8E2] bg-white px-3 py-2 text-sm text-[#0F3F3A] file:mr-3 file:rounded-full file:border-0 file:bg-[#EAF8F4] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-[#1F7A6C]"
+                  />
+                  {bannerFile ? <p className="mt-1 text-xs text-[#0F3F3A]/60">{bannerFile.name}</p> : null}
+                </div>
+                <div>
+                  <label
+                    htmlFor="primaryColor"
+                    className="mb-1.5 block text-sm font-medium text-[#0F3F3A]/80"
+                  >
+                    Couleur principale du restaurant
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="primaryColor"
+                      type="color"
+                      value={primaryColor}
+                      onChange={(event) => setPrimaryColor(event.target.value)}
+                      className="h-11 w-16 cursor-pointer rounded-xl border-[#CEE8E2] p-1"
+                    />
+                    <Input
+                      value={primaryColor}
+                      onChange={(event) => setPrimaryColor(event.target.value)}
+                      className="h-11 rounded-2xl border-[#CEE8E2] focus:border-[#3DBE9F] focus:ring-[#c8efe4]"
+                    />
+                  </div>
+                </div>
                 <div className="md:col-span-2">
                   <label
                     htmlFor="description"

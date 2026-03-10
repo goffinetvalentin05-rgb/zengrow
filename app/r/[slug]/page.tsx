@@ -13,7 +13,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
 
   const { data: restaurant, error } = await supabase
     .from("restaurants")
-    .select("id, name, slug, description, phone, address, email")
+    .select("id, name, slug, description, phone, address, email, logo_url, banner_url, primary_color")
     .eq("slug", slug)
     .single();
 
@@ -77,10 +77,10 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           openingHours={safeSettings.opening_hours as OpeningHours}
           blockedSlots={blockedSlots ?? []}
           existingReservations={existingReservations ?? []}
-          logoUrl={safeSettings.logo_url}
-          coverImageUrl={safeSettings.cover_image_url}
-          accentColor={safeSettings.accent_color}
-          buttonColor={safeSettings.button_color}
+          logoUrl={restaurant.logo_url ?? safeSettings.logo_url}
+          coverImageUrl={restaurant.banner_url ?? safeSettings.cover_image_url}
+          accentColor={restaurant.primary_color ?? safeSettings.accent_color}
+          buttonColor={restaurant.primary_color ?? safeSettings.button_color}
           instagramUrl={safeSettings.instagram_url}
           facebookUrl={safeSettings.facebook_url}
           websiteUrl={safeSettings.website_url}

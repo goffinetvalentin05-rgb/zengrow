@@ -16,6 +16,9 @@ type Payload = {
   description?: string;
   instagram?: string;
   website?: string;
+  logoUrl?: string | null;
+  bannerUrl?: string | null;
+  primaryColor?: string;
 };
 
 function optionalTrim(value: string | undefined) {
@@ -77,6 +80,9 @@ export async function POST(request: Request) {
   const metadataDescription = user.user_metadata?.restaurant_description as string | undefined;
   const metadataInstagram = user.user_metadata?.instagram_url as string | undefined;
   const metadataWebsite = user.user_metadata?.website_url as string | undefined;
+  const metadataLogoUrl = user.user_metadata?.logo_url as string | undefined;
+  const metadataBannerUrl = user.user_metadata?.banner_url as string | undefined;
+  const metadataPrimaryColor = user.user_metadata?.primary_color as string | undefined;
   const restaurantName = payload.restaurantName?.trim() || metadataName || "Mon restaurant";
   const slugBase = slugifyRestaurantName(payload.requestedSlug || metadataSlug || restaurantName);
   const slug = await buildUniqueSlug(supabase, slugBase);
@@ -87,6 +93,9 @@ export async function POST(request: Request) {
   const description = optionalTrim(payload.description ?? metadataDescription);
   const instagram = optionalTrim(payload.instagram ?? metadataInstagram);
   const website = optionalTrim(payload.website ?? metadataWebsite);
+  const logoUrl = optionalTrim(payload.logoUrl ?? metadataLogoUrl);
+  const bannerUrl = optionalTrim(payload.bannerUrl ?? metadataBannerUrl);
+  const primaryColor = optionalTrim(payload.primaryColor ?? metadataPrimaryColor) ?? "#1F7A6C";
   const tableCount = positiveIntegerOrDefault(payload.tableCount ?? metadataTableCount, 12);
   const maxPeople = positiveIntegerOrDefault(payload.maxPeople ?? metadataCapacity, 40);
   const averageMealDuration = positiveIntegerOrDefault(
@@ -108,6 +117,9 @@ export async function POST(request: Request) {
       city,
       country,
       description,
+      logo_url: logoUrl,
+      banner_url: bannerUrl,
+      primary_color: primaryColor,
       subscription_status: "trial",
       trial_start_date: trialStartDate.toISOString(),
       trial_end_date: trialEndDate.toISOString(),
@@ -130,6 +142,10 @@ export async function POST(request: Request) {
     reservation_duration: averageMealDuration,
     instagram_url: instagram,
     website_url: website,
+    logo_url: logoUrl,
+    cover_image_url: bannerUrl,
+    button_color: primaryColor,
+    accent_color: primaryColor,
   });
 
   if (settingsError) {
