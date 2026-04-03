@@ -73,6 +73,8 @@ export default function ReviewAutomationPanel({
   const [negativeLabel, setNegativeLabel] = useState(initialSettings.button_negative_label);
   const [primaryColor, setPrimaryColor] = useState(initialSettings.primary_color);
   const [saving, setSaving] = useState(false);
+  const [savingToggle, setSavingToggle] = useState(false);
+  const [toggleError, setToggleError] = useState<string | null>(null);
   const [sendingTest, setSendingTest] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -85,29 +87,50 @@ export default function ReviewAutomationPanel({
     [emailMessage],
   );
 
+  function buildAutomationUpsertPayload(enabled: boolean) {
+    return {
+      restaurant_id: restaurantId,
+      is_enabled: enabled,
+      channel,
+      delay_minutes: delayMinutes,
+      google_review_url: googleReviewUrl || null,
+      email_subject: emailSubject,
+      email_message: emailMessage,
+      button_positive_label: positiveLabel,
+      button_neutral_label: neutralLabel,
+      button_negative_label: negativeLabel,
+      primary_color: primaryColor,
+    };
+  }
+
   async function saveSettings() {
     setSaving(true);
     setMessage(null);
 
-    const { error } = await supabase.from("review_automation_settings").upsert(
-      {
-        restaurant_id: restaurantId,
-        is_enabled: isEnabled,
-        channel,
-        delay_minutes: delayMinutes,
-        google_review_url: googleReviewUrl || null,
-        email_subject: emailSubject,
-        email_message: emailMessage,
-        button_positive_label: positiveLabel,
-        button_neutral_label: neutralLabel,
-        button_negative_label: negativeLabel,
-        primary_color: primaryColor,
-      },
-      { onConflict: "restaurant_id" },
-    );
+    const { error } = await supabase.from("review_automation_settings").upsert(buildAutomationUpsertPayload(isEnabled), {
+      onConflict: "restaurant_id",
+    });
 
     setSaving(false);
     setMessage(error ? error.message : "Automatisation mise à jour.");
+  }
+
+  async function handleAutomationToggle(next: boolean) {
+    const previous = isEnabled;
+    setToggleError(null);
+    setMessage(null);
+    setIsEnabled(next);
+    setSavingToggle(true);
+
+    const { error } = await supabase.from("review_automation_settings").upsert(buildAutomationUpsertPayload(next), {
+      onConflict: "restaurant_id",
+    });
+
+    setSavingToggle(false);
+    if (error) {
+      setIsEnabled(previous);
+      setToggleError(error.message);
+    }
   }
 
   async function sendTestReviewEmail() {
@@ -137,12 +160,23 @@ export default function ReviewAutomationPanel({
           <CardDescription>Activez l&apos;envoi automatique et personnalisez le message reçu par vos clients.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-            <PanelToggle
-              checked={isEnabled}
-              onChange={setIsEnabled}
-              title="Automatisation active"
-              description="Les clients reçoivent un message après leur visite lorsque cette option est activée."
-            />
+            <div className="space-y-2">
+              <PanelToggle
+                checked={isEnabled}
+                onChange={handleAutomationToggle}
+                title="Automatisation active"
+                description="Les clients reçoivent un message après leur visite lorsque cette option est activée."
+                disabled={savingToggle || saving}
+              />
+              {savingToggle ? (
+                <p className="text-xs font-medium text-gray-500">Enregistrement…</p>
+              ) : null}
+              {toggleError ? (
+                <p className="text-sm text-red-600" role="alert">
+                  {toggleError}
+                </p>
+              ) : null}
+            </div>
 
             <div className="grid gap-6 md:grid-cols-2">
               <div>
@@ -266,14 +300,14 @@ export default function ReviewAutomationPanel({
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
-              <Button type="button" onClick={saveSettings} disabled={saving}>
+              <Button type="button" onClick={saveSettings} disabled={saving || savingToggle}>
                 {saving ? "Enregistrement…" : "Enregistrer"}
               </Button>
               <button
                 type="button"
                 className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
                 onClick={sendTestReviewEmail}
-                disabled={sendingTest}
+                disabled={sendingTest || savingToggle}
               >
                 {sendingTest ? "Envoi du test…" : "E-mail de test"}
               </button>
