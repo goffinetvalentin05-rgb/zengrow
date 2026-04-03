@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Mail, MessageCircle, Smartphone } from "lucide-react";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -61,6 +62,7 @@ export default function ReviewAutomationPanel({
   initialSettings,
   initialFeedback,
 }: ReviewAutomationPanelProps) {
+  const router = useRouter();
   const supabase = createClient();
   const [isEnabled, setIsEnabled] = useState(initialSettings.is_enabled);
   const [channel] = useState<"email">("email");
@@ -112,7 +114,12 @@ export default function ReviewAutomationPanel({
     });
 
     setSaving(false);
-    setMessage(error ? error.message : "Automatisation mise à jour.");
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    setMessage("Automatisation mise à jour.");
+    router.refresh();
   }
 
   async function handleAutomationToggle(next: boolean) {
@@ -122,15 +129,22 @@ export default function ReviewAutomationPanel({
     setIsEnabled(next);
     setSavingToggle(true);
 
-    const { error } = await supabase.from("review_automation_settings").upsert(buildAutomationUpsertPayload(next), {
-      onConflict: "restaurant_id",
+    const response = await fetch("/api/reviews/automation-settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_enabled: next }),
     });
 
+    const payload = (await response.json().catch(() => ({}))) as { error?: string };
+
     setSavingToggle(false);
-    if (error) {
+    if (!response.ok) {
       setIsEnabled(previous);
-      setToggleError(error.message);
+      setToggleError(payload.error ?? "Impossible d'enregistrer le réglage.");
+      return;
     }
+
+    router.refresh();
   }
 
   async function sendTestReviewEmail() {

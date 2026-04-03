@@ -2,6 +2,8 @@ import ReviewAutomationPanel from "@/src/components/dashboard/review-automation-
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardReviewsPage() {
   const supabase = await createClient();
   const restaurant = await requireRestaurant();
@@ -30,6 +32,7 @@ export default async function DashboardReviewsPage() {
         </p>
       </header>
       <ReviewAutomationPanel
+        key={`${restaurant.id}-${automation?.id ?? "none"}-${String(automation?.is_enabled ?? false)}`}
         restaurantId={restaurant.id}
         initialSettings={{
           is_enabled: automation?.is_enabled ?? false,
