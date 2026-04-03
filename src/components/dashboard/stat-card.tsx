@@ -18,7 +18,12 @@ type StatCardProps = {
 
 export default function StatCard({ label, value, icon: Icon, accent = "primary" }: StatCardProps) {
   return (
-    <div className="flex gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div
+      className={cn(
+        "flex gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm",
+        "min-h-0 min-w-0",
+      )}
+    >
       <div className={cn("mt-0.5 h-14 w-1 shrink-0 self-start rounded-full", accentBar[accent])} aria-hidden />
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>

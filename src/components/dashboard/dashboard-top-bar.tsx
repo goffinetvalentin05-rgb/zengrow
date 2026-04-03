@@ -15,7 +15,7 @@ const linkPrimaryClass =
   "inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-green-700 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-800";
 
 const linkSecondaryClass =
-  "inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition hover:bg-gray-50";
+  "inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-gray-300/90 bg-white px-3.5 py-1.5 text-sm font-medium text-gray-800 shadow-sm transition hover:bg-gray-50";
 
 export default function DashboardTopBar({ publicLink, restaurantName }: DashboardTopBarProps) {
   const [copied, setCopied] = useState(false);
@@ -27,7 +27,7 @@ export default function DashboardTopBar({ publicLink, restaurantName }: Dashboar
   }
 
   return (
-    <header className="mb-10 flex flex-col gap-5 border-b border-gray-200/90 pb-8 md:flex-row md:items-center md:justify-between">
+    <header className="mb-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500">Espace restaurant</p>
         <h1 className="mt-2 text-xl font-semibold tracking-tight text-gray-900 md:text-[22px]">{restaurantName}</h1>

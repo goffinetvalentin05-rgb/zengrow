@@ -11,6 +11,9 @@ import { cn } from "@/src/lib/utils";
 const linkPrimaryClass =
   "inline-flex min-h-9 items-center justify-center rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-800";
 
+const sectionIntroClass = "text-xl font-semibold tracking-tight text-gray-900 md:text-[22px] md:leading-snug";
+const sectionDescClass = "mt-2 text-sm leading-relaxed text-gray-500";
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const restaurant = await requireRestaurant();
@@ -110,19 +113,19 @@ export default async function DashboardPage() {
         </div>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>En chiffres</CardTitle>
-          <CardDescription>Vue synthétique de votre journée.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {kpis.map((kpi) => (
-              <StatCard key={kpi.label} label={kpi.label} value={kpi.value} icon={kpi.icon} accent={kpi.accent} />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <section className="space-y-4" aria-labelledby="dashboard-stats-heading">
+        <div>
+          <h2 id="dashboard-stats-heading" className={sectionIntroClass}>
+            En chiffres
+          </h2>
+          <p className={sectionDescClass}>Vue synthétique de votre journée.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {kpis.map((kpi) => (
+            <StatCard key={kpi.label} label={kpi.label} value={kpi.value} icon={kpi.icon} accent={kpi.accent} />
+          ))}
+        </div>
+      </section>
 
       <Card>
         <CardHeader>

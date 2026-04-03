@@ -53,14 +53,17 @@ export default function DashboardSidebar({
 
   return (
     <aside
-      className="flex w-full flex-col overflow-hidden border-b border-gray-100 bg-white text-gray-800 shadow-sm md:w-56 md:shrink-0 md:rounded-xl md:border md:border-gray-100 md:pr-8"
+      className="flex w-full min-w-0 flex-col overflow-hidden border-b border-gray-100 bg-white text-gray-800 shadow-sm md:min-w-[220px] md:w-[240px] md:max-w-[240px] md:shrink-0 md:rounded-xl md:border md:border-gray-100"
       style={{ overflow: "hidden" }}
     >
-      <div className="shrink-0 py-2">
+      <div className="shrink-0 px-5 pt-6 pb-8">
         <Image src="/Zengrow-logo.png" alt="ZenGrow" width={128} height={34} className="h-7 w-auto object-contain" priority />
       </div>
 
-      <nav className="mt-8 min-h-0 flex-1 space-y-0.5 overflow-hidden text-[14px]" style={{ overflow: "hidden" }}>
+      <nav
+        className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden px-3 text-sm"
+        style={{ overflow: "hidden" }}
+      >
         {navItems.map((item) => (
           <NavItem
             key={item.href}
@@ -73,20 +76,20 @@ export default function DashboardSidebar({
         ))}
       </nav>
 
-      <div className="mt-10 shrink-0 border-t border-gray-100 pt-8">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Lien public</p>
-        <p className="mt-2 break-all text-xs leading-relaxed text-gray-700">{reservationLink}</p>
+      <div className="mt-6 shrink-0 border-t border-gray-200 px-5 py-6">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Lien public</p>
+        <p className="mt-3 break-all text-xs leading-relaxed text-gray-600">{reservationLink}</p>
         <a
           href={reservationLink}
           target="_blank"
           rel="noreferrer"
-          className="mt-2 inline-block text-sm font-medium text-green-700 hover:text-green-800"
+          className="mt-3 inline-block text-sm font-medium text-green-700 hover:text-green-800"
         >
           Ouvrir la page →
         </a>
       </div>
 
-      <div className="mt-8 shrink-0 space-y-1 border-t border-gray-100 pt-6">
+      <div className="shrink-0 space-y-2 border-t border-gray-200 px-5 pt-6 pb-8">
         <button
           type="button"
           onClick={handleLogout}
@@ -123,10 +126,10 @@ function NavItem({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-lg py-2 pl-2 pr-2 font-medium transition-colors",
+        "flex items-center gap-3 rounded-lg py-2.5 text-sm font-medium transition-colors",
         active
-          ? "border-l-4 border-green-600 bg-green-50 pl-[calc(0.5rem-4px)] text-green-800"
-          : "border-l-4 border-transparent text-gray-800 hover:bg-gray-50",
+          ? "border-l-4 border-green-600 bg-green-50 pl-3 pr-4 text-green-800"
+          : "border-l-4 border-transparent px-4 text-gray-800 hover:bg-gray-50",
       )}
     >
       <Icon size={18} strokeWidth={1.75} className={cn("shrink-0", active ? "text-green-800" : "text-gray-600")} />
