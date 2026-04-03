@@ -8,9 +8,9 @@ export default function Input({ className = "", type, ...props }: InputProps) {
     <input
       type={type}
       className={cn(
-        "min-h-[42px] w-full rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface)] px-3.5 py-2.5 text-sm text-[var(--foreground)] outline-none transition",
-        "placeholder:text-[var(--muted-foreground)]/65",
-        "focus:border-[rgba(13,92,74,0.35)] focus:shadow-[0_0_0_3px_rgba(13,92,74,0.15)]",
+        "min-h-[44px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none transition duration-200",
+        "placeholder:text-[var(--muted-foreground)]/75",
+        "focus:border-[var(--primary)]/40 focus:shadow-[var(--focus-ring)]",
         "file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-[var(--surface-muted)] file:px-3 file:py-2 file:text-xs file:font-medium file:text-[var(--foreground)]",
         type === "color" && "min-h-11 w-14 cursor-pointer p-1.5",
         className,

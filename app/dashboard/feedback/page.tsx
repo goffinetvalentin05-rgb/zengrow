@@ -1,3 +1,4 @@
+import { MessageSquareText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
@@ -22,31 +23,50 @@ export default async function DashboardFeedbackPage() {
 
   return (
     <section className="space-y-10">
+      <div className="flex flex-wrap items-start gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
+          <MessageSquareText size={22} strokeWidth={1.75} />
+        </span>
+        <div>
+          <h1 className="dashboard-page-title">Retours clients</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-xl">
+            Messages privés envoyés après votre demande d&apos;avis — restez proche de vos convives.
+          </p>
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Retours clients</CardTitle>
-          <CardDescription>Tous les retours privés reçus depuis les demandes d&apos;avis.</CardDescription>
+          <CardTitle>Historique des retours</CardTitle>
+          <CardDescription>Ce que vos clients ont partagé en dehors des avis publics.</CardDescription>
         </CardHeader>
         <CardContent>
           {!feedbacks || feedbacks.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-5 text-sm text-[var(--muted-foreground)]">
+            <p className="rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--surface-muted)]/70 p-10 text-center text-[14px] text-[var(--muted-foreground)]">
               Aucun retour pour le moment.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {feedbacks.map((item) => (
                 <article
                   key={item.id}
-                  className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm"
+                  className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--card-shadow)]"
                 >
-                  <p className="text-sm font-semibold text-[var(--foreground)]">Retour #{item.id.slice(0, 8)}</p>
-                  <p className="mt-1 text-sm text-[var(--foreground)]/85">Note : {item.rating ?? 0}/5</p>
-                  <p className="mt-1 text-sm text-[var(--foreground)]/85">Message : {item.message || "(Aucun message)"}</p>
-                  <p className="mt-1 text-sm text-[var(--foreground)]/85">Client : {item.customer_name || "Client"}</p>
-                  <p className="mt-1 text-sm text-[var(--foreground)]/85">
-                    E-mail : {item.customer_email || "Non renseigné"}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-[15px] font-semibold text-[var(--foreground)]">
+                      {item.customer_name || "Client"}
+                    </p>
+                    <span className="rounded-full bg-[var(--badge-sand-bg)] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--badge-sand-text)]">
+                      {formatDate(item.created_at)}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-[14px] text-[var(--foreground)]/85">
+                    <span className="font-medium text-[var(--muted-foreground)]">Note :</span> {item.rating ?? 0}/5
                   </p>
-                  <p className="mt-1 text-sm text-[var(--foreground)]/85">Date : {formatDate(item.created_at)}</p>
+                  <p className="mt-2 text-[14px] leading-relaxed text-[var(--foreground)]/90">
+                    {item.message || "(Aucun message)"}
+                  </p>
+                  <p className="mt-3 text-[13px] text-[var(--muted-foreground)]">{item.customer_email || "Non renseigné"}</p>
                 </article>
               ))}
             </div>

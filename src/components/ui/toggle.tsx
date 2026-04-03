@@ -25,8 +25,8 @@ export default function Toggle({ checked, onChange, label, disabled }: TogglePro
         onClick={() => onChange(!checked)}
         className={cn(
           "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-200",
-          "focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(13,92,74,0.15)]",
-          checked ? "bg-[var(--primary)]" : "bg-[rgba(0,0,0,0.14)]",
+          "focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]",
+          checked ? "bg-[var(--primary)]" : "bg-stone-300/90",
         )}
       >
         <span

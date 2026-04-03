@@ -1,3 +1,4 @@
+import { Users } from "lucide-react";
 import EmptyState from "@/src/components/ui/empty-state";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
@@ -33,45 +34,70 @@ export default async function DashboardCustomersPage() {
   }));
 
   return (
-    <section className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
-      <header className="mb-8">
-        <h2 className="dashboard-page-title">Clients</h2>
-        <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
-          Liste simple des clients et de leur historique de réservation.
-        </p>
-      </header>
-      {customers.length === 0 ? (
-        <EmptyState title="Aucun client pour le moment" description="Les profils se construisent depuis les réservations." />
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-[rgba(0,0,0,0.07)]">
-          <table className="min-w-full text-sm">
-            <thead className="border-b border-[rgba(0,0,0,0.06)] bg-[var(--surface-muted)]/40 text-left text-[var(--muted-foreground)]">
-              <tr>
-                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Nom</th>
-                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Email</th>
-                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Téléphone</th>
-                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Réservations</th>
-                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Dernière visite</th>
-                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Visites totales</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.map((customer) => (
-                <tr key={customer.key} className="border-b border-[rgba(0,0,0,0.05)] last:border-0">
-                  <td className="px-4 py-3.5 font-medium text-[var(--foreground)]">{customer.name}</td>
-                  <td className="px-4 py-3.5 text-[var(--foreground)]/75">{customer.email || "—"}</td>
-                  <td className="px-4 py-3.5 text-[var(--foreground)]/75">{customer.phone || "—"}</td>
-                  <td className="px-4 py-3.5 text-[var(--foreground)]/75">{customer.reservations}</td>
-                  <td className="px-4 py-3.5 text-[var(--foreground)]/75">
-                    {customer.lastVisit ? customer.lastVisit.slice(0, 10) : "—"}
-                  </td>
-                  <td className="px-4 py-3.5 text-[var(--foreground)]/75">{customer.totalVisits}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <section className="space-y-8">
+      <div className="flex flex-wrap items-start gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
+          <Users size={22} strokeWidth={1.75} />
+        </span>
+        <div>
+          <h1 className="dashboard-page-title">Vos clients</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-xl">
+            Historique simple et lisible : idéal pour reconnaître vos habitués.
+          </p>
         </div>
-      )}
+      </div>
+
+      <div className="dashboard-shell-card overflow-hidden">
+        {customers.length === 0 ? (
+          <div className="p-10 md:p-14">
+            <EmptyState title="Aucun client pour le moment" description="Les fiches se construisent à partir des réservations." />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--border-soft)] bg-[var(--surface-muted)]/50 text-left">
+                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
+                    Nom
+                  </th>
+                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
+                    Email
+                  </th>
+                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
+                    Téléphone
+                  </th>
+                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
+                    Réservations
+                  </th>
+                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
+                    Dernière visite
+                  </th>
+                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
+                    Visites
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {customers.map((customer) => (
+                  <tr
+                    key={customer.key}
+                    className="border-b border-[var(--border-soft)] transition-colors last:border-0 hover:bg-[var(--surface-muted)]/40"
+                  >
+                    <td className="px-6 py-4 font-medium text-[var(--foreground)]">{customer.name}</td>
+                    <td className="px-6 py-4 text-[var(--foreground)]/80">{customer.email || "—"}</td>
+                    <td className="px-6 py-4 text-[var(--foreground)]/80">{customer.phone || "—"}</td>
+                    <td className="px-6 py-4 tabular-nums text-[var(--foreground)]/80">{customer.reservations}</td>
+                    <td className="px-6 py-4 tabular-nums text-[var(--foreground)]/80">
+                      {customer.lastVisit ? customer.lastVisit.slice(0, 10) : "—"}
+                    </td>
+                    <td className="px-6 py-4 tabular-nums text-[var(--foreground)]/80">{customer.totalVisits}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

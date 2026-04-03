@@ -1,3 +1,4 @@
+import { Settings } from "lucide-react";
 import SettingsForm from "@/src/components/dashboard/settings-form";
 import { headers } from "next/headers";
 import { requireRestaurant } from "@/src/lib/auth";
@@ -30,8 +31,8 @@ export default async function DashboardSettingsPage() {
     reservation_slot_interval: 30,
     restaurant_capacity: 40,
     max_party_size: 8,
-    accent_color: "#1F7A6C",
-    button_color: "#1F7A6C",
+    accent_color: "#1A6B50",
+    button_color: "#1A6B50",
     logo_url: "",
     cover_image_url: "",
     instagram_url: "",
@@ -44,19 +45,32 @@ export default async function DashboardSettingsPage() {
   };
 
   return (
-    <SettingsForm
-      restaurant={{
-        id: restaurant.id,
-        name: restaurant.name,
-        phone: restaurant.phone,
-        email: restaurant.email,
-        address: restaurant.address,
-        description: restaurant.description,
-        slug: restaurant.slug,
-      }}
-      settings={safeSettings}
-      confirmationMode={restaurantConfig?.reservation_confirmation_mode ?? "manual"}
-      publicLink={publicLink}
-    />
+    <div className="space-y-10">
+      <div className="flex flex-wrap items-start gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
+          <Settings size={22} strokeWidth={1.75} />
+        </span>
+        <div>
+          <h1 className="dashboard-page-title">Paramètres</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+            Votre page publique, vos règles de réservation et votre lien à partager.
+          </p>
+        </div>
+      </div>
+      <SettingsForm
+        restaurant={{
+          id: restaurant.id,
+          name: restaurant.name,
+          phone: restaurant.phone,
+          email: restaurant.email,
+          address: restaurant.address,
+          description: restaurant.description,
+          slug: restaurant.slug,
+        }}
+        settings={safeSettings}
+        confirmationMode={restaurantConfig?.reservation_confirmation_mode ?? "manual"}
+        publicLink={publicLink}
+      />
+    </div>
   );
 }

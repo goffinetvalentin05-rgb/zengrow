@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Link2 } from "lucide-react";
 import Button from "@/src/components/ui/button";
 
 type PublicLinkCardProps = {
@@ -17,23 +18,29 @@ export default function PublicLinkCard({ link }: PublicLinkCardProps) {
   }
 
   return (
-    <section className="space-y-4">
-      <div>
-        <h3 className="dashboard-page-title">Lien public de réservation</h3>
-        <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
-          Partagez ce lien sur Google, Instagram, Facebook ou votre site.
-        </p>
+    <section className="rounded-[20px] border border-[var(--border-soft)] bg-gradient-to-b from-[var(--surface-card)] to-[var(--surface-muted)]/40 p-7 shadow-[var(--card-shadow)]">
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
+          <Link2 size={18} strokeWidth={2} />
+        </span>
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight text-[var(--foreground)]">Lien public de réservation</h3>
+          <p className="dashboard-section-subtitle mt-1">
+            Partagez-le sur Google, Instagram, votre site ou par message.
+          </p>
+        </div>
       </div>
-      <div className="space-y-3">
-        <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/80 px-4 py-3 text-sm text-[var(--foreground)]/85 shadow-sm">
+
+      <div className="mt-6 space-y-4">
+        <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-card)] px-4 py-3.5 text-[13px] leading-relaxed text-[var(--foreground)]/90 shadow-inner">
           {link}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3">
           <Button type="button" onClick={handleCopy}>
             {copied ? "Lien copié" : "Copier le lien"}
           </Button>
           <a href={link} target="_blank" rel="noreferrer" className="dashboard-link-secondary">
-            Ouvrir
+            Ouvrir dans un nouvel onglet
           </a>
         </div>
       </div>

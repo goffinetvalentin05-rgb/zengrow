@@ -1,13 +1,14 @@
 import { cn } from "@/src/lib/utils";
 
-type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info";
+type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info" | "sand";
 
 const toneClasses: Record<BadgeTone, string> = {
-  neutral: "bg-[rgba(0,0,0,0.05)] text-[var(--foreground)]/80 ring-1 ring-[rgba(0,0,0,0.06)]",
-  success: "bg-[rgba(13,92,74,0.1)] text-[var(--primary)] ring-1 ring-[rgba(13,92,74,0.12)]",
-  warning: "bg-amber-50 text-amber-900/85 ring-1 ring-amber-200/80",
-  danger: "bg-red-50 text-red-900/85 ring-1 ring-red-200/80",
-  info: "bg-slate-50 text-slate-700 ring-1 ring-slate-200/90",
+  neutral: "bg-stone-100 text-stone-700 ring-1 ring-stone-200/90",
+  success: "bg-[rgba(26,107,80,0.12)] text-[#145239] ring-1 ring-[rgba(26,107,80,0.22)]",
+  warning: "bg-[#fffbeb] text-[#92400e] ring-1 ring-amber-200/90",
+  danger: "bg-red-50 text-red-900 ring-1 ring-red-200/90",
+  info: "bg-stone-50 text-stone-600 ring-1 ring-stone-200/90",
+  sand: "bg-[var(--badge-sand-bg)] text-[var(--badge-sand-text)] ring-1 ring-stone-200/70",
 };
 
 type BadgeProps = {
@@ -20,7 +21,7 @@ export default function Badge({ children, tone = "neutral", className }: BadgePr
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold tracking-wide",
         toneClasses[tone],
         className,
       )}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Megaphone } from "lucide-react";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import Input from "@/src/components/ui/input";
@@ -86,12 +87,23 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
   }
 
   return (
-    <section className="space-y-10">
+    <section className="space-y-12">
+      <div className="flex flex-wrap items-start gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
+          <Megaphone size={22} strokeWidth={1.75} />
+        </span>
+        <div>
+          <h1 className="dashboard-page-title">Campagnes marketing</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+            Un message groupé pour vos anciens clients — idéal pour une soirée spéciale ou une nouvelle carte.
+          </p>
+        </div>
+      </div>
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Campagnes marketing</CardTitle>
-            <CardDescription>Créez et envoyez des campagnes e-mail à vos anciens clients.</CardDescription>
+            <CardTitle>Vue d&apos;ensemble</CardTitle>
+            <CardDescription>Créez une campagne ou consultez l&apos;historique d&apos;envoi.</CardDescription>
           </div>
           <Button type="button" onClick={() => setShowForm((current) => !current)} variant={showForm ? "secondary" : "primary"}>
             {showForm ? "Fermer" : "Créer une campagne"}
@@ -178,7 +190,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
                 <Link
                   key={campaign.id}
                   href={`/dashboard/marketing/${campaign.id}`}
-                  className="block rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm transition hover:border-[rgba(13,92,74,0.22)] hover:bg-[rgba(13,92,74,0.04)]"
+                  className="block rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] p-5 shadow-[var(--card-shadow)] transition duration-200 hover:border-[rgba(26,107,80,0.2)] hover:bg-[rgba(26,107,80,0.03)]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-semibold text-[var(--foreground)]">{campaign.name}</p>

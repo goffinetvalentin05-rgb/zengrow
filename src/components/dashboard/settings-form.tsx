@@ -56,8 +56,8 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
   const [reservationDuration, setReservationDuration] = useState(settings.reservation_duration ?? 90);
   const [slotInterval, setSlotInterval] = useState(settings.reservation_slot_interval ?? 15);
   const [maxPartySize, setMaxPartySize] = useState(settings.max_party_size ?? 8);
-  const [accentColor, setAccentColor] = useState(settings.accent_color ?? "#0D5C4A");
-  const [buttonColor, setButtonColor] = useState(settings.button_color ?? "#0D5C4A");
+  const [accentColor, setAccentColor] = useState(settings.accent_color ?? "#1A6B50");
+  const [buttonColor, setButtonColor] = useState(settings.button_color ?? "#1A6B50");
   const [logoUrl, setLogoUrl] = useState(settings.logo_url ?? "");
   const [coverImageUrl, setCoverImageUrl] = useState(settings.cover_image_url ?? "");
   const [instagramUrl, setInstagramUrl] = useState(settings.instagram_url ?? "");
@@ -323,7 +323,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
             className={cn(
               "flex cursor-pointer gap-4 rounded-xl border p-4 transition-all",
               reservationConfirmationMode === "manual"
-                ? "border-[rgba(13,92,74,0.32)] bg-[rgba(13,92,74,0.05)] shadow-[0_0_0_3px_rgba(13,92,74,0.08)]"
+                ? "border-[rgba(26,107,80,0.3)] bg-[rgba(26,107,80,0.06)] shadow-[0_0_0_3px_rgba(26,107,80,0.1)]"
                 : "border-[rgba(0,0,0,0.07)] hover:bg-[var(--surface-muted)]/50",
             )}
           >
@@ -357,7 +357,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
             className={cn(
               "flex cursor-pointer gap-4 rounded-xl border p-4 transition-all",
               reservationConfirmationMode === "automatic"
-                ? "border-[rgba(13,92,74,0.32)] bg-[rgba(13,92,74,0.05)] shadow-[0_0_0_3px_rgba(13,92,74,0.08)]"
+                ? "border-[rgba(26,107,80,0.3)] bg-[rgba(26,107,80,0.06)] shadow-[0_0_0_3px_rgba(26,107,80,0.1)]"
                 : "border-[rgba(0,0,0,0.07)] hover:bg-[var(--surface-muted)]/50",
             )}
           >

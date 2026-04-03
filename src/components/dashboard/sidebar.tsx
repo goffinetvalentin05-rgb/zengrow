@@ -53,8 +53,8 @@ export default function DashboardSidebar({
   }
 
   return (
-    <aside className="flex w-full flex-col rounded-2xl bg-[var(--sidebar)] p-5 text-[var(--sidebar-foreground)] shadow-sm ring-1 ring-white/[0.06] lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:shrink-0 lg:w-72">
-      <div className="rounded-xl bg-white/[0.06] p-3.5 ring-1 ring-white/[0.08]">
+    <aside className="flex w-full flex-col rounded-[20px] bg-[var(--sidebar)] p-6 text-[var(--sidebar-foreground)] shadow-[var(--card-shadow)] ring-1 ring-white/[0.06] lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:shrink-0 lg:w-[18rem]">
+      <div className="rounded-xl bg-white/[0.06] p-4 ring-1 ring-white/[0.08]">
         <Image
           src="/Zengrow-logo.png"
           alt="Logo ZenGrow"
@@ -65,7 +65,7 @@ export default function DashboardSidebar({
         />
       </div>
 
-      <nav className="mt-6 flex-1 space-y-0.5 overflow-y-auto pr-1 text-sm">
+      <nav className="mt-8 flex-1 space-y-1 overflow-y-auto pr-1 text-[14px]">
         {navItems.map((item) => (
           <NavItem
             key={item.href}
@@ -78,24 +78,24 @@ export default function DashboardSidebar({
         ))}
       </nav>
 
-      <div className="mt-6 rounded-xl bg-white/[0.05] p-4 ring-1 ring-white/[0.08]">
-        <p className="dashboard-section-kicker text-[rgba(244,246,245,0.5)]">Lien public</p>
-        <p className="mt-2 break-all text-xs leading-relaxed text-white/75">{reservationLink}</p>
+      <div className="mt-8 rounded-[20px] bg-white/[0.05] p-5 ring-1 ring-white/[0.08]">
+        <p className="dashboard-section-kicker text-white/45">Lien public</p>
+        <p className="mt-3 break-all text-xs leading-relaxed text-white/80">{reservationLink}</p>
         <a
           href={reservationLink}
           target="_blank"
           rel="noreferrer"
-          className="mt-3 inline-flex text-xs font-medium text-white/90 underline decoration-white/25 underline-offset-4 transition hover:decoration-white/60"
+          className="mt-4 inline-flex text-[13px] font-medium text-white/95 underline decoration-white/25 underline-offset-4 transition hover:decoration-white/55"
         >
           Ouvrir la page de réservation
         </a>
       </div>
 
-      <div className="mt-6 space-y-1 border-t border-white/[0.08] pt-6">
-        <Button type="button" variant="ghostInverse" onClick={handleLogout} className="w-full justify-start">
+      <div className="mt-8 space-y-1 border-t border-white/[0.08] pt-8">
+        <Button type="button" variant="ghostInverse" onClick={handleLogout} className="w-full justify-start rounded-lg">
           Se déconnecter
         </Button>
-        <Button type="button" variant="ghostInverse" onClick={() => router.push("/")} className="w-full justify-start">
+        <Button type="button" variant="ghostInverse" onClick={() => router.push("/")} className="w-full justify-start rounded-lg">
           Retour au site
         </Button>
       </div>
@@ -120,27 +120,30 @@ function NavItem({
     <Link
       href={href}
       className={cn(
-        "group flex items-center gap-3 rounded-full px-3.5 py-2.5 font-medium transition-colors duration-150",
+        "group relative flex items-center gap-3 rounded-xl py-2.5 pl-3 pr-3 font-medium transition-all duration-200 ease-out",
         active
-          ? "bg-[var(--primary)] text-white shadow-sm"
-          : "text-white/55 hover:bg-white/[0.07] hover:text-white/95",
+          ? "border-l-[3px] border-l-[var(--primary)] bg-white/[0.09] text-white shadow-sm"
+          : "border-l-[3px] border-l-transparent text-white/55 hover:border-l-white/[0.12] hover:bg-white/[0.05] hover:text-white/95",
       )}
     >
-      <Icon
-        size={18}
-        className={cn(
-          "shrink-0 transition-colors",
-          active ? "text-white" : "text-white/45 group-hover:text-white/85",
-        )}
-      />
-      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+        <Icon
+          size={18}
+          strokeWidth={2}
+          className={cn(
+            "transition-colors duration-200",
+            active ? "text-white" : "text-white/45 group-hover:text-white/85",
+          )}
+        />
+      </span>
+      <span className="min-w-0 flex-1 truncate leading-snug">{label}</span>
       {locked ? (
         <span
           className={cn(
-            "ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1",
+            "ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1",
             active
-              ? "bg-white/15 text-white ring-white/25"
-              : "bg-white/[0.07] text-white/65 ring-white/10",
+              ? "bg-white/12 text-white/95 ring-white/20"
+              : "bg-white/[0.07] text-white/60 ring-white/10",
           )}
         >
           Pro

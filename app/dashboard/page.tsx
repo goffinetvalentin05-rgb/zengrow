@@ -1,7 +1,9 @@
 import { headers } from "next/headers";
 import Link from "next/link";
+import { Armchair, Calendar, LayoutDashboard, Star, Users } from "lucide-react";
 import PublicLinkCard from "@/src/components/dashboard/public-link-card";
-import StatusBadge from "@/src/components/dashboard/status-badge";
+import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
+import StatCard from "@/src/components/dashboard/stat-card";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -57,116 +59,122 @@ export default async function DashboardPage() {
       .sort((a, b) => a[0].localeCompare(b[0]))[0]?.[0] ?? null;
 
   const kpis = [
-    { label: "Réservations aujourd'hui", value: reservationsTodayCount },
-    { label: "Personnes attendues aujourd'hui", value: peopleExpectedToday },
-    { label: "Tables restantes aujourd'hui", value: tablesRemainingToday },
-    { label: "Avis Google reçus", value: reviewsReceived ?? 0 },
+    { label: "Réservations aujourd'hui", value: reservationsTodayCount, icon: Calendar, accent: "primary" as const },
+    { label: "Personnes attendues", value: peopleExpectedToday, icon: Users, accent: "amber" as const },
+    { label: "Tables restantes", value: tablesRemainingToday, icon: Armchair, accent: "stone" as const },
+    { label: "Avis Google reçus", value: reviewsReceived ?? 0, icon: Star, accent: "primary" as const },
   ];
 
   return (
-    <section className="space-y-10">
-      <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface)] p-6 shadow-sm md:p-7">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <section className="space-y-12">
+      <div className="flex flex-wrap items-start gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
+          <LayoutDashboard size={22} strokeWidth={1.75} />
+        </span>
+        <div>
+          <p className="text-[13px] font-medium text-[var(--muted-foreground)]">Tableau de bord</p>
+          <h1 className="dashboard-page-title mt-1">{restaurant.name}</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-xl">
+            Voici votre journée en un coup d&apos;œil — réservations, couverts et lien public.
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-8 flex flex-wrap items-start justify-between gap-5">
           <div>
-            <h2 className="dashboard-page-title">Service d&apos;aujourd&apos;hui</h2>
-            <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
-              Timeline des réservations prévues aujourd&apos;hui.
+            <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">Service d&apos;aujourd&apos;hui</h2>
+            <p className="dashboard-section-subtitle mt-2 max-w-xl">
+              Suivez les réservations prévues pour ce service, heure par heure.
             </p>
           </div>
           <Link
             href="/dashboard/reservations?new=1"
-            className="inline-flex min-h-[42px] items-center rounded-xl bg-[var(--primary)] px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition hover:bg-[var(--primary-hover)]"
+            className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition duration-200 hover:bg-[var(--primary-hover)] hover:shadow-[0_4px_14px_rgba(26,107,80,0.3)]"
           >
-            Ajouter une réservation
+            Nouvelle réservation
           </Link>
         </div>
 
         {timelineReservations.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-5 text-sm text-[var(--muted-foreground)]">
-            Aucune réservation aujourd&apos;hui.
-          </p>
+          <div className="rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--surface-muted)]/60 px-6 py-14 text-center">
+            <p className="text-[15px] font-medium text-[var(--foreground)]">Aucune réservation aujourd&apos;hui</p>
+            <p className="mt-2 text-[13px] text-[var(--muted-foreground)]">
+              Les prochains créneaux apparaîtront ici automatiquement.
+            </p>
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {timelineReservations.map((reservation) => (
-              <div
+              <ReservationListRow
                 key={reservation.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 px-4 py-3 shadow-sm"
-              >
-                <p className="text-sm text-[var(--foreground)]">
-                  <span className="font-semibold">{reservation.reservation_time}</span> —{" "}
-                  {reservation.guest_name ?? "Client"} — {reservation.guests} personnes
-                </p>
-                <StatusBadge status={reservation.status as "pending" | "confirmed" | "completed"} />
-              </div>
+                guestName={reservation.guest_name ?? "Client"}
+                timeLabel={reservation.reservation_time}
+                subtitle={`${reservation.guests} ${reservation.guests > 1 ? "personnes" : "personne"}`}
+                status={reservation.status as "pending" | "confirmed" | "completed"}
+                emphasizeTime
+              />
             ))}
           </div>
         )}
       </div>
 
       {fullFromSlot ? (
-        <div className="rounded-xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm font-medium text-amber-900">
-          Restaurant complet à partir de {fullFromSlot}
+        <div className="rounded-[20px] border border-amber-200/80 bg-[#fffbeb] px-5 py-4 text-[14px] font-medium text-amber-950 shadow-[var(--card-shadow)]">
+          <span className="font-semibold">Complet</span> à partir de {fullFromSlot} — capacité maximale atteinte sur ce
+          créneau.
         </div>
       ) : null}
 
-      <div className="border-b border-[rgba(0,0,0,0.06)] pb-10">
-        <div className="mb-6">
-          <h2 className="dashboard-page-title">Vue d&apos;ensemble</h2>
-          <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
-            Statistiques clés du service d&apos;aujourd&apos;hui.
-          </p>
+      <div>
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">Vue d&apos;ensemble</h2>
+          <p className="dashboard-section-subtitle mt-2">Les chiffres clés de votre journée.</p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {kpis.map((kpi) => (
-            <div
-              key={kpi.label}
-              className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 px-5 py-5 shadow-sm"
-            >
-              <p className="dashboard-section-kicker">{kpi.label}</p>
-              <p className="mt-3 text-3xl font-semibold tracking-tight text-[var(--foreground)]">{kpi.value}</p>
-            </div>
+            <StatCard key={kpi.label} label={kpi.label} value={kpi.value} icon={kpi.icon} accent={kpi.accent} />
           ))}
         </div>
       </div>
 
-      <div className="grid gap-10 xl:grid-cols-[1.6fr_0.95fr]">
-        <section className="space-y-4 border-b border-[rgba(0,0,0,0.06)] pb-10 xl:border-b-0 xl:border-r xl:pb-0 xl:pr-10">
+      <div className="grid gap-12 xl:grid-cols-[1.55fr_1fr]">
+        <section className="space-y-5 xl:border-r xl:border-[var(--border-soft)] xl:pr-12">
           <div>
-            <h3 className="dashboard-page-title">Prochaines réservations</h3>
-            <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
-              Liste simple des prochaines tables à servir aujourd&apos;hui.
-            </p>
+            <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">Prochaines tables</h2>
+            <p className="dashboard-section-subtitle mt-2">À servir dans l&apos;ordre d&apos;arrivée prévu.</p>
           </div>
           {activeTodayReservations.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-6 text-sm text-[var(--muted-foreground)]">
-              Aucune réservation à venir pour le moment.
-            </p>
+            <div className="rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--surface-muted)]/60 px-6 py-12 text-center">
+              <p className="text-[15px] font-medium text-[var(--foreground)]">Rien à venir pour l&apos;instant</p>
+              <p className="mt-2 text-[13px] text-[var(--muted-foreground)]">
+                Les réservations confirmées ou en attente s&apos;affichent ici.
+              </p>
+            </div>
           ) : (
-            activeTodayReservations.map((reservation) => (
-              <div
-                key={reservation.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm"
-              >
-                <div>
-                  <p className="font-semibold text-[var(--foreground)]">{reservation.guest_name ?? "Client"}</p>
-                  <p className="text-xs text-[var(--muted-foreground)]">
-                    {reservation.reservation_time} — {reservation.guests} couverts
-                  </p>
-                </div>
-                <StatusBadge status={reservation.status as "pending" | "confirmed"} />
-              </div>
-            ))
+            <div className="space-y-3">
+              {activeTodayReservations.map((reservation) => (
+                <ReservationListRow
+                  key={reservation.id}
+                  guestName={reservation.guest_name ?? "Client"}
+                  timeLabel={reservation.reservation_time}
+                  subtitle={`${reservation.guests} couverts`}
+                  status={reservation.status as "pending" | "confirmed"}
+                />
+              ))}
+            </div>
           )}
 
           <Link
             href="/dashboard/reservations"
-            className="inline-flex text-sm font-medium text-[var(--primary)] underline decoration-[var(--primary)]/25 underline-offset-4 transition hover:decoration-[var(--primary)]/50"
+            className="inline-flex items-center gap-2 text-[14px] font-semibold text-[var(--primary)] transition hover:text-[var(--primary-hover)]"
           >
             Voir toutes les réservations
+            <span aria-hidden>→</span>
           </Link>
         </section>
 
-        <section className="space-y-4">
+        <section>
           <PublicLinkCard link={publicLink} />
         </section>
       </div>

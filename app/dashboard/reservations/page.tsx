@@ -1,3 +1,4 @@
+import { Calendar } from "lucide-react";
 import ReservationsManager from "@/src/components/dashboard/reservations-manager";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
@@ -35,9 +36,22 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
   };
 
   return (
-    <ReservationsManager
-      initialReservations={(reservations ?? []) as ReservationRow[]}
-      initialShowManualForm={shouldOpenManualForm}
-    />
+    <div className="space-y-10">
+      <div className="flex flex-wrap items-start gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
+          <Calendar size={22} strokeWidth={1.75} />
+        </span>
+        <div>
+          <h1 className="dashboard-page-title">Réservations</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+            Toutes les demandes au même endroit : confirmez, refusez ou notez un détail en quelques clics.
+          </p>
+        </div>
+      </div>
+      <ReservationsManager
+        initialReservations={(reservations ?? []) as ReservationRow[]}
+        initialShowManualForm={shouldOpenManualForm}
+      />
+    </div>
   );
 }

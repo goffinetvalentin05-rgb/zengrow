@@ -9,7 +9,7 @@ export function Card({ className, children }: DivProps) {
   return (
     <article
       className={cn(
-        "rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface)] shadow-sm",
+        "rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--card-shadow)]",
         className,
       )}
     >
@@ -20,7 +20,7 @@ export function Card({ className, children }: DivProps) {
 
 export function CardHeader({ className, children }: DivProps) {
   return (
-    <header className={cn("border-b border-[rgba(0,0,0,0.06)] px-6 py-5", className)}>
+    <header className={cn("border-b border-[var(--border-soft)] px-7 py-6 md:px-8 md:py-7", className)}>
       {children}
     </header>
   );
@@ -28,7 +28,12 @@ export function CardHeader({ className, children }: DivProps) {
 
 export function CardTitle({ className, children }: DivProps) {
   return (
-    <h3 className={cn("text-[1.375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]", className)}>
+    <h3
+      className={cn(
+        "text-xl font-semibold leading-snug tracking-tight text-[var(--foreground)] md:text-[1.35rem]",
+        className,
+      )}
+    >
       {children}
     </h3>
   );
@@ -36,10 +41,10 @@ export function CardTitle({ className, children }: DivProps) {
 
 export function CardDescription({ className, children }: DivProps) {
   return (
-    <p className={cn("mt-1.5 text-sm font-normal text-[var(--muted-foreground)]", className)}>{children}</p>
+    <p className={cn("mt-2 text-[13px] leading-relaxed text-[var(--muted-foreground)]", className)}>{children}</p>
   );
 }
 
 export function CardContent({ className, children }: DivProps) {
-  return <div className={cn("p-6", className)}>{children}</div>;
+  return <div className={cn("p-7 md:p-8", className)}>{children}</div>;
 }

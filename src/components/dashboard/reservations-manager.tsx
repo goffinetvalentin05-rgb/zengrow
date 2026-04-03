@@ -2,6 +2,8 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/src/lib/supabase/client";
+import GuestAvatar from "@/src/components/dashboard/guest-avatar";
+import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
 import StatusBadge from "@/src/components/dashboard/status-badge";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -9,6 +11,7 @@ import EmptyState from "@/src/components/ui/empty-state";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
+import { cn } from "@/src/lib/utils";
 
 type ReservationRow = {
   id: string;
@@ -30,6 +33,15 @@ type ReservationsManagerProps = {
 
 const editableStatuses = ["pending", "confirmed", "rejected", "completed", "cancelled", "no-show"] as const;
 
+const STATUS_LABEL_FR: Record<ReservationRow["status"], string> = {
+  pending: "En attente",
+  confirmed: "Confirmée",
+  rejected: "Refusée",
+  cancelled: "Annulée",
+  completed: "Terminée",
+  "no-show": "Absent",
+};
+
 function reservationDateTimeValue(reservation: ReservationRow) {
   return new Date(`${reservation.reservation_date}T${reservation.reservation_time}`).getTime();
 }
@@ -38,7 +50,61 @@ function sortReservations(values: ReservationRow[]) {
   return [...values].sort((a, b) => reservationDateTimeValue(b) - reservationDateTimeValue(a));
 }
 
-export default function ReservationsManager({ initialReservations, initialShowManualForm = false }: ReservationsManagerProps) {
+function DesktopReservationRow({
+  reservation,
+  savingId,
+  onSelect,
+  onConfirm,
+  onReject,
+}: {
+  reservation: ReservationRow;
+  savingId: string | null;
+  onSelect: () => void;
+  onConfirm: () => void;
+  onReject: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] px-5 py-4 shadow-[var(--card-shadow)] transition duration-200 md:block",
+        "hover:shadow-[var(--card-shadow-hover)]",
+      )}
+    >
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <GuestAvatar name={reservation.guest_name} size="sm" />
+          <span className="truncate text-[15px] font-semibold text-[var(--foreground)]">{reservation.guest_name}</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-6 text-[13px] tabular-nums text-[var(--muted-foreground)]">
+          <span>{reservation.reservation_date}</span>
+          <span className="font-medium text-[var(--foreground)]">{reservation.reservation_time}</span>
+          <span>{reservation.guests} pers.</span>
+        </div>
+        <StatusBadge status={reservation.status} />
+      </div>
+      <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[var(--border-soft)] pt-4">
+        {reservation.status === "pending" ? (
+          <>
+            <Button type="button" size="sm" variant="secondary" onClick={onConfirm} disabled={savingId === reservation.id}>
+              Confirmer
+            </Button>
+            <Button type="button" size="sm" variant="danger" onClick={onReject} disabled={savingId === reservation.id}>
+              Refuser
+            </Button>
+          </>
+        ) : null}
+        <Button type="button" size="sm" variant="ghost" onClick={onSelect}>
+          Détails
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default function ReservationsManager({
+  initialReservations,
+  initialShowManualForm = false,
+}: ReservationsManagerProps) {
   const supabase = createClient();
   const [reservations, setReservations] = useState(sortReservations(initialReservations));
   const [filterDate, setFilterDate] = useState("");
@@ -55,9 +121,7 @@ export default function ReservationsManager({ initialReservations, initialShowMa
   const [manualGuests, setManualGuests] = useState(2);
   const [manualNote, setManualNote] = useState("");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>(
-    Object.fromEntries(
-      initialReservations.map((reservation) => [reservation.id, reservation.internal_note ?? ""]),
-    ),
+    Object.fromEntries(initialReservations.map((reservation) => [reservation.id, reservation.internal_note ?? ""])),
   );
 
   const filteredReservations = useMemo(() => {
@@ -173,207 +237,118 @@ export default function ReservationsManager({ initialReservations, initialShowMa
   }
 
   return (
-    <section className="space-y-10">
+    <section className="space-y-12">
       <Card>
-        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Réservations</CardTitle>
-            <CardDescription>
-              Vue claire des réservations, avec filtres rapides par date et statut.
-            </CardDescription>
+            <CardTitle>Toutes les demandes</CardTitle>
+            <CardDescription>Filtrez par date ou statut, puis ouvrez le détail pour ajuster.</CardDescription>
           </div>
-          <Button type="button" variant={showManualForm ? "secondary" : "primary"} onClick={() => setShowManualForm((current) => !current)}>
-            {showManualForm ? "Fermer" : "Ajouter une réservation"}
+          <Button type="button" variant={showManualForm ? "secondary" : "primary"} onClick={() => setShowManualForm((c) => !c)}>
+            {showManualForm ? "Fermer le formulaire" : "Ajouter une réservation"}
           </Button>
         </CardHeader>
-        <CardContent className="space-y-5">
+        <CardContent className="space-y-8">
           {showManualForm ? (
             <form
               onSubmit={createManualReservation}
-              className="space-y-4 rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-5 shadow-sm"
+              className="space-y-5 rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)]/60 p-6 md:p-8"
             >
-              <div className="grid gap-4 md:grid-cols-2">
+              <p className="text-[15px] font-semibold text-[var(--foreground)]">Nouvelle réservation</p>
+              <div className="grid gap-5 md:grid-cols-2">
                 <div>
                   <label className="dashboard-field-label">Nom du client</label>
-                  <Input value={manualGuestName} onChange={(event) => setManualGuestName(event.target.value)} required />
+                  <Input value={manualGuestName} onChange={(e) => setManualGuestName(e.target.value)} required />
                 </div>
                 <div>
                   <label className="dashboard-field-label">Téléphone</label>
-                  <Input value={manualGuestPhone} onChange={(event) => setManualGuestPhone(event.target.value)} required />
+                  <Input value={manualGuestPhone} onChange={(e) => setManualGuestPhone(e.target.value)} required />
                 </div>
                 <div>
                   <label className="dashboard-field-label">Email (optionnel)</label>
-                  <Input
-                    type="email"
-                    value={manualGuestEmail}
-                    onChange={(event) => setManualGuestEmail(event.target.value)}
-                  />
+                  <Input type="email" value={manualGuestEmail} onChange={(e) => setManualGuestEmail(e.target.value)} />
                 </div>
                 <div>
                   <label className="dashboard-field-label">Date</label>
-                  <Input
-                    type="date"
-                    value={manualReservationDate}
-                    onChange={(event) => setManualReservationDate(event.target.value)}
-                    required
-                  />
+                  <Input type="date" value={manualReservationDate} onChange={(e) => setManualReservationDate(e.target.value)} required />
                 </div>
                 <div>
                   <label className="dashboard-field-label">Heure</label>
-                  <Input
-                    type="time"
-                    value={manualReservationTime}
-                    onChange={(event) => setManualReservationTime(event.target.value)}
-                    required
-                  />
+                  <Input type="time" value={manualReservationTime} onChange={(e) => setManualReservationTime(e.target.value)} required />
                 </div>
                 <div>
                   <label className="dashboard-field-label">Nombre de personnes</label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={manualGuests}
-                    onChange={(event) => setManualGuests(Number(event.target.value))}
-                    required
-                  />
+                  <Input type="number" min={1} value={manualGuests} onChange={(e) => setManualGuests(Number(e.target.value))} required />
                 </div>
                 <div className="md:col-span-2">
                   <label className="dashboard-field-label">Note (optionnel)</label>
-                  <Textarea
-                    className="min-h-20"
-                    value={manualNote}
-                    onChange={(event) => setManualNote(event.target.value)}
-                  />
+                  <Textarea className="min-h-24" value={manualNote} onChange={(e) => setManualNote(e.target.value)} />
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 <Button type="submit" disabled={savingId === "manual-create"}>
                   {savingId === "manual-create" ? "Enregistrement..." : "Enregistrer la réservation"}
                 </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setShowManualForm(false)}
-                  disabled={savingId === "manual-create"}
-                >
+                <Button type="button" variant="secondary" onClick={() => setShowManualForm(false)} disabled={savingId === "manual-create"}>
                   Annuler
                 </Button>
               </div>
             </form>
           ) : null}
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2">
             <div>
-              <label className="dashboard-field-label">Date</label>
-              <Input type="date" value={filterDate} onChange={(event) => setFilterDate(event.target.value)} />
+              <label className="dashboard-field-label">Filtrer par date</label>
+              <Input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
             </div>
             <div>
               <label className="dashboard-field-label">Statut</label>
-              <Select
-                value={filterStatus}
-                onChange={(event) => setFilterStatus(event.target.value as "all" | ReservationRow["status"])}
-              >
-                <option value="all">Tous</option>
+              <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as "all" | ReservationRow["status"])}>
+                <option value="all">Tous les statuts</option>
                 {editableStatuses.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {STATUS_LABEL_FR[status]}
                   </option>
                 ))}
               </Select>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="border-b bg-[var(--surface-muted)] text-left text-[var(--muted-foreground)]">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Nom client</th>
-                  <th className="px-4 py-3 font-semibold">Date</th>
-                  <th className="px-4 py-3 font-semibold">Heure</th>
-                  <th className="px-4 py-3 font-semibold">Personnes</th>
-                  <th className="px-4 py-3 font-semibold">Statut</th>
-                  <th className="px-4 py-3 font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredReservations.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="p-4">
-                      <EmptyState title="Aucune réservation" description="Aucun résultat avec ces filtres." />
-                    </td>
-                  </tr>
-                ) : (
-                  filteredReservations.map((reservation) => (
-                    <tr key={reservation.id} className="border-b last:border-0">
-                      <td className="px-4 py-3">
-                        <p className="font-semibold text-[var(--foreground)]">{reservation.guest_name}</p>
-                      </td>
-                      <td className="px-4 py-3 text-[var(--foreground)]/75">{reservation.reservation_date}</td>
-                      <td className="px-4 py-3 text-[var(--foreground)]/75">{reservation.reservation_time}</td>
-                      <td className="px-4 py-3 text-[var(--foreground)]/75">{reservation.guests}</td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={reservation.status} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-2">
-                          {reservation.status === "pending" ? (
-                            <>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => updateStatus(reservation.id, "confirmed")}
-                                disabled={savingId === reservation.id}
-                              >
-                                Confirmer
-                              </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="danger"
-                                onClick={() => updateStatus(reservation.id, "rejected")}
-                                disabled={savingId === reservation.id}
-                              >
-                                Refuser
-                              </Button>
-                            </>
-                          ) : null}
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setSelectedReservationId(reservation.id)}
-                          >
-                            Voir
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <div className="hidden md:block">
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+              Liste des réservations
+            </p>
+            <div className="space-y-3">
+              {filteredReservations.length === 0 ? (
+                <EmptyState title="Aucune réservation" description="Aucun résultat avec ces filtres." />
+              ) : (
+                filteredReservations.map((reservation) => (
+                  <DesktopReservationRow
+                    key={reservation.id}
+                    reservation={reservation}
+                    savingId={savingId}
+                    onSelect={() => setSelectedReservationId(reservation.id)}
+                    onConfirm={() => updateStatus(reservation.id, "confirmed")}
+                    onReject={() => updateStatus(reservation.id, "rejected")}
+                  />
+                ))
+              )}
+            </div>
           </div>
 
-          <div className="space-y-3 pt-4 md:hidden">
+          <div className="space-y-3 md:hidden">
             {filteredReservations.length === 0 ? (
               <EmptyState title="Aucune réservation" description="Essayez d'ajuster vos filtres." />
             ) : (
               filteredReservations.map((reservation) => (
-                <button
+                <ReservationListRow
                   key={reservation.id}
-                  type="button"
+                  guestName={reservation.guest_name}
+                  timeLabel={`${reservation.reservation_date} · ${reservation.reservation_time}`}
+                  subtitle={`${reservation.guests} couverts`}
+                  status={reservation.status}
                   onClick={() => setSelectedReservationId(reservation.id)}
-                  className="w-full rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-3 text-left shadow-sm"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-[var(--foreground)]">{reservation.guest_name}</p>
-                    <StatusBadge status={reservation.status} />
-                  </div>
-                  <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                    {reservation.reservation_date} à {reservation.reservation_time} - {reservation.guests} couverts
-                  </p>
-                </button>
+                />
               ))
             )}
           </div>
@@ -383,71 +358,65 @@ export default function ReservationsManager({ initialReservations, initialShowMa
       {selectedReservation ? (
         <Card>
           <CardHeader>
-            <CardTitle>Détail de la réservation</CardTitle>
-            <CardDescription>Voir, modifier ou annuler rapidement.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-5 md:grid-cols-[1fr_1fr]">
-            <div className="space-y-1">
-              <p className="text-lg font-semibold text-[var(--foreground)]">{selectedReservation.guest_name}</p>
-              <p className="text-sm text-[var(--muted-foreground)]">
-                {selectedReservation.reservation_date} à {selectedReservation.reservation_time}
-              </p>
-              <p className="text-sm text-[var(--muted-foreground)]">{selectedReservation.guests} couverts</p>
-              <p className="text-sm text-[var(--muted-foreground)]">
-                Contact : {selectedReservation.guest_phone || selectedReservation.guest_email || "-"}
-              </p>
+            <div className="flex flex-wrap items-start gap-4">
+              <GuestAvatar name={selectedReservation.guest_name} size="lg" />
+              <div>
+                <CardTitle className="!mt-0">{selectedReservation.guest_name}</CardTitle>
+                <CardDescription>
+                  {selectedReservation.reservation_date} à {selectedReservation.reservation_time} · {selectedReservation.guests}{" "}
+                  couverts
+                </CardDescription>
+                <p className="dashboard-section-subtitle mt-3">
+                  Contact : {selectedReservation.guest_phone || selectedReservation.guest_email || "—"}
+                </p>
+              </div>
             </div>
-
-            <div className="space-y-4">
+          </CardHeader>
+          <CardContent className="grid gap-8 md:grid-cols-2">
+            <div className="space-y-5">
               <div>
                 <label className="dashboard-field-label">Statut</label>
                 <Select
                   value={selectedReservation.status}
-                  onChange={(event) =>
-                    updateStatus(selectedReservation.id, event.target.value as ReservationRow["status"])
-                  }
+                  onChange={(e) => updateStatus(selectedReservation.id, e.target.value as ReservationRow["status"])}
                   disabled={savingId === selectedReservation.id}
                 >
                   {editableStatuses.map((status) => (
                     <option key={status} value={status}>
-                      {status}
+                      {STATUS_LABEL_FR[status]}
                     </option>
                   ))}
                 </Select>
               </div>
-
+            </div>
+            <div className="space-y-4">
               <div>
                 <label className="dashboard-field-label">Note interne</label>
                 <Textarea
-                  className="min-h-24"
+                  className="min-h-28"
                   value={noteDrafts[selectedReservation.id] ?? ""}
-                  onChange={(event) =>
+                  onChange={(e) =>
                     setNoteDrafts((current) => ({
                       ...current,
-                      [selectedReservation.id]: event.target.value,
+                      [selectedReservation.id]: e.target.value,
                     }))
                   }
-                  placeholder="Informations utiles pour l'equipe salle."
+                  placeholder="Infos pour l'équipe en salle…"
                 />
               </div>
-
-              <Button
-                type="button"
-                onClick={() => saveNote(selectedReservation.id)}
-                disabled={savingId === selectedReservation.id}
-              >
-                Enregistrer
+              <Button type="button" onClick={() => saveNote(selectedReservation.id)} disabled={savingId === selectedReservation.id}>
+                Enregistrer la note
               </Button>
             </div>
           </CardContent>
         </Card>
       ) : null}
 
-      {message && (
-        <p className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 px-4 py-3 text-sm text-[var(--foreground)]/85 shadow-sm">
+      {message ? (
+        <p className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)]/70 px-5 py-4 text-[14px] text-[var(--foreground)]/90 shadow-[var(--card-shadow)]">
           {message}
         </p>
-      )}
+      ) : null}
     </section>
   );
 }

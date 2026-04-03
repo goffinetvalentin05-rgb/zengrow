@@ -134,8 +134,8 @@ export default function ReviewAutomationPanel({
       <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Automatisation des avis</CardTitle>
-            <CardDescription>Activez, configurez et prévisualisez votre message post-visite.</CardDescription>
+            <CardTitle>Paramètres d&apos;envoi</CardTitle>
+            <CardDescription>Activez l&apos;envoi automatique et personnalisez le message reçu par vos clients.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <PanelToggle
@@ -158,9 +158,9 @@ export default function ReviewAutomationPanel({
                         role={item.disabled ? undefined : "button"}
                         tabIndex={item.disabled ? -1 : 0}
                         className={cn(
-                          "flex min-w-0 flex-1 items-center gap-3 rounded-xl border px-3.5 py-3 transition-colors sm:min-w-[7.5rem] sm:flex-1",
+                          "flex min-w-0 flex-1 items-center gap-3 rounded-[16px] border px-3.5 py-3.5 transition-all duration-200 sm:min-w-[7.5rem] sm:flex-1",
                           item.disabled && "cursor-not-allowed opacity-65",
-                          !item.disabled && selected && "border-[rgba(13,92,74,0.35)] bg-[rgba(13,92,74,0.06)] shadow-sm",
+                          !item.disabled && selected && "border-[rgba(26,107,80,0.35)] bg-[rgba(26,107,80,0.08)] shadow-[var(--card-shadow)]",
                           !item.disabled && !selected && "cursor-pointer border-[rgba(0,0,0,0.07)] hover:bg-[var(--surface-muted)]/80",
                           item.disabled && "border-[rgba(0,0,0,0.06)] bg-[var(--surface-muted)]/40",
                         )}
@@ -284,15 +284,15 @@ export default function ReviewAutomationPanel({
             <CardDescription>Ce que le client recevra après sa visite.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/70 p-5">
+            <div className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)]/80 p-6">
               <p className="dashboard-section-kicker">{channel.toUpperCase()}</p>
-              <div className="mt-4 space-y-3 rounded-xl bg-[var(--surface)] p-5 text-sm text-[var(--foreground)]/85 shadow-sm ring-1 ring-[rgba(0,0,0,0.05)]">
+              <div className="mt-4 space-y-3 rounded-[16px] bg-[var(--surface-card)] p-6 text-sm text-[var(--foreground)]/88 shadow-[var(--card-shadow)] ring-1 ring-[var(--border-soft)]">
                 <p className="text-base font-semibold text-[var(--foreground)]">{previewSubject}</p>
                 <p className="whitespace-pre-line">{previewMessage}</p>
                 <div className="grid grid-cols-3 gap-2">
                   <span
                     className="rounded-lg px-2 py-2 text-center text-xs font-semibold text-white"
-                    style={{ backgroundColor: primaryColor || "#0D5C4A" }}
+                    style={{ backgroundColor: primaryColor || "#1A6B50" }}
                   >
                     {positiveLabel}
                   </span>
@@ -316,15 +316,15 @@ export default function ReviewAutomationPanel({
         </CardHeader>
         <CardContent>
           {initialFeedback.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-5 text-sm text-[var(--muted-foreground)]">
+            <p className="rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--surface-muted)]/70 p-8 text-center text-[14px] text-[var(--muted-foreground)]">
               Aucun retour privé pour le moment.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {initialFeedback.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm"
+                  className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] p-5 shadow-[var(--card-shadow)]"
                 >
                   <p className="dashboard-section-kicker">{item.created_at.slice(0, 10)}</p>
                   <p className="mt-2 text-sm text-[var(--foreground)]/85">{item.message || "(Aucun message)"}</p>

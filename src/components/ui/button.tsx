@@ -11,20 +11,20 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm hover:bg-[var(--primary-hover)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]/35 focus-visible:ring-offset-2",
+    "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm hover:bg-[var(--primary-hover)] hover:shadow-[0_4px_14px_rgba(26,107,80,0.32)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]/35 focus-visible:ring-offset-2",
   secondary:
-    "border border-[rgba(0,0,0,0.12)] bg-transparent text-[var(--foreground)] hover:bg-[rgba(0,0,0,0.03)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]/25 focus-visible:ring-offset-2",
+    "border border-[var(--border)] bg-transparent text-[var(--foreground)] hover:bg-[var(--surface-muted)] hover:shadow-[var(--card-shadow)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]/25 focus-visible:ring-offset-2",
   ghost:
-    "bg-transparent text-[var(--muted-foreground)] hover:bg-[rgba(0,0,0,0.04)] hover:text-[var(--foreground)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]/20 focus-visible:ring-offset-2",
+    "border border-transparent bg-transparent text-[var(--muted-foreground)] hover:border-[var(--border)] hover:bg-[var(--surface-muted)]/80 hover:text-[var(--foreground)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]/20 focus-visible:ring-offset-2",
   ghostInverse:
-    "bg-transparent text-[rgba(255,255,255,0.55)] hover:bg-[rgba(255,255,255,0.07)] hover:text-white focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar)]",
+    "border border-transparent bg-transparent text-[rgba(255,255,255,0.55)] hover:bg-[rgba(255,255,255,0.07)] hover:text-white focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar)]",
   danger:
-    "bg-[var(--danger)] text-white hover:bg-[#991b1b] focus-visible:ring-2 focus-visible:ring-red-400/50 focus-visible:ring-offset-2",
+    "bg-red-600 text-white shadow-sm hover:bg-red-700 hover:shadow-[0_4px_14px_rgba(220,38,38,0.35)] focus-visible:ring-2 focus-visible:ring-red-400/50 focus-visible:ring-offset-2",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
   sm: "min-h-9 px-3.5 py-1.5 text-sm font-medium",
-  md: "min-h-[42px] px-5 py-2.5 text-sm font-medium",
+  md: "min-h-[44px] px-5 py-2.5 text-sm font-medium",
   lg: "min-h-11 px-6 py-3 text-sm font-medium",
 };
 
@@ -37,7 +37,7 @@ export default function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl transition-all outline-none disabled:pointer-events-none disabled:opacity-60",
+        "inline-flex items-center justify-center gap-2 rounded-lg transition-all duration-200 outline-none disabled:pointer-events-none disabled:opacity-60",
         variantClasses[variant],
         sizeClasses[size],
         className,

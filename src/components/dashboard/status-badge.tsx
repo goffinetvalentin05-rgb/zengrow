@@ -11,13 +11,13 @@ const labels: Record<ReservationStatus, string> = {
   "no-show": "Absent",
 };
 
-const tones: Record<ReservationStatus, "neutral" | "success" | "warning" | "danger" | "info"> = {
+const tones: Record<ReservationStatus, "neutral" | "success" | "warning" | "danger" | "sand"> = {
   pending: "warning",
   confirmed: "success",
   rejected: "danger",
   completed: "success",
   cancelled: "danger",
-  "no-show": "neutral",
+  "no-show": "sand",
 };
 
 export default function StatusBadge({ status }: { status: ReservationStatus }) {

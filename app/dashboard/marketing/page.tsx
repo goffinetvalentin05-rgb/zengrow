@@ -1,3 +1,4 @@
+import { Megaphone } from "lucide-react";
 import MarketingPanel from "@/src/components/dashboard/marketing-panel";
 import Link from "next/link";
 import { requireRestaurant } from "@/src/lib/auth";
@@ -19,19 +20,30 @@ export default async function DashboardMarketingPage() {
   const restaurant = await requireRestaurant();
   if (!canAccessFeature(restaurant.subscription_plan, "marketing", restaurant.subscription_status)) {
     return (
-      <section className="space-y-6">
+      <section className="space-y-10">
+        <div className="flex flex-wrap items-start gap-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
+            <Megaphone size={22} strokeWidth={1.75} />
+          </span>
+          <div>
+            <h1 className="dashboard-page-title">Campagnes marketing</h1>
+            <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+              Fonction réservée au plan Pro — pour envoyer des messages à vos anciens clients.
+            </p>
+          </div>
+        </div>
         <Card>
           <CardHeader>
-            <CardTitle>Campagnes marketing</CardTitle>
-            <CardDescription>Disponible uniquement dans le plan Pro.</CardDescription>
+            <CardTitle>Passer au plan Pro</CardTitle>
+            <CardDescription>Les campagnes e-mail sont incluses dans l&apos;offre Pro.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-[var(--foreground)]/75">
-              Passez au plan Pro pour créer et envoyer des campagnes e-mail à vos clients.
+            <p className="dashboard-section-subtitle max-w-lg">
+              Créez des messages groupés pour annoncer une soirée, un menu ou une offre — en quelques minutes.
             </p>
             <Link
               href="/dashboard/billing"
-              className="mt-5 inline-flex min-h-[42px] items-center rounded-xl bg-[var(--primary)] px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition hover:bg-[var(--primary-hover)]"
+              className="mt-6 inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition duration-200 hover:bg-[var(--primary-hover)] hover:shadow-[0_4px_14px_rgba(26,107,80,0.3)]"
             >
               Voir les abonnements
             </Link>

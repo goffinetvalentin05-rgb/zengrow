@@ -34,13 +34,12 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
   const sentCount = emails.length;
 
   return (
-    <section className="space-y-10">
+    <section className="space-y-12">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="dashboard-section-kicker">Campagnes marketing</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)] md:text-[1.5rem]">
-            {campaign.name}
-          </h1>
+          <h1 className="dashboard-page-title mt-2">{campaign.name}</h1>
+          <p className="dashboard-section-subtitle mt-2">Détail et destinataires de cette campagne.</p>
         </div>
         <Link href="/dashboard/marketing" className="dashboard-link-secondary">
           Retour

@@ -103,12 +103,12 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
   }
 
   return (
-    <section className="space-y-6">
-      <div className="overflow-hidden rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface)] shadow-sm">
-        <div className="space-y-6 border-b border-[rgba(0,0,0,0.06)] px-6 py-6 md:px-8 md:py-8">
+    <section className="space-y-8">
+      <div className="dashboard-shell-card overflow-hidden">
+        <div className="space-y-8 border-b border-[var(--border-soft)] px-8 py-8 md:px-10 md:py-10">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="space-y-3">
-              <p className="inline-flex items-center gap-2 rounded-full border border-[rgba(13,92,74,0.2)] bg-[rgba(13,92,74,0.06)] px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--primary)]">
+              <p className="inline-flex items-center gap-2 rounded-full border border-[rgba(26,107,80,0.22)] bg-[rgba(26,107,80,0.08)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--primary)]">
                 <Sparkles size={14} />
                 Facturation ZenGrow
               </p>
@@ -147,7 +147,7 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
           ) : null}
 
           {status === "expired" ? (
-            <div className="rounded-xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm text-amber-900">
+            <div className="rounded-[20px] border border-amber-200/80 bg-[#fffbeb] px-5 py-4 text-[14px] text-amber-950 shadow-[var(--card-shadow)]">
               Votre essai est termine. Choisissez un plan pour redebloquer immediatement votre espace ZenGrow.
             </div>
           ) : null}
@@ -164,10 +164,10 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
               <div
                 key={item.key}
                 className={[
-                  "relative rounded-xl border px-6 py-6 shadow-sm transition-colors",
+                  "relative rounded-[20px] border px-7 py-7 shadow-[var(--card-shadow)] transition-shadow duration-200 hover:shadow-[var(--card-shadow-hover)]",
                   item.featured
-                    ? "border-[rgba(13,92,74,0.28)] bg-[rgba(13,92,74,0.04)]"
-                    : "border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/30",
+                    ? "border-[rgba(26,107,80,0.25)] bg-[rgba(26,107,80,0.05)]"
+                    : "border-[var(--border-soft)] bg-[var(--surface-card)]",
                 ].join(" ")}
               >
                 {item.featured ? (
@@ -218,7 +218,7 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
 function FeatureItem({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
     <li className="flex items-start gap-3">
-      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgba(13,92,74,0.1)] text-[var(--primary)]">
+      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgba(26,107,80,0.12)] text-[var(--primary)]">
         <Check size={14} strokeWidth={2.5} />
       </span>
       <span className="inline-flex items-center gap-2">

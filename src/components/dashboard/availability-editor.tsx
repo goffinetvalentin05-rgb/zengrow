@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CalendarDays } from "lucide-react";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import Input from "@/src/components/ui/input";
@@ -82,10 +83,21 @@ export default function AvailabilityEditor({
   }
 
   return (
-    <section className="space-y-10">
+    <section className="space-y-12">
+      <div className="flex flex-wrap items-start gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
+          <CalendarDays size={22} strokeWidth={1.75} />
+        </span>
+        <div>
+          <h1 className="dashboard-page-title">Disponibilités</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+            Indiquez quand vous accueillez les réservations — jour par jour, sans jargon.
+          </p>
+        </div>
+      </div>
       <Card>
         <CardHeader>
-          <CardTitle>Horaires et disponibilités</CardTitle>
+          <CardTitle>Horaires par jour</CardTitle>
           <CardDescription>
             Configurez vos disponibilités jour par jour avec une interface simple.
           </CardDescription>
@@ -97,7 +109,7 @@ export default function AvailabilityEditor({
             return (
               <div
                 key={day}
-                className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm"
+                className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] p-5 shadow-[var(--card-shadow)]"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{dayLabels[day]}</p>
