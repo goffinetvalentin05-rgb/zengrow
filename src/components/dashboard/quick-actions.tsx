@@ -7,7 +7,7 @@ export default function QuickActions() {
       <div className="mt-4 flex flex-wrap gap-3">
         <Link
           href="/dashboard/reservations"
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          className="rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)]"
         >
           Gérer les réservations
         </Link>

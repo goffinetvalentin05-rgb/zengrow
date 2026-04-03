@@ -29,14 +29,14 @@ export default function ReservationListRow({
       <div className="min-w-0 flex-1">
         {emphasizeTime ? (
           <>
-            <p className="font-semibold tabular-nums text-[var(--primary)]">{timeLabel}</p>
-            <p className="mt-0.5 truncate text-[15px] font-semibold text-[var(--foreground)]">{guestName}</p>
-            {subtitle ? <p className="mt-0.5 text-[13px] text-[var(--muted-foreground)]">{subtitle}</p> : null}
+            <p className="font-medium tabular-nums text-green-800">{timeLabel}</p>
+            <p className="mt-0.5 truncate font-medium text-gray-900">{guestName}</p>
+            {subtitle ? <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p> : null}
           </>
         ) : (
           <>
-            <p className="truncate text-[15px] font-semibold text-[var(--foreground)]">{guestName}</p>
-            <p className="mt-0.5 text-[13px] text-[var(--muted-foreground)]">
+            <p className="truncate font-medium text-gray-900">{guestName}</p>
+            <p className="mt-0.5 text-sm text-gray-500">
               {timeLabel}
               {subtitle ? ` · ${subtitle}` : ""}
             </p>
@@ -48,11 +48,11 @@ export default function ReservationListRow({
   );
 
   const shell =
-    "flex w-full items-center gap-4 rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] px-4 py-3.5 shadow-[var(--card-shadow)] transition-shadow duration-200 hover:shadow-[var(--card-shadow-hover)]";
+    "flex w-full items-center gap-4 border-b border-gray-100 py-4 text-left last:border-b-0 hover:bg-gray-50/50";
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={cn(shell, "text-left", className)}>
+      <button type="button" onClick={onClick} className={cn(shell, className)}>
         {inner}
       </button>
     );

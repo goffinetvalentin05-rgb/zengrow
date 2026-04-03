@@ -15,7 +15,7 @@ type GuestAvatarProps = {
   className?: string;
 };
 
-const sizeMap = { sm: "h-9 w-9 text-xs", md: "h-11 w-11 text-sm", lg: "h-12 w-12 text-base" };
+const sizeMap = { sm: "h-9 w-9 text-xs", md: "h-10 w-10 text-xs", lg: "h-11 w-11 text-sm" };
 
 export default function GuestAvatar({ name, size = "md", className }: GuestAvatarProps) {
   const initials = initialsFromName(name || "Client");
@@ -23,7 +23,7 @@ export default function GuestAvatar({ name, size = "md", className }: GuestAvata
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--primary)]/18 to-[var(--primary)]/6 font-semibold text-[var(--primary)] shadow-sm ring-2 ring-white",
+        "flex shrink-0 items-center justify-center rounded-full bg-gray-100 font-medium text-gray-600",
         sizeMap[size],
         className,
       )}

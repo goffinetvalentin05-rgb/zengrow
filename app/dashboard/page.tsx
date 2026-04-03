@@ -1,9 +1,7 @@
 import { headers } from "next/headers";
 import Link from "next/link";
-import { Armchair, Calendar, LayoutDashboard, Star, Users } from "lucide-react";
 import PublicLinkCard from "@/src/components/dashboard/public-link-card";
 import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
-import StatCard from "@/src/components/dashboard/stat-card";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -59,52 +57,51 @@ export default async function DashboardPage() {
       .sort((a, b) => a[0].localeCompare(b[0]))[0]?.[0] ?? null;
 
   const kpis = [
-    { label: "Réservations aujourd'hui", value: reservationsTodayCount, icon: Calendar, accent: "primary" as const },
-    { label: "Personnes attendues", value: peopleExpectedToday, icon: Users, accent: "amber" as const },
-    { label: "Tables restantes", value: tablesRemainingToday, icon: Armchair, accent: "stone" as const },
-    { label: "Avis Google reçus", value: reviewsReceived ?? 0, icon: Star, accent: "primary" as const },
+    { label: "Réservations aujourd'hui", value: reservationsTodayCount },
+    { label: "Personnes attendues", value: peopleExpectedToday },
+    { label: "Tables restantes", value: tablesRemainingToday },
+    { label: "Avis Google reçus", value: reviewsReceived ?? 0 },
   ];
 
   return (
-    <section className="space-y-12">
-      <div className="flex flex-wrap items-start gap-4">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
-          <LayoutDashboard size={22} strokeWidth={1.75} />
-        </span>
-        <div>
-          <p className="text-[13px] font-medium text-[var(--muted-foreground)]">Tableau de bord</p>
-          <h1 className="dashboard-page-title mt-1">{restaurant.name}</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-xl">
-            Voici votre journée en un coup d&apos;œil — réservations, couverts et lien public.
-          </p>
-        </div>
+    <section className="space-y-16 pb-8">
+      <header className="space-y-2">
+        <p className="dashboard-section-kicker">Tableau de bord</p>
+        <h1 className="dashboard-page-title">{restaurant.name}</h1>
+        <p className="dashboard-section-subtitle max-w-xl">
+          Aujourd&apos;hui : réservations, couverts et lien public en un coup d&apos;œil.
+        </p>
+      </header>
+
+      <div className="flex flex-wrap gap-x-14 gap-y-8 border-b border-gray-100 pb-12">
+        {kpis.map((kpi) => (
+          <div key={kpi.label}>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{kpi.label}</p>
+            <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight text-gray-900">{kpi.value}</p>
+          </div>
+        ))}
       </div>
 
-      <div>
-        <div className="mb-8 flex flex-wrap items-start justify-between gap-5">
+      <div className="space-y-8">
+        <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">Service d&apos;aujourd&apos;hui</h2>
-            <p className="dashboard-section-subtitle mt-2 max-w-xl">
-              Suivez les réservations prévues pour ce service, heure par heure.
-            </p>
+            <h2 className="text-lg font-semibold text-gray-900">Réservations du jour</h2>
+            <p className="dashboard-section-subtitle mt-1">Par ordre d&apos;heure.</p>
           </div>
           <Link
             href="/dashboard/reservations?new=1"
-            className="inline-flex min-h-[44px] items-center rounded-lg bg-[var(--primary)] px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition duration-200 hover:bg-[var(--primary-hover)] hover:shadow-[0_4px_14px_rgba(26,107,80,0.3)]"
+            className="inline-flex min-h-11 items-center rounded-lg bg-[var(--primary)] px-5 text-sm font-medium text-white transition hover:bg-[var(--primary-hover)]"
           >
             Nouvelle réservation
           </Link>
         </div>
 
         {timelineReservations.length === 0 ? (
-          <div className="rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--surface-muted)]/60 px-6 py-14 text-center">
-            <p className="text-[15px] font-medium text-[var(--foreground)]">Aucune réservation aujourd&apos;hui</p>
-            <p className="mt-2 text-[13px] text-[var(--muted-foreground)]">
-              Les prochains créneaux apparaîtront ici automatiquement.
-            </p>
-          </div>
+          <p className="py-10 text-center text-sm text-gray-500">
+            Aucune réservation aujourd&apos;hui. Les créneaux apparaîtront ici automatiquement.
+          </p>
         ) : (
-          <div className="space-y-3">
+          <div>
             {timelineReservations.map((reservation) => (
               <ReservationListRow
                 key={reservation.id}
@@ -117,67 +114,19 @@ export default async function DashboardPage() {
             ))}
           </div>
         )}
+
+        <Link href="/dashboard/reservations" className="inline-flex text-sm font-medium text-green-700 hover:text-green-800">
+          Voir toutes les réservations →
+        </Link>
       </div>
 
       {fullFromSlot ? (
-        <div className="rounded-[20px] border border-amber-200/80 bg-[#fffbeb] px-5 py-4 text-[14px] font-medium text-amber-950 shadow-[var(--card-shadow)]">
-          <span className="font-semibold">Complet</span> à partir de {fullFromSlot} — capacité maximale atteinte sur ce
-          créneau.
-        </div>
+        <p className="border-l-4 border-amber-400 bg-amber-50/80 py-3 pl-4 text-sm text-amber-950">
+          <span className="font-semibold">Complet</span> à partir de {fullFromSlot} — capacité maximale sur ce créneau.
+        </p>
       ) : null}
 
-      <div>
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">Vue d&apos;ensemble</h2>
-          <p className="dashboard-section-subtitle mt-2">Les chiffres clés de votre journée.</p>
-        </div>
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {kpis.map((kpi) => (
-            <StatCard key={kpi.label} label={kpi.label} value={kpi.value} icon={kpi.icon} accent={kpi.accent} />
-          ))}
-        </div>
-      </div>
-
-      <div className="grid gap-12 xl:grid-cols-[1.55fr_1fr]">
-        <section className="space-y-5 xl:border-r xl:border-[var(--border-soft)] xl:pr-12">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">Prochaines tables</h2>
-            <p className="dashboard-section-subtitle mt-2">À servir dans l&apos;ordre d&apos;arrivée prévu.</p>
-          </div>
-          {activeTodayReservations.length === 0 ? (
-            <div className="rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--surface-muted)]/60 px-6 py-12 text-center">
-              <p className="text-[15px] font-medium text-[var(--foreground)]">Rien à venir pour l&apos;instant</p>
-              <p className="mt-2 text-[13px] text-[var(--muted-foreground)]">
-                Les réservations confirmées ou en attente s&apos;affichent ici.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {activeTodayReservations.map((reservation) => (
-                <ReservationListRow
-                  key={reservation.id}
-                  guestName={reservation.guest_name ?? "Client"}
-                  timeLabel={reservation.reservation_time}
-                  subtitle={`${reservation.guests} couverts`}
-                  status={reservation.status as "pending" | "confirmed"}
-                />
-              ))}
-            </div>
-          )}
-
-          <Link
-            href="/dashboard/reservations"
-            className="inline-flex items-center gap-2 text-[14px] font-semibold text-[var(--primary)] transition hover:text-[var(--primary-hover)]"
-          >
-            Voir toutes les réservations
-            <span aria-hidden>→</span>
-          </Link>
-        </section>
-
-        <section>
-          <PublicLinkCard link={publicLink} />
-        </section>
-      </div>
+      <PublicLinkCard link={publicLink} />
     </section>
   );
 }

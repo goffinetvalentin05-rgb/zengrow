@@ -16,7 +16,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
-import Button from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 
 type DashboardSidebarProps = {
@@ -29,10 +28,10 @@ const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
   { href: "/dashboard/availability", label: "Disponibilités", icon: CalendarDays },
-  { href: "/dashboard/reviews", label: "Automatisation des avis", icon: Star },
+  { href: "/dashboard/reviews", label: "Avis Google", icon: Star },
   { href: "/dashboard/feedback", label: "Retours clients", icon: MessageSquare },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
-  { href: "/dashboard/marketing", label: "Campagnes marketing", icon: Megaphone, requiresPro: true },
+  { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { href: "/dashboard/billing", label: "Facturation", icon: CreditCard },
 ];
@@ -54,53 +53,64 @@ export default function DashboardSidebar({
 
   return (
     <aside
-      className="flex w-full flex-col overflow-hidden rounded-[20px] border-b border-solid border-[#E5E7EB] bg-[#FFFFFF] p-6 text-[#1a1a1a] lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:shrink-0 lg:w-[18rem] lg:border-b-0 lg:border-r lg:border-[#E5E7EB]"
+      className="flex w-full flex-col overflow-hidden border-b border-gray-100 bg-white text-gray-800 lg:sticky lg:top-0 lg:h-screen lg:max-h-screen lg:w-56 lg:shrink-0 lg:border-b-0 lg:border-r lg:border-gray-100"
       style={{ overflow: "hidden" }}
     >
-      <div className="shrink-0 rounded-xl border border-solid border-[#E5E7EB] bg-[#FFFFFF] p-4">
+      <div className="shrink-0 px-4 pb-6 pt-6 lg:px-5">
         <Image
           src="/Zengrow-logo.png"
-          alt="Logo ZenGrow"
-          width={140}
-          height={38}
-          className="h-8 w-auto object-contain"
+          alt="ZenGrow"
+          width={128}
+          height={36}
+          className="h-7 w-auto object-contain"
           priority
         />
       </div>
 
-      <nav className="mt-8 min-h-0 flex-1 space-y-1 overflow-hidden text-[14px] text-[#1a1a1a]" style={{ overflow: "hidden" }}>
+      <nav className="min-h-0 flex-1 space-y-0.5 overflow-hidden px-2 text-[14px]" style={{ overflow: "hidden" }}>
         {navItems.map((item) => (
           <NavItem
             key={item.href}
             href={item.href}
             label={item.label}
             icon={item.icon}
-            active={pathname === item.href}
+            active={
+              pathname === item.href ||
+              (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`))
+            }
             locked={Boolean(item.requiresPro && !hasProMarketingAccess)}
           />
         ))}
       </nav>
 
-      <div className="mt-8 shrink-0 rounded-[20px] border border-solid border-[#E5E7EB] bg-[#FFFFFF] p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6b7280]">Lien public</p>
-        <p className="mt-3 break-all text-xs leading-relaxed text-[#1a1a1a]">{reservationLink}</p>
+      <div className="shrink-0 space-y-3 border-t border-gray-100 px-4 py-6 lg:px-5">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">Lien public</p>
+        <p className="break-all text-xs leading-relaxed text-gray-600">{reservationLink}</p>
         <a
           href={reservationLink}
           target="_blank"
           rel="noreferrer"
-          className="mt-4 inline-flex text-[13px] font-medium text-[var(--primary)] underline decoration-[var(--primary)]/25 underline-offset-4 transition hover:decoration-[var(--primary)]/50"
+          className="text-sm font-medium text-green-700 underline decoration-green-200 underline-offset-2 hover:text-green-800"
         >
-          Ouvrir la page de réservation
+          Ouvrir la page
         </a>
       </div>
 
-      <div className="mt-8 shrink-0 space-y-1 border-t border-solid border-[#E5E7EB] pt-8">
-        <Button type="button" variant="ghost" onClick={handleLogout} className="w-full justify-start rounded-lg text-[#1a1a1a] hover:bg-[#F3F4F6]">
-          Se déconnecter
-        </Button>
-        <Button type="button" variant="ghost" onClick={() => router.push("/")} className="w-full justify-start rounded-lg text-[#1a1a1a] hover:bg-[#F3F4F6]">
-          Retour au site
-        </Button>
+      <div className="shrink-0 space-y-1 border-t border-gray-100 px-2 py-4 lg:px-3">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+        >
+          Déconnexion
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+        >
+          Site vitrine
+        </button>
       </div>
     </aside>
   );
@@ -123,30 +133,23 @@ function NavItem({
     <Link
       href={href}
       className={cn(
-        "group relative flex items-center gap-3 rounded-xl py-2.5 pl-3 pr-3 font-medium transition-all duration-200 ease-out",
+        "flex items-center gap-3 rounded-lg py-2 pl-2 pr-2 font-medium transition-colors",
         active
-          ? "border-l-[3px] border-solid border-l-[#166534] bg-[#F0FDF4] text-[#166534] shadow-sm"
-          : "border-l-[3px] border-l-transparent text-[#1a1a1a] hover:bg-[#F9FAFB] hover:text-[#1a1a1a]",
+          ? "border-l-4 border-green-600 bg-green-50 text-green-900"
+          : "border-l-4 border-transparent text-gray-800 hover:bg-gray-50",
       )}
     >
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center">
-        <Icon
-          size={18}
-          strokeWidth={2}
-          className={cn(
-            "transition-colors duration-200",
-            active ? "text-[#166534]" : "text-[#1a1a1a] group-hover:text-[#1a1a1a]",
-          )}
-        />
-      </span>
-      <span className="min-w-0 flex-1 truncate leading-snug">{label}</span>
+      <Icon
+        size={18}
+        strokeWidth={2}
+        className={cn("shrink-0", active ? "text-green-800" : "text-gray-500")}
+      />
+      <span className="min-w-0 flex-1 truncate">{label}</span>
       {locked ? (
         <span
           className={cn(
-            "ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1",
-            active
-              ? "bg-[#DCFCE7] text-[#166534] ring-[#166534]/20"
-              : "bg-[#F3F4F6] text-[#6b7280] ring-[#E5E7EB]",
+            "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+            active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500",
           )}
         >
           Pro

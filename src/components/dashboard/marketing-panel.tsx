@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Megaphone } from "lucide-react";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import Input from "@/src/components/ui/input";
@@ -87,125 +86,100 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
   }
 
   return (
-    <section className="space-y-12">
-      <div className="flex flex-wrap items-start gap-4">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
-          <Megaphone size={22} strokeWidth={1.75} />
-        </span>
-        <div>
-          <h1 className="dashboard-page-title">Campagnes marketing</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-            Un message groupé pour vos anciens clients — idéal pour une soirée spéciale ou une nouvelle carte.
-          </p>
-        </div>
-      </div>
-      <Card>
-        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <section className="space-y-14">
+      <header className="space-y-2">
+        <p className="dashboard-section-kicker">Marketing</p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <CardTitle>Vue d&apos;ensemble</CardTitle>
-            <CardDescription>Créez une campagne ou consultez l&apos;historique d&apos;envoi.</CardDescription>
+            <h1 className="dashboard-page-title">Campagnes e-mail</h1>
+            <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+              Un message groupé pour vos anciens clients — soirée spéciale, nouvelle carte, etc.
+            </p>
           </div>
-          <Button type="button" onClick={() => setShowForm((current) => !current)} variant={showForm ? "secondary" : "primary"}>
-            {showForm ? "Fermer" : "Créer une campagne"}
+          <Button type="button" onClick={() => setShowForm((c) => !c)} variant={showForm ? "secondary" : "primary"}>
+            {showForm ? "Fermer" : "Nouvelle campagne"}
           </Button>
-        </CardHeader>
-      </Card>
-
-      {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Créer une campagne</CardTitle>
-            <CardDescription>Configurez le message, l&apos;image et le segment de destinataires.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="dashboard-field-label">Nom de la campagne</label>
-              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Promo de mars" />
-            </div>
-
-            <div>
-              <label className="dashboard-field-label">Objet</label>
-              <Input
-                value={subject}
-                onChange={(event) => setSubject(event.target.value)}
-                placeholder="Menu spécial ce week-end"
-              />
-            </div>
-
-            <div>
-              <label className="dashboard-field-label">Contenu de l&apos;e-mail</label>
-              <Textarea
-                className="min-h-36"
-                value={content}
-                onChange={(event) => setContent(event.target.value)}
-                placeholder="Présentez votre offre à vos clients."
-              />
-            </div>
-
-            <div>
-              <label className="dashboard-field-label">URL de l&apos;image (optionnel)</label>
-              <Input
-                value={imageUrl}
-                onChange={(event) => setImageUrl(event.target.value)}
-                placeholder="https://.../flyer.jpg"
-              />
-            </div>
-
-            <div>
-              <label className="dashboard-field-label">Destinataires</label>
-              <Select value={audience} onChange={(event) => setAudience(event.target.value as AudienceFilter)}>
-                <option value="all_customers">Tous les clients</option>
-                <option value="visited_last_30_days">Clients venus ces 30 derniers jours</option>
-                <option value="visited_last_90_days">Clients venus ces 90 derniers jours</option>
-                <option value="visited_more_than_3_times">Clients venus plus de 3 fois</option>
-              </Select>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" onClick={handleCreateCampaign} disabled={submitting}>
-                {submitting ? "Envoi..." : "Envoyer la campagne"}
-              </Button>
-              <Button type="button" variant="secondary" onClick={() => setShowForm(false)} disabled={submitting}>
-                Annuler
-              </Button>
-            </div>
-            {message && <p className="text-sm text-[var(--muted-foreground)]">{message}</p>}
-          </CardContent>
-        </Card>
-      )}
+        </div>
+      </header>
 
       <Card>
         <CardHeader>
-          <CardTitle>Campagnes envoyées</CardTitle>
-          <CardDescription>Historique de vos campagnes e-mail envoyées depuis ZenGrow.</CardDescription>
+          <CardTitle>Vue d&apos;ensemble</CardTitle>
+          <CardDescription>Créez une campagne ou consultez l&apos;historique.</CardDescription>
         </CardHeader>
-        <CardContent>
-          {campaigns.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-5 text-sm text-[var(--muted-foreground)]">
-              Aucune campagne envoyée pour le moment.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {campaigns.map((campaign) => (
-                <Link
-                  key={campaign.id}
-                  href={`/dashboard/marketing/${campaign.id}`}
-                  className="block rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] p-5 shadow-[var(--card-shadow)] transition duration-200 hover:border-[rgba(26,107,80,0.2)] hover:bg-[rgba(26,107,80,0.03)]"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-semibold text-[var(--foreground)]">{campaign.name}</p>
-                    <p className="text-xs text-[var(--muted-foreground)]">
-                      {campaign.sent_at ? `Envoyée le ${campaign.sent_at.slice(0, 10)}` : "Non envoyée"}
-                    </p>
-                  </div>
-                  <p className="mt-1 text-sm text-[var(--foreground)]/80">{campaign.subject}</p>
-                  <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-                    Créée le {campaign.created_at.slice(0, 10)} - Destinataires {campaign.recipients_count}
-                  </p>
-                </Link>
-              ))}
+        <CardContent className="space-y-10">
+          {showForm ? (
+            <div className="space-y-4 border-t border-gray-100 pt-8">
+              <p className="text-sm font-medium text-gray-900">Nouvelle campagne</p>
+              <div>
+                <label className="dashboard-field-label">Nom de la campagne</label>
+                <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Promo de mars" />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Objet</label>
+                <Input
+                  value={subject}
+                  onChange={(event) => setSubject(event.target.value)}
+                  placeholder="Menu spécial ce week-end"
+                />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Contenu de l&apos;e-mail</label>
+                <Textarea
+                  className="min-h-36"
+                  value={content}
+                  onChange={(event) => setContent(event.target.value)}
+                  placeholder="Présentez votre offre à vos clients."
+                />
+              </div>
+              <div>
+                <label className="dashboard-field-label">URL de l&apos;image (optionnel)</label>
+                <Input
+                  value={imageUrl}
+                  onChange={(event) => setImageUrl(event.target.value)}
+                  placeholder="https://.../flyer.jpg"
+                />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Destinataires</label>
+                <Select value={audience} onChange={(event) => setAudience(event.target.value as AudienceFilter)}>
+                  <option value="all_customers">Tous les clients</option>
+                  <option value="visited_last_30_days">Clients venus ces 30 derniers jours</option>
+                  <option value="visited_last_90_days">Clients venus ces 90 derniers jours</option>
+                  <option value="visited_more_than_3_times">Clients venus plus de 3 fois</option>
+                </Select>
+              </div>
+              <Button type="button" onClick={handleCreateCampaign} disabled={submitting}>
+                {submitting ? "Envoi..." : "Envoyer la campagne"}
+              </Button>
+              {message && <p className="text-sm text-gray-600">{message}</p>}
             </div>
-          )}
+          ) : null}
+
+          <div>
+            <h3 className="mb-4 text-sm font-medium text-gray-900">Campagnes envoyées</h3>
+            {campaigns.length === 0 ? (
+              <p className="py-8 text-center text-sm text-gray-500">Aucune campagne pour le moment.</p>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {campaigns.map((campaign) => (
+                  <li key={campaign.id}>
+                    <Link
+                      href={`/dashboard/marketing/${campaign.id}`}
+                      className="block py-4 transition hover:bg-gray-50/80"
+                    >
+                      <p className="font-medium text-gray-900">{campaign.name}</p>
+                      <p className="mt-0.5 text-sm text-gray-600">{campaign.subject}</p>
+                      <p className="mt-2 text-xs text-gray-500">
+                        {campaign.sent_at ? `Envoyée le ${campaign.sent_at.slice(0, 10)}` : "Non envoyée"} ·{" "}
+                        {campaign.recipients_count} destinataires
+                      </p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </CardContent>
       </Card>
     </section>

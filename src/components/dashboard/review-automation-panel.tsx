@@ -268,10 +268,10 @@ export default function ReviewAutomationPanel({
 
             <div className="flex flex-wrap gap-2">
               <Button type="button" onClick={saveSettings} disabled={saving}>
-                {saving ? "Enregistrement..." : "Enregistrer la configuration"}
+                {saving ? "Enregistrement..." : "Enregistrer"}
               </Button>
-              <Button type="button" variant="secondary" onClick={sendTestReviewEmail} disabled={sendingTest}>
-                {sendingTest ? "Envoi du test..." : "Envoyer un e-mail de test"}
+              <Button type="button" variant="ghost" onClick={sendTestReviewEmail} disabled={sendingTest}>
+                {sendingTest ? "Envoi..." : "E-mail de test"}
               </Button>
             </div>
             {message && <p className="text-sm text-[var(--muted-foreground)]">{message}</p>}
@@ -284,25 +284,23 @@ export default function ReviewAutomationPanel({
             <CardDescription>Ce que le client recevra après sa visite.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)]/80 p-6">
-              <p className="dashboard-section-kicker">{channel.toUpperCase()}</p>
-              <div className="mt-4 space-y-3 rounded-[16px] bg-[var(--surface-card)] p-6 text-sm text-[var(--foreground)]/88 shadow-[var(--card-shadow)] ring-1 ring-[var(--border-soft)]">
-                <p className="text-base font-semibold text-[var(--foreground)]">{previewSubject}</p>
-                <p className="whitespace-pre-line">{previewMessage}</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <span
-                    className="rounded-lg px-2 py-2 text-center text-xs font-semibold text-white"
-                    style={{ backgroundColor: primaryColor || "#1A6B50" }}
-                  >
-                    {positiveLabel}
-                  </span>
-                  <span className="rounded-lg border border-[rgba(0,0,0,0.07)] px-2 py-2 text-center text-xs font-semibold">
-                    {neutralLabel}
-                  </span>
-                  <span className="rounded-lg border border-[rgba(0,0,0,0.07)] px-2 py-2 text-center text-xs font-semibold">
-                    {negativeLabel}
-                  </span>
-                </div>
+            <div className="space-y-4 rounded-lg bg-gray-50 p-5 text-sm text-gray-800">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{channel}</p>
+              <p className="text-base font-semibold text-gray-900">{previewSubject}</p>
+              <p className="whitespace-pre-line leading-relaxed">{previewMessage}</p>
+              <div className="grid grid-cols-3 gap-2 pt-2">
+                <span
+                  className="rounded-md px-2 py-2 text-center text-xs font-semibold text-white"
+                  style={{ backgroundColor: primaryColor || "#15803d" }}
+                >
+                  {positiveLabel}
+                </span>
+                <span className="rounded-md border border-gray-200 bg-white px-2 py-2 text-center text-xs font-medium text-gray-800">
+                  {neutralLabel}
+                </span>
+                <span className="rounded-md border border-gray-200 bg-white px-2 py-2 text-center text-xs font-medium text-gray-800">
+                  {negativeLabel}
+                </span>
               </div>
             </div>
           </CardContent>

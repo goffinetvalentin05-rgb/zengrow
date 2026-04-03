@@ -103,9 +103,8 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
   }
 
   return (
-    <section className="space-y-8">
-      <div className="dashboard-shell-card overflow-hidden">
-        <div className="space-y-8 border-b border-[var(--border-soft)] px-8 py-8 md:px-10 md:py-10">
+    <section className="space-y-10">
+      <div className="space-y-8 border-b border-gray-100 pb-10">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="space-y-3">
               <p className="inline-flex items-center gap-2 rounded-full border border-[rgba(26,107,80,0.22)] bg-[rgba(26,107,80,0.08)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--primary)]">
@@ -147,13 +146,13 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
           ) : null}
 
           {status === "expired" ? (
-            <div className="rounded-[20px] border border-amber-200/80 bg-[#fffbeb] px-5 py-4 text-[14px] text-amber-950 shadow-[var(--card-shadow)]">
-              Votre essai est termine. Choisissez un plan pour redebloquer immediatement votre espace ZenGrow.
-            </div>
+            <p className="border-l-4 border-amber-400 bg-amber-50/80 py-3 pl-4 text-sm text-amber-950">
+              Votre essai est terminé. Choisissez un plan pour redébloquer votre espace ZenGrow.
+            </p>
           ) : null}
         </div>
 
-        <div className="space-y-5 px-6 py-6 md:px-8 md:py-8">
+        <div className="space-y-6 pt-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="dashboard-section-kicker">Plans d&apos;abonnement</p>
             <p className="text-xs text-[var(--muted-foreground)]">35 CHF ou 49 CHF par mois</p>
@@ -164,10 +163,8 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
               <div
                 key={item.key}
                 className={[
-                  "relative rounded-[20px] border px-7 py-7 shadow-[var(--card-shadow)] transition-shadow duration-200 hover:shadow-[var(--card-shadow-hover)]",
-                  item.featured
-                    ? "border-[rgba(26,107,80,0.25)] bg-[rgba(26,107,80,0.05)]"
-                    : "border-[var(--border-soft)] bg-[var(--surface-card)]",
+                  "relative rounded-xl border px-6 py-6",
+                  item.featured ? "border-green-200 bg-green-50/40" : "border-gray-100 bg-white",
                 ].join(" ")}
               >
                 {item.featured ? (
@@ -204,13 +201,8 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
             ))}
           </div>
         </div>
-      </div>
 
-      {message ? (
-        <p className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--foreground)]/85 shadow-sm">
-          {message}
-        </p>
-      ) : null}
+      {message ? <p className="text-sm text-gray-600">{message}</p> : null}
     </section>
   );
 }

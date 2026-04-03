@@ -1,4 +1,3 @@
-import { Users } from "lucide-react";
 import EmptyState from "@/src/components/ui/empty-state";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
@@ -34,29 +33,22 @@ export default async function DashboardCustomersPage() {
   }));
 
   return (
-    <section className="space-y-8">
-      <div className="flex flex-wrap items-start gap-4">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
-          <Users size={22} strokeWidth={1.75} />
-        </span>
-        <div>
-          <h1 className="dashboard-page-title">Vos clients</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-xl">
-            Historique simple et lisible : idéal pour reconnaître vos habitués.
-          </p>
-        </div>
-      </div>
+    <section className="space-y-10">
+      <header className="space-y-2">
+        <p className="dashboard-section-kicker">Base clients</p>
+        <h1 className="dashboard-page-title">Vos clients</h1>
+        <p className="dashboard-section-subtitle max-w-xl">
+          Historique simple : reconnaître vos habitués au fil des réservations.
+        </p>
+      </header>
 
-      <div className="dashboard-shell-card overflow-hidden">
-        {customers.length === 0 ? (
-          <div className="p-10 md:p-14">
-            <EmptyState title="Aucun client pour le moment" description="Les fiches se construisent à partir des réservations." />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b border-[var(--border-soft)] bg-[var(--surface-muted)]/50 text-left">
+      {customers.length === 0 ? (
+        <EmptyState title="Aucun client pour le moment" description="Les fiches se construisent à partir des réservations." />
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-left">
                   <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
                     Nom
                   </th>
@@ -95,9 +87,8 @@ export default async function DashboardCustomersPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 }

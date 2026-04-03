@@ -1,4 +1,3 @@
-import { Star } from "lucide-react";
 import ReviewAutomationPanel from "@/src/components/dashboard/review-automation-panel";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
@@ -24,17 +23,13 @@ export default async function DashboardReviewsPage() {
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-wrap items-start gap-4">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
-          <Star size={22} strokeWidth={1.75} />
-        </span>
-        <div>
-          <h1 className="dashboard-page-title">Avis Google</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-            Après le repas, invitez vos clients à laisser un avis — sans effort pour vous.
-          </p>
-        </div>
-      </div>
+      <header className="space-y-2">
+        <p className="dashboard-section-kicker">Réputation</p>
+        <h1 className="dashboard-page-title">Avis Google</h1>
+        <p className="dashboard-section-subtitle max-w-2xl">
+          Après le repas, invitez vos clients à laisser un avis — automatiquement par e-mail.
+        </p>
+      </header>
       <ReviewAutomationPanel
         restaurantId={restaurant.id}
         initialSettings={{

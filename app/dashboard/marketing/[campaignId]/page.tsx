@@ -36,86 +36,57 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
   return (
     <section className="space-y-12">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="dashboard-section-kicker">Campagnes marketing</p>
-          <h1 className="dashboard-page-title mt-2">{campaign.name}</h1>
-          <p className="dashboard-section-subtitle mt-2">Détail et destinataires de cette campagne.</p>
-        </div>
-        <Link href="/dashboard/marketing" className="dashboard-link-secondary">
-          Retour
+        <header className="space-y-2">
+          <p className="dashboard-section-kicker">Campagne</p>
+          <h1 className="dashboard-page-title">{campaign.name}</h1>
+          <p className="dashboard-section-subtitle">Envoyée le {(campaign.sent_at ?? campaign.created_at).slice(0, 10)}</p>
+        </header>
+        <Link href="/dashboard/marketing" className="text-sm font-medium text-green-700 hover:text-green-800">
+          ← Retour
         </Link>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Détail de la campagne</CardTitle>
-          <CardDescription>Contenu envoyé et statistiques de diffusion.</CardDescription>
+          <CardTitle>Contenu</CardTitle>
+          <CardDescription>Objet et message envoyés.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-5 md:grid-cols-2">
-          <div className="space-y-1">
-            <p className="dashboard-field-label mb-0">Titre</p>
-            <p className="font-semibold text-[var(--foreground)]">{campaign.name}</p>
+        <CardContent className="space-y-6">
+          <div>
+            <p className="dashboard-field-label">Objet</p>
+            <p className="mt-1 font-medium text-gray-900">{campaign.subject}</p>
           </div>
-          <div className="space-y-1">
-            <p className="dashboard-field-label mb-0">Date d&apos;envoi</p>
-            <p className="font-semibold text-[var(--foreground)]">
-              {(campaign.sent_at ?? campaign.created_at).slice(0, 10)}
-            </p>
+          <div>
+            <p className="dashboard-field-label">Message</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-800">{campaign.content}</p>
           </div>
-          <div className="space-y-1 md:col-span-2">
-            <p className="dashboard-field-label mb-0">Objet</p>
-            <p className="font-semibold text-[var(--foreground)]">{campaign.subject}</p>
-          </div>
-          <div className="space-y-1 md:col-span-2">
-            <p className="dashboard-field-label mb-0">Contenu du message</p>
-            <p className="whitespace-pre-wrap rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 text-sm text-[var(--foreground)]/85 shadow-sm">
-              {campaign.content}
-            </p>
+          <div className="flex flex-wrap gap-10 border-t border-gray-100 pt-6">
+            <div>
+              <p className="dashboard-field-label">E-mails envoyés</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">{sentCount}</p>
+            </div>
+            <div>
+              <p className="dashboard-field-label">Ouverts</p>
+              <p className="mt-1 text-2xl font-semibold text-gray-400">—</p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Statistiques</CardTitle>
-          <CardDescription>Suivi simplifié des performances de la campagne.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm">
-            <p className="dashboard-section-kicker">Emails envoyés</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)]">{sentCount}</p>
-          </div>
-          <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm">
-            <p className="dashboard-section-kicker">Emails ouverts</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)]/60">—</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Destinataires</CardTitle>
-          <CardDescription>Liste des adresses e-mail ciblées par cette campagne.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {emails.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-5 text-sm text-[var(--muted-foreground)]">
-              Aucun destinataire enregistré.
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {emails.map((email) => (
-                <li
-                  key={email}
-                  className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 px-3 py-2.5 text-sm shadow-sm"
-                >
-                  {email}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <div>
+        <h2 className="text-sm font-medium text-gray-900">Destinataires</h2>
+        {emails.length === 0 ? (
+          <p className="mt-4 text-sm text-gray-500">Aucune adresse enregistrée.</p>
+        ) : (
+          <ul className="mt-4 divide-y divide-gray-100">
+            {emails.map((email) => (
+              <li key={email} className="py-2 text-sm text-gray-800">
+                {email}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }

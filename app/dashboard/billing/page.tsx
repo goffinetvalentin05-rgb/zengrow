@@ -1,4 +1,3 @@
-import { CreditCard } from "lucide-react";
 import BillingPlans from "@/src/components/dashboard/billing-plans";
 import { requireRestaurant } from "@/src/lib/auth";
 
@@ -7,17 +6,13 @@ export default async function DashboardBillingPage() {
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-wrap items-start gap-4">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
-          <CreditCard size={22} strokeWidth={1.75} />
-        </span>
-        <div>
-          <h1 className="dashboard-page-title">Facturation</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-            Choisissez l&apos;offre qui correspond à votre établissement — sans surprise.
-          </p>
-        </div>
-      </div>
+      <header className="space-y-2">
+        <p className="dashboard-section-kicker">Abonnement</p>
+        <h1 className="dashboard-page-title">Facturation</h1>
+        <p className="dashboard-section-subtitle max-w-2xl">
+          L&apos;offre qui correspond à votre établissement.
+        </p>
+      </header>
       <BillingPlans
         status={restaurant.subscription_status}
         plan={restaurant.subscription_plan}

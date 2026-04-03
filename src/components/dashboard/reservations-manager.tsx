@@ -11,7 +11,6 @@ import EmptyState from "@/src/components/ui/empty-state";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
-import { cn } from "@/src/lib/utils";
 
 type ReservationRow = {
   id: string;
@@ -64,39 +63,49 @@ function DesktopReservationRow({
   onReject: () => void;
 }) {
   return (
-    <div
-      className={cn(
-        "hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] px-5 py-4 shadow-[var(--card-shadow)] transition duration-200 md:block",
-        "hover:shadow-[var(--card-shadow-hover)]",
-      )}
-    >
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <GuestAvatar name={reservation.guest_name} size="sm" />
-          <span className="truncate text-[15px] font-semibold text-[var(--foreground)]">{reservation.guest_name}</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-6 text-[13px] tabular-nums text-[var(--muted-foreground)]">
+    <div className="hidden border-b border-gray-100 py-4 last:border-b-0 md:block">
+      <button
+        type="button"
+        onClick={onSelect}
+        className="flex w-full items-center gap-4 text-left hover:bg-gray-50/60"
+      >
+        <GuestAvatar name={reservation.guest_name} size="sm" />
+        <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-gray-900">{reservation.guest_name}</span>
+        <div className="flex flex-wrap items-center gap-6 text-[13px] tabular-nums text-gray-500">
           <span>{reservation.reservation_date}</span>
-          <span className="font-medium text-[var(--foreground)]">{reservation.reservation_time}</span>
+          <span className="font-medium text-gray-900">{reservation.reservation_time}</span>
           <span>{reservation.guests} pers.</span>
         </div>
         <StatusBadge status={reservation.status} />
-      </div>
-      <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[var(--border-soft)] pt-4">
-        {reservation.status === "pending" ? (
-          <>
-            <Button type="button" size="sm" variant="secondary" onClick={onConfirm} disabled={savingId === reservation.id}>
-              Confirmer
-            </Button>
-            <Button type="button" size="sm" variant="danger" onClick={onReject} disabled={savingId === reservation.id}>
-              Refuser
-            </Button>
-          </>
-        ) : null}
-        <Button type="button" size="sm" variant="ghost" onClick={onSelect}>
-          Détails
-        </Button>
-      </div>
+      </button>
+      {reservation.status === "pending" ? (
+        <div className="mt-3 flex flex-wrap justify-end gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              onConfirm();
+            }}
+            disabled={savingId === reservation.id}
+          >
+            Confirmer
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="danger"
+            onClick={(e) => {
+              e.stopPropagation();
+              onReject();
+            }}
+            disabled={savingId === reservation.id}
+          >
+            Refuser
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -242,18 +251,15 @@ export default function ReservationsManager({
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Toutes les demandes</CardTitle>
-            <CardDescription>Filtrez par date ou statut, puis ouvrez le détail pour ajuster.</CardDescription>
+            <CardDescription>Filtrez par date ou statut. Cliquez sur une ligne pour le détail.</CardDescription>
           </div>
           <Button type="button" variant={showManualForm ? "secondary" : "primary"} onClick={() => setShowManualForm((c) => !c)}>
-            {showManualForm ? "Fermer le formulaire" : "Ajouter une réservation"}
+            {showManualForm ? "Fermer" : "Ajouter une réservation"}
           </Button>
         </CardHeader>
         <CardContent className="space-y-8">
           {showManualForm ? (
-            <form
-              onSubmit={createManualReservation}
-              className="space-y-5 rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)]/60 p-6 md:p-8"
-            >
+            <form onSubmit={createManualReservation} className="space-y-5 border-t border-gray-100 pt-8">
               <p className="text-[15px] font-semibold text-[var(--foreground)]">Nouvelle réservation</p>
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
@@ -289,9 +295,6 @@ export default function ReservationsManager({
                 <Button type="submit" disabled={savingId === "manual-create"}>
                   {savingId === "manual-create" ? "Enregistrement..." : "Enregistrer la réservation"}
                 </Button>
-                <Button type="button" variant="secondary" onClick={() => setShowManualForm(false)} disabled={savingId === "manual-create"}>
-                  Annuler
-                </Button>
               </div>
             </form>
           ) : null}
@@ -315,10 +318,7 @@ export default function ReservationsManager({
           </div>
 
           <div className="hidden md:block">
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
-              Liste des réservations
-            </p>
-            <div className="space-y-3">
+            <div>
               {filteredReservations.length === 0 ? (
                 <EmptyState title="Aucune réservation" description="Aucun résultat avec ces filtres." />
               ) : (
@@ -336,7 +336,7 @@ export default function ReservationsManager({
             </div>
           </div>
 
-          <div className="space-y-3 md:hidden">
+          <div className="md:hidden">
             {filteredReservations.length === 0 ? (
               <EmptyState title="Aucune réservation" description="Essayez d'ajuster vos filtres." />
             ) : (
@@ -412,11 +412,7 @@ export default function ReservationsManager({
         </Card>
       ) : null}
 
-      {message ? (
-        <p className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)]/70 px-5 py-4 text-[14px] text-[var(--foreground)]/90 shadow-[var(--card-shadow)]">
-          {message}
-        </p>
-      ) : null}
+      {message ? <p className="text-sm text-gray-600">{message}</p> : null}
     </section>
   );
 }

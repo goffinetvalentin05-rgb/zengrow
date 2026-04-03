@@ -1,4 +1,3 @@
-import { Settings } from "lucide-react";
 import SettingsForm from "@/src/components/dashboard/settings-form";
 import { headers } from "next/headers";
 import { requireRestaurant } from "@/src/lib/auth";
@@ -46,17 +45,13 @@ export default async function DashboardSettingsPage() {
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-wrap items-start gap-4">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
-          <Settings size={22} strokeWidth={1.75} />
-        </span>
-        <div>
-          <h1 className="dashboard-page-title">Paramètres</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-            Votre page publique, vos règles de réservation et votre lien à partager.
-          </p>
-        </div>
-      </div>
+      <header className="space-y-2">
+        <p className="dashboard-section-kicker">Établissement</p>
+        <h1 className="dashboard-page-title">Paramètres</h1>
+        <p className="dashboard-section-subtitle max-w-2xl">
+          Page publique, règles de réservation et lien à partager.
+        </p>
+      </header>
       <SettingsForm
         restaurant={{
           id: restaurant.id,

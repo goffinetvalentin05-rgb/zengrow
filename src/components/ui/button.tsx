@@ -17,7 +17,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   ghost:
     "border border-transparent bg-transparent text-[var(--muted-foreground)] hover:border-[var(--border)] hover:bg-[var(--surface-muted)]/80 hover:text-[var(--foreground)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]/20 focus-visible:ring-offset-2",
   ghostInverse:
-    "border border-transparent bg-transparent text-[rgba(255,255,255,0.55)] hover:bg-[rgba(255,255,255,0.07)] hover:text-white focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar)]",
+    "border border-transparent bg-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-[var(--primary)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
   danger:
     "bg-red-600 text-white shadow-sm hover:bg-red-700 hover:shadow-[0_4px_14px_rgba(220,38,38,0.35)] focus-visible:ring-2 focus-visible:ring-red-400/50 focus-visible:ring-offset-2",
 };
