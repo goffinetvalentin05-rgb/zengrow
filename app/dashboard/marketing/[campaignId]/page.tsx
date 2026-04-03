@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -12,6 +12,11 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
   const { campaignId } = await params;
   const supabase = await createClient();
   const restaurant = await requireRestaurant();
+  const hasMarketingAccess =
+    restaurant.subscription_status === "trial" || restaurant.subscription_plan === "pro";
+  if (!hasMarketingAccess) {
+    redirect("/dashboard/marketing");
+  }
 
   const { data: campaign, error: campaignError } = await supabase
     .from("email_campaigns")
