@@ -34,59 +34,41 @@ export default async function DashboardCustomersPage() {
 
   return (
     <section className="space-y-10">
-      <header className="space-y-2">
-        <p className="dashboard-section-kicker">Base clients</p>
-        <h1 className="dashboard-page-title">Vos clients</h1>
-        <p className="dashboard-section-subtitle max-w-xl">
-          Historique simple : reconnaître vos habitués au fil des réservations.
-        </p>
+      <header>
+        <h1 className="dashboard-page-title">Clients</h1>
+        <p className="dashboard-section-subtitle mt-2 max-w-xl">Construit automatiquement à partir des réservations.</p>
       </header>
 
       {customers.length === 0 ? (
-        <EmptyState title="Aucun client pour le moment" description="Les fiches se construisent à partir des réservations." />
+        <EmptyState title="Aucun client" description="Les fiches apparaîtront après des réservations." />
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto border-t border-gray-100">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 text-left">
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
-                    Nom
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
-                    Email
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
-                    Téléphone
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
-                    Réservations
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
-                    Dernière visite
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
-                    Visites
-                  </th>
+                <th className="py-3 pr-4 text-xs font-semibold uppercase tracking-wide text-gray-500">Nom</th>
+                <th className="py-3 pr-4 text-xs font-semibold uppercase tracking-wide text-gray-500">Email</th>
+                <th className="py-3 pr-4 text-xs font-semibold uppercase tracking-wide text-gray-500">Téléphone</th>
+                <th className="py-3 pr-4 text-xs font-semibold uppercase tracking-wide text-gray-500">Résa.</th>
+                <th className="py-3 pr-4 text-xs font-semibold uppercase tracking-wide text-gray-500">Dernière visite</th>
+                <th className="py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Visites</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customers.map((customer) => (
+                <tr key={customer.key} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/60">
+                  <td className="py-3 pr-4 font-medium text-gray-900">{customer.name}</td>
+                  <td className="py-3 pr-4 text-gray-600">{customer.email || "—"}</td>
+                  <td className="py-3 pr-4 text-gray-600">{customer.phone || "—"}</td>
+                  <td className="py-3 pr-4 tabular-nums text-gray-600">{customer.reservations}</td>
+                  <td className="py-3 pr-4 tabular-nums text-gray-600">
+                    {customer.lastVisit ? customer.lastVisit.slice(0, 10) : "—"}
+                  </td>
+                  <td className="py-3 tabular-nums text-gray-600">{customer.totalVisits}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {customers.map((customer) => (
-                  <tr
-                    key={customer.key}
-                    className="border-b border-[var(--border-soft)] transition-colors last:border-0 hover:bg-[var(--surface-muted)]/40"
-                  >
-                    <td className="px-6 py-4 font-medium text-[var(--foreground)]">{customer.name}</td>
-                    <td className="px-6 py-4 text-[var(--foreground)]/80">{customer.email || "—"}</td>
-                    <td className="px-6 py-4 text-[var(--foreground)]/80">{customer.phone || "—"}</td>
-                    <td className="px-6 py-4 tabular-nums text-[var(--foreground)]/80">{customer.reservations}</td>
-                    <td className="px-6 py-4 tabular-nums text-[var(--foreground)]/80">
-                      {customer.lastVisit ? customer.lastVisit.slice(0, 10) : "—"}
-                    </td>
-                    <td className="px-6 py-4 tabular-nums text-[var(--foreground)]/80">{customer.totalVisits}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </section>

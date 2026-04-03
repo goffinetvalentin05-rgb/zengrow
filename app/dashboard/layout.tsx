@@ -6,6 +6,7 @@ import { requireRestaurant } from "@/src/lib/auth";
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
+  variable: "--font-inter",
 });
 
 export default async function DashboardLayout({
@@ -20,13 +21,15 @@ export default async function DashboardLayout({
 
   return (
     <div className={`${inter.className} min-h-screen bg-white`}>
-      <div className="mx-auto flex min-h-screen max-w-[1600px]">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-0 px-4 py-6 md:flex-row md:gap-0 md:px-6 md:py-8">
         <DashboardSidebar
           reservationLink={publicLink}
           subscriptionPlan={restaurant.subscription_plan}
           subscriptionStatus={restaurant.subscription_status}
         />
-        <main className="min-w-0 flex-1 px-6 py-10 md:px-10 md:py-12 lg:px-14">{children}</main>
+        <section className="min-w-0 flex-1 md:pl-12 md:pt-1">
+          {children}
+        </section>
       </div>
     </div>
   );

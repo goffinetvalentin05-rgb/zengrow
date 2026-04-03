@@ -35,13 +35,10 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
   };
 
   return (
-    <div className="space-y-10">
-      <header className="space-y-2">
-        <p className="dashboard-section-kicker">Planning</p>
+    <div className="space-y-12">
+      <header>
         <h1 className="dashboard-page-title">Réservations</h1>
-        <p className="dashboard-section-subtitle max-w-2xl">
-          Confirmez ou refusez en un clic ; le détail s&apos;ouvre sur la ligne.
-        </p>
+        <p className="dashboard-section-subtitle mt-2 max-w-2xl">Filtrez, ouvrez le détail pour confirmer ou noter.</p>
       </header>
       <ReservationsManager
         initialReservations={(reservations ?? []) as ReservationRow[]}

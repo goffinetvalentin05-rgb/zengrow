@@ -130,9 +130,8 @@ export default function ReviewAutomationPanel({
   }
 
   return (
-    <section className="space-y-10">
-      <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card>
+    <section className="space-y-12">
+      <Card>
           <CardHeader>
             <CardTitle>Paramètres d&apos;envoi</CardTitle>
             <CardDescription>Activez l&apos;envoi automatique et personnalisez le message reçu par vos clients.</CardDescription>
@@ -158,17 +157,17 @@ export default function ReviewAutomationPanel({
                         role={item.disabled ? undefined : "button"}
                         tabIndex={item.disabled ? -1 : 0}
                         className={cn(
-                          "flex min-w-0 flex-1 items-center gap-3 rounded-[16px] border px-3.5 py-3.5 transition-all duration-200 sm:min-w-[7.5rem] sm:flex-1",
-                          item.disabled && "cursor-not-allowed opacity-65",
-                          !item.disabled && selected && "border-[rgba(26,107,80,0.35)] bg-[rgba(26,107,80,0.08)] shadow-[var(--card-shadow)]",
-                          !item.disabled && !selected && "cursor-pointer border-[rgba(0,0,0,0.07)] hover:bg-[var(--surface-muted)]/80",
-                          item.disabled && "border-[rgba(0,0,0,0.06)] bg-[var(--surface-muted)]/40",
+                          "flex min-w-0 flex-1 items-center gap-3 rounded-lg border px-3 py-3 transition-colors sm:min-w-[7.5rem] sm:flex-1",
+                          item.disabled && "cursor-not-allowed opacity-50",
+                          !item.disabled && selected && "border-l-4 border-l-green-600 border-gray-200 bg-green-50/50 pl-2.5",
+                          !item.disabled && !selected && "cursor-pointer border-gray-200 bg-white hover:bg-gray-50",
+                          item.disabled && "border-gray-100 bg-gray-50/80",
                         )}
                       >
                         <span
                           className={cn(
                             "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-                            selected && !item.disabled ? "bg-[var(--primary)] text-white" : "bg-[rgba(0,0,0,0.05)] text-[var(--foreground)]/70",
+                            selected && !item.disabled ? "bg-green-700 text-white" : "bg-gray-100 text-gray-600",
                           )}
                         >
                           <Icon size={18} strokeWidth={2} />
@@ -180,8 +179,8 @@ export default function ReviewAutomationPanel({
                           className={cn(
                             "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
                             selected && !item.disabled
-                              ? "bg-[var(--primary)]/15 text-[var(--primary)] ring-1 ring-[var(--primary)]/20"
-                              : "bg-[rgba(0,0,0,0.05)] text-[var(--muted-foreground)] ring-1 ring-[rgba(0,0,0,0.06)]",
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-500",
                           )}
                         >
                           {item.badge}
@@ -266,66 +265,57 @@ export default function ReviewAutomationPanel({
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-4">
               <Button type="button" onClick={saveSettings} disabled={saving}>
-                {saving ? "Enregistrement..." : "Enregistrer"}
+                {saving ? "Enregistrement…" : "Enregistrer"}
               </Button>
-              <Button type="button" variant="ghost" onClick={sendTestReviewEmail} disabled={sendingTest}>
-                {sendingTest ? "Envoi..." : "E-mail de test"}
-              </Button>
+              <button
+                type="button"
+                className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
+                onClick={sendTestReviewEmail}
+                disabled={sendingTest}
+              >
+                {sendingTest ? "Envoi du test…" : "E-mail de test"}
+              </button>
             </div>
-            {message && <p className="text-sm text-[var(--muted-foreground)]">{message}</p>}
-          </CardContent>
-        </Card>
+            {message && <p className="text-sm text-gray-600">{message}</p>}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Aperçu du message</CardTitle>
-            <CardDescription>Ce que le client recevra après sa visite.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 rounded-lg bg-gray-50 p-5 text-sm text-gray-800">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{channel}</p>
-              <p className="text-base font-semibold text-gray-900">{previewSubject}</p>
-              <p className="whitespace-pre-line leading-relaxed">{previewMessage}</p>
-              <div className="grid grid-cols-3 gap-2 pt-2">
+            <div className="border-t border-gray-100 pt-10">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Aperçu</p>
+              <p className="mt-4 text-base font-semibold text-gray-900">{previewSubject}</p>
+              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">{previewMessage}</p>
+              <div className="mt-4 grid grid-cols-3 gap-2">
                 <span
-                  className="rounded-md px-2 py-2 text-center text-xs font-semibold text-white"
+                  className="rounded-lg px-2 py-2 text-center text-xs font-semibold text-white"
                   style={{ backgroundColor: primaryColor || "#15803d" }}
                 >
                   {positiveLabel}
                 </span>
-                <span className="rounded-md border border-gray-200 bg-white px-2 py-2 text-center text-xs font-medium text-gray-800">
+                <span className="rounded-lg border border-gray-200 bg-white px-2 py-2 text-center text-xs font-semibold text-gray-800">
                   {neutralLabel}
                 </span>
-                <span className="rounded-md border border-gray-200 bg-white px-2 py-2 text-center text-xs font-medium text-gray-800">
+                <span className="rounded-lg border border-gray-200 bg-white px-2 py-2 text-center text-xs font-semibold text-gray-800">
                   {negativeLabel}
                 </span>
               </div>
             </div>
           </CardContent>
-        </Card>
-      </div>
+      </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>Retours privés</CardTitle>
-          <CardDescription>Derniers retours privés reçus depuis les e-mails d&apos;avis.</CardDescription>
+          <CardDescription>Liés aux e-mails d&apos;avis.</CardDescription>
         </CardHeader>
         <CardContent>
           {initialFeedback.length === 0 ? (
-            <p className="rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--surface-muted)]/70 p-8 text-center text-[14px] text-[var(--muted-foreground)]">
-              Aucun retour privé pour le moment.
-            </p>
+            <p className="py-6 text-sm text-gray-500">Aucun retour pour le moment.</p>
           ) : (
-            <div className="space-y-4">
+            <div className="divide-y divide-gray-100 border-t border-gray-100">
               {initialFeedback.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] p-5 shadow-[var(--card-shadow)]"
-                >
-                  <p className="dashboard-section-kicker">{item.created_at.slice(0, 10)}</p>
-                  <p className="mt-2 text-sm text-[var(--foreground)]/85">{item.message || "(Aucun message)"}</p>
+                <div key={item.id} className="py-5">
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{item.created_at.slice(0, 10)}</p>
+                  <p className="mt-2 text-sm text-gray-800">{item.message || "(Aucun message)"}</p>
                 </div>
               ))}
             </div>

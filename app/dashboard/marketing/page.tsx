@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireRestaurant } from "@/src/lib/auth";
 import { canAccessFeature } from "@/src/lib/subscription";
 import { createClient } from "@/src/lib/supabase/server";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 
 type CampaignListItem = {
   id: string;
@@ -19,24 +20,24 @@ export default async function DashboardMarketingPage() {
   if (!canAccessFeature(restaurant.subscription_plan, "marketing", restaurant.subscription_status)) {
     return (
       <section className="space-y-10">
-        <header className="space-y-2">
-          <p className="dashboard-section-kicker">Marketing</p>
-          <h1 className="dashboard-page-title">Campagnes e-mail</h1>
-          <p className="dashboard-section-subtitle max-w-2xl">
-            Réservé au plan Pro — messages groupés pour vos anciens clients.
-          </p>
+        <header>
+          <h1 className="dashboard-page-title">Campagnes</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-2xl">Réservé au plan Pro — e-mails groupés à vos clients.</p>
         </header>
-        <div className="space-y-4 border-l-4 border-green-600 pl-5">
-          <p className="text-sm text-gray-700">
-            Passez à Pro pour envoyer des campagnes (soirée spéciale, nouvelle carte, etc.).
-          </p>
-          <Link
-            href="/dashboard/billing"
-            className="inline-flex min-h-11 items-center rounded-lg bg-[var(--primary)] px-5 text-sm font-medium text-white hover:bg-[var(--primary-hover)]"
-          >
-            Voir les abonnements
-          </Link>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Plan Pro</CardTitle>
+            <CardDescription>Campagnes e-mail incluses.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link
+              href="/dashboard/billing"
+              className="inline-flex min-h-[44px] items-center rounded-lg bg-green-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-800"
+            >
+              Voir les offres
+            </Link>
+          </CardContent>
+        </Card>
       </section>
     );
   }

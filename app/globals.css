@@ -2,15 +2,16 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --background-elevated: #fafafa;
+  --foreground: #111827;
   --surface: #ffffff;
   --surface-card: #ffffff;
-  --surface-muted: #fafafa;
-  --border: rgba(0, 0, 0, 0.06);
-  --border-soft: #f3f4f6;
+  --surface-muted: #f9fafb;
+  --border: rgba(17, 24, 39, 0.08);
+  --border-soft: rgba(17, 24, 39, 0.06);
   --primary: #15803d;
   --primary-hover: #166534;
-  --primary-muted: rgba(22, 101, 52, 0.08);
+  --primary-muted: rgba(22, 101, 52, 0.1);
   --primary-foreground: #ffffff;
   --muted-foreground: #6b7280;
   --accent-amber: #d97706;
@@ -19,10 +20,7 @@
   --badge-sand-text: #6b7280;
   --danger-bg: #fef2f2;
   --danger-text: #991b1b;
-  --card-shadow: none;
-  --card-shadow-hover: none;
-  --radius-card: 12px;
-  --focus-ring: 0 0 0 2px rgba(22, 101, 52, 0.2);
+  --focus-ring: 0 0 0 3px rgba(22, 101, 52, 0.2);
 }
 
 @theme inline {
@@ -71,7 +69,7 @@ body {
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.25;
-  color: #171717;
+  color: #111827;
 }
 
 .dashboard-section-subtitle {
@@ -87,14 +85,13 @@ body {
   min-height: 2.5rem;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-  background: transparent;
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
-  transition: background-color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .dashboard-link-secondary:hover {
   background: #f9fafb;
+  color: #111827;
 }

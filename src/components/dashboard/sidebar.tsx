@@ -53,61 +53,51 @@ export default function DashboardSidebar({
 
   return (
     <aside
-      className="flex w-full flex-col overflow-hidden border-b border-gray-100 bg-white text-gray-800 lg:sticky lg:top-0 lg:h-screen lg:max-h-screen lg:w-56 lg:shrink-0 lg:border-b-0 lg:border-r lg:border-gray-100"
+      className="flex w-full flex-col overflow-hidden border-b border-gray-100 bg-white text-gray-800 md:w-56 md:shrink-0 md:border-b-0 md:border-r md:pr-8"
       style={{ overflow: "hidden" }}
     >
-      <div className="shrink-0 px-4 pb-6 pt-6 lg:px-5">
-        <Image
-          src="/Zengrow-logo.png"
-          alt="ZenGrow"
-          width={128}
-          height={36}
-          className="h-7 w-auto object-contain"
-          priority
-        />
+      <div className="shrink-0 py-2">
+        <Image src="/Zengrow-logo.png" alt="ZenGrow" width={128} height={34} className="h-7 w-auto object-contain" priority />
       </div>
 
-      <nav className="min-h-0 flex-1 space-y-0.5 overflow-hidden px-2 text-[14px]" style={{ overflow: "hidden" }}>
+      <nav className="mt-8 min-h-0 flex-1 space-y-0.5 overflow-hidden text-[14px]" style={{ overflow: "hidden" }}>
         {navItems.map((item) => (
           <NavItem
             key={item.href}
             href={item.href}
             label={item.label}
             icon={item.icon}
-            active={
-              pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`))
-            }
+            active={pathname === item.href}
             locked={Boolean(item.requiresPro && !hasProMarketingAccess)}
           />
         ))}
       </nav>
 
-      <div className="shrink-0 space-y-3 border-t border-gray-100 px-4 py-6 lg:px-5">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">Lien public</p>
-        <p className="break-all text-xs leading-relaxed text-gray-600">{reservationLink}</p>
+      <div className="mt-10 shrink-0 border-t border-gray-100 pt-8">
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Lien public</p>
+        <p className="mt-2 break-all text-xs leading-relaxed text-gray-700">{reservationLink}</p>
         <a
           href={reservationLink}
           target="_blank"
           rel="noreferrer"
-          className="text-sm font-medium text-green-700 underline decoration-green-200 underline-offset-2 hover:text-green-800"
+          className="mt-2 inline-block text-sm font-medium text-green-700 hover:text-green-800"
         >
-          Ouvrir la page
+          Ouvrir la page →
         </a>
       </div>
 
-      <div className="shrink-0 space-y-1 border-t border-gray-100 px-2 py-4 lg:px-3">
+      <div className="mt-8 shrink-0 space-y-1 border-t border-gray-100 pt-6">
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+          className="w-full rounded-lg py-2.5 text-left text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
         >
-          Déconnexion
+          Se déconnecter
         </button>
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+          className="w-full rounded-lg py-2.5 text-left text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
         >
           Site vitrine
         </button>
@@ -135,20 +125,16 @@ function NavItem({
       className={cn(
         "flex items-center gap-3 rounded-lg py-2 pl-2 pr-2 font-medium transition-colors",
         active
-          ? "border-l-4 border-green-600 bg-green-50 text-green-900"
+          ? "border-l-4 border-green-600 bg-green-50 pl-[calc(0.5rem-4px)] text-green-800"
           : "border-l-4 border-transparent text-gray-800 hover:bg-gray-50",
       )}
     >
-      <Icon
-        size={18}
-        strokeWidth={2}
-        className={cn("shrink-0", active ? "text-green-800" : "text-gray-500")}
-      />
+      <Icon size={18} strokeWidth={1.75} className={cn("shrink-0", active ? "text-green-800" : "text-gray-600")} />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {locked ? (
         <span
           className={cn(
-            "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+            "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase",
             active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500",
           )}
         >

@@ -83,12 +83,9 @@ export default function AvailabilityEditor({
 
   return (
     <section className="space-y-12">
-      <header className="space-y-2">
-        <p className="dashboard-section-kicker">Planning</p>
+      <header>
         <h1 className="dashboard-page-title">Disponibilités</h1>
-        <p className="dashboard-section-subtitle max-w-2xl">
-          Quand vous accueillez les réservations, jour par jour.
-        </p>
+        <p className="dashboard-section-subtitle mt-2 max-w-2xl">Horaires d&apos;accueil et créneaux.</p>
       </header>
       <Card>
         <CardHeader>
@@ -102,10 +99,7 @@ export default function AvailabilityEditor({
             const ranges = openingHours[day] ?? [];
             const isOpen = ranges.length > 0;
             return (
-              <div
-                key={day}
-                className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-card)] p-5 shadow-[var(--card-shadow)]"
-              >
+              <div key={day} className="border-b border-gray-100 py-6 last:border-0">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{dayLabels[day]}</p>
                   <Toggle checked={isOpen} onChange={(value) => toggleDay(day, value)} label={isOpen ? "Ouvert" : "Fermé"} />
@@ -121,7 +115,7 @@ export default function AvailabilityEditor({
                           value={range.start}
                           onChange={(event) => updateRange(day, index, "start", event.target.value)}
                         />
-                        <span className="text-slate-500">a</span>
+                        <span className="text-gray-400">à</span>
                         <Input
                           type="time"
                           className="w-36"

@@ -11,15 +11,15 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm hover:bg-[var(--primary-hover)] hover:shadow-[0_4px_14px_rgba(26,107,80,0.32)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]/35 focus-visible:ring-offset-2",
+    "bg-green-700 text-white shadow-sm hover:bg-green-800 focus-visible:ring-2 focus-visible:ring-green-600/40 focus-visible:ring-offset-2",
   secondary:
-    "border border-[var(--border)] bg-transparent text-[var(--foreground)] hover:bg-[var(--surface-muted)] hover:shadow-[var(--card-shadow)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]/25 focus-visible:ring-offset-2",
+    "border border-gray-200 bg-white text-gray-900 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-green-600/20 focus-visible:ring-offset-2",
   ghost:
-    "border border-transparent bg-transparent text-[var(--muted-foreground)] hover:border-[var(--border)] hover:bg-[var(--surface-muted)]/80 hover:text-[var(--foreground)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]/20 focus-visible:ring-offset-2",
+    "border border-transparent bg-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-green-600/20 focus-visible:ring-offset-2",
   ghostInverse:
-    "border border-transparent bg-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-[var(--primary)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+    "border border-transparent bg-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-green-600/20 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
   danger:
-    "bg-red-600 text-white shadow-sm hover:bg-red-700 hover:shadow-[0_4px_14px_rgba(220,38,38,0.35)] focus-visible:ring-2 focus-visible:ring-red-400/50 focus-visible:ring-offset-2",
+    "bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-400/50 focus-visible:ring-offset-2",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

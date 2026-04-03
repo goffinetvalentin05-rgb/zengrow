@@ -1,7 +1,8 @@
 import { headers } from "next/headers";
 import Link from "next/link";
-import PublicLinkCard from "@/src/components/dashboard/public-link-card";
+import { Armchair, Calendar, Star, Users } from "lucide-react";
 import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
+import StatCard from "@/src/components/dashboard/stat-card";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -21,11 +22,7 @@ export default async function DashboardPage() {
       .eq("restaurant_id", restaurant.id)
       .eq("reservation_date", today)
       .in("status", ["pending", "confirmed", "completed"]),
-    supabase
-      .from("restaurant_settings")
-      .select("restaurant_capacity, table_count")
-      .eq("restaurant_id", restaurant.id)
-      .maybeSingle(),
+    supabase.from("restaurant_settings").select("restaurant_capacity, table_count").eq("restaurant_id", restaurant.id).maybeSingle(),
     supabase
       .from("feedbacks")
       .select("id", { count: "exact", head: true })
@@ -36,12 +33,8 @@ export default async function DashboardPage() {
 
   const restaurantCapacity = settings?.restaurant_capacity ?? 40;
   const tableCount = settings?.table_count ?? 12;
-  const timelineReservations = [...(todayReservations ?? [])].sort((a, b) =>
-    a.reservation_time.localeCompare(b.reservation_time),
-  );
-  const activeTodayReservations = timelineReservations.filter((reservation) =>
-    ["pending", "confirmed"].includes(reservation.status),
-  );
+  const timelineReservations = [...(todayReservations ?? [])].sort((a, b) => a.reservation_time.localeCompare(b.reservation_time));
+  const activeTodayReservations = timelineReservations.filter((r) => ["pending", "confirmed"].includes(r.status));
   const reservationsTodayCount = activeTodayReservations.length;
   const peopleExpectedToday = activeTodayReservations.reduce((sum, row) => sum + (row.guests ?? 0), 0);
   const tablesRemainingToday = Math.max(tableCount - reservationsTodayCount, 0);
@@ -57,51 +50,42 @@ export default async function DashboardPage() {
       .sort((a, b) => a[0].localeCompare(b[0]))[0]?.[0] ?? null;
 
   const kpis = [
-    { label: "Réservations aujourd'hui", value: reservationsTodayCount },
-    { label: "Personnes attendues", value: peopleExpectedToday },
-    { label: "Tables restantes", value: tablesRemainingToday },
-    { label: "Avis Google reçus", value: reviewsReceived ?? 0 },
+    { label: "Réservations aujourd'hui", value: reservationsTodayCount, icon: Calendar, accent: "primary" as const },
+    { label: "Personnes attendues", value: peopleExpectedToday, icon: Users, accent: "amber" as const },
+    { label: "Tables restantes", value: tablesRemainingToday, icon: Armchair, accent: "stone" as const },
+    { label: "Avis reçus aujourd'hui", value: reviewsReceived ?? 0, icon: Star, accent: "primary" as const },
   ];
 
   return (
-    <section className="space-y-16 pb-8">
-      <header className="space-y-2">
-        <p className="dashboard-section-kicker">Tableau de bord</p>
+    <div className="space-y-16">
+      <header>
         <h1 className="dashboard-page-title">{restaurant.name}</h1>
-        <p className="dashboard-section-subtitle max-w-xl">
-          Aujourd&apos;hui : réservations, couverts et lien public en un coup d&apos;œil.
+        <p className="dashboard-section-subtitle mt-2 max-w-lg">
+          Aujourd&apos;hui · Lien public :{" "}
+          <a href={publicLink} className="font-medium text-green-700 hover:underline" target="_blank" rel="noreferrer">
+            ouvrir
+          </a>
         </p>
       </header>
 
-      <div className="flex flex-wrap gap-x-14 gap-y-8 border-b border-gray-100 pb-12">
-        {kpis.map((kpi) => (
-          <div key={kpi.label}>
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{kpi.label}</p>
-            <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight text-gray-900">{kpi.value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-8">
-        <div className="flex flex-wrap items-end justify-between gap-6">
+      <section>
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Réservations du jour</h2>
-            <p className="dashboard-section-subtitle mt-1">Par ordre d&apos;heure.</p>
+            <h2 className="text-lg font-semibold text-gray-900">Service d&apos;aujourd&apos;hui</h2>
+            <p className="mt-1 text-sm text-gray-500">Par heure de passage.</p>
           </div>
           <Link
             href="/dashboard/reservations?new=1"
-            className="inline-flex min-h-11 items-center rounded-lg bg-[var(--primary)] px-5 text-sm font-medium text-white transition hover:bg-[var(--primary-hover)]"
+            className="inline-flex items-center rounded-lg bg-green-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-800"
           >
             Nouvelle réservation
           </Link>
         </div>
 
         {timelineReservations.length === 0 ? (
-          <p className="py-10 text-center text-sm text-gray-500">
-            Aucune réservation aujourd&apos;hui. Les créneaux apparaîtront ici automatiquement.
-          </p>
+          <p className="py-8 text-sm text-gray-500">Aucune réservation aujourd&apos;hui.</p>
         ) : (
-          <div>
+          <div className="divide-y divide-gray-100 border-t border-gray-100">
             {timelineReservations.map((reservation) => (
               <ReservationListRow
                 key={reservation.id}
@@ -114,19 +98,45 @@ export default async function DashboardPage() {
             ))}
           </div>
         )}
-
-        <Link href="/dashboard/reservations" className="inline-flex text-sm font-medium text-green-700 hover:text-green-800">
-          Voir toutes les réservations →
-        </Link>
-      </div>
+      </section>
 
       {fullFromSlot ? (
-        <p className="border-l-4 border-amber-400 bg-amber-50/80 py-3 pl-4 text-sm text-amber-950">
-          <span className="font-semibold">Complet</span> à partir de {fullFromSlot} — capacité maximale sur ce créneau.
+        <p className="text-sm text-amber-800">
+          <span className="font-medium">Complet</span> à partir de {fullFromSlot}.
         </p>
       ) : null}
 
-      <PublicLinkCard link={publicLink} />
-    </section>
+      <section>
+        <h2 className="text-lg font-semibold text-gray-900">En chiffres</h2>
+        <div className="mt-6 grid gap-0 sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-gray-100">
+          {kpis.map((kpi) => (
+            <StatCard key={kpi.label} label={kpi.label} value={kpi.value} icon={kpi.icon} accent={kpi.accent} />
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold text-gray-900">Prochaines tables</h2>
+        <p className="mt-1 text-sm text-gray-500">Confirmées ou en attente.</p>
+        {activeTodayReservations.length === 0 ? (
+          <p className="mt-6 text-sm text-gray-500">Rien de prévu pour l&apos;instant.</p>
+        ) : (
+          <div className="mt-6 divide-y divide-gray-100 border-t border-gray-100">
+            {activeTodayReservations.map((reservation) => (
+              <ReservationListRow
+                key={reservation.id}
+                guestName={reservation.guest_name ?? "Client"}
+                timeLabel={reservation.reservation_time}
+                subtitle={`${reservation.guests} couverts`}
+                status={reservation.status as "pending" | "confirmed"}
+              />
+            ))}
+          </div>
+        )}
+        <Link href="/dashboard/reservations" className="mt-6 inline-block text-sm font-medium text-green-700 hover:underline">
+          Toutes les réservations →
+        </Link>
+      </section>
+    </div>
   );
 }

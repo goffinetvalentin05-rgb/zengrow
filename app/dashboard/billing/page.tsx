@@ -5,13 +5,10 @@ export default async function DashboardBillingPage() {
   const restaurant = await requireRestaurant();
 
   return (
-    <div className="space-y-10">
-      <header className="space-y-2">
-        <p className="dashboard-section-kicker">Abonnement</p>
+    <div className="space-y-12">
+      <header>
         <h1 className="dashboard-page-title">Facturation</h1>
-        <p className="dashboard-section-subtitle max-w-2xl">
-          L&apos;offre qui correspond à votre établissement.
-        </p>
+        <p className="dashboard-section-subtitle mt-2 max-w-2xl">Formule et essai — sans surprise.</p>
       </header>
       <BillingPlans
         status={restaurant.subscription_status}

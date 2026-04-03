@@ -28,8 +28,8 @@ const PLAN_ITEMS = [
     key: "starter" as const,
     title: "Starter",
     price: "35 CHF / mois",
-    subtitle: "Tout ce qu'il faut pour bien demarrer",
-    cta: "Prendre Starter",
+    subtitle: "Pour bien démarrer",
+    cta: "Choisir Starter",
     featured: false,
     features: [
       { label: "Reservations", icon: CalendarDays },
@@ -43,14 +43,14 @@ const PLAN_ITEMS = [
     key: "pro" as const,
     title: "Pro",
     price: "49 CHF / mois",
-    subtitle: "Le plan ideal pour accelerer votre croissance",
-    cta: "Prendre Pro",
+    subtitle: "Pour accélérer",
+    cta: "Choisir Pro",
     featured: true,
     features: [
       { label: "Tout Starter", icon: BadgeCheck },
-      { label: "Campagnes marketing email", icon: Megaphone },
+      { label: "Campagnes e-mail", icon: Megaphone },
       { label: "Segmentation clients", icon: Sparkles },
-      { label: "Statistiques clients", icon: Star },
+      { label: "Stats clients", icon: Star },
       { label: "Export clients", icon: Gem },
     ],
   },
@@ -94,7 +94,7 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
 
     const payload = (await response.json().catch(() => ({}))) as { error?: string; url?: string };
     if (!response.ok || !payload.url) {
-      setMessage(payload.error ?? "Impossible de demarrer le paiement.");
+      setMessage(payload.error ?? "Impossible de démarrer le paiement.");
       setLoadingPlan(null);
       return;
     }
@@ -103,104 +103,78 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
   }
 
   return (
-    <section className="space-y-10">
-      <div className="space-y-8 border-b border-gray-100 pb-10">
-          <div className="flex flex-wrap items-start justify-between gap-6">
-            <div className="space-y-3">
-              <p className="inline-flex items-center gap-2 rounded-full border border-[rgba(26,107,80,0.22)] bg-[rgba(26,107,80,0.08)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--primary)]">
-                <Sparkles size={14} />
-                Facturation ZenGrow
-              </p>
-              <h2 className="dashboard-page-title max-w-xl md:text-2xl">
-                {status === "trial" ? "Votre essai gratuit est actif" : "Choisissez le plan adapte a votre restaurant"}
-              </h2>
-              <p className="max-w-2xl text-sm text-[var(--muted-foreground)] md:text-[15px] md:leading-relaxed">
-                {status === "trial" && formattedTrialDate
-                  ? `Votre essai se termine le ${formattedTrialDate}.`
-                  : "Activez un abonnement pour continuer a utiliser toutes les fonctionnalites ZenGrow."}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 px-5 py-4 text-right shadow-sm">
-              <p className="dashboard-section-kicker">Plan actuel</p>
-              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{plan ?? "Aucun"}</p>
-              <p className="mt-1 text-xs text-[var(--muted-foreground)]">Statut: {status}</p>
-            </div>
-          </div>
-
-          {status === "trial" ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <p className="font-medium text-[var(--foreground)]">Progression de l&apos;essai</p>
-                <p className="font-semibold text-[var(--primary)]">
-                  {remainingDays !== null ? `${remainingDays} jour${remainingDays > 1 ? "s" : ""} restants` : "--"}
-                </p>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[rgba(0,0,0,0.06)]">
-                <div
-                  className="h-full rounded-full bg-[var(--primary)] transition-all duration-500"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-            </div>
-          ) : null}
-
-          {status === "expired" ? (
-            <p className="border-l-4 border-amber-400 bg-amber-50/80 py-3 pl-4 text-sm text-amber-950">
-              Votre essai est terminé. Choisissez un plan pour redébloquer votre espace ZenGrow.
+    <section className="space-y-12">
+      <div className="space-y-8 border-b border-gray-100 pb-12">
+        <div className="flex flex-wrap items-start justify-between gap-8">
+          <div className="max-w-xl space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-green-800">Facturation</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+              {status === "trial" ? "Essai gratuit actif" : "Choisissez votre formule"}
+            </h2>
+            <p className="text-sm leading-relaxed text-gray-600">
+              {status === "trial" && formattedTrialDate
+                ? `Fin de l'essai le ${formattedTrialDate}.`
+                : "Un abonnement pour garder toutes les fonctions ZenGrow."}
             </p>
-          ) : null}
-        </div>
-
-        <div className="space-y-6 pt-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="dashboard-section-kicker">Plans d&apos;abonnement</p>
-            <p className="text-xs text-[var(--muted-foreground)]">35 CHF ou 49 CHF par mois</p>
           </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            {PLAN_ITEMS.map((item) => (
-              <div
-                key={item.key}
-                className={[
-                  "relative rounded-xl border px-6 py-6",
-                  item.featured ? "border-green-200 bg-green-50/40" : "border-gray-100 bg-white",
-                ].join(" ")}
-              >
-                {item.featured ? (
-                  <span className="absolute right-4 top-4 rounded-full bg-[var(--primary)] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
-                    Populaire
-                  </span>
-                ) : null}
-
-                <div className="space-y-5">
-                  <div>
-                    <h3 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">{item.title}</h3>
-                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">{item.subtitle}</p>
-                    <p className="mt-4 text-3xl font-semibold tracking-tight text-[var(--foreground)]">{item.price}</p>
-                  </div>
-
-                  <ul className="space-y-2.5 text-sm text-[var(--foreground)]/85">
-                    {item.features.map((feature) => (
-                      <FeatureItem key={`${item.key}-${feature.label}`} icon={feature.icon} label={feature.label} />
-                    ))}
-                  </ul>
-
-                  <Button
-                    type="button"
-                    onClick={() => startCheckout(item.key)}
-                    disabled={Boolean(loadingPlan)}
-                    className={item.featured ? "w-full" : "w-full"}
-                  >
-                    {loadingPlan === item.key ? "Redirection..." : item.cta}
-                  </Button>
-
-                  <p className="text-center text-xs text-[var(--muted-foreground)]">Sans engagement long terme</p>
-                </div>
-              </div>
-            ))}
+          <div className="text-right">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Plan actuel</p>
+            <p className="mt-1 text-lg font-semibold text-gray-900">{plan ?? "—"}</p>
+            <p className="mt-0.5 text-xs text-gray-500">{status}</p>
           </div>
         </div>
+
+        {status === "trial" ? (
+          <div className="max-w-md space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-700">Essai</span>
+              <span className="font-medium text-green-800">
+                {remainingDays !== null ? `${remainingDays} jour${remainingDays > 1 ? "s" : ""} restants` : "—"}
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+              <div className="h-full rounded-full bg-green-600 transition-all" style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+        ) : null}
+
+        {status === "expired" ? (
+          <p className="text-sm text-amber-900">Votre essai est terminé. Choisissez un plan pour continuer.</p>
+        ) : null}
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Offres</p>
+        <div className="mt-6 grid gap-8 lg:grid-cols-2">
+          {PLAN_ITEMS.map((item) => (
+            <div
+              key={item.key}
+              className={
+                item.featured
+                  ? "rounded-xl border border-green-200 bg-green-50/40 p-8"
+                  : "rounded-xl border border-gray-100 p-8"
+              }
+            >
+              {item.featured ? (
+                <span className="text-xs font-semibold uppercase tracking-wide text-green-800">Recommandé</span>
+              ) : null}
+              <h3 className={item.featured ? "mt-2 text-xl font-semibold text-gray-900" : "text-xl font-semibold text-gray-900"}>
+                {item.title}
+              </h3>
+              <p className="mt-1 text-sm text-gray-600">{item.subtitle}</p>
+              <p className="mt-4 text-3xl font-semibold tabular-nums text-gray-900">{item.price}</p>
+              <ul className="mt-6 space-y-2.5 text-sm text-gray-800">
+                {item.features.map((feature) => (
+                  <FeatureItem key={`${item.key}-${feature.label}`} icon={feature.icon} label={feature.label} />
+                ))}
+              </ul>
+              <Button type="button" className="mt-8 w-full" onClick={() => startCheckout(item.key)} disabled={Boolean(loadingPlan)}>
+                {loadingPlan === item.key ? "Redirection…" : item.cta}
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {message ? <p className="text-sm text-gray-600">{message}</p> : null}
     </section>
@@ -209,14 +183,12 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
 
 function FeatureItem({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
-    <li className="flex items-start gap-3">
-      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgba(26,107,80,0.12)] text-[var(--primary)]">
+    <li className="flex items-center gap-3">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-green-700">
         <Check size={14} strokeWidth={2.5} />
       </span>
-      <span className="inline-flex items-center gap-2">
-        <Icon size={15} className="text-[var(--primary)]/80" />
-        <span>{label}</span>
-      </span>
+      <Icon size={15} className="shrink-0 text-gray-400" strokeWidth={1.75} />
+      <span>{label}</span>
     </li>
   );
 }

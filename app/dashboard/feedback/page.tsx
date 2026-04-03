@@ -21,32 +21,29 @@ export default async function DashboardFeedbackPage() {
 
   return (
     <section className="space-y-10">
-      <header className="space-y-2">
-        <p className="dashboard-section-kicker">Feedback</p>
+      <header>
         <h1 className="dashboard-page-title">Retours clients</h1>
-        <p className="dashboard-section-subtitle max-w-xl">
-          Messages privés après votre demande d&apos;avis — en dehors des avis Google publics.
-        </p>
+        <p className="dashboard-section-subtitle mt-2 max-w-xl">Messages privés après la demande d&apos;avis.</p>
       </header>
 
       {!feedbacks || feedbacks.length === 0 ? (
-        <p className="py-12 text-center text-sm text-gray-500">Aucun retour pour le moment.</p>
+        <p className="py-8 text-sm text-gray-500">Aucun retour pour le moment.</p>
       ) : (
-        <ul className="divide-y divide-gray-100">
+        <div className="divide-y divide-gray-100 border-t border-gray-100">
           {feedbacks.map((item) => (
-            <li key={item.id} className="py-8">
+            <article key={item.id} className="py-8">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="font-medium text-gray-900">{item.customer_name || "Client"}</p>
-                <time className="text-xs text-gray-500">{formatDate(item.created_at)}</time>
+                <time className="text-xs font-medium uppercase tracking-wide text-gray-500">{formatDate(item.created_at)}</time>
               </div>
               <p className="mt-2 text-sm text-gray-600">
                 Note {item.rating ?? 0}/5
                 {item.customer_email ? ` · ${item.customer_email}` : ""}
               </p>
               <p className="mt-3 text-sm leading-relaxed text-gray-800">{item.message || "(Aucun message)"}</p>
-            </li>
+            </article>
           ))}
-        </ul>
+        </div>
       )}
     </section>
   );

@@ -22,13 +22,10 @@ export default async function DashboardReviewsPage() {
     .limit(20);
 
   return (
-    <div className="space-y-10">
-      <header className="space-y-2">
-        <p className="dashboard-section-kicker">Réputation</p>
+    <div className="space-y-12">
+      <header>
         <h1 className="dashboard-page-title">Avis Google</h1>
-        <p className="dashboard-section-subtitle max-w-2xl">
-          Après le repas, invitez vos clients à laisser un avis — automatiquement par e-mail.
-        </p>
+        <p className="dashboard-section-subtitle mt-2 max-w-2xl">Message automatique après la visite.</p>
       </header>
       <ReviewAutomationPanel
         restaurantId={restaurant.id}

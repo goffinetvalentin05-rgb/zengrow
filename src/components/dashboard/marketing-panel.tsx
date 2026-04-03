@@ -86,100 +86,113 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
   }
 
   return (
-    <section className="space-y-14">
-      <header className="space-y-2">
-        <p className="dashboard-section-kicker">Marketing</p>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="dashboard-page-title">Campagnes e-mail</h1>
-            <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-              Un message groupé pour vos anciens clients — soirée spéciale, nouvelle carte, etc.
-            </p>
-          </div>
-          <Button type="button" onClick={() => setShowForm((c) => !c)} variant={showForm ? "secondary" : "primary"}>
-            {showForm ? "Fermer" : "Nouvelle campagne"}
-          </Button>
+    <section className="space-y-12">
+      <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="dashboard-page-title">Campagnes</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-2xl">E-mail groupé à vos clients.</p>
         </div>
+        <Button type="button" onClick={() => setShowForm((current) => !current)} variant={showForm ? "secondary" : "primary"}>
+          {showForm ? "Annuler" : "Nouvelle campagne"}
+        </Button>
       </header>
+
+      {showForm && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Nouvelle campagne</CardTitle>
+            <CardDescription>Message, image optionnelle, destinataires.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="dashboard-field-label">Nom de la campagne</label>
+              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Promo de mars" />
+            </div>
+
+            <div>
+              <label className="dashboard-field-label">Objet</label>
+              <Input
+                value={subject}
+                onChange={(event) => setSubject(event.target.value)}
+                placeholder="Menu spécial ce week-end"
+              />
+            </div>
+
+            <div>
+              <label className="dashboard-field-label">Contenu de l&apos;e-mail</label>
+              <Textarea
+                className="min-h-36"
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+                placeholder="Présentez votre offre à vos clients."
+              />
+            </div>
+
+            <div>
+              <label className="dashboard-field-label">URL de l&apos;image (optionnel)</label>
+              <Input
+                value={imageUrl}
+                onChange={(event) => setImageUrl(event.target.value)}
+                placeholder="https://.../flyer.jpg"
+              />
+            </div>
+
+            <div>
+              <label className="dashboard-field-label">Destinataires</label>
+              <Select value={audience} onChange={(event) => setAudience(event.target.value as AudienceFilter)}>
+                <option value="all_customers">Tous les clients</option>
+                <option value="visited_last_30_days">Clients venus ces 30 derniers jours</option>
+                <option value="visited_last_90_days">Clients venus ces 90 derniers jours</option>
+                <option value="visited_more_than_3_times">Clients venus plus de 3 fois</option>
+              </Select>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <Button type="button" onClick={handleCreateCampaign} disabled={submitting}>
+                {submitting ? "Envoi…" : "Envoyer"}
+              </Button>
+              <button
+                type="button"
+                className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
+                onClick={() => setShowForm(false)}
+                disabled={submitting}
+              >
+                Fermer
+              </button>
+            </div>
+            {message && <p className="text-sm text-gray-600">{message}</p>}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
-          <CardTitle>Vue d&apos;ensemble</CardTitle>
-          <CardDescription>Créez une campagne ou consultez l&apos;historique.</CardDescription>
+          <CardTitle>Historique</CardTitle>
+          <CardDescription>Campagnes envoyées.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-10">
-          {showForm ? (
-            <div className="space-y-4 border-t border-gray-100 pt-8">
-              <p className="text-sm font-medium text-gray-900">Nouvelle campagne</p>
-              <div>
-                <label className="dashboard-field-label">Nom de la campagne</label>
-                <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Promo de mars" />
-              </div>
-              <div>
-                <label className="dashboard-field-label">Objet</label>
-                <Input
-                  value={subject}
-                  onChange={(event) => setSubject(event.target.value)}
-                  placeholder="Menu spécial ce week-end"
-                />
-              </div>
-              <div>
-                <label className="dashboard-field-label">Contenu de l&apos;e-mail</label>
-                <Textarea
-                  className="min-h-36"
-                  value={content}
-                  onChange={(event) => setContent(event.target.value)}
-                  placeholder="Présentez votre offre à vos clients."
-                />
-              </div>
-              <div>
-                <label className="dashboard-field-label">URL de l&apos;image (optionnel)</label>
-                <Input
-                  value={imageUrl}
-                  onChange={(event) => setImageUrl(event.target.value)}
-                  placeholder="https://.../flyer.jpg"
-                />
-              </div>
-              <div>
-                <label className="dashboard-field-label">Destinataires</label>
-                <Select value={audience} onChange={(event) => setAudience(event.target.value as AudienceFilter)}>
-                  <option value="all_customers">Tous les clients</option>
-                  <option value="visited_last_30_days">Clients venus ces 30 derniers jours</option>
-                  <option value="visited_last_90_days">Clients venus ces 90 derniers jours</option>
-                  <option value="visited_more_than_3_times">Clients venus plus de 3 fois</option>
-                </Select>
-              </div>
-              <Button type="button" onClick={handleCreateCampaign} disabled={submitting}>
-                {submitting ? "Envoi..." : "Envoyer la campagne"}
-              </Button>
-              {message && <p className="text-sm text-gray-600">{message}</p>}
+        <CardContent>
+          {campaigns.length === 0 ? (
+            <p className="py-6 text-sm text-gray-500">Aucune campagne pour le moment.</p>
+          ) : (
+            <div className="divide-y divide-gray-100 border-t border-gray-100">
+              {campaigns.map((campaign) => (
+                <Link
+                  key={campaign.id}
+                  href={`/dashboard/marketing/${campaign.id}`}
+                  className="block py-5 transition hover:bg-gray-50/80"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="font-medium text-gray-900">{campaign.name}</p>
+                    <span className="text-xs text-gray-500">
+                      {campaign.sent_at ? campaign.sent_at.slice(0, 10) : "Brouillon"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-gray-600">{campaign.subject}</p>
+                  <p className="mt-1 text-xs text-gray-500">{campaign.recipients_count} destinataires</p>
+                </Link>
+              ))}
             </div>
-          ) : null}
-
-          <div>
-            <h3 className="mb-4 text-sm font-medium text-gray-900">Campagnes envoyées</h3>
-            {campaigns.length === 0 ? (
-              <p className="py-8 text-center text-sm text-gray-500">Aucune campagne pour le moment.</p>
-            ) : (
-              <ul className="divide-y divide-gray-100">
-                {campaigns.map((campaign) => (
-                  <li key={campaign.id}>
-                    <Link
-                      href={`/dashboard/marketing/${campaign.id}`}
-                      className="block py-4 transition hover:bg-gray-50/80"
-                    >
-                      <p className="font-medium text-gray-900">{campaign.name}</p>
-                      <p className="mt-0.5 text-sm text-gray-600">{campaign.subject}</p>
-                      <p className="mt-2 text-xs text-gray-500">
-                        {campaign.sent_at ? `Envoyée le ${campaign.sent_at.slice(0, 10)}` : "Non envoyée"} ·{" "}
-                        {campaign.recipients_count} destinataires
-                      </p>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          )}
         </CardContent>
       </Card>
     </section>

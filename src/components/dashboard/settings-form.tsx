@@ -321,10 +321,10 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         <CardContent className="space-y-3">
           <label
             className={cn(
-              "flex cursor-pointer gap-4 rounded-xl border p-4 transition-all",
+              "flex cursor-pointer gap-4 rounded-lg border p-4 transition-colors",
               reservationConfirmationMode === "manual"
-                ? "border-[rgba(26,107,80,0.3)] bg-[rgba(26,107,80,0.06)] shadow-[0_0_0_3px_rgba(26,107,80,0.1)]"
-                : "border-[rgba(0,0,0,0.07)] hover:bg-[var(--surface-muted)]/50",
+                ? "border-green-200 bg-green-50/50"
+                : "border-gray-200 hover:bg-gray-50/80",
             )}
           >
             <input
@@ -355,10 +355,10 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
 
           <label
             className={cn(
-              "flex cursor-pointer gap-4 rounded-xl border p-4 transition-all",
+              "flex cursor-pointer gap-4 rounded-lg border p-4 transition-colors",
               reservationConfirmationMode === "automatic"
-                ? "border-[rgba(26,107,80,0.3)] bg-[rgba(26,107,80,0.06)] shadow-[0_0_0_3px_rgba(26,107,80,0.1)]"
-                : "border-[rgba(0,0,0,0.07)] hover:bg-[var(--surface-muted)]/50",
+                ? "border-green-200 bg-green-50/50"
+                : "border-gray-200 hover:bg-gray-50/80",
             )}
           >
             <input
@@ -460,21 +460,21 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
               <Input value={publicLink.replace(restaurant.slug, slug)} readOnly />
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
+          <div className="flex flex-wrap items-center gap-4">
+            <button
               type="button"
-              variant="secondary"
+              className="text-sm font-medium text-green-700 hover:underline"
               onClick={() => navigator.clipboard.writeText(publicLink.replace(restaurant.slug, slug))}
             >
-              Copier
-            </Button>
+              Copier le lien
+            </button>
             <a
               href={publicLink.replace(restaurant.slug, slug)}
               target="_blank"
               rel="noreferrer"
-              className="dashboard-link-secondary"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900"
             >
-              Voir la page publique
+              Ouvrir la page publique
             </a>
           </div>
         </CardContent>
