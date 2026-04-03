@@ -53,19 +53,19 @@ export default function DashboardSidebar({
   }
 
   return (
-    <aside className="flex w-full flex-col rounded-[20px] bg-[var(--sidebar)] p-6 text-[var(--sidebar-foreground)] shadow-[var(--card-shadow)] ring-1 ring-white/[0.06] lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:shrink-0 lg:w-[18rem]">
-      <div className="rounded-xl bg-white/[0.06] p-4 ring-1 ring-white/[0.08]">
+    <aside className="flex w-full flex-col overflow-hidden rounded-[20px] border-b border-[#E5E7EB] bg-white p-6 text-[#1a1a1a] shadow-[var(--card-shadow)] lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:shrink-0 lg:w-[18rem] lg:border-b-0 lg:border-r lg:border-[#E5E7EB]">
+      <div className="shrink-0 rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4">
         <Image
           src="/Zengrow-logo.png"
           alt="Logo ZenGrow"
           width={140}
           height={38}
-          className="h-8 w-auto object-contain opacity-95"
+          className="h-8 w-auto object-contain"
           priority
         />
       </div>
 
-      <nav className="mt-8 flex-1 space-y-1 overflow-y-auto pr-1 text-[14px]">
+      <nav className="mt-8 min-h-0 flex-1 space-y-1 overflow-hidden text-[14px]">
         {navItems.map((item) => (
           <NavItem
             key={item.href}
@@ -78,24 +78,24 @@ export default function DashboardSidebar({
         ))}
       </nav>
 
-      <div className="mt-8 rounded-[20px] bg-white/[0.05] p-5 ring-1 ring-white/[0.08]">
-        <p className="dashboard-section-kicker text-white/45">Lien public</p>
-        <p className="mt-3 break-all text-xs leading-relaxed text-white/80">{reservationLink}</p>
+      <div className="mt-8 shrink-0 rounded-[20px] border border-[#E5E7EB] bg-[#FAFAFA] p-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6b7280]">Lien public</p>
+        <p className="mt-3 break-all text-xs leading-relaxed text-[#1a1a1a]">{reservationLink}</p>
         <a
           href={reservationLink}
           target="_blank"
           rel="noreferrer"
-          className="mt-4 inline-flex text-[13px] font-medium text-white/95 underline decoration-white/25 underline-offset-4 transition hover:decoration-white/55"
+          className="mt-4 inline-flex text-[13px] font-medium text-[var(--primary)] underline decoration-[var(--primary)]/25 underline-offset-4 transition hover:decoration-[var(--primary)]/50"
         >
           Ouvrir la page de réservation
         </a>
       </div>
 
-      <div className="mt-8 space-y-1 border-t border-white/[0.08] pt-8">
-        <Button type="button" variant="ghostInverse" onClick={handleLogout} className="w-full justify-start rounded-lg">
+      <div className="mt-8 shrink-0 space-y-1 border-t border-[#E5E7EB] pt-8">
+        <Button type="button" variant="ghost" onClick={handleLogout} className="w-full justify-start rounded-lg text-[#1a1a1a] hover:bg-[#F3F4F6]">
           Se déconnecter
         </Button>
-        <Button type="button" variant="ghostInverse" onClick={() => router.push("/")} className="w-full justify-start rounded-lg">
+        <Button type="button" variant="ghost" onClick={() => router.push("/")} className="w-full justify-start rounded-lg text-[#1a1a1a] hover:bg-[#F3F4F6]">
           Retour au site
         </Button>
       </div>
@@ -122,8 +122,8 @@ function NavItem({
       className={cn(
         "group relative flex items-center gap-3 rounded-xl py-2.5 pl-3 pr-3 font-medium transition-all duration-200 ease-out",
         active
-          ? "border-l-[3px] border-l-[var(--primary)] bg-white/[0.09] text-white shadow-sm"
-          : "border-l-[3px] border-l-transparent text-white/55 hover:border-l-white/[0.12] hover:bg-white/[0.05] hover:text-white/95",
+          ? "border-l-[3px] border-l-[var(--primary)] bg-[#F0FDF4] text-[var(--primary)] shadow-sm"
+          : "border-l-[3px] border-l-transparent text-[#1a1a1a] hover:bg-[#F9FAFB] hover:text-[#1a1a1a]",
       )}
     >
       <span className="flex h-5 w-5 shrink-0 items-center justify-center">
@@ -132,7 +132,7 @@ function NavItem({
           strokeWidth={2}
           className={cn(
             "transition-colors duration-200",
-            active ? "text-white" : "text-white/45 group-hover:text-white/85",
+            active ? "text-[var(--primary)]" : "text-[#1a1a1a] group-hover:text-[#1a1a1a]",
           )}
         />
       </span>
@@ -142,8 +142,8 @@ function NavItem({
           className={cn(
             "ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1",
             active
-              ? "bg-white/12 text-white/95 ring-white/20"
-              : "bg-white/[0.07] text-white/60 ring-white/10",
+              ? "bg-[var(--primary)]/10 text-[var(--primary)] ring-[var(--primary)]/20"
+              : "bg-[#F3F4F6] text-[#6b7280] ring-[#E5E7EB]",
           )}
         >
           Pro
