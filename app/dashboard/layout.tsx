@@ -14,41 +14,39 @@ export default async function DashboardLayout({
   const publicLink = origin ? `${origin}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
 
   return (
-    <main className="min-h-screen bg-[var(--surface-muted)] p-3 md:p-4">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-3 lg:flex-row">
+    <main className="min-h-screen bg-[var(--background)] px-4 py-6 md:px-6 md:py-8">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
         <DashboardSidebar
           reservationLink={publicLink}
           subscriptionPlan={restaurant.subscription_plan}
           subscriptionStatus={restaurant.subscription_status}
         />
-        <section className="flex-1">
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[0_18px_42px_-30px_rgba(15,63,58,0.42)]">
-            <header className="border-b border-[var(--border)] px-5 py-4 md:px-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
-                  Espace restaurant
-                </p>
+        <section className="min-w-0 flex-1">
+          <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface)] shadow-sm">
+            <header className="border-b border-[rgba(0,0,0,0.06)] px-6 py-5 md:px-8">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="dashboard-section-kicker">Espace restaurant</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href="/dashboard/reservations"
+                    className="inline-flex min-h-[42px] items-center rounded-xl bg-[var(--primary)] px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition hover:bg-[var(--primary-hover)]"
+                  >
+                    Gérer les réservations
+                  </Link>
+                  <a
+                    href={publicLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="dashboard-link-secondary"
+                  >
+                    Voir le lien public
+                  </a>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/dashboard/reservations"
-                  className="inline-flex h-10 items-center rounded-xl bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-4 text-sm font-semibold text-white transition hover:opacity-95"
-                >
-                  Gérer les réservations
-                </Link>
-                <a
-                  href={publicLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-10 items-center rounded-xl border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--foreground)]/80 hover:bg-[var(--surface-muted)]"
-                >
-                  Voir le lien public
-                </a>
-              </div>
-            </div>
             </header>
-            <div className="px-5 py-4 md:px-6 md:py-5">{children}</div>
+            <div className="px-6 py-6 md:px-8 md:py-8">{children}</div>
           </div>
         </section>
       </div>

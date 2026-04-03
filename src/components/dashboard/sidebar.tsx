@@ -53,19 +53,19 @@ export default function DashboardSidebar({
   }
 
   return (
-    <aside className="w-full rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_16px_36px_-28px_rgba(15,63,58,0.6)] lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:w-72">
-      <div className="rounded-2xl bg-[#ECF8F5] p-4">
+    <aside className="flex w-full flex-col rounded-2xl bg-[var(--sidebar)] p-5 text-[var(--sidebar-foreground)] shadow-sm ring-1 ring-white/[0.06] lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:shrink-0 lg:w-72">
+      <div className="rounded-xl bg-white/[0.06] p-3.5 ring-1 ring-white/[0.08]">
         <Image
           src="/Zengrow-logo.png"
           alt="Logo ZenGrow"
           width={140}
           height={38}
-          className="h-8 w-auto object-contain"
+          className="h-8 w-auto object-contain opacity-95"
           priority
         />
       </div>
 
-      <nav className="mt-5 space-y-1 text-sm">
+      <nav className="mt-6 flex-1 space-y-0.5 overflow-y-auto pr-1 text-sm">
         {navItems.map((item) => (
           <NavItem
             key={item.href}
@@ -78,26 +78,24 @@ export default function DashboardSidebar({
         ))}
       </nav>
 
-      <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-          Lien public
-        </p>
-        <p className="mt-2 break-all text-xs text-[var(--foreground)]/75">{reservationLink}</p>
+      <div className="mt-6 rounded-xl bg-white/[0.05] p-4 ring-1 ring-white/[0.08]">
+        <p className="dashboard-section-kicker text-[rgba(244,246,245,0.5)]">Lien public</p>
+        <p className="mt-2 break-all text-xs leading-relaxed text-white/75">{reservationLink}</p>
         <a
           href={reservationLink}
           target="_blank"
           rel="noreferrer"
-          className="mt-3 inline-flex text-xs font-semibold text-[var(--primary)] hover:underline"
+          className="mt-3 inline-flex text-xs font-medium text-white/90 underline decoration-white/25 underline-offset-4 transition hover:decoration-white/60"
         >
           Ouvrir la page de réservation
         </a>
       </div>
 
-      <div className="mt-auto pt-6">
-        <Button type="button" variant="ghost" onClick={handleLogout} className="w-full justify-start">
+      <div className="mt-6 space-y-1 border-t border-white/[0.08] pt-6">
+        <Button type="button" variant="ghostInverse" onClick={handleLogout} className="w-full justify-start">
           Se déconnecter
         </Button>
-        <Button type="button" variant="ghost" onClick={() => router.push("/")} className="mt-2 w-full justify-start">
+        <Button type="button" variant="ghostInverse" onClick={() => router.push("/")} className="w-full justify-start">
           Retour au site
         </Button>
       </div>
@@ -122,27 +120,27 @@ function NavItem({
     <Link
       href={href}
       className={cn(
-        "group flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium transition",
+        "group flex items-center gap-3 rounded-full px-3.5 py-2.5 font-medium transition-colors duration-150",
         active
-          ? "bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] text-white shadow-[0_12px_30px_-20px_rgba(31,122,108,0.9)]"
-          : "text-[var(--muted-foreground)] hover:bg-[#F3FBF8] hover:text-[var(--foreground)]",
+          ? "bg-[var(--primary)] text-white shadow-sm"
+          : "text-white/55 hover:bg-white/[0.07] hover:text-white/95",
       )}
     >
       <Icon
-        size={17}
+        size={18}
         className={cn(
-          "shrink-0 transition",
-          active ? "text-white" : "text-[var(--muted-foreground)] group-hover:text-[#1F7A6C]",
+          "shrink-0 transition-colors",
+          active ? "text-white" : "text-white/45 group-hover:text-white/85",
         )}
       />
-      <span>{label}</span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
       {locked ? (
         <span
           className={cn(
-            "ml-auto rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]",
+            "ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1",
             active
-              ? "border-white/70 bg-white/20 text-white"
-              : "border-[var(--border)] bg-white text-[var(--muted-foreground)]",
+              ? "bg-white/15 text-white ring-white/25"
+              : "bg-white/[0.07] text-white/65 ring-white/10",
           )}
         >
           Pro

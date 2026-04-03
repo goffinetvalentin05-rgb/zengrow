@@ -7,6 +7,7 @@ import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import Input from "@/src/components/ui/input";
 import Textarea from "@/src/components/ui/textarea";
+import { cn } from "@/src/lib/utils";
 
 type RestaurantData = {
   id: string;
@@ -55,8 +56,8 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
   const [reservationDuration, setReservationDuration] = useState(settings.reservation_duration ?? 90);
   const [slotInterval, setSlotInterval] = useState(settings.reservation_slot_interval ?? 15);
   const [maxPartySize, setMaxPartySize] = useState(settings.max_party_size ?? 8);
-  const [accentColor, setAccentColor] = useState(settings.accent_color ?? "#1F7A6C");
-  const [buttonColor, setButtonColor] = useState(settings.button_color ?? "#1F7A6C");
+  const [accentColor, setAccentColor] = useState(settings.accent_color ?? "#0D5C4A");
+  const [buttonColor, setButtonColor] = useState(settings.button_color ?? "#0D5C4A");
   const [logoUrl, setLogoUrl] = useState(settings.logo_url ?? "");
   const [coverImageUrl, setCoverImageUrl] = useState(settings.cover_image_url ?? "");
   const [instagramUrl, setInstagramUrl] = useState(settings.instagram_url ?? "");
@@ -180,25 +181,25 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Card className="rounded-3xl">
+    <form onSubmit={handleSubmit} className="space-y-10">
+      <Card>
         <CardHeader>
           <CardTitle>Informations restaurant</CardTitle>
           <CardDescription>Informations générales de votre établissement.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Nom du restaurant</label>
+            <label className="dashboard-field-label">Nom du restaurant</label>
             <Input value={name} onChange={(event) => setName(event.target.value)} required />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Email</label>
+            <label className="dashboard-field-label">Email</label>
             <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Apparence de la page</CardTitle>
           <CardDescription>Personnalisez votre page publique de réservation.</CardDescription>
@@ -206,7 +207,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
+              <label className="dashboard-field-label">
                 Logo du restaurant
               </label>
               <Input type="file" accept="image/*" onChange={handleLogoUpload} />
@@ -226,7 +227,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
               ) : null}
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
+              <label className="dashboard-field-label">
                 Photo de couverture
               </label>
               <Input type="file" accept="image/*" onChange={handleCoverUpload} />
@@ -249,14 +250,14 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Couleur principale</label>
+              <label className="dashboard-field-label">Couleur principale</label>
               <div className="flex items-center gap-2">
                 <Input type="color" className="h-10 w-16 p-1" value={accentColor} onChange={(event) => setAccentColor(event.target.value)} />
                 <Input value={accentColor} onChange={(event) => setAccentColor(event.target.value)} />
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Couleur du bouton</label>
+              <label className="dashboard-field-label">Couleur du bouton</label>
               <div className="flex items-center gap-2">
                 <Input type="color" className="h-10 w-16 p-1" value={buttonColor} onChange={(event) => setButtonColor(event.target.value)} />
                 <Input value={buttonColor} onChange={(event) => setButtonColor(event.target.value)} />
@@ -266,30 +267,30 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Instagram</label>
+              <label className="dashboard-field-label">Instagram</label>
               <Input value={instagramUrl} onChange={(event) => setInstagramUrl(event.target.value)} placeholder="https://instagram.com/..." />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Facebook</label>
+              <label className="dashboard-field-label">Facebook</label>
               <Input value={facebookUrl} onChange={(event) => setFacebookUrl(event.target.value)} placeholder="https://facebook.com/..." />
             </div>
             <div className="md:col-span-2">
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Site web</label>
+              <label className="dashboard-field-label">Site web</label>
               <Input value={websiteUrl} onChange={(event) => setWebsiteUrl(event.target.value)} placeholder="https://..." />
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Adresse</label>
+              <label className="dashboard-field-label">Adresse</label>
               <Input value={address} onChange={(event) => setAddress(event.target.value)} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Téléphone</label>
+              <label className="dashboard-field-label">Téléphone</label>
               <Input value={phone} onChange={(event) => setPhone(event.target.value)} />
             </div>
             <div className="md:col-span-2">
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Description</label>
+              <label className="dashboard-field-label">Description</label>
               <Textarea
                 className="min-h-20"
                 value={description}
@@ -299,7 +300,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
+            <label className="dashboard-field-label">
               Message avant réservation
             </label>
             <Textarea
@@ -312,41 +313,75 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Confirmation des réservations</CardTitle>
           <CardDescription>Choisissez comment les nouvelles réservations sont confirmées.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--border)] p-4">
+          <label
+            className={cn(
+              "flex cursor-pointer gap-4 rounded-xl border p-4 transition-all",
+              reservationConfirmationMode === "manual"
+                ? "border-[rgba(13,92,74,0.32)] bg-[rgba(13,92,74,0.05)] shadow-[0_0_0_3px_rgba(13,92,74,0.08)]"
+                : "border-[rgba(0,0,0,0.07)] hover:bg-[var(--surface-muted)]/50",
+            )}
+          >
             <input
               type="radio"
               name="reservation-confirmation-mode"
               value="manual"
               checked={reservationConfirmationMode === "manual"}
               onChange={() => setReservationConfirmationMode("manual")}
-              className="mt-1"
+              className="sr-only"
             />
+            <span
+              className={cn(
+                "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                reservationConfirmationMode === "manual"
+                  ? "border-[var(--primary)] bg-[var(--primary)]"
+                  : "border-[rgba(0,0,0,0.12)] bg-[var(--surface)]",
+              )}
+            >
+              {reservationConfirmationMode === "manual" ? <span className="h-2 w-2 rounded-full bg-white" /> : null}
+            </span>
             <span>
               <span className="block text-sm font-semibold text-[var(--foreground)]">Confirmation manuelle</span>
-              <span className="block text-sm text-[var(--muted-foreground)]">
+              <span className="mt-0.5 block text-sm text-[var(--muted-foreground)]">
                 Le restaurant doit confirmer ou refuser les réservations.
               </span>
             </span>
           </label>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--border)] p-4">
+          <label
+            className={cn(
+              "flex cursor-pointer gap-4 rounded-xl border p-4 transition-all",
+              reservationConfirmationMode === "automatic"
+                ? "border-[rgba(13,92,74,0.32)] bg-[rgba(13,92,74,0.05)] shadow-[0_0_0_3px_rgba(13,92,74,0.08)]"
+                : "border-[rgba(0,0,0,0.07)] hover:bg-[var(--surface-muted)]/50",
+            )}
+          >
             <input
               type="radio"
               name="reservation-confirmation-mode"
               value="automatic"
               checked={reservationConfirmationMode === "automatic"}
               onChange={() => setReservationConfirmationMode("automatic")}
-              className="mt-1"
+              className="sr-only"
             />
+            <span
+              className={cn(
+                "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                reservationConfirmationMode === "automatic"
+                  ? "border-[var(--primary)] bg-[var(--primary)]"
+                  : "border-[rgba(0,0,0,0.12)] bg-[var(--surface)]",
+              )}
+            >
+              {reservationConfirmationMode === "automatic" ? <span className="h-2 w-2 rounded-full bg-white" /> : null}
+            </span>
             <span>
               <span className="block text-sm font-semibold text-[var(--foreground)]">Confirmation automatique</span>
-              <span className="block text-sm text-[var(--muted-foreground)]">
+              <span className="mt-0.5 block text-sm text-[var(--muted-foreground)]">
                 Les réservations sont confirmées automatiquement si les disponibilités le permettent.
               </span>
             </span>
@@ -354,14 +389,14 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Reservations intelligentes</CardTitle>
           <CardDescription>Réglez la capacité et la logique de chevauchement des réservations.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
+            <label className="dashboard-field-label">
               Capacité maximale du restaurant
             </label>
             <Input
@@ -372,7 +407,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
+            <label className="dashboard-field-label">
               Limite max de personnes par réservation
             </label>
             <Input
@@ -383,7 +418,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
+            <label className="dashboard-field-label">
               Durée moyenne d&apos;une réservation (minutes)
             </label>
             <Input
@@ -395,7 +430,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
+            <label className="dashboard-field-label">
               Intervalle entre créneaux (minutes)
             </label>
             <Input
@@ -409,7 +444,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Lien public</CardTitle>
           <CardDescription>Personnalisez le slug et partagez facilement la page.</CardDescription>
@@ -417,11 +452,11 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Slug</label>
+              <label className="dashboard-field-label">Slug</label>
               <Input value={slug} onChange={(event) => setSlug(event.target.value)} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">URL</label>
+              <label className="dashboard-field-label">URL</label>
               <Input value={publicLink.replace(restaurant.slug, slug)} readOnly />
             </div>
           </div>
@@ -437,7 +472,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
               href={publicLink.replace(restaurant.slug, slug)}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-10 items-center rounded-xl border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--foreground)]/80 hover:bg-[var(--surface-muted)]"
+              className="dashboard-link-secondary"
             >
               Voir la page publique
             </a>
@@ -445,14 +480,14 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Fermeture temporaire</CardTitle>
           <CardDescription>Bloquez les réservations pendant une période de fermeture.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Date de début</label>
+            <label className="dashboard-field-label">Date de début</label>
             <Input
               type="date"
               value={closureStartDate}
@@ -460,11 +495,11 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Date de fin</label>
+            <label className="dashboard-field-label">Date de fin</label>
             <Input type="date" value={closureEndDate} onChange={(event) => setClosureEndDate(event.target.value)} />
           </div>
           <div className="md:col-span-2">
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
+            <label className="dashboard-field-label">
               Message (optionnel)
             </label>
             <Textarea

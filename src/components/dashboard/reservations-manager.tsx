@@ -173,8 +173,8 @@ export default function ReservationsManager({ initialReservations, initialShowMa
   }
 
   return (
-    <section className="space-y-6">
-      <Card className="rounded-3xl">
+    <section className="space-y-10">
+      <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Réservations</CardTitle>
@@ -188,18 +188,21 @@ export default function ReservationsManager({ initialReservations, initialShowMa
         </CardHeader>
         <CardContent className="space-y-5">
           {showManualForm ? (
-            <form onSubmit={createManualReservation} className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+            <form
+              onSubmit={createManualReservation}
+              className="space-y-4 rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-5 shadow-sm"
+            >
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Nom du client</label>
+                  <label className="dashboard-field-label">Nom du client</label>
                   <Input value={manualGuestName} onChange={(event) => setManualGuestName(event.target.value)} required />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Téléphone</label>
+                  <label className="dashboard-field-label">Téléphone</label>
                   <Input value={manualGuestPhone} onChange={(event) => setManualGuestPhone(event.target.value)} required />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Email (optionnel)</label>
+                  <label className="dashboard-field-label">Email (optionnel)</label>
                   <Input
                     type="email"
                     value={manualGuestEmail}
@@ -207,7 +210,7 @@ export default function ReservationsManager({ initialReservations, initialShowMa
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Date</label>
+                  <label className="dashboard-field-label">Date</label>
                   <Input
                     type="date"
                     value={manualReservationDate}
@@ -216,7 +219,7 @@ export default function ReservationsManager({ initialReservations, initialShowMa
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Heure</label>
+                  <label className="dashboard-field-label">Heure</label>
                   <Input
                     type="time"
                     value={manualReservationTime}
@@ -225,9 +228,7 @@ export default function ReservationsManager({ initialReservations, initialShowMa
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">
-                    Nombre de personnes
-                  </label>
+                  <label className="dashboard-field-label">Nombre de personnes</label>
                   <Input
                     type="number"
                     min={1}
@@ -237,7 +238,7 @@ export default function ReservationsManager({ initialReservations, initialShowMa
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Note (optionnel)</label>
+                  <label className="dashboard-field-label">Note (optionnel)</label>
                   <Textarea
                     className="min-h-20"
                     value={manualNote}
@@ -263,11 +264,11 @@ export default function ReservationsManager({ initialReservations, initialShowMa
 
           <div className="grid gap-3 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Date</label>
+              <label className="dashboard-field-label">Date</label>
               <Input type="date" value={filterDate} onChange={(event) => setFilterDate(event.target.value)} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Statut</label>
+              <label className="dashboard-field-label">Statut</label>
               <Select
                 value={filterStatus}
                 onChange={(event) => setFilterStatus(event.target.value as "all" | ReservationRow["status"])}
@@ -363,7 +364,7 @@ export default function ReservationsManager({ initialReservations, initialShowMa
                   key={reservation.id}
                   type="button"
                   onClick={() => setSelectedReservationId(reservation.id)}
-                  className="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-left"
+                  className="w-full rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-3 text-left shadow-sm"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-semibold text-[var(--foreground)]">{reservation.guest_name}</p>
@@ -380,7 +381,7 @@ export default function ReservationsManager({ initialReservations, initialShowMa
       </Card>
 
       {selectedReservation ? (
-        <Card className="rounded-3xl">
+        <Card>
           <CardHeader>
             <CardTitle>Détail de la réservation</CardTitle>
             <CardDescription>Voir, modifier ou annuler rapidement.</CardDescription>
@@ -399,7 +400,7 @@ export default function ReservationsManager({ initialReservations, initialShowMa
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Statut</label>
+                <label className="dashboard-field-label">Statut</label>
                 <Select
                   value={selectedReservation.status}
                   onChange={(event) =>
@@ -416,7 +417,7 @@ export default function ReservationsManager({ initialReservations, initialShowMa
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Note interne</label>
+                <label className="dashboard-field-label">Note interne</label>
                 <Textarea
                   className="min-h-24"
                   value={noteDrafts[selectedReservation.id] ?? ""}
@@ -443,7 +444,7 @@ export default function ReservationsManager({ initialReservations, initialShowMa
       ) : null}
 
       {message && (
-        <p className="rounded-2xl border border-[var(--border)] bg-white px-4 py-2 text-sm text-[var(--foreground)]/80 shadow-sm">
+        <p className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 px-4 py-3 text-sm text-[var(--foreground)]/85 shadow-sm">
           {message}
         </p>
       )}

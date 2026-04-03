@@ -36,7 +36,7 @@ export default async function DashboardReviewsPage() {
         button_positive_label: automation?.button_positive_label ?? "Excellent",
         button_neutral_label: automation?.button_neutral_label ?? "Moyen",
         button_negative_label: automation?.button_negative_label ?? "À améliorer",
-        primary_color: automation?.primary_color ?? "#1F7A6C",
+        primary_color: automation?.primary_color ?? "#0D5C4A",
       }}
       initialFeedback={feedback ?? []}
     />

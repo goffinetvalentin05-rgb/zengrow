@@ -82,8 +82,8 @@ export default function AvailabilityEditor({
   }
 
   return (
-    <section className="space-y-6">
-      <Card className="rounded-3xl">
+    <section className="space-y-10">
+      <Card>
         <CardHeader>
           <CardTitle>Horaires et disponibilités</CardTitle>
           <CardDescription>
@@ -95,7 +95,10 @@ export default function AvailabilityEditor({
             const ranges = openingHours[day] ?? [];
             const isOpen = ranges.length > 0;
             return (
-              <div key={day} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+              <div
+                key={day}
+                className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{dayLabels[day]}</p>
                   <Toggle checked={isOpen} onChange={(value) => toggleDay(day, value)} label={isOpen ? "Ouvert" : "Fermé"} />
@@ -134,14 +137,14 @@ export default function AvailabilityEditor({
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Paramètres de réservation</CardTitle>
           <CardDescription>Règles générales appliquées à toutes les réservations.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Couverts max par créneau</label>
+            <label className="dashboard-field-label">Couverts max par créneau</label>
             <Input
               type="number"
               min={1}
@@ -150,7 +153,7 @@ export default function AvailabilityEditor({
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Intervalle des créneaux</label>
+            <label className="dashboard-field-label">Intervalle des créneaux</label>
             <Select value={String(slotInterval)} onChange={(event) => setSlotInterval(Number(event.target.value))}>
               <option value="15">15 min</option>
               <option value="30">30 min</option>
@@ -159,7 +162,7 @@ export default function AvailabilityEditor({
             </Select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Durée de réservation</label>
+            <label className="dashboard-field-label">Durée de réservation</label>
             <Select
               value={String(reservationDuration)}
               onChange={(event) => setReservationDuration(Number(event.target.value))}

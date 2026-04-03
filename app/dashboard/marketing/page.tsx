@@ -20,7 +20,7 @@ export default async function DashboardMarketingPage() {
   if (!canAccessFeature(restaurant.subscription_plan, "marketing", restaurant.subscription_status)) {
     return (
       <section className="space-y-6">
-        <Card className="rounded-3xl">
+        <Card>
           <CardHeader>
             <CardTitle>Campagnes marketing</CardTitle>
             <CardDescription>Disponible uniquement dans le plan Pro.</CardDescription>
@@ -31,7 +31,7 @@ export default async function DashboardMarketingPage() {
             </p>
             <Link
               href="/dashboard/billing"
-              className="mt-4 inline-flex h-10 items-center rounded-xl bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-4 text-sm font-semibold text-white transition hover:opacity-95"
+              className="mt-5 inline-flex min-h-[42px] items-center rounded-xl bg-[var(--primary)] px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition hover:bg-[var(--primary-hover)]"
             >
               Voir les abonnements
             </Link>

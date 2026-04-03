@@ -17,27 +17,22 @@ export default function PublicLinkCard({ link }: PublicLinkCardProps) {
   }
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <div>
-        <h3 className="text-base font-semibold text-[var(--foreground)]">Lien public de réservation</h3>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+        <h3 className="dashboard-page-title">Lien public de réservation</h3>
+        <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
           Partagez ce lien sur Google, Instagram, Facebook ou votre site.
         </p>
       </div>
       <div className="space-y-3">
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--foreground)]/80">
+        <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/80 px-4 py-3 text-sm text-[var(--foreground)]/85 shadow-sm">
           {link}
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" onClick={handleCopy}>
             {copied ? "Lien copié" : "Copier le lien"}
           </Button>
-          <a
-            href={link}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex h-10 items-center rounded-xl border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--foreground)]/80 hover:bg-[var(--surface-muted)]"
-          >
+          <a href={link} target="_blank" rel="noreferrer" className="dashboard-link-secondary">
             Ouvrir
           </a>
         </div>

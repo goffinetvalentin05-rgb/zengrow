@@ -14,26 +14,25 @@ export default async function DashboardPage() {
   const publicLink = host ? `${protocol}://${host}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
   const today = new Date().toISOString().split("T")[0];
 
-  const [{ data: todayReservations }, { data: settings }, { count: reviewsReceived }] =
-    await Promise.all([
-      supabase
-        .from("reservations")
-        .select("id, guest_name, guests, reservation_time, status")
-        .eq("restaurant_id", restaurant.id)
-        .eq("reservation_date", today)
-        .in("status", ["pending", "confirmed", "completed"]),
-      supabase
-        .from("restaurant_settings")
-        .select("restaurant_capacity, table_count")
-        .eq("restaurant_id", restaurant.id)
-        .maybeSingle(),
-      supabase
-        .from("feedbacks")
-        .select("id", { count: "exact", head: true })
-        .eq("restaurant_id", restaurant.id)
-        .gte("created_at", `${today}T00:00:00`)
-        .lte("created_at", `${today}T23:59:59`),
-    ]);
+  const [{ data: todayReservations }, { data: settings }, { count: reviewsReceived }] = await Promise.all([
+    supabase
+      .from("reservations")
+      .select("id, guest_name, guests, reservation_time, status")
+      .eq("restaurant_id", restaurant.id)
+      .eq("reservation_date", today)
+      .in("status", ["pending", "confirmed", "completed"]),
+    supabase
+      .from("restaurant_settings")
+      .select("restaurant_capacity, table_count")
+      .eq("restaurant_id", restaurant.id)
+      .maybeSingle(),
+    supabase
+      .from("feedbacks")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", restaurant.id)
+      .gte("created_at", `${today}T00:00:00`)
+      .lte("created_at", `${today}T23:59:59`),
+  ]);
 
   const restaurantCapacity = settings?.restaurant_capacity ?? 40;
   const tableCount = settings?.table_count ?? 12;
@@ -65,23 +64,25 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <section className="space-y-6">
-      <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <section className="space-y-10">
+      <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface)] p-6 shadow-sm md:p-7">
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Service d&apos;aujourd&apos;hui</h2>
-            <p className="text-sm text-[var(--muted-foreground)]">Timeline des réservations prévues aujourd&apos;hui.</p>
+            <h2 className="dashboard-page-title">Service d&apos;aujourd&apos;hui</h2>
+            <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
+              Timeline des réservations prévues aujourd&apos;hui.
+            </p>
           </div>
           <Link
             href="/dashboard/reservations?new=1"
-            className="inline-flex h-10 items-center rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)] shadow-sm transition hover:bg-[#186256]"
+            className="inline-flex min-h-[42px] items-center rounded-xl bg-[var(--primary)] px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition hover:bg-[var(--primary-hover)]"
           >
-            ➕ Ajouter une réservation
+            Ajouter une réservation
           </Link>
         </div>
 
         {timelineReservations.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--muted-foreground)]">
+          <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-5 text-sm text-[var(--muted-foreground)]">
             Aucune réservation aujourd&apos;hui.
           </p>
         ) : (
@@ -89,11 +90,11 @@ export default async function DashboardPage() {
             {timelineReservations.map((reservation) => (
               <div
                 key={reservation.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 px-4 py-3 shadow-sm"
               >
                 <p className="text-sm text-[var(--foreground)]">
-                  <span className="font-semibold">{reservation.reservation_time}</span> — {reservation.guest_name ?? "Client"} —{" "}
-                  {reservation.guests} personnes
+                  <span className="font-semibold">{reservation.reservation_time}</span> —{" "}
+                  {reservation.guest_name ?? "Client"} — {reservation.guests} personnes
                 </p>
                 <StatusBadge status={reservation.status as "pending" | "confirmed" | "completed"} />
               </div>
@@ -103,48 +104,53 @@ export default async function DashboardPage() {
       </div>
 
       {fullFromSlot ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-          ⚠️ Restaurant complet à partir de {fullFromSlot}
+        <div className="rounded-xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm font-medium text-amber-900">
+          Restaurant complet à partir de {fullFromSlot}
         </div>
       ) : null}
 
-      <div className="border-b border-[var(--border)] pb-6">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">Vue d&apos;ensemble</h2>
-          <p className="text-sm text-[var(--muted-foreground)]">Statistiques clés du service d&apos;aujourd&apos;hui.</p>
+      <div className="border-b border-[rgba(0,0,0,0.06)] pb-10">
+        <div className="mb-6">
+          <h2 className="dashboard-page-title">Vue d&apos;ensemble</h2>
+          <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
+            Statistiques clés du service d&apos;aujourd&apos;hui.
+          </p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {kpis.map((kpi) => (
-            <div key={kpi.label} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-                {kpi.label}
-              </p>
-              <p className="text-4xl font-semibold text-[var(--foreground)]">{kpi.value}</p>
+            <div
+              key={kpi.label}
+              className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 px-5 py-5 shadow-sm"
+            >
+              <p className="dashboard-section-kicker">{kpi.label}</p>
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-[var(--foreground)]">{kpi.value}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.6fr_0.95fr]">
-        <section className="space-y-3 border-b border-[var(--border)] pb-6 xl:border-b-0 xl:border-r xl:pb-0 xl:pr-5">
+      <div className="grid gap-10 xl:grid-cols-[1.6fr_0.95fr]">
+        <section className="space-y-4 border-b border-[rgba(0,0,0,0.06)] pb-10 xl:border-b-0 xl:border-r xl:pb-0 xl:pr-10">
           <div>
-            <h3 className="text-lg font-semibold text-[var(--foreground)]">Prochaines réservations</h3>
-            <p className="text-sm text-[var(--muted-foreground)]">Liste simple des prochaines tables à servir aujourd&apos;hui.</p>
+            <h3 className="dashboard-page-title">Prochaines réservations</h3>
+            <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
+              Liste simple des prochaines tables à servir aujourd&apos;hui.
+            </p>
           </div>
           {activeTodayReservations.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-5 text-sm text-[var(--muted-foreground)]">
+            <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-6 text-sm text-[var(--muted-foreground)]">
               Aucune réservation à venir pour le moment.
             </p>
           ) : (
             activeTodayReservations.map((reservation) => (
               <div
                 key={reservation.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm"
               >
                 <div>
                   <p className="font-semibold text-[var(--foreground)]">{reservation.guest_name ?? "Client"}</p>
                   <p className="text-xs text-[var(--muted-foreground)]">
-                    {reservation.reservation_time} - {reservation.guests} couverts
+                    {reservation.reservation_time} — {reservation.guests} couverts
                   </p>
                 </div>
                 <StatusBadge status={reservation.status as "pending" | "confirmed"} />
@@ -152,7 +158,10 @@ export default async function DashboardPage() {
             ))
           )}
 
-          <Link href="/dashboard/reservations" className="inline-flex text-sm font-semibold text-[var(--primary)] hover:underline">
+          <Link
+            href="/dashboard/reservations"
+            className="inline-flex text-sm font-medium text-[var(--primary)] underline decoration-[var(--primary)]/25 underline-offset-4 transition hover:decoration-[var(--primary)]/50"
+          >
             Voir toutes les réservations
           </Link>
         </section>

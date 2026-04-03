@@ -33,39 +33,39 @@ export default async function DashboardCustomersPage() {
   }));
 
   return (
-    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-5">
-      <header className="mb-5">
-        <h2 className="text-xl font-semibold text-[var(--foreground)]">Clients</h2>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+    <section className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
+      <header className="mb-8">
+        <h2 className="dashboard-page-title">Clients</h2>
+        <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
           Liste simple des clients et de leur historique de réservation.
         </p>
       </header>
       {customers.length === 0 ? (
         <EmptyState title="Aucun client pour le moment" description="Les profils se construisent depuis les réservations." />
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-[rgba(0,0,0,0.07)]">
           <table className="min-w-full text-sm">
-            <thead className="border-b bg-[var(--surface-muted)] text-left text-[var(--muted-foreground)]">
+            <thead className="border-b border-[rgba(0,0,0,0.06)] bg-[var(--surface-muted)]/40 text-left text-[var(--muted-foreground)]">
               <tr>
-                <th className="px-4 py-3 font-semibold">Nom</th>
-                <th className="px-4 py-3 font-semibold">Email</th>
-                <th className="px-4 py-3 font-semibold">Téléphone</th>
-                <th className="px-4 py-3 font-semibold">Réservations</th>
-                <th className="px-4 py-3 font-semibold">Dernière visite</th>
-                <th className="px-4 py-3 font-semibold">Visites totales</th>
+                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Nom</th>
+                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Email</th>
+                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Téléphone</th>
+                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Réservations</th>
+                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Dernière visite</th>
+                <th className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider">Visites totales</th>
               </tr>
             </thead>
             <tbody>
               {customers.map((customer) => (
-                <tr key={customer.key} className="border-b last:border-0">
-                  <td className="px-4 py-3 font-semibold text-[var(--foreground)]">{customer.name}</td>
-                  <td className="px-4 py-3 text-[var(--foreground)]/75">{customer.email || "-"}</td>
-                  <td className="px-4 py-3 text-[var(--foreground)]/75">{customer.phone || "-"}</td>
-                  <td className="px-4 py-3 text-[var(--foreground)]/75">{customer.reservations}</td>
-                  <td className="px-4 py-3 text-[var(--foreground)]/75">
-                    {customer.lastVisit ? customer.lastVisit.slice(0, 10) : "-"}
+                <tr key={customer.key} className="border-b border-[rgba(0,0,0,0.05)] last:border-0">
+                  <td className="px-4 py-3.5 font-medium text-[var(--foreground)]">{customer.name}</td>
+                  <td className="px-4 py-3.5 text-[var(--foreground)]/75">{customer.email || "—"}</td>
+                  <td className="px-4 py-3.5 text-[var(--foreground)]/75">{customer.phone || "—"}</td>
+                  <td className="px-4 py-3.5 text-[var(--foreground)]/75">{customer.reservations}</td>
+                  <td className="px-4 py-3.5 text-[var(--foreground)]/75">
+                    {customer.lastVisit ? customer.lastVisit.slice(0, 10) : "—"}
                   </td>
-                  <td className="px-4 py-3 text-[var(--foreground)]/75">{customer.totalVisits}</td>
+                  <td className="px-4 py-3.5 text-[var(--foreground)]/75">{customer.totalVisits}</td>
                 </tr>
               ))}
             </tbody>

@@ -86,8 +86,8 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
   }
 
   return (
-    <section className="space-y-6">
-      <Card className="rounded-3xl">
+    <section className="space-y-10">
+      <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Campagnes marketing</CardTitle>
@@ -100,19 +100,19 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
       </Card>
 
       {showForm && (
-        <Card className="rounded-3xl">
+        <Card>
           <CardHeader>
             <CardTitle>Créer une campagne</CardTitle>
             <CardDescription>Configurez le message, l&apos;image et le segment de destinataires.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Nom de la campagne</label>
+              <label className="dashboard-field-label">Nom de la campagne</label>
               <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Promo de mars" />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Objet</label>
+              <label className="dashboard-field-label">Objet</label>
               <Input
                 value={subject}
                 onChange={(event) => setSubject(event.target.value)}
@@ -121,7 +121,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Contenu de l&apos;e-mail</label>
+              <label className="dashboard-field-label">Contenu de l&apos;e-mail</label>
               <Textarea
                 className="min-h-36"
                 value={content}
@@ -131,7 +131,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">URL de l&apos;image (optionnel)</label>
+              <label className="dashboard-field-label">URL de l&apos;image (optionnel)</label>
               <Input
                 value={imageUrl}
                 onChange={(event) => setImageUrl(event.target.value)}
@@ -140,7 +140,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground)]/80">Destinataires</label>
+              <label className="dashboard-field-label">Destinataires</label>
               <Select value={audience} onChange={(event) => setAudience(event.target.value as AudienceFilter)}>
                 <option value="all_customers">Tous les clients</option>
                 <option value="visited_last_30_days">Clients venus ces 30 derniers jours</option>
@@ -162,14 +162,14 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
         </Card>
       )}
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Campagnes envoyées</CardTitle>
           <CardDescription>Historique de vos campagnes e-mail envoyées depuis ZenGrow.</CardDescription>
         </CardHeader>
         <CardContent>
           {campaigns.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--muted-foreground)]">
+            <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-5 text-sm text-[var(--muted-foreground)]">
               Aucune campagne envoyée pour le moment.
             </p>
           ) : (
@@ -178,7 +178,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
                 <Link
                   key={campaign.id}
                   href={`/dashboard/marketing/${campaign.id}`}
-                  className="block rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 transition hover:border-[#b7ddd4] hover:bg-[#f4fbf9]"
+                  className="block rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm transition hover:border-[rgba(13,92,74,0.22)] hover:bg-[rgba(13,92,74,0.04)]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-semibold text-[var(--foreground)]">{campaign.name}</p>

@@ -34,78 +34,82 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
   const sentCount = emails.length;
 
   return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
+    <section className="space-y-10">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm text-[var(--muted-foreground)]">Campagnes marketing</p>
-          <h1 className="text-2xl font-semibold text-[var(--foreground)]">{campaign.name}</h1>
+          <p className="dashboard-section-kicker">Campagnes marketing</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)] md:text-[1.5rem]">
+            {campaign.name}
+          </h1>
         </div>
-        <Link
-          href="/dashboard/marketing"
-          className="inline-flex h-10 items-center rounded-xl border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--foreground)]/80 hover:bg-[var(--surface-muted)]"
-        >
+        <Link href="/dashboard/marketing" className="dashboard-link-secondary">
           Retour
         </Link>
       </div>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Détail de la campagne</CardTitle>
           <CardDescription>Contenu envoyé et statistiques de diffusion.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
+        <CardContent className="grid gap-5 md:grid-cols-2">
           <div className="space-y-1">
-            <p className="text-sm text-[var(--muted-foreground)]">Titre</p>
+            <p className="dashboard-field-label mb-0">Titre</p>
             <p className="font-semibold text-[var(--foreground)]">{campaign.name}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-sm text-[var(--muted-foreground)]">Date d&apos;envoi</p>
-            <p className="font-semibold text-[var(--foreground)]">{(campaign.sent_at ?? campaign.created_at).slice(0, 10)}</p>
+            <p className="dashboard-field-label mb-0">Date d&apos;envoi</p>
+            <p className="font-semibold text-[var(--foreground)]">
+              {(campaign.sent_at ?? campaign.created_at).slice(0, 10)}
+            </p>
           </div>
           <div className="space-y-1 md:col-span-2">
-            <p className="text-sm text-[var(--muted-foreground)]">Objet</p>
+            <p className="dashboard-field-label mb-0">Objet</p>
             <p className="font-semibold text-[var(--foreground)]">{campaign.subject}</p>
           </div>
           <div className="space-y-1 md:col-span-2">
-            <p className="text-sm text-[var(--muted-foreground)]">Contenu du message</p>
-            <p className="whitespace-pre-wrap rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--foreground)]/85">
+            <p className="dashboard-field-label mb-0">Contenu du message</p>
+            <p className="whitespace-pre-wrap rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 text-sm text-[var(--foreground)]/85 shadow-sm">
               {campaign.content}
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Statistiques</CardTitle>
           <CardDescription>Suivi simplifié des performances de la campagne.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
-            <p className="text-sm text-[var(--muted-foreground)]">Emails envoyés</p>
-            <p className="mt-1 text-2xl font-semibold text-[var(--foreground)]">{sentCount}</p>
+          <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm">
+            <p className="dashboard-section-kicker">Emails envoyés</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)]">{sentCount}</p>
           </div>
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
-            <p className="text-sm text-[var(--muted-foreground)]">Emails ouverts</p>
-            <p className="mt-1 text-2xl font-semibold text-[var(--foreground)]/70">--</p>
+          <div className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm">
+            <p className="dashboard-section-kicker">Emails ouverts</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)]/60">—</p>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Destinataires</CardTitle>
           <CardDescription>Liste des adresses e-mail ciblées par cette campagne.</CardDescription>
         </CardHeader>
         <CardContent>
           {emails.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--muted-foreground)]">
+            <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-5 text-sm text-[var(--muted-foreground)]">
               Aucun destinataire enregistré.
             </p>
           ) : (
             <ul className="space-y-2">
               {emails.map((email) => (
-                <li key={email} className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm">
+                <li
+                  key={email}
+                  className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 px-3 py-2.5 text-sm shadow-sm"
+                >
                   {email}
                 </li>
               ))}

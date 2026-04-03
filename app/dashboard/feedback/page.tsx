@@ -21,21 +21,24 @@ export default async function DashboardFeedbackPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <section className="space-y-6">
-      <Card className="rounded-3xl">
+    <section className="space-y-10">
+      <Card>
         <CardHeader>
           <CardTitle>Retours clients</CardTitle>
           <CardDescription>Tous les retours privés reçus depuis les demandes d&apos;avis.</CardDescription>
         </CardHeader>
         <CardContent>
           {!feedbacks || feedbacks.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--muted-foreground)]">
+            <p className="rounded-xl border border-dashed border-[rgba(0,0,0,0.08)] bg-[var(--surface-muted)]/60 p-5 text-sm text-[var(--muted-foreground)]">
               Aucun retour pour le moment.
             </p>
           ) : (
             <div className="space-y-3">
               {feedbacks.map((item) => (
-                <article key={item.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+                <article
+                  key={item.id}
+                  className="rounded-xl border border-[rgba(0,0,0,0.07)] bg-[var(--surface-muted)]/50 p-4 shadow-sm"
+                >
                   <p className="text-sm font-semibold text-[var(--foreground)]">Retour #{item.id.slice(0, 8)}</p>
                   <p className="mt-1 text-sm text-[var(--foreground)]/85">Note : {item.rating ?? 0}/5</p>
                   <p className="mt-1 text-sm text-[var(--foreground)]/85">Message : {item.message || "(Aucun message)"}</p>
