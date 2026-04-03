@@ -53,8 +53,11 @@ export default function DashboardSidebar({
   }
 
   return (
-    <aside className="flex w-full flex-col overflow-hidden rounded-[20px] border-b border-[#E5E7EB] bg-white p-6 text-[#1a1a1a] shadow-[var(--card-shadow)] lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:shrink-0 lg:w-[18rem] lg:border-b-0 lg:border-r lg:border-[#E5E7EB]">
-      <div className="shrink-0 rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+    <aside
+      className="flex w-full flex-col overflow-hidden rounded-[20px] border-b border-solid border-[#E5E7EB] bg-[#FFFFFF] p-6 text-[#1a1a1a] lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:shrink-0 lg:w-[18rem] lg:border-b-0 lg:border-r lg:border-[#E5E7EB]"
+      style={{ overflow: "hidden" }}
+    >
+      <div className="shrink-0 rounded-xl border border-solid border-[#E5E7EB] bg-[#FFFFFF] p-4">
         <Image
           src="/Zengrow-logo.png"
           alt="Logo ZenGrow"
@@ -65,7 +68,7 @@ export default function DashboardSidebar({
         />
       </div>
 
-      <nav className="mt-8 min-h-0 flex-1 space-y-1 overflow-hidden text-[14px]">
+      <nav className="mt-8 min-h-0 flex-1 space-y-1 overflow-hidden text-[14px] text-[#1a1a1a]" style={{ overflow: "hidden" }}>
         {navItems.map((item) => (
           <NavItem
             key={item.href}
@@ -78,7 +81,7 @@ export default function DashboardSidebar({
         ))}
       </nav>
 
-      <div className="mt-8 shrink-0 rounded-[20px] border border-[#E5E7EB] bg-[#FAFAFA] p-5">
+      <div className="mt-8 shrink-0 rounded-[20px] border border-solid border-[#E5E7EB] bg-[#FFFFFF] p-5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6b7280]">Lien public</p>
         <p className="mt-3 break-all text-xs leading-relaxed text-[#1a1a1a]">{reservationLink}</p>
         <a
@@ -91,7 +94,7 @@ export default function DashboardSidebar({
         </a>
       </div>
 
-      <div className="mt-8 shrink-0 space-y-1 border-t border-[#E5E7EB] pt-8">
+      <div className="mt-8 shrink-0 space-y-1 border-t border-solid border-[#E5E7EB] pt-8">
         <Button type="button" variant="ghost" onClick={handleLogout} className="w-full justify-start rounded-lg text-[#1a1a1a] hover:bg-[#F3F4F6]">
           Se déconnecter
         </Button>
@@ -122,7 +125,7 @@ function NavItem({
       className={cn(
         "group relative flex items-center gap-3 rounded-xl py-2.5 pl-3 pr-3 font-medium transition-all duration-200 ease-out",
         active
-          ? "border-l-[3px] border-l-[var(--primary)] bg-[#F0FDF4] text-[var(--primary)] shadow-sm"
+          ? "border-l-[3px] border-solid border-l-[#166534] bg-[#F0FDF4] text-[#166534] shadow-sm"
           : "border-l-[3px] border-l-transparent text-[#1a1a1a] hover:bg-[#F9FAFB] hover:text-[#1a1a1a]",
       )}
     >
@@ -132,7 +135,7 @@ function NavItem({
           strokeWidth={2}
           className={cn(
             "transition-colors duration-200",
-            active ? "text-[var(--primary)]" : "text-[#1a1a1a] group-hover:text-[#1a1a1a]",
+            active ? "text-[#166534]" : "text-[#1a1a1a] group-hover:text-[#1a1a1a]",
           )}
         />
       </span>
@@ -142,7 +145,7 @@ function NavItem({
           className={cn(
             "ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1",
             active
-              ? "bg-[var(--primary)]/10 text-[var(--primary)] ring-[var(--primary)]/20"
+              ? "bg-[#DCFCE7] text-[#166534] ring-[#166534]/20"
               : "bg-[#F3F4F6] text-[#6b7280] ring-[#E5E7EB]",
           )}
         >
