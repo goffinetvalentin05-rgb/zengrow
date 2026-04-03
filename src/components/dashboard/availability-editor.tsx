@@ -82,10 +82,12 @@ export default function AvailabilityEditor({
   }
 
   return (
-    <section className="space-y-12">
-      <header>
-        <h1 className="dashboard-page-title">Disponibilités</h1>
-        <p className="dashboard-section-subtitle mt-2 max-w-2xl">Horaires d&apos;accueil et créneaux.</p>
+    <section className="space-y-10">
+      <header className="border-b border-gray-100 pb-6">
+        <h1 className="dashboard-section-heading">Disponibilités</h1>
+        <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+          Indiquez quand vous accueillez les réservations, jour par jour.
+        </p>
       </header>
       <Card>
         <CardHeader>
@@ -99,9 +101,12 @@ export default function AvailabilityEditor({
             const ranges = openingHours[day] ?? [];
             const isOpen = ranges.length > 0;
             return (
-              <div key={day} className="border-b border-gray-100 py-6 last:border-0">
+              <div
+                key={day}
+                className="rounded-xl border border-gray-100 bg-gray-50/40 p-5 shadow-sm md:p-6"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-[var(--foreground)]">{dayLabels[day]}</p>
+                  <p className="text-sm font-semibold text-gray-900">{dayLabels[day]}</p>
                   <Toggle checked={isOpen} onChange={(value) => toggleDay(day, value)} label={isOpen ? "Ouvert" : "Fermé"} />
                 </div>
 

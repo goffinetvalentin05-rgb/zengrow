@@ -130,13 +130,13 @@ export default function ReviewAutomationPanel({
   }
 
   return (
-    <section className="space-y-12">
+    <section className="space-y-10">
       <Card>
-          <CardHeader>
-            <CardTitle>Paramètres d&apos;envoi</CardTitle>
-            <CardDescription>Activez l&apos;envoi automatique et personnalisez le message reçu par vos clients.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
+        <CardHeader>
+          <CardTitle>Paramètres d&apos;envoi</CardTitle>
+          <CardDescription>Activez l&apos;envoi automatique et personnalisez le message reçu par vos clients.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
             <PanelToggle
               checked={isEnabled}
               onChange={setIsEnabled}
@@ -157,11 +157,11 @@ export default function ReviewAutomationPanel({
                         role={item.disabled ? undefined : "button"}
                         tabIndex={item.disabled ? -1 : 0}
                         className={cn(
-                          "flex min-w-0 flex-1 items-center gap-3 rounded-lg border px-3 py-3 transition-colors sm:min-w-[7.5rem] sm:flex-1",
+                          "flex min-w-0 flex-1 items-center gap-3 rounded-lg border px-3 py-3 shadow-sm transition-colors sm:min-w-[7.5rem] sm:flex-1",
                           item.disabled && "cursor-not-allowed opacity-50",
                           !item.disabled && selected && "border-l-4 border-l-green-600 border-gray-200 bg-green-50/50 pl-2.5",
                           !item.disabled && !selected && "cursor-pointer border-gray-200 bg-white hover:bg-gray-50",
-                          item.disabled && "border-gray-100 bg-gray-50/80",
+                          item.disabled && "border-gray-100 bg-gray-50/80 shadow-none",
                         )}
                       >
                         <span
@@ -280,7 +280,7 @@ export default function ReviewAutomationPanel({
             </div>
             {message && <p className="text-sm text-gray-600">{message}</p>}
 
-            <div className="border-t border-gray-100 pt-10">
+            <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-6 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Aperçu</p>
               <p className="mt-4 text-base font-semibold text-gray-900">{previewSubject}</p>
               <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">{previewMessage}</p>
@@ -299,7 +299,7 @@ export default function ReviewAutomationPanel({
                 </span>
               </div>
             </div>
-          </CardContent>
+        </CardContent>
       </Card>
 
       <Card>
@@ -309,13 +309,18 @@ export default function ReviewAutomationPanel({
         </CardHeader>
         <CardContent>
           {initialFeedback.length === 0 ? (
-            <p className="py-6 text-sm text-gray-500">Aucun retour pour le moment.</p>
+            <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50/80 py-10 text-center text-sm text-gray-500 shadow-sm">
+              Aucun retour pour le moment.
+            </p>
           ) : (
-            <div className="divide-y divide-gray-100 border-t border-gray-100">
+            <div className="space-y-4">
               {initialFeedback.map((item) => (
-                <div key={item.id} className="py-5">
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{item.created_at.slice(0, 10)}</p>
-                  <p className="mt-2 text-sm text-gray-800">{item.message || "(Aucun message)"}</p>
+                <div
+                  key={item.id}
+                  className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm md:p-6"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{item.created_at.slice(0, 10)}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-800">{item.message || "(Aucun message)"}</p>
                 </div>
               ))}
             </div>

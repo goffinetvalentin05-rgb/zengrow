@@ -21,7 +21,9 @@ export default function PanelToggle({ checked, onChange, title, description, dis
       className={cn(
         "flex w-full items-center justify-between gap-4 rounded-lg border px-5 py-4 text-left transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/25 focus-visible:ring-offset-2",
-        checked ? "border-green-200 bg-green-50/60" : "border-gray-200 bg-white hover:bg-gray-50/80",
+        checked
+          ? "border-green-200 bg-green-50/60 shadow-sm"
+          : "border-gray-200 bg-white shadow-sm hover:bg-gray-50/80",
         disabled && "pointer-events-none opacity-60",
       )}
     >

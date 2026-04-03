@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Button from "@/src/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import type { SubscriptionPlan, SubscriptionStatus } from "@/src/lib/subscription";
 
 type BillingPlansProps = {
@@ -32,10 +33,10 @@ const PLAN_ITEMS = [
     cta: "Choisir Starter",
     featured: false,
     features: [
-      { label: "Reservations", icon: CalendarDays },
-      { label: "Gestion des disponibilites", icon: Clock3 },
+      { label: "Réservations", icon: CalendarDays },
+      { label: "Disponibilités", icon: Clock3 },
       { label: "Demandes d'avis Google", icon: Star },
-      { label: "Feedback prive", icon: MessageSquare },
+      { label: "Feedback privé", icon: MessageSquare },
       { label: "Base clients", icon: Users },
     ],
   },
@@ -103,56 +104,59 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
   }
 
   return (
-    <section className="space-y-12">
-      <div className="space-y-8 border-b border-gray-100 pb-12">
-        <div className="flex flex-wrap items-start justify-between gap-8">
-          <div className="max-w-xl space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-green-800">Facturation</p>
-            <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
-              {status === "trial" ? "Essai gratuit actif" : "Choisissez votre formule"}
-            </h2>
-            <p className="text-sm leading-relaxed text-gray-600">
+    <section className="space-y-10">
+      <Card>
+        <CardHeader className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-xl space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-green-800">Facturation ZenGrow</p>
+            <CardTitle className="!mt-0">
+              {status === "trial" ? "Votre essai gratuit est actif" : "Choisissez votre formule"}
+            </CardTitle>
+            <CardDescription className="!mt-2 max-w-2xl">
               {status === "trial" && formattedTrialDate
                 ? `Fin de l'essai le ${formattedTrialDate}.`
-                : "Un abonnement pour garder toutes les fonctions ZenGrow."}
-            </p>
+                : "Un abonnement pour conserver toutes les fonctionnalités."}
+            </CardDescription>
           </div>
-          <div className="text-right">
+          <div className="rounded-xl border border-gray-100 bg-gray-50/80 px-5 py-4 text-left shadow-sm lg:text-right">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Plan actuel</p>
-            <p className="mt-1 text-lg font-semibold text-gray-900">{plan ?? "—"}</p>
-            <p className="mt-0.5 text-xs text-gray-500">{status}</p>
+            <p className="mt-2 text-lg font-semibold text-gray-900">{plan ?? "—"}</p>
+            <p className="mt-1 text-xs text-gray-500">Statut : {status}</p>
           </div>
-        </div>
-
-        {status === "trial" ? (
-          <div className="max-w-md space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-700">Essai</span>
-              <span className="font-medium text-green-800">
-                {remainingDays !== null ? `${remainingDays} jour${remainingDays > 1 ? "s" : ""} restants` : "—"}
-              </span>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {status === "trial" ? (
+            <div className="max-w-md space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium text-gray-800">Progression de l&apos;essai</span>
+                <span className="font-semibold text-green-800">
+                  {remainingDays !== null ? `${remainingDays} jour${remainingDays > 1 ? "s" : ""} restants` : "—"}
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-gray-200/80">
+                <div className="h-full rounded-full bg-green-600 transition-all" style={{ width: `${progressPercent}%` }} />
+              </div>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-              <div className="h-full rounded-full bg-green-600 transition-all" style={{ width: `${progressPercent}%` }} />
-            </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {status === "expired" ? (
-          <p className="text-sm text-amber-900">Votre essai est terminé. Choisissez un plan pour continuer.</p>
-        ) : null}
-      </div>
+          {status === "expired" ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950 shadow-sm">
+              Votre essai est terminé. Choisissez un plan pour continuer à utiliser ZenGrow.
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Offres</p>
-        <div className="mt-6 grid gap-8 lg:grid-cols-2">
+        <div className="mt-4 grid gap-6 lg:grid-cols-2">
           {PLAN_ITEMS.map((item) => (
             <div
               key={item.key}
               className={
                 item.featured
-                  ? "rounded-xl border border-green-200 bg-green-50/40 p-8"
-                  : "rounded-xl border border-gray-100 p-8"
+                  ? "rounded-xl border border-green-200 bg-green-50/50 p-8 shadow-sm"
+                  : "rounded-xl border border-gray-100 bg-white p-8 shadow-sm"
               }
             >
               {item.featured ? (
@@ -162,7 +166,7 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
                 {item.title}
               </h3>
               <p className="mt-1 text-sm text-gray-600">{item.subtitle}</p>
-              <p className="mt-4 text-3xl font-semibold tabular-nums text-gray-900">{item.price}</p>
+              <p className="mt-4 text-3xl font-bold tabular-nums tracking-tight text-gray-900">{item.price}</p>
               <ul className="mt-6 space-y-2.5 text-sm text-gray-800">
                 {item.features.map((feature) => (
                   <FeatureItem key={`${item.key}-${feature.label}`} icon={feature.icon} label={feature.label} />
@@ -171,12 +175,15 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
               <Button type="button" className="mt-8 w-full" onClick={() => startCheckout(item.key)} disabled={Boolean(loadingPlan)}>
                 {loadingPlan === item.key ? "Redirection…" : item.cta}
               </Button>
+              <p className="mt-3 text-center text-xs text-gray-500">Sans engagement long terme</p>
             </div>
           ))}
         </div>
       </div>
 
-      {message ? <p className="text-sm text-gray-600">{message}</p> : null}
+      {message ? (
+        <p className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">{message}</p>
+      ) : null}
     </section>
   );
 }

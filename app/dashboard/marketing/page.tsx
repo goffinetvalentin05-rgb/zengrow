@@ -20,9 +20,11 @@ export default async function DashboardMarketingPage() {
   if (!canAccessFeature(restaurant.subscription_plan, "marketing", restaurant.subscription_status)) {
     return (
       <section className="space-y-10">
-        <header>
-          <h1 className="dashboard-page-title">Campagnes</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-2xl">Réservé au plan Pro — e-mails groupés à vos clients.</p>
+        <header className="border-b border-gray-100 pb-6">
+          <h1 className="dashboard-section-heading">Campagnes marketing</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+            Réservé au plan Pro — envoyez des messages groupés à vos clients.
+          </p>
         </header>
         <Card>
           <CardHeader>

@@ -5,10 +5,10 @@ export default async function DashboardBillingPage() {
   const restaurant = await requireRestaurant();
 
   return (
-    <div className="space-y-12">
-      <header>
-        <h1 className="dashboard-page-title">Facturation</h1>
-        <p className="dashboard-section-subtitle mt-2 max-w-2xl">Formule et essai — sans surprise.</p>
+    <div className="space-y-10">
+      <header className="border-b border-gray-100 pb-6">
+        <h1 className="dashboard-section-heading">Facturation</h1>
+        <p className="dashboard-section-subtitle mt-2 max-w-2xl">Formule, essai et souscription ZenGrow.</p>
       </header>
       <BillingPlans
         status={restaurant.subscription_status}

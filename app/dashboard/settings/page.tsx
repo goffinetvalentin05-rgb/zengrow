@@ -44,10 +44,12 @@ export default async function DashboardSettingsPage() {
   };
 
   return (
-    <div className="space-y-12">
-      <header>
-        <h1 className="dashboard-page-title">Paramètres</h1>
-        <p className="dashboard-section-subtitle mt-2 max-w-2xl">Page publique, règles de réservation et lien à partager.</p>
+    <div className="space-y-10">
+      <header className="border-b border-gray-100 pb-6">
+        <h1 className="dashboard-section-heading">Paramètres</h1>
+        <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+          Page publique, règles de réservation, apparence et lien à partager.
+        </p>
       </header>
       <SettingsForm
         restaurant={{

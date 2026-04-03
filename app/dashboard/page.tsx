@@ -3,8 +3,13 @@ import Link from "next/link";
 import { Armchair, Calendar, Star, Users } from "lucide-react";
 import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
 import StatCard from "@/src/components/dashboard/stat-card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
+import { cn } from "@/src/lib/utils";
+
+const linkPrimaryClass =
+  "inline-flex min-h-9 items-center justify-center rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-800";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -57,86 +62,97 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-16">
-      <header>
-        <h1 className="dashboard-page-title">{restaurant.name}</h1>
-        <p className="dashboard-section-subtitle mt-2 max-w-lg">
-          Aujourd&apos;hui · Lien public :{" "}
+    <div className="space-y-10 md:space-y-12">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Tableau de bord</p>
+        <p className="mt-2 max-w-xl text-sm text-gray-600">
+          Activité du jour pour {restaurant.name}. Lien public :{" "}
           <a href={publicLink} className="font-medium text-green-700 hover:underline" target="_blank" rel="noreferrer">
             ouvrir
           </a>
+          .
         </p>
-      </header>
+      </div>
 
-      <section>
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <Card>
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Service d&apos;aujourd&apos;hui</h2>
-            <p className="mt-1 text-sm text-gray-500">Par heure de passage.</p>
+            <CardTitle>Service d&apos;aujourd&apos;hui</CardTitle>
+            <CardDescription>Réservations du jour, par heure de passage.</CardDescription>
           </div>
-          <Link
-            href="/dashboard/reservations?new=1"
-            className="inline-flex items-center rounded-lg bg-green-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-800"
-          >
+          <Link href="/dashboard/reservations?new=1" className={cn(linkPrimaryClass, "shrink-0")}>
             Nouvelle réservation
           </Link>
-        </div>
-
-        {timelineReservations.length === 0 ? (
-          <p className="py-8 text-sm text-gray-500">Aucune réservation aujourd&apos;hui.</p>
-        ) : (
-          <div className="divide-y divide-gray-100 border-t border-gray-100">
-            {timelineReservations.map((reservation) => (
-              <ReservationListRow
-                key={reservation.id}
-                guestName={reservation.guest_name ?? "Client"}
-                timeLabel={reservation.reservation_time}
-                subtitle={`${reservation.guests} ${reservation.guests > 1 ? "personnes" : "personne"}`}
-                status={reservation.status as "pending" | "confirmed" | "completed"}
-                emphasizeTime
-              />
-            ))}
-          </div>
-        )}
-      </section>
+        </CardHeader>
+        <CardContent>
+          {timelineReservations.length === 0 ? (
+            <p className="rounded-lg bg-gray-50/90 py-10 text-center text-sm text-gray-500">Aucune réservation aujourd&apos;hui.</p>
+          ) : (
+            <div className="space-y-3">
+              {timelineReservations.map((reservation) => (
+                <ReservationListRow
+                  key={reservation.id}
+                  guestName={reservation.guest_name ?? "Client"}
+                  timeLabel={reservation.reservation_time}
+                  subtitle={`${reservation.guests} ${reservation.guests > 1 ? "personnes" : "personne"}`}
+                  status={reservation.status as "pending" | "confirmed" | "completed"}
+                  emphasizeTime
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {fullFromSlot ? (
-        <p className="text-sm text-amber-800">
-          <span className="font-medium">Complet</span> à partir de {fullFromSlot}.
-        </p>
+        <div className="rounded-xl border border-amber-200/90 bg-amber-50/90 px-5 py-4 text-sm text-amber-950 shadow-sm">
+          <span className="font-semibold">Complet</span> à partir de {fullFromSlot}.
+        </div>
       ) : null}
 
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900">En chiffres</h2>
-        <div className="mt-6 grid gap-0 sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-gray-100">
-          {kpis.map((kpi) => (
-            <StatCard key={kpi.label} label={kpi.label} value={kpi.value} icon={kpi.icon} accent={kpi.accent} />
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900">Prochaines tables</h2>
-        <p className="mt-1 text-sm text-gray-500">Confirmées ou en attente.</p>
-        {activeTodayReservations.length === 0 ? (
-          <p className="mt-6 text-sm text-gray-500">Rien de prévu pour l&apos;instant.</p>
-        ) : (
-          <div className="mt-6 divide-y divide-gray-100 border-t border-gray-100">
-            {activeTodayReservations.map((reservation) => (
-              <ReservationListRow
-                key={reservation.id}
-                guestName={reservation.guest_name ?? "Client"}
-                timeLabel={reservation.reservation_time}
-                subtitle={`${reservation.guests} couverts`}
-                status={reservation.status as "pending" | "confirmed"}
-              />
+      <Card>
+        <CardHeader>
+          <CardTitle>En chiffres</CardTitle>
+          <CardDescription>Vue synthétique de votre journée.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {kpis.map((kpi) => (
+              <StatCard key={kpi.label} label={kpi.label} value={kpi.value} icon={kpi.icon} accent={kpi.accent} />
             ))}
           </div>
-        )}
-        <Link href="/dashboard/reservations" className="mt-6 inline-block text-sm font-medium text-green-700 hover:underline">
-          Toutes les réservations →
-        </Link>
-      </section>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Prochaines tables</CardTitle>
+          <CardDescription>Réservations confirmées ou en attente.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {activeTodayReservations.length === 0 ? (
+            <p className="rounded-lg bg-gray-50/90 py-10 text-center text-sm text-gray-500">Rien de prévu pour l&apos;instant.</p>
+          ) : (
+            <div className="space-y-3">
+              {activeTodayReservations.map((reservation) => (
+                <ReservationListRow
+                  key={reservation.id}
+                  guestName={reservation.guest_name ?? "Client"}
+                  timeLabel={reservation.reservation_time}
+                  subtitle={`${reservation.guests} couverts`}
+                  status={reservation.status as "pending" | "confirmed"}
+                />
+              ))}
+            </div>
+          )}
+          <Link
+            href="/dashboard/reservations"
+            className="mt-8 inline-flex text-sm font-semibold text-green-700 hover:text-green-800 hover:underline"
+          >
+            Toutes les réservations →
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   );
 }

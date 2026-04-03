@@ -25,20 +25,20 @@ export default function ReservationListRow({
 }: ReservationListRowProps) {
   const inner = (
     <>
-      <GuestAvatar name={guestName} />
+      <GuestAvatar name={guestName} size="md" />
       <div className="min-w-0 flex-1">
         {emphasizeTime ? (
           <>
-            <p className="font-semibold tabular-nums text-green-700">{timeLabel}</p>
-            <p className="mt-0.5 truncate text-[15px] font-medium text-gray-900">{guestName}</p>
+            <p className="text-base font-semibold tabular-nums text-green-600">{timeLabel}</p>
+            <p className="mt-1 truncate text-[15px] font-semibold text-gray-900">{guestName}</p>
             {subtitle ? <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p> : null}
           </>
         ) : (
           <>
-            <p className="truncate text-[15px] font-medium text-gray-900">{guestName}</p>
+            <p className="truncate text-[15px] font-semibold text-gray-900">{guestName}</p>
             <p className="mt-0.5 text-sm text-gray-500">
-              {timeLabel}
-              {subtitle ? ` · ${subtitle}` : ""}
+              <span className="font-medium tabular-nums text-green-600">{timeLabel}</span>
+              {subtitle ? <span>{` · ${subtitle}`}</span> : null}
             </p>
           </>
         )}
@@ -47,15 +47,19 @@ export default function ReservationListRow({
     </>
   );
 
-  const rowClass = "flex w-full items-center gap-4 border-b border-gray-100 py-4 text-left transition hover:bg-gray-50/80";
+  const rowClass = cn(
+    "flex w-full items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 text-left shadow-sm transition md:p-5",
+    onClick && "cursor-pointer hover:border-green-200/70 hover:shadow-md",
+    className,
+  );
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={cn(rowClass, className)}>
+      <button type="button" onClick={onClick} className={rowClass}>
         {inner}
       </button>
     );
   }
 
-  return <div className={cn(rowClass, className)}>{inner}</div>;
+  return <div className={rowClass}>{inner}</div>;
 }

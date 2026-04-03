@@ -4,7 +4,6 @@ import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/src/lib/supabase/client";
 import GuestAvatar from "@/src/components/dashboard/guest-avatar";
 import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
-import StatusBadge from "@/src/components/dashboard/status-badge";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import EmptyState from "@/src/components/ui/empty-state";
@@ -175,7 +174,7 @@ export default function ReservationsManager({
   }
 
   return (
-    <section className="space-y-16">
+    <section className="space-y-10 md:space-y-12">
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -245,34 +244,30 @@ export default function ReservationsManager({
           </div>
 
           <div className="hidden md:block">
-            <div className="divide-y divide-gray-100 border-t border-gray-100">
-              {filteredReservations.length === 0 ? (
-                <EmptyState title="Aucune réservation" description="Modifiez les filtres." />
-              ) : (
-                filteredReservations.map((reservation) => (
-                  <button
+            {filteredReservations.length === 0 ? (
+              <EmptyState title="Aucune réservation" description="Modifiez les filtres." />
+            ) : (
+              <div className="space-y-3">
+                {filteredReservations.map((reservation) => (
+                  <ReservationListRow
                     key={reservation.id}
-                    type="button"
+                    guestName={reservation.guest_name}
+                    timeLabel={reservation.reservation_time}
+                    subtitle={`${reservation.reservation_date} · ${reservation.guests} couverts`}
+                    status={reservation.status}
+                    emphasizeTime
                     onClick={() => setSelectedReservationId(reservation.id)}
-                    className="flex w-full items-center gap-4 py-4 text-left transition hover:bg-gray-50"
-                  >
-                    <GuestAvatar name={reservation.guest_name} size="sm" />
-                    <span className="min-w-0 flex-1 truncate font-medium text-gray-900">{reservation.guest_name}</span>
-                    <span className="hidden text-sm tabular-nums text-gray-500 sm:inline">{reservation.reservation_date}</span>
-                    <span className="text-sm font-medium tabular-nums text-gray-900">{reservation.reservation_time}</span>
-                    <span className="text-sm text-gray-500">{reservation.guests} p.</span>
-                    <StatusBadge status={reservation.status} />
-                  </button>
-                ))
-              )}
-            </div>
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="md:hidden">
             {filteredReservations.length === 0 ? (
               <EmptyState title="Aucune réservation" description="Modifiez les filtres." />
             ) : (
-              <div className="divide-y divide-gray-100 border-t border-gray-100">
+              <div className="space-y-3">
                 {filteredReservations.map((reservation) => (
                   <ReservationListRow
                     key={reservation.id}

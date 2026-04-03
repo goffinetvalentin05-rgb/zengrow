@@ -53,7 +53,7 @@ export default function DashboardSidebar({
 
   return (
     <aside
-      className="flex w-full flex-col overflow-hidden border-b border-gray-100 bg-white text-gray-800 md:w-56 md:shrink-0 md:border-b-0 md:border-r md:pr-8"
+      className="flex w-full flex-col overflow-hidden border-b border-gray-100 bg-white text-gray-800 shadow-sm md:w-56 md:shrink-0 md:rounded-xl md:border md:border-gray-100 md:pr-8"
       style={{ overflow: "hidden" }}
     >
       <div className="shrink-0 py-2">

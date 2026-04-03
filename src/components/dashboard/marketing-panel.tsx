@@ -86,11 +86,13 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
   }
 
   return (
-    <section className="space-y-12">
-      <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+    <section className="space-y-10">
+      <header className="flex flex-col gap-6 border-b border-gray-100 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="dashboard-page-title">Campagnes</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-2xl">E-mail groupé à vos clients.</p>
+          <h1 className="dashboard-section-heading">Campagnes marketing</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+            Créez un e-mail groupé pour vos clients — soirées spéciales, menus, offres.
+          </p>
         </div>
         <Button type="button" onClick={() => setShowForm((current) => !current)} variant={showForm ? "secondary" : "primary"}>
           {showForm ? "Annuler" : "Nouvelle campagne"}
@@ -172,23 +174,25 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
         </CardHeader>
         <CardContent>
           {campaigns.length === 0 ? (
-            <p className="py-6 text-sm text-gray-500">Aucune campagne pour le moment.</p>
+            <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50/80 py-10 text-center text-sm text-gray-500 shadow-sm">
+              Aucune campagne pour le moment.
+            </p>
           ) : (
-            <div className="divide-y divide-gray-100 border-t border-gray-100">
+            <div className="space-y-3">
               {campaigns.map((campaign) => (
                 <Link
                   key={campaign.id}
                   href={`/dashboard/marketing/${campaign.id}`}
-                  className="block py-5 transition hover:bg-gray-50/80"
+                  className="block rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-green-200/70 hover:shadow-md md:p-6"
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <p className="font-medium text-gray-900">{campaign.name}</p>
-                    <span className="text-xs text-gray-500">
+                    <p className="text-[15px] font-semibold text-gray-900">{campaign.name}</p>
+                    <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
                       {campaign.sent_at ? campaign.sent_at.slice(0, 10) : "Brouillon"}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-gray-600">{campaign.subject}</p>
-                  <p className="mt-1 text-xs text-gray-500">{campaign.recipients_count} destinataires</p>
+                  <p className="mt-2 text-sm text-gray-600">{campaign.subject}</p>
+                  <p className="mt-2 text-xs font-medium text-gray-500">{campaign.recipients_count} destinataires</p>
                 </Link>
               ))}
             </div>
