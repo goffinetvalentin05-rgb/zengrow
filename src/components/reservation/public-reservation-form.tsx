@@ -10,7 +10,9 @@ import { generateTimeSlotsForDate, OpeningHours } from "@/src/lib/utils";
 type PublicReservationFormProps = {
   restaurantId: string;
   restaurantName: string;
-  restaurantDescription?: string | null;
+  publicPageDescription?: string | null;
+  galleryImageUrls?: string[];
+  menuPublicHref?: string | null;
   restaurantPhone?: string | null;
   restaurantAddress?: string | null;
   restaurantEmail?: string | null;
@@ -44,7 +46,9 @@ type PublicReservationFormProps = {
 export default function PublicReservationForm({
   restaurantId,
   restaurantName,
-  restaurantDescription,
+  publicPageDescription,
+  galleryImageUrls = [],
+  menuPublicHref,
   restaurantPhone,
   restaurantAddress,
   restaurantEmail,
@@ -201,6 +205,8 @@ export default function PublicReservationForm({
       ? `Le restaurant est ferme du ${closureStartDate} au ${closureEndDate}. Les reservations restent disponibles apres cette periode.`
       : null;
 
+  const descriptionText = publicPageDescription?.trim();
+
   return (
     <section className="overflow-hidden rounded-3xl border border-[#DDEFEA] bg-white shadow-[0_20px_45px_-30px_rgba(15,63,58,0.55)]">
       {coverImageUrl ? (
@@ -208,6 +214,26 @@ export default function PublicReservationForm({
       ) : (
         <div className="h-20 w-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F]" />
       )}
+
+      {galleryImageUrls.length > 0 ? (
+        <div className="grid grid-cols-2 gap-2 border-b border-[#E8F3EF] p-3 md:grid-cols-3 md:p-4">
+          {galleryImageUrls.map((src) => (
+            <div
+              key={src}
+              className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100"
+            >
+              <Image
+                src={src}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 50vw, 33vw"
+                unoptimized
+              />
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div className="p-6 md:p-8">
         <header>
@@ -229,7 +255,20 @@ export default function PublicReservationForm({
               <h1 className="mt-1 text-3xl font-semibold text-slate-900">{restaurantName}</h1>
             </div>
           </div>
-          {restaurantDescription && <p className="mt-3 text-sm text-slate-600">{restaurantDescription}</p>}
+          {descriptionText ? <p className="mt-3 text-sm leading-relaxed text-slate-600">{descriptionText}</p> : null}
+          {menuPublicHref ? (
+            <div className="mt-4">
+              <a
+                href={menuPublicHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-full items-center justify-center rounded-2xl border border-[#CFE9E2] bg-[#EFFAF7] px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-[#E3F5EF] sm:w-auto"
+                style={{ borderColor: `${primaryColor}40` }}
+              >
+                Voir le menu
+              </a>
+            </div>
+          ) : null}
           <div className="mt-4 grid gap-2 rounded-2xl border border-[#E3F2EE] bg-[#F7FCFB] p-3 text-xs text-slate-600">
             {restaurantAddress && <p>Adresse : {restaurantAddress}</p>}
             {restaurantPhone && <p>Téléphone : {restaurantPhone}</p>}

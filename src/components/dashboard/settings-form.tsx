@@ -35,7 +35,23 @@ type SettingsData = {
   closure_start_date: string | null;
   closure_end_date: string | null;
   closure_message: string | null;
+  public_page_description: string | null;
+  gallery_image_urls: string[] | null;
+  public_menu_mode: "url" | "pdf" | null;
+  public_menu_url: string | null;
+  public_menu_pdf_url: string | null;
 };
+
+function storagePathFromRestaurantAssetUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const parts = u.pathname.split("/storage/v1/object/public/restaurant-assets/");
+    if (parts.length < 2) return null;
+    return decodeURIComponent(parts[1]);
+  } catch {
+    return null;
+  }
+}
 
 type SettingsFormProps = {
   restaurant: RestaurantData;
@@ -72,6 +88,18 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
   );
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>(settings.gallery_image_urls ?? []);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [menuMode, setMenuMode] = useState<"url" | "pdf">(() => {
+    if (settings.public_menu_mode === "pdf") return "pdf";
+    if (settings.public_menu_mode === "url") return "url";
+    if (settings.public_menu_pdf_url?.trim()) return "pdf";
+    return "url";
+  });
+  const [menuUrl, setMenuUrl] = useState(settings.public_menu_url ?? "");
+  const [menuPdfUrl, setMenuPdfUrl] = useState(settings.public_menu_pdf_url ?? "");
+  const [isUploadingMenuPdf, setIsUploadingMenuPdf] = useState(false);
+  const [publicPageDescription, setPublicPageDescription] = useState(settings.public_page_description ?? "");
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -89,6 +117,91 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
 
     const { data } = supabase.storage.from("restaurant-assets").getPublicUrl(filePath);
     return data.publicUrl;
+  }
+
+  async function uploadGalleryPhoto(file: File) {
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const filePath = `${restaurant.id}/gallery-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
+
+    const { error } = await supabase.storage.from("restaurant-assets").upload(filePath, file, {
+      upsert: false,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const { data } = supabase.storage.from("restaurant-assets").getPublicUrl(filePath);
+    return data.publicUrl;
+  }
+
+  async function uploadMenuPdf(file: File) {
+    const filePath = `${restaurant.id}/menu-${Date.now()}.pdf`;
+
+    const { error } = await supabase.storage.from("restaurant-assets").upload(filePath, file, {
+      upsert: true,
+      contentType: "application/pdf",
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const { data } = supabase.storage.from("restaurant-assets").getPublicUrl(filePath);
+    return data.publicUrl;
+  }
+
+  async function handleGalleryUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (galleryUrls.length >= 6) {
+      setMessage("Maximum 6 photos pour la galerie.");
+      event.target.value = "";
+      return;
+    }
+    setMessage(null);
+    setIsUploadingGallery(true);
+    try {
+      const publicUrl = await uploadGalleryPhoto(file);
+      setGalleryUrls((prev) => [...prev, publicUrl]);
+      setMessage("Photo ajoutée à la galerie.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Impossible d’ajouter la photo.");
+    } finally {
+      setIsUploadingGallery(false);
+      event.target.value = "";
+    }
+  }
+
+  async function removeGalleryPhoto(url: string) {
+    const path = storagePathFromRestaurantAssetUrl(url);
+    if (path) {
+      await supabase.storage.from("restaurant-assets").remove([path]);
+    }
+    setGalleryUrls((prev) => prev.filter((u) => u !== url));
+  }
+
+  async function handleMenuPdfUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      setMessage("Veuillez choisir un fichier PDF.");
+      event.target.value = "";
+      return;
+    }
+    setMessage(null);
+    setIsUploadingMenuPdf(true);
+    try {
+      const publicUrl = await uploadMenuPdf(file);
+      setMenuPdfUrl(publicUrl);
+      setMenuMode("pdf");
+      setMessage("Menu PDF chargé.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Impossible de charger le PDF.");
+    } finally {
+      setIsUploadingMenuPdf(false);
+      event.target.value = "";
+    }
   }
 
   async function handleLogoUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -149,6 +262,18 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
       return;
     }
 
+    const descTrim = publicPageDescription.trim().slice(0, 300);
+    let publicMenuMode: "url" | "pdf" | null = null;
+    let publicMenuUrlSave: string | null = null;
+    let publicMenuPdfUrlSave: string | null = null;
+    if (menuMode === "url" && menuUrl.trim()) {
+      publicMenuMode = "url";
+      publicMenuUrlSave = menuUrl.trim();
+    } else if (menuMode === "pdf" && menuPdfUrl.trim()) {
+      publicMenuMode = "pdf";
+      publicMenuPdfUrlSave = menuPdfUrl.trim();
+    }
+
     const { error: settingsError } = await supabase
       .from("restaurant_settings")
       .upsert({
@@ -168,6 +293,11 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         closure_start_date: closureStartDate || null,
         closure_end_date: closureEndDate || null,
         closure_message: closureMessage || null,
+        public_page_description: descTrim || null,
+        gallery_image_urls: galleryUrls.filter(Boolean),
+        public_menu_mode: publicMenuMode,
+        public_menu_url: publicMenuUrlSave,
+        public_menu_pdf_url: publicMenuPdfUrlSave,
       }, { onConflict: "restaurant_id" });
 
     if (settingsError) {
@@ -309,6 +439,145 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
               onChange={(event) => setPreBookingMessage(event.target.value)}
               placeholder="Ex : Pour les groupes de plus de 8 personnes, merci de nous contacter par téléphone."
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Apparence de la page publique</CardTitle>
+          <CardDescription>
+            Galerie, menu et texte d’accroche affichés sur votre page de réservation publique.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          <div>
+            <label className="dashboard-field-label">Photos des plats / galerie</label>
+            <p className="mb-2 text-sm text-[var(--muted-foreground)]">
+              Jusqu’à 6 images (plats, ambiance, etc.). Affichées sous la photo de couverture sur la page publique.
+            </p>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleGalleryUpload}
+              disabled={galleryUrls.length >= 6 || isUploadingGallery}
+            />
+            {isUploadingGallery ? (
+              <p className="mt-1 text-xs text-[var(--muted-foreground)]">Envoi...</p>
+            ) : null}
+            {galleryUrls.length > 0 ? (
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {galleryUrls.map((url) => (
+                  <div key={url} className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200">
+                    <Image src={url} alt="" fill className="object-cover" unoptimized sizes="(max-width: 640px) 50vw, 33vw" />
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 rounded-md bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={() => void removeGalleryPhoto(url)}
+                    >
+                      Retirer
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-[var(--foreground)]">Menu</p>
+            <label
+              className={cn(
+                "flex cursor-pointer gap-4 rounded-lg border p-4 transition-colors",
+                menuMode === "url" ? "border-green-200 bg-green-50/50" : "border-gray-200 hover:bg-gray-50/80",
+              )}
+            >
+              <input
+                type="radio"
+                name="public-menu-mode"
+                value="url"
+                checked={menuMode === "url"}
+                onChange={() => setMenuMode("url")}
+                className="sr-only"
+              />
+              <span
+                className={cn(
+                  "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                  menuMode === "url"
+                    ? "border-[var(--primary)] bg-[var(--primary)]"
+                    : "border-[rgba(0,0,0,0.12)] bg-[var(--surface)]",
+                )}
+              >
+                {menuMode === "url" ? <span className="h-2 w-2 rounded-full bg-white" /> : null}
+              </span>
+              <span className="flex-1 space-y-2">
+                <span className="block text-sm font-semibold text-[var(--foreground)]">Lien vers le menu</span>
+                <Input
+                  type="url"
+                  value={menuUrl}
+                  onChange={(event) => setMenuUrl(event.target.value)}
+                  placeholder="https://… (PDF externe ou page web)"
+                  disabled={menuMode !== "url"}
+                />
+              </span>
+            </label>
+
+            <label
+              className={cn(
+                "flex cursor-pointer gap-4 rounded-lg border p-4 transition-colors",
+                menuMode === "pdf" ? "border-green-200 bg-green-50/50" : "border-gray-200 hover:bg-gray-50/80",
+              )}
+            >
+              <input
+                type="radio"
+                name="public-menu-mode"
+                value="pdf"
+                checked={menuMode === "pdf"}
+                onChange={() => setMenuMode("pdf")}
+                className="sr-only"
+              />
+              <span
+                className={cn(
+                  "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                  menuMode === "pdf"
+                    ? "border-[var(--primary)] bg-[var(--primary)]"
+                    : "border-[rgba(0,0,0,0.12)] bg-[var(--surface)]",
+                )}
+              >
+                {menuMode === "pdf" ? <span className="h-2 w-2 rounded-full bg-white" /> : null}
+              </span>
+              <span className="flex-1 space-y-2">
+                <span className="block text-sm font-semibold text-[var(--foreground)]">PDF du menu</span>
+                <Input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleMenuPdfUpload}
+                  disabled={menuMode !== "pdf" || isUploadingMenuPdf}
+                />
+                {isUploadingMenuPdf ? (
+                  <p className="text-xs text-[var(--muted-foreground)]">Envoi du PDF...</p>
+                ) : null}
+                {menuPdfUrl && menuMode === "pdf" ? (
+                  <p className="break-all text-xs text-[var(--muted-foreground)]">{menuPdfUrl}</p>
+                ) : null}
+              </span>
+            </label>
+          </div>
+
+          <div>
+            <label className="dashboard-field-label">Description du restaurant (page publique)</label>
+            <p className="mb-2 text-sm text-[var(--muted-foreground)]">
+              Texte court sous le nom du restaurant, au-dessus du formulaire. Maximum 300 caractères.
+            </p>
+            <Textarea
+              className="min-h-24"
+              value={publicPageDescription}
+              maxLength={300}
+              onChange={(event) => setPublicPageDescription(event.target.value)}
+              placeholder="Ex. : Cuisine du marché, terrasse ombragée…"
+            />
+            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+              {publicPageDescription.length}/300
+            </p>
           </div>
         </CardContent>
       </Card>
