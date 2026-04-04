@@ -262,8 +262,12 @@ export default function PublicReservationForm({
                 href={menuPublicHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex w-full items-center justify-center rounded-2xl border border-[#CFE9E2] bg-[#EFFAF7] px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-[#E3F5EF] sm:w-auto"
-                style={{ borderColor: `${primaryColor}40` }}
+                className="inline-flex w-full items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold transition hover:opacity-90 sm:w-auto"
+                style={{
+                  borderColor: `${ctaColor}55`,
+                  backgroundColor: `${ctaColor}18`,
+                  color: ctaColor,
+                }}
               >
                 Voir le menu
               </a>
