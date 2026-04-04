@@ -215,26 +215,6 @@ export default function PublicReservationForm({
         <div className="h-20 w-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F]" />
       )}
 
-      {galleryImageUrls.length > 0 ? (
-        <div className="grid grid-cols-2 gap-2 border-b border-[#E8F3EF] p-3 md:grid-cols-3 md:p-4">
-          {galleryImageUrls.map((src) => (
-            <div
-              key={src}
-              className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100"
-            >
-              <Image
-                src={src}
-                alt=""
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 50vw, 33vw"
-                unoptimized
-              />
-            </div>
-          ))}
-        </div>
-      ) : null}
-
       <div className="p-6 md:p-8">
         <header>
           <div className="flex items-center gap-3">
@@ -307,6 +287,26 @@ export default function PublicReservationForm({
             )}
           </div>
         </header>
+
+        {galleryImageUrls.length > 0 ? (
+          <div className="mt-8">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Galerie photos</p>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+              {galleryImageUrls.map((src) => (
+                <div key={src} className="relative aspect-square overflow-hidden rounded-xl bg-slate-100">
+                  <Image
+                    src={src}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                    unoptimized
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           {closureNotice ? (
