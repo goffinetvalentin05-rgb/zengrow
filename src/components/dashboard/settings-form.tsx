@@ -40,6 +40,12 @@ type SettingsData = {
   public_menu_mode: "url" | "pdf" | null;
   public_menu_url: string | null;
   public_menu_pdf_url: string | null;
+  public_page_background_color: string | null;
+  public_page_show_address: boolean | null;
+  public_page_show_phone: boolean | null;
+  public_page_show_email: boolean | null;
+  public_page_show_website: boolean | null;
+  public_page_show_opening_hours: boolean | null;
 };
 
 function storagePathFromRestaurantAssetUrl(url: string): string | null {
@@ -100,6 +106,14 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
   const [menuPdfUrl, setMenuPdfUrl] = useState(settings.public_menu_pdf_url ?? "");
   const [isUploadingMenuPdf, setIsUploadingMenuPdf] = useState(false);
   const [publicPageDescription, setPublicPageDescription] = useState(settings.public_page_description ?? "");
+  const [publicPageBackgroundColor, setPublicPageBackgroundColor] = useState(
+    settings.public_page_background_color ?? "#12151c",
+  );
+  const [showPublicAddress, setShowPublicAddress] = useState(settings.public_page_show_address ?? true);
+  const [showPublicPhone, setShowPublicPhone] = useState(settings.public_page_show_phone ?? true);
+  const [showPublicEmail, setShowPublicEmail] = useState(settings.public_page_show_email ?? true);
+  const [showPublicWebsite, setShowPublicWebsite] = useState(settings.public_page_show_website ?? true);
+  const [showPublicOpeningHours, setShowPublicOpeningHours] = useState(settings.public_page_show_opening_hours ?? true);
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -298,6 +312,12 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         public_menu_mode: publicMenuMode,
         public_menu_url: publicMenuUrlSave,
         public_menu_pdf_url: publicMenuPdfUrlSave,
+        public_page_background_color: publicPageBackgroundColor.trim() || null,
+        public_page_show_address: showPublicAddress,
+        public_page_show_phone: showPublicPhone,
+        public_page_show_email: showPublicEmail,
+        public_page_show_website: showPublicWebsite,
+        public_page_show_opening_hours: showPublicOpeningHours,
       }, { onConflict: "restaurant_id" });
 
     if (settingsError) {
@@ -393,6 +413,79 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
                 <Input value={buttonColor} onChange={(event) => setButtonColor(event.target.value)} />
               </div>
             </div>
+            <div className="md:col-span-2">
+              <label className="dashboard-field-label">Couleur de fond (page publique)</label>
+              <p className="mb-2 text-sm text-[var(--muted-foreground)]">
+                Fond de la page de réservation. Le texte s’ajuste automatiquement pour rester lisible (clair ou foncé).
+              </p>
+              <div className="flex max-w-md items-center gap-2">
+                <Input
+                  type="color"
+                  className="h-10 w-16 shrink-0 p-1"
+                  value={publicPageBackgroundColor}
+                  onChange={(event) => setPublicPageBackgroundColor(event.target.value)}
+                />
+                <Input
+                  value={publicPageBackgroundColor}
+                  onChange={(event) => setPublicPageBackgroundColor(event.target.value)}
+                  placeholder="#12151c"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+            <p className="text-sm font-medium text-[var(--foreground)]">Coordonnées visibles sur la page publique</p>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              Choisissez les blocs affichés. Si tout est désactivé et qu’aucun réseau social n’est renseigné, la carte disparaît.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showPublicAddress}
+                  onChange={(event) => setShowPublicAddress(event.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                Adresse
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showPublicPhone}
+                  onChange={(event) => setShowPublicPhone(event.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                Téléphone
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showPublicEmail}
+                  onChange={(event) => setShowPublicEmail(event.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                E-mail
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showPublicWebsite}
+                  onChange={(event) => setShowPublicWebsite(event.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                Site web
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm sm:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={showPublicOpeningHours}
+                  onChange={(event) => setShowPublicOpeningHours(event.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                Horaires d’ouverture
+              </label>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -454,7 +547,7 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
           <div>
             <label className="dashboard-field-label">Photos des plats / galerie</label>
             <p className="mb-2 text-sm text-[var(--muted-foreground)]">
-              Jusqu’à 6 images (plats, ambiance, etc.). Affichées sous la photo de couverture sur la page publique.
+              Jusqu’à 6 images (plats, ambiance, etc.). Affichées sous le formulaire de réservation sur la page publique.
             </p>
             <Input
               type="file"

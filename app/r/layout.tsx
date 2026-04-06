@@ -18,11 +18,7 @@ export default function PublicRestaurantLayout({
   return (
     <div
       className={`${playfair.variable} ${dmSans.variable} min-h-screen antialiased`}
-      style={{
-        fontFamily: "var(--font-public-sans), system-ui, sans-serif",
-        backgroundColor: "#12151c",
-        color: "#e7e2d8",
-      }}
+      style={{ fontFamily: "var(--font-public-sans), system-ui, sans-serif" }}
     >
       {children}
     </div>

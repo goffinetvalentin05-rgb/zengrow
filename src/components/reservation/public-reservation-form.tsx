@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import Image from "next/image";
 import {
+  Clock,
   Facebook,
   Globe,
   Instagram,
@@ -12,13 +13,11 @@ import {
 } from "lucide-react";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
-import { cn, generateTimeSlotsForDate, OpeningHours } from "@/src/lib/utils";
+import type { ResolvedPublicTheme } from "@/src/lib/public-page-theme";
+import { cn, formatOpeningHoursLines, generateTimeSlotsForDate, OpeningHours } from "@/src/lib/utils";
 
 const HERO_NOISE_SVG =
   "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E\")";
-
-const fieldClass =
-  "min-h-[48px] rounded-xl border border-white/12 bg-[#0f1218] px-4 py-3 text-sm text-[#f2ebe0] shadow-inner shadow-black/20 outline-none transition placeholder:text-stone-500 focus:border-[#c9a962]/45 focus:ring-2 focus:ring-[#c9a962]/20";
 
 type PublicReservationFormProps = {
   restaurantId: string;
@@ -46,8 +45,12 @@ type PublicReservationFormProps = {
   }[];
   logoUrl?: string | null;
   coverImageUrl?: string | null;
-  accentColor?: string | null;
-  buttonColor?: string | null;
+  theme: ResolvedPublicTheme;
+  showPublicAddress: boolean;
+  showPublicPhone: boolean;
+  showPublicEmail: boolean;
+  showPublicWebsite: boolean;
+  showPublicOpeningHours: boolean;
   instagramUrl?: string | null;
   facebookUrl?: string | null;
   websiteUrl?: string | null;
@@ -82,8 +85,12 @@ export default function PublicReservationForm({
   existingReservations,
   logoUrl,
   coverImageUrl,
-  accentColor,
-  buttonColor,
+  theme,
+  showPublicAddress,
+  showPublicPhone,
+  showPublicEmail,
+  showPublicWebsite,
+  showPublicOpeningHours,
   instagramUrl,
   facebookUrl,
   websiteUrl,
@@ -92,6 +99,7 @@ export default function PublicReservationForm({
   closureEndDate,
   closureMessage,
 }: PublicReservationFormProps) {
+  const t = theme;
   const todayDate = new Date().toISOString().slice(0, 10);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -102,6 +110,25 @@ export default function PublicReservationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const cssVars = useMemo(
+    () =>
+      ({
+        "--bg-color": t.background,
+        "--accent-color": t.accent,
+        "--text-color": t.text,
+      }) as React.CSSProperties,
+    [t.background, t.accent, t.text],
+  );
+
+  const fieldStyle = useMemo(
+    () => ({
+      backgroundColor: t.surface,
+      borderColor: t.surfaceBorder,
+      color: t.text,
+    }),
+    [t.surface, t.surfaceBorder, t.text],
+  );
 
   const blockedSet = useMemo(() => {
     return new Set(blockedSlots.map((slot) => `${slot.reservation_date}|${slot.reservation_time}`));
@@ -210,7 +237,6 @@ export default function PublicReservationForm({
     setIsSubmitting(false);
   }
 
-  const primaryAccent = buttonColor || accentColor || "#c9a962";
   const isDateInClosurePeriod = Boolean(
     reservationDate &&
       closureStartDate &&
@@ -227,13 +253,29 @@ export default function PublicReservationForm({
   const introRaw = publicPageDescription?.trim();
   const introText =
     introRaw && taglineText && introRaw === taglineText ? null : introRaw;
-  const hasContactRows = Boolean(restaurantAddress || restaurantPhone || restaurantEmail || websiteUrl);
+
+  const openingHoursLines = formatOpeningHoursLines(openingHours);
+
+  const showAddressRow = showPublicAddress && Boolean(restaurantAddress?.trim());
+  const showPhoneRow = showPublicPhone && Boolean(restaurantPhone?.trim());
+  const showEmailRow = showPublicEmail && Boolean(restaurantEmail?.trim());
+  const showWebsiteRow = showPublicWebsite && Boolean(websiteUrl?.trim());
+  const showHoursRow = showPublicOpeningHours;
+
+  const hasContactGrid = showAddressRow || showPhoneRow || showEmailRow || showWebsiteRow;
+  const hasContactRows = hasContactGrid || showHoursRow;
   const hasSocialLinks = Boolean(instagramUrl || facebookUrl);
   const showInfoCard = hasContactRows || hasSocialLinks;
 
+  const labelClass = "block text-xs font-semibold uppercase tracking-[0.18em]";
+  const iconRing =
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-[color-mix(in_srgb,var(--accent-color)_12%,transparent)] text-[var(--accent-color)]";
+  const inputClass =
+    "min-h-[48px] w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-color)]";
+
   return (
-    <div className="text-[#e7e2d8]">
-      <section className="relative min-h-[min(72vh,560px)] w-full overflow-hidden">
+    <div className="min-h-screen" style={{ ...cssVars, backgroundColor: "var(--bg-color)", color: "var(--text-color)" }}>
+      <section className="relative min-h-[min(60vh,520px)] w-full overflow-hidden sm:min-h-[min(65vh,560px)]">
         {coverImageUrl ? (
           <Image
             src={coverImageUrl}
@@ -246,29 +288,30 @@ export default function PublicReservationForm({
           />
         ) : (
           <div
-            className="absolute inset-0 bg-gradient-to-br from-[#1a2235] via-[#14161f] to-[#0a0c10]"
+            className="absolute inset-0 bg-gradient-to-br"
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${t.background} 0%, ${t.surface} 55%, ${t.background} 100%)`,
+            }}
             aria-hidden
           />
         )}
 
         <div
-          className="absolute inset-0 bg-gradient-to-t from-[#0a0c10] via-[#0a0c10]/75 to-[#0a0c10]/25"
+          className="absolute inset-0 bg-gradient-to-t from-[color:var(--bg-color)] via-[color:var(--bg-color)]/80 to-transparent"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute inset-0 mix-blend-overlay opacity-[0.4]"
+          className="pointer-events-none absolute inset-0 mix-blend-overlay opacity-[0.38]"
           style={{ backgroundImage: HERO_NOISE_SVG }}
           aria-hidden
         />
 
-        <div className="relative z-[1] flex min-h-[min(72vh,560px)] flex-col justify-end px-5 pb-10 pt-28 sm:px-8 md:px-12 lg:px-16">
+        <div className="relative z-[1] flex min-h-[min(60vh,520px)] flex-col justify-end px-5 pb-10 pt-24 sm:min-h-[min(65vh,560px)] sm:px-8 md:px-12 lg:px-16">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-8 md:flex-row md:items-end md:justify-start md:gap-10">
             {logoUrl ? (
               <div
-                className={cn(
-                  "relative shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-[#0f1218]/60 p-1 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.85)] backdrop-blur-sm",
-                  "ring-1 ring-[#c9a962]/25",
-                )}
+                className="relative shrink-0 overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--text-color)_18%,transparent)] bg-[color-mix(in_srgb,var(--bg-color)_55%,transparent)] p-1 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-sm"
+                style={{ boxShadow: `0 24px 60px -20px rgba(0,0,0,0.55), 0 0 0 1px color-mix(in srgb, var(--accent-color) 28%, transparent)` }}
               >
                 <div className="relative h-28 w-28 sm:h-32 sm:w-32 md:h-40 md:w-40">
                   <Image
@@ -285,19 +328,22 @@ export default function PublicReservationForm({
 
             <div className="max-w-3xl text-center md:text-left">
               <p
-                className="mb-2 text-[11px] font-medium uppercase tracking-[0.35em] text-[#c9a962]/90"
+                className="mb-2 text-[11px] font-medium uppercase tracking-[0.35em] text-[color:var(--accent-color)]"
                 style={{ fontFamily: "var(--font-public-sans), system-ui, sans-serif" }}
               >
                 Réservation
               </p>
               <h1
-                className="text-balance text-4xl font-medium leading-[1.08] tracking-tight text-[#f8f3ea] sm:text-5xl md:text-6xl lg:text-[3.35rem]"
-                style={{ fontFamily: "var(--font-public-display), Georgia, serif" }}
+                className="text-balance text-4xl font-medium leading-[1.08] tracking-tight sm:text-5xl md:text-6xl lg:text-[3.35rem]"
+                style={{ fontFamily: "var(--font-public-display), Georgia, serif", color: "var(--text-color)" }}
               >
                 {restaurantName}
               </h1>
               {taglineText ? (
-                <p className="mt-4 max-w-xl text-pretty text-base font-light leading-relaxed text-[#d4cec2] sm:text-lg">
+                <p
+                  className="mt-4 max-w-xl text-pretty text-base font-light leading-relaxed sm:text-lg"
+                  style={{ color: t.textMuted }}
+                >
                   {taglineText}
                 </p>
               ) : null}
@@ -306,13 +352,13 @@ export default function PublicReservationForm({
         </div>
       </section>
 
-      <div className="relative z-[2] -mt-5 flex flex-col items-stretch justify-center gap-3 px-5 sm:flex-row sm:flex-wrap sm:px-8 md:px-12 lg:px-16">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 sm:flex-row sm:justify-center">
+      <div className="relative z-[2] -mt-5 flex flex-col items-stretch justify-center gap-3 px-5 sm:px-8 md:px-12 lg:px-16">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
           <button
             type="button"
             onClick={scrollToReservation}
-            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-full px-8 text-sm font-semibold tracking-wide text-[#14161f] shadow-[0_12px_40px_-12px_rgba(0,0,0,0.65)] transition duration-300 hover:brightness-110 hover:shadow-[0_16px_48px_-12px_rgba(201,169,98,0.35)] active:scale-[0.98] sm:max-w-xs sm:flex-none"
-            style={{ backgroundColor: primaryAccent }}
+            className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full px-8 text-sm font-semibold tracking-wide shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)] transition duration-300 hover:brightness-110 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.25)] active:scale-[0.98] sm:min-h-[52px] sm:w-auto sm:min-w-[220px] sm:max-w-xs"
+            style={{ backgroundColor: "var(--accent-color)", color: t.onAccent }}
           >
             Réserver une table
           </button>
@@ -321,7 +367,11 @@ export default function PublicReservationForm({
               href={menuPublicHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-full border border-[#c9a962]/55 bg-transparent px-8 text-sm font-semibold tracking-wide text-[#f5f0e6] transition duration-300 hover:border-[#c9a962] hover:bg-[#c9a962]/10 active:scale-[0.98] sm:max-w-xs sm:flex-none"
+              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full border-2 bg-transparent px-8 text-sm font-semibold tracking-wide transition duration-300 active:scale-[0.98] sm:min-h-[52px] sm:w-auto sm:min-w-[220px] sm:max-w-xs"
+              style={{
+                borderColor: "var(--accent-color)",
+                color: "var(--accent-color)",
+              }}
             >
               Voir le menu
             </a>
@@ -331,90 +381,134 @@ export default function PublicReservationForm({
 
       <div className="mx-auto max-w-6xl space-y-14 px-5 py-14 sm:px-8 md:px-12 lg:px-16 lg:py-20">
         {introText ? (
-          <p className="mx-auto max-w-3xl text-center text-pretty text-base leading-relaxed text-[#b8b0a2] md:text-lg">
+          <p className="mx-auto max-w-3xl text-center text-pretty text-base leading-relaxed md:text-lg" style={{ color: t.textMuted }}>
             {introText}
           </p>
         ) : null}
 
         {showInfoCard ? (
-          <div className="rounded-2xl border border-white/[0.08] bg-[#161a24]/80 px-6 py-8 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.9)] backdrop-blur-md md:px-10 md:py-10">
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-              {restaurantAddress ? (
+          <div
+            className="rounded-2xl border px-6 py-8 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.35)] backdrop-blur-md md:px-10 md:py-10"
+            style={{ backgroundColor: t.surface, borderColor: t.surfaceBorder }}
+          >
+            {hasContactGrid ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+              {showAddressRow ? (
                 <div className="flex gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#c9a962]/20 bg-[#c9a962]/10 text-[#c9a962]">
+                  <span className={cn(iconRing, "border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
                     <MapPin className="h-4 w-4" aria-hidden />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8a8274]">Adresse</p>
-                    <p className="mt-1 text-sm leading-snug text-[#e7e2d8]">{restaurantAddress}</p>
+                    <p className={cn(labelClass)} style={{ color: t.textMuted }}>
+                      Adresse
+                    </p>
+                    <p className="mt-1 text-sm leading-snug" style={{ color: t.text }}>
+                      {restaurantAddress}
+                    </p>
                   </div>
                 </div>
               ) : null}
-              {restaurantPhone ? (
+              {showPhoneRow ? (
                 <div className="flex gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#c9a962]/20 bg-[#c9a962]/10 text-[#c9a962]">
+                  <span className={cn(iconRing, "border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
                     <Phone className="h-4 w-4" aria-hidden />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8a8274]">Téléphone</p>
+                    <p className={cn(labelClass)} style={{ color: t.textMuted }}>
+                      Téléphone
+                    </p>
                     <a
-                      href={`tel:${restaurantPhone.replace(/\s/g, "")}`}
-                      className="mt-1 block text-sm text-[#e7e2d8] transition hover:text-[#c9a962]"
+                      href={`tel:${restaurantPhone!.replace(/\s/g, "")}`}
+                      className="mt-1 block text-sm transition hover:opacity-90"
+                      style={{ color: "var(--accent-color)" }}
                     >
                       {restaurantPhone}
                     </a>
                   </div>
                 </div>
               ) : null}
-              {restaurantEmail ? (
+              {showEmailRow ? (
                 <div className="flex gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#c9a962]/20 bg-[#c9a962]/10 text-[#c9a962]">
+                  <span className={cn(iconRing, "border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
                     <Mail className="h-4 w-4" aria-hidden />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8a8274]">E-mail</p>
+                    <p className={cn(labelClass)} style={{ color: t.textMuted }}>
+                      E-mail
+                    </p>
                     <a
                       href={`mailto:${restaurantEmail}`}
-                      className="mt-1 block truncate text-sm text-[#e7e2d8] transition hover:text-[#c9a962]"
+                      className="mt-1 block truncate text-sm transition hover:opacity-90"
+                      style={{ color: "var(--accent-color)" }}
                     >
                       {restaurantEmail}
                     </a>
                   </div>
                 </div>
               ) : null}
-              {websiteUrl ? (
+              {showWebsiteRow ? (
                 <div className="flex gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#c9a962]/20 bg-[#c9a962]/10 text-[#c9a962]">
+                  <span className={cn(iconRing, "border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
                     <Globe className="h-4 w-4" aria-hidden />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8a8274]">Site web</p>
+                    <p className={cn(labelClass)} style={{ color: t.textMuted }}>
+                      Site web
+                    </p>
                     <a
-                      href={websiteUrl}
+                      href={websiteUrl!}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-1 block truncate text-sm text-[#e7e2d8] transition hover:text-[#c9a962]"
+                      className="mt-1 block truncate text-sm transition hover:opacity-90"
+                      style={{ color: "var(--accent-color)" }}
                     >
-                      {websiteUrl.replace(/^https?:\/\//, "")}
+                      {websiteUrl!.replace(/^https?:\/\//, "")}
                     </a>
                   </div>
                 </div>
               ) : null}
             </div>
+            ) : null}
+
+            {showHoursRow ? (
+              <div
+                className={cn(
+                  "flex flex-col gap-3 sm:flex-row sm:gap-4",
+                  hasContactGrid && "mt-6 border-t pt-6",
+                )}
+                style={{ borderColor: t.surfaceBorder }}
+              >
+                <span className={cn(iconRing, "h-10 w-10 shrink-0 border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
+                  <Clock className="h-4 w-4" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className={cn(labelClass)} style={{ color: t.textMuted }}>
+                    Horaires
+                  </p>
+                  <ul className="mt-2 space-y-1.5 text-sm leading-snug" style={{ color: t.text }}>
+                    {openingHoursLines.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : null}
 
             {hasSocialLinks ? (
               <div
                 className={cn(
                   "flex flex-wrap items-center justify-center gap-4 md:justify-start",
-                  hasContactRows && "mt-8 border-t border-white/[0.06] pt-8",
+                  (hasContactGrid || showHoursRow) && "mt-8 border-t pt-8",
                 )}
+                style={{ borderColor: t.surfaceBorder }}
               >
                 {instagramUrl ? (
                   <a
                     href={instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-medium text-[#c9a962] transition hover:border-[#c9a962]/40 hover:bg-[#c9a962]/10"
+                    className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition hover:opacity-90"
+                    style={{ borderColor: t.surfaceBorder, color: "var(--accent-color)" }}
                   >
                     <Instagram className="h-4 w-4" aria-hidden />
                     Instagram
@@ -425,7 +519,8 @@ export default function PublicReservationForm({
                     href={facebookUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-medium text-[#c9a962] transition hover:border-[#c9a962]/40 hover:bg-[#c9a962]/10"
+                    className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition hover:opacity-90"
+                    style={{ borderColor: t.surfaceBorder, color: "var(--accent-color)" }}
                   >
                     <Facebook className="h-4 w-4" aria-hidden />
                     Facebook
@@ -436,50 +531,21 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {galleryImageUrls.length > 0 ? (
-          <div>
-            <h2
-              className="mb-6 text-center text-2xl font-medium text-[#f5f0e6] md:text-left md:text-3xl"
-              style={{ fontFamily: "var(--font-public-display), Georgia, serif" }}
-            >
-              Galerie
-            </h2>
-            <div className="columns-2 gap-3 md:columns-3 md:gap-4">
-              {galleryImageUrls.map((src) => (
-                <div
-                  key={src}
-                  className="group relative mb-3 break-inside-avoid overflow-hidden rounded-2xl bg-[#1a1e2a] md:mb-4"
-                >
-                  <div className="relative aspect-[4/3] w-full overflow-hidden">
-                    <Image
-                      src={src}
-                      alt=""
-                      fill
-                      className="object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                      unoptimized
-                    />
-                    <div
-                      className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a0c10]/50 to-transparent opacity-0 transition duration-500 group-hover:opacity-100"
-                      aria-hidden
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
         <section id="reservation" className="scroll-mt-24">
-          <div className="rounded-2xl border border-white/[0.08] bg-[#161a24]/90 p-6 shadow-[0_32px_100px_-48px_rgba(0,0,0,0.95)] backdrop-blur-md md:p-10">
+          <div
+            className="rounded-2xl border p-6 shadow-[0_32px_100px_-48px_rgba(0,0,0,0.4)] backdrop-blur-md md:p-10"
+            style={{ backgroundColor: t.surface, borderColor: t.surfaceBorder }}
+          >
             <div className="mb-8 text-center md:text-left">
               <h2
-                className="text-2xl font-medium text-[#f5f0e6] md:text-3xl"
-                style={{ fontFamily: "var(--font-public-display), Georgia, serif" }}
+                className="text-2xl font-medium md:text-3xl"
+                style={{ fontFamily: "var(--font-public-display), Georgia, serif", color: "var(--text-color)" }}
               >
                 Réserver une table
               </h2>
-              <p className="mt-2 text-sm text-[#9a9285]">Indiquez vos préférences — nous vous confirmerons rapidement.</p>
+              <p className="mt-2 text-sm" style={{ color: t.textMuted }}>
+                Indiquez vos préférences — nous vous confirmerons rapidement.
+              </p>
             </div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -489,14 +555,21 @@ export default function PublicReservationForm({
                 </div>
               ) : null}
               {preBookingMessage ? (
-                <div className="rounded-xl border border-[#c9a962]/20 bg-[#c9a962]/5 px-4 py-3 text-sm leading-relaxed text-[#d4cec2]">
+                <div
+                  className="rounded-xl border px-4 py-3 text-sm leading-relaxed"
+                  style={{
+                    borderColor: `color-mix(in srgb, var(--accent-color) 35%, transparent)`,
+                    backgroundColor: `color-mix(in srgb, var(--accent-color) 8%, transparent)`,
+                    color: t.text,
+                  }}
+                >
                   {preBookingMessage}
                 </div>
               ) : null}
 
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label htmlFor="date" className="block text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8274]">
+                  <label htmlFor="date" className={labelClass} style={{ color: t.textMuted }}>
                     Date
                   </label>
                   <Input
@@ -506,11 +579,12 @@ export default function PublicReservationForm({
                     onChange={(event) => setReservationDate(event.target.value)}
                     min={todayDate}
                     required
-                    className={fieldClass}
+                    className={inputClass}
+                    style={fieldStyle}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="time" className="block text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8274]">
+                  <label htmlFor="time" className={labelClass} style={{ color: t.textMuted }}>
                     Heure
                   </label>
                   <Select
@@ -519,7 +593,8 @@ export default function PublicReservationForm({
                     onChange={(event) => setReservationTime(event.target.value)}
                     required
                     disabled={isDateInClosurePeriod}
-                    className={cn(fieldClass, "cursor-pointer")}
+                    className={cn(inputClass, "cursor-pointer")}
+                    style={fieldStyle}
                   >
                     <option value="">Sélectionnez une heure</option>
                     {generatedSlots.map((slot) => (
@@ -538,7 +613,7 @@ export default function PublicReservationForm({
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="guests" className="block text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8274]">
+                <label htmlFor="guests" className={labelClass} style={{ color: t.textMuted }}>
                   Nombre de convives
                 </label>
                 <Input
@@ -549,12 +624,13 @@ export default function PublicReservationForm({
                   value={guests}
                   onChange={(event) => setGuests(Number(event.target.value))}
                   required
-                  className={fieldClass}
+                  className={inputClass}
+                  style={fieldStyle}
                 />
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="name" className="block text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8274]">
+                <label htmlFor="name" className={labelClass} style={{ color: t.textMuted }}>
                   Nom complet
                 </label>
                 <Input
@@ -563,27 +639,31 @@ export default function PublicReservationForm({
                   onChange={(event) => setGuestName(event.target.value)}
                   required
                   autoComplete="name"
-                  className={fieldClass}
+                  className={inputClass}
+                  style={fieldStyle}
                 />
               </div>
 
               <div className="grid gap-5 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8274]">
-                    E-mail
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={guestEmail}
-                    onChange={(event) => setGuestEmail(event.target.value)}
-                    required={allowEmail ?? true}
-                    autoComplete="email"
-                    className={fieldClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8274]">
+                {(allowEmail ?? true) ? (
+                  <div className="space-y-2">
+                    <label htmlFor="email" className={labelClass} style={{ color: t.textMuted }}>
+                      E-mail
+                    </label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={guestEmail}
+                      onChange={(event) => setGuestEmail(event.target.value)}
+                      required={allowEmail ?? true}
+                      autoComplete="email"
+                      className={inputClass}
+                      style={fieldStyle}
+                    />
+                  </div>
+                ) : null}
+                <div className={cn("space-y-2", !(allowEmail ?? true) && "md:col-span-2")}>
+                  <label htmlFor="phone" className={labelClass} style={{ color: t.textMuted }}>
                     Téléphone
                   </label>
                   <Input
@@ -593,7 +673,8 @@ export default function PublicReservationForm({
                     onChange={(event) => setGuestPhone(event.target.value)}
                     required={allowPhone ?? true}
                     autoComplete="tel"
-                    className={fieldClass}
+                    className={inputClass}
+                    style={fieldStyle}
                   />
                 </div>
               </div>
@@ -601,8 +682,8 @@ export default function PublicReservationForm({
               <button
                 type="submit"
                 disabled={isSubmitting || isDateInClosurePeriod}
-                className="w-full min-h-[52px] rounded-full border border-transparent py-3.5 text-[15px] font-semibold tracking-wide text-[#14161f] shadow-lg transition hover:brightness-110 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
-                style={{ backgroundColor: primaryAccent }}
+                className="w-full min-h-[52px] rounded-full border border-transparent py-3.5 text-[15px] font-semibold tracking-wide shadow-lg transition hover:brightness-110 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
+                style={{ backgroundColor: "var(--accent-color)", color: t.onAccent }}
               >
                 {isSubmitting ? "Envoi en cours…" : "Confirmer la demande"}
               </button>
@@ -620,6 +701,39 @@ export default function PublicReservationForm({
             ) : null}
           </div>
         </section>
+
+        {galleryImageUrls.length > 0 ? (
+          <div>
+            <h2
+              className="mb-6 text-center text-2xl font-medium md:text-left md:text-3xl"
+              style={{ fontFamily: "var(--font-public-display), Georgia, serif", color: "var(--text-color)" }}
+            >
+              Galerie
+            </h2>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+              {galleryImageUrls.map((src) => (
+                <div
+                  key={src}
+                  className="group relative aspect-[4/3] overflow-hidden rounded-2xl"
+                  style={{ backgroundColor: t.surface }}
+                >
+                  <Image
+                    src={src}
+                    alt=""
+                    fill
+                    className="object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                    unoptimized
+                  />
+                  <div
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[color:var(--bg-color)]/45 to-transparent opacity-0 transition duration-500 group-hover:opacity-100"
+                    aria-hidden
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

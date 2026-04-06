@@ -17,6 +17,23 @@ export const dayLabels: Record<string, string> = {
 };
 export const dayOrder = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
+/** Human-readable opening hours for public pages (French day labels). */
+export function formatOpeningHoursLines(openingHours: OpeningHours | null | undefined): string[] {
+  const oh = openingHours ?? getDefaultOpeningHours();
+  const lines: string[] = [];
+  for (const day of dayOrder) {
+    const ranges = oh[day] ?? [];
+    const label = dayLabels[day];
+    if (ranges.length === 0) {
+      lines.push(`${label} — Fermé`);
+    } else {
+      const slots = ranges.map((r) => `${r.start} – ${r.end}`).join(", ");
+      lines.push(`${label} — ${slots}`);
+    }
+  }
+  return lines;
+}
+
 export function slugifyRestaurantName(name: string) {
   return name
     .toLowerCase()

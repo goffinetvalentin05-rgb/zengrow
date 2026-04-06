@@ -14,7 +14,7 @@ export default async function DashboardSettingsPage() {
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "reservation_duration, reservation_slot_interval, restaurant_capacity, max_party_size, accent_color, button_color, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_menu_mode, public_menu_url, public_menu_pdf_url",
+      "reservation_duration, reservation_slot_interval, restaurant_capacity, max_party_size, accent_color, button_color, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_menu_mode, public_menu_url, public_menu_pdf_url, public_page_background_color, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours",
     )
     .eq("restaurant_id", restaurant.id)
     .single();
@@ -46,6 +46,12 @@ export default async function DashboardSettingsPage() {
     public_menu_mode: null as "url" | "pdf" | null,
     public_menu_url: "",
     public_menu_pdf_url: "",
+    public_page_background_color: "#12151c",
+    public_page_show_address: true,
+    public_page_show_phone: true,
+    public_page_show_email: true,
+    public_page_show_website: true,
+    public_page_show_opening_hours: true,
   };
 
   return (
