@@ -17,6 +17,7 @@ type RestaurantData = {
   address: string | null;
   description: string | null;
   slug: string;
+  public_theme_key?: string | null;
 };
 
 type SettingsData = {
@@ -40,7 +41,6 @@ type SettingsData = {
   public_menu_mode: "url" | "pdf" | null;
   public_menu_url: string | null;
   public_menu_pdf_url: string | null;
-  public_page_background_color: string | null;
   public_page_show_address: boolean | null;
   public_page_show_phone: boolean | null;
   public_page_show_email: boolean | null;
@@ -106,8 +106,10 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
   const [menuPdfUrl, setMenuPdfUrl] = useState(settings.public_menu_pdf_url ?? "");
   const [isUploadingMenuPdf, setIsUploadingMenuPdf] = useState(false);
   const [publicPageDescription, setPublicPageDescription] = useState(settings.public_page_description ?? "");
-  const [publicPageBackgroundColor, setPublicPageBackgroundColor] = useState(
-    settings.public_page_background_color ?? "#12151c",
+  const [publicThemeKey, setPublicThemeKey] = useState<"moderne" | "classique" | "naturel" | "minimaliste">(
+    restaurant.public_theme_key && ["moderne", "classique", "naturel", "minimaliste"].includes(restaurant.public_theme_key)
+      ? (restaurant.public_theme_key as "moderne" | "classique" | "naturel" | "minimaliste")
+      : "moderne",
   );
   const [showPublicAddress, setShowPublicAddress] = useState(settings.public_page_show_address ?? true);
   const [showPublicPhone, setShowPublicPhone] = useState(settings.public_page_show_phone ?? true);
@@ -266,6 +268,8 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         email: email || null,
         address: address || null,
         description: description || null,
+        // Theme key for public reservation page (curated presets)
+        public_theme_key: publicThemeKey,
         reservation_confirmation_mode: reservationConfirmationMode,
       })
       .eq("id", restaurant.id);
@@ -312,7 +316,6 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
         public_menu_mode: publicMenuMode,
         public_menu_url: publicMenuUrlSave,
         public_menu_pdf_url: publicMenuPdfUrlSave,
-        public_page_background_color: publicPageBackgroundColor.trim() || null,
         public_page_show_address: showPublicAddress,
         public_page_show_phone: showPublicPhone,
         public_page_show_email: showPublicEmail,
@@ -413,24 +416,52 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
                 <Input value={buttonColor} onChange={(event) => setButtonColor(event.target.value)} />
               </div>
             </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Couleur de fond (page publique)</label>
-              <p className="mb-2 text-sm text-[var(--muted-foreground)]">
-                Fond de la page de réservation. Le texte s’ajuste automatiquement pour rester lisible (clair ou foncé).
-              </p>
-              <div className="flex max-w-md items-center gap-2">
-                <Input
-                  type="color"
-                  className="h-10 w-16 shrink-0 p-1"
-                  value={publicPageBackgroundColor}
-                  onChange={(event) => setPublicPageBackgroundColor(event.target.value)}
-                />
-                <Input
-                  value={publicPageBackgroundColor}
-                  onChange={(event) => setPublicPageBackgroundColor(event.target.value)}
-                  placeholder="#12151c"
-                />
-              </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+            <p className="text-sm font-medium text-[var(--foreground)]">Thème de la page publique</p>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              4 styles premium, cohérents et adaptés aux restaurants. Ce thème pilote fond, accent, texte et polices sur la page publique.
+            </p>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {([
+                { key: "moderne", title: "Moderne", desc: "Charbon profond, vert lumineux, Playfair + Inter" },
+                { key: "classique", title: "Classique", desc: "Crème chaude, bordeaux, Cormorant + Lato" },
+                { key: "naturel", title: "Naturel", desc: "Beige chaud, terracotta, Merriweather + Source Sans" },
+                { key: "minimaliste", title: "Minimaliste", desc: "Blanc pur, noir, DM Sans" },
+              ] as const).map((opt) => (
+                <label
+                  key={opt.key}
+                  className={cn(
+                    "flex cursor-pointer gap-4 rounded-xl border p-4 transition-colors",
+                    publicThemeKey === opt.key ? "border-green-200 bg-green-50/50" : "border-gray-200 hover:bg-gray-50/80",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="public-theme-key"
+                    value={opt.key}
+                    checked={publicThemeKey === opt.key}
+                    onChange={() => setPublicThemeKey(opt.key)}
+                    className="sr-only"
+                  />
+                  <span
+                    className={cn(
+                      "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                      publicThemeKey === opt.key
+                        ? "border-[var(--primary)] bg-[var(--primary)]"
+                        : "border-[rgba(0,0,0,0.12)] bg-[var(--surface)]",
+                    )}
+                  >
+                    {publicThemeKey === opt.key ? <span className="h-2 w-2 rounded-full bg-white" /> : null}
+                  </span>
+                  <span className="flex-1">
+                    <span className="block text-sm font-semibold text-[var(--foreground)]">{opt.title}</span>
+                    <span className="mt-0.5 block text-sm text-[var(--muted-foreground)]">{opt.desc}</span>
+                  </span>
+                </label>
+              ))}
             </div>
           </div>
 

@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
-import type { ResolvedPublicTheme } from "@/src/lib/public-page-theme";
+import type { PublicThemeKey } from "@/src/lib/public-page-themes";
+import { PUBLIC_THEMES } from "@/src/lib/public-page-themes";
 import { cn, formatOpeningHoursLines, generateTimeSlotsForDate, OpeningHours } from "@/src/lib/utils";
 
 const HERO_NOISE_SVG =
@@ -45,7 +46,7 @@ type PublicReservationFormProps = {
   }[];
   logoUrl?: string | null;
   coverImageUrl?: string | null;
-  theme: ResolvedPublicTheme;
+  themeKey: PublicThemeKey;
   showPublicAddress: boolean;
   showPublicPhone: boolean;
   showPublicEmail: boolean;
@@ -85,7 +86,7 @@ export default function PublicReservationForm({
   existingReservations,
   logoUrl,
   coverImageUrl,
-  theme,
+  themeKey,
   showPublicAddress,
   showPublicPhone,
   showPublicEmail,
@@ -99,7 +100,8 @@ export default function PublicReservationForm({
   closureEndDate,
   closureMessage,
 }: PublicReservationFormProps) {
-  const t = theme;
+  const preset = PUBLIC_THEMES[themeKey] ?? PUBLIC_THEMES.moderne;
+  const isLightTheme = preset.key === "classique" || preset.key === "naturel" || preset.key === "minimaliste";
   const todayDate = new Date().toISOString().slice(0, 10);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -114,20 +116,22 @@ export default function PublicReservationForm({
   const cssVars = useMemo(
     () =>
       ({
-        "--bg-color": t.background,
-        "--accent-color": t.accent,
-        "--text-color": t.text,
+        "--bg-color": preset.background,
+        "--accent-color": preset.accent,
+        "--text-color": preset.text,
+        "--heading-font": `var(${preset.headingFontVar})`,
+        "--body-font": `var(${preset.bodyFontVar})`,
       }) as React.CSSProperties,
-    [t.background, t.accent, t.text],
+    [preset],
   );
 
   const fieldStyle = useMemo(
     () => ({
-      backgroundColor: t.surface,
-      borderColor: t.surfaceBorder,
-      color: t.text,
+      backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))",
+      borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
+      color: "var(--text-color)",
     }),
-    [t.surface, t.surfaceBorder, t.text],
+    [],
   );
 
   const blockedSet = useMemo(() => {
@@ -274,7 +278,15 @@ export default function PublicReservationForm({
     "min-h-[48px] w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-color)]";
 
   return (
-    <div className="min-h-screen" style={{ ...cssVars, backgroundColor: "var(--bg-color)", color: "var(--text-color)" }}>
+    <div
+      className="min-h-screen"
+      style={{
+        ...cssVars,
+        backgroundColor: "var(--bg-color)",
+        color: "var(--text-color)",
+        fontFamily: "var(--body-font), system-ui, sans-serif",
+      }}
+    >
       <section className="relative min-h-[min(60vh,520px)] w-full overflow-hidden sm:min-h-[min(65vh,560px)]">
         {coverImageUrl ? (
           <Image
@@ -290,7 +302,7 @@ export default function PublicReservationForm({
           <div
             className="absolute inset-0 bg-gradient-to-br"
             style={{
-              backgroundImage: `linear-gradient(135deg, ${t.background} 0%, ${t.surface} 55%, ${t.background} 100%)`,
+              backgroundImage: `linear-gradient(135deg, var(--bg-color) 0%, color-mix(in srgb, var(--text-color) 7%, var(--bg-color)) 55%, var(--bg-color) 100%)`,
             }}
             aria-hidden
           />
@@ -329,20 +341,20 @@ export default function PublicReservationForm({
             <div className="max-w-3xl text-center md:text-left">
               <p
                 className="mb-2 text-[11px] font-medium uppercase tracking-[0.35em] text-[color:var(--accent-color)]"
-                style={{ fontFamily: "var(--font-public-sans), system-ui, sans-serif" }}
+                style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
               >
                 Réservation
               </p>
               <h1
                 className="text-balance text-4xl font-medium leading-[1.08] tracking-tight sm:text-5xl md:text-6xl lg:text-[3.35rem]"
-                style={{ fontFamily: "var(--font-public-display), Georgia, serif", color: "var(--text-color)" }}
+                style={{ fontFamily: "var(--heading-font), Georgia, serif", color: "var(--text-color)" }}
               >
                 {restaurantName}
               </h1>
               {taglineText ? (
                 <p
                   className="mt-4 max-w-xl text-pretty text-base font-light leading-relaxed sm:text-lg"
-                  style={{ color: t.textMuted }}
+                  style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
                 >
                   {taglineText}
                 </p>
@@ -358,7 +370,10 @@ export default function PublicReservationForm({
             type="button"
             onClick={scrollToReservation}
             className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full px-8 text-sm font-semibold tracking-wide shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)] transition duration-300 hover:brightness-110 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.25)] active:scale-[0.98] sm:min-h-[52px] sm:w-auto sm:min-w-[220px] sm:max-w-xs"
-            style={{ backgroundColor: "var(--accent-color)", color: t.onAccent }}
+            style={{
+              backgroundColor: "var(--accent-color)",
+              color: isLightTheme ? "#ffffff" : "#0b0b0b",
+            }}
           >
             Réserver une table
           </button>
@@ -381,7 +396,10 @@ export default function PublicReservationForm({
 
       <div className="mx-auto max-w-6xl space-y-14 px-5 py-14 sm:px-8 md:px-12 lg:px-16 lg:py-20">
         {introText ? (
-          <p className="mx-auto max-w-3xl text-center text-pretty text-base leading-relaxed md:text-lg" style={{ color: t.textMuted }}>
+          <p
+            className="mx-auto max-w-3xl text-center text-pretty text-base leading-relaxed md:text-lg"
+            style={{ color: "color-mix(in srgb, var(--text-color) 72%, var(--bg-color))" }}
+          >
             {introText}
           </p>
         ) : null}
@@ -389,7 +407,10 @@ export default function PublicReservationForm({
         {showInfoCard ? (
           <div
             className="rounded-2xl border px-6 py-8 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.35)] backdrop-blur-md md:px-10 md:py-10"
-            style={{ backgroundColor: t.surface, borderColor: t.surfaceBorder }}
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))",
+              borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
+            }}
           >
             {hasContactGrid ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
@@ -399,10 +420,13 @@ export default function PublicReservationForm({
                     <MapPin className="h-4 w-4" aria-hidden />
                   </span>
                   <div className="min-w-0">
-                    <p className={cn(labelClass)} style={{ color: t.textMuted }}>
+                    <p
+                      className={cn(labelClass)}
+                      style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                    >
                       Adresse
                     </p>
-                    <p className="mt-1 text-sm leading-snug" style={{ color: t.text }}>
+                    <p className="mt-1 text-sm leading-snug" style={{ color: "var(--text-color)" }}>
                       {restaurantAddress}
                     </p>
                   </div>
@@ -414,7 +438,10 @@ export default function PublicReservationForm({
                     <Phone className="h-4 w-4" aria-hidden />
                   </span>
                   <div className="min-w-0">
-                    <p className={cn(labelClass)} style={{ color: t.textMuted }}>
+                    <p
+                      className={cn(labelClass)}
+                      style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                    >
                       Téléphone
                     </p>
                     <a
@@ -433,7 +460,10 @@ export default function PublicReservationForm({
                     <Mail className="h-4 w-4" aria-hidden />
                   </span>
                   <div className="min-w-0">
-                    <p className={cn(labelClass)} style={{ color: t.textMuted }}>
+                    <p
+                      className={cn(labelClass)}
+                      style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                    >
                       E-mail
                     </p>
                     <a
@@ -452,7 +482,10 @@ export default function PublicReservationForm({
                     <Globe className="h-4 w-4" aria-hidden />
                   </span>
                   <div className="min-w-0">
-                    <p className={cn(labelClass)} style={{ color: t.textMuted }}>
+                    <p
+                      className={cn(labelClass)}
+                      style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                    >
                       Site web
                     </p>
                     <a
@@ -476,16 +509,19 @@ export default function PublicReservationForm({
                   "flex flex-col gap-3 sm:flex-row sm:gap-4",
                   hasContactGrid && "mt-6 border-t pt-6",
                 )}
-                style={{ borderColor: t.surfaceBorder }}
+                style={{ borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))" }}
               >
                 <span className={cn(iconRing, "h-10 w-10 shrink-0 border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
                   <Clock className="h-4 w-4" aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className={cn(labelClass)} style={{ color: t.textMuted }}>
+                  <p
+                    className={cn(labelClass)}
+                    style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                  >
                     Horaires
                   </p>
-                  <ul className="mt-2 space-y-1.5 text-sm leading-snug" style={{ color: t.text }}>
+                  <ul className="mt-2 space-y-1.5 text-sm leading-snug" style={{ color: "var(--text-color)" }}>
                     {openingHoursLines.map((line) => (
                       <li key={line}>{line}</li>
                     ))}
@@ -500,7 +536,7 @@ export default function PublicReservationForm({
                   "flex flex-wrap items-center justify-center gap-4 md:justify-start",
                   (hasContactGrid || showHoursRow) && "mt-8 border-t pt-8",
                 )}
-                style={{ borderColor: t.surfaceBorder }}
+                style={{ borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))" }}
               >
                 {instagramUrl ? (
                   <a
@@ -508,7 +544,10 @@ export default function PublicReservationForm({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition hover:opacity-90"
-                    style={{ borderColor: t.surfaceBorder, color: "var(--accent-color)" }}
+                    style={{
+                      borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
+                      color: "var(--accent-color)",
+                    }}
                   >
                     <Instagram className="h-4 w-4" aria-hidden />
                     Instagram
@@ -520,7 +559,10 @@ export default function PublicReservationForm({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition hover:opacity-90"
-                    style={{ borderColor: t.surfaceBorder, color: "var(--accent-color)" }}
+                    style={{
+                      borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
+                      color: "var(--accent-color)",
+                    }}
                   >
                     <Facebook className="h-4 w-4" aria-hidden />
                     Facebook
@@ -534,16 +576,19 @@ export default function PublicReservationForm({
         <section id="reservation" className="scroll-mt-24">
           <div
             className="rounded-2xl border p-6 shadow-[0_32px_100px_-48px_rgba(0,0,0,0.4)] backdrop-blur-md md:p-10"
-            style={{ backgroundColor: t.surface, borderColor: t.surfaceBorder }}
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))",
+              borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
+            }}
           >
             <div className="mb-8 text-center md:text-left">
               <h2
                 className="text-2xl font-medium md:text-3xl"
-                style={{ fontFamily: "var(--font-public-display), Georgia, serif", color: "var(--text-color)" }}
+                style={{ fontFamily: "var(--heading-font), Georgia, serif", color: "var(--text-color)" }}
               >
                 Réserver une table
               </h2>
-              <p className="mt-2 text-sm" style={{ color: t.textMuted }}>
+              <p className="mt-2 text-sm" style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}>
                 Indiquez vos préférences — nous vous confirmerons rapidement.
               </p>
             </div>
@@ -560,7 +605,7 @@ export default function PublicReservationForm({
                   style={{
                     borderColor: `color-mix(in srgb, var(--accent-color) 35%, transparent)`,
                     backgroundColor: `color-mix(in srgb, var(--accent-color) 8%, transparent)`,
-                    color: t.text,
+                    color: "var(--text-color)",
                   }}
                 >
                   {preBookingMessage}
@@ -569,7 +614,11 @@ export default function PublicReservationForm({
 
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label htmlFor="date" className={labelClass} style={{ color: t.textMuted }}>
+                  <label
+                    htmlFor="date"
+                    className={labelClass}
+                    style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                  >
                     Date
                   </label>
                   <Input
@@ -584,7 +633,11 @@ export default function PublicReservationForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="time" className={labelClass} style={{ color: t.textMuted }}>
+                  <label
+                    htmlFor="time"
+                    className={labelClass}
+                    style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                  >
                     Heure
                   </label>
                   <Select
@@ -613,7 +666,11 @@ export default function PublicReservationForm({
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="guests" className={labelClass} style={{ color: t.textMuted }}>
+                <label
+                  htmlFor="guests"
+                  className={labelClass}
+                  style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                >
                   Nombre de convives
                 </label>
                 <Input
@@ -630,7 +687,11 @@ export default function PublicReservationForm({
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="name" className={labelClass} style={{ color: t.textMuted }}>
+                <label
+                  htmlFor="name"
+                  className={labelClass}
+                  style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                >
                   Nom complet
                 </label>
                 <Input
@@ -647,7 +708,11 @@ export default function PublicReservationForm({
               <div className="grid gap-5 md:grid-cols-2">
                 {(allowEmail ?? true) ? (
                   <div className="space-y-2">
-                    <label htmlFor="email" className={labelClass} style={{ color: t.textMuted }}>
+                    <label
+                      htmlFor="email"
+                      className={labelClass}
+                      style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                    >
                       E-mail
                     </label>
                     <Input
@@ -663,7 +728,11 @@ export default function PublicReservationForm({
                   </div>
                 ) : null}
                 <div className={cn("space-y-2", !(allowEmail ?? true) && "md:col-span-2")}>
-                  <label htmlFor="phone" className={labelClass} style={{ color: t.textMuted }}>
+                  <label
+                    htmlFor="phone"
+                    className={labelClass}
+                    style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
+                  >
                     Téléphone
                   </label>
                   <Input
@@ -683,7 +752,10 @@ export default function PublicReservationForm({
                 type="submit"
                 disabled={isSubmitting || isDateInClosurePeriod}
                 className="w-full min-h-[52px] rounded-full border border-transparent py-3.5 text-[15px] font-semibold tracking-wide shadow-lg transition hover:brightness-110 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
-                style={{ backgroundColor: "var(--accent-color)", color: t.onAccent }}
+                style={{
+                  backgroundColor: "var(--accent-color)",
+                  color: isLightTheme ? "#ffffff" : "#0b0b0b",
+                }}
               >
                 {isSubmitting ? "Envoi en cours…" : "Confirmer la demande"}
               </button>
@@ -706,7 +778,7 @@ export default function PublicReservationForm({
           <div>
             <h2
               className="mb-6 text-center text-2xl font-medium md:text-left md:text-3xl"
-              style={{ fontFamily: "var(--font-public-display), Georgia, serif", color: "var(--text-color)" }}
+                style={{ fontFamily: "var(--heading-font), Georgia, serif", color: "var(--text-color)" }}
             >
               Galerie
             </h2>
@@ -715,7 +787,7 @@ export default function PublicReservationForm({
                 <div
                   key={src}
                   className="group relative aspect-[4/3] overflow-hidden rounded-2xl"
-                  style={{ backgroundColor: t.surface }}
+                  style={{ backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))" }}
                 >
                   <Image
                     src={src}

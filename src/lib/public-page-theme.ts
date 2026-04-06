@@ -1,7 +1,11 @@
-/** ZenGrow brand green — default accent when none configured */
-export const DEFAULT_PUBLIC_ACCENT = "#15803d";
+/**
+ * DEPRECATED
+ * Public page theming uses curated presets in `public-page-themes.ts`.
+ *
+ * Kept for backward-compat with older imports (not used by `/r/...` anymore).
+ */
 
-/** Default dark charcoal page background */
+export const DEFAULT_PUBLIC_ACCENT = "#15803d";
 export const DEFAULT_PUBLIC_BACKGROUND = "#12151c";
 
 type RGB = { r: number; g: number; b: number };
