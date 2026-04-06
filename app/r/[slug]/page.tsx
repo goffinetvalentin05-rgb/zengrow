@@ -83,12 +83,12 @@ export default async function PublicReservationPage({ params }: PublicReservatio
   const galleryImageUrls = (safeSettings.gallery_image_urls ?? []).filter(Boolean);
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#ebf1ff_0,#f4f7fb_45%,#f4f7fb_100%)] p-4 md:p-8">
-      <div className="mx-auto max-w-2xl">
-        <PublicReservationForm
-          restaurantId={restaurant.id}
-          restaurantName={restaurant.name}
-          publicPageDescription={safeSettings.public_page_description}
+    <main className="min-h-screen">
+      <PublicReservationForm
+        restaurantId={restaurant.id}
+        restaurantName={restaurant.name}
+        restaurantTagline={restaurant.description}
+        publicPageDescription={safeSettings.public_page_description}
           galleryImageUrls={galleryImageUrls}
           menuPublicHref={menuPublicHref}
           restaurantPhone={restaurant.phone}
@@ -114,8 +114,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           closureStartDate={safeSettings.closure_start_date}
           closureEndDate={safeSettings.closure_end_date}
           closureMessage={safeSettings.closure_message}
-        />
-      </div>
+      />
     </main>
   );
 }
