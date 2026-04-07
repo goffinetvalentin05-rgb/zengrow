@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, type ReactNode, useState } from "react";
 import Image from "next/image";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
@@ -68,9 +68,48 @@ type SettingsFormProps = {
   settings: SettingsData;
   confirmationMode: "manual" | "automatic";
   publicLink: string;
+  /** Nombre de lignes dans restaurant_tables pour ce restaurant (alerte si mode tables sans config) */
+  restaurantTableCount?: number;
 };
 
-export default function SettingsForm({ restaurant, settings, confirmationMode, publicLink }: SettingsFormProps) {
+function supabaseTableEditorUrl(): string | null {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!raw) return null;
+  try {
+    const host = new URL(raw).hostname;
+    const ref = host.split(".")[0];
+    if (!ref || ref === "localhost") return null;
+    return `https://supabase.com/dashboard/project/${ref}/editor`;
+  } catch {
+    return null;
+  }
+}
+
+function ReservationField({
+  label,
+  description,
+  children,
+}: {
+  label: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="dashboard-field-label">{label}</label>
+      <p className="text-sm leading-relaxed text-gray-500">{description}</p>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+export default function SettingsForm({
+  restaurant,
+  settings,
+  confirmationMode,
+  publicLink,
+  restaurantTableCount = 0,
+}: SettingsFormProps) {
   const supabase = createClient();
   const [name, setName] = useState(restaurant.name);
   const [phone, setPhone] = useState(restaurant.phone ?? "");
@@ -795,72 +834,149 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
 
       <Card>
         <CardHeader>
-          <CardTitle>Réservations</CardTitle>
-          <CardDescription>Capacité par créneau, tables physiques et horizon de réservation en ligne.</CardDescription>
+          <CardTitle>
+            {useTables ? "Gestion par tables physiques" : "Gestion par couverts (mode simple)"}
+          </CardTitle>
+          <CardDescription>
+            Règles appliquées sur votre page publique de réservation : créneaux, capacité et horizon.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="md:col-span-2 flex flex-wrap items-center gap-3 rounded-lg border border-gray-100 bg-gray-50/80 px-4 py-3">
-            <Toggle checked={useTables} onChange={setUseTables} label="Gestion par tables physiques" />
-            <p className="text-sm text-gray-600">
-              Si activé, chaque réservation occupe une table (définie en base). Sinon, la capacité est comptée en
-              couverts par créneau.
-            </p>
+        <CardContent className="space-y-6">
+          <div className="rounded-xl border border-gray-200 bg-[var(--surface)] p-4 md:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1 space-y-3">
+                <Toggle
+                  checked={useTables}
+                  onChange={setUseTables}
+                  label={useTables ? "Tables physiques activées" : "Mode couverts globaux activé"}
+                />
+                {useTables ? (
+                  <>
+                    <p className="text-sm leading-relaxed text-gray-600">
+                      Chaque réservation occupe une table spécifique définie dans votre base. Le système cherche
+                      automatiquement une table disponible correspondant au nombre de personnes. Si aucune table
+                      n&apos;est libre sur ce créneau, la réservation est refusée.
+                    </p>
+                    <p className="text-sm leading-relaxed text-gray-500">
+                      <span className="font-medium text-gray-700">Exemple :</span> vous avez une table de 2 et une
+                      table de 4 → une demande pour 3 personnes sera placée à la table de 4 si elle est libre.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm leading-relaxed text-gray-600">
+                      Le système additionne les couverts de toutes les réservations sur un créneau. Quand la limite est
+                      atteinte, le créneau est automatiquement fermé. Idéal si vos tables sont mobiles ou
+                      interchangeables.
+                    </p>
+                    <p className="text-sm leading-relaxed text-gray-500">
+                      <span className="font-medium text-gray-700">Exemple :</span> limite fixée à 40 couverts → une
+                      réservation de 6 personnes à 12h30 sera refusée s&apos;il reste moins de 6 places sur ce créneau.
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {useTables ? (
+              <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+                {supabaseTableEditorUrl() ? (
+                  <a
+                    href={supabaseTableEditorUrl()!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--primary)] underline-offset-2 hover:underline"
+                  >
+                    Configurer vos tables →
+                  </a>
+                ) : null}
+                <p className="text-xs text-gray-500">
+                  Dans Supabase : éditeur de table &gt; <code className="rounded bg-gray-100 px-1 py-0.5">restaurant_tables</code>{" "}
+                  — ajoutez une ligne par table (nom, min. et max. couverts).
+                </p>
+                {restaurantTableCount === 0 ? (
+                  <div
+                    className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-950"
+                    role="alert"
+                  >
+                    Aucune table configurée. Le système ne pourra accepter aucune réservation tant que vos tables ne
+                    sont pas définies.
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
-          <div>
-            <label className="dashboard-field-label">Jours réservables à l&apos;avance (page publique)</label>
-            <Input
-              type="number"
-              min={1}
-              max={365}
-              value={daysInAdvance}
-              onChange={(event) => setDaysInAdvance(Number(event.target.value))}
-            />
-          </div>
-          <div>
-            <label className="dashboard-field-label">
-              Couverts maximum par créneau (mode couverts)
-            </label>
-            <Input
-              type="number"
-              min={1}
-              value={restaurantCapacity}
-              onChange={(event) => setRestaurantCapacity(Number(event.target.value))}
-            />
-          </div>
-          <div>
-            <label className="dashboard-field-label">
-              Limite max de personnes par réservation
-            </label>
-            <Input
-              type="number"
-              min={1}
-              value={maxPartySize}
-              onChange={(event) => setMaxPartySize(Number(event.target.value))}
-            />
-          </div>
-          <div>
-            <label className="dashboard-field-label">
-              Durée moyenne d&apos;une réservation (minutes)
-            </label>
-            <Input
-              type="number"
-              min={30}
-              step={15}
-              value={reservationDuration}
-              onChange={(event) => setReservationDuration(Number(event.target.value))}
-            />
-          </div>
-          <div>
-            <label className="dashboard-field-label">
-              Intervalle entre créneaux (minutes)
-            </label>
-            <Input
-              type="number"
-              min={5}
-              step={5}
-              value={slotInterval}
-              onChange={(event) => setSlotInterval(Number(event.target.value))}
-            />
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <ReservationField
+              label="Intervalle entre créneaux"
+              description="Définit la fréquence des créneaux proposés aux clients. 30 min = créneaux à 12:00, 12:30, 13:00… 15 min = créneaux à 12:00, 12:15, 12:30…"
+            >
+              <Input
+                type="number"
+                min={5}
+                step={5}
+                value={slotInterval}
+                placeholder="ex : 30"
+                onChange={(event) => setSlotInterval(Number(event.target.value))}
+              />
+            </ReservationField>
+
+            <ReservationField
+              label="Durée estimée d'un repas"
+              description="Utilisée pour calculer quels créneaux sont bloqués. Si un client réserve à 12:00 pour 90 min, les créneaux 12:00, 12:30 et 13:00 seront occupés pour sa table. Évite les chevauchements."
+            >
+              <Input
+                type="number"
+                min={30}
+                step={15}
+                value={reservationDuration}
+                placeholder="ex : 90"
+                onChange={(event) => setReservationDuration(Number(event.target.value))}
+              />
+            </ReservationField>
+
+            <ReservationField
+              label="Horizon de réservation (jours)"
+              description="Nombre de jours maximum pendant lesquels un client peut réserver depuis la page publique. Au-delà, les dates ne sont pas proposées."
+            >
+              <Input
+                type="number"
+                min={1}
+                max={365}
+                value={daysInAdvance}
+                placeholder="ex : 60"
+                onChange={(event) => setDaysInAdvance(Number(event.target.value))}
+              />
+            </ReservationField>
+
+            {!useTables ? (
+              <ReservationField
+                label="Capacité max par créneau"
+                description="Nombre total de couverts acceptés simultanément sur un même créneau. Inclut toutes les réservations en attente et confirmées."
+              >
+                <Input
+                  type="number"
+                  min={1}
+                  value={restaurantCapacity}
+                  placeholder="ex : 40"
+                  onChange={(event) => setRestaurantCapacity(Number(event.target.value))}
+                />
+              </ReservationField>
+            ) : null}
+
+            <ReservationField
+              label="Groupe maximum accepté"
+              description="Un client ne pourra pas réserver pour plus de X personnes depuis la page publique. Les réservations plus grandes devront être gérées manuellement."
+            >
+              <Input
+                type="number"
+                min={1}
+                value={maxPartySize}
+                placeholder="ex : 8"
+                onChange={(event) => setMaxPartySize(Number(event.target.value))}
+              />
+            </ReservationField>
           </div>
         </CardContent>
       </Card>
