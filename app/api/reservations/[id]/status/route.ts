@@ -3,7 +3,7 @@ import { createClient } from "@/src/lib/supabase/server";
 import { sendReservationConfirmationEmail } from "@/lib/email";
 import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 
-const allowedStatuses = new Set(["pending", "confirmed", "rejected", "completed", "cancelled", "no-show"]);
+const allowedStatuses = new Set(["pending", "confirmed", "refused", "completed", "cancelled", "no-show"]);
 
 type RouteParams = {
   params: Promise<{ id: string }>;

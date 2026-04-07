@@ -7,6 +7,7 @@ import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import Input from "@/src/components/ui/input";
 import Textarea from "@/src/components/ui/textarea";
+import Toggle from "@/src/components/ui/toggle";
 import { cn } from "@/src/lib/utils";
 
 type RestaurantData = {
@@ -24,7 +25,10 @@ type SettingsData = {
   reservation_duration: number | null;
   reservation_slot_interval: number | null;
   restaurant_capacity: number | null;
+  max_covers_per_slot: number | null;
   max_party_size: number | null;
+  use_tables: boolean | null;
+  days_in_advance: number | null;
   accent_color: string | null;
   button_color: string | null;
   logo_url: string | null;
@@ -74,7 +78,11 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
   const [address, setAddress] = useState(restaurant.address ?? "");
   const [description, setDescription] = useState(restaurant.description ?? "");
   const [slug, setSlug] = useState(restaurant.slug);
-  const [restaurantCapacity, setRestaurantCapacity] = useState(settings.restaurant_capacity ?? 40);
+  const [restaurantCapacity, setRestaurantCapacity] = useState(
+    settings.max_covers_per_slot ?? settings.restaurant_capacity ?? 40,
+  );
+  const [useTables, setUseTables] = useState(settings.use_tables ?? false);
+  const [daysInAdvance, setDaysInAdvance] = useState(settings.days_in_advance ?? 60);
   const [reservationDuration, setReservationDuration] = useState(settings.reservation_duration ?? 90);
   const [slotInterval, setSlotInterval] = useState(settings.reservation_slot_interval ?? 15);
   const [maxPartySize, setMaxPartySize] = useState(settings.max_party_size ?? 8);
@@ -297,7 +305,10 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
       .upsert({
         restaurant_id: restaurant.id,
         restaurant_capacity: restaurantCapacity,
+        max_covers_per_slot: restaurantCapacity,
         reservation_duration: reservationDuration,
+        use_tables: useTables,
+        days_in_advance: daysInAdvance,
         reservation_slot_interval: slotInterval,
         max_party_size: maxPartySize,
         accent_color: accentColor || null,
@@ -784,13 +795,30 @@ export default function SettingsForm({ restaurant, settings, confirmationMode, p
 
       <Card>
         <CardHeader>
-          <CardTitle>Reservations intelligentes</CardTitle>
-          <CardDescription>Réglez la capacité et la logique de chevauchement des réservations.</CardDescription>
+          <CardTitle>Réservations</CardTitle>
+          <CardDescription>Capacité par créneau, tables physiques et horizon de réservation en ligne.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
+          <div className="md:col-span-2 flex flex-wrap items-center gap-3 rounded-lg border border-gray-100 bg-gray-50/80 px-4 py-3">
+            <Toggle checked={useTables} onChange={setUseTables} label="Gestion par tables physiques" />
+            <p className="text-sm text-gray-600">
+              Si activé, chaque réservation occupe une table (définie en base). Sinon, la capacité est comptée en
+              couverts par créneau.
+            </p>
+          </div>
+          <div>
+            <label className="dashboard-field-label">Jours réservables à l&apos;avance (page publique)</label>
+            <Input
+              type="number"
+              min={1}
+              max={365}
+              value={daysInAdvance}
+              onChange={(event) => setDaysInAdvance(Number(event.target.value))}
+            />
+          </div>
           <div>
             <label className="dashboard-field-label">
-              Capacité maximale du restaurant
+              Couverts maximum par créneau (mode couverts)
             </label>
             <Input
               type="number"

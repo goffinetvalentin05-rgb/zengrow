@@ -2,7 +2,7 @@ import StatusBadge from "@/src/components/dashboard/status-badge";
 import GuestAvatar from "@/src/components/dashboard/guest-avatar";
 import { cn } from "@/src/lib/utils";
 
-type ReservationStatus = "pending" | "confirmed" | "rejected" | "completed" | "cancelled" | "no-show";
+type ReservationStatus = "pending" | "confirmed" | "refused" | "completed" | "cancelled" | "no-show";
 
 type ReservationListRowProps = {
   guestName: string;

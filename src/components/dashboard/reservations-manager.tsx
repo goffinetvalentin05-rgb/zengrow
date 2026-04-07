@@ -19,7 +19,7 @@ type ReservationRow = {
   guest_phone: string | null;
   guest_email: string | null;
   guests: number;
-  status: "pending" | "confirmed" | "rejected" | "cancelled" | "completed" | "no-show";
+  status: "pending" | "confirmed" | "refused" | "cancelled" | "completed" | "no-show";
   internal_note: string | null;
   created_at: string;
 };
@@ -29,12 +29,12 @@ type ReservationsManagerProps = {
   initialShowManualForm?: boolean;
 };
 
-const editableStatuses = ["pending", "confirmed", "rejected", "completed", "cancelled", "no-show"] as const;
+const editableStatuses = ["pending", "confirmed", "refused", "completed", "cancelled", "no-show"] as const;
 
 const STATUS_LABEL_FR: Record<ReservationRow["status"], string> = {
   pending: "En attente",
   confirmed: "Confirmée",
-  rejected: "Refusée",
+  refused: "Refusée",
   cancelled: "Annulée",
   completed: "Terminée",
   "no-show": "Absent",
@@ -314,7 +314,7 @@ export default function ReservationsManager({
                 <Button
                   type="button"
                   variant="danger"
-                  onClick={() => updateStatus(selectedReservation.id, "rejected")}
+                  onClick={() => updateStatus(selectedReservation.id, "refused")}
                   disabled={savingId === selectedReservation.id}
                 >
                   Refuser

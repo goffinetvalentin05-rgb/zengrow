@@ -1,11 +1,11 @@
 import Badge from "@/src/components/ui/badge";
 
-type ReservationStatus = "pending" | "confirmed" | "rejected" | "completed" | "cancelled" | "no-show";
+type ReservationStatus = "pending" | "confirmed" | "refused" | "completed" | "cancelled" | "no-show";
 
 const labels: Record<ReservationStatus, string> = {
   pending: "En attente",
   confirmed: "Confirmée",
-  rejected: "Refusée",
+  refused: "Refusée",
   completed: "Terminée",
   cancelled: "Annulée",
   "no-show": "Absent",
@@ -14,7 +14,7 @@ const labels: Record<ReservationStatus, string> = {
 const tones: Record<ReservationStatus, "neutral" | "success" | "warning" | "danger" | "sand"> = {
   pending: "warning",
   confirmed: "success",
-  rejected: "danger",
+  refused: "danger",
   completed: "success",
   cancelled: "danger",
   "no-show": "sand",

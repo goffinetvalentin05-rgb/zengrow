@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Clock,
@@ -15,7 +15,8 @@ import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import type { PublicThemeKey } from "@/src/lib/public-page-themes";
 import { PUBLIC_THEMES } from "@/src/lib/public-page-themes";
-import { cn, formatOpeningHoursLines, generateTimeSlotsForDate, OpeningHours } from "@/src/lib/utils";
+import type { AvailabilitySlot } from "@/src/lib/reservation/schemas";
+import { cn, formatOpeningHoursLines, OpeningHours } from "@/src/lib/utils";
 
 const HERO_NOISE_SVG =
   "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E\")";
@@ -32,18 +33,10 @@ type PublicReservationFormProps = {
   restaurantEmail?: string | null;
   allowPhone?: boolean | null;
   allowEmail?: boolean | null;
-  restaurantCapacity: number;
   maxPartySize: number;
-  reservationDuration: number;
-  slotInterval: number;
   openingHours: OpeningHours | null;
-  blockedSlots: { reservation_date: string; reservation_time: string }[];
-  existingReservations: {
-    reservation_date: string;
-    reservation_time: string;
-    guests: number;
-    status: string;
-  }[];
+  daysInAdvance: number;
+  useTables: boolean;
   logoUrl?: string | null;
   coverImageUrl?: string | null;
   themeKey: PublicThemeKey;
@@ -77,13 +70,10 @@ export default function PublicReservationForm({
   restaurantEmail,
   allowPhone,
   allowEmail,
-  restaurantCapacity,
   maxPartySize,
-  reservationDuration,
-  slotInterval,
   openingHours,
-  blockedSlots,
-  existingReservations,
+  daysInAdvance,
+  useTables,
   logoUrl,
   coverImageUrl,
   themeKey,
@@ -103,6 +93,12 @@ export default function PublicReservationForm({
   const preset = PUBLIC_THEMES[themeKey] ?? PUBLIC_THEMES.moderne;
   const isLightTheme = preset.key === "classique" || preset.key === "naturel" || preset.key === "minimaliste";
   const todayDate = new Date().toISOString().slice(0, 10);
+  const maxDateStr = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + daysInAdvance);
+    return d.toISOString().slice(0, 10);
+  }, [daysInAdvance]);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
@@ -112,6 +108,9 @@ export default function PublicReservationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
 
   const cssVars = useMemo(
     () =>
@@ -134,59 +133,79 @@ export default function PublicReservationForm({
     [],
   );
 
-  const blockedSet = useMemo(() => {
-    return new Set(blockedSlots.map((slot) => `${slot.reservation_date}|${slot.reservation_time}`));
-  }, [blockedSlots]);
-
-  const generatedSlots = useMemo(() => {
-    if (!reservationDate) return [];
-    if (closureStartDate && closureEndDate && reservationDate >= closureStartDate && reservationDate <= closureEndDate) {
-      return [];
+  useEffect(() => {
+    if (
+      !reservationDate ||
+      guests < 1 ||
+      (closureStartDate && closureEndDate && reservationDate >= closureStartDate && reservationDate <= closureEndDate)
+    ) {
+      setAvailabilitySlots([]);
+      setSlotsError(null);
+      return;
     }
-    const baseSlots = generateTimeSlotsForDate(reservationDate, openingHours, slotInterval);
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    return baseSlots.filter((slot) => {
-      if (blockedSet.has(`${reservationDate}|${slot}`)) return false;
-      if (reservationDate !== todayDate) return true;
-      const [hours, minutes] = slot.split(":").map(Number);
-      const slotMinutes = hours * 60 + minutes;
-      return slotMinutes >= currentMinutes;
+
+    if (reservationDate > maxDateStr) {
+      setAvailabilitySlots([]);
+      setSlotsError("Cette date dépasse la fenêtre de réservation autorisée.");
+      return;
+    }
+
+    let cancelled = false;
+    setSlotsLoading(true);
+    setSlotsError(null);
+
+    const q = new URLSearchParams({
+      restaurantId,
+      date: reservationDate,
+      covers: String(guests),
     });
-  }, [reservationDate, openingHours, slotInterval, blockedSet, closureStartDate, closureEndDate, todayDate]);
 
-  const capacityBySlot = useMemo(() => {
-    if (!reservationDate) return {};
+    fetch(`/api/reservations/availability?${q.toString()}`)
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => ({}))) as {
+          slots?: AvailabilitySlot[];
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Impossible de charger les créneaux.");
+        }
+        return payload.slots ?? [];
+      })
+      .then((slots) => {
+        if (!cancelled) {
+          setAvailabilitySlots(slots);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setAvailabilitySlots([]);
+          setSlotsError(err instanceof Error ? err.message : "Impossible de charger les créneaux.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setSlotsLoading(false);
+        }
+      });
 
-    const reservationsForDate = existingReservations.filter(
-      (reservation) =>
-        reservation.reservation_date === reservationDate &&
-        ["pending", "confirmed"].includes(reservation.status),
-    );
-
-    const toMinutes = (time: string) => {
-      const [hours, minutes] = time.split(":").map(Number);
-      return hours * 60 + minutes;
+    return () => {
+      cancelled = true;
     };
+  }, [
+    restaurantId,
+    reservationDate,
+    guests,
+    closureStartDate,
+    closureEndDate,
+    maxDateStr,
+  ]);
 
-    const values: Record<string, number> = {};
-
-    for (const slot of generatedSlots) {
-      const slotStart = toMinutes(slot);
-      const slotEnd = slotStart + reservationDuration;
-
-      const usedSeats = reservationsForDate.reduce((total, reservation) => {
-        const reservationStart = toMinutes(reservation.reservation_time);
-        const reservationEnd = reservationStart + reservationDuration;
-        const overlaps = reservationStart < slotEnd && reservationEnd > slotStart;
-        return overlaps ? total + reservation.guests : total;
-      }, 0);
-
-      values[slot] = Math.max(restaurantCapacity - usedSeats, 0);
+  useEffect(() => {
+    const times = new Set(availabilitySlots.map((s) => s.time));
+    if (reservationTime && !times.has(reservationTime)) {
+      setReservationTime("");
     }
-
-    return values;
-  }, [existingReservations, generatedSlots, reservationDate, reservationDuration, restaurantCapacity]);
+  }, [availabilitySlots, reservationTime]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -205,7 +224,7 @@ export default function PublicReservationForm({
       return;
     }
 
-    const response = await fetch("/api/public/reservations", {
+    const response = await fetch("/api/reservations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -627,6 +646,7 @@ export default function PublicReservationForm({
                     value={reservationDate}
                     onChange={(event) => setReservationDate(event.target.value)}
                     min={todayDate}
+                    max={maxDateStr}
                     required
                     className={inputClass}
                     style={fieldStyle}
@@ -645,23 +665,24 @@ export default function PublicReservationForm({
                     value={reservationTime}
                     onChange={(event) => setReservationTime(event.target.value)}
                     required
-                    disabled={isDateInClosurePeriod}
+                    disabled={isDateInClosurePeriod || slotsLoading}
                     className={cn(inputClass, "cursor-pointer")}
                     style={fieldStyle}
                   >
-                    <option value="">Sélectionnez une heure</option>
-                    {generatedSlots.map((slot) => (
-                      <option
-                        key={slot}
-                        value={slot}
-                        disabled={(capacityBySlot[slot] ?? 0) <= 0 || (capacityBySlot[slot] ?? 0) < guests}
-                      >
-                        {(capacityBySlot[slot] ?? 0) <= 0
-                          ? `${slot} — Complet`
-                          : `${slot} — ${capacityBySlot[slot] ?? restaurantCapacity} places`}
+                    <option value="">
+                      {slotsLoading ? "Chargement des créneaux…" : "Sélectionnez une heure"}
+                    </option>
+                    {availabilitySlots.map((slot) => (
+                      <option key={slot.time} value={slot.time}>
+                        {useTables
+                          ? slot.time
+                          : `${slot.time} — ${slot.remainingCapacity ?? 0} place(s) restante(s) après votre demande`}
                       </option>
                     ))}
                   </Select>
+                  {slotsError ? (
+                    <p className="text-xs text-amber-200/90">{slotsError}</p>
+                  ) : null}
                 </div>
               </div>
 

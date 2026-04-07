@@ -3,7 +3,6 @@ import { executePublicReservation } from "@/src/lib/reservation/execute-public-r
 import { publicReservationPostSchema } from "@/src/lib/reservation/schemas";
 import { createClient } from "@/src/lib/supabase/server";
 
-/** @deprecated Utiliser POST /api/reservations */
 export async function POST(request: NextRequest) {
   const json = await request.json().catch(() => null);
   const parsed = publicReservationPostSchema.safeParse(json);

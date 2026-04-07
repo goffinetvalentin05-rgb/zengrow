@@ -22,30 +22,17 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     notFound();
   }
 
-  const [{ data: settings }, { data: blockedSlots }, { data: existingReservations }] = await Promise.all([
-    supabase
-      .from("restaurant_settings")
-      .select(
-        "opening_hours, reservation_slot_interval, reservation_duration, restaurant_capacity, max_party_size, allow_phone, allow_email, logo_url, cover_image_url, accent_color, button_color, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_menu_mode, public_menu_url, public_menu_pdf_url, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours",
-      )
-      .eq("restaurant_id", restaurant.id)
-      .single(),
-    supabase
-      .from("blocked_slots")
-      .select("reservation_date, reservation_time")
-      .eq("restaurant_id", restaurant.id),
-    supabase
-      .from("reservations")
-      .select("reservation_date, reservation_time, guests, status")
-      .eq("restaurant_id", restaurant.id)
-      .in("status", ["pending", "confirmed"]),
-  ]);
+  const { data: settings } = await supabase
+    .from("restaurant_settings")
+    .select(
+      "opening_hours, reservation_slot_interval, max_party_size, allow_phone, allow_email, logo_url, cover_image_url, accent_color, button_color, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_menu_mode, public_menu_url, public_menu_pdf_url, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours, days_in_advance, use_tables",
+    )
+    .eq("restaurant_id", restaurant.id)
+    .single();
 
   const safeSettings = settings ?? {
     opening_hours: getDefaultOpeningHours(),
-    restaurant_capacity: 40,
     max_party_size: 8,
-    reservation_duration: 90,
     reservation_slot_interval: 30,
     allow_phone: true,
     allow_email: true,
@@ -70,6 +57,8 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     public_page_show_email: true,
     public_page_show_website: true,
     public_page_show_opening_hours: true,
+    days_in_advance: 60,
+    use_tables: false,
   };
 
   const menuPdf = safeSettings.public_menu_pdf_url?.trim();
@@ -104,13 +93,10 @@ export default async function PublicReservationPage({ params }: PublicReservatio
         restaurantEmail={restaurant.email}
         allowPhone={safeSettings.allow_phone}
         allowEmail={safeSettings.allow_email}
-        restaurantCapacity={safeSettings.restaurant_capacity}
         maxPartySize={safeSettings.max_party_size}
-        reservationDuration={safeSettings.reservation_duration}
-        slotInterval={safeSettings.reservation_slot_interval}
         openingHours={safeSettings.opening_hours as OpeningHours}
-        blockedSlots={blockedSlots ?? []}
-        existingReservations={existingReservations ?? []}
+        daysInAdvance={safeSettings.days_in_advance ?? 60}
+        useTables={safeSettings.use_tables ?? false}
         logoUrl={restaurant.logo_url ?? safeSettings.logo_url}
         coverImageUrl={restaurant.banner_url ?? safeSettings.cover_image_url}
         themeKey={themeKey}

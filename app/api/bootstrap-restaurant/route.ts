@@ -139,6 +139,7 @@ export async function POST(request: Request) {
     opening_hours: getDefaultOpeningHours(),
     table_count: tableCount,
     restaurant_capacity: maxPeople,
+    max_covers_per_slot: maxPeople,
     reservation_duration: averageMealDuration,
     instagram_url: instagram,
     website_url: website,
