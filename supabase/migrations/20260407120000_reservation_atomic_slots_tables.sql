@@ -103,37 +103,36 @@ declare
   v_max_covers integer;
   v_max_party integer;
   v_slot_interval integer;
+  v_duration integer;
   v_use_tables boolean;
   v_used integer;
   v_time time;
   v_minutes integer;
+  v_new_start timestamp;
+  v_new_end timestamp;
 begin
   if new.status not in ('pending', 'confirmed') then
     return new;
   end if;
 
   perform pg_advisory_xact_lock(
-    hashtext(
-      new.restaurant_id::text
-      || '|'
-      || new.reservation_date::text
-      || '|'
-      || new.reservation_time
-    )
+    hashtext(new.restaurant_id::text || '|' || new.reservation_date::text)
   );
 
   select
     coalesce(s.max_covers_per_slot, s.restaurant_capacity, 40),
     coalesce(s.max_party_size, 8),
     coalesce(s.reservation_slot_interval, 30),
+    coalesce(s.reservation_duration, 90),
     coalesce(s.use_tables, false)
-  into v_max_covers, v_max_party, v_slot_interval, v_use_tables
+  into v_max_covers, v_max_party, v_slot_interval, v_duration, v_use_tables
   from public.restaurant_settings s
   where s.restaurant_id = new.restaurant_id;
 
   if v_max_covers is null then v_max_covers := 40; end if;
   if v_max_party is null then v_max_party := 8; end if;
   if v_slot_interval is null or v_slot_interval <= 0 then v_slot_interval := 30; end if;
+  if v_duration is null or v_duration <= 0 then v_duration := 90; end if;
 
   if new.guests > v_max_party then
     raise exception 'MAX_PARTY';
@@ -148,6 +147,9 @@ begin
   if mod(v_minutes, v_slot_interval) <> 0 then
     raise exception 'INVALID_SLOT';
   end if;
+
+  v_new_start := (new.reservation_date::text || ' ' || new.reservation_time)::timestamp;
+  v_new_end := v_new_start + make_interval(mins => v_duration);
 
   if v_use_tables then
     if new.table_id is null then
@@ -171,9 +173,10 @@ begin
       where r.restaurant_id = new.restaurant_id
         and r.table_id = new.table_id
         and r.reservation_date = new.reservation_date
-        and r.reservation_time = new.reservation_time
         and r.status in ('pending', 'confirmed')
         and (tg_op = 'INSERT' or r.id <> new.id)
+        and ((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) < v_new_end
+        and (((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) + make_interval(mins => v_duration)) > v_new_start
     ) then
       raise exception 'TABLE_TAKEN';
     end if;
@@ -185,9 +188,10 @@ begin
     from public.reservations r
     where r.restaurant_id = new.restaurant_id
       and r.reservation_date = new.reservation_date
-      and r.reservation_time = new.reservation_time
       and r.status in ('pending', 'confirmed')
-      and (tg_op = 'INSERT' or r.id <> new.id);
+      and (tg_op = 'INSERT' or r.id <> new.id)
+      and ((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) < v_new_end
+      and (((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) + make_interval(mins => v_duration)) > v_new_start;
 
     if (v_used + new.guests) > v_max_covers then
       raise exception 'SLOT_FULL';
@@ -234,6 +238,9 @@ declare
   v_st text;
   v_used integer;
   v_max_covers integer;
+  v_duration integer;
+  v_new_start timestamp;
+  v_new_end timestamp;
 begin
   if p_status not in ('pending', 'confirmed') then
     raise exception 'INVALID_STATUS';
@@ -243,14 +250,10 @@ begin
     raise exception 'INVALID_GUESTS';
   end if;
 
+  -- Verrouillage volontairement plus large (par jour) car la durée provoque des chevauchements
+  -- sur plusieurs créneaux.
   perform pg_advisory_xact_lock(
-    hashtext(
-      p_restaurant_id::text
-      || '|'
-      || p_reservation_date::text
-      || '|'
-      || left(trim(p_reservation_time), 5)
-    )
+    hashtext(p_restaurant_id::text || '|' || p_reservation_date::text)
   );
 
   select *
@@ -263,6 +266,11 @@ begin
   end if;
 
   v_max_covers := coalesce(v_settings.max_covers_per_slot, v_settings.restaurant_capacity, 40);
+  v_duration := coalesce(v_settings.reservation_duration, 90);
+  if v_duration is null or v_duration <= 0 then v_duration := 90; end if;
+
+  v_new_start := (p_reservation_date::text || ' ' || left(trim(p_reservation_time), 5))::timestamp;
+  v_new_end := v_new_start + make_interval(mins => v_duration);
 
   if coalesce(v_settings.use_tables, false) then
     select t.id
@@ -276,8 +284,9 @@ begin
         from public.reservations r
         where r.table_id = t.id
           and r.reservation_date = p_reservation_date
-          and r.reservation_time = p_reservation_time
           and r.status in ('pending', 'confirmed')
+          and ((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) < v_new_end
+          and (((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) + make_interval(mins => v_duration)) > v_new_start
       )
     order by t.max_covers asc, t.min_covers asc
     limit 1;
@@ -293,8 +302,9 @@ begin
     from public.reservations r
     where r.restaurant_id = p_restaurant_id
       and r.reservation_date = p_reservation_date
-      and r.reservation_time = p_reservation_time
-      and r.status in ('pending', 'confirmed');
+      and r.status in ('pending', 'confirmed')
+      and ((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) < v_new_end
+      and (((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) + make_interval(mins => v_duration)) > v_new_start;
 
     if (v_used + p_guests) > v_max_covers then
       raise exception 'SLOT_FULL';
@@ -352,6 +362,7 @@ as $$
 declare
   s record;
   v_interval integer;
+  v_duration integer;
   v_max_party integer;
   v_max_covers integer;
   v_use_tables boolean;
@@ -381,6 +392,7 @@ begin
 
   select
     rs.reservation_slot_interval,
+    rs.reservation_duration,
     rs.max_party_size,
     rs.max_covers_per_slot,
     rs.restaurant_capacity,
@@ -398,11 +410,13 @@ begin
   end if;
 
   v_interval := coalesce(s.reservation_slot_interval, 30);
+  v_duration := coalesce(s.reservation_duration, 90);
   v_max_party := coalesce(s.max_party_size, 8);
   v_max_covers := coalesce(s.max_covers_per_slot, s.restaurant_capacity, 40);
   v_use_tables := coalesce(s.use_tables, false);
   v_days := coalesce(s.days_in_advance, 60);
   v_oh := s.opening_hours;
+  if v_duration is null or v_duration <= 0 then v_duration := 90; end if;
 
   if p_covers > v_max_party then
     return '[]'::jsonb;
@@ -477,8 +491,9 @@ begin
               from public.reservations r
               where r.table_id = t.id
                 and r.reservation_date = p_date
-                and r.reservation_time = v_slot
                 and r.status in ('pending', 'confirmed')
+                and ((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) < ((p_date::text || ' ' || v_slot)::timestamp + make_interval(mins => v_duration))
+                and (((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) + make_interval(mins => v_duration)) > ((p_date::text || ' ' || v_slot)::timestamp)
             )
           order by t.max_covers asc, t.min_covers asc
           limit 1;
@@ -499,8 +514,9 @@ begin
           from public.reservations r
           where r.restaurant_id = p_restaurant_id
             and r.reservation_date = p_date
-            and r.reservation_time = v_slot
-            and r.status in ('pending', 'confirmed');
+            and r.status in ('pending', 'confirmed')
+            and ((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) < ((p_date::text || ' ' || v_slot)::timestamp + make_interval(mins => v_duration))
+            and (((r.reservation_date::text || ' ' || r.reservation_time)::timestamp) + make_interval(mins => v_duration)) > ((p_date::text || ' ' || v_slot)::timestamp);
 
           if (v_used + p_covers) <= v_max_covers then
             v_elem := jsonb_build_object(
