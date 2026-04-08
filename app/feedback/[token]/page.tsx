@@ -1,5 +1,5 @@
 import FeedbackForm from "@/src/components/reviews/feedback-form";
-import { createAdminClient } from "@/src/lib/supabase/admin";
+import { createClient } from "@/src/lib/supabase/server";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -8,6 +8,15 @@ type FeedbackPageProps = {
   params: Promise<{ token: string }> | { token: string };
   searchParams: Promise<{ restaurantId?: string; rating?: string }> | { restaurantId?: string; rating?: string };
 };
+
+function normalizeTokenSegment(raw: string): string {
+  const t = raw.trim();
+  try {
+    return decodeURIComponent(t);
+  } catch {
+    return t;
+  }
+}
 
 function initialRatingFromResponse(value: string | null): number {
   if (value === "a_ameliorer") return 2;
@@ -24,7 +33,7 @@ function initialResponseLabel(value: string | null): string {
 export default async function FeedbackPage({ params, searchParams }: FeedbackPageProps) {
   const resolvedParams = await Promise.resolve(params);
   const resolvedSearchParams = await Promise.resolve(searchParams);
-  const segment = resolvedParams.token;
+  const segment = normalizeTokenSegment(resolvedParams.token);
   const legacyRestaurantId = resolvedSearchParams.restaurantId || "";
   const legacyRatingRaw = resolvedSearchParams.rating;
   const parsedLegacyRating = Number(legacyRatingRaw);
@@ -34,23 +43,19 @@ export default async function FeedbackPage({ params, searchParams }: FeedbackPag
       : 3;
 
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
 
-    const { data: byToken, error: tokenError } = await supabase
-      .from("feedbacks")
-      .select(
-        "id, token, initial_response, responded_at, customer_name, customer_email, restaurant_id, reservation_id, restaurants ( name )",
-      )
-      .eq("token", segment)
-      .maybeSingle();
+    const { data: tokenRows, error: tokenRpcError } = await supabase.rpc("get_pending_feedback_by_token", {
+      p_token: segment,
+    });
 
-    if (!tokenError && byToken) {
-      if (byToken.responded_at) {
-        return <InvalidFeedbackLink />;
-      }
+    if (!tokenRpcError && tokenRows && tokenRows.length > 0) {
+      const byToken = tokenRows[0] as {
+        initial_response: string | null;
+        restaurant_name: string | null;
+      };
 
-      const rel = byToken.restaurants as { name: string } | { name: string }[] | null;
-      const restaurantName = Array.isArray(rel) ? (rel[0]?.name ?? "Restaurant") : (rel?.name ?? "Restaurant");
+      const restaurantName = byToken.restaurant_name?.trim() || "Restaurant";
 
       return (
         <main className="min-h-screen bg-[radial-gradient(circle_at_top,#ebf1ff_0,#f4f7fb_45%,#f4f7fb_100%)] px-4 py-10 md:py-16">
@@ -68,18 +73,19 @@ export default async function FeedbackPage({ params, searchParams }: FeedbackPag
     }
 
     if (UUID_RE.test(segment)) {
-      let reservationQuery = supabase
-        .from("reservations")
-        .select("guest_name, guest_email, restaurant_id")
-        .eq("id", segment);
+      const { data: resRows, error: reservationRpcError } = await supabase.rpc("get_reservation_for_public_feedback", {
+        p_id: segment,
+      });
 
-      if (legacyRestaurantId) {
-        reservationQuery = reservationQuery.eq("restaurant_id", legacyRestaurantId);
-      }
+      const reservation = resRows?.[0] as
+        | { guest_name: string | null; guest_email: string | null; restaurant_id: string }
+        | undefined;
 
-      const { data: reservation, error: reservationError } = await reservationQuery.maybeSingle();
+      if (!reservationRpcError && reservation) {
+        if (legacyRestaurantId && reservation.restaurant_id !== legacyRestaurantId) {
+          return <InvalidFeedbackLink />;
+        }
 
-      if (!reservationError && reservation) {
         return (
           <main className="min-h-screen bg-[radial-gradient(circle_at_top,#ebf1ff_0,#f4f7fb_45%,#f4f7fb_100%)] px-4 py-10 md:py-16">
             <div className="mx-auto max-w-xl">

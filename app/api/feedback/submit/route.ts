@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/src/lib/supabase/admin";
+import { createClient } from "@/src/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as {
@@ -21,33 +21,21 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
 
     if (body.token) {
-      const { data: row, error: fetchError } = await supabase
-        .from("feedbacks")
-        .select("id, responded_at")
-        .eq("token", body.token)
-        .maybeSingle();
+      const token = body.token.trim();
+      const { data: ok, error } = await supabase.rpc("submit_feedback_by_token", {
+        p_token: token,
+        p_rating: rating,
+        p_message: message,
+      });
 
-      if (fetchError || !row || row.responded_at) {
+      if (error) {
+        console.error("submit_feedback_by_token", error);
         return NextResponse.json({ error: invalidMsg }, { status: 400 });
       }
-
-      const { data: updated, error: updateError } = await supabase
-        .from("feedbacks")
-        .update({
-          rating,
-          message,
-          responded_at: new Date().toISOString(),
-        })
-        .eq("id", row.id)
-        .is("responded_at", null)
-        .select("id")
-        .maybeSingle();
-
-      if (updateError || !updated) {
-        if (updateError) console.error("Feedback token update failed", updateError);
+      if (!ok) {
         return NextResponse.json({ error: invalidMsg }, { status: 400 });
       }
 
@@ -59,43 +47,25 @@ export async function POST(request: NextRequest) {
     const customerName = (body.customerName || "").trim();
     const customerEmail = (body.customerEmail || "").trim();
 
-    if (!reservationId) {
+    if (!reservationId || !restaurantId) {
       return NextResponse.json({ error: invalidMsg }, { status: 400 });
     }
 
-    const { data: reservation, error: reservationError } = await supabase
-      .from("reservations")
-      .select("id, restaurant_id, guest_name, guest_email, status")
-      .eq("id", reservationId)
-      .single();
-
-    if (reservationError || !reservation) {
-      return NextResponse.json({ error: invalidMsg }, { status: 404 });
-    }
-
-    if (restaurantId && reservation.restaurant_id !== restaurantId) {
-      return NextResponse.json({ error: invalidMsg }, { status: 400 });
-    }
-
-    if (reservation.status !== "completed") {
-      return NextResponse.json({ error: "La réservation n'est pas terminée." }, { status: 400 });
-    }
-
-    const { error: insertError } = await supabase.from("feedbacks").insert({
-      restaurant_id: reservation.restaurant_id,
-      reservation_id: reservationId,
-      customer_name: customerName || reservation.guest_name || "Client",
-      customer_email: customerEmail || reservation.guest_email || null,
-      rating,
-      message,
-      responded_at: new Date().toISOString(),
-      token: null,
-      initial_response: null,
+    const { data: ok, error } = await supabase.rpc("submit_feedback_legacy", {
+      p_reservation_id: reservationId,
+      p_restaurant_id: restaurantId,
+      p_rating: rating,
+      p_message: message,
+      p_customer_name: customerName,
+      p_customer_email: customerEmail,
     });
 
-    if (insertError) {
-      console.error("Feedback legacy insert failed", insertError);
-      return NextResponse.json({ error: "Impossible d'enregistrer votre retour." }, { status: 500 });
+    if (error) {
+      console.error("submit_feedback_legacy", error);
+      return NextResponse.json({ error: invalidMsg }, { status: 400 });
+    }
+    if (!ok) {
+      return NextResponse.json({ error: invalidMsg }, { status: 400 });
     }
   } catch (error) {
     console.error("Feedback submit route failed", error);
