@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { sendReviewRequestEmail } from "@/lib/email";
+import { insertPendingFeedbackTokensForReservation } from "@/src/lib/review-feedback-tokens";
 import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
+import { createAdminClient } from "@/src/lib/supabase/admin";
 import { createClient } from "@/src/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -69,14 +71,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Aucune adresse e-mail de destination trouvée." }, { status: 400 });
   }
 
+  const admin = createAdminClient();
+  let feedbackNeutralUrl: string;
+  let feedbackNegativeUrl: string;
+  try {
+    const { tokenMoyen, tokenNegatif } = await insertPendingFeedbackTokensForReservation(admin, {
+      restaurantId: restaurant.id,
+      reservationId: testReservation.id,
+      guestName: "Test review",
+      guestEmail: recipient,
+    });
+    feedbackNeutralUrl = `${appUrl}/feedback/${tokenMoyen}`;
+    feedbackNegativeUrl = `${appUrl}/feedback/${tokenNegatif}`;
+  } catch (tokenError) {
+    console.error("Test feedback tokens failed", tokenError);
+    return NextResponse.json({ error: "Impossible de préparer les liens de retour." }, { status: 500 });
+  }
+
   try {
     await sendReviewRequestEmail({
       to: recipient,
       restaurantName: restaurant.name,
       restaurantLogoUrl: restaurantUi?.logo_url ?? null,
       googleReviewUrl: automation?.google_review_url || `${appUrl}/review/${testReservation.id}`,
-      feedbackNeutralUrl: `${appUrl}/feedback/${testReservation.id}?restaurantId=${restaurant.id}&rating=3`,
-      feedbackNegativeUrl: `${appUrl}/feedback/${testReservation.id}?restaurantId=${restaurant.id}&rating=2`,
+      feedbackNeutralUrl,
+      feedbackNegativeUrl,
       emailSubject: automation?.email_subject,
       emailMessage: automation?.email_message,
       buttonPositiveLabel: automation?.button_positive_label,

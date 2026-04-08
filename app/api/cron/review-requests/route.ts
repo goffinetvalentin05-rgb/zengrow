@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendReviewRequestEmail } from "@/lib/email";
+import { insertPendingFeedbackTokensForReservation } from "@/src/lib/review-feedback-tokens";
 import { isRestaurantExpired } from "@/src/lib/subscription";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 
@@ -80,9 +81,23 @@ export async function GET(request: NextRequest) {
     if (now < sendAt) continue;
 
     const googleReviewUrl = automation.google_review_url || `${appUrl}/review/${reservation.id}`;
-    const feedbackNeutralUrl = `${appUrl}/feedback/${reservation.id}?restaurantId=${reservation.restaurant_id}&rating=3`;
-    const feedbackNegativeUrl = `${appUrl}/feedback/${reservation.id}?restaurantId=${reservation.restaurant_id}&rating=2`;
     const visual = visualsByRestaurant.get(reservation.restaurant_id);
+
+    let feedbackNeutralUrl: string;
+    let feedbackNegativeUrl: string;
+    try {
+      const { tokenMoyen, tokenNegatif } = await insertPendingFeedbackTokensForReservation(supabase, {
+        restaurantId: reservation.restaurant_id,
+        reservationId: reservation.id,
+        guestName: reservation.guest_name,
+        guestEmail: reservation.guest_email,
+      });
+      feedbackNeutralUrl = `${appUrl}/feedback/${tokenMoyen}`;
+      feedbackNegativeUrl = `${appUrl}/feedback/${tokenNegatif}`;
+    } catch (tokenError) {
+      console.error("Feedback tokens insert failed", { reservationId: reservation.id, tokenError });
+      continue;
+    }
 
     try {
       await sendReviewRequestEmail({

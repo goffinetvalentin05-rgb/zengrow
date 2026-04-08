@@ -43,17 +43,17 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (rating <= 3) {
-    const { error: feedbackError } = await supabase.from("feedbacks").upsert(
-      {
-        restaurant_id: reservation.restaurant_id,
-        reservation_id: reservation.id,
-        customer_name: reservation.guest_name || "Client",
-        customer_email: reservation.guest_email || null,
-        rating,
-        message,
-      },
-      { onConflict: "reservation_id" },
-    );
+    const { error: feedbackError } = await supabase.from("feedbacks").insert({
+      restaurant_id: reservation.restaurant_id,
+      reservation_id: reservation.id,
+      customer_name: reservation.guest_name || "Client",
+      customer_email: reservation.guest_email || null,
+      rating,
+      message,
+      responded_at: new Date().toISOString(),
+      token: null,
+      initial_response: null,
+    });
 
     if (feedbackError) {
       return NextResponse.json({ error: feedbackError.message }, { status: 500 });

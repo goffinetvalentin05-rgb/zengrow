@@ -18,6 +18,7 @@ export default async function DashboardFeedbackPage() {
     .from("feedbacks")
     .select("id, reservation_id, customer_name, customer_email, rating, message, created_at")
     .eq("restaurant_id", restaurant.id)
+    .not("responded_at", "is", null)
     .order("created_at", { ascending: false });
 
   return (

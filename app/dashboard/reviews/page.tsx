@@ -20,6 +20,7 @@ export default async function DashboardReviewsPage() {
     .from("feedbacks")
     .select("id, message, created_at")
     .eq("restaurant_id", restaurant.id)
+    .not("responded_at", "is", null)
     .order("created_at", { ascending: false })
     .limit(20);
 

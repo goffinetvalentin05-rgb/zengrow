@@ -35,6 +35,7 @@ export default async function DashboardPage() {
       .from("feedbacks")
       .select("id", { count: "exact", head: true })
       .eq("restaurant_id", restaurant.id)
+      .not("responded_at", "is", null)
       .gte("created_at", `${today}T00:00:00`)
       .lte("created_at", `${today}T23:59:59`),
   ]);
