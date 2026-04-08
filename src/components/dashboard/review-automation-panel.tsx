@@ -155,9 +155,21 @@ export default function ReviewAutomationPanel({
       method: "POST",
     });
 
-    const payload = (await response.json().catch(() => ({}))) as { error?: string };
+    const raw = await response.text();
+    let payload: { error?: string } = {};
+    try {
+      payload = raw ? (JSON.parse(raw) as { error?: string }) : {};
+    } catch {
+      payload = {};
+    }
+
     if (!response.ok) {
-      setMessage(payload.error ?? "Impossible d'envoyer l'e-mail de test.");
+      setMessage(
+        payload.error ??
+          (response.status >= 500
+            ? `Erreur serveur (${response.status}). Vérifiez SUPABASE_SERVICE_ROLE_KEY, les migrations Supabase et RESEND_API_KEY.`
+            : `Impossible d'envoyer l'e-mail de test (erreur ${response.status}).`),
+      );
       setSendingTest(false);
       return;
     }

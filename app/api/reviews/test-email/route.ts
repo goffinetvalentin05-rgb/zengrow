@@ -5,6 +5,14 @@ import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription
 import { createAdminClient } from "@/src/lib/supabase/admin";
 import { createClient } from "@/src/lib/supabase/server";
 
+function errorMessageFromUnknown(err: unknown): string {
+  if (err && typeof err === "object" && "message" in err && typeof (err as { message: string }).message === "string") {
+    return (err as { message: string }).message;
+  }
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -71,21 +79,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Aucune adresse e-mail de destination trouvée." }, { status: 400 });
   }
 
-  const admin = createAdminClient();
+  const reservationId = testReservation.id;
+  const restaurantIdQuery = encodeURIComponent(restaurant.id);
+
   let feedbackNeutralUrl: string;
   let feedbackNegativeUrl: string;
   try {
+    const admin = createAdminClient();
     const { tokenMoyen, tokenNegatif } = await insertPendingFeedbackTokensForReservation(admin, {
       restaurantId: restaurant.id,
-      reservationId: testReservation.id,
+      reservationId: reservationId,
       guestName: "Test review",
       guestEmail: recipient,
     });
     feedbackNeutralUrl = `${appUrl}/feedback/${tokenMoyen}`;
     feedbackNegativeUrl = `${appUrl}/feedback/${tokenNegatif}`;
-  } catch (tokenError) {
-    console.error("Test feedback tokens failed", tokenError);
-    return NextResponse.json({ error: "Impossible de préparer les liens de retour." }, { status: 500 });
+  } catch (tokenSetupError: unknown) {
+    console.warn(
+      "E-mail de test : jetons non créés (clé service Supabase absente, migration feedbacks manquante, etc.). Utilisation de liens classiques.",
+      tokenSetupError,
+    );
+    feedbackNeutralUrl = `${appUrl}/feedback/${reservationId}?restaurantId=${restaurantIdQuery}&rating=3`;
+    feedbackNegativeUrl = `${appUrl}/feedback/${reservationId}?restaurantId=${restaurantIdQuery}&rating=2`;
   }
 
   try {
@@ -103,8 +118,18 @@ export async function POST(request: Request) {
       buttonNegativeLabel: automation?.button_negative_label,
       primaryColor: automation?.primary_color,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Test review email failed", error);
+    const hint = errorMessageFromUnknown(error);
+    if (/RESEND_API_KEY|Missing env var:\s*RESEND/i.test(hint)) {
+      return NextResponse.json(
+        {
+          error:
+            "RESEND_API_KEY ou RESEND_FROM_EMAIL manquant : ajoutez la clé API Resend dans les variables d’environnement du serveur.",
+        },
+        { status: 500 },
+      );
+    }
     return NextResponse.json({ error: "Échec d'envoi de l'e-mail." }, { status: 500 });
   }
 
