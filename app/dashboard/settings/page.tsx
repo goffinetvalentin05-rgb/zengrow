@@ -25,10 +25,11 @@ export default async function DashboardSettingsPage() {
     .eq("id", restaurant.id)
     .single();
 
-  const { count: restaurantTableCount } = await supabase
+  const { data: restaurantTablesRows } = await supabase
     .from("restaurant_tables")
-    .select("*", { count: "exact", head: true })
-    .eq("restaurant_id", restaurant.id);
+    .select("id, name, min_covers, max_covers")
+    .eq("restaurant_id", restaurant.id)
+    .order("name", { ascending: true });
 
   const safeSettings = settings ?? {
     reservation_duration: 90,
@@ -83,7 +84,7 @@ export default async function DashboardSettingsPage() {
         settings={safeSettings}
         confirmationMode={restaurantConfig?.reservation_confirmation_mode ?? "manual"}
         publicLink={publicLink}
-        restaurantTableCount={restaurantTableCount ?? 0}
+        initialRestaurantTables={restaurantTablesRows ?? []}
       />
     </div>
   );

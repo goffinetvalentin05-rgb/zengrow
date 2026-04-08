@@ -1,7 +1,8 @@
 "use client";
 
-import { ChangeEvent, FormEvent, type ReactNode, useState } from "react";
+import { ChangeEvent, FormEvent, type ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
+import { Trash2 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -63,26 +64,35 @@ function storagePathFromRestaurantAssetUrl(url: string): string | null {
   }
 }
 
+type RestaurantTableRow = {
+  id: string;
+  name: string;
+  min_covers: number;
+  max_covers: number;
+};
+
+type TableRowDraft = {
+  key: string;
+  name: string;
+  min_covers: number;
+  max_covers: number;
+};
+
 type SettingsFormProps = {
   restaurant: RestaurantData;
   settings: SettingsData;
   confirmationMode: "manual" | "automatic";
   publicLink: string;
-  /** Nombre de lignes dans restaurant_tables pour ce restaurant (alerte si mode tables sans config) */
-  restaurantTableCount?: number;
+  initialRestaurantTables: RestaurantTableRow[];
 };
 
-function supabaseTableEditorUrl(): string | null {
-  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!raw) return null;
-  try {
-    const host = new URL(raw).hostname;
-    const ref = host.split(".")[0];
-    if (!ref || ref === "localhost") return null;
-    return `https://supabase.com/dashboard/project/${ref}/editor`;
-  } catch {
-    return null;
-  }
+function draftRowsFromDb(rows: RestaurantTableRow[]): TableRowDraft[] {
+  return rows.map((r) => ({
+    key: r.id,
+    name: r.name,
+    min_covers: Math.max(1, r.min_covers),
+    max_covers: Math.min(20, Math.max(1, r.max_covers)),
+  }));
 }
 
 function ReservationField({
@@ -108,7 +118,7 @@ export default function SettingsForm({
   settings,
   confirmationMode,
   publicLink,
-  restaurantTableCount = 0,
+  initialRestaurantTables,
 }: SettingsFormProps) {
   const supabase = createClient();
   const [name, setName] = useState(restaurant.name);
@@ -165,6 +175,31 @@ export default function SettingsForm({
   const [showPublicOpeningHours, setShowPublicOpeningHours] = useState(settings.public_page_show_opening_hours ?? true);
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveButtonSuccess, setSaveButtonSuccess] = useState(false);
+
+  const [tableRows, setTableRows] = useState<TableRowDraft[]>(() => draftRowsFromDb(initialRestaurantTables));
+  const [tableRowErrors, setTableRowErrors] = useState<
+    Record<string, { name?: boolean; minMax?: boolean }>
+  >({});
+  const [tableListBlockError, setTableListBlockError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ key: string; until: number } | null>(null);
+
+  useEffect(() => {
+    if (!pendingDelete) return;
+    const id = window.setInterval(() => {
+      if (Date.now() >= pendingDelete.until) {
+        setPendingDelete(null);
+      }
+    }, 150);
+    return () => window.clearInterval(id);
+  }, [pendingDelete]);
+
+  useEffect(() => {
+    if (!useTables) {
+      setTableListBlockError(null);
+      setTableRowErrors({});
+    }
+  }, [useTables]);
 
   async function uploadAsset(file: File, type: "logo" | "cover") {
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
@@ -301,9 +336,71 @@ export default function SettingsForm({
     }
   }
 
+  function validateReservationTables(): boolean {
+    setTableRowErrors({});
+    setTableListBlockError(null);
+    if (!useTables) {
+      return true;
+    }
+    if (tableRows.length === 0) {
+      setTableListBlockError("Ajoutez au moins une table pour activer ce mode.");
+      return false;
+    }
+
+    const nextErrors: Record<string, { name?: boolean; minMax?: boolean }> = {};
+    const seen = new Set<string>();
+    let hasDup = false;
+
+    for (const row of tableRows) {
+      const trimmed = row.name.trim();
+      if (!trimmed) {
+        nextErrors[row.key] = { ...nextErrors[row.key], name: true };
+      }
+      const norm = trimmed.toLowerCase();
+      if (norm) {
+        if (seen.has(norm)) {
+          hasDup = true;
+        }
+        seen.add(norm);
+      }
+      if (row.min_covers > row.max_covers) {
+        nextErrors[row.key] = { ...nextErrors[row.key], minMax: true };
+      }
+    }
+
+    if (Object.keys(nextErrors).some((k) => nextErrors[k]?.name)) {
+      setTableRowErrors(nextErrors);
+      return false;
+    }
+    if (hasDup) {
+      setTableListBlockError("Deux tables ont le même nom.");
+      return false;
+    }
+    if (Object.keys(nextErrors).some((k) => nextErrors[k]?.minMax)) {
+      setTableRowErrors(nextErrors);
+      return false;
+    }
+    return true;
+  }
+
+  function addTableRow() {
+    const newKey = crypto.randomUUID();
+    setTableRows((rows) => [...rows, { key: newKey, name: "", min_covers: 2, max_covers: 4 }]);
+    requestAnimationFrame(() => {
+      document.getElementById(`table-name-${newKey}`)?.focus();
+    });
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
+    setTableRowErrors({});
+    setTableListBlockError(null);
+
+    if (!validateReservationTables()) {
+      return;
+    }
+
     setIsSaving(true);
 
     const { error: restaurantError } = await supabase
@@ -379,7 +476,34 @@ export default function SettingsForm({
       return;
     }
 
-    setMessage("Paramètres enregistrés.");
+    if (useTables) {
+      const { error: tablesRpcError } = await supabase.rpc("replace_restaurant_tables", {
+        p_restaurant_id: restaurant.id,
+        p_tables: tableRows.map((row) => ({
+          name: row.name.trim(),
+          min_covers: Math.max(1, Math.min(20, row.min_covers)),
+          max_covers: Math.max(1, Math.min(20, row.max_covers)),
+        })),
+      });
+
+      if (tablesRpcError) {
+        setMessage(tablesRpcError.message);
+        setIsSaving(false);
+        return;
+      }
+
+      const { data: refreshedTables } = await supabase
+        .from("restaurant_tables")
+        .select("id, name, min_covers, max_covers")
+        .eq("restaurant_id", restaurant.id)
+        .order("name", { ascending: true });
+      if (refreshedTables) {
+        setTableRows(draftRowsFromDb(refreshedTables));
+      }
+    }
+
+    setSaveButtonSuccess(true);
+    window.setTimeout(() => setSaveButtonSuccess(false), 2000);
     setIsSaving(false);
   }
 
@@ -879,30 +1003,135 @@ export default function SettingsForm({
             </div>
 
             {useTables ? (
-              <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
-                {supabaseTableEditorUrl() ? (
-                  <a
-                    href={supabaseTableEditorUrl()!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--primary)] underline-offset-2 hover:underline"
-                  >
-                    Configurer vos tables →
-                  </a>
-                ) : null}
-                <p className="text-xs text-gray-500">
-                  Dans Supabase : éditeur de table &gt; <code className="rounded bg-gray-100 px-1 py-0.5">restaurant_tables</code>{" "}
-                  — ajoutez une ligne par table (nom, min. et max. couverts).
-                </p>
-                {restaurantTableCount === 0 ? (
-                  <div
-                    className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-950"
+              <div className="mt-4 space-y-4 border-t border-gray-100 pt-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-[var(--foreground)]">Vos tables</h3>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Une ligne = une table. Enregistrez en bas de cette section pour appliquer les changements.
+                  </p>
+                </div>
+
+                {tableListBlockError ? (
+                  <p
+                    className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950"
                     role="alert"
                   >
-                    Aucune table configurée. Le système ne pourra accepter aucune réservation tant que vos tables ne
-                    sont pas définies.
-                  </div>
+                    {tableListBlockError}
+                  </p>
                 ) : null}
+
+                <div className="hidden gap-2 text-xs font-medium uppercase tracking-wide text-gray-500 sm:grid sm:grid-cols-[1fr_minmax(0,5.5rem)_minmax(0,5.5rem)_2.5rem] sm:items-end sm:gap-3">
+                  <span>Nom</span>
+                  <span>min pers.</span>
+                  <span>max pers.</span>
+                  <span className="sr-only">Supprimer</span>
+                </div>
+
+                <ul className="space-y-3">
+                  {tableRows.map((row) => {
+                    const isPendingDelete = pendingDelete?.key === row.key;
+                    const err = tableRowErrors[row.key];
+                    return (
+                      <li
+                        key={row.key}
+                        className={cn(
+                          "rounded-lg border p-3 transition-colors sm:grid sm:grid-cols-[1fr_minmax(0,5.5rem)_minmax(0,5.5rem)_2.5rem] sm:items-center sm:gap-3",
+                          isPendingDelete ? "border-red-400 bg-red-50/80" : "border-gray-200 bg-white",
+                          err?.name || err?.minMax ? "border-red-300" : "",
+                        )}
+                      >
+                        <div className="min-w-0 sm:col-span-1">
+                          <label className="sr-only" htmlFor={`table-name-${row.key}`}>
+                            Nom de la table
+                          </label>
+                          <Input
+                            id={`table-name-${row.key}`}
+                            value={row.name}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setTableRows((rows) => rows.map((r) => (r.key === row.key ? { ...r, name: v } : r)));
+                            }}
+                            placeholder="ex : Table 1, Terrasse A, Bar..."
+                            className={cn(err?.name && "border-red-500")}
+                          />
+                          {err?.name ? (
+                            <p className="mt-1 text-xs font-medium text-red-600">Nom requis</p>
+                          ) : null}
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs text-gray-500 sm:hidden">min pers.</label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={20}
+                            value={row.min_covers}
+                            onChange={(e) => {
+                              const v = Number(e.target.value);
+                              setTableRows((rows) =>
+                                rows.map((r) => (r.key === row.key ? { ...r, min_covers: Number.isNaN(v) ? 1 : v } : r)),
+                              );
+                            }}
+                            className={cn(err?.minMax && "border-red-500")}
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs text-gray-500 sm:hidden">max pers.</label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={20}
+                            value={row.max_covers}
+                            onChange={(e) => {
+                              const v = Number(e.target.value);
+                              setTableRows((rows) =>
+                                rows.map((r) => (r.key === row.key ? { ...r, max_covers: Number.isNaN(v) ? 1 : v } : r)),
+                              );
+                            }}
+                            className={cn(err?.minMax && "border-red-500")}
+                          />
+                          {err?.minMax ? (
+                            <p className="mt-1 text-xs font-medium text-red-600">
+                              Le min ne peut pas dépasser le max.
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="mt-2 flex flex-col items-stretch gap-2 sm:mt-0">
+                          {isPendingDelete ? (
+                            <button
+                              type="button"
+                              className="rounded-md border border-red-300 bg-white px-2 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+                              onClick={() => {
+                                setTableRows((rows) => rows.filter((r) => r.key !== row.key));
+                                setPendingDelete(null);
+                              }}
+                            >
+                              Confirmer la suppression
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
+                              aria-label="Supprimer cette table"
+                              onClick={() =>
+                                setPendingDelete({ key: row.key, until: Date.now() + 2000 })
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <button
+                  type="button"
+                  onClick={addTableRow}
+                  className="text-sm font-semibold text-[var(--primary)] hover:underline"
+                >
+                  + Ajouter une table
+                </button>
               </div>
             ) : null}
           </div>
@@ -978,6 +1207,16 @@ export default function SettingsForm({
               />
             </ReservationField>
           </div>
+
+          <div className="border-t border-gray-100 pt-6">
+            <Button type="submit" disabled={isSaving} className="min-h-[44px] min-w-[200px]">
+              {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+            <p className="mt-2 text-xs text-gray-500">
+              Enregistre l&apos;ensemble des paramètres de la page (y compris les tables ci-dessus), comme le bouton en
+              bas.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
@@ -1050,10 +1289,10 @@ export default function SettingsForm({
       </Card>
 
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? "Enregistrement..." : "Enregistrer les paramètres"}
+        <Button type="submit" disabled={isSaving} className="min-h-[44px]">
+          {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement..." : "Enregistrer les paramètres"}
         </Button>
-        {message && <p className="text-sm text-[var(--muted-foreground)]">{message}</p>}
+        {message ? <p className="text-sm text-[var(--muted-foreground)]">{message}</p> : null}
       </div>
     </form>
   );
