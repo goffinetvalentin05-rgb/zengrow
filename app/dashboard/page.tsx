@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
 import Link from "next/link";
-import { Armchair, Calendar, Star, Users } from "lucide-react";
+import { Suspense } from "react";
 import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
-import StatCard from "@/src/components/dashboard/stat-card";
+import { DashboardStats, DashboardStatsSkeleton } from "@/src/components/dashboard/dashboard-stats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
@@ -23,30 +23,19 @@ export default async function DashboardPage() {
   const publicLink = host ? `${protocol}://${host}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
   const today = new Date().toISOString().split("T")[0];
 
-  const [{ data: todayReservations }, { data: settings }, { count: reviewsReceived }] = await Promise.all([
+  const [{ data: todayReservations }, { data: settings }] = await Promise.all([
     supabase
       .from("reservations")
       .select("id, guest_name, guests, reservation_time, status")
       .eq("restaurant_id", restaurant.id)
       .eq("reservation_date", today)
       .in("status", ["pending", "confirmed", "completed"]),
-    supabase.from("restaurant_settings").select("restaurant_capacity, table_count").eq("restaurant_id", restaurant.id).maybeSingle(),
-    supabase
-      .from("feedbacks")
-      .select("id", { count: "exact", head: true })
-      .eq("restaurant_id", restaurant.id)
-      .not("responded_at", "is", null)
-      .gte("created_at", `${today}T00:00:00`)
-      .lte("created_at", `${today}T23:59:59`),
+    supabase.from("restaurant_settings").select("restaurant_capacity").eq("restaurant_id", restaurant.id).maybeSingle(),
   ]);
 
   const restaurantCapacity = settings?.restaurant_capacity ?? 40;
-  const tableCount = settings?.table_count ?? 12;
   const timelineReservations = [...(todayReservations ?? [])].sort((a, b) => a.reservation_time.localeCompare(b.reservation_time));
   const activeTodayReservations = timelineReservations.filter((r) => ["pending", "confirmed"].includes(r.status));
-  const reservationsTodayCount = activeTodayReservations.length;
-  const peopleExpectedToday = activeTodayReservations.reduce((sum, row) => sum + (row.guests ?? 0), 0);
-  const tablesRemainingToday = Math.max(tableCount - reservationsTodayCount, 0);
 
   const slotCapacityMap = new Map<string, number>();
   for (const reservation of activeTodayReservations) {
@@ -57,13 +46,6 @@ export default async function DashboardPage() {
     [...slotCapacityMap.entries()]
       .filter(([, guests]) => guests >= restaurantCapacity)
       .sort((a, b) => a[0].localeCompare(b[0]))[0]?.[0] ?? null;
-
-  const kpis = [
-    { label: "Réservations aujourd'hui", value: reservationsTodayCount, icon: Calendar, accent: "primary" as const },
-    { label: "Personnes attendues", value: peopleExpectedToday, icon: Users, accent: "amber" as const },
-    { label: "Tables restantes", value: tablesRemainingToday, icon: Armchair, accent: "stone" as const },
-    { label: "Avis reçus aujourd'hui", value: reviewsReceived ?? 0, icon: Star, accent: "primary" as const },
-  ];
 
   return (
     <div className="space-y-10 md:space-y-12">
@@ -121,11 +103,9 @@ export default async function DashboardPage() {
           </h2>
           <p className={sectionDescClass}>Vue synthétique de votre journée.</p>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {kpis.map((kpi) => (
-            <StatCard key={kpi.label} label={kpi.label} value={kpi.value} icon={kpi.icon} accent={kpi.accent} />
-          ))}
-        </div>
+        <Suspense fallback={<DashboardStatsSkeleton />}>
+          <DashboardStats restaurantId={restaurant.id} />
+        </Suspense>
       </section>
 
       <Card>
