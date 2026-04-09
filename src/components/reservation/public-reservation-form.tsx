@@ -270,7 +270,7 @@ export default function PublicReservationForm({
 
   const ctaStyle = useMemo(() => {
     const base =
-      "inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-[var(--radius)] px-8 text-sm font-semibold tracking-wide transition duration-300 active:scale-[0.98] sm:min-h-[52px]";
+      "inline-flex min-h-[48px] w-auto min-w-[220px] max-w-md items-center justify-center rounded-[var(--radius)] px-8 text-sm font-semibold tracking-wide transition duration-300 active:scale-[0.98] sm:min-h-[52px]";
     if (buttonStyle === "ghost") {
       return {
         className: cn(base, "bg-transparent"),
@@ -514,9 +514,9 @@ export default function PublicReservationForm({
           aria-hidden
         />
 
-        <div className="relative z-[1] flex flex-1 flex-col items-center justify-center px-5 py-16 text-center sm:px-8 md:py-20">
+        <div className="relative z-[1] flex flex-1 flex-col items-center justify-center px-5 pt-16 pb-20 text-center sm:px-8 sm:pb-24 md:pt-20 md:pb-28">
           {logoUrl ? (
-            <div className="relative mb-6 h-20 w-20 shrink-0 overflow-hidden rounded-[var(--radius)] border border-white/25 bg-white/10 p-1 shadow-lg backdrop-blur-sm sm:h-24 sm:w-24">
+            <div className="relative mb-6 h-20 w-20 shrink-0 overflow-hidden rounded-[var(--radius)] border border-white/25 bg-white/10 p-1 shadow-lg backdrop-blur-sm sm:mb-8 sm:h-24 sm:w-24">
               <Image
                 src={logoUrl}
                 alt=""
@@ -546,7 +546,7 @@ export default function PublicReservationForm({
           </h1>
           {taglineText ? (
             <p
-              className="mx-auto mt-4 max-w-2xl text-pretty text-base font-light leading-relaxed sm:text-lg"
+              className="mx-auto mt-4 max-w-2xl text-pretty text-base font-light leading-relaxed sm:mt-5 sm:text-lg"
               style={{ color: "color-mix(in srgb, var(--heading-color) 88%, transparent)" }}
             >
               {taglineText}
@@ -556,7 +556,7 @@ export default function PublicReservationForm({
           <button
             type="button"
             onClick={scrollToReservation}
-            className={ctaStyle.className}
+            className={cn(ctaStyle.className, "mt-10 shrink-0 sm:mt-12")}
             style={ctaStyle.style}
           >
             {ctaLabel}
