@@ -1,49 +1,96 @@
 import { notFound } from "next/navigation";
 import PublicReservationForm from "@/src/components/reservation/public-reservation-form";
 import { createClient } from "@/src/lib/supabase/server";
+import { googleFontsHref, normalizePublicPageFont } from "@/src/lib/public-page-fonts";
 import { getDefaultOpeningHours, OpeningHours } from "@/src/lib/utils";
-
-const GOOGLE_FONT_FAMILIES = new Set([
-  "Playfair Display",
-  "Cormorant Garamond",
-  "DM Sans",
-  "Inter",
-  "Merriweather",
-  "Lato",
-  "Source Sans Pro",
-  "Montserrat",
-  "Raleway",
-  "Poppins",
-]);
-
-function normalizeFontChoice(value: string | null | undefined, fallback: string) {
-  const v = (value ?? "").trim();
-  return GOOGLE_FONT_FAMILIES.has(v) ? v : fallback;
-}
-
-function googleFontsHref(fonts: string[]) {
-  const unique = Array.from(new Set(fonts.map((f) => f.trim()).filter(Boolean)));
-  const safe = unique.filter((f) => GOOGLE_FONT_FAMILIES.has(f));
-  if (safe.length === 0) return null;
-  const families = safe
-    .map((fam) => `family=${encodeURIComponent(fam).replace(/%20/g, "+")}:wght@300;400;500;600;700`)
-    .join("&");
-  return `https://fonts.googleapis.com/css2?${families}&display=swap`;
-}
 
 type PublicReservationPageProps = {
   params: Promise<{ slug: string }>;
+};
+
+type PublicRestaurantRow = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  phone: string | null;
+  address: string | null;
+  email: string | null;
+  logo_url: string | null;
+  banner_url: string | null;
+  primary_color: string | null;
+  page_background_color: string | null;
+  hero_primary_color: string | null;
+  public_button_bg_color: string | null;
+  public_button_text_color: string | null;
+  public_heading_text_color: string | null;
+  public_body_text_color: string | null;
+  public_accent_color: string | null;
+  public_footer_bg_color: string | null;
+  public_footer_text_color: string | null;
+  public_heading_font: string | null;
+  public_body_font: string | null;
+  public_hero_title_size_px: number | null;
+  public_display_name: string | null;
+  public_tagline: string | null;
+  public_description: string | null;
+  public_cta_label: string | null;
+  public_hero_height: string | null;
+  public_hero_overlay_enabled: boolean | null;
+  public_hero_overlay_opacity: number | null;
+  google_maps_url: string | null;
+  show_public_instagram: boolean | null;
+  show_public_facebook: boolean | null;
+  show_public_google_maps: boolean | null;
 };
 
 export default async function PublicReservationPage({ params }: PublicReservationPageProps) {
   const supabase = await createClient();
   const { slug } = await params;
 
-  const { data: restaurant, error } = await supabase
+  const { data: restaurantRaw, error } = await supabase
     .from("restaurants")
-    .select("id, name, slug, description, phone, address, email, logo_url, banner_url, primary_color")
+    .select(
+      [
+        "id",
+        "name",
+        "slug",
+        "description",
+        "phone",
+        "address",
+        "email",
+        "logo_url",
+        "banner_url",
+        "primary_color",
+        "page_background_color",
+        "hero_primary_color",
+        "public_button_bg_color",
+        "public_button_text_color",
+        "public_heading_text_color",
+        "public_body_text_color",
+        "public_accent_color",
+        "public_footer_bg_color",
+        "public_footer_text_color",
+        "public_heading_font",
+        "public_body_font",
+        "public_hero_title_size_px",
+        "public_display_name",
+        "public_tagline",
+        "public_description",
+        "public_cta_label",
+        "public_hero_height",
+        "public_hero_overlay_enabled",
+        "public_hero_overlay_opacity",
+        "google_maps_url",
+        "show_public_instagram",
+        "show_public_facebook",
+        "show_public_google_maps",
+      ].join(", "),
+    )
     .eq("slug", slug)
     .single();
+
+  const restaurant = restaurantRaw as PublicRestaurantRow | null;
 
   if (error || !restaurant) {
     notFound();
@@ -68,7 +115,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     accent_color: "#1F7A6C",
     button_color: "#1F7A6C",
     text_color: "#111827",
-    heading_font: "Playfair Display",
+    heading_font: "Inter",
     body_font: "Inter",
     font_size_scale: "medium" as const,
     border_radius: "rounded" as const,
@@ -100,9 +147,35 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     .order("created_at", { ascending: true });
 
   const galleryImageUrls = (safeSettings.gallery_image_urls ?? []).filter(Boolean);
-  const headingFont = normalizeFontChoice(safeSettings.heading_font, "Playfair Display");
-  const bodyFont = normalizeFontChoice(safeSettings.body_font, "Inter");
+
+  const headingFont = normalizePublicPageFont(
+    restaurant.public_heading_font ?? safeSettings.heading_font,
+    "Playfair Display",
+  );
+  const bodyFont = normalizePublicPageFont(restaurant.public_body_font ?? safeSettings.body_font, "Inter");
   const fontsHref = googleFontsHref([headingFont, bodyFont]);
+
+  const displayName = restaurant.public_display_name?.trim() || restaurant.name;
+  const tagline = restaurant.public_tagline?.trim() || restaurant.description?.trim() || null;
+  const publicDescription =
+    restaurant.public_description?.trim() || safeSettings.public_page_description?.trim() || null;
+
+  const pageBg =
+    restaurant.page_background_color?.trim() || safeSettings.text_color || "#f8fafc";
+  const heroPrimary =
+    restaurant.hero_primary_color?.trim() || restaurant.primary_color?.trim() || "#12151c";
+  const btnBg = restaurant.public_button_bg_color?.trim() || safeSettings.button_color || "#1F7A6C";
+  const btnText = restaurant.public_button_text_color?.trim() || "#ffffff";
+  const headingColor = restaurant.public_heading_text_color?.trim() || "#0f172a";
+  const bodyColor = restaurant.public_body_text_color?.trim() || safeSettings.text_color || "#334155";
+  const accent = restaurant.public_accent_color?.trim() || safeSettings.accent_color || "#1F7A6C";
+  const footerBg = restaurant.public_footer_bg_color?.trim() || "#0f172a";
+  const footerText = restaurant.public_footer_text_color?.trim() || "#e2e8f0";
+
+  const heroTitleSize = Math.min(72, Math.max(32, restaurant.public_hero_title_size_px ?? 48));
+  const heroHeight = (restaurant.public_hero_height as "compact" | "normal" | "tall") || "normal";
+  const overlayOn = restaurant.public_hero_overlay_enabled !== false;
+  const overlayOp = Math.min(80, Math.max(0, restaurant.public_hero_overlay_opacity ?? 40));
 
   return (
     <>
@@ -116,9 +189,9 @@ export default async function PublicReservationPage({ params }: PublicReservatio
       <main className="min-h-screen">
         <PublicReservationForm
           restaurantId={restaurant.id}
-          restaurantName={restaurant.name}
-          restaurantTagline={restaurant.description}
-          publicPageDescription={safeSettings.public_page_description}
+          restaurantName={displayName}
+          restaurantTagline={tagline}
+          publicPageDescription={publicDescription}
           galleryImageUrls={galleryImageUrls}
           documents={(documents ?? []).map((d) => ({
             id: d.id,
@@ -137,12 +210,22 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           useTables={safeSettings.use_tables ?? false}
           logoUrl={restaurant.logo_url ?? safeSettings.logo_url}
           coverImageUrl={restaurant.banner_url ?? safeSettings.cover_image_url}
-          primaryColor={restaurant.primary_color ?? "#12151c"}
-          buttonColor={safeSettings.button_color ?? "#1F7A6C"}
-          textColor={safeSettings.text_color ?? "#111827"}
-          accentColor={safeSettings.accent_color ?? "#1F7A6C"}
+          pageBackgroundColor={pageBg}
+          heroPrimaryColor={heroPrimary}
+          buttonBgColor={btnBg}
+          buttonTextColor={btnText}
+          headingTextColor={headingColor}
+          bodyTextColor={bodyColor}
+          accentColor={accent}
+          footerBgColor={footerBg}
+          footerTextColor={footerText}
           headingFont={headingFont}
           bodyFont={bodyFont}
+          heroTitleSizePx={heroTitleSize}
+          heroHeight={heroHeight}
+          heroOverlayEnabled={overlayOn}
+          heroOverlayOpacity={overlayOp}
+          ctaLabel={restaurant.public_cta_label?.trim() || "Réserver une table"}
           fontSizeScale={(safeSettings.font_size_scale ?? "medium") as "small" | "medium" | "large"}
           borderRadius={(safeSettings.border_radius ?? "rounded") as "sharp" | "rounded" | "pill"}
           buttonStyle={(safeSettings.button_style ?? "filled") as "filled" | "outlined" | "ghost"}
@@ -152,9 +235,13 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           showPublicEmail={safeSettings.public_page_show_email ?? true}
           showPublicWebsite={safeSettings.public_page_show_website ?? true}
           showPublicOpeningHours={safeSettings.public_page_show_opening_hours ?? true}
+          showPublicInstagram={restaurant.show_public_instagram !== false}
+          showPublicFacebook={restaurant.show_public_facebook !== false}
+          showPublicGoogleMaps={restaurant.show_public_google_maps !== false}
           instagramUrl={safeSettings.instagram_url}
           facebookUrl={safeSettings.facebook_url}
           websiteUrl={safeSettings.website_url}
+          googleMapsUrl={restaurant.google_maps_url}
           preBookingMessage={safeSettings.pre_booking_message}
           closureStartDate={safeSettings.closure_start_date}
           closureEndDate={safeSettings.closure_end_date}

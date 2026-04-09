@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   Clock,
@@ -8,6 +8,7 @@ import {
   Globe,
   Instagram,
   Mail,
+  Map,
   MapPin,
   Phone,
 } from "lucide-react";
@@ -16,10 +17,8 @@ import Select from "@/src/components/ui/select";
 import type { AvailabilitySlot } from "@/src/lib/reservation/schemas";
 import { cn, formatOpeningHoursLines, OpeningHours } from "@/src/lib/utils";
 
-const HERO_NOISE_SVG =
-  "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E\")";
-
-type PublicReservationFormProps = {
+export type PublicReservationFormProps = {
+  previewMode?: boolean;
   restaurantId: string;
   restaurantName: string;
   restaurantTagline?: string | null;
@@ -37,12 +36,22 @@ type PublicReservationFormProps = {
   useTables: boolean;
   logoUrl?: string | null;
   coverImageUrl?: string | null;
-  primaryColor: string;
-  buttonColor: string;
-  textColor: string;
+  pageBackgroundColor: string;
+  heroPrimaryColor: string;
+  buttonBgColor: string;
+  buttonTextColor: string;
+  headingTextColor: string;
+  bodyTextColor: string;
   accentColor: string;
+  footerBgColor: string;
+  footerTextColor: string;
   headingFont: string;
   bodyFont: string;
+  heroTitleSizePx: number;
+  heroHeight: "compact" | "normal" | "tall";
+  heroOverlayEnabled: boolean;
+  heroOverlayOpacity: number;
+  ctaLabel: string;
   fontSizeScale: "small" | "medium" | "large";
   borderRadius: "sharp" | "rounded" | "pill";
   buttonStyle: "filled" | "outlined" | "ghost";
@@ -52,9 +61,13 @@ type PublicReservationFormProps = {
   showPublicEmail: boolean;
   showPublicWebsite: boolean;
   showPublicOpeningHours: boolean;
+  showPublicInstagram: boolean;
+  showPublicFacebook: boolean;
+  showPublicGoogleMaps: boolean;
   instagramUrl?: string | null;
   facebookUrl?: string | null;
   websiteUrl?: string | null;
+  googleMapsUrl?: string | null;
   preBookingMessage?: string | null;
   closureStartDate?: string | null;
   closureEndDate?: string | null;
@@ -65,7 +78,62 @@ function scrollToReservation() {
   document.getElementById("reservation")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function heroMinHeightClass(h: "compact" | "normal" | "tall") {
+  if (h === "compact") return "min-h-[38vh] max-h-[440px]";
+  if (h === "tall") return "min-h-[min(72vh,820px)]";
+  return "min-h-[min(56vh,620px)]";
+}
+
+function PublicDescription({
+  text,
+  bodyColor,
+  accentColor,
+}: {
+  text: string;
+  bodyColor: string;
+  accentColor: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [clampNeeded, setClampNeeded] = useState(false);
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (expanded) return;
+    setClampNeeded(el.scrollHeight > el.clientHeight + 1);
+  }, [text, expanded]);
+
+  return (
+    <div className="mx-auto w-full max-w-3xl px-4">
+      <p
+        ref={ref}
+        className={cn(
+          "text-center text-pretty text-base leading-relaxed break-words md:text-lg",
+          !expanded && "line-clamp-3",
+        )}
+        style={{ color: bodyColor }}
+      >
+        {text}
+      </p>
+      {clampNeeded || expanded ? (
+        <div className="mt-2 flex justify-center">
+          <button
+            type="button"
+            className="text-sm font-semibold underline-offset-4 hover:underline"
+            style={{ color: accentColor }}
+            onClick={() => setExpanded((v) => !v)}
+          >
+            {expanded ? "Voir moins" : "Voir plus"}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function PublicReservationForm({
+  previewMode = false,
   restaurantId,
   restaurantName,
   restaurantTagline,
@@ -83,12 +151,22 @@ export default function PublicReservationForm({
   useTables,
   logoUrl,
   coverImageUrl,
-  primaryColor,
-  buttonColor,
-  textColor,
+  pageBackgroundColor,
+  heroPrimaryColor,
+  buttonBgColor,
+  buttonTextColor,
+  headingTextColor,
+  bodyTextColor,
   accentColor,
+  footerBgColor,
+  footerTextColor,
   headingFont,
   bodyFont,
+  heroTitleSizePx,
+  heroHeight,
+  heroOverlayEnabled,
+  heroOverlayOpacity,
+  ctaLabel,
   fontSizeScale,
   borderRadius,
   buttonStyle,
@@ -98,18 +176,18 @@ export default function PublicReservationForm({
   showPublicEmail,
   showPublicWebsite,
   showPublicOpeningHours,
+  showPublicInstagram,
+  showPublicFacebook,
+  showPublicGoogleMaps,
   instagramUrl,
   facebookUrl,
   websiteUrl,
+  googleMapsUrl,
   preBookingMessage,
   closureStartDate,
   closureEndDate,
   closureMessage,
 }: PublicReservationFormProps) {
-  const isLightTheme = useMemo(() => {
-    const t = textColor.trim().toLowerCase();
-    return t === "#111827" || t === "#111111" || t === "#1a1a1a" || t === "#222222";
-  }, [textColor]);
   const todayDate = new Date().toISOString().slice(0, 10);
   const maxDateStr = useMemo(() => {
     const d = new Date();
@@ -129,7 +207,6 @@ export default function PublicReservationForm({
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
-  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
 
   const sortedDocuments = useMemo(() => {
     const copy = [...documents];
@@ -137,36 +214,90 @@ export default function PublicReservationForm({
     return copy;
   }, [documents]);
 
-  const activeDocument = useMemo(() => {
-    if (!activeDocumentId) return null;
-    return sortedDocuments.find((d) => d.id === activeDocumentId) ?? null;
-  }, [activeDocumentId, sortedDocuments]);
-
   const cssVars = useMemo(
     () =>
       ({
-        "--bg-color": primaryColor,
+        "--page-bg": pageBackgroundColor,
+        "--hero-primary": heroPrimaryColor,
         "--accent-color": accentColor,
-        "--button-color": buttonColor,
-        "--text-color": textColor,
+        "--button-bg": buttonBgColor,
+        "--button-text": buttonTextColor,
+        "--heading-color": headingTextColor,
+        "--body-text": bodyTextColor,
+        "--footer-bg": footerBgColor,
+        "--footer-text": footerTextColor,
         "--heading-font": `"${headingFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
         "--body-font": `"${bodyFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
         "--radius": borderRadius === "sharp" ? "0px" : borderRadius === "pill" ? "999px" : "8px",
         "--font-scale": fontSizeScale === "small" ? "0.92" : fontSizeScale === "large" ? "1.08" : "1",
       }) as React.CSSProperties,
-    [accentColor, bodyFont, borderRadius, buttonColor, fontSizeScale, headingFont, primaryColor, textColor],
+    [
+      accentColor,
+      bodyFont,
+      bodyTextColor,
+      borderRadius,
+      buttonBgColor,
+      buttonTextColor,
+      fontSizeScale,
+      footerBgColor,
+      footerTextColor,
+      headingFont,
+      headingTextColor,
+      heroPrimaryColor,
+      pageBackgroundColor,
+    ],
   );
 
   const fieldStyle = useMemo(
     () => ({
-      backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))",
-      borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
-      color: "var(--text-color)",
+      backgroundColor: "color-mix(in srgb, var(--body-text) 8%, var(--page-bg))",
+      borderColor: "color-mix(in srgb, var(--body-text) 16%, var(--page-bg))",
+      color: "var(--body-text)",
     }),
     [],
   );
 
+  const cardShell = useMemo(
+    () =>
+      cn(
+        "rounded-[var(--radius)] border p-6 backdrop-blur-md md:p-10",
+        cardStyle === "elevated" && "shadow-[0_32px_100px_-48px_rgba(0,0,0,0.35)]",
+        cardStyle === "flat" && "shadow-none",
+        cardStyle === "bordered" && "shadow-none",
+      ),
+    [cardStyle],
+  );
+
+  const ctaStyle = useMemo(() => {
+    const base =
+      "inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-[var(--radius)] px-8 text-sm font-semibold tracking-wide transition duration-300 active:scale-[0.98] sm:min-h-[52px]";
+    if (buttonStyle === "ghost") {
+      return {
+        className: cn(base, "bg-transparent"),
+        style: { color: "var(--button-bg)", border: "1px solid transparent" } as React.CSSProperties,
+      };
+    }
+    if (buttonStyle === "outlined") {
+      return {
+        className: cn(base, "bg-transparent"),
+        style: {
+          color: "var(--button-bg)",
+          border: "2px solid var(--button-bg)",
+        } as React.CSSProperties,
+      };
+    }
+    return {
+      className: cn(base, "shadow-lg"),
+      style: {
+        backgroundColor: "var(--button-bg)",
+        color: "var(--button-text)",
+        border: "1px solid transparent",
+      } as React.CSSProperties,
+    };
+  }, [buttonStyle]);
+
   useEffect(() => {
+    if (previewMode) return;
     if (
       !reservationDate ||
       guests < 1 ||
@@ -225,6 +356,7 @@ export default function PublicReservationForm({
       cancelled = true;
     };
   }, [
+    previewMode,
     restaurantId,
     reservationDate,
     guests,
@@ -242,6 +374,7 @@ export default function PublicReservationForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (previewMode) return;
     setMessage(null);
     setError(null);
     setIsSubmitting(true);
@@ -306,9 +439,7 @@ export default function PublicReservationForm({
       : null;
 
   const taglineText = restaurantTagline?.trim();
-  const introRaw = publicPageDescription?.trim();
-  const introText =
-    introRaw && taglineText && introRaw === taglineText ? null : introRaw;
+  const descriptionText = publicPageDescription?.trim() ?? "";
 
   const openingHoursLines = formatOpeningHoursLines(openingHours);
 
@@ -316,35 +447,44 @@ export default function PublicReservationForm({
   const showPhoneRow = showPublicPhone && Boolean(restaurantPhone?.trim());
   const showEmailRow = showPublicEmail && Boolean(restaurantEmail?.trim());
   const showWebsiteRow = showPublicWebsite && Boolean(websiteUrl?.trim());
+  const showMapsRow = showPublicGoogleMaps && Boolean(googleMapsUrl?.trim());
   const showHoursRow = showPublicOpeningHours;
+  const showInstagram = showPublicInstagram && Boolean(instagramUrl?.trim());
+  const showFacebook = showPublicFacebook && Boolean(facebookUrl?.trim());
 
-  const hasContactGrid = showAddressRow || showPhoneRow || showEmailRow || showWebsiteRow;
-  const hasContactRows = hasContactGrid || showHoursRow;
-  const hasSocialLinks = Boolean(instagramUrl || facebookUrl);
-  const showInfoCard = hasContactRows || hasSocialLinks;
+  const hasFooterContent =
+    showAddressRow ||
+    showPhoneRow ||
+    showEmailRow ||
+    showWebsiteRow ||
+    showMapsRow ||
+    showHoursRow ||
+    showInstagram ||
+    showFacebook;
 
   const labelClass = "block text-xs font-semibold uppercase tracking-[0.18em]";
   const iconRing =
-    "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius)] border bg-[color-mix(in_srgb,var(--accent-color)_12%,transparent)] text-[var(--accent-color)]";
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius)] border border-[color-mix(in_srgb,var(--footer-text)_22%,transparent)] bg-[color-mix(in_srgb,var(--footer-text)_10%,transparent)] text-[var(--footer-text)]";
   const inputClass =
-    "min-h-[48px] w-full rounded-[var(--radius)] border px-4 py-3 text-sm outline-none transition focus:border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-color)]";
+    "min-h-[48px] w-full rounded-[var(--radius)] border px-4 py-3 text-sm outline-none transition focus:border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--page-bg)]";
+
+  const overlayOpacity = Math.min(80, Math.max(0, heroOverlayOpacity)) / 100;
 
   return (
-    <>
-      <div
+    <div
       className="min-h-screen [font-size:calc(16px*var(--font-scale))]"
       style={{
         ...cssVars,
-        backgroundColor: "var(--bg-color)",
-        color: "var(--text-color)",
+        backgroundColor: "var(--page-bg)",
+        color: "var(--body-text)",
         fontFamily: "var(--body-font), system-ui, sans-serif",
       }}
     >
-      <section className="relative min-h-[min(60vh,520px)] w-full overflow-hidden sm:min-h-[min(65vh,560px)]">
+      <section className={cn("relative flex w-full flex-col overflow-hidden", heroMinHeightClass(heroHeight))}>
         {coverImageUrl ? (
           <Image
             src={coverImageUrl}
-            alt={restaurantName}
+            alt=""
             fill
             priority
             className="object-cover"
@@ -353,342 +493,146 @@ export default function PublicReservationForm({
           />
         ) : (
           <div
-            className="absolute inset-0 bg-gradient-to-br"
+            className="absolute inset-0"
             style={{
-              backgroundImage: `linear-gradient(135deg, var(--bg-color) 0%, color-mix(in srgb, var(--text-color) 7%, var(--bg-color)) 55%, var(--bg-color) 100%)`,
+              background: `linear-gradient(145deg, var(--hero-primary) 0%, color-mix(in srgb, var(--body-text) 12%, var(--hero-primary)) 100%)`,
             }}
             aria-hidden
           />
         )}
 
+        {heroOverlayEnabled ? (
+          <div
+            className="absolute inset-0 bg-black"
+            style={{ opacity: overlayOpacity }}
+            aria-hidden
+          />
+        ) : null}
+
         <div
-          className="absolute inset-0 bg-gradient-to-t from-[color:var(--bg-color)] via-[color:var(--bg-color)]/80 to-transparent"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-0 mix-blend-overlay opacity-[0.38]"
-          style={{ backgroundImage: HERO_NOISE_SVG }}
+          className="absolute inset-0 bg-gradient-to-t from-[color:var(--page-bg)] via-transparent to-transparent opacity-90"
           aria-hidden
         />
 
-        <div className="relative z-[1] flex min-h-[min(60vh,520px)] flex-col justify-end px-5 pb-10 pt-24 sm:min-h-[min(65vh,560px)] sm:px-8 md:px-12 lg:px-16">
-          <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-8 md:flex-row md:items-end md:justify-start md:gap-10">
-            {logoUrl ? (
-              <div
-                className="relative shrink-0 overflow-hidden rounded-[var(--radius)] border border-[color-mix(in_srgb,var(--text-color)_18%,transparent)] bg-[color-mix(in_srgb,var(--bg-color)_55%,transparent)] p-1 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-sm"
-                style={{ boxShadow: `0 24px 60px -20px rgba(0,0,0,0.55), 0 0 0 1px color-mix(in srgb, var(--accent-color) 28%, transparent)` }}
-              >
-                <div className="relative h-28 w-28 sm:h-32 sm:w-32 md:h-40 md:w-40">
-                  <Image
-                    src={logoUrl}
-                    alt={`Logo ${restaurantName}`}
-                    fill
-                    className="object-contain p-2"
-                    sizes="(max-width: 768px) 112px, 160px"
-                    unoptimized
-                  />
-                </div>
-              </div>
-            ) : null}
-
-            <div className="max-w-3xl text-center md:text-left">
-              <p
-                className="mb-2 text-[11px] font-medium uppercase tracking-[0.35em] text-[color:var(--accent-color)]"
-                style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
-              >
-                Réservation
-              </p>
-              <h1
-                className="text-balance text-4xl font-medium leading-[1.08] tracking-tight sm:text-5xl md:text-6xl lg:text-[3.35rem]"
-                style={{ fontFamily: "var(--heading-font), Georgia, serif", color: "var(--text-color)" }}
-              >
-                {restaurantName}
-              </h1>
-              {taglineText ? (
-                <p
-                  className="mt-4 max-w-xl text-pretty text-base font-light leading-relaxed sm:text-lg"
-                  style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                >
-                  {taglineText}
-                </p>
-              ) : null}
+        <div className="relative z-[1] flex flex-1 flex-col items-center justify-center px-5 py-16 text-center sm:px-8 md:py-20">
+          {logoUrl ? (
+            <div className="relative mb-6 h-20 w-20 shrink-0 overflow-hidden rounded-[var(--radius)] border border-white/25 bg-white/10 p-1 shadow-lg backdrop-blur-sm sm:h-24 sm:w-24">
+              <Image
+                src={logoUrl}
+                alt=""
+                fill
+                className="object-contain p-1"
+                sizes="96px"
+                unoptimized
+              />
             </div>
-          </div>
-        </div>
-      </section>
+          ) : null}
 
-      <div className="relative z-[2] -mt-5 flex flex-col items-stretch justify-center gap-3 px-5 sm:px-8 md:px-12 lg:px-16">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+          <p
+            className="mb-3 text-[11px] font-medium uppercase tracking-[0.35em]"
+            style={{ fontFamily: "var(--body-font)", color: "var(--accent-color)" }}
+          >
+            Réservation en ligne
+          </p>
+          <h1
+            className="max-w-4xl text-balance font-semibold leading-[1.08] tracking-tight"
+            style={{
+              fontFamily: "var(--heading-font), Georgia, serif",
+              color: headingTextColor,
+              fontSize: `clamp(1.75rem, 5vw, ${Math.min(72, Math.max(32, heroTitleSizePx))}px)`,
+            }}
+          >
+            {restaurantName}
+          </h1>
+          {taglineText ? (
+            <p
+              className="mx-auto mt-4 max-w-2xl text-pretty text-base font-light leading-relaxed sm:text-lg"
+              style={{ color: "color-mix(in srgb, var(--heading-color) 88%, transparent)" }}
+            >
+              {taglineText}
+            </p>
+          ) : null}
+
           <button
             type="button"
             onClick={scrollToReservation}
-            className="inline-flex min-h-[48px] w-full items-center justify-center rounded-[var(--radius)] px-8 text-sm font-semibold tracking-wide shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)] transition duration-300 hover:brightness-110 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.25)] active:scale-[0.98] sm:min-h-[52px] sm:w-auto sm:min-w-[220px] sm:max-w-xs"
-            style={{
-              ...(buttonStyle === "ghost"
-                ? { backgroundColor: "transparent", color: "var(--button-color)" }
-                : buttonStyle === "outlined"
-                  ? { backgroundColor: "transparent", color: "var(--button-color)", border: "1px solid var(--button-color)" }
-                  : { backgroundColor: "var(--button-color)", color: isLightTheme ? "#ffffff" : "#0b0b0b" }),
-            }}
+            className={ctaStyle.className}
+            style={ctaStyle.style}
           >
-            Réserver une table
+            {ctaLabel}
           </button>
         </div>
-      </div>
+      </section>
 
-      <div className="mx-auto max-w-6xl space-y-14 px-5 py-14 sm:px-8 md:px-12 lg:px-16 lg:py-20">
+      <div className="mx-auto max-w-6xl space-y-14 px-4 py-12 sm:px-6 md:px-10 lg:px-12 lg:py-16">
         {sortedDocuments.length > 0 ? (
           <section
-            className="rounded-[var(--radius)] border px-6 py-6 md:px-10 md:py-8"
+            className={cn(
+              "rounded-[var(--radius)] border px-5 py-6 md:px-8",
+              cardStyle === "elevated" && "shadow-md",
+            )}
             style={{
-              backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))",
-              borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
+              backgroundColor: "color-mix(in srgb, var(--body-text) 6%, var(--page-bg))",
+              borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))",
             }}
           >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2
-                  className="text-lg font-semibold"
-                  style={{ fontFamily: "var(--heading-font), Georgia, serif", color: "var(--text-color)" }}
+            <h2
+              className="text-center text-lg font-semibold md:text-left"
+              style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+            >
+              Cartes & menus
+            </h2>
+            <div className="mt-4 flex flex-wrap justify-center gap-3 md:justify-start">
+              {sortedDocuments.map((doc) => (
+                <a
+                  key={doc.id}
+                  href={doc.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-[var(--radius)] border-2 px-5 py-2 text-sm font-semibold transition hover:opacity-90"
+                  style={{
+                    borderColor: "var(--accent-color)",
+                    color: "var(--accent-color)",
+                    backgroundColor: "transparent",
+                  }}
                 >
-                  Nos cartes & menus
-                </h2>
-                <p className="mt-1 text-sm" style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}>
-                  Consultez nos documents (PDF).
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {sortedDocuments.map((doc) => (
-                  <button
-                    key={doc.id}
-                    type="button"
-                    onClick={() => setActiveDocumentId(doc.id)}
-                    className="inline-flex items-center justify-center rounded-[var(--radius)] px-4 py-2 text-sm font-semibold transition hover:brightness-110 active:scale-[0.99]"
-                    style={{
-                      backgroundColor: "transparent",
-                      border: "1px solid var(--accent-color)",
-                      color: "var(--accent-color)",
-                    }}
-                  >
-                    {doc.label}
-                  </button>
-                ))}
-              </div>
+                  {doc.label}
+                </a>
+              ))}
             </div>
           </section>
         ) : null}
 
-        {introText ? (
-          <p
-            className="mx-auto max-w-3xl text-center text-pretty text-base leading-relaxed md:text-lg"
-            style={{ color: "color-mix(in srgb, var(--text-color) 72%, var(--bg-color))" }}
-          >
-            {introText}
-          </p>
-        ) : null}
-
-        {showInfoCard ? (
-          <div
-            className={cn(
-              "rounded-[var(--radius)] border px-6 py-8 backdrop-blur-md md:px-10 md:py-10",
-              cardStyle === "elevated" && "shadow-[0_24px_80px_-40px_rgba(0,0,0,0.35)]",
-              cardStyle === "flat" && "shadow-none",
-              cardStyle === "bordered" && "shadow-none",
-            )}
-            style={{
-              backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))",
-              borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
-            }}
-          >
-            {hasContactGrid ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-              {showAddressRow ? (
-                <div className="flex gap-3">
-                  <span className={cn(iconRing, "border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
-                    <MapPin className="h-4 w-4" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <p
-                      className={cn(labelClass)}
-                      style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                    >
-                      Adresse
-                    </p>
-                    <p className="mt-1 text-sm leading-snug" style={{ color: "var(--text-color)" }}>
-                      {restaurantAddress}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-              {showPhoneRow ? (
-                <div className="flex gap-3">
-                  <span className={cn(iconRing, "border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
-                    <Phone className="h-4 w-4" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <p
-                      className={cn(labelClass)}
-                      style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                    >
-                      Téléphone
-                    </p>
-                    <a
-                      href={`tel:${restaurantPhone!.replace(/\s/g, "")}`}
-                      className="mt-1 block text-sm transition hover:opacity-90"
-                      style={{ color: "var(--accent-color)" }}
-                    >
-                      {restaurantPhone}
-                    </a>
-                  </div>
-                </div>
-              ) : null}
-              {showEmailRow ? (
-                <div className="flex gap-3">
-                  <span className={cn(iconRing, "border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
-                    <Mail className="h-4 w-4" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <p
-                      className={cn(labelClass)}
-                      style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                    >
-                      E-mail
-                    </p>
-                    <a
-                      href={`mailto:${restaurantEmail}`}
-                      className="mt-1 block truncate text-sm transition hover:opacity-90"
-                      style={{ color: "var(--accent-color)" }}
-                    >
-                      {restaurantEmail}
-                    </a>
-                  </div>
-                </div>
-              ) : null}
-              {showWebsiteRow ? (
-                <div className="flex gap-3">
-                  <span className={cn(iconRing, "border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
-                    <Globe className="h-4 w-4" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <p
-                      className={cn(labelClass)}
-                      style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                    >
-                      Site web
-                    </p>
-                    <a
-                      href={websiteUrl!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 block truncate text-sm transition hover:opacity-90"
-                      style={{ color: "var(--accent-color)" }}
-                    >
-                      {websiteUrl!.replace(/^https?:\/\//, "")}
-                    </a>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-            ) : null}
-
-            {showHoursRow ? (
-              <div
-                className={cn(
-                  "flex flex-col gap-3 sm:flex-row sm:gap-4",
-                  hasContactGrid && "mt-6 border-t pt-6",
-                )}
-                style={{ borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))" }}
-              >
-                <span className={cn(iconRing, "h-10 w-10 shrink-0 border-[color-mix(in_srgb,var(--accent-color)_35%,var(--text-color)_12%)]")}>
-                  <Clock className="h-4 w-4" aria-hidden />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={cn(labelClass)}
-                    style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                  >
-                    Horaires
-                  </p>
-                  <ul className="mt-2 space-y-1.5 text-sm leading-snug" style={{ color: "var(--text-color)" }}>
-                    {openingHoursLines.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ) : null}
-
-            {hasSocialLinks ? (
-              <div
-                className={cn(
-                  "flex flex-wrap items-center justify-center gap-4 md:justify-start",
-                  (hasContactGrid || showHoursRow) && "mt-8 border-t pt-8",
-                )}
-                style={{ borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))" }}
-              >
-                {instagramUrl ? (
-                  <a
-                    href={instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-[var(--radius)] border px-4 py-2 text-xs font-medium transition hover:opacity-90"
-                    style={{
-                      borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
-                      color: "var(--accent-color)",
-                    }}
-                  >
-                    <Instagram className="h-4 w-4" aria-hidden />
-                    Instagram
-                  </a>
-                ) : null}
-                {facebookUrl ? (
-                  <a
-                    href={facebookUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-[var(--radius)] border px-4 py-2 text-xs font-medium transition hover:opacity-90"
-                    style={{
-                      borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
-                      color: "var(--accent-color)",
-                    }}
-                  >
-                    <Facebook className="h-4 w-4" aria-hidden />
-                    Facebook
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
+        {descriptionText ? (
+          <PublicDescription text={descriptionText} bodyColor={bodyTextColor} accentColor={accentColor} />
         ) : null}
 
         <section id="reservation" className="scroll-mt-24">
           <div
-            className={cn(
-              "rounded-[var(--radius)] border p-6 backdrop-blur-md md:p-10",
-              cardStyle === "elevated" && "shadow-[0_32px_100px_-48px_rgba(0,0,0,0.4)]",
-              cardStyle === "flat" && "shadow-none",
-              cardStyle === "bordered" && "shadow-none",
-            )}
+            className={cardShell}
             style={{
-              backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))",
-              borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
+              backgroundColor: "color-mix(in srgb, var(--body-text) 7%, var(--page-bg))",
+              borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))",
             }}
           >
             <div className="mb-8 text-center md:text-left">
               <h2
                 className="text-2xl font-medium md:text-3xl"
-                style={{ fontFamily: "var(--heading-font), Georgia, serif", color: "var(--text-color)" }}
+                style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
               >
                 Réserver une table
               </h2>
-              <p className="mt-2 text-sm" style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}>
+              <p
+                className="mt-2 text-sm"
+                style={{ color: "color-mix(in srgb, var(--body-text) 72%, var(--page-bg))" }}
+              >
                 Indiquez vos préférences — nous vous confirmerons rapidement.
               </p>
             </div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>
               {closureNotice ? (
-                <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/95">
+                <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-950">
                   {closureMessage?.trim() ? `${closureMessage.trim()} — ${closureNotice}` : closureNotice}
                 </div>
               ) : null}
@@ -698,7 +642,7 @@ export default function PublicReservationForm({
                   style={{
                     borderColor: `color-mix(in srgb, var(--accent-color) 35%, transparent)`,
                     backgroundColor: `color-mix(in srgb, var(--accent-color) 8%, transparent)`,
-                    color: "var(--text-color)",
+                    color: "var(--body-text)",
                   }}
                 >
                   {preBookingMessage}
@@ -707,11 +651,7 @@ export default function PublicReservationForm({
 
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label
-                    htmlFor="date"
-                    className={labelClass}
-                    style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                  >
+                  <label htmlFor="date" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
                     Date
                   </label>
                   <Input
@@ -722,16 +662,13 @@ export default function PublicReservationForm({
                     min={todayDate}
                     max={maxDateStr}
                     required
+                    disabled={previewMode}
                     className={inputClass}
                     style={fieldStyle}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label
-                    htmlFor="time"
-                    className={labelClass}
-                    style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                  >
+                  <label htmlFor="time" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
                     Heure
                   </label>
                   <Select
@@ -739,7 +676,7 @@ export default function PublicReservationForm({
                     value={reservationTime}
                     onChange={(event) => setReservationTime(event.target.value)}
                     required
-                    disabled={isDateInClosurePeriod || slotsLoading}
+                    disabled={previewMode || isDateInClosurePeriod || slotsLoading}
                     className={cn(inputClass, "cursor-pointer")}
                     style={fieldStyle}
                   >
@@ -755,17 +692,13 @@ export default function PublicReservationForm({
                     ))}
                   </Select>
                   {slotsError ? (
-                    <p className="text-xs text-amber-200/90">{slotsError}</p>
+                    <p className="text-xs text-amber-700">{slotsError}</p>
                   ) : null}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label
-                  htmlFor="guests"
-                  className={labelClass}
-                  style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                >
+                <label htmlFor="guests" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
                   Nombre de convives
                 </label>
                 <Input
@@ -776,17 +709,14 @@ export default function PublicReservationForm({
                   value={guests}
                   onChange={(event) => setGuests(Number(event.target.value))}
                   required
+                  disabled={previewMode}
                   className={inputClass}
                   style={fieldStyle}
                 />
               </div>
 
               <div className="space-y-2">
-                <label
-                  htmlFor="name"
-                  className={labelClass}
-                  style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                >
+                <label htmlFor="name" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
                   Nom complet
                 </label>
                 <Input
@@ -795,6 +725,7 @@ export default function PublicReservationForm({
                   onChange={(event) => setGuestName(event.target.value)}
                   required
                   autoComplete="name"
+                  disabled={previewMode}
                   className={inputClass}
                   style={fieldStyle}
                 />
@@ -803,11 +734,7 @@ export default function PublicReservationForm({
               <div className="grid gap-5 md:grid-cols-2">
                 {(allowEmail ?? true) ? (
                   <div className="space-y-2">
-                    <label
-                      htmlFor="email"
-                      className={labelClass}
-                      style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                    >
+                    <label htmlFor="email" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
                       E-mail
                     </label>
                     <Input
@@ -817,17 +744,14 @@ export default function PublicReservationForm({
                       onChange={(event) => setGuestEmail(event.target.value)}
                       required={allowEmail ?? true}
                       autoComplete="email"
+                      disabled={previewMode}
                       className={inputClass}
                       style={fieldStyle}
                     />
                   </div>
                 ) : null}
                 <div className={cn("space-y-2", !(allowEmail ?? true) && "md:col-span-2")}>
-                  <label
-                    htmlFor="phone"
-                    className={labelClass}
-                    style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}
-                  >
+                  <label htmlFor="phone" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
                     Téléphone
                   </label>
                   <Input
@@ -837,6 +761,7 @@ export default function PublicReservationForm({
                     onChange={(event) => setGuestPhone(event.target.value)}
                     required={allowPhone ?? true}
                     autoComplete="tel"
+                    disabled={previewMode}
                     className={inputClass}
                     style={fieldStyle}
                   />
@@ -845,14 +770,14 @@ export default function PublicReservationForm({
 
               <button
                 type="submit"
-                disabled={isSubmitting || isDateInClosurePeriod}
+                disabled={previewMode || isSubmitting || isDateInClosurePeriod}
                 className="w-full min-h-[52px] rounded-[var(--radius)] border border-transparent py-3.5 text-[15px] font-semibold tracking-wide shadow-lg transition hover:brightness-110 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
                 style={{
                   ...(buttonStyle === "ghost"
-                    ? { backgroundColor: "transparent", color: "var(--button-color)" }
+                    ? { backgroundColor: "transparent", color: "var(--button-bg)" }
                     : buttonStyle === "outlined"
-                      ? { backgroundColor: "transparent", color: "var(--button-color)", borderColor: "var(--button-color)" }
-                      : { backgroundColor: "var(--button-color)", color: isLightTheme ? "#ffffff" : "#0b0b0b" }),
+                      ? { backgroundColor: "transparent", color: "var(--button-bg)", borderColor: "var(--button-bg)" }
+                      : { backgroundColor: "var(--button-bg)", color: "var(--button-text)" }),
                 }}
               >
                 {isSubmitting ? "Envoi en cours…" : "Confirmer la demande"}
@@ -860,12 +785,12 @@ export default function PublicReservationForm({
             </form>
 
             {error ? (
-              <p className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+              <p className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-900">
                 {error}
               </p>
             ) : null}
             {message ? (
-              <p className="mt-6 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+              <p className="mt-6 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-900">
                 {message}
               </p>
             ) : null}
@@ -876,7 +801,7 @@ export default function PublicReservationForm({
           <div>
             <h2
               className="mb-6 text-center text-2xl font-medium md:text-left md:text-3xl"
-                style={{ fontFamily: "var(--heading-font), Georgia, serif", color: "var(--text-color)" }}
+              style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
             >
               Galerie
             </h2>
@@ -885,7 +810,7 @@ export default function PublicReservationForm({
                 <div
                   key={src}
                   className="group relative aspect-[4/3] overflow-hidden rounded-[var(--radius)]"
-                  style={{ backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))" }}
+                  style={{ backgroundColor: "color-mix(in srgb, var(--body-text) 7%, var(--page-bg))" }}
                 >
                   <Image
                     src={src}
@@ -895,55 +820,162 @@ export default function PublicReservationForm({
                     sizes="(max-width: 768px) 50vw, 33vw"
                     unoptimized
                   />
-                  <div
-                    className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[color:var(--bg-color)]/45 to-transparent opacity-0 transition duration-500 group-hover:opacity-100"
-                    aria-hidden
-                  />
                 </div>
               ))}
             </div>
           </div>
         ) : null}
       </div>
-    </div>
-    {activeDocument ? (
-      <div
-        className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Document PDF"
-        onClick={() => setActiveDocumentId(null)}
-      >
-        <div
-          className="w-full max-w-5xl overflow-hidden rounded-xl border bg-white shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
+
+      {hasFooterContent ? (
+        <footer
+          className="mt-4 border-t px-4 py-12 sm:px-8"
+          style={{
+            backgroundColor: "var(--footer-bg)",
+            color: "var(--footer-text)",
+            borderColor: "color-mix(in srgb, var(--footer-text) 15%, transparent)",
+          }}
         >
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-            <p className="text-sm font-semibold text-gray-900">{activeDocument.label}</p>
-            <div className="flex items-center gap-3">
-              <a
-                href={activeDocument.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-semibold text-gray-700 hover:underline"
-              >
-                Ouvrir dans un nouvel onglet
-              </a>
-              <button
-                type="button"
-                onClick={() => setActiveDocumentId(null)}
-                className="rounded-md border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-800 hover:bg-gray-50"
-              >
-                Fermer
-              </button>
+          <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-6">
+              <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Contact</p>
+              <div className="space-y-4">
+                {showAddressRow ? (
+                  <div className="flex gap-3">
+                    <span className={iconRing}>
+                      <MapPin className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs uppercase tracking-wide opacity-70">Adresse</p>
+                      <p className="mt-1 text-sm leading-snug break-words">{restaurantAddress}</p>
+                    </div>
+                  </div>
+                ) : null}
+                {showPhoneRow ? (
+                  <div className="flex gap-3">
+                    <span className={iconRing}>
+                      <Phone className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs uppercase tracking-wide opacity-70">Téléphone</p>
+                      <a
+                        href={`tel:${restaurantPhone!.replace(/\s/g, "")}`}
+                        className="mt-1 block text-sm font-medium underline-offset-2 hover:underline"
+                        style={{ color: "var(--accent-color)" }}
+                      >
+                        {restaurantPhone}
+                      </a>
+                    </div>
+                  </div>
+                ) : null}
+                {showEmailRow ? (
+                  <div className="flex gap-3">
+                    <span className={iconRing}>
+                      <Mail className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs uppercase tracking-wide opacity-70">E-mail</p>
+                      <a
+                        href={`mailto:${restaurantEmail}`}
+                        className="mt-1 block break-all text-sm font-medium underline-offset-2 hover:underline"
+                        style={{ color: "var(--accent-color)" }}
+                      >
+                        {restaurantEmail}
+                      </a>
+                    </div>
+                  </div>
+                ) : null}
+                {showWebsiteRow ? (
+                  <div className="flex gap-3">
+                    <span className={iconRing}>
+                      <Globe className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs uppercase tracking-wide opacity-70">Site web</p>
+                      <a
+                        href={websiteUrl!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 block truncate text-sm font-medium underline-offset-2 hover:underline"
+                        style={{ color: "var(--accent-color)" }}
+                      >
+                        {websiteUrl!.replace(/^https?:\/\//, "")}
+                      </a>
+                    </div>
+                  </div>
+                ) : null}
+                {showMapsRow ? (
+                  <div className="flex gap-3">
+                    <span className={iconRing}>
+                      <Map className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs uppercase tracking-wide opacity-70">Google Maps</p>
+                      <a
+                        href={googleMapsUrl!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 block text-sm font-medium underline-offset-2 hover:underline"
+                        style={{ color: "var(--accent-color)" }}
+                      >
+                        Voir sur la carte
+                      </a>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
+
+            {showHoursRow ? (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Horaires</p>
+                <div className="mt-4 flex gap-3">
+                  <span className={iconRing}>
+                    <Clock className="h-4 w-4" aria-hidden />
+                  </span>
+                  <ul className="space-y-1.5 text-sm leading-snug">
+                    {openingHoursLines.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div aria-hidden className="hidden lg:block" />
+            )}
+
+            {(showInstagram || showFacebook) ? (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Réseaux</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {showInstagram ? (
+                    <a
+                      href={instagramUrl!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--footer-text)_25%,transparent)] transition hover:bg-[color-mix(in_srgb,var(--footer-text)_12%,transparent)]"
+                      aria-label="Instagram"
+                    >
+                      <Instagram className="h-5 w-5" />
+                    </a>
+                  ) : null}
+                  {showFacebook ? (
+                    <a
+                      href={facebookUrl!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--footer-text)_25%,transparent)] transition hover:bg-[color-mix(in_srgb,var(--footer-text)_12%,transparent)]"
+                      aria-label="Facebook"
+                    >
+                      <Facebook className="h-5 w-5" />
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </div>
-          <div className="h-[75vh] bg-white">
-            <iframe title={activeDocument.label} src={activeDocument.fileUrl} className="h-full w-full" />
-          </div>
-        </div>
-      </div>
-    ) : null}
-    </>
+        </footer>
+      ) : null}
+    </div>
   );
 }

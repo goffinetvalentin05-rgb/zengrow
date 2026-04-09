@@ -10,6 +10,8 @@ import Input from "@/src/components/ui/input";
 import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
 import { cn } from "@/src/lib/utils";
+import PublicPageLivePreview, { type PublicPagePreviewDraft } from "@/src/components/dashboard/public-page-live-preview";
+import { PUBLIC_PAGE_FONT_OPTIONS } from "@/src/lib/public-page-fonts";
 
 type RestaurantData = {
   id: string;
@@ -20,6 +22,31 @@ type RestaurantData = {
   description: string | null;
   slug: string;
   primary_color: string | null;
+  logo_url?: string | null;
+  banner_url?: string | null;
+  page_background_color?: string | null;
+  hero_primary_color?: string | null;
+  public_button_bg_color?: string | null;
+  public_button_text_color?: string | null;
+  public_heading_text_color?: string | null;
+  public_body_text_color?: string | null;
+  public_accent_color?: string | null;
+  public_footer_bg_color?: string | null;
+  public_footer_text_color?: string | null;
+  public_heading_font?: string | null;
+  public_body_font?: string | null;
+  public_hero_title_size_px?: number | null;
+  public_display_name?: string | null;
+  public_tagline?: string | null;
+  public_description?: string | null;
+  public_cta_label?: string | null;
+  public_hero_height?: string | null;
+  public_hero_overlay_enabled?: boolean | null;
+  public_hero_overlay_opacity?: number | null;
+  google_maps_url?: string | null;
+  show_public_instagram?: boolean | null;
+  show_public_facebook?: boolean | null;
+  show_public_google_maps?: boolean | null;
 };
 
 type SettingsData = {
@@ -57,12 +84,19 @@ type SettingsData = {
   public_page_show_opening_hours: boolean | null;
 };
 
-function storagePathFromRestaurantAssetUrl(url: string): string | null {
+const STORAGE_BUCKETS = ["restaurants", "restaurant-assets"] as const;
+
+function storageRefFromPublicUrl(url: string): { bucket: string; path: string } | null {
   try {
     const u = new URL(url);
-    const parts = u.pathname.split("/storage/v1/object/public/restaurant-assets/");
-    if (parts.length < 2) return null;
-    return decodeURIComponent(parts[1]);
+    for (const bucket of STORAGE_BUCKETS) {
+      const marker = `/storage/v1/object/public/${bucket}/`;
+      const parts = u.pathname.split(marker);
+      if (parts.length >= 2) {
+        return { bucket, path: decodeURIComponent(parts[1]) };
+      }
+    }
+    return null;
   } catch {
     return null;
   }
@@ -148,12 +182,46 @@ export default function SettingsForm({
   const [reservationDuration, setReservationDuration] = useState(settings.reservation_duration ?? 90);
   const [slotInterval, setSlotInterval] = useState(settings.reservation_slot_interval ?? 15);
   const [maxPartySize, setMaxPartySize] = useState(settings.max_party_size ?? 8);
-  const [primaryColor, setPrimaryColor] = useState(restaurant.primary_color ?? "#12151c");
-  const [buttonColor, setButtonColor] = useState(settings.button_color ?? "#1A6B50");
-  const [textColor, setTextColor] = useState(settings.text_color ?? "#111827");
-  const [accentColor, setAccentColor] = useState(settings.accent_color ?? "#1A6B50");
-  const [headingFont, setHeadingFont] = useState(settings.heading_font ?? "Playfair Display");
-  const [bodyFont, setBodyFont] = useState(settings.body_font ?? "Inter");
+  const [pageBackgroundColor, setPageBackgroundColor] = useState(
+    restaurant.page_background_color ?? "#f8fafc",
+  );
+  const [heroPrimaryColor, setHeroPrimaryColor] = useState(
+    restaurant.hero_primary_color ?? restaurant.primary_color ?? "#12151c",
+  );
+  const [buttonColor, setButtonColor] = useState(
+    restaurant.public_button_bg_color ?? settings.button_color ?? "#1F7A6C",
+  );
+  const [buttonTextColor, setButtonTextColor] = useState(restaurant.public_button_text_color ?? "#ffffff");
+  const [headingTextColor, setHeadingTextColor] = useState(restaurant.public_heading_text_color ?? "#0f172a");
+  const [bodyTextColor, setBodyTextColor] = useState(
+    restaurant.public_body_text_color ?? settings.text_color ?? "#334155",
+  );
+  const [accentColor, setAccentColor] = useState(
+    restaurant.public_accent_color ?? settings.accent_color ?? "#1F7A6C",
+  );
+  const [footerBgColor, setFooterBgColor] = useState(restaurant.public_footer_bg_color ?? "#0f172a");
+  const [footerTextColor, setFooterTextColor] = useState(restaurant.public_footer_text_color ?? "#e2e8f0");
+  const [headingFont, setHeadingFont] = useState(
+    restaurant.public_heading_font ?? settings.heading_font ?? "Playfair Display",
+  );
+  const [bodyFont, setBodyFont] = useState(restaurant.public_body_font ?? settings.body_font ?? "Inter");
+  const [heroTitleSizePx, setHeroTitleSizePx] = useState(restaurant.public_hero_title_size_px ?? 48);
+  const [publicDisplayName, setPublicDisplayName] = useState(
+    restaurant.public_display_name?.trim() || restaurant.name,
+  );
+  const [publicTagline, setPublicTagline] = useState(restaurant.public_tagline ?? "");
+  const [ctaLabel, setCtaLabel] = useState(restaurant.public_cta_label?.trim() || "Réserver une table");
+  const [heroHeight, setHeroHeight] = useState<"compact" | "normal" | "tall">(
+    (restaurant.public_hero_height as "compact" | "normal" | "tall") || "normal",
+  );
+  const [heroOverlayEnabled, setHeroOverlayEnabled] = useState(
+    restaurant.public_hero_overlay_enabled !== false,
+  );
+  const [heroOverlayOpacity, setHeroOverlayOpacity] = useState(restaurant.public_hero_overlay_opacity ?? 40);
+  const [googleMapsUrl, setGoogleMapsUrl] = useState(restaurant.google_maps_url ?? "");
+  const [showPublicInstagram, setShowPublicInstagram] = useState(restaurant.show_public_instagram !== false);
+  const [showPublicFacebook, setShowPublicFacebook] = useState(restaurant.show_public_facebook !== false);
+  const [showPublicGoogleMaps, setShowPublicGoogleMaps] = useState(restaurant.show_public_google_maps !== false);
   const [fontSizeScale, setFontSizeScale] = useState<"small" | "medium" | "large">(
     (settings.font_size_scale as "small" | "medium" | "large") ?? "medium",
   );
@@ -166,8 +234,8 @@ export default function SettingsForm({
   const [cardStyle, setCardStyle] = useState<"flat" | "elevated" | "bordered">(
     (settings.card_style as "flat" | "elevated" | "bordered") ?? "elevated",
   );
-  const [logoUrl, setLogoUrl] = useState(settings.logo_url ?? "");
-  const [coverImageUrl, setCoverImageUrl] = useState(settings.cover_image_url ?? "");
+  const [logoUrl, setLogoUrl] = useState(settings.logo_url ?? restaurant.logo_url ?? "");
+  const [coverImageUrl, setCoverImageUrl] = useState(settings.cover_image_url ?? restaurant.banner_url ?? "");
   const [instagramUrl, setInstagramUrl] = useState(settings.instagram_url ?? "");
   const [facebookUrl, setFacebookUrl] = useState(settings.facebook_url ?? "");
   const [websiteUrl, setWebsiteUrl] = useState(settings.website_url ?? "");
@@ -182,7 +250,9 @@ export default function SettingsForm({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [galleryUrls, setGalleryUrls] = useState<string[]>(settings.gallery_image_urls ?? []);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
-  const [publicPageDescription, setPublicPageDescription] = useState(settings.public_page_description ?? "");
+  const [publicPageDescription, setPublicPageDescription] = useState(
+    restaurant.public_description?.trim() || settings.public_page_description || "",
+  );
   const [showPublicAddress, setShowPublicAddress] = useState(settings.public_page_show_address ?? true);
   const [showPublicPhone, setShowPublicPhone] = useState(settings.public_page_show_phone ?? true);
   const [showPublicEmail, setShowPublicEmail] = useState(settings.public_page_show_email ?? true);
@@ -256,11 +326,111 @@ export default function SettingsForm({
     };
   }, [restaurant.id, supabase]);
 
+  const previewDraft = useMemo(
+    (): PublicPagePreviewDraft => ({
+      restaurantId: restaurant.id,
+      slug: restaurant.slug,
+      displayName: publicDisplayName,
+      tagline: publicTagline,
+      publicDescription: publicPageDescription,
+      logoUrl,
+      coverImageUrl,
+      pageBackgroundColor,
+      heroPrimaryColor,
+      buttonBgColor: buttonColor,
+      buttonTextColor,
+      headingTextColor,
+      bodyTextColor,
+      accentColor,
+      footerBgColor,
+      footerTextColor,
+      headingFont,
+      bodyFont,
+      heroTitleSizePx: Math.min(72, Math.max(32, heroTitleSizePx)),
+      heroHeight,
+      heroOverlayEnabled,
+      heroOverlayOpacity,
+      ctaLabel,
+      borderRadius,
+      buttonStyle,
+      cardStyle,
+      fontSizeScale,
+      phone,
+      address,
+      email,
+      websiteUrl,
+      instagramUrl,
+      facebookUrl,
+      googleMapsUrl,
+      showPublicAddress,
+      showPublicPhone,
+      showPublicEmail,
+      showPublicWebsite,
+      showPublicOpeningHours,
+      showPublicInstagram,
+      showPublicFacebook,
+      showPublicGoogleMaps,
+      documents: sortedDocuments.map((d) => ({
+        id: d.id,
+        label: d.label,
+        fileUrl: d.file_url,
+        position: d.position ?? 0,
+      })),
+      galleryImageUrls: galleryUrls,
+    }),
+    [
+      accentColor,
+      address,
+      bodyFont,
+      bodyTextColor,
+      borderRadius,
+      buttonColor,
+      buttonStyle,
+      buttonTextColor,
+      cardStyle,
+      coverImageUrl,
+      ctaLabel,
+      email,
+      facebookUrl,
+      fontSizeScale,
+      footerBgColor,
+      footerTextColor,
+      galleryUrls,
+      googleMapsUrl,
+      headingFont,
+      headingTextColor,
+      heroHeight,
+      heroOverlayEnabled,
+      heroOverlayOpacity,
+      heroPrimaryColor,
+      heroTitleSizePx,
+      instagramUrl,
+      logoUrl,
+      pageBackgroundColor,
+      phone,
+      publicDisplayName,
+      publicPageDescription,
+      publicTagline,
+      restaurant.id,
+      restaurant.slug,
+      showPublicAddress,
+      showPublicEmail,
+      showPublicFacebook,
+      showPublicGoogleMaps,
+      showPublicInstagram,
+      showPublicOpeningHours,
+      showPublicPhone,
+      showPublicWebsite,
+      sortedDocuments,
+      websiteUrl,
+    ],
+  );
+
   async function uploadAsset(file: File, type: "logo" | "cover") {
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
     const filePath = `${restaurant.id}/${type}-${Date.now()}.${extension}`;
 
-    const { error } = await supabase.storage.from("restaurant-assets").upload(filePath, file, {
+    const { error } = await supabase.storage.from("restaurants").upload(filePath, file, {
       upsert: true,
     });
 
@@ -268,7 +438,7 @@ export default function SettingsForm({
       throw new Error(error.message);
     }
 
-    const { data } = supabase.storage.from("restaurant-assets").getPublicUrl(filePath);
+    const { data } = supabase.storage.from("restaurants").getPublicUrl(filePath);
     return data.publicUrl;
   }
 
@@ -276,7 +446,7 @@ export default function SettingsForm({
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
     const filePath = `${restaurant.id}/gallery-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
 
-    const { error } = await supabase.storage.from("restaurant-assets").upload(filePath, file, {
+    const { error } = await supabase.storage.from("restaurants").upload(filePath, file, {
       upsert: false,
     });
 
@@ -284,18 +454,18 @@ export default function SettingsForm({
       throw new Error(error.message);
     }
 
-    const { data } = supabase.storage.from("restaurant-assets").getPublicUrl(filePath);
+    const { data } = supabase.storage.from("restaurants").getPublicUrl(filePath);
     return data.publicUrl;
   }
 
   async function uploadRestaurantDocumentPdf(file: File) {
-    const filePath = `documents/${restaurant.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.pdf`;
-    const { error } = await supabase.storage.from("restaurant-assets").upload(filePath, file, {
+    const filePath = `${restaurant.id}/documents/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.pdf`;
+    const { error } = await supabase.storage.from("restaurants").upload(filePath, file, {
       upsert: false,
       contentType: "application/pdf",
     });
     if (error) throw new Error(error.message);
-    const { data } = supabase.storage.from("restaurant-assets").getPublicUrl(filePath);
+    const { data } = supabase.storage.from("restaurants").getPublicUrl(filePath);
     return data.publicUrl;
   }
 
@@ -322,9 +492,9 @@ export default function SettingsForm({
   }
 
   async function removeGalleryPhoto(url: string) {
-    const path = storagePathFromRestaurantAssetUrl(url);
-    if (path) {
-      await supabase.storage.from("restaurant-assets").remove([path]);
+    const ref = storageRefFromPublicUrl(url);
+    if (ref) {
+      await supabase.storage.from(ref.bucket).remove([ref.path]);
     }
     setGalleryUrls((prev) => prev.filter((u) => u !== url));
   }
@@ -381,9 +551,9 @@ export default function SettingsForm({
 
   async function deleteDocument(doc: RestaurantDocument) {
     setMessage(null);
-    const path = storagePathFromRestaurantAssetUrl(doc.file_url);
-    if (path) {
-      await supabase.storage.from("restaurant-assets").remove([path]);
+    const ref = storageRefFromPublicUrl(doc.file_url);
+    if (ref) {
+      await supabase.storage.from(ref.bucket).remove([ref.path]);
     }
     const { error } = await supabase.from("restaurant_documents").delete().eq("id", doc.id);
     if (error) {
@@ -525,6 +695,9 @@ export default function SettingsForm({
 
     setIsSaving(true);
 
+    const descTrim = publicPageDescription.trim().slice(0, 500);
+    const tagTrim = publicTagline.trim().slice(0, 100);
+
     const { error: restaurantError } = await supabase
       .from("restaurants")
       .update({
@@ -534,7 +707,32 @@ export default function SettingsForm({
         email: email || null,
         address: address || null,
         description: description || null,
-        primary_color: primaryColor || null,
+        primary_color: heroPrimaryColor || null,
+        logo_url: logoUrl || null,
+        banner_url: coverImageUrl || null,
+        page_background_color: pageBackgroundColor || null,
+        hero_primary_color: heroPrimaryColor || null,
+        public_button_bg_color: buttonColor || null,
+        public_button_text_color: buttonTextColor || null,
+        public_heading_text_color: headingTextColor || null,
+        public_body_text_color: bodyTextColor || null,
+        public_accent_color: accentColor || null,
+        public_footer_bg_color: footerBgColor || null,
+        public_footer_text_color: footerTextColor || null,
+        public_heading_font: headingFont || null,
+        public_body_font: bodyFont || null,
+        public_hero_title_size_px: Math.min(72, Math.max(32, heroTitleSizePx)),
+        public_display_name: publicDisplayName.trim() || null,
+        public_tagline: tagTrim || null,
+        public_description: descTrim || null,
+        public_cta_label: ctaLabel.trim().slice(0, 80) || null,
+        public_hero_height: heroHeight,
+        public_hero_overlay_enabled: heroOverlayEnabled,
+        public_hero_overlay_opacity: Math.min(80, Math.max(0, heroOverlayOpacity)),
+        google_maps_url: googleMapsUrl.trim() || null,
+        show_public_instagram: showPublicInstagram,
+        show_public_facebook: showPublicFacebook,
+        show_public_google_maps: showPublicGoogleMaps,
         reservation_confirmation_mode: reservationConfirmationMode,
       })
       .eq("id", restaurant.id);
@@ -544,8 +742,6 @@ export default function SettingsForm({
       setIsSaving(false);
       return;
     }
-
-    const descTrim = publicPageDescription.trim().slice(0, 300);
 
     const { error: settingsError } = await supabase
       .from("restaurant_settings")
@@ -560,7 +756,7 @@ export default function SettingsForm({
         max_party_size: maxPartySize,
         accent_color: accentColor || null,
         button_color: buttonColor || null,
-        text_color: textColor || null,
+        text_color: bodyTextColor || null,
         heading_font: headingFont || null,
         body_font: bodyFont || null,
         font_size_scale: fontSizeScale,
@@ -638,72 +834,58 @@ export default function SettingsForm({
             <label className="dashboard-field-label">Email</label>
             <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
           </div>
+          <div className="md:col-span-2">
+            <label className="dashboard-field-label">Description interne (optionnel)</label>
+            <p className="mb-1 text-xs text-[var(--muted-foreground)]">
+              Notes internes ou texte brut non affiché sur la page publique (la description visible par les clients se règle dans Personnalisation).
+            </p>
+            <Textarea
+              className="min-h-20"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+            />
+          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Apparence de la page</CardTitle>
-          <CardDescription>Personnalisez votre page publique de réservation.</CardDescription>
+          <CardTitle>Personnalisation — page publique</CardTitle>
+          <CardDescription>
+            Aperçu en direct à droite (bureau) ou en bas (mobile). Tout est enregistré avec le bouton en bas de la page.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="dashboard-field-label">
-                Logo du restaurant
-              </label>
-              <Input type="file" accept="image/*" onChange={handleLogoUpload} />
-              {isUploadingLogo ? <p className="mt-1 text-xs text-[var(--muted-foreground)]">Envoi...</p> : null}
-              {logoUrl ? (
-                <div className="mt-2 flex items-center gap-3">
-                  <Image
-                    src={logoUrl}
-                    alt="Logo"
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 rounded-lg object-cover"
-                    unoptimized
-                  />
-                  <Input value={logoUrl} onChange={(event) => setLogoUrl(event.target.value)} />
-                </div>
-              ) : null}
-            </div>
-            <div>
-              <label className="dashboard-field-label">
-                Photo de couverture
-              </label>
-              <Input type="file" accept="image/*" onChange={handleCoverUpload} />
-              {isUploadingCover ? <p className="mt-1 text-xs text-[var(--muted-foreground)]">Envoi...</p> : null}
-              {coverImageUrl ? (
-                <div className="mt-2 space-y-2">
-                  <Image
-                    src={coverImageUrl}
-                    alt="Couverture"
-                    width={1200}
-                    height={320}
-                    className="h-24 w-full rounded-xl object-cover"
-                    unoptimized
-                  />
-                  <Input value={coverImageUrl} onChange={(event) => setCoverImageUrl(event.target.value)} />
-                </div>
-              ) : null}
-            </div>
-          </div>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            Bucket Supabase : <span className="font-mono text-xs">restaurants</span> pour les fichiers. Enregistrez tout en bas de la page.
+          </p>
 
-          <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
-            <div className="space-y-4">
+          <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,440px)] lg:items-start lg:gap-8">
+            <div className="order-1 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm font-medium text-[var(--foreground)]">Personnalisation</p>
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={() => {
-                    setPrimaryColor("#12151c");
+                    setPageBackgroundColor("#f8fafc");
+                    setHeroPrimaryColor("#12151c");
                     setButtonColor("#1F7A6C");
-                    setTextColor("#111827");
+                    setButtonTextColor("#ffffff");
+                    setHeadingTextColor("#0f172a");
+                    setBodyTextColor("#334155");
                     setAccentColor("#1F7A6C");
+                    setFooterBgColor("#0f172a");
+                    setFooterTextColor("#e2e8f0");
                     setHeadingFont("Playfair Display");
                     setBodyFont("Inter");
+                    setHeroTitleSizePx(48);
+                    setPublicDisplayName(name);
+                    setPublicTagline("");
+                    setCtaLabel("Réserver une table");
+                    setHeroHeight("normal");
+                    setHeroOverlayEnabled(true);
+                    setHeroOverlayOpacity(40);
                     setFontSizeScale("medium");
                     setBorderRadius("rounded");
                     setButtonStyle("filled");
@@ -718,31 +900,66 @@ export default function SettingsForm({
                 <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Couleurs</summary>
                 <div className="mt-4 space-y-4">
                   <div>
-                    <label className="dashboard-field-label">Couleur principale (fond)</label>
+                    <label className="dashboard-field-label">Fond de la page publique</label>
                     <div className="flex items-center gap-2">
-                      <Input type="color" className="h-10 w-16 p-1" value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} />
-                      <Input value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} />
+                      <Input type="color" className="h-10 w-16 p-1" value={pageBackgroundColor} onChange={(event) => setPageBackgroundColor(event.target.value)} />
+                      <Input value={pageBackgroundColor} onChange={(event) => setPageBackgroundColor(event.target.value)} />
                     </div>
                   </div>
                   <div>
-                    <label className="dashboard-field-label">Couleur du bouton</label>
+                    <label className="dashboard-field-label">Couleur principale (hero / en-tête)</label>
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="h-10 w-16 p-1" value={heroPrimaryColor} onChange={(event) => setHeroPrimaryColor(event.target.value)} />
+                      <Input value={heroPrimaryColor} onChange={(event) => setHeroPrimaryColor(event.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Couleur du bouton de réservation</label>
                     <div className="flex items-center gap-2">
                       <Input type="color" className="h-10 w-16 p-1" value={buttonColor} onChange={(event) => setButtonColor(event.target.value)} />
                       <Input value={buttonColor} onChange={(event) => setButtonColor(event.target.value)} />
                     </div>
                   </div>
                   <div>
-                    <label className="dashboard-field-label">Couleur du texte</label>
+                    <label className="dashboard-field-label">Texte du bouton de réservation</label>
                     <div className="flex items-center gap-2">
-                      <Input type="color" className="h-10 w-16 p-1" value={textColor} onChange={(event) => setTextColor(event.target.value)} />
-                      <Input value={textColor} onChange={(event) => setTextColor(event.target.value)} />
+                      <Input type="color" className="h-10 w-16 p-1" value={buttonTextColor} onChange={(event) => setButtonTextColor(event.target.value)} />
+                      <Input value={buttonTextColor} onChange={(event) => setButtonTextColor(event.target.value)} />
                     </div>
                   </div>
                   <div>
-                    <label className="dashboard-field-label">Couleur d’accent (liens, surlignages)</label>
+                    <label className="dashboard-field-label">Couleur des titres (h1, h2)</label>
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="h-10 w-16 p-1" value={headingTextColor} onChange={(event) => setHeadingTextColor(event.target.value)} />
+                      <Input value={headingTextColor} onChange={(event) => setHeadingTextColor(event.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Texte courant (paragraphes)</label>
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="h-10 w-16 p-1" value={bodyTextColor} onChange={(event) => setBodyTextColor(event.target.value)} />
+                      <Input value={bodyTextColor} onChange={(event) => setBodyTextColor(event.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Liens / accents</label>
                     <div className="flex items-center gap-2">
                       <Input type="color" className="h-10 w-16 p-1" value={accentColor} onChange={(event) => setAccentColor(event.target.value)} />
                       <Input value={accentColor} onChange={(event) => setAccentColor(event.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Fond du pied de page</label>
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="h-10 w-16 p-1" value={footerBgColor} onChange={(event) => setFooterBgColor(event.target.value)} />
+                      <Input value={footerBgColor} onChange={(event) => setFooterBgColor(event.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Texte du pied de page</label>
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="h-10 w-16 p-1" value={footerTextColor} onChange={(event) => setFooterTextColor(event.target.value)} />
+                      <Input value={footerTextColor} onChange={(event) => setFooterTextColor(event.target.value)} />
                     </div>
                   </div>
                 </div>
@@ -758,8 +975,10 @@ export default function SettingsForm({
                       value={headingFont}
                       onChange={(event) => setHeadingFont(event.target.value)}
                     >
-                      {["Playfair Display","Cormorant Garamond","DM Sans","Inter","Merriweather","Lato","Source Sans Pro","Montserrat","Raleway","Poppins"].map((f) => (
-                        <option key={f} value={f}>{f}</option>
+                      {PUBLIC_PAGE_FONT_OPTIONS.map((f) => (
+                        <option key={f} value={f}>
+                          {f}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -770,22 +989,121 @@ export default function SettingsForm({
                       value={bodyFont}
                       onChange={(event) => setBodyFont(event.target.value)}
                     >
-                      {["Playfair Display","Cormorant Garamond","DM Sans","Inter","Merriweather","Lato","Source Sans Pro","Montserrat","Raleway","Poppins"].map((f) => (
-                        <option key={f} value={f}>{f}</option>
+                      {PUBLIC_PAGE_FONT_OPTIONS.map((f) => (
+                        <option key={f} value={f}>
+                          {f}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="dashboard-field-label">Échelle de taille</label>
+                    <label className="dashboard-field-label">Taille du titre principal ({heroTitleSizePx}px)</label>
+                    <input
+                      type="range"
+                      min={32}
+                      max={72}
+                      value={heroTitleSizePx}
+                      onChange={(e) => setHeroTitleSizePx(Number(e.target.value))}
+                      className="mt-2 w-full"
+                    />
+                    <div className="mt-1 flex justify-between text-xs text-[var(--muted-foreground)]">
+                      <span>32px</span>
+                      <span>72px</span>
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="dashboard-field-label">Échelle du corps de page</label>
                     <select
                       className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
                       value={fontSizeScale}
                       onChange={(event) => setFontSizeScale(event.target.value as "small" | "medium" | "large")}
                     >
-                      <option value="small">Small</option>
-                      <option value="medium">Medium</option>
-                      <option value="large">Large</option>
+                      <option value="small">Petit</option>
+                      <option value="medium">Moyen</option>
+                      <option value="large">Grand</option>
                     </select>
+                  </div>
+                </div>
+              </details>
+
+              <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Hero / en-tête</summary>
+                <div className="mt-4 space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="dashboard-field-label">Logo (fichier)</label>
+                      <Input type="file" accept="image/*" onChange={handleLogoUpload} />
+                      {isUploadingLogo ? <p className="mt-1 text-xs text-[var(--muted-foreground)]">Envoi...</p> : null}
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label">Photo de couverture (fichier)</label>
+                      <Input type="file" accept="image/*" onChange={handleCoverUpload} />
+                      {isUploadingCover ? <p className="mt-1 text-xs text-[var(--muted-foreground)]">Envoi...</p> : null}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">URL du logo</label>
+                    <Input value={logoUrl} onChange={(event) => setLogoUrl(event.target.value)} placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">URL de la photo de couverture</label>
+                    <Input value={coverImageUrl} onChange={(event) => setCoverImageUrl(event.target.value)} placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Nom affiché sur la page publique</label>
+                    <Input value={publicDisplayName} onChange={(event) => setPublicDisplayName(event.target.value)} />
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Slogan / sous-titre (max 100 caractères)</label>
+                    <Input value={publicTagline} maxLength={100} onChange={(event) => setPublicTagline(event.target.value)} />
+                    <p className="mt-1 text-xs text-[var(--muted-foreground)]">{publicTagline.length}/100</p>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Description (page publique, max 500 caractères)</label>
+                    <Textarea
+                      className="min-h-28"
+                      value={publicPageDescription}
+                      maxLength={500}
+                      onChange={(event) => setPublicPageDescription(event.target.value)}
+                    />
+                    <p className="mt-1 text-xs text-[var(--muted-foreground)]">{publicPageDescription.length}/500</p>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Texte du bouton de réservation (hero)</label>
+                    <Input value={ctaLabel} onChange={(event) => setCtaLabel(event.target.value)} maxLength={80} />
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Hauteur du hero</label>
+                    <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input type="radio" name="hero-height" checked={heroHeight === "compact"} onChange={() => setHeroHeight("compact")} />
+                        Compact
+                      </label>
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input type="radio" name="hero-height" checked={heroHeight === "normal"} onChange={() => setHeroHeight("normal")} />
+                        Normal
+                      </label>
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input type="radio" name="hero-height" checked={heroHeight === "tall"} onChange={() => setHeroHeight("tall")} />
+                        Grand
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <Toggle checked={heroOverlayEnabled} onChange={setHeroOverlayEnabled} label="Assombrir la photo (overlay)" />
+                    {heroOverlayEnabled ? (
+                      <div className="flex flex-1 flex-col gap-1 sm:max-w-xs">
+                        <label className="text-xs text-[var(--muted-foreground)]">Opacité overlay ({heroOverlayOpacity}%)</label>
+                        <input
+                          type="range"
+                          min={0}
+                          max={80}
+                          value={heroOverlayOpacity}
+                          onChange={(e) => setHeroOverlayOpacity(Number(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </details>
@@ -833,152 +1151,235 @@ export default function SettingsForm({
               </details>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
-              <p className="text-sm font-medium text-[var(--foreground)]">Aperçu</p>
-              <div
-                className="mt-3 overflow-hidden rounded-xl border"
-                style={{
-                  borderColor: "rgba(0,0,0,0.08)",
-                  backgroundColor: primaryColor,
-                  color: textColor,
-                  fontFamily: `"${bodyFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
-                }}
-              >
-                <div className="p-5" style={{ fontSize: fontSizeScale === "small" ? 14 : fontSizeScale === "large" ? 17 : 16 }}>
-                  <div
-                    className={cn(
-                      "p-4",
-                      cardStyle === "elevated" && "shadow-sm",
-                      cardStyle === "bordered" && "border",
-                    )}
-                    style={{
-                      borderColor: "color-mix(in srgb, currentColor 14%, transparent)",
-                      backgroundColor: "color-mix(in srgb, currentColor 7%, transparent)",
-                      borderRadius: borderRadius === "sharp" ? 0 : borderRadius === "pill" ? 999 : 8,
-                    }}
-                  >
-                    <div
-                      className="text-lg font-semibold"
-                      style={{ fontFamily: `"${headingFont}", system-ui, serif` }}
-                    >
-                      Votre page publique
-                    </div>
-                    <p className="mt-1 text-sm" style={{ opacity: 0.78 }}>
-                      Aperçu en temps réel avant d’enregistrer.
-                    </p>
-                    <div className="mt-3 flex items-center gap-3">
-                      <button
-                        type="button"
-                        className="px-4 py-2 text-sm font-semibold"
-                        style={{
-                          borderRadius: borderRadius === "sharp" ? 0 : borderRadius === "pill" ? 999 : 8,
-                          backgroundColor: buttonStyle === "filled" ? buttonColor : "transparent",
-                          color: buttonStyle === "filled" ? "#fff" : buttonColor,
-                          border: buttonStyle === "outlined" ? `1px solid ${buttonColor}` : "1px solid transparent",
-                        }}
-                      >
-                        Bouton
-                      </button>
-                      <a href="#" className="text-sm font-medium" style={{ color: accentColor }}>
-                        Lien d’accent
-                      </a>
-                    </div>
+            <div className="order-2 lg:sticky lg:top-4 lg:self-start">
+              <PublicPageLivePreview draft={previewDraft} publicPath={publicLink} />
+            </div>
+          </div>
+
+          <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+            <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Informations de contact</summary>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Ces champs alimentent le pied de page public. Cochez ce qui doit être visible.
+            </p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="dashboard-field-label">Téléphone</label>
+                <Input value={phone} onChange={(event) => setPhone(event.target.value)} />
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={showPublicPhone}
+                    onChange={(event) => setShowPublicPhone(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Afficher sur la page publique
+                </label>
+              </div>
+              <div>
+                <label className="dashboard-field-label">Site web</label>
+                <Input value={websiteUrl} onChange={(event) => setWebsiteUrl(event.target.value)} placeholder="https://..." />
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={showPublicWebsite}
+                    onChange={(event) => setShowPublicWebsite(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Afficher sur la page publique
+                </label>
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Adresse</label>
+                <Input value={address} onChange={(event) => setAddress(event.target.value)} />
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={showPublicAddress}
+                    onChange={(event) => setShowPublicAddress(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Afficher sur la page publique
+                </label>
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">E-mail de contact</label>
+                <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={showPublicEmail}
+                    onChange={(event) => setShowPublicEmail(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Afficher sur la page publique
+                </label>
+              </div>
+              <div className="md:col-span-2">
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={showPublicOpeningHours}
+                    onChange={(event) => setShowPublicOpeningHours(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Afficher les horaires d’ouverture dans le pied de page
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+            <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Réseaux sociaux</summary>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="dashboard-field-label">Instagram (URL)</label>
+                <Input value={instagramUrl} onChange={(event) => setInstagramUrl(event.target.value)} placeholder="https://instagram.com/..." />
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={showPublicInstagram}
+                    onChange={(event) => setShowPublicInstagram(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Afficher l’icône Instagram
+                </label>
+              </div>
+              <div>
+                <label className="dashboard-field-label">Facebook (URL)</label>
+                <Input value={facebookUrl} onChange={(event) => setFacebookUrl(event.target.value)} placeholder="https://facebook.com/..." />
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={showPublicFacebook}
+                    onChange={(event) => setShowPublicFacebook(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Afficher l’icône Facebook
+                </label>
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Google Maps (URL)</label>
+                <Input value={googleMapsUrl} onChange={(event) => setGoogleMapsUrl(event.target.value)} placeholder="https://maps.google.com/..." />
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={showPublicGoogleMaps}
+                    onChange={(event) => setShowPublicGoogleMaps(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Afficher le lien Google Maps dans le pied de page
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+            <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Cartes & menus (PDF)</summary>
+            <div className="mt-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-[var(--muted-foreground)]">Ajoutez autant de PDF que nécessaire, avec un libellé affiché sur la page publique.</p>
+                <Button type="button" variant="secondary" onClick={() => void persistDocumentPositions()} disabled={documentsLoading || sortedDocuments.length < 2}>
+                  Enregistrer l’ordre
+                </Button>
+              </div>
+              {documentsError ? (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800" role="alert">
+                  {documentsError}
+                </p>
+              ) : null}
+              <div className="grid gap-3 rounded-xl border border-gray-200 bg-white p-4">
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <div>
+                    <label className="dashboard-field-label">Libellé du bouton</label>
+                    <Input
+                      value={newDocLabel}
+                      onChange={(e) => setNewDocLabel(e.target.value)}
+                      placeholder='Ex. : « Menu », « Carte des vins »'
+                      maxLength={60}
+                      disabled={isUploadingDocument}
+                    />
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Fichier PDF (max 10 Mo)</label>
+                    <Input type="file" accept="application/pdf" onChange={handleDocumentUpload} disabled={isUploadingDocument} />
                   </div>
                 </div>
+                {isUploadingDocument ? <p className="text-xs text-[var(--muted-foreground)]">Envoi du PDF...</p> : null}
               </div>
-              <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-                Les changements ci-dessus se reflètent immédiatement ici, avant sauvegarde.
-              </p>
+              {documentsLoading ? (
+                <p className="text-sm text-[var(--muted-foreground)]">Chargement des documents…</p>
+              ) : sortedDocuments.length === 0 ? (
+                <p className="text-sm text-[var(--muted-foreground)]">Aucun document. Utilisez « Ajouter » via le fichier ci-dessus.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {sortedDocuments.map((doc) => (
+                    <li
+                      key={doc.id}
+                      draggable
+                      onDragStart={() => setDraggingDocId(doc.id)}
+                      onDragEnd={() => setDraggingDocId(null)}
+                      onDragOver={(e: DragEvent<HTMLLIElement>) => e.preventDefault()}
+                      onDrop={() => {
+                        if (!draggingDocId) return;
+                        reorderDocuments(draggingDocId, doc.id);
+                        setDraggingDocId(null);
+                      }}
+                      className={cn(
+                        "flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3",
+                        draggingDocId === doc.id && "opacity-60",
+                      )}
+                    >
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500">
+                        <GripVertical className="h-4 w-4" aria-hidden />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-[var(--foreground)]">{doc.label}</p>
+                        <p className="truncate text-xs text-[var(--muted-foreground)]">{doc.file_url}</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
+                        aria-label="Supprimer ce document"
+                        onClick={() => void deleteDocument(doc)}
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </div>
+          </details>
 
-          <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
-            <p className="text-sm font-medium text-[var(--foreground)]">Coordonnées visibles sur la page publique</p>
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Choisissez les blocs affichés. Si tout est désactivé et qu’aucun réseau social n’est renseigné, la carte disparaît.
-            </p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={showPublicAddress}
-                  onChange={(event) => setShowPublicAddress(event.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                Adresse
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={showPublicPhone}
-                  onChange={(event) => setShowPublicPhone(event.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                Téléphone
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={showPublicEmail}
-                  onChange={(event) => setShowPublicEmail(event.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                E-mail
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={showPublicWebsite}
-                  onChange={(event) => setShowPublicWebsite(event.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                Site web
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm sm:col-span-2">
-                <input
-                  type="checkbox"
-                  checked={showPublicOpeningHours}
-                  onChange={(event) => setShowPublicOpeningHours(event.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                Horaires d’ouverture
-              </label>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="dashboard-field-label">Instagram</label>
-              <Input value={instagramUrl} onChange={(event) => setInstagramUrl(event.target.value)} placeholder="https://instagram.com/..." />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Facebook</label>
-              <Input value={facebookUrl} onChange={(event) => setFacebookUrl(event.target.value)} placeholder="https://facebook.com/..." />
-            </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Site web</label>
-              <Input value={websiteUrl} onChange={(event) => setWebsiteUrl(event.target.value)} placeholder="https://..." />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="dashboard-field-label">Adresse</label>
-              <Input value={address} onChange={(event) => setAddress(event.target.value)} />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Téléphone</label>
-              <Input value={phone} onChange={(event) => setPhone(event.target.value)} />
-            </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Description</label>
-              <Textarea
-                className="min-h-20"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
+          <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+            <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Galerie photos</summary>
+            <div className="mt-4 space-y-3">
+              <p className="text-sm text-[var(--muted-foreground)]">Jusqu’à 6 images, affichées sous le formulaire de réservation.</p>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleGalleryUpload}
+                disabled={galleryUrls.length >= 6 || isUploadingGallery}
               />
+              {isUploadingGallery ? <p className="text-xs text-[var(--muted-foreground)]">Envoi...</p> : null}
+              {galleryUrls.length > 0 ? (
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {galleryUrls.map((url) => (
+                    <div key={url} className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200">
+                      <Image src={url} alt="" fill className="object-cover" unoptimized sizes="(max-width: 640px) 50vw, 33vw" />
+                      <button
+                        type="button"
+                        className="absolute right-1 top-1 rounded-md bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={() => void removeGalleryPhoto(url)}
+                      >
+                        Retirer
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
-          </div>
+          </details>
 
           <div>
             <label className="dashboard-field-label">
@@ -990,155 +1391,6 @@ export default function SettingsForm({
               onChange={(event) => setPreBookingMessage(event.target.value)}
               placeholder="Ex : Pour les groupes de plus de 8 personnes, merci de nous contacter par téléphone."
             />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Apparence de la page publique</CardTitle>
-          <CardDescription>
-            Galerie, menu et texte d’accroche affichés sur votre page de réservation publique.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          <div>
-            <label className="dashboard-field-label">Photos des plats / galerie</label>
-            <p className="mb-2 text-sm text-[var(--muted-foreground)]">
-              Jusqu’à 6 images (plats, ambiance, etc.). Affichées sous le formulaire de réservation sur la page publique.
-            </p>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleGalleryUpload}
-              disabled={galleryUrls.length >= 6 || isUploadingGallery}
-            />
-            {isUploadingGallery ? (
-              <p className="mt-1 text-xs text-[var(--muted-foreground)]">Envoi...</p>
-            ) : null}
-            {galleryUrls.length > 0 ? (
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {galleryUrls.map((url) => (
-                  <div key={url} className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200">
-                    <Image src={url} alt="" fill className="object-cover" unoptimized sizes="(max-width: 640px) 50vw, 33vw" />
-                    <button
-                      type="button"
-                      className="absolute right-1 top-1 rounded-md bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
-                      onClick={() => void removeGalleryPhoto(url)}
-                    >
-                      Retirer
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-[var(--foreground)]">PDF — cartes & menus</p>
-                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                  Ajoutez plusieurs documents (PDF), nommez-les et définissez l’ordre d’affichage.
-                </p>
-              </div>
-              <Button type="button" variant="secondary" onClick={() => void persistDocumentPositions()} disabled={documentsLoading || sortedDocuments.length < 2}>
-                Enregistrer l’ordre
-              </Button>
-            </div>
-
-            {documentsError ? (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800" role="alert">
-                {documentsError}
-              </p>
-            ) : null}
-
-            <div className="grid gap-3 rounded-xl border border-gray-200 bg-white p-4">
-              <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
-                <div>
-                  <label className="dashboard-field-label">Libellé</label>
-                  <Input
-                    value={newDocLabel}
-                    onChange={(e) => setNewDocLabel(e.target.value)}
-                    placeholder='Ex : "Carte des pizzas", "Menu du jour"...'
-                    maxLength={60}
-                    disabled={isUploadingDocument}
-                  />
-                </div>
-                <div>
-                  <label className="dashboard-field-label">Fichier (PDF, max 10MB)</label>
-                  <Input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleDocumentUpload}
-                    disabled={isUploadingDocument}
-                  />
-                </div>
-              </div>
-              {isUploadingDocument ? (
-                <p className="text-xs text-[var(--muted-foreground)]">Envoi du PDF...</p>
-              ) : null}
-            </div>
-
-            {documentsLoading ? (
-              <p className="text-sm text-[var(--muted-foreground)]">Chargement des documents…</p>
-            ) : sortedDocuments.length === 0 ? (
-              <p className="text-sm text-[var(--muted-foreground)]">Aucun PDF pour le moment.</p>
-            ) : (
-              <ul className="space-y-2">
-                {sortedDocuments.map((doc) => (
-                  <li
-                    key={doc.id}
-                    draggable
-                    onDragStart={() => setDraggingDocId(doc.id)}
-                    onDragEnd={() => setDraggingDocId(null)}
-                    onDragOver={(e: DragEvent<HTMLLIElement>) => e.preventDefault()}
-                    onDrop={() => {
-                      if (!draggingDocId) return;
-                      reorderDocuments(draggingDocId, doc.id);
-                      setDraggingDocId(null);
-                    }}
-                    className={cn(
-                      "flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3",
-                      draggingDocId === doc.id && "opacity-60",
-                    )}
-                  >
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500">
-                      <GripVertical className="h-4 w-4" aria-hidden />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[var(--foreground)]">{doc.label}</p>
-                      <p className="truncate text-xs text-[var(--muted-foreground)]">{doc.file_url}</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
-                      aria-label="Supprimer ce document"
-                      onClick={() => void deleteDocument(doc)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div>
-            <label className="dashboard-field-label">Description du restaurant (page publique)</label>
-            <p className="mb-2 text-sm text-[var(--muted-foreground)]">
-              Texte court sous le nom du restaurant, au-dessus du formulaire. Maximum 300 caractères.
-            </p>
-            <Textarea
-              className="min-h-24"
-              value={publicPageDescription}
-              maxLength={300}
-              onChange={(event) => setPublicPageDescription(event.target.value)}
-              placeholder="Ex. : Cuisine du marché, terrasse ombragée…"
-            />
-            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-              {publicPageDescription.length}/300
-            </p>
           </div>
         </CardContent>
       </Card>
