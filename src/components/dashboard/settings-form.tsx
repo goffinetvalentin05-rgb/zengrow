@@ -1,8 +1,8 @@
 "use client";
 
-import { ChangeEvent, FormEvent, type ReactNode, useEffect, useState } from "react";
+import { ChangeEvent, DragEvent, FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Trash2 } from "lucide-react";
+import { GripVertical, Trash2 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -50,9 +50,6 @@ type SettingsData = {
   closure_message: string | null;
   public_page_description: string | null;
   gallery_image_urls: string[] | null;
-  public_menu_mode: "url" | "pdf" | null;
-  public_menu_url: string | null;
-  public_menu_pdf_url: string | null;
   public_page_show_address: boolean | null;
   public_page_show_phone: boolean | null;
   public_page_show_email: boolean | null;
@@ -70,6 +67,15 @@ function storagePathFromRestaurantAssetUrl(url: string): string | null {
     return null;
   }
 }
+
+type RestaurantDocument = {
+  id: string;
+  restaurant_id: string;
+  label: string;
+  file_url: string;
+  position: number;
+  created_at: string;
+};
 
 type RestaurantTableRow = {
   id: string;
@@ -176,15 +182,6 @@ export default function SettingsForm({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [galleryUrls, setGalleryUrls] = useState<string[]>(settings.gallery_image_urls ?? []);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
-  const [menuMode, setMenuMode] = useState<"url" | "pdf">(() => {
-    if (settings.public_menu_mode === "pdf") return "pdf";
-    if (settings.public_menu_mode === "url") return "url";
-    if (settings.public_menu_pdf_url?.trim()) return "pdf";
-    return "url";
-  });
-  const [menuUrl, setMenuUrl] = useState(settings.public_menu_url ?? "");
-  const [menuPdfUrl, setMenuPdfUrl] = useState(settings.public_menu_pdf_url ?? "");
-  const [isUploadingMenuPdf, setIsUploadingMenuPdf] = useState(false);
   const [publicPageDescription, setPublicPageDescription] = useState(settings.public_page_description ?? "");
   const [showPublicAddress, setShowPublicAddress] = useState(settings.public_page_show_address ?? true);
   const [showPublicPhone, setShowPublicPhone] = useState(settings.public_page_show_phone ?? true);
@@ -194,6 +191,13 @@ export default function SettingsForm({
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveButtonSuccess, setSaveButtonSuccess] = useState(false);
+
+  const [documents, setDocuments] = useState<RestaurantDocument[]>([]);
+  const [documentsLoading, setDocumentsLoading] = useState(true);
+  const [documentsError, setDocumentsError] = useState<string | null>(null);
+  const [newDocLabel, setNewDocLabel] = useState("");
+  const [isUploadingDocument, setIsUploadingDocument] = useState(false);
+  const [draggingDocId, setDraggingDocId] = useState<string | null>(null);
 
   const [tableRows, setTableRows] = useState<TableRowDraft[]>(() => draftRowsFromDb(initialRestaurantTables));
   const [tableRowErrors, setTableRowErrors] = useState<
@@ -218,6 +222,39 @@ export default function SettingsForm({
       setTableRowErrors({});
     }
   }, [useTables]);
+
+  const sortedDocuments = useMemo(() => {
+    const copy = [...documents];
+    copy.sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || a.created_at.localeCompare(b.created_at));
+    return copy;
+  }, [documents]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setDocumentsLoading(true);
+    setDocumentsError(null);
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("restaurant_documents")
+          .select("id, restaurant_id, label, file_url, position, created_at")
+          .eq("restaurant_id", restaurant.id)
+          .order("position", { ascending: true });
+        if (cancelled) return;
+        if (error) {
+          setDocumentsError(error.message);
+          setDocuments([]);
+          return;
+        }
+        setDocuments((data ?? []) as RestaurantDocument[]);
+      } finally {
+        if (!cancelled) setDocumentsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [restaurant.id, supabase]);
 
   async function uploadAsset(file: File, type: "logo" | "cover") {
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
@@ -251,18 +288,13 @@ export default function SettingsForm({
     return data.publicUrl;
   }
 
-  async function uploadMenuPdf(file: File) {
-    const filePath = `${restaurant.id}/menu-${Date.now()}.pdf`;
-
+  async function uploadRestaurantDocumentPdf(file: File) {
+    const filePath = `documents/${restaurant.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.pdf`;
     const { error } = await supabase.storage.from("restaurant-assets").upload(filePath, file, {
-      upsert: true,
+      upsert: false,
       contentType: "application/pdf",
     });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
+    if (error) throw new Error(error.message);
     const { data } = supabase.storage.from("restaurant-assets").getPublicUrl(filePath);
     return data.publicUrl;
   }
@@ -297,27 +329,99 @@ export default function SettingsForm({
     setGalleryUrls((prev) => prev.filter((u) => u !== url));
   }
 
-  async function handleMenuPdfUpload(event: ChangeEvent<HTMLInputElement>) {
+  async function handleDocumentUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+    const label = newDocLabel.trim().slice(0, 60);
+    if (!label) {
+      setMessage("Ajoutez un libellé avant d’envoyer le PDF.");
+      event.target.value = "";
+      return;
+    }
     if (file.type !== "application/pdf") {
       setMessage("Veuillez choisir un fichier PDF.");
       event.target.value = "";
       return;
     }
+    const maxBytes = 10 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setMessage("Fichier trop volumineux (max 10MB).");
+      event.target.value = "";
+      return;
+    }
     setMessage(null);
-    setIsUploadingMenuPdf(true);
+    setIsUploadingDocument(true);
     try {
-      const publicUrl = await uploadMenuPdf(file);
-      setMenuPdfUrl(publicUrl);
-      setMenuMode("pdf");
-      setMessage("Menu PDF chargé.");
+      const publicUrl = await uploadRestaurantDocumentPdf(file);
+      const nextPosition =
+        sortedDocuments.length > 0 ? Math.max(...sortedDocuments.map((d) => d.position ?? 0)) + 1 : 0;
+      const { data, error } = await supabase
+        .from("restaurant_documents")
+        .insert({
+          restaurant_id: restaurant.id,
+          label,
+          file_url: publicUrl,
+          position: nextPosition,
+        })
+        .select("id, restaurant_id, label, file_url, position, created_at")
+        .single();
+      if (error) throw new Error(error.message);
+      if (data) {
+        setDocuments((prev) => [...prev, data as RestaurantDocument]);
+      }
+      setNewDocLabel("");
+      setMessage("Document ajouté.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Impossible de charger le PDF.");
+      setMessage(error instanceof Error ? error.message : "Impossible d’ajouter le document.");
     } finally {
-      setIsUploadingMenuPdf(false);
+      setIsUploadingDocument(false);
       event.target.value = "";
     }
+  }
+
+  async function deleteDocument(doc: RestaurantDocument) {
+    setMessage(null);
+    const path = storagePathFromRestaurantAssetUrl(doc.file_url);
+    if (path) {
+      await supabase.storage.from("restaurant-assets").remove([path]);
+    }
+    const { error } = await supabase.from("restaurant_documents").delete().eq("id", doc.id);
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
+    setMessage("Document supprimé.");
+  }
+
+  function reorderDocuments(dragId: string, overId: string) {
+    if (dragId === overId) return;
+    const list = sortedDocuments;
+    const fromIndex = list.findIndex((d) => d.id === dragId);
+    const toIndex = list.findIndex((d) => d.id === overId);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const next = [...list];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    setDocuments(
+      next.map((d, idx) => ({
+        ...d,
+        position: idx,
+      })),
+    );
+  }
+
+  async function persistDocumentPositions() {
+    const next = [...sortedDocuments].map((d, idx) => ({ ...d, position: idx }));
+    setDocuments(next);
+    const updates = next.map((d) => supabase.from("restaurant_documents").update({ position: d.position }).eq("id", d.id));
+    const results = await Promise.all(updates);
+    const firstError = results.find((r) => r.error)?.error;
+    if (firstError) {
+      setMessage(firstError.message);
+      return;
+    }
+    setMessage("Ordre mis à jour.");
   }
 
   async function handleLogoUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -442,16 +546,6 @@ export default function SettingsForm({
     }
 
     const descTrim = publicPageDescription.trim().slice(0, 300);
-    let publicMenuMode: "url" | "pdf" | null = null;
-    let publicMenuUrlSave: string | null = null;
-    let publicMenuPdfUrlSave: string | null = null;
-    if (menuMode === "url" && menuUrl.trim()) {
-      publicMenuMode = "url";
-      publicMenuUrlSave = menuUrl.trim();
-    } else if (menuMode === "pdf" && menuPdfUrl.trim()) {
-      publicMenuMode = "pdf";
-      publicMenuPdfUrlSave = menuPdfUrl.trim();
-    }
 
     const { error: settingsError } = await supabase
       .from("restaurant_settings")
@@ -484,9 +578,6 @@ export default function SettingsForm({
         closure_message: closureMessage || null,
         public_page_description: descTrim || null,
         gallery_image_urls: galleryUrls.filter(Boolean),
-        public_menu_mode: publicMenuMode,
-        public_menu_url: publicMenuUrlSave,
-        public_menu_pdf_url: publicMenuPdfUrlSave,
         public_page_show_address: showPublicAddress,
         public_page_show_phone: showPublicPhone,
         public_page_show_email: showPublicEmail,
@@ -944,83 +1035,93 @@ export default function SettingsForm({
           </div>
 
           <div className="space-y-3">
-            <p className="text-sm font-medium text-[var(--foreground)]">Menu</p>
-            <label
-              className={cn(
-                "flex cursor-pointer gap-4 rounded-lg border p-4 transition-colors",
-                menuMode === "url" ? "border-green-200 bg-green-50/50" : "border-gray-200 hover:bg-gray-50/80",
-              )}
-            >
-              <input
-                type="radio"
-                name="public-menu-mode"
-                value="url"
-                checked={menuMode === "url"}
-                onChange={() => setMenuMode("url")}
-                className="sr-only"
-              />
-              <span
-                className={cn(
-                  "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
-                  menuMode === "url"
-                    ? "border-[var(--primary)] bg-[var(--primary)]"
-                    : "border-[rgba(0,0,0,0.12)] bg-[var(--surface)]",
-                )}
-              >
-                {menuMode === "url" ? <span className="h-2 w-2 rounded-full bg-white" /> : null}
-              </span>
-              <span className="flex-1 space-y-2">
-                <span className="block text-sm font-semibold text-[var(--foreground)]">Lien vers le menu</span>
-                <Input
-                  type="url"
-                  value={menuUrl}
-                  onChange={(event) => setMenuUrl(event.target.value)}
-                  placeholder="https://… (PDF externe ou page web)"
-                  disabled={menuMode !== "url"}
-                />
-              </span>
-            </label>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">PDF — cartes & menus</p>
+                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                  Ajoutez plusieurs documents (PDF), nommez-les et définissez l’ordre d’affichage.
+                </p>
+              </div>
+              <Button type="button" variant="secondary" onClick={() => void persistDocumentPositions()} disabled={documentsLoading || sortedDocuments.length < 2}>
+                Enregistrer l’ordre
+              </Button>
+            </div>
 
-            <label
-              className={cn(
-                "flex cursor-pointer gap-4 rounded-lg border p-4 transition-colors",
-                menuMode === "pdf" ? "border-green-200 bg-green-50/50" : "border-gray-200 hover:bg-gray-50/80",
-              )}
-            >
-              <input
-                type="radio"
-                name="public-menu-mode"
-                value="pdf"
-                checked={menuMode === "pdf"}
-                onChange={() => setMenuMode("pdf")}
-                className="sr-only"
-              />
-              <span
-                className={cn(
-                  "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
-                  menuMode === "pdf"
-                    ? "border-[var(--primary)] bg-[var(--primary)]"
-                    : "border-[rgba(0,0,0,0.12)] bg-[var(--surface)]",
-                )}
-              >
-                {menuMode === "pdf" ? <span className="h-2 w-2 rounded-full bg-white" /> : null}
-              </span>
-              <span className="flex-1 space-y-2">
-                <span className="block text-sm font-semibold text-[var(--foreground)]">PDF du menu</span>
-                <Input
-                  type="file"
-                  accept="application/pdf"
-                  onChange={handleMenuPdfUpload}
-                  disabled={menuMode !== "pdf" || isUploadingMenuPdf}
-                />
-                {isUploadingMenuPdf ? (
-                  <p className="text-xs text-[var(--muted-foreground)]">Envoi du PDF...</p>
-                ) : null}
-                {menuPdfUrl && menuMode === "pdf" ? (
-                  <p className="break-all text-xs text-[var(--muted-foreground)]">{menuPdfUrl}</p>
-                ) : null}
-              </span>
-            </label>
+            {documentsError ? (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800" role="alert">
+                {documentsError}
+              </p>
+            ) : null}
+
+            <div className="grid gap-3 rounded-xl border border-gray-200 bg-white p-4">
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+                <div>
+                  <label className="dashboard-field-label">Libellé</label>
+                  <Input
+                    value={newDocLabel}
+                    onChange={(e) => setNewDocLabel(e.target.value)}
+                    placeholder='Ex : "Carte des pizzas", "Menu du jour"...'
+                    maxLength={60}
+                    disabled={isUploadingDocument}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Fichier (PDF, max 10MB)</label>
+                  <Input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleDocumentUpload}
+                    disabled={isUploadingDocument}
+                  />
+                </div>
+              </div>
+              {isUploadingDocument ? (
+                <p className="text-xs text-[var(--muted-foreground)]">Envoi du PDF...</p>
+              ) : null}
+            </div>
+
+            {documentsLoading ? (
+              <p className="text-sm text-[var(--muted-foreground)]">Chargement des documents…</p>
+            ) : sortedDocuments.length === 0 ? (
+              <p className="text-sm text-[var(--muted-foreground)]">Aucun PDF pour le moment.</p>
+            ) : (
+              <ul className="space-y-2">
+                {sortedDocuments.map((doc) => (
+                  <li
+                    key={doc.id}
+                    draggable
+                    onDragStart={() => setDraggingDocId(doc.id)}
+                    onDragEnd={() => setDraggingDocId(null)}
+                    onDragOver={(e: DragEvent<HTMLLIElement>) => e.preventDefault()}
+                    onDrop={() => {
+                      if (!draggingDocId) return;
+                      reorderDocuments(draggingDocId, doc.id);
+                      setDraggingDocId(null);
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3",
+                      draggingDocId === doc.id && "opacity-60",
+                    )}
+                  >
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500">
+                      <GripVertical className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[var(--foreground)]">{doc.label}</p>
+                      <p className="truncate text-xs text-[var(--muted-foreground)]">{doc.file_url}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
+                      aria-label="Supprimer ce document"
+                      onClick={() => void deleteDocument(doc)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div>

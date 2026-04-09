@@ -25,7 +25,7 @@ type PublicReservationFormProps = {
   restaurantTagline?: string | null;
   publicPageDescription?: string | null;
   galleryImageUrls?: string[];
-  menuPublicHref?: string | null;
+  documents?: { id: string; label: string; fileUrl: string; position: number }[];
   restaurantPhone?: string | null;
   restaurantAddress?: string | null;
   restaurantEmail?: string | null;
@@ -71,7 +71,7 @@ export default function PublicReservationForm({
   restaurantTagline,
   publicPageDescription,
   galleryImageUrls = [],
-  menuPublicHref,
+  documents = [],
   restaurantPhone,
   restaurantAddress,
   restaurantEmail,
@@ -129,6 +129,18 @@ export default function PublicReservationForm({
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
+
+  const sortedDocuments = useMemo(() => {
+    const copy = [...documents];
+    copy.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    return copy;
+  }, [documents]);
+
+  const activeDocument = useMemo(() => {
+    if (!activeDocumentId) return null;
+    return sortedDocuments.find((d) => d.id === activeDocumentId) ?? null;
+  }, [activeDocumentId, sortedDocuments]);
 
   const cssVars = useMemo(
     () =>
@@ -318,7 +330,8 @@ export default function PublicReservationForm({
     "min-h-[48px] w-full rounded-[var(--radius)] border px-4 py-3 text-sm outline-none transition focus:border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-color)]";
 
   return (
-    <div
+    <>
+      <div
       className="min-h-screen [font-size:calc(16px*var(--font-scale))]"
       style={{
         ...cssVars,
@@ -420,24 +433,51 @@ export default function PublicReservationForm({
           >
             Réserver une table
           </button>
-          {menuPublicHref ? (
-            <a
-              href={menuPublicHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-[var(--radius)] border-2 bg-transparent px-8 text-sm font-semibold tracking-wide transition duration-300 active:scale-[0.98] sm:min-h-[52px] sm:w-auto sm:min-w-[220px] sm:max-w-xs"
-              style={{
-                borderColor: "var(--accent-color)",
-                color: "var(--accent-color)",
-              }}
-            >
-              Voir le menu
-            </a>
-          ) : null}
         </div>
       </div>
 
       <div className="mx-auto max-w-6xl space-y-14 px-5 py-14 sm:px-8 md:px-12 lg:px-16 lg:py-20">
+        {sortedDocuments.length > 0 ? (
+          <section
+            className="rounded-[var(--radius)] border px-6 py-6 md:px-10 md:py-8"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))",
+              borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
+            }}
+          >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2
+                  className="text-lg font-semibold"
+                  style={{ fontFamily: "var(--heading-font), Georgia, serif", color: "var(--text-color)" }}
+                >
+                  Nos cartes & menus
+                </h2>
+                <p className="mt-1 text-sm" style={{ color: "color-mix(in srgb, var(--text-color) 62%, var(--bg-color))" }}>
+                  Consultez nos documents (PDF).
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {sortedDocuments.map((doc) => (
+                  <button
+                    key={doc.id}
+                    type="button"
+                    onClick={() => setActiveDocumentId(doc.id)}
+                    className="inline-flex items-center justify-center rounded-[var(--radius)] px-4 py-2 text-sm font-semibold transition hover:brightness-110 active:scale-[0.99]"
+                    style={{
+                      backgroundColor: "transparent",
+                      border: "1px solid var(--accent-color)",
+                      color: "var(--accent-color)",
+                    }}
+                  >
+                    {doc.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         {introText ? (
           <p
             className="mx-auto max-w-3xl text-center text-pretty text-base leading-relaxed md:text-lg"
@@ -866,5 +906,44 @@ export default function PublicReservationForm({
         ) : null}
       </div>
     </div>
+    {activeDocument ? (
+      <div
+        className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Document PDF"
+        onClick={() => setActiveDocumentId(null)}
+      >
+        <div
+          className="w-full max-w-5xl overflow-hidden rounded-xl border bg-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
+            <p className="text-sm font-semibold text-gray-900">{activeDocument.label}</p>
+            <div className="flex items-center gap-3">
+              <a
+                href={activeDocument.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-gray-700 hover:underline"
+              >
+                Ouvrir dans un nouvel onglet
+              </a>
+              <button
+                type="button"
+                onClick={() => setActiveDocumentId(null)}
+                className="rounded-md border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+          <div className="h-[75vh] bg-white">
+            <iframe title={activeDocument.label} src={activeDocument.fileUrl} className="h-full w-full" />
+          </div>
+        </div>
+      </div>
+    ) : null}
+    </>
   );
 }

@@ -52,7 +52,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "opening_hours, reservation_slot_interval, max_party_size, allow_phone, allow_email, logo_url, cover_image_url, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_menu_mode, public_menu_url, public_menu_pdf_url, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours, days_in_advance, use_tables",
+      "opening_hours, reservation_slot_interval, max_party_size, allow_phone, allow_email, logo_url, cover_image_url, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours, days_in_advance, use_tables",
     )
     .eq("restaurant_id", restaurant.id)
     .single();
@@ -83,9 +83,6 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     closure_message: null,
     public_page_description: null,
     gallery_image_urls: [] as string[],
-    public_menu_mode: null as "url" | "pdf" | null,
-    public_menu_url: null,
-    public_menu_pdf_url: null,
     public_page_show_address: true,
     public_page_show_phone: true,
     public_page_show_email: true,
@@ -95,19 +92,12 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     use_tables: false,
   };
 
-  const menuPdf = safeSettings.public_menu_pdf_url?.trim();
-  const menuUrl = safeSettings.public_menu_url?.trim();
-  const menuMode = safeSettings.public_menu_mode;
-  const menuPublicHref =
-    menuMode === "pdf" && menuPdf
-      ? menuPdf
-      : menuMode === "url" && menuUrl
-        ? menuUrl
-        : !menuMode && menuPdf
-          ? menuPdf
-          : !menuMode && menuUrl
-            ? menuUrl
-            : null;
+  const { data: documents } = await supabase
+    .from("restaurant_documents")
+    .select("id, label, file_url, position, created_at")
+    .eq("restaurant_id", restaurant.id)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
 
   const galleryImageUrls = (safeSettings.gallery_image_urls ?? []).filter(Boolean);
   const headingFont = normalizeFontChoice(safeSettings.heading_font, "Playfair Display");
@@ -130,7 +120,12 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           restaurantTagline={restaurant.description}
           publicPageDescription={safeSettings.public_page_description}
           galleryImageUrls={galleryImageUrls}
-          menuPublicHref={menuPublicHref}
+          documents={(documents ?? []).map((d) => ({
+            id: d.id,
+            label: d.label,
+            fileUrl: d.file_url,
+            position: d.position ?? 0,
+          }))}
           restaurantPhone={restaurant.phone}
           restaurantAddress={restaurant.address}
           restaurantEmail={restaurant.email}
