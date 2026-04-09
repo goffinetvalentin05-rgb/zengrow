@@ -14,14 +14,14 @@ export default async function DashboardSettingsPage() {
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "reservation_duration, reservation_slot_interval, restaurant_capacity, max_covers_per_slot, max_party_size, use_tables, days_in_advance, accent_color, button_color, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_menu_mode, public_menu_url, public_menu_pdf_url, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours",
+      "reservation_duration, reservation_slot_interval, restaurant_capacity, max_covers_per_slot, max_party_size, use_tables, days_in_advance, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_menu_mode, public_menu_url, public_menu_pdf_url, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours",
     )
     .eq("restaurant_id", restaurant.id)
     .single();
 
   const { data: restaurantConfig } = await supabase
     .from("restaurants")
-    .select("reservation_confirmation_mode, public_theme_key")
+    .select("reservation_confirmation_mode, primary_color")
     .eq("id", restaurant.id)
     .single();
 
@@ -41,6 +41,13 @@ export default async function DashboardSettingsPage() {
     days_in_advance: 60,
     accent_color: "#1A6B50",
     button_color: "#1A6B50",
+    text_color: "#111827",
+    heading_font: "Playfair Display",
+    body_font: "Inter",
+    font_size_scale: "medium" as const,
+    border_radius: "rounded" as const,
+    button_style: "filled" as const,
+    card_style: "elevated" as const,
     logo_url: "",
     cover_image_url: "",
     instagram_url: "",
@@ -79,7 +86,7 @@ export default async function DashboardSettingsPage() {
           address: restaurant.address,
           description: restaurant.description,
           slug: restaurant.slug,
-          public_theme_key: restaurantConfig?.public_theme_key ?? "moderne",
+          primary_color: restaurantConfig?.primary_color ?? "#12151c",
         }}
         settings={safeSettings}
         confirmationMode={restaurantConfig?.reservation_confirmation_mode ?? "manual"}

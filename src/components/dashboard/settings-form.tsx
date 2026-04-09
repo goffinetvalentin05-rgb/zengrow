@@ -19,7 +19,7 @@ type RestaurantData = {
   address: string | null;
   description: string | null;
   slug: string;
-  public_theme_key?: string | null;
+  primary_color: string | null;
 };
 
 type SettingsData = {
@@ -32,6 +32,13 @@ type SettingsData = {
   days_in_advance: number | null;
   accent_color: string | null;
   button_color: string | null;
+  text_color?: string | null;
+  heading_font?: string | null;
+  body_font?: string | null;
+  font_size_scale?: "small" | "medium" | "large" | string | null;
+  border_radius?: "sharp" | "rounded" | "pill" | string | null;
+  button_style?: "filled" | "outlined" | "ghost" | string | null;
+  card_style?: "flat" | "elevated" | "bordered" | string | null;
   logo_url: string | null;
   cover_image_url: string | null;
   instagram_url: string | null;
@@ -135,8 +142,24 @@ export default function SettingsForm({
   const [reservationDuration, setReservationDuration] = useState(settings.reservation_duration ?? 90);
   const [slotInterval, setSlotInterval] = useState(settings.reservation_slot_interval ?? 15);
   const [maxPartySize, setMaxPartySize] = useState(settings.max_party_size ?? 8);
-  const [accentColor, setAccentColor] = useState(settings.accent_color ?? "#1A6B50");
+  const [primaryColor, setPrimaryColor] = useState(restaurant.primary_color ?? "#12151c");
   const [buttonColor, setButtonColor] = useState(settings.button_color ?? "#1A6B50");
+  const [textColor, setTextColor] = useState(settings.text_color ?? "#111827");
+  const [accentColor, setAccentColor] = useState(settings.accent_color ?? "#1A6B50");
+  const [headingFont, setHeadingFont] = useState(settings.heading_font ?? "Playfair Display");
+  const [bodyFont, setBodyFont] = useState(settings.body_font ?? "Inter");
+  const [fontSizeScale, setFontSizeScale] = useState<"small" | "medium" | "large">(
+    (settings.font_size_scale as "small" | "medium" | "large") ?? "medium",
+  );
+  const [borderRadius, setBorderRadius] = useState<"sharp" | "rounded" | "pill">(
+    (settings.border_radius as "sharp" | "rounded" | "pill") ?? "rounded",
+  );
+  const [buttonStyle, setButtonStyle] = useState<"filled" | "outlined" | "ghost">(
+    (settings.button_style as "filled" | "outlined" | "ghost") ?? "filled",
+  );
+  const [cardStyle, setCardStyle] = useState<"flat" | "elevated" | "bordered">(
+    (settings.card_style as "flat" | "elevated" | "bordered") ?? "elevated",
+  );
   const [logoUrl, setLogoUrl] = useState(settings.logo_url ?? "");
   const [coverImageUrl, setCoverImageUrl] = useState(settings.cover_image_url ?? "");
   const [instagramUrl, setInstagramUrl] = useState(settings.instagram_url ?? "");
@@ -163,11 +186,6 @@ export default function SettingsForm({
   const [menuPdfUrl, setMenuPdfUrl] = useState(settings.public_menu_pdf_url ?? "");
   const [isUploadingMenuPdf, setIsUploadingMenuPdf] = useState(false);
   const [publicPageDescription, setPublicPageDescription] = useState(settings.public_page_description ?? "");
-  const [publicThemeKey, setPublicThemeKey] = useState<"moderne" | "classique" | "naturel" | "minimaliste">(
-    restaurant.public_theme_key && ["moderne", "classique", "naturel", "minimaliste"].includes(restaurant.public_theme_key)
-      ? (restaurant.public_theme_key as "moderne" | "classique" | "naturel" | "minimaliste")
-      : "moderne",
-  );
   const [showPublicAddress, setShowPublicAddress] = useState(settings.public_page_show_address ?? true);
   const [showPublicPhone, setShowPublicPhone] = useState(settings.public_page_show_phone ?? true);
   const [showPublicEmail, setShowPublicEmail] = useState(settings.public_page_show_email ?? true);
@@ -412,8 +430,7 @@ export default function SettingsForm({
         email: email || null,
         address: address || null,
         description: description || null,
-        // Theme key for public reservation page (curated presets)
-        public_theme_key: publicThemeKey,
+        primary_color: primaryColor || null,
         reservation_confirmation_mode: reservationConfirmationMode,
       })
       .eq("id", restaurant.id);
@@ -449,6 +466,13 @@ export default function SettingsForm({
         max_party_size: maxPartySize,
         accent_color: accentColor || null,
         button_color: buttonColor || null,
+        text_color: textColor || null,
+        heading_font: headingFont || null,
+        body_font: bodyFont || null,
+        font_size_scale: fontSizeScale,
+        border_radius: borderRadius,
+        button_style: buttonStyle,
+        card_style: cardStyle,
         logo_url: logoUrl || null,
         cover_image_url: coverImageUrl || null,
         instagram_url: instagramUrl || null,
@@ -575,67 +599,205 @@ export default function SettingsForm({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="dashboard-field-label">Couleur principale</label>
-              <div className="flex items-center gap-2">
-                <Input type="color" className="h-10 w-16 p-1" value={accentColor} onChange={(event) => setAccentColor(event.target.value)} />
-                <Input value={accentColor} onChange={(event) => setAccentColor(event.target.value)} />
-              </div>
-            </div>
-            <div>
-              <label className="dashboard-field-label">Couleur du bouton</label>
-              <div className="flex items-center gap-2">
-                <Input type="color" className="h-10 w-16 p-1" value={buttonColor} onChange={(event) => setButtonColor(event.target.value)} />
-                <Input value={buttonColor} onChange={(event) => setButtonColor(event.target.value)} />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
-            <p className="text-sm font-medium text-[var(--foreground)]">Thème de la page publique</p>
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              4 styles premium, cohérents et adaptés aux restaurants. Ce thème pilote fond, accent, texte et polices sur la page publique.
-            </p>
-
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {([
-                { key: "moderne", title: "Moderne", desc: "Charbon profond, vert lumineux, Playfair + Inter" },
-                { key: "classique", title: "Classique", desc: "Crème chaude, bordeaux, Cormorant + Lato" },
-                { key: "naturel", title: "Naturel", desc: "Beige chaud, terracotta, Merriweather + Source Sans" },
-                { key: "minimaliste", title: "Minimaliste", desc: "Blanc pur, noir, DM Sans" },
-              ] as const).map((opt) => (
-                <label
-                  key={opt.key}
-                  className={cn(
-                    "flex cursor-pointer gap-4 rounded-xl border p-4 transition-colors",
-                    publicThemeKey === opt.key ? "border-green-200 bg-green-50/50" : "border-gray-200 hover:bg-gray-50/80",
-                  )}
+          <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm font-medium text-[var(--foreground)]">Personnalisation</p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setPrimaryColor("#12151c");
+                    setButtonColor("#1F7A6C");
+                    setTextColor("#111827");
+                    setAccentColor("#1F7A6C");
+                    setHeadingFont("Playfair Display");
+                    setBodyFont("Inter");
+                    setFontSizeScale("medium");
+                    setBorderRadius("rounded");
+                    setButtonStyle("filled");
+                    setCardStyle("elevated");
+                  }}
                 >
-                  <input
-                    type="radio"
-                    name="public-theme-key"
-                    value={opt.key}
-                    checked={publicThemeKey === opt.key}
-                    onChange={() => setPublicThemeKey(opt.key)}
-                    className="sr-only"
-                  />
-                  <span
+                  Réinitialiser
+                </Button>
+              </div>
+
+              <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Couleurs</summary>
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label className="dashboard-field-label">Couleur principale (fond)</label>
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="h-10 w-16 p-1" value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} />
+                      <Input value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Couleur du bouton</label>
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="h-10 w-16 p-1" value={buttonColor} onChange={(event) => setButtonColor(event.target.value)} />
+                      <Input value={buttonColor} onChange={(event) => setButtonColor(event.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Couleur du texte</label>
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="h-10 w-16 p-1" value={textColor} onChange={(event) => setTextColor(event.target.value)} />
+                      <Input value={textColor} onChange={(event) => setTextColor(event.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Couleur d’accent (liens, surlignages)</label>
+                    <div className="flex items-center gap-2">
+                      <Input type="color" className="h-10 w-16 p-1" value={accentColor} onChange={(event) => setAccentColor(event.target.value)} />
+                      <Input value={accentColor} onChange={(event) => setAccentColor(event.target.value)} />
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Typographie</summary>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="dashboard-field-label">Police des titres</label>
+                    <select
+                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      value={headingFont}
+                      onChange={(event) => setHeadingFont(event.target.value)}
+                    >
+                      {["Playfair Display","Cormorant Garamond","DM Sans","Inter","Merriweather","Lato","Source Sans Pro","Montserrat","Raleway","Poppins"].map((f) => (
+                        <option key={f} value={f}>{f}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Police du corps</label>
+                    <select
+                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      value={bodyFont}
+                      onChange={(event) => setBodyFont(event.target.value)}
+                    >
+                      {["Playfair Display","Cormorant Garamond","DM Sans","Inter","Merriweather","Lato","Source Sans Pro","Montserrat","Raleway","Poppins"].map((f) => (
+                        <option key={f} value={f}>{f}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="dashboard-field-label">Échelle de taille</label>
+                    <select
+                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      value={fontSizeScale}
+                      onChange={(event) => setFontSizeScale(event.target.value as "small" | "medium" | "large")}
+                    >
+                      <option value="small">Small</option>
+                      <option value="medium">Medium</option>
+                      <option value="large">Large</option>
+                    </select>
+                  </div>
+                </div>
+              </details>
+
+              <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Style</summary>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="dashboard-field-label">Rayon des bordures</label>
+                    <select
+                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      value={borderRadius}
+                      onChange={(event) => setBorderRadius(event.target.value as "sharp" | "rounded" | "pill")}
+                    >
+                      <option value="sharp">Sharp (0px)</option>
+                      <option value="rounded">Rounded (8px)</option>
+                      <option value="pill">Pill (999px)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Style des boutons</label>
+                    <select
+                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      value={buttonStyle}
+                      onChange={(event) => setButtonStyle(event.target.value as "filled" | "outlined" | "ghost")}
+                    >
+                      <option value="filled">Filled</option>
+                      <option value="outlined">Outlined</option>
+                      <option value="ghost">Ghost</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="dashboard-field-label">Style des cartes</label>
+                    <select
+                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      value={cardStyle}
+                      onChange={(event) => setCardStyle(event.target.value as "flat" | "elevated" | "bordered")}
+                    >
+                      <option value="flat">Flat</option>
+                      <option value="elevated">Elevated (shadow)</option>
+                      <option value="bordered">Bordered</option>
+                    </select>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <p className="text-sm font-medium text-[var(--foreground)]">Aperçu</p>
+              <div
+                className="mt-3 overflow-hidden rounded-xl border"
+                style={{
+                  borderColor: "rgba(0,0,0,0.08)",
+                  backgroundColor: primaryColor,
+                  color: textColor,
+                  fontFamily: `"${bodyFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
+                }}
+              >
+                <div className="p-5" style={{ fontSize: fontSizeScale === "small" ? 14 : fontSizeScale === "large" ? 17 : 16 }}>
+                  <div
                     className={cn(
-                      "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
-                      publicThemeKey === opt.key
-                        ? "border-[var(--primary)] bg-[var(--primary)]"
-                        : "border-[rgba(0,0,0,0.12)] bg-[var(--surface)]",
+                      "p-4",
+                      cardStyle === "elevated" && "shadow-sm",
+                      cardStyle === "bordered" && "border",
                     )}
+                    style={{
+                      borderColor: "color-mix(in srgb, currentColor 14%, transparent)",
+                      backgroundColor: "color-mix(in srgb, currentColor 7%, transparent)",
+                      borderRadius: borderRadius === "sharp" ? 0 : borderRadius === "pill" ? 999 : 8,
+                    }}
                   >
-                    {publicThemeKey === opt.key ? <span className="h-2 w-2 rounded-full bg-white" /> : null}
-                  </span>
-                  <span className="flex-1">
-                    <span className="block text-sm font-semibold text-[var(--foreground)]">{opt.title}</span>
-                    <span className="mt-0.5 block text-sm text-[var(--muted-foreground)]">{opt.desc}</span>
-                  </span>
-                </label>
-              ))}
+                    <div
+                      className="text-lg font-semibold"
+                      style={{ fontFamily: `"${headingFont}", system-ui, serif` }}
+                    >
+                      Votre page publique
+                    </div>
+                    <p className="mt-1 text-sm" style={{ opacity: 0.78 }}>
+                      Aperçu en temps réel avant d’enregistrer.
+                    </p>
+                    <div className="mt-3 flex items-center gap-3">
+                      <button
+                        type="button"
+                        className="px-4 py-2 text-sm font-semibold"
+                        style={{
+                          borderRadius: borderRadius === "sharp" ? 0 : borderRadius === "pill" ? 999 : 8,
+                          backgroundColor: buttonStyle === "filled" ? buttonColor : "transparent",
+                          color: buttonStyle === "filled" ? "#fff" : buttonColor,
+                          border: buttonStyle === "outlined" ? `1px solid ${buttonColor}` : "1px solid transparent",
+                        }}
+                      >
+                        Bouton
+                      </button>
+                      <a href="#" className="text-sm font-medium" style={{ color: accentColor }}>
+                        Lien d’accent
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-[var(--muted-foreground)]">
+                Les changements ci-dessus se reflètent immédiatement ici, avant sauvegarde.
+              </p>
             </div>
           </div>
 

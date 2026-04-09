@@ -13,8 +13,6 @@ import {
 } from "lucide-react";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
-import type { PublicThemeKey } from "@/src/lib/public-page-themes";
-import { PUBLIC_THEMES } from "@/src/lib/public-page-themes";
 import type { AvailabilitySlot } from "@/src/lib/reservation/schemas";
 import { cn, formatOpeningHoursLines, OpeningHours } from "@/src/lib/utils";
 
@@ -39,7 +37,16 @@ type PublicReservationFormProps = {
   useTables: boolean;
   logoUrl?: string | null;
   coverImageUrl?: string | null;
-  themeKey: PublicThemeKey;
+  primaryColor: string;
+  buttonColor: string;
+  textColor: string;
+  accentColor: string;
+  headingFont: string;
+  bodyFont: string;
+  fontSizeScale: "small" | "medium" | "large";
+  borderRadius: "sharp" | "rounded" | "pill";
+  buttonStyle: "filled" | "outlined" | "ghost";
+  cardStyle: "flat" | "elevated" | "bordered";
   showPublicAddress: boolean;
   showPublicPhone: boolean;
   showPublicEmail: boolean;
@@ -76,7 +83,16 @@ export default function PublicReservationForm({
   useTables,
   logoUrl,
   coverImageUrl,
-  themeKey,
+  primaryColor,
+  buttonColor,
+  textColor,
+  accentColor,
+  headingFont,
+  bodyFont,
+  fontSizeScale,
+  borderRadius,
+  buttonStyle,
+  cardStyle,
   showPublicAddress,
   showPublicPhone,
   showPublicEmail,
@@ -90,8 +106,10 @@ export default function PublicReservationForm({
   closureEndDate,
   closureMessage,
 }: PublicReservationFormProps) {
-  const preset = PUBLIC_THEMES[themeKey] ?? PUBLIC_THEMES.moderne;
-  const isLightTheme = preset.key === "classique" || preset.key === "naturel" || preset.key === "minimaliste";
+  const isLightTheme = useMemo(() => {
+    const t = textColor.trim().toLowerCase();
+    return t === "#111827" || t === "#111111" || t === "#1a1a1a" || t === "#222222";
+  }, [textColor]);
   const todayDate = new Date().toISOString().slice(0, 10);
   const maxDateStr = useMemo(() => {
     const d = new Date();
@@ -115,13 +133,16 @@ export default function PublicReservationForm({
   const cssVars = useMemo(
     () =>
       ({
-        "--bg-color": preset.background,
-        "--accent-color": preset.accent,
-        "--text-color": preset.text,
-        "--heading-font": `var(${preset.headingFontVar})`,
-        "--body-font": `var(${preset.bodyFontVar})`,
+        "--bg-color": primaryColor,
+        "--accent-color": accentColor,
+        "--button-color": buttonColor,
+        "--text-color": textColor,
+        "--heading-font": `"${headingFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
+        "--body-font": `"${bodyFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
+        "--radius": borderRadius === "sharp" ? "0px" : borderRadius === "pill" ? "999px" : "8px",
+        "--font-scale": fontSizeScale === "small" ? "0.92" : fontSizeScale === "large" ? "1.08" : "1",
       }) as React.CSSProperties,
-    [preset],
+    [accentColor, bodyFont, borderRadius, buttonColor, fontSizeScale, headingFont, primaryColor, textColor],
   );
 
   const fieldStyle = useMemo(
@@ -292,13 +313,13 @@ export default function PublicReservationForm({
 
   const labelClass = "block text-xs font-semibold uppercase tracking-[0.18em]";
   const iconRing =
-    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-[color-mix(in_srgb,var(--accent-color)_12%,transparent)] text-[var(--accent-color)]";
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius)] border bg-[color-mix(in_srgb,var(--accent-color)_12%,transparent)] text-[var(--accent-color)]";
   const inputClass =
-    "min-h-[48px] w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-color)]";
+    "min-h-[48px] w-full rounded-[var(--radius)] border px-4 py-3 text-sm outline-none transition focus:border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-color)]";
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen [font-size:calc(16px*var(--font-scale))]"
       style={{
         ...cssVars,
         backgroundColor: "var(--bg-color)",
@@ -341,7 +362,7 @@ export default function PublicReservationForm({
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-8 md:flex-row md:items-end md:justify-start md:gap-10">
             {logoUrl ? (
               <div
-                className="relative shrink-0 overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--text-color)_18%,transparent)] bg-[color-mix(in_srgb,var(--bg-color)_55%,transparent)] p-1 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-sm"
+                className="relative shrink-0 overflow-hidden rounded-[var(--radius)] border border-[color-mix(in_srgb,var(--text-color)_18%,transparent)] bg-[color-mix(in_srgb,var(--bg-color)_55%,transparent)] p-1 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-sm"
                 style={{ boxShadow: `0 24px 60px -20px rgba(0,0,0,0.55), 0 0 0 1px color-mix(in srgb, var(--accent-color) 28%, transparent)` }}
               >
                 <div className="relative h-28 w-28 sm:h-32 sm:w-32 md:h-40 md:w-40">
@@ -388,10 +409,13 @@ export default function PublicReservationForm({
           <button
             type="button"
             onClick={scrollToReservation}
-            className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full px-8 text-sm font-semibold tracking-wide shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)] transition duration-300 hover:brightness-110 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.25)] active:scale-[0.98] sm:min-h-[52px] sm:w-auto sm:min-w-[220px] sm:max-w-xs"
+            className="inline-flex min-h-[48px] w-full items-center justify-center rounded-[var(--radius)] px-8 text-sm font-semibold tracking-wide shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)] transition duration-300 hover:brightness-110 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.25)] active:scale-[0.98] sm:min-h-[52px] sm:w-auto sm:min-w-[220px] sm:max-w-xs"
             style={{
-              backgroundColor: "var(--accent-color)",
-              color: isLightTheme ? "#ffffff" : "#0b0b0b",
+              ...(buttonStyle === "ghost"
+                ? { backgroundColor: "transparent", color: "var(--button-color)" }
+                : buttonStyle === "outlined"
+                  ? { backgroundColor: "transparent", color: "var(--button-color)", border: "1px solid var(--button-color)" }
+                  : { backgroundColor: "var(--button-color)", color: isLightTheme ? "#ffffff" : "#0b0b0b" }),
             }}
           >
             Réserver une table
@@ -401,7 +425,7 @@ export default function PublicReservationForm({
               href={menuPublicHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full border-2 bg-transparent px-8 text-sm font-semibold tracking-wide transition duration-300 active:scale-[0.98] sm:min-h-[52px] sm:w-auto sm:min-w-[220px] sm:max-w-xs"
+              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-[var(--radius)] border-2 bg-transparent px-8 text-sm font-semibold tracking-wide transition duration-300 active:scale-[0.98] sm:min-h-[52px] sm:w-auto sm:min-w-[220px] sm:max-w-xs"
               style={{
                 borderColor: "var(--accent-color)",
                 color: "var(--accent-color)",
@@ -425,7 +449,12 @@ export default function PublicReservationForm({
 
         {showInfoCard ? (
           <div
-            className="rounded-2xl border px-6 py-8 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.35)] backdrop-blur-md md:px-10 md:py-10"
+            className={cn(
+              "rounded-[var(--radius)] border px-6 py-8 backdrop-blur-md md:px-10 md:py-10",
+              cardStyle === "elevated" && "shadow-[0_24px_80px_-40px_rgba(0,0,0,0.35)]",
+              cardStyle === "flat" && "shadow-none",
+              cardStyle === "bordered" && "shadow-none",
+            )}
             style={{
               backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))",
               borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
@@ -562,7 +591,7 @@ export default function PublicReservationForm({
                     href={instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition hover:opacity-90"
+                    className="inline-flex items-center gap-2 rounded-[var(--radius)] border px-4 py-2 text-xs font-medium transition hover:opacity-90"
                     style={{
                       borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
                       color: "var(--accent-color)",
@@ -577,7 +606,7 @@ export default function PublicReservationForm({
                     href={facebookUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition hover:opacity-90"
+                    className="inline-flex items-center gap-2 rounded-[var(--radius)] border px-4 py-2 text-xs font-medium transition hover:opacity-90"
                     style={{
                       borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
                       color: "var(--accent-color)",
@@ -594,7 +623,12 @@ export default function PublicReservationForm({
 
         <section id="reservation" className="scroll-mt-24">
           <div
-            className="rounded-2xl border p-6 shadow-[0_32px_100px_-48px_rgba(0,0,0,0.4)] backdrop-blur-md md:p-10"
+            className={cn(
+              "rounded-[var(--radius)] border p-6 backdrop-blur-md md:p-10",
+              cardStyle === "elevated" && "shadow-[0_32px_100px_-48px_rgba(0,0,0,0.4)]",
+              cardStyle === "flat" && "shadow-none",
+              cardStyle === "bordered" && "shadow-none",
+            )}
             style={{
               backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))",
               borderColor: "color-mix(in srgb, var(--text-color) 14%, var(--bg-color))",
@@ -772,10 +806,13 @@ export default function PublicReservationForm({
               <button
                 type="submit"
                 disabled={isSubmitting || isDateInClosurePeriod}
-                className="w-full min-h-[52px] rounded-full border border-transparent py-3.5 text-[15px] font-semibold tracking-wide shadow-lg transition hover:brightness-110 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
+                className="w-full min-h-[52px] rounded-[var(--radius)] border border-transparent py-3.5 text-[15px] font-semibold tracking-wide shadow-lg transition hover:brightness-110 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
                 style={{
-                  backgroundColor: "var(--accent-color)",
-                  color: isLightTheme ? "#ffffff" : "#0b0b0b",
+                  ...(buttonStyle === "ghost"
+                    ? { backgroundColor: "transparent", color: "var(--button-color)" }
+                    : buttonStyle === "outlined"
+                      ? { backgroundColor: "transparent", color: "var(--button-color)", borderColor: "var(--button-color)" }
+                      : { backgroundColor: "var(--button-color)", color: isLightTheme ? "#ffffff" : "#0b0b0b" }),
                 }}
               >
                 {isSubmitting ? "Envoi en cours…" : "Confirmer la demande"}
@@ -807,7 +844,7 @@ export default function PublicReservationForm({
               {galleryImageUrls.map((src) => (
                 <div
                   key={src}
-                  className="group relative aspect-[4/3] overflow-hidden rounded-2xl"
+                  className="group relative aspect-[4/3] overflow-hidden rounded-[var(--radius)]"
                   style={{ backgroundColor: "color-mix(in srgb, var(--text-color) 7%, var(--bg-color))" }}
                 >
                   <Image
