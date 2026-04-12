@@ -27,7 +27,7 @@ export default async function DashboardPage() {
   const [{ data: todayReservations }, { data: settings }, { data: upcomingRows }] = await Promise.all([
     supabase
       .from("reservations")
-      .select("id, guest_name, guests, reservation_time, status, zone")
+      .select("id, guest_name, guests, reservation_time, status, zone, reservation_type")
       .eq("restaurant_id", restaurant.id)
       .eq("reservation_date", today)
       .in("status", ["pending", "confirmed", "completed"]),
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
       .maybeSingle(),
     supabase
       .from("reservations")
-      .select("id, guest_name, guests, reservation_date, reservation_time, status, zone")
+      .select("id, guest_name, guests, reservation_date, reservation_time, status, zone, reservation_type")
       .eq("restaurant_id", restaurant.id)
       .gte("reservation_date", today)
       .in("status", ["pending", "confirmed"])
@@ -102,6 +102,7 @@ export default async function DashboardPage() {
                   subtitle={`${reservation.guests} ${reservation.guests > 1 ? "personnes" : "personne"}`}
                   status={reservation.status as "pending" | "confirmed" | "completed"}
                   seatingZone={(reservation.zone === "terrace" ? "terrace" : "interior") as "interior" | "terrace"}
+                  reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
                   emphasizeTime
                   presentation="list"
                   showZoneBadge={showZoneOnDashboard}
@@ -152,6 +153,7 @@ export default async function DashboardPage() {
                   subtitle={`${reservation.guests} couverts`}
                   status={reservation.status as "pending" | "confirmed"}
                   seatingZone={(reservation.zone === "terrace" ? "terrace" : "interior") as "interior" | "terrace"}
+                  reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
                   presentation="list"
                   showZoneBadge={showZoneOnDashboard}
                 />

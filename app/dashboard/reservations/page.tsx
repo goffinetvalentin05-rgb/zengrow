@@ -15,7 +15,7 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
   const { data: reservations } = await supabase
     .from("reservations")
     .select(
-      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone",
+      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone, reservation_type",
     )
     .eq("restaurant_id", restaurant.id)
     .order("reservation_date", { ascending: false })
@@ -39,6 +39,7 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
     internal_note: string | null;
     created_at: string;
     zone?: "interior" | "terrace" | string | null;
+    reservation_type?: "standard" | "walkin";
   };
 
   return (

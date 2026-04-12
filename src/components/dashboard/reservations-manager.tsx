@@ -23,6 +23,7 @@ type ReservationRow = {
   internal_note: string | null;
   created_at: string;
   zone?: "interior" | "terrace" | string | null;
+  reservation_type?: "standard" | "walkin";
 };
 
 type ReservationsManagerProps = {
@@ -75,6 +76,8 @@ export default function ReservationsManager({
   const [manualGuests, setManualGuests] = useState(2);
   const [manualZone, setManualZone] = useState<"interior" | "terrace">("interior");
   const [manualNote, setManualNote] = useState("");
+  const [manualWalkInMode, setManualWalkInMode] = useState(false);
+  const [showWalkInContactFields, setShowWalkInContactFields] = useState(false);
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>(
     Object.fromEntries(initialReservations.map((reservation) => [reservation.id, reservation.internal_note ?? ""])),
   );
@@ -124,7 +127,7 @@ export default function ReservationsManager({
       .update({ internal_note })
       .eq("id", id)
       .select(
-        "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone",
+        "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone, reservation_type",
       )
       .single();
 
@@ -154,7 +157,8 @@ export default function ReservationsManager({
         reservationDate: manualReservationDate,
         reservationTime: manualReservationTime,
         guests: manualGuests,
-        note: manualNote,
+        note: manualWalkInMode ? undefined : manualNote,
+        isWalkIn: manualWalkInMode,
         ...(terraceEnabled ? { zone: manualZone } : {}),
       }),
     });
@@ -179,7 +183,9 @@ export default function ReservationsManager({
     setManualGuests(2);
     setManualZone("interior");
     setManualNote("");
-    setMessage("Réservation ajoutée.");
+    setManualWalkInMode(false);
+    setShowWalkInContactFields(false);
+    setMessage(createdReservation.reservation_type === "walkin" ? "Walk-in ajouté." : "Réservation ajoutée.");
     setSavingId(null);
   }
 
@@ -191,7 +197,20 @@ export default function ReservationsManager({
             <CardTitle>Liste</CardTitle>
             <CardDescription>Filtrez puis cliquez une ligne pour agir.</CardDescription>
           </div>
-          <Button type="button" variant="primary" onClick={() => setShowManualForm((c) => !c)}>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => {
+              setShowManualForm((c) => {
+                const next = !c;
+                if (!next) {
+                  setManualWalkInMode(false);
+                  setShowWalkInContactFields(false);
+                }
+                return next;
+              });
+            }}
+          >
             {showManualForm ? "Annuler" : "Nouvelle réservation"}
           </Button>
         </CardHeader>
@@ -199,19 +218,49 @@ export default function ReservationsManager({
           {showManualForm ? (
             <form onSubmit={createManualReservation} className="space-y-5 border-t border-gray-100 pt-8">
               <p className="text-sm font-medium text-gray-900">Saisie rapide</p>
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50/80 p-4 text-sm text-gray-800">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
+                  checked={manualWalkInMode}
+                  onChange={(e) => {
+                    const on = e.target.checked;
+                    setManualWalkInMode(on);
+                    if (on) {
+                      setManualGuestName("");
+                      setManualGuestPhone("");
+                      setManualGuestEmail("");
+                      setManualNote("");
+                      setShowWalkInContactFields(false);
+                    } else {
+                      setShowWalkInContactFields(false);
+                    }
+                  }}
+                />
+                <span>
+                  <span className="font-semibold text-gray-900">Walk-in (client sans réservation)</span>
+                  <span className="mt-1 block text-gray-600">
+                    Enregistrement minimal : date, créneau, couverts{terraceEnabled ? ", zone" : ""}. Le badge Walk-in apparaît dans la liste.
+                  </span>
+                </span>
+              </label>
               <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <label className="dashboard-field-label">Nom</label>
-                  <Input value={manualGuestName} onChange={(e) => setManualGuestName(e.target.value)} required />
-                </div>
-                <div>
-                  <label className="dashboard-field-label">Téléphone</label>
-                  <Input value={manualGuestPhone} onChange={(e) => setManualGuestPhone(e.target.value)} required />
-                </div>
-                <div>
-                  <label className="dashboard-field-label">Email</label>
-                  <Input type="email" value={manualGuestEmail} onChange={(e) => setManualGuestEmail(e.target.value)} />
-                </div>
+                {!manualWalkInMode ? (
+                  <>
+                    <div>
+                      <label className="dashboard-field-label">Nom</label>
+                      <Input value={manualGuestName} onChange={(e) => setManualGuestName(e.target.value)} required />
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label">Téléphone</label>
+                      <Input value={manualGuestPhone} onChange={(e) => setManualGuestPhone(e.target.value)} required />
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label">Email</label>
+                      <Input type="email" value={manualGuestEmail} onChange={(e) => setManualGuestEmail(e.target.value)} />
+                    </div>
+                  </>
+                ) : null}
                 <div>
                   <label className="dashboard-field-label">Date</label>
                   <Input type="date" value={manualReservationDate} onChange={(e) => setManualReservationDate(e.target.value)} required />
@@ -253,13 +302,46 @@ export default function ReservationsManager({
                     </div>
                   </div>
                 ) : null}
-                <div className="md:col-span-2">
-                  <label className="dashboard-field-label">Note</label>
-                  <Textarea className="min-h-24" value={manualNote} onChange={(e) => setManualNote(e.target.value)} />
-                </div>
+                {manualWalkInMode && !showWalkInContactFields ? (
+                  <div className="md:col-span-2">
+                    <button
+                      type="button"
+                      className="text-sm font-semibold text-[#1F7A6C] underline decoration-[#CBE6DF] underline-offset-2 hover:text-[#0F3F3A]"
+                      onClick={() => setShowWalkInContactFields(true)}
+                    >
+                      Ajouter nom, email ou téléphone (optionnel)
+                    </button>
+                  </div>
+                ) : null}
+                {manualWalkInMode && showWalkInContactFields ? (
+                  <>
+                    <div>
+                      <label className="dashboard-field-label">Nom (optionnel)</label>
+                      <Input value={manualGuestName} onChange={(e) => setManualGuestName(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label">Téléphone (optionnel)</label>
+                      <Input value={manualGuestPhone} onChange={(e) => setManualGuestPhone(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label">Email (optionnel)</label>
+                      <Input type="email" value={manualGuestEmail} onChange={(e) => setManualGuestEmail(e.target.value)} />
+                    </div>
+                  </>
+                ) : null}
+                {!manualWalkInMode ? (
+                  <div className="md:col-span-2">
+                    <label className="dashboard-field-label">Note</label>
+                    <Textarea className="min-h-24" value={manualNote} onChange={(e) => setManualNote(e.target.value)} />
+                  </div>
+                ) : null}
               </div>
               <Button type="submit" disabled={savingId === "manual-create"}>
-                {savingId === "manual-create" ? "Enregistrement…" : "Enregistrer"}
+                {savingId === "manual-create"
+                  ? "Enregistrement…"
+                  : manualWalkInMode
+                    ? "Ajouter le walk-in"
+                    : "Enregistrer"}
               </Button>
             </form>
           ) : null}
@@ -295,6 +377,7 @@ export default function ReservationsManager({
                     subtitle={`${reservation.reservation_date} · ${reservation.guests} couverts`}
                     status={reservation.status}
                     seatingZone={seatingZoneFromRow(reservation)}
+                    reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
                     emphasizeTime
                     onClick={() => setSelectedReservationId(reservation.id)}
                   />
@@ -316,6 +399,7 @@ export default function ReservationsManager({
                     subtitle={`${reservation.guests} couverts`}
                     status={reservation.status}
                     seatingZone={seatingZoneFromRow(reservation)}
+                    reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
                     onClick={() => setSelectedReservationId(reservation.id)}
                   />
                 ))}
@@ -337,6 +421,11 @@ export default function ReservationsManager({
                     {selectedReservation.reservation_date} à {selectedReservation.reservation_time} ·{" "}
                     {selectedReservation.guests} couverts
                   </span>
+                  {selectedReservation.reservation_type === "walkin" ? (
+                    <span className="rounded-full border border-amber-200/90 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-950">
+                      Walk-in
+                    </span>
+                  ) : null}
                   <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-900">
                     {seatingZoneFromRow(selectedReservation) === "terrace" ? "Terrasse" : "Intérieur"}
                   </span>

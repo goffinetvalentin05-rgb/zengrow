@@ -12,6 +12,8 @@ type ReservationListRowProps = {
   status: ReservationStatus;
   /** Salle ou terrasse. */
   seatingZone?: SeatingZone;
+  /** Walk-in enregistré depuis le tableau de bord. */
+  reservationType?: "standard" | "walkin";
   className?: string;
   onClick?: () => void;
   emphasizeTime?: boolean;
@@ -26,6 +28,7 @@ export default function ReservationListRow({
   subtitle,
   status,
   seatingZone = "interior",
+  reservationType = "standard",
   className,
   onClick,
   emphasizeTime,
@@ -33,6 +36,12 @@ export default function ReservationListRow({
   showZoneBadge = true,
 }: ReservationListRowProps) {
   const zoneLabel = seatingZone === "terrace" ? "Terrasse" : "Intérieur";
+  const walkInBadge =
+    reservationType === "walkin" ? (
+      <span className="rounded-full border border-amber-200/90 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-950">
+        Walk-in
+      </span>
+    ) : null;
 
   if (presentation === "list") {
     const listInner =
@@ -45,6 +54,7 @@ export default function ReservationListRow({
             {subtitle ? <p className="mt-0.5 text-sm text-[#0F3F3A]/55">{subtitle}</p> : null}
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
+            {walkInBadge}
             {showZoneBadge ? (
               <span className="rounded-full border border-[#CBE6DF] bg-[#F0F9F7] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#1F7A6C]">
                 {zoneLabel}
@@ -61,6 +71,12 @@ export default function ReservationListRow({
             {subtitle ? <p className="mt-0.5 text-sm text-[#0F3F3A]/55">{subtitle}</p> : null}
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
+            {walkInBadge}
+            {showZoneBadge ? (
+              <span className="rounded-full border border-[#CBE6DF] bg-[#F0F9F7] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#1F7A6C]">
+                {zoneLabel}
+              </span>
+            ) : null}
             <span className="text-[15px] font-bold tabular-nums text-[#1F7A6C]">{timeLabel}</span>
             <StatusBadge status={status} />
           </div>
@@ -104,6 +120,7 @@ export default function ReservationListRow({
         )}
       </div>
       <div className="flex shrink-0 flex-col items-end gap-2">
+        {walkInBadge}
         {showZoneBadge ? (
           <span className="rounded-full border border-[#CBE6DF] bg-[#F0F9F7] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#1F7A6C]">
             {zoneLabel}
