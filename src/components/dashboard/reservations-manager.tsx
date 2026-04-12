@@ -52,7 +52,7 @@ function reservationDateTimeValue(reservation: ReservationRow) {
 }
 
 function sortReservations(values: ReservationRow[]) {
-  return [...values].sort((a, b) => reservationDateTimeValue(b) - reservationDateTimeValue(a));
+  return [...values].sort((a, b) => reservationDateTimeValue(a) - reservationDateTimeValue(b));
 }
 
 export default function ReservationsManager({

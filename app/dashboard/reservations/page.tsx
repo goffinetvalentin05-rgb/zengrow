@@ -18,8 +18,8 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
       "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone, reservation_type",
     )
     .eq("restaurant_id", restaurant.id)
-    .order("reservation_date", { ascending: false })
-    .order("reservation_time", { ascending: false });
+    .order("reservation_date", { ascending: true })
+    .order("reservation_time", { ascending: true });
 
   const { data: resSettings } = await supabase
     .from("restaurant_settings")
