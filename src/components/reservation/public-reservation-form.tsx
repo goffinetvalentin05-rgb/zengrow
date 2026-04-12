@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
+  Calendar,
   Clock,
   Facebook,
   Globe,
@@ -13,7 +14,6 @@ import {
   Phone,
 } from "lucide-react";
 import Input from "@/src/components/ui/input";
-import Select from "@/src/components/ui/select";
 import type { AvailabilitySlot } from "@/src/lib/reservation/schemas";
 import { cn, formatOpeningHoursLines, OpeningHours } from "@/src/lib/utils";
 
@@ -78,6 +78,19 @@ export type PublicReservationFormProps = {
 
 function scrollToReservation() {
   document.getElementById("reservation")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function localYmd(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function formatDateDdMmYyyy(iso: string): string {
+  const [y, mo, da] = iso.split("-");
+  if (!y || !mo || !da) return "";
+  return `${da}.${mo}.${y}`;
 }
 
 function heroMinHeightClass(h: "compact" | "normal" | "tall") {
@@ -191,32 +204,74 @@ export default function PublicReservationForm({
   closureMessage,
   terraceEnabled = false,
 }: PublicReservationFormProps) {
-  const todayDate = new Date().toISOString().slice(0, 10);
+  const todayDate = useMemo(() => localYmd(new Date()), []);
   const maxDateStr = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() + daysInAdvance);
-    return d.toISOString().slice(0, 10);
+    return localYmd(d);
   }, [daysInAdvance]);
-  const [guestName, setGuestName] = useState("");
+  const totalSteps = terraceEnabled ? 4 : 3;
+  const [wizardStep, setWizardStep] = useState(1);
+  const [guestFirstName, setGuestFirstName] = useState("");
+  const [guestLastName, setGuestLastName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guests, setGuests] = useState(2);
-  const [reservationDate, setReservationDate] = useState("");
+  const [reservationDate, setReservationDate] = useState(todayDate);
   const [reservationTime, setReservationTime] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
+  const [zoneSlots, setZoneSlots] = useState<{ interior: AvailabilitySlot[]; terrace: AvailabilitySlot[] }>({
+    interior: [],
+    terrace: [],
+  });
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
-  const [seatingZone, setSeatingZone] = useState<"interior" | "terrace">("interior");
+  const [seatingZone, setSeatingZone] = useState<"interior" | "terrace" | null>(null);
+  const datePickerRef = useRef<HTMLInputElement>(null);
+
+  const partyGridMax = Math.min(6, Math.max(1, maxPartySize));
+  const showMoreThanSixHint = maxPartySize >= 6;
+
+  const tomorrowDate = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 1);
+    return localYmd(d);
+  }, []);
+
+  const dateInClosure = (iso: string) =>
+    Boolean(closureStartDate && closureEndDate && iso >= closureStartDate && iso <= closureEndDate);
+
+  const todaySelectable = !dateInClosure(todayDate) && todayDate <= maxDateStr;
+  const tomorrowSelectable = !dateInClosure(tomorrowDate) && tomorrowDate <= maxDateStr;
 
   const sortedDocuments = useMemo(() => {
     const copy = [...documents];
     copy.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     return copy;
   }, [documents]);
+
+  const unionSlotTimes = useMemo(() => {
+    if (terraceEnabled) {
+      const set = new Set<string>();
+      for (const s of zoneSlots.interior) set.add(s.time);
+      for (const s of zoneSlots.terrace) set.add(s.time);
+      return [...set].sort((a, b) => a.localeCompare(b));
+    }
+    return zoneSlots.interior.map((s) => s.time).sort((a, b) => a.localeCompare(b));
+  }, [terraceEnabled, zoneSlots]);
+
+  const slotsForSelectedZone = useMemo(() => {
+    if (terraceEnabled) {
+      if (seatingZone === "terrace") return zoneSlots.terrace;
+      if (seatingZone === "interior") return zoneSlots.interior;
+      return [];
+    }
+    return zoneSlots.interior;
+  }, [terraceEnabled, seatingZone, zoneSlots]);
 
   const cssVars = useMemo(
     () =>
@@ -307,13 +362,13 @@ export default function PublicReservationForm({
       guests < 1 ||
       (closureStartDate && closureEndDate && reservationDate >= closureStartDate && reservationDate <= closureEndDate)
     ) {
-      setAvailabilitySlots([]);
+      setZoneSlots({ interior: [], terrace: [] });
       setSlotsError(null);
       return;
     }
 
     if (reservationDate > maxDateStr) {
-      setAvailabilitySlots([]);
+      setZoneSlots({ interior: [], terrace: [] });
       setSlotsError("Cette date dépasse la fenêtre de réservation autorisée.");
       return;
     }
@@ -322,39 +377,41 @@ export default function PublicReservationForm({
     setSlotsLoading(true);
     setSlotsError(null);
 
-    const q = new URLSearchParams({
-      restaurantId,
-      date: reservationDate,
-      covers: String(guests),
-      zone: terraceEnabled ? seatingZone : "interior",
-    });
+    const loadZone = async (zone: "interior" | "terrace") => {
+      const q = new URLSearchParams({
+        restaurantId,
+        date: reservationDate,
+        covers: String(guests),
+        zone,
+      });
+      const response = await fetch(`/api/reservations/availability?${q.toString()}`);
+      const payload = (await response.json().catch(() => ({}))) as {
+        slots?: AvailabilitySlot[];
+        error?: string;
+      };
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Impossible de charger les créneaux.");
+      }
+      return payload.slots ?? [];
+    };
 
-    fetch(`/api/reservations/availability?${q.toString()}`)
-      .then(async (response) => {
-        const payload = (await response.json().catch(() => ({}))) as {
-          slots?: AvailabilitySlot[];
-          error?: string;
-        };
-        if (!response.ok) {
-          throw new Error(payload.error ?? "Impossible de charger les créneaux.");
-        }
-        return payload.slots ?? [];
-      })
-      .then((slots) => {
-        if (!cancelled) {
-          setAvailabilitySlots(slots);
-        }
-      })
+    const run = terraceEnabled
+      ? Promise.all([loadZone("interior"), loadZone("terrace")]).then(([interior, terrace]) => {
+          if (!cancelled) setZoneSlots({ interior, terrace });
+        })
+      : loadZone("interior").then((interior) => {
+          if (!cancelled) setZoneSlots({ interior, terrace: [] });
+        });
+
+    run
       .catch((err: unknown) => {
         if (!cancelled) {
-          setAvailabilitySlots([]);
+          setZoneSlots({ interior: [], terrace: [] });
           setSlotsError(err instanceof Error ? err.message : "Impossible de charger les créneaux.");
         }
       })
       .finally(() => {
-        if (!cancelled) {
-          setSlotsLoading(false);
-        }
+        if (!cancelled) setSlotsLoading(false);
       });
 
     return () => {
@@ -369,15 +426,26 @@ export default function PublicReservationForm({
     closureEndDate,
     maxDateStr,
     terraceEnabled,
-    seatingZone,
   ]);
 
   useEffect(() => {
-    const times = new Set(availabilitySlots.map((s) => s.time));
+    const times = new Set(unionSlotTimes);
     if (reservationTime && !times.has(reservationTime)) {
       setReservationTime("");
     }
-  }, [availabilitySlots, reservationTime]);
+  }, [unionSlotTimes, reservationTime]);
+
+  useEffect(() => {
+    if (!terraceEnabled || !seatingZone) return;
+    const times = new Set(slotsForSelectedZone.map((s) => s.time));
+    if (reservationTime && !times.has(reservationTime)) {
+      setReservationTime("");
+    }
+  }, [terraceEnabled, seatingZone, slotsForSelectedZone, reservationTime]);
+
+  useEffect(() => {
+    setGuests((g) => Math.min(Math.max(1, g), maxPartySize));
+  }, [maxPartySize]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -397,6 +465,27 @@ export default function PublicReservationForm({
       return;
     }
 
+    const guestName = `${guestFirstName.trim()} ${guestLastName.trim()}`.trim();
+    if (!guestName) {
+      setError("Le prénom et le nom sont requis.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (terraceEnabled) {
+      if (!seatingZone) {
+        setError("Veuillez choisir un emplacement (intérieur ou terrasse).");
+        setIsSubmitting(false);
+        return;
+      }
+      const okTime = slotsForSelectedZone.some((s) => s.time === reservationTime);
+      if (!okTime) {
+        setError("Ce créneau n'est pas disponible pour la zone choisie. Modifiez l'heure ou l'emplacement.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const response = await fetch("/api/reservations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -408,7 +497,7 @@ export default function PublicReservationForm({
         guests,
         reservationDate,
         reservationTime,
-        ...(terraceEnabled ? { zone: seatingZone } : {}),
+        ...(terraceEnabled && seatingZone ? { zone: seatingZone } : {}),
       }),
     });
     const payload = (await response.json().catch(() => ({}))) as { error?: string; status?: string };
@@ -425,13 +514,15 @@ export default function PublicReservationForm({
         ? "Votre réservation est confirmée. Un e-mail de confirmation vous a été envoyé."
         : "Votre demande de réservation a été enregistrée. Nous la confirmerons rapidement.",
     );
-    setGuestName("");
+    setGuestFirstName("");
+    setGuestLastName("");
     setGuestEmail("");
     setGuestPhone("");
     setGuests(2);
-    setReservationDate("");
+    setReservationDate(todayDate);
     setReservationTime("");
-    setSeatingZone("interior");
+    setSeatingZone(null);
+    setWizardStep(1);
     setIsSubmitting(false);
   }
 
@@ -624,22 +715,16 @@ export default function PublicReservationForm({
               borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))",
             }}
           >
-            <div className="mb-8 text-center md:text-left">
+            <div className="mb-6 text-center md:text-left">
               <h2
                 className="text-2xl font-medium md:text-3xl"
                 style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
               >
                 Réserver une table
               </h2>
-              <p
-                className="mt-2 text-sm"
-                style={{ color: "color-mix(in srgb, var(--body-text) 72%, var(--page-bg))" }}
-              >
-                Indiquez vos préférences — nous vous confirmerons rapidement.
-              </p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="flex min-h-0 flex-col gap-5" onSubmit={handleSubmit}>
               {closureNotice ? (
                 <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-950">
                   {closureMessage?.trim() ? `${closureMessage.trim()} — ${closureNotice}` : closureNotice}
@@ -658,200 +743,395 @@ export default function PublicReservationForm({
                 </div>
               ) : null}
 
-              {terraceEnabled ? (
-                <fieldset className="space-y-3">
-                  <legend className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
-                    Emplacement <span className="text-rose-600">*</span>
-                  </legend>
-                  <p className="text-sm" style={{ color: "color-mix(in srgb, var(--body-text) 72%, var(--page-bg))" }}>
-                    Choisissez la zone pour laquelle vous souhaitez réserver.
-                  </p>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    <label
-                      className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-[var(--radius)] border px-4 py-3 transition",
-                        seatingZone === "interior" ? "border-[var(--accent-color)] bg-[color-mix(in_srgb,var(--accent-color)_12%,transparent)]" : "",
-                      )}
-                      style={{
-                        borderColor:
-                          seatingZone === "interior" ? undefined : "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
-                      }}
-                    >
+              <nav aria-label="Étapes" className="w-full px-1">
+                <ol className="flex w-full list-none items-center justify-between gap-1 p-0">
+                  {Array.from({ length: totalSteps }, (_, i) => i + 1).map((n, idx) => {
+                    const active = wizardStep === n;
+                    const mutedLine = "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))";
+                    return (
+                      <Fragment key={n}>
+                        <li className="flex list-none items-center">
+                          <span
+                            className={cn(
+                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition sm:h-11 sm:w-11",
+                              active ? "border-transparent shadow-sm" : "border-current bg-transparent opacity-45",
+                            )}
+                            style={
+                              active
+                                ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)" }
+                                : { borderColor: mutedLine, color: "color-mix(in srgb, var(--body-text) 55%, var(--page-bg))" }
+                            }
+                            aria-current={active ? "step" : undefined}
+                          >
+                            {n}
+                          </span>
+                        </li>
+                        {idx < totalSteps - 1 ? (
+                          <li className="mx-1 min-w-[12px] flex-1 list-none" aria-hidden>
+                            <div
+                              className="h-0.5 w-full rounded-full"
+                              style={{ backgroundColor: wizardStep > n ? "var(--button-bg)" : mutedLine }}
+                            />
+                          </li>
+                        ) : null}
+                      </Fragment>
+                    );
+                  })}
+                </ol>
+              </nav>
+
+              <div className="min-h-0 flex-1">
+                {wizardStep === 1 ? (
+                  <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={previewMode || !todaySelectable}
+                          onClick={() => setReservationDate(todayDate)}
+                          className={cn(
+                            "min-h-[48px] flex-1 rounded-[var(--radius)] border-2 px-2 py-3 text-xs font-semibold tracking-wide transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40 sm:text-sm",
+                            reservationDate === todayDate ? "border-transparent shadow-sm" : "bg-transparent",
+                          )}
+                          style={
+                            reservationDate === todayDate
+                              ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
+                              : {
+                                  borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                                  color: "color-mix(in srgb, var(--body-text) 78%, var(--page-bg))",
+                                }
+                          }
+                        >
+                          AUJOURD&apos;HUI
+                        </button>
+                        <button
+                          type="button"
+                          disabled={previewMode || !tomorrowSelectable}
+                          onClick={() => setReservationDate(tomorrowDate)}
+                          className={cn(
+                            "min-h-[48px] flex-1 rounded-[var(--radius)] border-2 px-2 py-3 text-xs font-semibold tracking-wide transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40 sm:text-sm",
+                            reservationDate === tomorrowDate ? "border-transparent shadow-sm" : "bg-transparent",
+                          )}
+                          style={
+                            reservationDate === tomorrowDate
+                              ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
+                              : {
+                                  borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                                  color: "color-mix(in srgb, var(--body-text) 78%, var(--page-bg))",
+                                }
+                          }
+                        >
+                          DEMAIN
+                        </button>
+                        <button
+                          type="button"
+                          disabled={previewMode}
+                          onClick={() => datePickerRef.current?.showPicker?.() ?? datePickerRef.current?.click()}
+                          className={cn(
+                            "flex min-h-[48px] min-w-[48px] shrink-0 items-center justify-center rounded-[var(--radius)] border-2 transition active:scale-[0.99] disabled:opacity-40",
+                            reservationDate &&
+                              reservationDate !== todayDate &&
+                              reservationDate !== tomorrowDate
+                              ? "border-transparent shadow-sm"
+                              : "bg-transparent",
+                          )}
+                          style={
+                            reservationDate &&
+                            reservationDate !== todayDate &&
+                            reservationDate !== tomorrowDate
+                              ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
+                              : {
+                                  borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                                  color: "color-mix(in srgb, var(--body-text) 78%, var(--page-bg))",
+                                }
+                          }
+                          aria-label="Choisir une date au calendrier"
+                        >
+                          <Calendar className="h-5 w-5" strokeWidth={2} />
+                        </button>
+                      </div>
                       <input
-                        type="radio"
-                        name="seating-zone"
-                        value="interior"
-                        checked={seatingZone === "interior"}
-                        onChange={() => setSeatingZone("interior")}
-                        required
+                        ref={datePickerRef}
+                        id="public-reservation-date-picker"
+                        type="date"
+                        value={reservationDate}
+                        min={todayDate}
+                        max={maxDateStr}
                         disabled={previewMode}
-                        className="h-4 w-4 shrink-0 accent-[var(--accent-color)]"
+                        className="sr-only"
+                        tabIndex={-1}
+                        onChange={(e) => setReservationDate(e.target.value)}
                       />
-                      <span className="text-sm font-medium" style={{ color: "var(--body-text)" }}>
-                        Intérieur
-                      </span>
-                    </label>
-                    <label
-                      className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-[var(--radius)] border px-4 py-3 transition",
-                        seatingZone === "terrace" ? "border-[var(--accent-color)] bg-[color-mix(in_srgb,var(--accent-color)_12%,transparent)]" : "",
-                      )}
-                      style={{
-                        borderColor:
-                          seatingZone === "terrace" ? undefined : "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="seating-zone"
-                        value="terrace"
-                        checked={seatingZone === "terrace"}
-                        onChange={() => setSeatingZone("terrace")}
-                        required
-                        disabled={previewMode}
-                        className="h-4 w-4 shrink-0 accent-[var(--accent-color)]"
-                      />
-                      <span className="text-sm font-medium" style={{ color: "var(--body-text)" }}>
-                        Terrasse
-                      </span>
-                    </label>
-                  </div>
-                </fieldset>
-              ) : null}
+                      <p
+                        className="text-center text-sm font-medium tabular-nums sm:text-base"
+                        style={{ color: "var(--heading-color)" }}
+                      >
+                        {reservationDate ? formatDateDdMmYyyy(reservationDate) : "—"}
+                      </p>
+                    </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label htmlFor="date" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
-                    Date
-                  </label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={reservationDate}
-                    onChange={(event) => setReservationDate(event.target.value)}
-                    min={todayDate}
-                    max={maxDateStr}
-                    required
-                    disabled={previewMode}
-                    className={inputClass}
-                    style={fieldStyle}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="time" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
-                    Heure
-                  </label>
-                  <Select
-                    id="time"
-                    value={reservationTime}
-                    onChange={(event) => setReservationTime(event.target.value)}
-                    required
-                    disabled={previewMode || isDateInClosurePeriod || slotsLoading}
-                    className={cn(inputClass, "cursor-pointer")}
-                    style={fieldStyle}
-                  >
-                    <option value="">
-                      {slotsLoading ? "Chargement des créneaux…" : "Sélectionnez une heure"}
-                    </option>
-                    {availabilitySlots.map((slot) => (
-                      <option key={slot.time} value={slot.time}>
-                        {useTables && slot.remainingCapacity == null
-                          ? slot.time
-                          : `${slot.time} — ${slot.remainingCapacity ?? 0} place(s) restante(s) après votre demande`}
-                      </option>
-                    ))}
-                  </Select>
-                  {slotsError ? (
-                    <p className="text-xs text-amber-700">{slotsError}</p>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="guests" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
-                  Nombre de convives
-                </label>
-                <Input
-                  id="guests"
-                  type="number"
-                  min={1}
-                  max={maxPartySize}
-                  value={guests}
-                  onChange={(event) => setGuests(Number(event.target.value))}
-                  required
-                  disabled={previewMode}
-                  className={inputClass}
-                  style={fieldStyle}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="name" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
-                  Nom complet
-                </label>
-                <Input
-                  id="name"
-                  value={guestName}
-                  onChange={(event) => setGuestName(event.target.value)}
-                  required
-                  autoComplete="name"
-                  disabled={previewMode}
-                  className={inputClass}
-                  style={fieldStyle}
-                />
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                {(allowEmail ?? true) ? (
-                  <div className="space-y-2">
-                    <label htmlFor="email" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
-                      E-mail
-                    </label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={guestEmail}
-                      onChange={(event) => setGuestEmail(event.target.value)}
-                      required={allowEmail ?? true}
-                      autoComplete="email"
-                      disabled={previewMode}
-                      className={inputClass}
-                      style={fieldStyle}
-                    />
+                    <div className="flex flex-col gap-3">
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                        {Array.from({ length: partyGridMax }, (_, i) => i + 1).map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            disabled={previewMode || n > maxPartySize}
+                            onClick={() => setGuests(n)}
+                            className={cn(
+                              "min-h-[48px] rounded-[var(--radius)] border-2 text-base font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40",
+                              guests === n ? "border-transparent shadow-sm" : "bg-transparent",
+                            )}
+                            style={
+                              guests === n
+                                ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
+                                : {
+                                    borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                                    color: "color-mix(in srgb, var(--body-text) 78%, var(--page-bg))",
+                                  }
+                            }
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                      <p
+                        className="text-center text-xs leading-snug sm:text-sm"
+                        style={{ color: "color-mix(in srgb, var(--body-text) 62%, var(--page-bg))" }}
+                      >
+                        {showMoreThanSixHint
+                          ? "Veuillez nous appeler s'il y a plus de 6 personnes."
+                          : `Veuillez nous appeler au-delà de ${maxPartySize} personnes.`}
+                      </p>
+                    </div>
                   </div>
                 ) : null}
-                <div className={cn("space-y-2", !(allowEmail ?? true) && "md:col-span-2")}>
-                  <label htmlFor="phone" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
-                    Téléphone
-                  </label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={guestPhone}
-                    onChange={(event) => setGuestPhone(event.target.value)}
-                    required={allowPhone ?? true}
-                    autoComplete="tel"
-                    disabled={previewMode}
-                    className={inputClass}
-                    style={fieldStyle}
-                  />
-                </div>
+
+                {wizardStep === 2 ? (
+                  <div className="flex flex-col gap-4">
+                    {slotsLoading ? (
+                      <p className="text-center text-sm" style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}>
+                        Chargement des créneaux…
+                      </p>
+                    ) : slotsError ? (
+                      <p className="text-center text-sm text-amber-800">{slotsError}</p>
+                    ) : unionSlotTimes.length === 0 ? (
+                      <p className="text-center text-sm" style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}>
+                        Aucun créneau disponible pour cette date.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                        {unionSlotTimes.map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            disabled={previewMode || isDateInClosurePeriod}
+                            onClick={() => setReservationTime(t)}
+                            className={cn(
+                              "min-h-[48px] rounded-[var(--radius)] border-2 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-40",
+                              reservationTime === t ? "border-transparent shadow-sm" : "bg-transparent",
+                            )}
+                            style={
+                              reservationTime === t
+                                ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
+                                : {
+                                    borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                                    color: "color-mix(in srgb, var(--body-text) 82%, var(--page-bg))",
+                                  }
+                            }
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                {wizardStep === 3 && terraceEnabled ? (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      disabled={previewMode}
+                      onClick={() => setSeatingZone("interior")}
+                      className={cn(
+                        "flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-[var(--radius)] border-2 px-4 py-6 text-lg font-semibold transition active:scale-[0.99] disabled:opacity-40",
+                        seatingZone === "interior" ? "border-transparent shadow-md" : "bg-transparent",
+                      )}
+                      style={
+                        seatingZone === "interior"
+                          ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
+                          : {
+                              borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                              color: "color-mix(in srgb, var(--body-text) 85%, var(--page-bg))",
+                            }
+                      }
+                    >
+                      <span className="text-3xl" aria-hidden>
+                        🪑
+                      </span>
+                      Intérieur
+                    </button>
+                    <button
+                      type="button"
+                      disabled={previewMode}
+                      onClick={() => setSeatingZone("terrace")}
+                      className={cn(
+                        "flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-[var(--radius)] border-2 px-4 py-6 text-lg font-semibold transition active:scale-[0.99] disabled:opacity-40",
+                        seatingZone === "terrace" ? "border-transparent shadow-md" : "bg-transparent",
+                      )}
+                      style={
+                        seatingZone === "terrace"
+                          ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
+                          : {
+                              borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                              color: "color-mix(in srgb, var(--body-text) 85%, var(--page-bg))",
+                            }
+                      }
+                    >
+                      <span className="text-3xl" aria-hidden>
+                        ☀️
+                      </span>
+                      Terrasse
+                    </button>
+                  </div>
+                ) : null}
+
+                {wizardStep === totalSteps ? (
+                  <div className="grid gap-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="guest-first-name"
+                          className={labelClass}
+                          style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}
+                        >
+                          Prénom
+                        </label>
+                        <Input
+                          id="guest-first-name"
+                          value={guestFirstName}
+                          onChange={(event) => setGuestFirstName(event.target.value)}
+                          required
+                          autoComplete="given-name"
+                          disabled={previewMode}
+                          className={inputClass}
+                          style={fieldStyle}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="guest-last-name"
+                          className={labelClass}
+                          style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}
+                        >
+                          Nom
+                        </label>
+                        <Input
+                          id="guest-last-name"
+                          value={guestLastName}
+                          onChange={(event) => setGuestLastName(event.target.value)}
+                          required
+                          autoComplete="family-name"
+                          disabled={previewMode}
+                          className={inputClass}
+                          style={fieldStyle}
+                        />
+                      </div>
+                    </div>
+                    {(allowEmail ?? true) ? (
+                      <div className="space-y-2">
+                        <label htmlFor="email" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
+                          Email
+                        </label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={guestEmail}
+                          onChange={(event) => setGuestEmail(event.target.value)}
+                          required={allowEmail ?? true}
+                          autoComplete="email"
+                          disabled={previewMode}
+                          className={inputClass}
+                          style={fieldStyle}
+                        />
+                      </div>
+                    ) : null}
+                    <div className="space-y-2">
+                      <label htmlFor="phone" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
+                        Téléphone
+                      </label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={guestPhone}
+                        onChange={(event) => setGuestPhone(event.target.value)}
+                        required={allowPhone ?? true}
+                        autoComplete="tel"
+                        disabled={previewMode}
+                        className={inputClass}
+                        style={fieldStyle}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
-              <button
-                type="submit"
-                disabled={previewMode || isSubmitting || isDateInClosurePeriod}
-                className="w-full min-h-[52px] rounded-[var(--radius)] border border-transparent py-3.5 text-[15px] font-semibold tracking-wide shadow-lg transition hover:brightness-110 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
-                style={{
-                  ...(buttonStyle === "ghost"
-                    ? { backgroundColor: "transparent", color: "var(--button-bg)" }
-                    : buttonStyle === "outlined"
-                      ? { backgroundColor: "transparent", color: "var(--button-bg)", borderColor: "var(--button-bg)" }
-                      : { backgroundColor: "var(--button-bg)", color: "var(--button-text)" }),
-                }}
-              >
-                {isSubmitting ? "Envoi en cours…" : "Confirmer la demande"}
-              </button>
+              <div className="mt-auto flex flex-col gap-2 pt-2 sm:flex-row sm:justify-between">
+                {wizardStep > 1 ? (
+                  <button
+                    type="button"
+                    disabled={previewMode || isSubmitting}
+                    onClick={() => setWizardStep((s) => Math.max(1, s - 1))}
+                    className="order-2 min-h-[48px] rounded-[var(--radius)] border-2 px-6 text-sm font-semibold transition active:scale-[0.99] disabled:opacity-40 sm:order-1"
+                    style={{
+                      borderColor: "color-mix(in srgb, var(--body-text) 24%, var(--page-bg))",
+                      color: "color-mix(in srgb, var(--body-text) 88%, var(--page-bg))",
+                      backgroundColor: "transparent",
+                    }}
+                  >
+                    Retour
+                  </button>
+                ) : (
+                  <span className="hidden sm:block sm:flex-1" aria-hidden />
+                )}
+
+                {wizardStep < totalSteps ? (
+                  <button
+                    type="button"
+                    disabled={
+                      previewMode ||
+                      (wizardStep === 1 &&
+                        (!reservationDate || guests < 1 || isDateInClosurePeriod || reservationDate > maxDateStr)) ||
+                      (wizardStep === 2 && !reservationTime) ||
+                      (wizardStep === 3 && terraceEnabled && !seatingZone)
+                    }
+                    onClick={() => setWizardStep((s) => Math.min(totalSteps, s + 1))}
+                    className="order-1 min-h-[48px] w-full rounded-[var(--radius)] border border-transparent px-6 text-sm font-semibold shadow-md transition hover:brightness-105 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-45 sm:order-2 sm:ml-auto sm:w-auto sm:min-w-[200px]"
+                    style={{
+                      backgroundColor: "var(--button-bg)",
+                      color: "var(--button-text)",
+                    }}
+                  >
+                    Continuer
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={previewMode || isSubmitting || isDateInClosurePeriod}
+                    className="order-1 min-h-[52px] w-full rounded-[var(--radius)] border border-transparent px-6 text-[15px] font-semibold shadow-lg transition hover:brightness-110 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 sm:order-2 sm:ml-auto sm:w-auto sm:min-w-[220px]"
+                    style={{
+                      ...(buttonStyle === "ghost"
+                        ? { backgroundColor: "transparent", color: "var(--button-bg)" }
+                        : buttonStyle === "outlined"
+                          ? { backgroundColor: "transparent", color: "var(--button-bg)", borderColor: "var(--button-bg)" }
+                          : { backgroundColor: "var(--button-bg)", color: "var(--button-text)" }),
+                    }}
+                  >
+                    {isSubmitting ? "Envoi en cours…" : "Confirmer la réservation"}
+                  </button>
+                )}
+              </div>
             </form>
 
             {error ? (
