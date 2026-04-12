@@ -20,6 +20,7 @@ export default async function DashboardCustomersPage() {
     .select("customer_id, guests")
     .eq("restaurant_id", restaurant.id)
     .eq("status", "completed")
+    .neq("reservation_type", "walkin")
     .not("customer_id", "is", null);
 
   const avgByCustomer = new Map<string, { sum: number; count: number }>();
@@ -32,21 +33,29 @@ export default async function DashboardCustomersPage() {
     avgByCustomer.set(id, cur);
   }
 
-  const customers: CustomerRow[] = (customersData ?? []).map((customer) => {
-    const agg = avgByCustomer.get(customer.id);
-    const avgCovers =
-      agg && agg.count > 0 ? Math.round((agg.sum / agg.count) * 10) / 10 : null;
-    return {
-      id: customer.id,
-      name: customer.full_name,
-      phone: customer.phone,
-      email: customer.email,
-      reservations: customer.reservation_count ?? 0,
-      lastVisit: customer.last_visit_at,
-      totalVisits: customer.total_visits ?? 0,
-      avgCovers,
-    };
-  });
+  const customers: CustomerRow[] = (customersData ?? [])
+    .map((customer) => {
+      const agg = avgByCustomer.get(customer.id);
+      const avgCovers =
+        agg && agg.count > 0 ? Math.round((agg.sum / agg.count) * 10) / 10 : null;
+      return {
+        id: customer.id,
+        name: customer.full_name,
+        phone: customer.phone,
+        email: customer.email,
+        reservations: customer.reservation_count ?? 0,
+        lastVisit: customer.last_visit_at,
+        totalVisits: customer.total_visits ?? 0,
+        avgCovers,
+      };
+    })
+    .filter(
+      (c) =>
+        c.reservations > 0 ||
+        c.totalVisits > 0 ||
+        (c.email != null && c.email.trim().length > 0) ||
+        (c.phone != null && c.phone.trim().length > 0),
+    );
 
   if (!hasCustomersProAccess) {
     return (
