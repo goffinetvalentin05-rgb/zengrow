@@ -8,11 +8,11 @@ import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import { cn } from "@/src/lib/utils";
 
-const linkPrimaryClass =
-  "inline-flex min-h-9 items-center justify-center rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-800";
+const ctaReservationClass =
+  "inline-flex min-h-9 items-center justify-center rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_30px_-12px_rgba(31,122,108,0.75)] transition hover:scale-[1.02]";
 
-const sectionIntroClass = "text-xl font-semibold tracking-tight text-gray-900 md:text-[22px] md:leading-snug";
-const sectionDescClass = "mt-2 text-sm leading-relaxed text-gray-500";
+const sectionIntroClass = "text-xl font-bold tracking-tight text-[#0F3F3A] md:text-[22px] md:leading-snug";
+const sectionDescClass = "mt-2 text-sm leading-relaxed text-[#0F3F3A]/58";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -48,12 +48,12 @@ export default async function DashboardPage() {
       .sort((a, b) => a[0].localeCompare(b[0]))[0]?.[0] ?? null;
 
   return (
-    <div className="space-y-10 md:space-y-12">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Tableau de bord</p>
-        <p className="mt-2 max-w-xl text-sm text-gray-600">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#0F3F3A]/45">Tableau de bord</p>
+        <p className="mt-2 max-w-xl text-sm text-[#0F3F3A]/65">
           Activité du jour pour {restaurant.name}. Lien public :{" "}
-          <a href={publicLink} className="font-medium text-green-700 hover:underline" target="_blank" rel="noreferrer">
+          <a href={publicLink} className="font-semibold text-[#1F7A6C] underline decoration-[#CBE6DF] underline-offset-2 hover:text-[#0F3F3A]" target="_blank" rel="noreferrer">
             ouvrir
           </a>
           .
@@ -61,20 +61,20 @@ export default async function DashboardPage() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle>Service d&apos;aujourd&apos;hui</CardTitle>
             <CardDescription>Réservations du jour, par heure de passage.</CardDescription>
           </div>
-          <Link href="/dashboard/reservations?new=1" className={cn(linkPrimaryClass, "shrink-0")}>
+          <Link href="/dashboard/reservations?new=1" className={cn(ctaReservationClass, "shrink-0")}>
             Nouvelle réservation
           </Link>
         </CardHeader>
         <CardContent>
           {timelineReservations.length === 0 ? (
-            <p className="rounded-lg bg-gray-50/90 py-10 text-center text-sm text-gray-500">Aucune réservation aujourd&apos;hui.</p>
+            <p className="py-14 text-center text-sm text-[#0F3F3A]/45">Aucune réservation aujourd&apos;hui.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="-mx-1">
               {timelineReservations.map((reservation) => (
                 <ReservationListRow
                   key={reservation.id}
@@ -83,6 +83,8 @@ export default async function DashboardPage() {
                   subtitle={`${reservation.guests} ${reservation.guests > 1 ? "personnes" : "personne"}`}
                   status={reservation.status as "pending" | "confirmed" | "completed"}
                   emphasizeTime
+                  presentation="list"
+                  showZoneBadge={false}
                 />
               ))}
             </div>
@@ -91,12 +93,12 @@ export default async function DashboardPage() {
       </Card>
 
       {fullFromSlot ? (
-        <div className="rounded-xl border border-amber-200/90 bg-amber-50/90 px-5 py-4 text-sm text-amber-950 shadow-sm">
-          <span className="font-semibold">Complet</span> à partir de {fullFromSlot}.
+        <div className="rounded-xl border border-amber-200/80 bg-white px-5 py-4 text-sm text-amber-950 shadow-md">
+          <span className="font-bold text-amber-900">Complet</span> à partir de {fullFromSlot}.
         </div>
       ) : null}
 
-      <section className="space-y-4" aria-labelledby="dashboard-stats-heading">
+      <section className="space-y-6" aria-labelledby="dashboard-stats-heading">
         <div>
           <h2 id="dashboard-stats-heading" className={sectionIntroClass}>
             En chiffres
@@ -115,9 +117,9 @@ export default async function DashboardPage() {
         </CardHeader>
         <CardContent>
           {activeTodayReservations.length === 0 ? (
-            <p className="rounded-lg bg-gray-50/90 py-10 text-center text-sm text-gray-500">Rien de prévu pour l&apos;instant.</p>
+            <p className="py-14 text-center text-sm text-[#0F3F3A]/45">Rien de prévu pour l&apos;instant.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="-mx-1">
               {activeTodayReservations.map((reservation) => (
                 <ReservationListRow
                   key={reservation.id}
@@ -125,13 +127,15 @@ export default async function DashboardPage() {
                   timeLabel={reservation.reservation_time}
                   subtitle={`${reservation.guests} couverts`}
                   status={reservation.status as "pending" | "confirmed"}
+                  presentation="list"
+                  showZoneBadge={false}
                 />
               ))}
             </div>
           )}
           <Link
             href="/dashboard/reservations"
-            className="mt-8 inline-flex text-sm font-semibold text-green-700 hover:text-green-800 hover:underline"
+            className="mt-8 inline-flex text-sm font-semibold text-[#1F7A6C] transition hover:text-[#0F3F3A] hover:underline"
           >
             Toutes les réservations →
           </Link>

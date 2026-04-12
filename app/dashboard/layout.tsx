@@ -21,7 +21,7 @@ export default async function DashboardLayout({
   const publicLink = origin ? `${origin}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
 
   return (
-    <div className={`${inter.className} min-h-screen bg-[#F4F6F5]`}>
+    <div className={`${inter.className} min-h-screen bg-[#F6FBFA] text-[#0F3F3A]`}>
       <div className="mx-auto flex max-w-[1440px] flex-col gap-0 px-4 py-6 md:flex-row md:items-start md:gap-8 md:px-6 md:py-8">
         <DashboardSidebar
           reservationLink={publicLink}

@@ -53,11 +53,13 @@ export default function DashboardSidebar({
 
   return (
     <aside
-      className="flex w-full min-w-0 flex-col overflow-hidden border-b border-gray-100 bg-white text-gray-800 shadow-sm md:min-w-[220px] md:w-[240px] md:max-w-[240px] md:shrink-0 md:rounded-xl md:border md:border-gray-100"
+      className="flex w-full min-w-0 flex-col overflow-hidden border-b border-[#DDEFEA]/80 bg-white md:min-w-[220px] md:w-[240px] md:max-w-[240px] md:shrink-0 md:rounded-xl md:border-r md:border-[#DDEFEA]/80 md:border-b-0 md:shadow-none"
       style={{ overflow: "hidden" }}
     >
-      <div className="shrink-0 px-5 pt-6 pb-8">
-        <Image src="/Zengrow-logo.png" alt="ZenGrow" width={128} height={34} className="h-7 w-auto object-contain" priority />
+      <div className="shrink-0 px-5 pt-6 pb-6">
+        <Link href="/dashboard" className="inline-block" aria-label="ZenGrow — tableau de bord">
+          <Image src="/Zengrow-logo.png" alt="" width={148} height={40} className="h-9 w-auto object-contain" priority />
+        </Link>
       </div>
 
       <nav
@@ -76,31 +78,31 @@ export default function DashboardSidebar({
         ))}
       </nav>
 
-      <div className="mt-6 shrink-0 border-t border-gray-200 px-5 py-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Lien public</p>
-        <p className="mt-3 break-all text-xs leading-relaxed text-gray-600">{reservationLink}</p>
+      <div className="mt-4 shrink-0 border-t border-[#DDEFEA]/70 px-5 py-5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#0F3F3A]/45">Lien public</p>
+        <p className="mt-2 break-all text-xs leading-relaxed text-[#0F3F3A]/55">{reservationLink}</p>
         <a
           href={reservationLink}
           target="_blank"
           rel="noreferrer"
-          className="mt-3 inline-block text-sm font-medium text-green-700 hover:text-green-800"
+          className="mt-2 inline-block text-xs font-semibold text-[#1F7A6C] transition hover:text-[#0F3F3A]"
         >
           Ouvrir la page →
         </a>
       </div>
 
-      <div className="shrink-0 space-y-2 border-t border-gray-200 px-5 pt-6 pb-8">
+      <div className="shrink-0 space-y-0.5 border-t border-[#DDEFEA]/70 px-5 pt-5 pb-8">
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full rounded-lg py-2.5 text-left text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+          className="w-full rounded-lg py-2 text-left text-xs text-[#0F3F3A]/45 transition hover:bg-[#F0F9F7] hover:text-[#0F3F3A]/70"
         >
           Se déconnecter
         </button>
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="w-full rounded-lg py-2.5 text-left text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+          className="w-full rounded-lg py-2 text-left text-xs text-[#0F3F3A]/45 transition hover:bg-[#F0F9F7] hover:text-[#0F3F3A]/70"
         >
           Site vitrine
         </button>
@@ -126,19 +128,23 @@ function NavItem({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-lg py-2.5 text-sm font-medium transition-colors",
+        "flex items-center gap-3 rounded-full py-2.5 text-sm font-medium transition-colors",
         active
-          ? "border-l-4 border-green-600 bg-green-50 pl-3 pr-4 text-green-800"
-          : "border-l-4 border-transparent px-4 text-gray-800 hover:bg-gray-50",
+          ? "bg-[#E3F5EF] px-4 text-[#0F3F3A]"
+          : "px-4 text-[#0F3F3A]/55 hover:bg-[#F0F9F7] hover:text-[#0F3F3A]/85",
       )}
     >
-      <Icon size={18} strokeWidth={1.75} className={cn("shrink-0", active ? "text-green-800" : "text-gray-600")} />
+      <Icon
+        size={18}
+        strokeWidth={1.75}
+        className={cn("shrink-0", active ? "text-[#1F7A6C]" : "text-[#0F3F3A]/45")}
+      />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {locked ? (
         <span
           className={cn(
-            "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase",
-            active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500",
+            "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+            active ? "bg-white/80 text-[#1F7A6C]" : "bg-[#F0F9F7] text-[#0F3F3A]/45",
           )}
         >
           Pro
