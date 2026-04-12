@@ -51,6 +51,8 @@ export type PublicPagePreviewDraft = {
   documents: { id: string; label: string; fileUrl: string; position: number }[];
   galleryImageUrls: string[];
   terraceEnabled?: boolean;
+  /** Nombre max de convives (paramètre restaurant). */
+  maxPartySize?: number;
 };
 
 type PublicPageLivePreviewProps = {
@@ -132,7 +134,7 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
             restaurantEmail={draft.email.trim() || null}
             allowPhone
             allowEmail
-            maxPartySize={8}
+            maxPartySize={Math.max(1, draft.maxPartySize ?? 8)}
             openingHours={getDefaultOpeningHours()}
             daysInAdvance={60}
             useTables={false}

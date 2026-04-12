@@ -384,6 +384,7 @@ export default function SettingsForm({
       })),
       galleryImageUrls: galleryUrls,
       terraceEnabled,
+      maxPartySize: Math.max(1, maxPartySize),
     }),
     [
       accentColor,
@@ -430,6 +431,7 @@ export default function SettingsForm({
       showPublicWebsite,
       sortedDocuments,
       terraceEnabled,
+      maxPartySize,
       websiteUrl,
     ],
   );

@@ -232,8 +232,10 @@ export default function PublicReservationForm({
   const [seatingZone, setSeatingZone] = useState<"interior" | "terrace" | null>(null);
   const datePickerRef = useRef<HTMLInputElement>(null);
 
-  const partyGridMax = Math.min(6, Math.max(1, maxPartySize));
-  const showMoreThanSixHint = maxPartySize >= 6;
+  const effectiveMaxParty = useMemo(
+    () => Math.max(1, Math.floor(Number(maxPartySize)) || 8),
+    [maxPartySize],
+  );
 
   const tomorrowDate = useMemo(() => {
     const d = new Date();
@@ -444,8 +446,8 @@ export default function PublicReservationForm({
   }, [terraceEnabled, seatingZone, slotsForSelectedZone, reservationTime]);
 
   useEffect(() => {
-    setGuests((g) => Math.min(Math.max(1, g), maxPartySize));
-  }, [maxPartySize]);
+    setGuests((g) => Math.min(Math.max(1, g), effectiveMaxParty));
+  }, [effectiveMaxParty]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -871,12 +873,17 @@ export default function PublicReservationForm({
                     </div>
 
                     <div className="flex flex-col gap-3">
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                        {Array.from({ length: partyGridMax }, (_, i) => i + 1).map((n) => (
+                      <div
+                        className="grid gap-2"
+                        style={{
+                          gridTemplateColumns: "repeat(auto-fill, minmax(3.25rem, 1fr))",
+                        }}
+                      >
+                        {Array.from({ length: effectiveMaxParty }, (_, i) => i + 1).map((n) => (
                           <button
                             key={n}
                             type="button"
-                            disabled={previewMode || n > maxPartySize}
+                            disabled={previewMode}
                             onClick={() => setGuests(n)}
                             className={cn(
                               "min-h-[48px] rounded-[var(--radius)] border-2 text-base font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40",
@@ -899,9 +906,7 @@ export default function PublicReservationForm({
                         className="text-center text-xs leading-snug sm:text-sm"
                         style={{ color: "color-mix(in srgb, var(--body-text) 62%, var(--page-bg))" }}
                       >
-                        {showMoreThanSixHint
-                          ? "Veuillez nous appeler s'il y a plus de 6 personnes."
-                          : `Veuillez nous appeler au-delà de ${maxPartySize} personnes.`}
+                        {`Veuillez nous appeler pour les groupes de plus de ${effectiveMaxParty} personnes.`}
                       </p>
                     </div>
                   </div>

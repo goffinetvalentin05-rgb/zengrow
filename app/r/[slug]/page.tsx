@@ -205,7 +205,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           restaurantEmail={restaurant.email}
           allowPhone={safeSettings.allow_phone}
           allowEmail={safeSettings.allow_email}
-          maxPartySize={safeSettings.max_party_size}
+          maxPartySize={Math.max(1, safeSettings.max_party_size ?? 8)}
           openingHours={safeSettings.opening_hours as OpeningHours}
           daysInAdvance={safeSettings.days_in_advance ?? 60}
           useTables={safeSettings.use_tables ?? false}
