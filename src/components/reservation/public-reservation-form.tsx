@@ -211,7 +211,7 @@ export default function PublicReservationForm({
     d.setDate(d.getDate() + daysInAdvance);
     return localYmd(d);
   }, [daysInAdvance]);
-  const totalSteps = terraceEnabled ? 4 : 3;
+  const totalSteps = 3;
   const [wizardStep, setWizardStep] = useState(1);
   const [guestFirstName, setGuestFirstName] = useState("");
   const [guestLastName, setGuestLastName] = useState("");
@@ -223,10 +223,7 @@ export default function PublicReservationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [zoneSlots, setZoneSlots] = useState<{ interior: AvailabilitySlot[]; terrace: AvailabilitySlot[] }>({
-    interior: [],
-    terrace: [],
-  });
+  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const [seatingZone, setSeatingZone] = useState<"interior" | "terrace" | null>(null);
@@ -256,24 +253,10 @@ export default function PublicReservationForm({
     return copy;
   }, [documents]);
 
-  const unionSlotTimes = useMemo(() => {
-    if (terraceEnabled) {
-      const set = new Set<string>();
-      for (const s of zoneSlots.interior) set.add(s.time);
-      for (const s of zoneSlots.terrace) set.add(s.time);
-      return [...set].sort((a, b) => a.localeCompare(b));
-    }
-    return zoneSlots.interior.map((s) => s.time).sort((a, b) => a.localeCompare(b));
-  }, [terraceEnabled, zoneSlots]);
-
-  const slotsForSelectedZone = useMemo(() => {
-    if (terraceEnabled) {
-      if (seatingZone === "terrace") return zoneSlots.terrace;
-      if (seatingZone === "interior") return zoneSlots.interior;
-      return [];
-    }
-    return zoneSlots.interior;
-  }, [terraceEnabled, seatingZone, zoneSlots]);
+  const slotTimes = useMemo(
+    () => [...availabilitySlots.map((s) => s.time)].sort((a, b) => a.localeCompare(b)),
+    [availabilitySlots],
+  );
 
   const cssVars = useMemo(
     () =>
@@ -364,14 +347,20 @@ export default function PublicReservationForm({
       guests < 1 ||
       (closureStartDate && closureEndDate && reservationDate >= closureStartDate && reservationDate <= closureEndDate)
     ) {
-      setZoneSlots({ interior: [], terrace: [] });
+      setAvailabilitySlots([]);
       setSlotsError(null);
       return;
     }
 
     if (reservationDate > maxDateStr) {
-      setZoneSlots({ interior: [], terrace: [] });
+      setAvailabilitySlots([]);
       setSlotsError("Cette date dépasse la fenêtre de réservation autorisée.");
+      return;
+    }
+
+    if (terraceEnabled && !seatingZone) {
+      setAvailabilitySlots([]);
+      setSlotsError(null);
       return;
     }
 
@@ -379,36 +368,31 @@ export default function PublicReservationForm({
     setSlotsLoading(true);
     setSlotsError(null);
 
-    const loadZone = async (zone: "interior" | "terrace") => {
-      const q = new URLSearchParams({
-        restaurantId,
-        date: reservationDate,
-        covers: String(guests),
-        zone,
-      });
-      const response = await fetch(`/api/reservations/availability?${q.toString()}`);
-      const payload = (await response.json().catch(() => ({}))) as {
-        slots?: AvailabilitySlot[];
-        error?: string;
-      };
-      if (!response.ok) {
-        throw new Error(payload.error ?? "Impossible de charger les créneaux.");
-      }
-      return payload.slots ?? [];
-    };
+    const zone: "interior" | "terrace" = terraceEnabled ? seatingZone! : "interior";
+    const q = new URLSearchParams({
+      restaurantId,
+      date: reservationDate,
+      covers: String(guests),
+      zone,
+    });
 
-    const run = terraceEnabled
-      ? Promise.all([loadZone("interior"), loadZone("terrace")]).then(([interior, terrace]) => {
-          if (!cancelled) setZoneSlots({ interior, terrace });
-        })
-      : loadZone("interior").then((interior) => {
-          if (!cancelled) setZoneSlots({ interior, terrace: [] });
-        });
-
-    run
+    fetch(`/api/reservations/availability?${q.toString()}`)
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => ({}))) as {
+          slots?: AvailabilitySlot[];
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Impossible de charger les créneaux.");
+        }
+        return payload.slots ?? [];
+      })
+      .then((slots) => {
+        if (!cancelled) setAvailabilitySlots(slots);
+      })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setZoneSlots({ interior: [], terrace: [] });
+          setAvailabilitySlots([]);
           setSlotsError(err instanceof Error ? err.message : "Impossible de charger les créneaux.");
         }
       })
@@ -428,22 +412,15 @@ export default function PublicReservationForm({
     closureEndDate,
     maxDateStr,
     terraceEnabled,
+    seatingZone,
   ]);
 
   useEffect(() => {
-    const times = new Set(unionSlotTimes);
+    const times = new Set(availabilitySlots.map((s) => s.time));
     if (reservationTime && !times.has(reservationTime)) {
       setReservationTime("");
     }
-  }, [unionSlotTimes, reservationTime]);
-
-  useEffect(() => {
-    if (!terraceEnabled || !seatingZone) return;
-    const times = new Set(slotsForSelectedZone.map((s) => s.time));
-    if (reservationTime && !times.has(reservationTime)) {
-      setReservationTime("");
-    }
-  }, [terraceEnabled, seatingZone, slotsForSelectedZone, reservationTime]);
+  }, [availabilitySlots, reservationTime]);
 
   useEffect(() => {
     setGuests((g) => Math.min(Math.max(1, g), effectiveMaxParty));
@@ -474,18 +451,15 @@ export default function PublicReservationForm({
       return;
     }
 
-    if (terraceEnabled) {
-      if (!seatingZone) {
-        setError("Veuillez choisir un emplacement (intérieur ou terrasse).");
-        setIsSubmitting(false);
-        return;
-      }
-      const okTime = slotsForSelectedZone.some((s) => s.time === reservationTime);
-      if (!okTime) {
-        setError("Ce créneau n'est pas disponible pour la zone choisie. Modifiez l'heure ou l'emplacement.");
-        setIsSubmitting(false);
-        return;
-      }
+    if (terraceEnabled && !seatingZone) {
+      setError("Veuillez choisir un emplacement (intérieur ou terrasse).");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!availabilitySlots.some((s) => s.time === reservationTime)) {
+      setError("Ce créneau n'est plus disponible. Veuillez choisir une autre heure.");
+      setIsSubmitting(false);
+      return;
     }
 
     const response = await fetch("/api/reservations", {
@@ -872,6 +846,51 @@ export default function PublicReservationForm({
                       </p>
                     </div>
 
+                    {terraceEnabled ? (
+                      <div className="flex flex-col gap-2" role="group" aria-label="Emplacement">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <button
+                            type="button"
+                            disabled={previewMode}
+                            onClick={() => setSeatingZone("interior")}
+                            className={cn(
+                              "min-h-[52px] rounded-[var(--radius)] border-2 px-4 py-3 text-base font-semibold transition active:scale-[0.99] disabled:opacity-40",
+                              seatingZone === "interior" ? "border-transparent shadow-sm" : "bg-transparent",
+                            )}
+                            style={
+                              seatingZone === "interior"
+                                ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
+                                : {
+                                    borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                                    color: "color-mix(in srgb, var(--body-text) 85%, var(--page-bg))",
+                                  }
+                            }
+                          >
+                            Intérieur
+                          </button>
+                          <button
+                            type="button"
+                            disabled={previewMode}
+                            onClick={() => setSeatingZone("terrace")}
+                            className={cn(
+                              "min-h-[52px] rounded-[var(--radius)] border-2 px-4 py-3 text-base font-semibold transition active:scale-[0.99] disabled:opacity-40",
+                              seatingZone === "terrace" ? "border-transparent shadow-sm" : "bg-transparent",
+                            )}
+                            style={
+                              seatingZone === "terrace"
+                                ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
+                                : {
+                                    borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                                    color: "color-mix(in srgb, var(--body-text) 85%, var(--page-bg))",
+                                  }
+                            }
+                          >
+                            Terrasse
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+
                     <div className="flex flex-col gap-3">
                       <div
                         className="grid gap-2"
@@ -920,13 +939,13 @@ export default function PublicReservationForm({
                       </p>
                     ) : slotsError ? (
                       <p className="text-center text-sm text-amber-800">{slotsError}</p>
-                    ) : unionSlotTimes.length === 0 ? (
+                    ) : slotTimes.length === 0 ? (
                       <p className="text-center text-sm" style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}>
                         Aucun créneau disponible pour cette date.
                       </p>
                     ) : (
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                        {unionSlotTimes.map((t) => (
+                        {slotTimes.map((t) => (
                           <button
                             key={t}
                             type="button"
@@ -950,55 +969,6 @@ export default function PublicReservationForm({
                         ))}
                       </div>
                     )}
-                  </div>
-                ) : null}
-
-                {wizardStep === 3 && terraceEnabled ? (
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <button
-                      type="button"
-                      disabled={previewMode}
-                      onClick={() => setSeatingZone("interior")}
-                      className={cn(
-                        "flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-[var(--radius)] border-2 px-4 py-6 text-lg font-semibold transition active:scale-[0.99] disabled:opacity-40",
-                        seatingZone === "interior" ? "border-transparent shadow-md" : "bg-transparent",
-                      )}
-                      style={
-                        seatingZone === "interior"
-                          ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
-                          : {
-                              borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
-                              color: "color-mix(in srgb, var(--body-text) 85%, var(--page-bg))",
-                            }
-                      }
-                    >
-                      <span className="text-3xl" aria-hidden>
-                        🪑
-                      </span>
-                      Intérieur
-                    </button>
-                    <button
-                      type="button"
-                      disabled={previewMode}
-                      onClick={() => setSeatingZone("terrace")}
-                      className={cn(
-                        "flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-[var(--radius)] border-2 px-4 py-6 text-lg font-semibold transition active:scale-[0.99] disabled:opacity-40",
-                        seatingZone === "terrace" ? "border-transparent shadow-md" : "bg-transparent",
-                      )}
-                      style={
-                        seatingZone === "terrace"
-                          ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
-                          : {
-                              borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
-                              color: "color-mix(in srgb, var(--body-text) 85%, var(--page-bg))",
-                            }
-                      }
-                    >
-                      <span className="text-3xl" aria-hidden>
-                        ☀️
-                      </span>
-                      Terrasse
-                    </button>
                   </div>
                 ) : null}
 
@@ -1107,9 +1077,12 @@ export default function PublicReservationForm({
                     disabled={
                       previewMode ||
                       (wizardStep === 1 &&
-                        (!reservationDate || guests < 1 || isDateInClosurePeriod || reservationDate > maxDateStr)) ||
-                      (wizardStep === 2 && !reservationTime) ||
-                      (wizardStep === 3 && terraceEnabled && !seatingZone)
+                        (!reservationDate ||
+                          guests < 1 ||
+                          isDateInClosurePeriod ||
+                          reservationDate > maxDateStr ||
+                          (terraceEnabled && !seatingZone))) ||
+                      (wizardStep === 2 && !reservationTime)
                     }
                     onClick={() => setWizardStep((s) => Math.min(totalSteps, s + 1))}
                     className="order-1 min-h-[48px] w-full rounded-[var(--radius)] border border-transparent px-6 text-sm font-semibold shadow-md transition hover:brightness-105 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-45 sm:order-2 sm:ml-auto sm:w-auto sm:min-w-[200px]"
