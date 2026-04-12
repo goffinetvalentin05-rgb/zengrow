@@ -31,12 +31,13 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
 
   const { data: recipients } = await supabase
     .from("email_campaign_recipients")
-    .select("email")
+    .select("email, opened_at")
     .eq("campaign_id", campaign.id)
     .order("sent_at", { ascending: false });
 
   const emails = (recipients ?? []).map((item) => item.email);
   const sentCount = emails.length;
+  const openedCount = (recipients ?? []).filter((r) => r.opened_at != null).length;
 
   return (
     <section className="space-y-10">
@@ -84,7 +85,10 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
           </div>
           <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">E-mails ouverts</p>
-            <p className="mt-2 text-3xl font-bold tabular-nums text-gray-400">—</p>
+            <p className="mt-2 text-3xl font-bold tabular-nums text-gray-900">{openedCount}</p>
+            <p className="mt-2 text-xs text-gray-500">
+              Comptage via pixel de suivi (désactivez les images pour une mesure partielle).
+            </p>
           </div>
         </CardContent>
       </Card>

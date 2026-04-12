@@ -80,7 +80,13 @@ export async function GET(request: NextRequest) {
     const sendAt = new Date(completedAt.getTime() + automation.delay_minutes * 60 * 1000);
     if (now < sendAt) continue;
 
-    const googleReviewUrl = automation.google_review_url || `${appUrl}/review/${reservation.id}`;
+    const googleReviewUrl = (automation.google_review_url ?? "").trim();
+    if (!googleReviewUrl) {
+      console.warn("Review automation: URL Google manquante, e-mail ignoré.", {
+        restaurantId: reservation.restaurant_id,
+      });
+      continue;
+    }
     const visual = visualsByRestaurant.get(reservation.restaurant_id);
 
     let feedbackNeutralUrl: string;

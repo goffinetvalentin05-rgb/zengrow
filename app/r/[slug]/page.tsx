@@ -208,7 +208,6 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           maxPartySize={Math.max(1, safeSettings.max_party_size ?? 8)}
           openingHours={safeSettings.opening_hours as OpeningHours}
           daysInAdvance={safeSettings.days_in_advance ?? 60}
-          useTables={safeSettings.use_tables ?? false}
           logoUrl={restaurant.logo_url ?? safeSettings.logo_url}
           coverImageUrl={restaurant.banner_url ?? safeSettings.cover_image_url}
           pageBackgroundColor={pageBg}

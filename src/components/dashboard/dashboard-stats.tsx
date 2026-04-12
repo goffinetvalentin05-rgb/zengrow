@@ -1,6 +1,10 @@
 import { Calendar, CalendarDays, Clock, Users } from "lucide-react";
 import StatCard, { StatCardSkeleton } from "@/src/components/dashboard/stat-card";
-import { isoWeekUtcBounds } from "@/src/lib/date/iso-week";
+import {
+  calendarYmdInBusinessTz,
+  isoWeekBoundsInBusinessTz,
+  reservationIsAtOrAfterNow,
+} from "@/src/lib/date/business-calendar";
 import { createClient } from "@/src/lib/supabase/server";
 
 const EMPTY = "—";
@@ -9,11 +13,6 @@ const TODAY_COUNT_STATUSES = ["pending", "confirmed", "completed"] as const;
 const COUVERTS_STATUSES = ["pending", "confirmed"] as const;
 const WEEK_COUNT_STATUSES = ["pending", "confirmed", "completed", "no-show"] as const;
 const NEXT_STATUSES = ["pending", "confirmed"] as const;
-
-function reservationStartsAtMs(reservationDate: string, reservationTime: string): number {
-  const hm = reservationTime.trim().slice(0, 5);
-  return Date.parse(`${reservationDate}T${hm}:00.000Z`);
-}
 
 function formatTimeLabel(reservationTime: string): string {
   const t = reservationTime.trim();
@@ -33,9 +32,8 @@ export function DashboardStatsSkeleton() {
 export async function DashboardStats({ restaurantId }: { restaurantId: string }) {
   const supabase = await createClient();
   const now = new Date();
-  const today = now.toISOString().split("T")[0];
-  const { start: weekStart, end: weekEnd } = isoWeekUtcBounds(now);
-  const nowMs = now.getTime();
+  const today = calendarYmdInBusinessTz(now);
+  const { start: weekStart, end: weekEnd } = isoWeekBoundsInBusinessTz(now);
 
   const [
     { data: todayForCount, error: errTodayCount },
@@ -82,9 +80,7 @@ export async function DashboardStats({ restaurantId }: { restaurantId: string })
 
   let nextLine: string | null = null;
   if (!errNext && nextCandidates?.length) {
-    const next = nextCandidates.find(
-      (r) => reservationStartsAtMs(r.reservation_date, r.reservation_time) >= nowMs,
-    );
+    const next = nextCandidates.find((r) => reservationIsAtOrAfterNow(r.reservation_date, r.reservation_time, now));
     if (next) {
       const name = (next.guest_name ?? "").trim() || EMPTY;
       const time = formatTimeLabel(next.reservation_time);

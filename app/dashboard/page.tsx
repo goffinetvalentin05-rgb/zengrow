@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
 import { DashboardStats, DashboardStatsSkeleton } from "@/src/components/dashboard/dashboard-stats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { calendarYmdInBusinessTz, reservationIsAtOrAfterNow } from "@/src/lib/date/business-calendar";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import { cn } from "@/src/lib/utils";
@@ -21,21 +22,39 @@ export default async function DashboardPage() {
   const host = headerList.get("host");
   const protocol = headerList.get("x-forwarded-proto") ?? "http";
   const publicLink = host ? `${protocol}://${host}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
-  const today = new Date().toISOString().split("T")[0];
+  const today = calendarYmdInBusinessTz();
 
-  const [{ data: todayReservations }, { data: settings }] = await Promise.all([
+  const [{ data: todayReservations }, { data: settings }, { data: upcomingRows }] = await Promise.all([
     supabase
       .from("reservations")
-      .select("id, guest_name, guests, reservation_time, status")
+      .select("id, guest_name, guests, reservation_time, status, zone")
       .eq("restaurant_id", restaurant.id)
       .eq("reservation_date", today)
       .in("status", ["pending", "confirmed", "completed"]),
-    supabase.from("restaurant_settings").select("restaurant_capacity").eq("restaurant_id", restaurant.id).maybeSingle(),
+    supabase
+      .from("restaurant_settings")
+      .select("restaurant_capacity, terrace_enabled")
+      .eq("restaurant_id", restaurant.id)
+      .maybeSingle(),
+    supabase
+      .from("reservations")
+      .select("id, guest_name, guests, reservation_date, reservation_time, status, zone")
+      .eq("restaurant_id", restaurant.id)
+      .gte("reservation_date", today)
+      .in("status", ["pending", "confirmed"])
+      .order("reservation_date", { ascending: true })
+      .order("reservation_time", { ascending: true })
+      .limit(40),
   ]);
 
   const restaurantCapacity = settings?.restaurant_capacity ?? 40;
+  const showZoneOnDashboard = settings?.terrace_enabled === true;
   const timelineReservations = [...(todayReservations ?? [])].sort((a, b) => a.reservation_time.localeCompare(b.reservation_time));
   const activeTodayReservations = timelineReservations.filter((r) => ["pending", "confirmed"].includes(r.status));
+  const now = new Date();
+  const upcomingReservations = (upcomingRows ?? [])
+    .filter((r) => reservationIsAtOrAfterNow(r.reservation_date, r.reservation_time, now))
+    .slice(0, 12);
 
   const slotCapacityMap = new Map<string, number>();
   for (const reservation of activeTodayReservations) {
@@ -82,9 +101,10 @@ export default async function DashboardPage() {
                   timeLabel={reservation.reservation_time}
                   subtitle={`${reservation.guests} ${reservation.guests > 1 ? "personnes" : "personne"}`}
                   status={reservation.status as "pending" | "confirmed" | "completed"}
+                  seatingZone={(reservation.zone === "terrace" ? "terrace" : "interior") as "interior" | "terrace"}
                   emphasizeTime
                   presentation="list"
-                  showZoneBadge={false}
+                  showZoneBadge={showZoneOnDashboard}
                 />
               ))}
             </div>
@@ -113,22 +133,27 @@ export default async function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle>Prochaines tables</CardTitle>
-          <CardDescription>Réservations confirmées ou en attente.</CardDescription>
+          <CardDescription>Prochaines réservations à venir (confirmées ou en attente).</CardDescription>
         </CardHeader>
         <CardContent>
-          {activeTodayReservations.length === 0 ? (
+          {upcomingReservations.length === 0 ? (
             <p className="py-14 text-center text-sm text-[#0F3F3A]/45">Rien de prévu pour l&apos;instant.</p>
           ) : (
             <div className="-mx-1">
-              {activeTodayReservations.map((reservation) => (
+              {upcomingReservations.map((reservation) => (
                 <ReservationListRow
                   key={reservation.id}
                   guestName={reservation.guest_name ?? "Client"}
-                  timeLabel={reservation.reservation_time}
+                  timeLabel={
+                    reservation.reservation_date === today
+                      ? reservation.reservation_time
+                      : `${reservation.reservation_date.slice(8, 10)}.${reservation.reservation_date.slice(5, 7)} · ${reservation.reservation_time.trim().slice(0, 5)}`
+                  }
                   subtitle={`${reservation.guests} couverts`}
                   status={reservation.status as "pending" | "confirmed"}
+                  seatingZone={(reservation.zone === "terrace" ? "terrace" : "interior") as "interior" | "terrace"}
                   presentation="list"
-                  showZoneBadge={false}
+                  showZoneBadge={showZoneOnDashboard}
                 />
               ))}
             </div>

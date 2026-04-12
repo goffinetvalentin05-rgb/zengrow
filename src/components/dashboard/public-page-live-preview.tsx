@@ -137,7 +137,6 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
             maxPartySize={Math.max(1, draft.maxPartySize ?? 8)}
             openingHours={getDefaultOpeningHours()}
             daysInAdvance={60}
-            useTables={false}
             logoUrl={draft.logoUrl.trim() || null}
             coverImageUrl={draft.coverImageUrl.trim() || null}
             pageBackgroundColor={draft.pageBackgroundColor}

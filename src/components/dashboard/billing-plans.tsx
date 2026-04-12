@@ -73,12 +73,19 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function subscriptionStatusLabel(status: SubscriptionStatus): string {
+  if (status === "trial") return "Essai gratuit";
+  if (status === "active") return "Actif";
+  if (status === "expired") return "Expiré";
+  return status;
+}
+
 export default function BillingPlans({ status, plan, trialEndDate }: BillingPlansProps) {
   const [loadingPlan, setLoadingPlan] = useState<SubscriptionPlan>(null);
   const [message, setMessage] = useState<string | null>(null);
   const formattedTrialDate = formatDate(trialEndDate);
   const trialEndMs = trialEndDate ? new Date(trialEndDate).getTime() : null;
-  const now = Date.now();
+  const [now] = useState(() => Date.now());
   const totalTrialDays = 14;
   const totalTrialMs = totalTrialDays * 24 * 60 * 60 * 1000;
   const trialStartMs = trialEndMs ? trialEndMs - totalTrialMs : null;
@@ -124,7 +131,7 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
           <div className="rounded-xl border border-gray-100 bg-gray-50/80 px-5 py-4 text-left shadow-sm lg:text-right">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Plan actuel</p>
             <p className="mt-2 text-lg font-semibold text-gray-900">{plan ?? "—"}</p>
-            <p className="mt-1 text-xs text-gray-500">Statut : {status}</p>
+            <p className="mt-1 text-xs text-gray-500">Statut : {subscriptionStatusLabel(status)}</p>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">

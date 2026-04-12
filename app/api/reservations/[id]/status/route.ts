@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
-import { sendReservationConfirmationEmail } from "@/lib/email";
+import { sendReservationCancellationEmail, sendReservationConfirmationEmail } from "@/lib/email";
 import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 
 const allowedStatuses = new Set(["pending", "confirmed", "refused", "completed", "cancelled", "no-show"]);
@@ -63,6 +63,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   const shouldSendConfirmation =
     body.status === "confirmed" && previousStatus !== "confirmed" && Boolean(reservation.guest_email);
 
+  const shouldSendCancellation =
+    body.status === "cancelled" && previousStatus !== "cancelled" && Boolean(reservation.guest_email);
+
   if (shouldSendConfirmation && reservation.guest_email) {
     try {
       await sendReservationConfirmationEmail({
@@ -75,6 +78,21 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       });
     } catch (error) {
       console.error("Confirmation email failed", error);
+    }
+  }
+
+  if (shouldSendCancellation && reservation.guest_email) {
+    try {
+      await sendReservationCancellationEmail({
+        to: reservation.guest_email,
+        customerName: reservation.guest_name || "Client",
+        restaurantName: restaurant.name,
+        date: reservation.reservation_date,
+        time: reservation.reservation_time,
+        guests: reservation.guests,
+      });
+    } catch (error) {
+      console.error("Cancellation email failed", error);
     }
   }
 

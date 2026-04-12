@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+/** Domaine d’envoi (ex. vérifié sur Resend) — à surcharger avec RESEND_FROM_EMAIL si besoin. */
+const FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL?.trim() || "ZenGrow <notifications@obillz.com>";
 
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;
@@ -34,17 +36,95 @@ export async function sendReservationConfirmationEmail({
   return resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: "Votre reservation est confirmee",
+    subject: "Votre réservation est confirmée",
     text: [
       `Bonjour ${customerName}`,
       "",
-      `Votre reservation chez ${restaurantName} est confirmee.`,
+      `Votre réservation chez ${restaurantName} est confirmée.`,
       "",
       `Date : ${date}`,
       `Heure : ${time}`,
       `Personnes : ${guests}`,
       "",
-      "Nous avons hate de vous accueillir.",
+      "Nous avons hâte de vous accueillir.",
+      "",
+      restaurantName,
+    ].join("\n"),
+  });
+}
+
+type ReservationPendingParams = {
+  to: string;
+  customerName: string;
+  restaurantName: string;
+  date: string;
+  time: string;
+  guests: number;
+};
+
+export async function sendReservationReceivedEmail({
+  to,
+  customerName,
+  restaurantName,
+  date,
+  time,
+  guests,
+}: ReservationPendingParams) {
+  const resend = getResendClient();
+
+  return resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "Demande de réservation bien reçue",
+    text: [
+      `Bonjour ${customerName}`,
+      "",
+      `Nous avons bien enregistré votre demande de réservation chez ${restaurantName}.`,
+      "",
+      `Date souhaitée : ${date}`,
+      `Heure : ${time}`,
+      `Personnes : ${guests}`,
+      "",
+      "Nous vous confirmerons la disponibilité dans les plus brefs délais.",
+      "",
+      restaurantName,
+    ].join("\n"),
+  });
+}
+
+type ReservationCancellationParams = {
+  to: string;
+  customerName: string;
+  restaurantName: string;
+  date: string;
+  time: string;
+  guests: number;
+};
+
+export async function sendReservationCancellationEmail({
+  to,
+  customerName,
+  restaurantName,
+  date,
+  time,
+  guests,
+}: ReservationCancellationParams) {
+  const resend = getResendClient();
+
+  return resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "Votre réservation a été annulée",
+    text: [
+      `Bonjour ${customerName}`,
+      "",
+      `Votre réservation chez ${restaurantName} a été annulée.`,
+      "",
+      `Date : ${date}`,
+      `Heure : ${time}`,
+      `Personnes : ${guests}`,
+      "",
+      "Pour toute question, contactez directement le restaurant.",
       "",
       restaurantName,
     ].join("\n"),
@@ -75,6 +155,8 @@ type MarketingCampaignEmailParams = {
   imageUrl?: string | null;
   ctaLabel?: string;
   ctaUrl?: string;
+  /** URL du pixel 1×1 pour compter les ouvertures (optionnel). */
+  openTrackingPixelUrl?: string | null;
 };
 
 function escapeHtml(value: string) {
@@ -172,6 +254,7 @@ export async function sendMarketingCampaignEmail({
   imageUrl,
   ctaLabel = "Réserver une table",
   ctaUrl,
+  openTrackingPixelUrl,
 }: MarketingCampaignEmailParams) {
   const resend = getResendClient();
   const normalizedSubject = subject.trim() || "Dernières nouvelles de votre restaurant";
@@ -206,6 +289,11 @@ export async function sendMarketingCampaignEmail({
               ? `<a href="${ctaUrl}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:#1F7A6C;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">${escapeHtml(ctaLabel)}</a>`
               : ""
           }
+          ${
+            openTrackingPixelUrl
+              ? `<img src="${escapeHtml(openTrackingPixelUrl)}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;margin:0;padding:0;" />`
+              : ""
+          }
         </div>
       </div>
     `,
@@ -235,7 +323,7 @@ export async function sendNegativeFeedbackEmail({
     text: [
       `Bonjour ${restaurantName},`,
       "",
-      "Un client a laisse un retour prive.",
+      "Un client a laissé un retour privé.",
       "",
       `Note : ${rating}`,
       `Message : ${message || "(Aucun message)"}`,

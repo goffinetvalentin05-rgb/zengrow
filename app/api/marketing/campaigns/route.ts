@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendMarketingCampaignEmail } from "@/lib/email";
+import { signMarketingRecipientOpenToken } from "@/src/lib/marketing/open-pixel-token";
 import { canAccessFeature, expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -148,12 +149,38 @@ export async function POST(request: Request) {
   const origin = new URL(request.url).origin;
   const ctaUrl = `${origin}/r/${syncedRestaurant.slug}`;
   const sentAtIso = new Date().toISOString();
-  const successfulRecipients: { campaign_id: string; customer_id: string; email: string; sent_at: string }[] = [];
+  let sentCount = 0;
 
   for (const recipient of recipients) {
     if (!recipient.email) {
       continue;
     }
+
+    const { data: row, error: recipientInsertError } = await supabase
+      .from("email_campaign_recipients")
+      .insert({
+        campaign_id: campaign.id,
+        customer_id: recipient.id,
+        email: recipient.email,
+        sent_at: sentAtIso,
+      })
+      .select("id")
+      .single();
+
+    if (recipientInsertError || !row) {
+      console.error("Marketing campaign recipient insert failed", {
+        campaignId: campaign.id,
+        customerId: recipient.id,
+        error: recipientInsertError,
+      });
+      continue;
+    }
+
+    const openToken = signMarketingRecipientOpenToken(row.id);
+    const openTrackingPixelUrl =
+      openToken.length > 0
+        ? `${origin}/api/marketing/open?id=${encodeURIComponent(row.id)}&t=${encodeURIComponent(openToken)}`
+        : null;
 
     try {
       await sendMarketingCampaignEmail({
@@ -165,31 +192,18 @@ export async function POST(request: Request) {
         imageUrl,
         ctaLabel: "Réserver une table",
         ctaUrl,
+        openTrackingPixelUrl,
       });
 
-      successfulRecipients.push({
-        campaign_id: campaign.id,
-        customer_id: recipient.id,
-        email: recipient.email,
-        sent_at: sentAtIso,
-      });
+      sentCount += 1;
     } catch (error) {
+      await supabase.from("email_campaign_recipients").delete().eq("id", row.id);
       console.error("Marketing campaign email failed", {
         campaignId: campaign.id,
         customerId: recipient.id,
         email: recipient.email,
         error,
       });
-    }
-  }
-
-  if (successfulRecipients.length > 0) {
-    const { error: recipientsInsertError } = await supabase
-      .from("email_campaign_recipients")
-      .insert(successfulRecipients);
-
-    if (recipientsInsertError) {
-      return NextResponse.json({ error: recipientsInsertError.message }, { status: 500 });
     }
   }
 
@@ -206,7 +220,7 @@ export async function POST(request: Request) {
     ok: true,
     campaignId: campaign.id,
     requestedRecipients: recipients.length,
-    sentRecipients: successfulRecipients.length,
-    failedRecipients: recipients.length - successfulRecipients.length,
+    sentRecipients: sentCount,
+    failedRecipients: recipients.length - sentCount,
   });
 }

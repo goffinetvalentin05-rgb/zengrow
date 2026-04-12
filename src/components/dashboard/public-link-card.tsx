@@ -24,7 +24,7 @@ export default function PublicLinkCard({ link }: PublicLinkCardProps) {
       <p className="break-all text-sm text-gray-700">{link}</p>
       <div className="flex flex-wrap items-center gap-4">
         <button type="button" className="text-sm font-medium text-green-700 hover:underline" onClick={handleCopy}>
-          {copied ? "Copié" : "Copier"}
+          {copied ? "Copié" : "Copier le lien"}
         </button>
         <a href={link} target="_blank" rel="noreferrer" className="text-sm font-medium text-gray-600 hover:text-gray-900">
           Ouvrir

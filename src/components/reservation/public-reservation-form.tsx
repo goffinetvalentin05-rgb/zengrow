@@ -33,7 +33,6 @@ export type PublicReservationFormProps = {
   maxPartySize: number;
   openingHours: OpeningHours | null;
   daysInAdvance: number;
-  useTables: boolean;
   logoUrl?: string | null;
   coverImageUrl?: string | null;
   pageBackgroundColor: string;
@@ -163,7 +162,6 @@ export default function PublicReservationForm({
   maxPartySize,
   openingHours,
   daysInAdvance,
-  useTables,
   logoUrl,
   coverImageUrl,
   pageBackgroundColor,
@@ -211,7 +209,7 @@ export default function PublicReservationForm({
     d.setDate(d.getDate() + daysInAdvance);
     return localYmd(d);
   }, [daysInAdvance]);
-  const totalSteps = 3;
+  const totalSteps = 4;
   const [wizardStep, setWizardStep] = useState(1);
   const [guestFirstName, setGuestFirstName] = useState("");
   const [guestLastName, setGuestLastName] = useState("");
@@ -340,6 +338,7 @@ export default function PublicReservationForm({
     };
   }, [buttonStyle]);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- chargement asynchrone des créneaux et indicateurs associés */
   useEffect(() => {
     if (previewMode) return;
     if (
@@ -347,20 +346,26 @@ export default function PublicReservationForm({
       guests < 1 ||
       (closureStartDate && closureEndDate && reservationDate >= closureStartDate && reservationDate <= closureEndDate)
     ) {
-      setAvailabilitySlots([]);
-      setSlotsError(null);
+      queueMicrotask(() => {
+        setAvailabilitySlots([]);
+        setSlotsError(null);
+      });
       return;
     }
 
     if (reservationDate > maxDateStr) {
-      setAvailabilitySlots([]);
-      setSlotsError("Cette date dépasse la fenêtre de réservation autorisée.");
+      queueMicrotask(() => {
+        setAvailabilitySlots([]);
+        setSlotsError("Cette date dépasse la fenêtre de réservation autorisée.");
+      });
       return;
     }
 
     if (terraceEnabled && !seatingZone) {
-      setAvailabilitySlots([]);
-      setSlotsError(null);
+      queueMicrotask(() => {
+        setAvailabilitySlots([]);
+        setSlotsError(null);
+      });
       return;
     }
 
@@ -414,16 +419,17 @@ export default function PublicReservationForm({
     terraceEnabled,
     seatingZone,
   ]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     const times = new Set(availabilitySlots.map((s) => s.time));
     if (reservationTime && !times.has(reservationTime)) {
-      setReservationTime("");
+      queueMicrotask(() => setReservationTime(""));
     }
   }, [availabilitySlots, reservationTime]);
 
   useEffect(() => {
-    setGuests((g) => Math.min(Math.max(1, g), effectiveMaxParty));
+    queueMicrotask(() => setGuests((g) => Math.min(Math.max(1, g), effectiveMaxParty)));
   }, [effectiveMaxParty]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -438,7 +444,7 @@ export default function PublicReservationForm({
         ? `${closureMessage.trim()} - `
         : "";
       setError(
-        `${closureLabel}Le restaurant est ferme du ${closureStartDate} au ${closureEndDate}. Les reservations restent disponibles apres cette periode.`,
+        `${closureLabel}Le restaurant est fermé du ${closureStartDate} au ${closureEndDate}. Les réservations restent disponibles après cette période.`,
       );
       setIsSubmitting(false);
       return;
@@ -447,6 +453,30 @@ export default function PublicReservationForm({
     const guestName = `${guestFirstName.trim()} ${guestLastName.trim()}`.trim();
     if (!guestName) {
       setError("Le prénom et le nom sont requis.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if ((allowEmail ?? true) && !guestEmail.trim()) {
+      setError("L’adresse e-mail est requise.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if ((allowEmail ?? true) && guestEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim())) {
+      setError("Adresse e-mail invalide.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if ((allowPhone ?? true) && !guestPhone.trim()) {
+      setError("Le numéro de téléphone est requis.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (guestPhone.trim() && guestPhone.trim().replace(/\D/g, "").length < 8) {
+      setError("Numéro de téléphone invalide (minimum 8 chiffres).");
       setIsSubmitting(false);
       return;
     }
@@ -488,7 +518,7 @@ export default function PublicReservationForm({
     setMessage(
       isConfirmed
         ? "Votre réservation est confirmée. Un e-mail de confirmation vous a été envoyé."
-        : "Votre demande de réservation a été enregistrée. Nous la confirmerons rapidement.",
+        : "Votre demande de réservation a été enregistrée. Si vous avez indiqué une adresse e-mail, un accusé de réception vous a été envoyé.",
     );
     setGuestFirstName("");
     setGuestLastName("");
@@ -511,7 +541,7 @@ export default function PublicReservationForm({
   );
   const closureNotice =
     closureStartDate && closureEndDate
-      ? `Le restaurant est ferme du ${closureStartDate} au ${closureEndDate}. Les reservations restent disponibles apres cette periode.`
+      ? `Le restaurant est fermé du ${closureStartDate} au ${closureEndDate}. Les réservations restent disponibles après cette période.`
       : null;
 
   const taglineText = restaurantTagline?.trim();
@@ -845,9 +875,16 @@ export default function PublicReservationForm({
                         {reservationDate ? formatDateDdMmYyyy(reservationDate) : "—"}
                       </p>
                     </div>
+                  </div>
+                ) : null}
 
+                {wizardStep === 2 ? (
+                  <div className="flex flex-col gap-6">
                     {terraceEnabled ? (
                       <div className="flex flex-col gap-2" role="group" aria-label="Emplacement">
+                        <p className="text-center text-sm font-medium" style={{ color: "var(--heading-color)" }}>
+                          Emplacement
+                        </p>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <button
                             type="button"
@@ -892,6 +929,9 @@ export default function PublicReservationForm({
                     ) : null}
 
                     <div className="flex flex-col gap-3">
+                      <p className="text-center text-sm font-medium" style={{ color: "var(--heading-color)" }}>
+                        Nombre de personnes
+                      </p>
                       <div
                         className="grid gap-2"
                         style={{
@@ -931,7 +971,7 @@ export default function PublicReservationForm({
                   </div>
                 ) : null}
 
-                {wizardStep === 2 ? (
+                {wizardStep === 3 ? (
                   <div className="flex flex-col gap-4">
                     {slotsLoading ? (
                       <p className="text-center text-sm" style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}>
@@ -972,7 +1012,7 @@ export default function PublicReservationForm({
                   </div>
                 ) : null}
 
-                {wizardStep === totalSteps ? (
+                {wizardStep === 4 ? (
                   <div className="grid gap-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
@@ -1077,12 +1117,10 @@ export default function PublicReservationForm({
                     disabled={
                       previewMode ||
                       (wizardStep === 1 &&
-                        (!reservationDate ||
-                          guests < 1 ||
-                          isDateInClosurePeriod ||
-                          reservationDate > maxDateStr ||
-                          (terraceEnabled && !seatingZone))) ||
-                      (wizardStep === 2 && !reservationTime)
+                        (!reservationDate || isDateInClosurePeriod || reservationDate > maxDateStr)) ||
+                      (wizardStep === 2 &&
+                        (guests < 1 || isDateInClosurePeriod || (terraceEnabled && !seatingZone))) ||
+                      (wizardStep === 3 && !reservationTime)
                     }
                     onClick={() => setWizardStep((s) => Math.min(totalSteps, s + 1))}
                     className="order-1 min-h-[48px] w-full rounded-[var(--radius)] border border-transparent px-6 text-sm font-semibold shadow-md transition hover:brightness-105 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-45 sm:order-2 sm:ml-auto sm:w-auto sm:min-w-[200px]"

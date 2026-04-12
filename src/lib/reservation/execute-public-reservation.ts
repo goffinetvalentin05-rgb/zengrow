@@ -1,4 +1,7 @@
-import { sendReservationConfirmationEmail } from "@/lib/email";
+import {
+  sendReservationConfirmationEmail,
+  sendReservationReceivedEmail,
+} from "@/lib/email";
 import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 import { mapReservationRpcError } from "@/src/lib/reservation/map-reservation-error";
 import type { PublicReservationPostInput } from "@/src/lib/reservation/schemas";
@@ -52,10 +55,24 @@ export async function executePublicReservation(
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "opening_hours, reservation_slot_interval, max_party_size, closure_start_date, closure_end_date, closure_message, days_in_advance, terrace_enabled",
+      "opening_hours, reservation_slot_interval, max_party_size, closure_start_date, closure_end_date, closure_message, days_in_advance, terrace_enabled, allow_phone, allow_email",
     )
     .eq("restaurant_id", restaurantId)
     .maybeSingle();
+
+  const allowEmail = settings?.allow_email !== false;
+  const allowPhone = settings?.allow_phone !== false;
+
+  if (allowEmail && !guestEmail?.trim()) {
+    return { ok: false, status: 400, error: "L'adresse e-mail est requise." };
+  }
+  if (allowPhone && !guestPhone?.trim()) {
+    return { ok: false, status: 400, error: "Le numéro de téléphone est requis." };
+  }
+  const phoneDigits = (guestPhone ?? "").replace(/\D/g, "");
+  if (guestPhone?.trim() && phoneDigits.length < 8) {
+    return { ok: false, status: 400, error: "Numéro de téléphone invalide." };
+  }
 
   const terraceEnabled = settings?.terrace_enabled === true;
   if (terraceEnabled && parsed.zone !== "interior" && parsed.zone !== "terrace") {
@@ -159,6 +176,19 @@ export async function executePublicReservation(
       });
     } catch (error) {
       console.error("Automatic confirmation email failed", error);
+    }
+  } else if (finalStatus === "pending" && guestEmail) {
+    try {
+      await sendReservationReceivedEmail({
+        to: guestEmail,
+        customerName: guestName || "Client",
+        restaurantName: restaurant.name,
+        date: reservationDate,
+        time: reservationTime,
+        guests,
+      });
+    } catch (error) {
+      console.error("Pending reservation acknowledgment email failed", error);
     }
   }
 

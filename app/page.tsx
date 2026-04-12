@@ -551,11 +551,11 @@ export default function Home() {
             Simple et transparent
           </motion.h2>
           <p className="mt-4 max-w-2xl text-[#0F3F3A]/70">
-            Comparez les plans et choisissez l'offre adaptée à votre restaurant.
+            Comparez les plans et choisissez l&apos;offre adaptée à votre restaurant.
             Le plan Pro est idéal pour accélérer votre croissance.
           </p>
           <p className="mt-2 text-sm font-medium text-[#1F7A6C]">
-            Plus de réservations récurrentes, moins d'actions manuelles.
+            Plus de réservations récurrentes, moins d&apos;actions manuelles.
           </p>
           <div className="mt-10 grid gap-5 md:grid-cols-2">
             {plans.map((plan, index) => (
