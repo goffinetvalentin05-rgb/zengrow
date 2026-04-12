@@ -10,6 +10,11 @@ import EmptyState from "@/src/components/ui/empty-state";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
+import {
+  isReservationSlotPastInBusinessTz,
+  reservationSlotEndInBusinessTz,
+  reservationStartInBusinessTz,
+} from "@/src/lib/date/business-calendar";
 
 type ReservationRow = {
   id: string;
@@ -43,20 +48,6 @@ const editableStatuses = ["pending", "confirmed", "refused", "completed", "cance
 
 const statusesWithoutCompleted = ["pending", "confirmed", "refused", "cancelled", "no-show"] as const;
 
-function reservationSlotEndMs(reservation: ReservationRow, durationMinutes: number) {
-  const start = new Date(`${reservation.reservation_date}T${reservation.reservation_time}`).getTime();
-  if (Number.isNaN(start)) return 0;
-  return start + durationMinutes * 60_000;
-}
-
-function isPastReservationSlot(
-  reservation: ReservationRow,
-  durationMinutes: number,
-  nowMs: number,
-) {
-  return nowMs >= reservationSlotEndMs(reservation, durationMinutes);
-}
-
 function historyStatusDisplayLabel(reservation: ReservationRow, autoArchive: boolean) {
   if (autoArchive && reservation.status === "completed") return "Archivée";
   return undefined;
@@ -72,7 +63,8 @@ const STATUS_LABEL_FR: Record<ReservationRow["status"], string> = {
 };
 
 function reservationDateTimeValue(reservation: ReservationRow) {
-  return new Date(`${reservation.reservation_date}T${reservation.reservation_time}`).getTime();
+  const t = reservationStartInBusinessTz(reservation.reservation_date, reservation.reservation_time).getTime();
+  return Number.isNaN(t) ? 0 : t;
 }
 
 function sortReservations(values: ReservationRow[]) {
@@ -89,7 +81,7 @@ export default function ReservationsManager({
   const supabase = createClient();
   const [reservations, setReservations] = useState(sortReservations(initialReservations));
   /** Instantané au montage : le filtre archive / actif est évalué une fois au chargement de la page. */
-  const [clientNowMs] = useState(() => Date.now());
+  const [clientNow] = useState(() => new Date());
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | ReservationRow["status"]>("all");
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -127,28 +119,31 @@ export default function ReservationsManager({
     const main: ReservationRow[] = [];
     const hist: ReservationRow[] = [];
     for (const r of baseFiltered) {
-      if (isPastReservationSlot(r, mealDuration, clientNowMs)) hist.push(r);
+      if (isReservationSlotPastInBusinessTz(r.reservation_date, r.reservation_time, mealDuration, clientNow))
+        hist.push(r);
       else main.push(r);
     }
     return {
       mainListReservations: sortReservations(main),
       historyListReservations: [...hist].sort(
-        (a, b) => reservationSlotEndMs(b, mealDuration) - reservationSlotEndMs(a, mealDuration),
+        (a, b) =>
+          reservationSlotEndInBusinessTz(b.reservation_date, b.reservation_time, mealDuration).getTime() -
+          reservationSlotEndInBusinessTz(a.reservation_date, a.reservation_time, mealDuration).getTime(),
       ),
     };
-  }, [autoArchiveReservations, baseFiltered, mealDuration, clientNowMs]);
+  }, [autoArchiveReservations, baseFiltered, mealDuration, clientNow]);
 
   const selectedReservation = useMemo(() => {
     const row = baseFiltered.find((reservation) => reservation.id === selectedReservationId) ?? null;
     if (!row) return null;
     if (
       autoArchiveReservations &&
-      isPastReservationSlot(row, mealDuration, clientNowMs)
+      isReservationSlotPastInBusinessTz(row.reservation_date, row.reservation_time, mealDuration, clientNow)
     ) {
       return null;
     }
     return row;
-  }, [baseFiltered, selectedReservationId, autoArchiveReservations, mealDuration, clientNowMs]);
+  }, [baseFiltered, selectedReservationId, autoArchiveReservations, mealDuration, clientNow]);
 
   const statusFilterOptions = autoArchiveReservations ? statusesWithoutCompleted : editableStatuses;
 
