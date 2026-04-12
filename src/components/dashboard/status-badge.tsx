@@ -20,6 +20,13 @@ const tones: Record<ReservationStatus, "neutral" | "success" | "warning" | "dang
   "no-show": "sand",
 };
 
-export default function StatusBadge({ status }: { status: ReservationStatus }) {
-  return <Badge tone={tones[status]}>{labels[status]}</Badge>;
+export default function StatusBadge({
+  status,
+  displayLabel,
+}: {
+  status: ReservationStatus;
+  /** Libellé affiché à la place de celui par défaut (ex. « Archivée » en mode auto). */
+  displayLabel?: string;
+}) {
+  return <Badge tone={tones[status]}>{displayLabel ?? labels[status]}</Badge>;
 }

@@ -10,6 +10,8 @@ type ReservationListRowProps = {
   timeLabel: string;
   subtitle?: string;
   status: ReservationStatus;
+  /** Surcharge du libellé du badge de statut. */
+  statusDisplayLabel?: string;
   /** Salle ou terrasse. */
   seatingZone?: SeatingZone;
   /** Walk-in enregistré depuis le tableau de bord. */
@@ -27,6 +29,7 @@ export default function ReservationListRow({
   timeLabel,
   subtitle,
   status,
+  statusDisplayLabel,
   seatingZone = "interior",
   reservationType = "standard",
   className,
@@ -60,7 +63,7 @@ export default function ReservationListRow({
                 {zoneLabel}
               </span>
             ) : null}
-            <StatusBadge status={status} />
+            <StatusBadge status={status} displayLabel={statusDisplayLabel} />
           </div>
         </>
       ) : (
@@ -78,7 +81,7 @@ export default function ReservationListRow({
               </span>
             ) : null}
             <span className="text-[15px] font-bold tabular-nums text-[#1F7A6C]">{timeLabel}</span>
-            <StatusBadge status={status} />
+            <StatusBadge status={status} displayLabel={statusDisplayLabel} />
           </div>
         </>
       );
@@ -126,7 +129,7 @@ export default function ReservationListRow({
             {zoneLabel}
           </span>
         ) : null}
-        <StatusBadge status={status} />
+        <StatusBadge status={status} displayLabel={statusDisplayLabel} />
       </div>
     </>
   );

@@ -30,6 +30,9 @@ type ReservationsManagerProps = {
   initialReservations: ReservationRow[];
   initialShowManualForm?: boolean;
   terraceEnabled?: boolean;
+  /** Archivage par temps (heure + durée du repas), filtrage côté client au chargement. */
+  autoArchiveReservations?: boolean;
+  reservationDurationMinutes?: number;
 };
 
 function seatingZoneFromRow(row: ReservationRow): "interior" | "terrace" {
@@ -37,6 +40,27 @@ function seatingZoneFromRow(row: ReservationRow): "interior" | "terrace" {
 }
 
 const editableStatuses = ["pending", "confirmed", "refused", "completed", "cancelled", "no-show"] as const;
+
+const statusesWithoutCompleted = ["pending", "confirmed", "refused", "cancelled", "no-show"] as const;
+
+function reservationSlotEndMs(reservation: ReservationRow, durationMinutes: number) {
+  const start = new Date(`${reservation.reservation_date}T${reservation.reservation_time}`).getTime();
+  if (Number.isNaN(start)) return 0;
+  return start + durationMinutes * 60_000;
+}
+
+function isPastReservationSlot(
+  reservation: ReservationRow,
+  durationMinutes: number,
+  nowMs: number,
+) {
+  return nowMs >= reservationSlotEndMs(reservation, durationMinutes);
+}
+
+function historyStatusDisplayLabel(reservation: ReservationRow, autoArchive: boolean) {
+  if (autoArchive && reservation.status === "completed") return "Archivée";
+  return undefined;
+}
 
 const STATUS_LABEL_FR: Record<ReservationRow["status"], string> = {
   pending: "En attente",
@@ -59,9 +83,13 @@ export default function ReservationsManager({
   initialReservations,
   initialShowManualForm = false,
   terraceEnabled = false,
+  autoArchiveReservations = false,
+  reservationDurationMinutes = 90,
 }: ReservationsManagerProps) {
   const supabase = createClient();
   const [reservations, setReservations] = useState(sortReservations(initialReservations));
+  /** Instantané au montage : le filtre archive / actif est évalué une fois au chargement de la page. */
+  const [clientNowMs] = useState(() => Date.now());
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | ReservationRow["status"]>("all");
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -82,7 +110,9 @@ export default function ReservationsManager({
     Object.fromEntries(initialReservations.map((reservation) => [reservation.id, reservation.internal_note ?? ""])),
   );
 
-  const filteredReservations = useMemo(() => {
+  const mealDuration = Math.max(1, reservationDurationMinutes);
+
+  const baseFiltered = useMemo(() => {
     return reservations.filter((reservation) => {
       if (filterDate && reservation.reservation_date !== filterDate) return false;
       if (filterStatus !== "all" && reservation.status !== filterStatus) return false;
@@ -90,8 +120,45 @@ export default function ReservationsManager({
     });
   }, [reservations, filterDate, filterStatus]);
 
-  const selectedReservation =
-    filteredReservations.find((reservation) => reservation.id === selectedReservationId) ?? null;
+  const { mainListReservations, historyListReservations } = useMemo(() => {
+    if (!autoArchiveReservations) {
+      return { mainListReservations: baseFiltered, historyListReservations: [] as ReservationRow[] };
+    }
+    const main: ReservationRow[] = [];
+    const hist: ReservationRow[] = [];
+    for (const r of baseFiltered) {
+      if (isPastReservationSlot(r, mealDuration, clientNowMs)) hist.push(r);
+      else main.push(r);
+    }
+    return {
+      mainListReservations: sortReservations(main),
+      historyListReservations: [...hist].sort(
+        (a, b) => reservationSlotEndMs(b, mealDuration) - reservationSlotEndMs(a, mealDuration),
+      ),
+    };
+  }, [autoArchiveReservations, baseFiltered, mealDuration, clientNowMs]);
+
+  const selectedReservation = useMemo(() => {
+    const row = baseFiltered.find((reservation) => reservation.id === selectedReservationId) ?? null;
+    if (!row) return null;
+    if (
+      autoArchiveReservations &&
+      isPastReservationSlot(row, mealDuration, clientNowMs)
+    ) {
+      return null;
+    }
+    return row;
+  }, [baseFiltered, selectedReservationId, autoArchiveReservations, mealDuration, clientNowMs]);
+
+  const statusFilterOptions = autoArchiveReservations ? statusesWithoutCompleted : editableStatuses;
+
+  const detailStatusOptions: readonly ReservationRow["status"][] = useMemo(() => {
+    if (!autoArchiveReservations) return editableStatuses;
+    if (selectedReservation?.status === "completed") {
+      return [...statusesWithoutCompleted, "completed"];
+    }
+    return statusesWithoutCompleted;
+  }, [autoArchiveReservations, selectedReservation?.status]);
 
   async function updateStatus(id: string, status: ReservationRow["status"]) {
     setMessage(null);
@@ -195,7 +262,11 @@ export default function ReservationsManager({
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <CardTitle>Liste</CardTitle>
-            <CardDescription>Filtrez puis cliquez une ligne pour agir.</CardDescription>
+            <CardDescription>
+              {autoArchiveReservations
+                ? "Créneaux à venir et en cours uniquement (les passages passés sont en Historique). Filtrez puis cliquez une ligne pour agir."
+                : "Filtrez puis cliquez une ligne pour agir."}
+            </CardDescription>
           </div>
           <Button
             type="button"
@@ -355,7 +426,7 @@ export default function ReservationsManager({
               <label className="dashboard-field-label">Statut</label>
               <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as "all" | ReservationRow["status"])}>
                 <option value="all">Tous</option>
-                {editableStatuses.map((status) => (
+                {statusFilterOptions.map((status) => (
                   <option key={status} value={status}>
                     {STATUS_LABEL_FR[status]}
                   </option>
@@ -365,11 +436,18 @@ export default function ReservationsManager({
           </div>
 
           <div className="hidden md:block">
-            {filteredReservations.length === 0 ? (
-              <EmptyState title="Aucune réservation" description="Modifiez les filtres." />
+            {mainListReservations.length === 0 ? (
+              <EmptyState
+                title="Aucune réservation"
+                description={
+                  autoArchiveReservations
+                    ? "Aucun créneau à venir ou en cours pour ces filtres. Consultez l’historique ci-dessous."
+                    : "Modifiez les filtres."
+                }
+              />
             ) : (
               <div className="space-y-3">
-                {filteredReservations.map((reservation) => (
+                {mainListReservations.map((reservation) => (
                   <ReservationListRow
                     key={reservation.id}
                     guestName={reservation.guest_name}
@@ -387,11 +465,18 @@ export default function ReservationsManager({
           </div>
 
           <div className="md:hidden">
-            {filteredReservations.length === 0 ? (
-              <EmptyState title="Aucune réservation" description="Modifiez les filtres." />
+            {mainListReservations.length === 0 ? (
+              <EmptyState
+                title="Aucune réservation"
+                description={
+                  autoArchiveReservations
+                    ? "Aucun créneau à venir ou en cours pour ces filtres. Consultez l’historique ci-dessous."
+                    : "Modifiez les filtres."
+                }
+              />
             ) : (
               <div className="space-y-3">
-                {filteredReservations.map((reservation) => (
+                {mainListReservations.map((reservation) => (
                   <ReservationListRow
                     key={reservation.id}
                     guestName={reservation.guest_name}
@@ -406,6 +491,59 @@ export default function ReservationsManager({
               </div>
             )}
           </div>
+
+          {autoArchiveReservations ? (
+            <div className="border-t border-gray-100 pt-10">
+              <div className="mb-4">
+                <p className="text-base font-semibold text-gray-900">Historique</p>
+                <p className="mt-1 text-sm text-gray-500">
+                  Réservations dont l’heure de fin (passage + durée du repas, {mealDuration} min) est dépassée. Lecture
+                  seule.
+                </p>
+              </div>
+              <div className="hidden md:block">
+                {historyListReservations.length === 0 ? (
+                  <EmptyState title="Historique vide" description="Aucune réservation archivée pour ces filtres." />
+                ) : (
+                  <div className="space-y-3">
+                    {historyListReservations.map((reservation) => (
+                      <ReservationListRow
+                        key={reservation.id}
+                        guestName={reservation.guest_name}
+                        timeLabel={reservation.reservation_time}
+                        subtitle={`${reservation.reservation_date} · ${reservation.guests} couverts`}
+                        status={reservation.status}
+                        statusDisplayLabel={historyStatusDisplayLabel(reservation, true)}
+                        seatingZone={seatingZoneFromRow(reservation)}
+                        reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
+                        emphasizeTime
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="md:hidden">
+                {historyListReservations.length === 0 ? (
+                  <EmptyState title="Historique vide" description="Aucune réservation archivée pour ces filtres." />
+                ) : (
+                  <div className="space-y-3">
+                    {historyListReservations.map((reservation) => (
+                      <ReservationListRow
+                        key={reservation.id}
+                        guestName={reservation.guest_name}
+                        timeLabel={`${reservation.reservation_date} · ${reservation.reservation_time}`}
+                        subtitle={`${reservation.guests} couverts`}
+                        status={reservation.status}
+                        statusDisplayLabel={historyStatusDisplayLabel(reservation, true)}
+                        seatingZone={seatingZoneFromRow(reservation)}
+                        reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -464,9 +602,11 @@ export default function ReservationsManager({
                 onChange={(e) => updateStatus(selectedReservation.id, e.target.value as ReservationRow["status"])}
                 disabled={savingId === selectedReservation.id}
               >
-                {editableStatuses.map((status) => (
+                {detailStatusOptions.map((status) => (
                   <option key={status} value={status}>
-                    {STATUS_LABEL_FR[status]}
+                    {autoArchiveReservations && status === "completed"
+                      ? "Archivée (ancien statut)"
+                      : STATUS_LABEL_FR[status]}
                   </option>
                 ))}
               </Select>

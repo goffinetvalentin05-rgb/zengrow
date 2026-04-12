@@ -84,6 +84,7 @@ type SettingsData = {
   public_page_show_opening_hours: boolean | null;
   terrace_enabled?: boolean | null;
   terrace_capacity?: number | null;
+  auto_archive_reservations?: boolean | null;
 };
 
 const STORAGE_BUCKETS = ["restaurants", "restaurant-assets"] as const;
@@ -186,6 +187,9 @@ export default function SettingsForm({
   );
   const [daysInAdvance, setDaysInAdvance] = useState(settings.days_in_advance ?? 60);
   const [reservationDuration, setReservationDuration] = useState(settings.reservation_duration ?? 90);
+  const [autoArchiveReservations, setAutoArchiveReservations] = useState(
+    settings.auto_archive_reservations === true,
+  );
   const [slotInterval, setSlotInterval] = useState(settings.reservation_slot_interval ?? 15);
   const [maxPartySize, setMaxPartySize] = useState(settings.max_party_size ?? 8);
   const [pageBackgroundColor, setPageBackgroundColor] = useState(
@@ -760,6 +764,7 @@ export default function SettingsForm({
         restaurant_capacity: restaurantCapacity,
         max_covers_per_slot: restaurantCapacity,
         reservation_duration: reservationDuration,
+        auto_archive_reservations: autoArchiveReservations,
         use_tables: useTables,
         terrace_enabled: terraceEnabled,
         terrace_capacity: Math.max(0, Math.min(500, terraceCapacity)),
@@ -1722,6 +1727,24 @@ export default function SettingsForm({
                 placeholder="ex : 90"
                 onChange={(event) => setReservationDuration(Number(event.target.value))}
               />
+            </ReservationField>
+
+            <ReservationField
+              label="Archivage automatique des réservations"
+              description="Activé : les créneaux passés (heure de réservation + cette durée de repas) disparaissent de la liste principale et apparaissent en lecture seule sous Historique. Désactivé : vous gardez la liste actuelle et gérez les statuts (dont Terminée) manuellement."
+            >
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50/80 p-4 text-sm text-gray-800">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
+                  checked={autoArchiveReservations}
+                  onChange={(e) => setAutoArchiveReservations(e.target.checked)}
+                />
+                <span>
+                  Masquer automatiquement les réservations passées de la liste principale (selon l&apos;heure et la
+                  durée du repas ci-dessus).
+                </span>
+              </label>
             </ReservationField>
 
             <ReservationField
