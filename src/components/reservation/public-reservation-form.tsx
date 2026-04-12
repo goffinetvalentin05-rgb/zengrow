@@ -72,6 +72,8 @@ export type PublicReservationFormProps = {
   closureStartDate?: string | null;
   closureEndDate?: string | null;
   closureMessage?: string | null;
+  /** Si vrai, le client doit choisir salle ou terrasse (paramètres restaurant). */
+  terraceEnabled?: boolean;
 };
 
 function scrollToReservation() {
@@ -187,6 +189,7 @@ export default function PublicReservationForm({
   closureStartDate,
   closureEndDate,
   closureMessage,
+  terraceEnabled = false,
 }: PublicReservationFormProps) {
   const todayDate = new Date().toISOString().slice(0, 10);
   const maxDateStr = useMemo(() => {
@@ -207,6 +210,7 @@ export default function PublicReservationForm({
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
+  const [seatingZone, setSeatingZone] = useState<"interior" | "terrace">("interior");
 
   const sortedDocuments = useMemo(() => {
     const copy = [...documents];
@@ -322,6 +326,7 @@ export default function PublicReservationForm({
       restaurantId,
       date: reservationDate,
       covers: String(guests),
+      zone: terraceEnabled ? seatingZone : "interior",
     });
 
     fetch(`/api/reservations/availability?${q.toString()}`)
@@ -363,6 +368,8 @@ export default function PublicReservationForm({
     closureStartDate,
     closureEndDate,
     maxDateStr,
+    terraceEnabled,
+    seatingZone,
   ]);
 
   useEffect(() => {
@@ -401,6 +408,7 @@ export default function PublicReservationForm({
         guests,
         reservationDate,
         reservationTime,
+        ...(terraceEnabled ? { zone: seatingZone } : {}),
       }),
     });
     const payload = (await response.json().catch(() => ({}))) as { error?: string; status?: string };
@@ -423,6 +431,7 @@ export default function PublicReservationForm({
     setGuests(2);
     setReservationDate("");
     setReservationTime("");
+    setSeatingZone("interior");
     setIsSubmitting(false);
   }
 
@@ -649,6 +658,67 @@ export default function PublicReservationForm({
                 </div>
               ) : null}
 
+              {terraceEnabled ? (
+                <fieldset className="space-y-3">
+                  <legend className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
+                    Emplacement <span className="text-rose-600">*</span>
+                  </legend>
+                  <p className="text-sm" style={{ color: "color-mix(in srgb, var(--body-text) 72%, var(--page-bg))" }}>
+                    Choisissez la zone pour laquelle vous souhaitez réserver.
+                  </p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                    <label
+                      className={cn(
+                        "flex cursor-pointer items-center gap-3 rounded-[var(--radius)] border px-4 py-3 transition",
+                        seatingZone === "interior" ? "border-[var(--accent-color)] bg-[color-mix(in_srgb,var(--accent-color)_12%,transparent)]" : "",
+                      )}
+                      style={{
+                        borderColor:
+                          seatingZone === "interior" ? undefined : "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="seating-zone"
+                        value="interior"
+                        checked={seatingZone === "interior"}
+                        onChange={() => setSeatingZone("interior")}
+                        required
+                        disabled={previewMode}
+                        className="h-4 w-4 shrink-0 accent-[var(--accent-color)]"
+                      />
+                      <span className="text-sm font-medium" style={{ color: "var(--body-text)" }}>
+                        Intérieur
+                      </span>
+                    </label>
+                    <label
+                      className={cn(
+                        "flex cursor-pointer items-center gap-3 rounded-[var(--radius)] border px-4 py-3 transition",
+                        seatingZone === "terrace" ? "border-[var(--accent-color)] bg-[color-mix(in_srgb,var(--accent-color)_12%,transparent)]" : "",
+                      )}
+                      style={{
+                        borderColor:
+                          seatingZone === "terrace" ? undefined : "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="seating-zone"
+                        value="terrace"
+                        checked={seatingZone === "terrace"}
+                        onChange={() => setSeatingZone("terrace")}
+                        required
+                        disabled={previewMode}
+                        className="h-4 w-4 shrink-0 accent-[var(--accent-color)]"
+                      />
+                      <span className="text-sm font-medium" style={{ color: "var(--body-text)" }}>
+                        Terrasse
+                      </span>
+                    </label>
+                  </div>
+                </fieldset>
+              ) : null}
+
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-2">
                   <label htmlFor="date" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
@@ -685,7 +755,7 @@ export default function PublicReservationForm({
                     </option>
                     {availabilitySlots.map((slot) => (
                       <option key={slot.time} value={slot.time}>
-                        {useTables
+                        {useTables && slot.remainingCapacity == null
                           ? slot.time
                           : `${slot.time} — ${slot.remainingCapacity ?? 0} place(s) restante(s) après votre demande`}
                       </option>

@@ -82,6 +82,8 @@ type SettingsData = {
   public_page_show_email: boolean | null;
   public_page_show_website: boolean | null;
   public_page_show_opening_hours: boolean | null;
+  terrace_enabled?: boolean | null;
+  terrace_capacity?: number | null;
 };
 
 const STORAGE_BUCKETS = ["restaurants", "restaurant-assets"] as const;
@@ -178,6 +180,10 @@ export default function SettingsForm({
     settings.max_covers_per_slot ?? settings.restaurant_capacity ?? 40,
   );
   const [useTables, setUseTables] = useState(settings.use_tables ?? false);
+  const [terraceEnabled, setTerraceEnabled] = useState(settings.terrace_enabled ?? false);
+  const [terraceCapacity, setTerraceCapacity] = useState(
+    Math.max(0, Math.min(500, settings.terrace_capacity ?? 0)),
+  );
   const [daysInAdvance, setDaysInAdvance] = useState(settings.days_in_advance ?? 60);
   const [reservationDuration, setReservationDuration] = useState(settings.reservation_duration ?? 90);
   const [slotInterval, setSlotInterval] = useState(settings.reservation_slot_interval ?? 15);
@@ -377,6 +383,7 @@ export default function SettingsForm({
         position: d.position ?? 0,
       })),
       galleryImageUrls: galleryUrls,
+      terraceEnabled,
     }),
     [
       accentColor,
@@ -422,6 +429,7 @@ export default function SettingsForm({
       showPublicPhone,
       showPublicWebsite,
       sortedDocuments,
+      terraceEnabled,
       websiteUrl,
     ],
   );
@@ -751,6 +759,8 @@ export default function SettingsForm({
         max_covers_per_slot: restaurantCapacity,
         reservation_duration: reservationDuration,
         use_tables: useTables,
+        terrace_enabled: terraceEnabled,
+        terrace_capacity: Math.max(0, Math.min(500, terraceCapacity)),
         days_in_advance: daysInAdvance,
         reservation_slot_interval: slotInterval,
         max_party_size: maxPartySize,
@@ -1468,6 +1478,38 @@ export default function SettingsForm({
               </span>
             </span>
           </label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Terrasse</CardTitle>
+          <CardDescription>
+            Proposez une zone « terrasse » distincte de la salle, avec sa propre capacité par créneau.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <Toggle checked={terraceEnabled} onChange={setTerraceEnabled} label="Réservations en terrasse activées" />
+          <p className="text-sm leading-relaxed text-gray-600">
+            Lorsque l&apos;option est désactivée, toutes les demandes sont traitées comme en salle et le choix
+            terrasse n&apos;apparaît pas sur votre page publique.
+          </p>
+          {terraceEnabled ? (
+            <div className="space-y-2">
+              <label className="dashboard-field-label">Capacité terrasse (couverts par créneau)</label>
+              <p className="text-xs text-gray-500">
+                Nombre maximum de convives en terrasse en même temps sur un créneau (indépendant de la capacité
+                intérieure).
+              </p>
+              <Input
+                type="number"
+                min={0}
+                max={500}
+                value={terraceCapacity}
+                onChange={(e) => setTerraceCapacity(Number(e.target.value))}
+              />
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 

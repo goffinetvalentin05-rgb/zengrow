@@ -44,7 +44,7 @@ export default async function DashboardSettingsPage() {
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "reservation_duration, reservation_slot_interval, restaurant_capacity, max_covers_per_slot, max_party_size, use_tables, days_in_advance, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours",
+      "reservation_duration, reservation_slot_interval, restaurant_capacity, max_covers_per_slot, max_party_size, use_tables, terrace_enabled, terrace_capacity, days_in_advance, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours",
     )
     .eq("restaurant_id", restaurant.id)
     .single();
@@ -126,6 +126,8 @@ export default async function DashboardSettingsPage() {
     public_page_show_email: true,
     public_page_show_website: true,
     public_page_show_opening_hours: true,
+    terrace_enabled: false,
+    terrace_capacity: 0,
   };
 
   return (

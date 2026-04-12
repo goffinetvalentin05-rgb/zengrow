@@ -22,12 +22,18 @@ type ReservationRow = {
   status: "pending" | "confirmed" | "refused" | "cancelled" | "completed" | "no-show";
   internal_note: string | null;
   created_at: string;
+  zone?: "interior" | "terrace" | string | null;
 };
 
 type ReservationsManagerProps = {
   initialReservations: ReservationRow[];
   initialShowManualForm?: boolean;
+  terraceEnabled?: boolean;
 };
+
+function seatingZoneFromRow(row: ReservationRow): "interior" | "terrace" {
+  return row.zone === "terrace" ? "terrace" : "interior";
+}
 
 const editableStatuses = ["pending", "confirmed", "refused", "completed", "cancelled", "no-show"] as const;
 
@@ -51,6 +57,7 @@ function sortReservations(values: ReservationRow[]) {
 export default function ReservationsManager({
   initialReservations,
   initialShowManualForm = false,
+  terraceEnabled = false,
 }: ReservationsManagerProps) {
   const supabase = createClient();
   const [reservations, setReservations] = useState(sortReservations(initialReservations));
@@ -66,6 +73,7 @@ export default function ReservationsManager({
   const [manualReservationDate, setManualReservationDate] = useState("");
   const [manualReservationTime, setManualReservationTime] = useState("");
   const [manualGuests, setManualGuests] = useState(2);
+  const [manualZone, setManualZone] = useState<"interior" | "terrace">("interior");
   const [manualNote, setManualNote] = useState("");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>(
     Object.fromEntries(initialReservations.map((reservation) => [reservation.id, reservation.internal_note ?? ""])),
@@ -116,7 +124,7 @@ export default function ReservationsManager({
       .update({ internal_note })
       .eq("id", id)
       .select(
-        "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at",
+        "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone",
       )
       .single();
 
@@ -147,6 +155,7 @@ export default function ReservationsManager({
         reservationTime: manualReservationTime,
         guests: manualGuests,
         note: manualNote,
+        ...(terraceEnabled ? { zone: manualZone } : {}),
       }),
     });
 
@@ -168,6 +177,7 @@ export default function ReservationsManager({
     setManualReservationDate("");
     setManualReservationTime("");
     setManualGuests(2);
+    setManualZone("interior");
     setManualNote("");
     setMessage("Réservation ajoutée.");
     setSavingId(null);
@@ -214,6 +224,35 @@ export default function ReservationsManager({
                   <label className="dashboard-field-label">Couverts</label>
                   <Input type="number" min={1} value={manualGuests} onChange={(e) => setManualGuests(Number(e.target.value))} required />
                 </div>
+                {terraceEnabled ? (
+                  <div className="md:col-span-2 space-y-2">
+                    <p className="dashboard-field-label">Zone</p>
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="radio"
+                          name="manual-zone"
+                          value="interior"
+                          checked={manualZone === "interior"}
+                          onChange={() => setManualZone("interior")}
+                          required
+                        />
+                        Intérieur
+                      </label>
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="radio"
+                          name="manual-zone"
+                          value="terrace"
+                          checked={manualZone === "terrace"}
+                          onChange={() => setManualZone("terrace")}
+                          required
+                        />
+                        Terrasse
+                      </label>
+                    </div>
+                  </div>
+                ) : null}
                 <div className="md:col-span-2">
                   <label className="dashboard-field-label">Note</label>
                   <Textarea className="min-h-24" value={manualNote} onChange={(e) => setManualNote(e.target.value)} />
@@ -255,6 +294,7 @@ export default function ReservationsManager({
                     timeLabel={reservation.reservation_time}
                     subtitle={`${reservation.reservation_date} · ${reservation.guests} couverts`}
                     status={reservation.status}
+                    seatingZone={seatingZoneFromRow(reservation)}
                     emphasizeTime
                     onClick={() => setSelectedReservationId(reservation.id)}
                   />
@@ -275,6 +315,7 @@ export default function ReservationsManager({
                     timeLabel={`${reservation.reservation_date} · ${reservation.reservation_time}`}
                     subtitle={`${reservation.guests} couverts`}
                     status={reservation.status}
+                    seatingZone={seatingZoneFromRow(reservation)}
                     onClick={() => setSelectedReservationId(reservation.id)}
                   />
                 ))}
@@ -291,9 +332,14 @@ export default function ReservationsManager({
               <GuestAvatar name={selectedReservation.guest_name} size="lg" />
               <div>
                 <CardTitle>{selectedReservation.guest_name}</CardTitle>
-                <CardDescription>
-                  {selectedReservation.reservation_date} à {selectedReservation.reservation_time} · {selectedReservation.guests}{" "}
-                  couverts
+                <CardDescription className="mt-2 flex flex-wrap items-center gap-2">
+                  <span>
+                    {selectedReservation.reservation_date} à {selectedReservation.reservation_time} ·{" "}
+                    {selectedReservation.guests} couverts
+                  </span>
+                  <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-900">
+                    {seatingZoneFromRow(selectedReservation) === "terrace" ? "Terrasse" : "Intérieur"}
+                  </span>
                 </CardDescription>
                 <p className="mt-3 text-sm text-gray-500">
                   {selectedReservation.guest_phone || selectedReservation.guest_email || "Pas de contact"}

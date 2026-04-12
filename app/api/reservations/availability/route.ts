@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     restaurantId: params.get("restaurantId") ?? "",
     date: params.get("date") ?? "",
     covers: params.get("covers") ?? "",
+    zone: params.get("zone") ?? "",
   };
 
   const parsed = availabilityQuerySchema.safeParse(raw);
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
     p_restaurant_id: parsed.data.restaurantId,
     p_date: parsed.data.date,
     p_covers: parsed.data.covers,
+    p_zone: parsed.data.zone,
   });
 
   if (error) {

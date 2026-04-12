@@ -3,12 +3,15 @@ import GuestAvatar from "@/src/components/dashboard/guest-avatar";
 import { cn } from "@/src/lib/utils";
 
 type ReservationStatus = "pending" | "confirmed" | "refused" | "completed" | "cancelled" | "no-show";
+type SeatingZone = "interior" | "terrace";
 
 type ReservationListRowProps = {
   guestName: string;
   timeLabel: string;
   subtitle?: string;
   status: ReservationStatus;
+  /** Salle ou terrasse. */
+  seatingZone?: SeatingZone;
   className?: string;
   onClick?: () => void;
   emphasizeTime?: boolean;
@@ -19,10 +22,12 @@ export default function ReservationListRow({
   timeLabel,
   subtitle,
   status,
+  seatingZone = "interior",
   className,
   onClick,
   emphasizeTime,
 }: ReservationListRowProps) {
+  const zoneLabel = seatingZone === "terrace" ? "Terrasse" : "Intérieur";
   const inner = (
     <>
       <GuestAvatar name={guestName} size="md" />
@@ -43,7 +48,12 @@ export default function ReservationListRow({
           </>
         )}
       </div>
-      <StatusBadge status={status} />
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-900">
+          {zoneLabel}
+        </span>
+        <StatusBadge status={status} />
+      </div>
     </>
   );
 

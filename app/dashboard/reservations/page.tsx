@@ -15,11 +15,17 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
   const { data: reservations } = await supabase
     .from("reservations")
     .select(
-      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at",
+      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone",
     )
     .eq("restaurant_id", restaurant.id)
     .order("reservation_date", { ascending: false })
     .order("reservation_time", { ascending: false });
+
+  const { data: resSettings } = await supabase
+    .from("restaurant_settings")
+    .select("terrace_enabled")
+    .eq("restaurant_id", restaurant.id)
+    .maybeSingle();
 
   type ReservationRow = {
     id: string;
@@ -32,6 +38,7 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
     status: "pending" | "confirmed" | "refused" | "cancelled" | "completed" | "no-show";
     internal_note: string | null;
     created_at: string;
+    zone?: "interior" | "terrace" | string | null;
   };
 
   return (
@@ -45,6 +52,7 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
       <ReservationsManager
         initialReservations={(reservations ?? []) as ReservationRow[]}
         initialShowManualForm={shouldOpenManualForm}
+        terraceEnabled={resSettings?.terrace_enabled === true}
       />
     </div>
   );

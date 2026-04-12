@@ -11,6 +11,7 @@ type ManualReservationPayload = {
   reservationTime?: string;
   guests?: number;
   note?: string;
+  zone?: string;
 };
 
 function normalize(value?: string) {
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
   const reservationTime = body.reservationTime?.trim().slice(0, 5);
   const guests = Number(body.guests);
   const note = normalize(body.note);
+  const bodyZone = typeof body.zone === "string" ? body.zone.trim() : "";
 
   if (!guestName || !guestPhone || !reservationDate || !reservationTime || !Number.isInteger(guests) || guests <= 0) {
     return NextResponse.json({ error: "Données invalides." }, { status: 400 });
@@ -73,7 +75,7 @@ export async function POST(request: NextRequest) {
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "opening_hours, reservation_slot_interval, restaurant_capacity, max_covers_per_slot, max_party_size, use_tables",
+      "opening_hours, reservation_slot_interval, restaurant_capacity, max_covers_per_slot, max_party_size, use_tables, terrace_enabled, terrace_capacity",
     )
     .eq("restaurant_id", restaurant.id)
     .maybeSingle();
@@ -82,6 +84,16 @@ export async function POST(request: NextRequest) {
   const maxPartySize = settings?.max_party_size ?? 8;
   const maxCoversPerSlot = settings?.max_covers_per_slot ?? settings?.restaurant_capacity ?? 40;
   const useTables = settings?.use_tables ?? false;
+  const terraceEnabled = settings?.terrace_enabled === true;
+  const terraceCapacity = settings?.terrace_capacity ?? 0;
+
+  let reservationZone: "interior" | "terrace" = "interior";
+  if (terraceEnabled) {
+    if (bodyZone !== "interior" && bodyZone !== "terrace") {
+      return NextResponse.json({ error: "Indiquez la zone : intérieur ou terrasse." }, { status: 400 });
+    }
+    reservationZone = bodyZone as "interior" | "terrace";
+  }
   const openingHours = (settings?.opening_hours as OpeningHours | null) ?? null;
   const availableSlots = generateTimeSlotsForDate(reservationDate, openingHours, slotInterval);
   if (!availableSlots.includes(reservationTime)) {
@@ -96,7 +108,7 @@ export async function POST(request: NextRequest) {
 
   let tableId: string | null = null;
 
-  if (useTables) {
+  if (useTables && reservationZone === "interior") {
     const { data: candidates } = await supabase
       .from("restaurant_tables")
       .select("id, min_covers, max_covers")
@@ -124,17 +136,43 @@ export async function POST(request: NextRequest) {
       );
     }
     tableId = picked.id;
-  } else {
+  } else if (useTables && reservationZone === "terrace") {
+    tableId = null;
+    if (terraceCapacity <= 0) {
+      return NextResponse.json({ error: "La terrasse n'est pas configurée pour recevoir des réservations." }, { status: 409 });
+    }
     const { data: slotRows } = await supabase
       .from("reservations")
       .select("guests")
       .eq("restaurant_id", restaurant.id)
       .eq("reservation_date", reservationDate)
       .eq("reservation_time", reservationTime)
+      .eq("zone", "terrace")
       .in("status", ["pending", "confirmed"]);
 
     const existingPeopleInSlot = (slotRows ?? []).reduce((total, row) => total + (row.guests ?? 0), 0);
-    if (existingPeopleInSlot + guests > maxCoversPerSlot) {
+    if (existingPeopleInSlot + guests > terraceCapacity) {
+      return NextResponse.json({ error: "Ce créneau n'a plus assez de places disponibles en terrasse." }, { status: 409 });
+    }
+  } else {
+    const maxForZone = reservationZone === "terrace" ? terraceCapacity : maxCoversPerSlot;
+    if (reservationZone === "terrace" && maxForZone <= 0) {
+      return NextResponse.json(
+        { error: "La terrasse n'est pas configurée pour recevoir des réservations." },
+        { status: 409 },
+      );
+    }
+    const { data: slotRows } = await supabase
+      .from("reservations")
+      .select("guests")
+      .eq("restaurant_id", restaurant.id)
+      .eq("reservation_date", reservationDate)
+      .eq("reservation_time", reservationTime)
+      .eq("zone", reservationZone)
+      .in("status", ["pending", "confirmed"]);
+
+    const existingPeopleInSlot = (slotRows ?? []).reduce((total, row) => total + (row.guests ?? 0), 0);
+    if (existingPeopleInSlot + guests > maxForZone) {
       return NextResponse.json(
         { error: "Ce créneau n'a plus assez de places disponibles." },
         { status: 409 },
@@ -156,9 +194,10 @@ export async function POST(request: NextRequest) {
       status: "confirmed",
       source: "manual_dashboard",
       table_id: tableId,
+      zone: reservationZone,
     })
     .select(
-      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, table_id",
+      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, table_id, zone",
     )
     .single();
 

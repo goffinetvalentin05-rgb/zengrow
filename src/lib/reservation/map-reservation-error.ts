@@ -18,6 +18,9 @@ export function mapReservationRpcError(
   if (raw.includes("invalid_time")) {
     return "Ce créneau n'est pas valide.";
   }
+  if (raw.includes("terrace_disabled")) {
+    return "La réservation en terrasse n'est pas disponible pour ce restaurant.";
+  }
   if (raw.includes("table_required") || raw.includes("table_taken") || raw.includes("table_capacity")) {
     return "Aucune table n'est disponible pour ce créneau et ce nombre de convives.";
   }

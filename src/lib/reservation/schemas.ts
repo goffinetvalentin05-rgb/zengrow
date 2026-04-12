@@ -10,6 +10,8 @@ const optionalPhone = z.preprocess(
   z.string().trim().max(40).optional(),
 );
 
+export const seatingZoneSchema = z.enum(["interior", "terrace"]);
+
 export const publicReservationPostSchema = z.object({
   restaurantId: z.string().uuid(),
   guestName: z.string().trim().min(1, "Le nom est requis.").max(200),
@@ -21,6 +23,7 @@ export const publicReservationPostSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide.")
     .refine((d) => !Number.isNaN(Date.parse(d)), "Date invalide."),
   reservationTime: z.string().regex(/^\d{2}:\d{2}$/, "Heure invalide."),
+  zone: seatingZoneSchema.optional(),
 });
 
 export type PublicReservationPostInput = z.infer<typeof publicReservationPostSchema>;
@@ -29,6 +32,10 @@ export const availabilityQuerySchema = z.object({
   restaurantId: z.string().uuid(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   covers: z.coerce.number().int().min(1).max(500),
+  zone: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? "interior" : v),
+    seatingZoneSchema,
+  ),
 });
 
 export type AvailabilitySlot = {

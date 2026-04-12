@@ -52,10 +52,20 @@ export async function executePublicReservation(
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "opening_hours, reservation_slot_interval, max_party_size, closure_start_date, closure_end_date, closure_message, days_in_advance",
+      "opening_hours, reservation_slot_interval, max_party_size, closure_start_date, closure_end_date, closure_message, days_in_advance, terrace_enabled",
     )
     .eq("restaurant_id", restaurantId)
     .maybeSingle();
+
+  const terraceEnabled = settings?.terrace_enabled === true;
+  if (terraceEnabled && parsed.zone !== "interior" && parsed.zone !== "terrace") {
+    return {
+      ok: false,
+      status: 400,
+      error: "Indiquez si la réservation est en salle ou en terrasse.",
+    };
+  }
+  const reservationZone: "interior" | "terrace" = terraceEnabled ? parsed.zone! : "interior";
 
   const slotInterval = settings?.reservation_slot_interval ?? 30;
   const maxPartySize = settings?.max_party_size ?? 8;
@@ -118,6 +128,7 @@ export async function executePublicReservation(
     p_reservation_time: reservationTime,
     p_status: status,
     p_source: "public_link",
+    p_zone: reservationZone,
   });
 
   if (rpcError || !rpcData) {
@@ -128,7 +139,8 @@ export async function executePublicReservation(
       code.includes("table") ||
       code.includes("max_party") ||
       code.includes("invalid_slot") ||
-      code.includes("invalid_time");
+      code.includes("invalid_time") ||
+      code.includes("terrace_disabled");
     return { ok: false, status: isConflict ? 409 : 400, error: msg };
   }
 

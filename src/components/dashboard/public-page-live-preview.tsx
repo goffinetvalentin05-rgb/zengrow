@@ -50,6 +50,7 @@ export type PublicPagePreviewDraft = {
   showPublicGoogleMaps: boolean;
   documents: { id: string; label: string; fileUrl: string; position: number }[];
   galleryImageUrls: string[];
+  terraceEnabled?: boolean;
 };
 
 type PublicPageLivePreviewProps = {
@@ -173,6 +174,7 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
             closureStartDate={null}
             closureEndDate={null}
             closureMessage={null}
+            terraceEnabled={draft.terraceEnabled ?? false}
           />
         </div>
       </div>
