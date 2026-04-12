@@ -1530,6 +1530,21 @@ export default function SettingsForm({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="rounded-xl border border-[#CBE6DF] bg-[#F0F9F7]/60 p-4 md:p-5">
+            <h3 className="text-sm font-semibold text-[#0F3F3A]">Page « Réservations » du tableau de bord</h3>
+            <p className="mt-1 text-sm leading-relaxed text-gray-600">
+              Activez l&apos;archivage pour masquer automatiquement les créneaux passés (heure + durée du repas) de la
+              liste principale ; ils restent consultables sous Historique.
+            </p>
+            <div className="mt-4">
+              <Toggle
+                checked={autoArchiveReservations}
+                onChange={setAutoArchiveReservations}
+                label="Archivage automatique des réservations"
+              />
+            </div>
+          </div>
+
           <div className="rounded-xl border border-gray-200 bg-[var(--surface)] p-4 md:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1 space-y-3">
@@ -1727,24 +1742,6 @@ export default function SettingsForm({
                 placeholder="ex : 90"
                 onChange={(event) => setReservationDuration(Number(event.target.value))}
               />
-            </ReservationField>
-
-            <ReservationField
-              label="Archivage automatique des réservations"
-              description="Activé : les créneaux passés (heure de réservation + cette durée de repas) disparaissent de la liste principale et apparaissent en lecture seule sous Historique. Désactivé : vous gardez la liste actuelle et gérez les statuts (dont Terminée) manuellement."
-            >
-              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50/80 p-4 text-sm text-gray-800">
-                <input
-                  type="checkbox"
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
-                  checked={autoArchiveReservations}
-                  onChange={(e) => setAutoArchiveReservations(e.target.checked)}
-                />
-                <span>
-                  Masquer automatiquement les réservations passées de la liste principale (selon l&apos;heure et la
-                  durée du repas ci-dessus).
-                </span>
-              </label>
             </ReservationField>
 
             <ReservationField
