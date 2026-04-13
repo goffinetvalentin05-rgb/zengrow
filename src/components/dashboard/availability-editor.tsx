@@ -83,7 +83,7 @@ export default function AvailabilityEditor({
 
   return (
     <section className="space-y-10">
-      <header className="border-b border-gray-100 pb-6">
+      <header className="border-b border-zg-border/80 pb-7">
         <h1 className="dashboard-section-heading">Disponibilités</h1>
         <p className="dashboard-section-subtitle mt-2 max-w-2xl">
           Indiquez quand vous accueillez les réservations, jour par jour.
@@ -103,10 +103,10 @@ export default function AvailabilityEditor({
             return (
               <div
                 key={day}
-                className="rounded-xl border border-gray-100 bg-gray-50/40 p-5 shadow-sm md:p-6"
+                className="rounded-2xl border border-zg-border/90 bg-zg-surface-elevated/55 p-5 shadow-zg-soft backdrop-blur-sm md:p-6"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-gray-900">{dayLabels[day]}</p>
+                  <p className="text-sm font-semibold text-zg-fg">{dayLabels[day]}</p>
                   <Toggle checked={isOpen} onChange={(value) => toggleDay(day, value)} label={isOpen ? "Ouvert" : "Fermé"} />
                 </div>
 
@@ -120,7 +120,7 @@ export default function AvailabilityEditor({
                           value={range.start}
                           onChange={(event) => updateRange(day, index, "start", event.target.value)}
                         />
-                        <span className="text-gray-400">à</span>
+                        <span className="text-zg-fg/38">à</span>
                         <Input
                           type="time"
                           className="w-36"

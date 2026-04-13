@@ -157,7 +157,7 @@ function ReservationField({
   return (
     <div className="space-y-2">
       <label className="dashboard-field-label">{label}</label>
-      <p className="text-sm leading-relaxed text-gray-500">{description}</p>
+      <p className="text-sm leading-relaxed text-zg-fg/52">{description}</p>
       <div>{children}</div>
     </div>
   );
@@ -913,7 +913,7 @@ export default function SettingsForm({
                 </Button>
               </div>
 
-              <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+              <details open className="rounded-xl border border-zg-border-strong bg-zg-surface-elevated/55 p-4">
                 <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Couleurs</summary>
                 <div className="mt-4 space-y-4">
                   <div>
@@ -982,13 +982,13 @@ export default function SettingsForm({
                 </div>
               </details>
 
-              <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+              <details open className="rounded-xl border border-zg-border-strong bg-zg-surface-elevated/55 p-4">
                 <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Typographie</summary>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="dashboard-field-label">Police des titres</label>
                     <select
-                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      className="h-10 w-full rounded-md border border-zg-border-strong bg-zg-surface/98 px-3 text-sm text-zg-fg"
                       value={headingFont}
                       onChange={(event) => setHeadingFont(event.target.value)}
                     >
@@ -1002,7 +1002,7 @@ export default function SettingsForm({
                   <div>
                     <label className="dashboard-field-label">Police du corps</label>
                     <select
-                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      className="h-10 w-full rounded-md border border-zg-border-strong bg-zg-surface/98 px-3 text-sm text-zg-fg"
                       value={bodyFont}
                       onChange={(event) => setBodyFont(event.target.value)}
                     >
@@ -1031,7 +1031,7 @@ export default function SettingsForm({
                   <div className="md:col-span-2">
                     <label className="dashboard-field-label">Échelle du corps de page</label>
                     <select
-                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      className="h-10 w-full rounded-md border border-zg-border-strong bg-zg-surface/98 px-3 text-sm text-zg-fg"
                       value={fontSizeScale}
                       onChange={(event) => setFontSizeScale(event.target.value as "small" | "medium" | "large")}
                     >
@@ -1043,7 +1043,7 @@ export default function SettingsForm({
                 </div>
               </details>
 
-              <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+              <details open className="rounded-xl border border-zg-border-strong bg-zg-surface-elevated/55 p-4">
                 <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Hero / en-tête</summary>
                 <div className="mt-4 space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
@@ -1125,13 +1125,13 @@ export default function SettingsForm({
                 </div>
               </details>
 
-              <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+              <details open className="rounded-xl border border-zg-border-strong bg-zg-surface-elevated/55 p-4">
                 <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Style</summary>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="dashboard-field-label">Rayon des bordures</label>
                     <select
-                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      className="h-10 w-full rounded-md border border-zg-border-strong bg-zg-surface/98 px-3 text-sm text-zg-fg"
                       value={borderRadius}
                       onChange={(event) => setBorderRadius(event.target.value as "sharp" | "rounded" | "pill")}
                     >
@@ -1143,7 +1143,7 @@ export default function SettingsForm({
                   <div>
                     <label className="dashboard-field-label">Style des boutons</label>
                     <select
-                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      className="h-10 w-full rounded-md border border-zg-border-strong bg-zg-surface/98 px-3 text-sm text-zg-fg"
                       value={buttonStyle}
                       onChange={(event) => setButtonStyle(event.target.value as "filled" | "outlined" | "ghost")}
                     >
@@ -1155,7 +1155,7 @@ export default function SettingsForm({
                   <div className="md:col-span-2">
                     <label className="dashboard-field-label">Style des cartes</label>
                     <select
-                      className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                      className="h-10 w-full rounded-md border border-zg-border-strong bg-zg-surface/98 px-3 text-sm text-zg-fg"
                       value={cardStyle}
                       onChange={(event) => setCardStyle(event.target.value as "flat" | "elevated" | "bordered")}
                     >
@@ -1173,7 +1173,7 @@ export default function SettingsForm({
             </div>
           </div>
 
-          <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+          <details open className="rounded-xl border border-zg-border-strong bg-zg-surface-elevated/55 p-4">
             <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Informations de contact</summary>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
               Ces champs alimentent le pied de page public. Cochez ce qui doit être visible.
@@ -1187,7 +1187,7 @@ export default function SettingsForm({
                     type="checkbox"
                     checked={showPublicPhone}
                     onChange={(event) => setShowPublicPhone(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-zg-border-strong/75"
                   />
                   Afficher sur la page publique
                 </label>
@@ -1200,7 +1200,7 @@ export default function SettingsForm({
                     type="checkbox"
                     checked={showPublicWebsite}
                     onChange={(event) => setShowPublicWebsite(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-zg-border-strong/75"
                   />
                   Afficher sur la page publique
                 </label>
@@ -1213,7 +1213,7 @@ export default function SettingsForm({
                     type="checkbox"
                     checked={showPublicAddress}
                     onChange={(event) => setShowPublicAddress(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-zg-border-strong/75"
                   />
                   Afficher sur la page publique
                 </label>
@@ -1226,7 +1226,7 @@ export default function SettingsForm({
                     type="checkbox"
                     checked={showPublicEmail}
                     onChange={(event) => setShowPublicEmail(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-zg-border-strong/75"
                   />
                   Afficher sur la page publique
                 </label>
@@ -1237,7 +1237,7 @@ export default function SettingsForm({
                     type="checkbox"
                     checked={showPublicOpeningHours}
                     onChange={(event) => setShowPublicOpeningHours(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-zg-border-strong/75"
                   />
                   Afficher les horaires d’ouverture dans le pied de page
                 </label>
@@ -1245,7 +1245,7 @@ export default function SettingsForm({
             </div>
           </details>
 
-          <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+          <details open className="rounded-xl border border-zg-border-strong bg-zg-surface-elevated/55 p-4">
             <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Réseaux sociaux</summary>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
@@ -1256,7 +1256,7 @@ export default function SettingsForm({
                     type="checkbox"
                     checked={showPublicInstagram}
                     onChange={(event) => setShowPublicInstagram(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-zg-border-strong/75"
                   />
                   Afficher l’icône Instagram
                 </label>
@@ -1269,7 +1269,7 @@ export default function SettingsForm({
                     type="checkbox"
                     checked={showPublicFacebook}
                     onChange={(event) => setShowPublicFacebook(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-zg-border-strong/75"
                   />
                   Afficher l’icône Facebook
                 </label>
@@ -1282,7 +1282,7 @@ export default function SettingsForm({
                     type="checkbox"
                     checked={showPublicGoogleMaps}
                     onChange={(event) => setShowPublicGoogleMaps(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-zg-border-strong/75"
                   />
                   Afficher le lien Google Maps dans le pied de page
                 </label>
@@ -1290,7 +1290,7 @@ export default function SettingsForm({
             </div>
           </details>
 
-          <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+          <details open className="rounded-xl border border-zg-border-strong bg-zg-surface-elevated/55 p-4">
             <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Cartes & menus (PDF)</summary>
             <div className="mt-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1304,7 +1304,7 @@ export default function SettingsForm({
                   {documentsError}
                 </p>
               ) : null}
-              <div className="grid gap-3 rounded-xl border border-gray-200 bg-white p-4">
+              <div className="grid gap-3 rounded-xl border border-zg-border-strong bg-zg-surface/95 p-4">
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
                   <div>
                     <label className="dashboard-field-label">Libellé du bouton</label>
@@ -1342,11 +1342,11 @@ export default function SettingsForm({
                         setDraggingDocId(null);
                       }}
                       className={cn(
-                        "flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3",
+                        "flex items-center gap-3 rounded-xl border border-zg-border-strong bg-zg-surface/95 p-3",
                         draggingDocId === doc.id && "opacity-60",
                       )}
                     >
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zg-border-strong text-zg-fg/52">
                         <GripVertical className="h-4 w-4" aria-hidden />
                       </span>
                       <div className="min-w-0 flex-1">
@@ -1355,7 +1355,7 @@ export default function SettingsForm({
                       </div>
                       <button
                         type="button"
-                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
+                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-zg-border-strong text-zg-fg/62 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
                         aria-label="Supprimer ce document"
                         onClick={() => void deleteDocument(doc)}
                       >
@@ -1368,7 +1368,7 @@ export default function SettingsForm({
             </div>
           </details>
 
-          <details open className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+          <details open className="rounded-xl border border-zg-border-strong bg-zg-surface-elevated/55 p-4">
             <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">Galerie photos</summary>
             <div className="mt-4 space-y-3">
               <p className="text-sm text-[var(--muted-foreground)]">Jusqu’à 6 images, affichées sous le formulaire de réservation.</p>
@@ -1382,7 +1382,7 @@ export default function SettingsForm({
               {galleryUrls.length > 0 ? (
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {galleryUrls.map((url) => (
-                    <div key={url} className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200">
+                    <div key={url} className="group relative aspect-square overflow-hidden rounded-xl border border-zg-border-strong">
                       <Image src={url} alt="" fill className="object-cover" unoptimized sizes="(max-width: 640px) 50vw, 33vw" />
                       <button
                         type="button"
@@ -1423,7 +1423,7 @@ export default function SettingsForm({
               "flex cursor-pointer gap-4 rounded-lg border p-4 transition-colors",
               reservationConfirmationMode === "manual"
                 ? "border-green-200 bg-green-50/50"
-                : "border-gray-200 hover:bg-gray-50/80",
+                : "border-zg-border-strong hover:bg-zg-highlight/55",
             )}
           >
             <input
@@ -1457,7 +1457,7 @@ export default function SettingsForm({
               "flex cursor-pointer gap-4 rounded-lg border p-4 transition-colors",
               reservationConfirmationMode === "automatic"
                 ? "border-green-200 bg-green-50/50"
-                : "border-gray-200 hover:bg-gray-50/80",
+                : "border-zg-border-strong hover:bg-zg-highlight/55",
             )}
           >
             <input
@@ -1497,14 +1497,14 @@ export default function SettingsForm({
         </CardHeader>
         <CardContent className="space-y-5">
           <Toggle checked={terraceEnabled} onChange={setTerraceEnabled} label="Réservations en terrasse activées" />
-          <p className="text-sm leading-relaxed text-gray-600">
+          <p className="text-sm leading-relaxed text-zg-fg/62">
             Lorsque l&apos;option est désactivée, toutes les demandes sont traitées comme en salle et le choix
             terrasse n&apos;apparaît pas sur votre page publique.
           </p>
           {terraceEnabled ? (
             <div className="space-y-2">
               <label className="dashboard-field-label">Capacité terrasse (couverts par créneau)</label>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-zg-fg/52">
                 Nombre maximum de convives en terrasse en même temps sur un créneau (indépendant de la capacité
                 intérieure).
               </p>
@@ -1532,7 +1532,7 @@ export default function SettingsForm({
         <CardContent className="space-y-6">
           <div className="rounded-xl border border-[#CBE6DF] bg-[#F0F9F7]/60 p-4 md:p-5">
             <h3 className="text-sm font-semibold text-[#0F3F3A]">Page « Réservations » du tableau de bord</h3>
-            <p className="mt-1 text-sm leading-relaxed text-gray-600">
+            <p className="mt-1 text-sm leading-relaxed text-zg-fg/62">
               Activez l&apos;archivage pour masquer automatiquement les créneaux passés (heure + durée du repas) de la
               liste principale ; ils restent consultables sous Historique.
             </p>
@@ -1545,7 +1545,7 @@ export default function SettingsForm({
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-[var(--surface)] p-4 md:p-5">
+          <div className="rounded-xl border border-zg-border-strong bg-[var(--surface)] p-4 md:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1 space-y-3">
                 <Toggle
@@ -1555,25 +1555,25 @@ export default function SettingsForm({
                 />
                 {useTables ? (
                   <>
-                    <p className="text-sm leading-relaxed text-gray-600">
+                    <p className="text-sm leading-relaxed text-zg-fg/62">
                       Chaque réservation occupe une table spécifique définie dans votre base. Le système cherche
                       automatiquement une table disponible correspondant au nombre de personnes. Si aucune table
                       n&apos;est libre sur ce créneau, la réservation est refusée.
                     </p>
-                    <p className="text-sm leading-relaxed text-gray-500">
-                      <span className="font-medium text-gray-700">Exemple :</span> vous avez une table de 2 et une
+                    <p className="text-sm leading-relaxed text-zg-fg/52">
+                      <span className="font-medium text-zg-fg/72">Exemple :</span> vous avez une table de 2 et une
                       table de 4 → une demande pour 3 personnes sera placée à la table de 4 si elle est libre.
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="text-sm leading-relaxed text-gray-600">
+                    <p className="text-sm leading-relaxed text-zg-fg/62">
                       Le système additionne les couverts de toutes les réservations sur un créneau. Quand la limite est
                       atteinte, le créneau est automatiquement fermé. Idéal si vos tables sont mobiles ou
                       interchangeables.
                     </p>
-                    <p className="text-sm leading-relaxed text-gray-500">
-                      <span className="font-medium text-gray-700">Exemple :</span> limite fixée à 40 couverts → une
+                    <p className="text-sm leading-relaxed text-zg-fg/52">
+                      <span className="font-medium text-zg-fg/72">Exemple :</span> limite fixée à 40 couverts → une
                       réservation de 6 personnes à 12h30 sera refusée s&apos;il reste moins de 6 places sur ce créneau.
                     </p>
                   </>
@@ -1582,10 +1582,10 @@ export default function SettingsForm({
             </div>
 
             {useTables ? (
-              <div className="mt-4 space-y-4 border-t border-gray-100 pt-4">
+              <div className="mt-4 space-y-4 border-t border-zg-border/82 pt-4">
                 <div>
                   <h3 className="text-sm font-semibold text-[var(--foreground)]">Vos tables</h3>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-zg-fg/52">
                     Une ligne = une table. Enregistrez en bas de cette section pour appliquer les changements.
                   </p>
                 </div>
@@ -1599,7 +1599,7 @@ export default function SettingsForm({
                   </p>
                 ) : null}
 
-                <div className="hidden gap-2 text-xs font-medium uppercase tracking-wide text-gray-500 sm:grid sm:grid-cols-[1fr_minmax(0,5.5rem)_minmax(0,5.5rem)_2.5rem] sm:items-end sm:gap-3">
+                <div className="hidden gap-2 text-xs font-medium uppercase tracking-wide text-zg-fg/52 sm:grid sm:grid-cols-[1fr_minmax(0,5.5rem)_minmax(0,5.5rem)_2.5rem] sm:items-end sm:gap-3">
                   <span>Nom</span>
                   <span>min pers.</span>
                   <span>max pers.</span>
@@ -1615,7 +1615,7 @@ export default function SettingsForm({
                         key={row.key}
                         className={cn(
                           "rounded-lg border p-3 transition-colors sm:grid sm:grid-cols-[1fr_minmax(0,5.5rem)_minmax(0,5.5rem)_2.5rem] sm:items-center sm:gap-3",
-                          isPendingDelete ? "border-red-400 bg-red-50/80" : "border-gray-200 bg-white",
+                          isPendingDelete ? "border-red-400 bg-red-50/80" : "border-zg-border-strong bg-zg-surface/95",
                           err?.name || err?.minMax ? "border-red-300" : "",
                         )}
                       >
@@ -1638,7 +1638,7 @@ export default function SettingsForm({
                           ) : null}
                         </div>
                         <div>
-                          <label className="mb-1 block text-xs text-gray-500 sm:hidden">min pers.</label>
+                          <label className="mb-1 block text-xs text-zg-fg/52 sm:hidden">min pers.</label>
                           <Input
                             type="number"
                             min={1}
@@ -1654,7 +1654,7 @@ export default function SettingsForm({
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-xs text-gray-500 sm:hidden">max pers.</label>
+                          <label className="mb-1 block text-xs text-zg-fg/52 sm:hidden">max pers.</label>
                           <Input
                             type="number"
                             min={1}
@@ -1689,7 +1689,7 @@ export default function SettingsForm({
                           ) : (
                             <button
                               type="button"
-                              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
+                              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-zg-border-strong text-zg-fg/62 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
                               aria-label="Supprimer cette table"
                               onClick={() =>
                                 setPendingDelete({ key: row.key, until: Date.now() + 2000 })
@@ -1787,11 +1787,11 @@ export default function SettingsForm({
             </ReservationField>
           </div>
 
-          <div className="border-t border-gray-100 pt-6">
+          <div className="border-t border-zg-border/82 pt-6">
             <Button type="submit" disabled={isSaving} className="min-h-[44px] min-w-[200px]">
               {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement..." : "Enregistrer"}
             </Button>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-zg-fg/52">
               Enregistre l&apos;ensemble des paramètres de la page (y compris les tables ci-dessus), comme le bouton en
               bas.
             </p>
@@ -1827,7 +1827,7 @@ export default function SettingsForm({
               href={publicLink.replace(restaurant.slug, slug)}
               target="_blank"
               rel="noreferrer"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900"
+              className="text-sm font-medium text-zg-fg/62 hover:text-zg-fg"
             >
               Ouvrir la page publique
             </a>

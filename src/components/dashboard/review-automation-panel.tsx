@@ -195,7 +195,7 @@ export default function ReviewAutomationPanel({
                 disabled={savingToggle || saving}
               />
               {savingToggle ? (
-                <p className="text-xs font-medium text-gray-500">Enregistrement…</p>
+                <p className="text-xs font-medium text-zg-fg/52">Enregistrement…</p>
               ) : null}
               {toggleError ? (
                 <p className="text-sm text-red-600" role="alert">
@@ -219,15 +219,15 @@ export default function ReviewAutomationPanel({
                         className={cn(
                           "flex min-w-0 flex-1 items-center gap-3 rounded-lg border px-3 py-3 shadow-sm transition-colors sm:min-w-[7.5rem] sm:flex-1",
                           item.disabled && "cursor-not-allowed opacity-50",
-                          !item.disabled && selected && "border-l-4 border-l-green-600 border-gray-200 bg-green-50/50 pl-2.5",
-                          !item.disabled && !selected && "cursor-pointer border-gray-200 bg-white hover:bg-gray-50",
-                          item.disabled && "border-gray-100 bg-gray-50/80 shadow-none",
+                          !item.disabled && selected && "border-l-4 border-l-zg-teal border-zg-border-strong bg-zg-highlight/55 pl-2.5",
+                          !item.disabled && !selected && "cursor-pointer border-zg-border-strong bg-zg-surface/95 hover:bg-zg-highlight/45",
+                          item.disabled && "border-zg-border/80 bg-zg-surface-elevated/70 shadow-none",
                         )}
                       >
                         <span
                           className={cn(
                             "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-                            selected && !item.disabled ? "bg-green-700 text-white" : "bg-gray-100 text-gray-600",
+                            selected && !item.disabled ? "bg-zg-teal text-white" : "bg-zg-surface-soft text-zg-fg/58",
                           )}
                         >
                           <Icon size={18} strokeWidth={2} />
@@ -240,7 +240,7 @@ export default function ReviewAutomationPanel({
                             "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
                             selected && !item.disabled
                               ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-500",
+                              : "bg-zg-border/55 text-zg-fg/48",
                           )}
                         >
                           {item.badge}
@@ -338,12 +338,12 @@ export default function ReviewAutomationPanel({
                 {sendingTest ? "Envoi du test…" : "E-mail de test"}
               </button>
             </div>
-            {message && <p className="text-sm text-gray-600">{message}</p>}
+            {message && <p className="text-sm text-zg-fg/62">{message}</p>}
 
-            <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Aperçu</p>
-              <p className="mt-4 text-base font-semibold text-gray-900">{previewSubject}</p>
-              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">{previewMessage}</p>
+            <div className="rounded-2xl border border-zg-border/90 bg-zg-surface-elevated/70 p-6 shadow-zg-soft backdrop-blur-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Aperçu</p>
+              <p className="mt-4 text-base font-semibold text-zg-fg">{previewSubject}</p>
+              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zg-fg/72">{previewMessage}</p>
               <div className="mt-4 grid grid-cols-3 gap-2">
                 <span
                   className="rounded-lg px-2 py-2 text-center text-xs font-semibold text-white"
@@ -351,10 +351,10 @@ export default function ReviewAutomationPanel({
                 >
                   {positiveLabel}
                 </span>
-                <span className="rounded-lg border border-gray-200 bg-white px-2 py-2 text-center text-xs font-semibold text-gray-800">
+                <span className="rounded-lg border border-zg-border-strong bg-zg-surface/95 px-2 py-2 text-center text-xs font-semibold text-zg-fg/85">
                   {neutralLabel}
                 </span>
-                <span className="rounded-lg border border-gray-200 bg-white px-2 py-2 text-center text-xs font-semibold text-gray-800">
+                <span className="rounded-lg border border-zg-border-strong bg-zg-surface/95 px-2 py-2 text-center text-xs font-semibold text-zg-fg/85">
                   {negativeLabel}
                 </span>
               </div>
@@ -369,7 +369,7 @@ export default function ReviewAutomationPanel({
         </CardHeader>
         <CardContent>
           {initialFeedback.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50/80 py-10 text-center text-sm text-gray-500 shadow-sm">
+            <p className="rounded-2xl border border-dashed border-zg-border-strong bg-zg-surface-elevated/85 py-10 text-center text-sm text-zg-fg/52 shadow-zg-soft backdrop-blur-sm">
               Aucun retour pour le moment.
             </p>
           ) : (
@@ -377,10 +377,10 @@ export default function ReviewAutomationPanel({
               {initialFeedback.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm md:p-6"
+                  className="rounded-2xl border border-zg-border/90 bg-zg-surface/95 p-5 shadow-zg-soft backdrop-blur-sm md:p-6"
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{item.created_at.slice(0, 10)}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-800">{item.message || "(Aucun message)"}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">{item.created_at.slice(0, 10)}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-zg-fg/80">{item.message || "(Aucun message)"}</p>
                 </div>
               ))}
             </div>

@@ -26,7 +26,7 @@ export default function Toggle({ checked, onChange, label, disabled }: TogglePro
         className={cn(
           "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-200",
           "focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]",
-          checked ? "bg-[var(--primary)]" : "bg-stone-300/90",
+          checked ? "bg-zg-teal" : "bg-zg-border-strong/95",
         )}
       >
         <span
@@ -36,7 +36,7 @@ export default function Toggle({ checked, onChange, label, disabled }: TogglePro
           )}
         />
       </button>
-      {label && <span className="text-sm font-medium text-[var(--foreground)]">{label}</span>}
+      {label && <span className="text-sm font-semibold text-zg-fg">{label}</span>}
     </label>
   );
 }

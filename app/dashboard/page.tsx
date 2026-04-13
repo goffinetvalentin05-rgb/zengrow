@@ -10,10 +10,11 @@ import { createClient } from "@/src/lib/supabase/server";
 import { cn } from "@/src/lib/utils";
 
 const ctaReservationClass =
-  "inline-flex min-h-9 items-center justify-center rounded-full bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_30px_-12px_rgba(31,122,108,0.75)] transition hover:scale-[1.02]";
+  "inline-flex min-h-10 items-center justify-center rounded-full bg-gradient-to-r from-zg-teal to-zg-mint px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_32px_-14px_rgba(31,122,108,0.82)] transition hover:scale-[1.02] active:scale-[0.99]";
 
-const sectionIntroClass = "text-xl font-bold tracking-tight text-[#0F3F3A] md:text-[22px] md:leading-snug";
-const sectionDescClass = "mt-2 text-sm leading-relaxed text-[#0F3F3A]/58";
+const sectionIntroClass =
+  "text-xl font-bold tracking-[-0.02em] text-zg-fg md:text-[1.375rem] md:leading-snug";
+const sectionDescClass = "mt-2 text-sm leading-relaxed text-zg-fg/58";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -69,10 +70,15 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6 md:space-y-8">
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#0F3F3A]/45">Tableau de bord</p>
-        <p className="mt-2 max-w-xl text-sm text-[#0F3F3A]/65">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zg-fg/46">Tableau de bord</p>
+        <p className="mt-2 max-w-xl text-sm text-zg-fg/65">
           Activité du jour pour {restaurant.name}. Lien public :{" "}
-          <a href={publicLink} className="font-semibold text-[#1F7A6C] underline decoration-[#CBE6DF] underline-offset-2 hover:text-[#0F3F3A]" target="_blank" rel="noreferrer">
+          <a
+            href={publicLink}
+            className="font-semibold text-zg-teal underline decoration-zg-border-accent underline-offset-2 hover:text-zg-fg"
+            target="_blank"
+            rel="noreferrer"
+          >
             ouvrir
           </a>
           .
@@ -91,7 +97,7 @@ export default async function DashboardPage() {
         </CardHeader>
         <CardContent>
           {timelineReservations.length === 0 ? (
-            <p className="py-14 text-center text-sm text-[#0F3F3A]/45">Aucune réservation aujourd&apos;hui.</p>
+            <p className="py-14 text-center text-sm text-zg-fg/48">Aucune réservation aujourd&apos;hui.</p>
           ) : (
             <div className="-mx-1">
               {timelineReservations.map((reservation) => (
@@ -114,7 +120,7 @@ export default async function DashboardPage() {
       </Card>
 
       {fullFromSlot ? (
-        <div className="rounded-xl border border-amber-200/80 bg-white px-5 py-4 text-sm text-amber-950 shadow-md">
+        <div className="rounded-2xl border border-amber-200/85 bg-zg-surface/95 px-5 py-4 text-sm text-amber-950 shadow-zg-soft backdrop-blur-sm">
           <span className="font-bold text-amber-900">Complet</span> à partir de {fullFromSlot}.
         </div>
       ) : null}
@@ -138,7 +144,7 @@ export default async function DashboardPage() {
         </CardHeader>
         <CardContent>
           {upcomingReservations.length === 0 ? (
-            <p className="py-14 text-center text-sm text-[#0F3F3A]/45">Rien de prévu pour l&apos;instant.</p>
+            <p className="py-14 text-center text-sm text-zg-fg/48">Rien de prévu pour l&apos;instant.</p>
           ) : (
             <div className="-mx-1">
               {upcomingReservations.map((reservation) => (
@@ -162,7 +168,7 @@ export default async function DashboardPage() {
           )}
           <Link
             href="/dashboard/reservations"
-            className="mt-8 inline-flex text-sm font-semibold text-[#1F7A6C] transition hover:text-[#0F3F3A] hover:underline"
+            className="mt-8 inline-flex text-sm font-semibold text-zg-teal transition hover:text-zg-fg hover:underline"
           >
             Toutes les réservations →
           </Link>

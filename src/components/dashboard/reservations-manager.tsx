@@ -282,12 +282,12 @@ export default function ReservationsManager({
         </CardHeader>
         <CardContent className="space-y-10">
           {showManualForm ? (
-            <form onSubmit={createManualReservation} className="space-y-5 border-t border-gray-100 pt-8">
-              <p className="text-sm font-medium text-gray-900">Saisie rapide</p>
-              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50/80 p-4 text-sm text-gray-800">
+            <form onSubmit={createManualReservation} className="space-y-5 border-t border-zg-border/80 pt-8">
+              <p className="text-sm font-semibold text-zg-fg">Saisie rapide</p>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-zg-border-strong bg-zg-surface-elevated/80 p-4 text-sm text-zg-fg/85">
                 <input
                   type="checkbox"
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-zg-border-strong/75"
                   checked={manualWalkInMode}
                   onChange={(e) => {
                     const on = e.target.checked;
@@ -304,8 +304,8 @@ export default function ReservationsManager({
                   }}
                 />
                 <span>
-                  <span className="font-semibold text-gray-900">Walk-in (client sans réservation)</span>
-                  <span className="mt-1 block text-gray-600">
+                  <span className="font-semibold text-zg-fg">Walk-in (client sans réservation)</span>
+                  <span className="mt-1 block text-zg-fg/62">
                     Enregistrement minimal : date, créneau, couverts{terraceEnabled ? ", zone" : ""}. Le badge Walk-in apparaît dans la liste.
                   </span>
                 </span>
@@ -488,10 +488,10 @@ export default function ReservationsManager({
           </div>
 
           {autoArchiveReservations ? (
-            <div className="border-t border-gray-100 pt-10">
+            <div className="border-t border-zg-border/80 pt-10">
               <div className="mb-4">
-                <p className="text-base font-semibold text-gray-900">Historique</p>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="text-base font-semibold text-zg-fg">Historique</p>
+                <p className="mt-1 text-sm text-zg-fg/52">
                   Réservations dont l’heure de fin (passage + durée du repas, {mealDuration} min) est dépassée. Lecture
                   seule.
                 </p>
@@ -563,7 +563,7 @@ export default function ReservationsManager({
                     {seatingZoneFromRow(selectedReservation) === "terrace" ? "Terrasse" : "Intérieur"}
                   </span>
                 </CardDescription>
-                <p className="mt-3 text-sm text-gray-500">
+                <p className="mt-3 text-sm text-zg-fg/52">
                   {selectedReservation.guest_phone || selectedReservation.guest_email || "Pas de contact"}
                 </p>
               </div>
@@ -630,7 +630,7 @@ export default function ReservationsManager({
         </Card>
       ) : null}
 
-      {message ? <p className="text-sm text-gray-600">{message}</p> : null}
+      {message ? <p className="text-sm text-zg-fg/62">{message}</p> : null}
     </section>
   );
 }

@@ -59,8 +59,8 @@ function pillClass(active: boolean) {
   return cn(
     "rounded-full border px-3 py-1.5 text-xs font-medium transition",
     active
-      ? "border-green-700 bg-green-700 text-white shadow-sm"
-      : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50",
+      ? "border-zg-teal bg-gradient-to-r from-zg-teal to-zg-mint text-white shadow-[0_8px_24px_-12px_rgba(31,122,108,0.72)]"
+      : "border-zg-border-strong bg-zg-surface/95 text-zg-fg/72 hover:border-zg-mint/35 hover:bg-zg-highlight/50",
   );
 }
 
@@ -114,7 +114,7 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
         <button
           type="button"
           onClick={() => downloadCsv(filtered)}
-          className="inline-flex min-h-[40px] shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition hover:bg-gray-50"
+          className="inline-flex min-h-[40px] shrink-0 items-center justify-center rounded-xl border border-zg-border-strong bg-zg-surface/95 px-4 py-2 text-sm font-semibold text-zg-fg shadow-zg-soft transition hover:bg-zg-highlight/55"
         >
           Exporter
         </button>
@@ -122,7 +122,7 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
       <CardContent className="space-y-6">
         <div className="flex flex-col gap-4">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Nombre de visites</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Nombre de visites</p>
             <div className="flex flex-wrap gap-2">
               {(
                 [
@@ -143,7 +143,7 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
             </div>
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Dernière visite</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Dernière visite</p>
             <div className="flex flex-wrap gap-2">
               {(
                 [
@@ -165,7 +165,7 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
             </div>
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Couverts moyens</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Couverts moyens</p>
             <div className="flex flex-wrap gap-2">
               {(
                 [
@@ -195,34 +195,34 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
             <EmptyState title="Aucun client" description="Aucun client ne correspond à ces filtres." />
           )
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-100">
+          <div className="overflow-x-auto rounded-xl border border-zg-border/85">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/90 text-left">
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Nom</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Email</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Téléphone</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Résa.</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Dernière visite</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Visites</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Couverts moy.</th>
+                <tr className="border-b border-zg-border/80 bg-zg-surface-elevated/92 text-left">
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Nom</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Email</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Téléphone</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Résa.</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Dernière visite</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Visites</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Couverts moy.</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((customer) => (
                   <tr
                     key={customer.id}
-                    className="border-b border-gray-100 bg-white last:border-0 hover:bg-gray-50/60"
+                    className="border-b border-zg-border/75 bg-zg-surface/96 last:border-0 hover:bg-zg-highlight/40"
                   >
-                    <td className="px-5 py-3.5 font-medium text-gray-900">{customer.name}</td>
-                    <td className="px-5 py-3.5 text-gray-600">{customer.email || "—"}</td>
-                    <td className="px-5 py-3.5 text-gray-600">{customer.phone || "—"}</td>
-                    <td className="px-5 py-3.5 tabular-nums text-gray-600">{customer.reservations}</td>
-                    <td className="px-5 py-3.5 tabular-nums text-gray-600">
+                    <td className="px-5 py-3.5 font-semibold text-zg-fg">{customer.name}</td>
+                    <td className="px-5 py-3.5 text-zg-fg/62">{customer.email || "—"}</td>
+                    <td className="px-5 py-3.5 text-zg-fg/62">{customer.phone || "—"}</td>
+                    <td className="px-5 py-3.5 tabular-nums text-zg-fg/62">{customer.reservations}</td>
+                    <td className="px-5 py-3.5 tabular-nums text-zg-fg/62">
                       {customer.lastVisit ? customer.lastVisit.slice(0, 10) : "—"}
                     </td>
-                    <td className="px-5 py-3.5 tabular-nums text-gray-600">{customer.totalVisits}</td>
-                    <td className="px-5 py-3.5 tabular-nums text-gray-600">
+                    <td className="px-5 py-3.5 tabular-nums text-zg-fg/62">{customer.totalVisits}</td>
+                    <td className="px-5 py-3.5 tabular-nums text-zg-fg/62">
                       {customer.avgCovers != null ? customer.avgCovers.toFixed(1) : "—"}
                     </td>
                   </tr>

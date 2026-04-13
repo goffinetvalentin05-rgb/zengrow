@@ -53,17 +53,22 @@ export default function DashboardSidebar({
 
   return (
     <aside
-      className="flex w-full min-w-0 flex-col overflow-hidden border-b border-[#DDEFEA]/80 bg-white md:min-w-[220px] md:w-[240px] md:max-w-[240px] md:shrink-0 md:rounded-xl md:border-r md:border-[#DDEFEA]/80 md:border-b-0 md:shadow-none"
+      className="flex w-full min-w-0 flex-col overflow-hidden border-b border-zg-border-strong/90 bg-zg-surface/82 backdrop-blur-xl md:min-w-[228px] md:w-[252px] md:max-w-[252px] md:shrink-0 md:rounded-2xl md:border md:border-zg-border-strong/85 md:border-b-0 md:shadow-zg-sidebar"
       style={{ overflow: "hidden" }}
     >
-      <div className="shrink-0 px-5 pt-6 pb-6">
-        <Link href="/dashboard" className="inline-block" aria-label="ZenGrow — tableau de bord">
-          <Image src="/Zengrow-logo.png" alt="" width={148} height={40} className="h-9 w-auto object-contain" priority />
+      <div className="shrink-0 border-b border-zg-border/70 px-5 pt-7 pb-6">
+        <Link
+          href="/dashboard"
+          className="inline-flex rounded-xl ring-offset-zg-canvas transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/35 focus-visible:ring-offset-2"
+          aria-label="ZenGrow — tableau de bord"
+        >
+          <Image src="/Zengrow-logo.png" alt="" width={156} height={42} className="h-9 w-auto object-contain sm:h-10" priority />
         </Link>
+        <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-zg-fg/42">Navigation</p>
       </div>
 
       <nav
-        className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden px-3 text-sm"
+        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden px-3 pb-2 pt-4 text-[13px] leading-snug"
         style={{ overflow: "hidden" }}
       >
         {navItems.map((item) => (
@@ -78,31 +83,31 @@ export default function DashboardSidebar({
         ))}
       </nav>
 
-      <div className="mt-4 shrink-0 border-t border-[#DDEFEA]/70 px-5 py-5">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#0F3F3A]/45">Lien public</p>
-        <p className="mt-2 break-all text-xs leading-relaxed text-[#0F3F3A]/55">{reservationLink}</p>
+      <div className="mt-auto shrink-0 border-t border-zg-border/75 bg-zg-surface-elevated/50 px-5 py-5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zg-fg/45">Lien public</p>
+        <p className="mt-2 break-all text-xs leading-relaxed text-zg-fg/58">{reservationLink}</p>
         <a
           href={reservationLink}
           target="_blank"
           rel="noreferrer"
-          className="mt-2 inline-block text-xs font-semibold text-[#1F7A6C] transition hover:text-[#0F3F3A]"
+          className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-zg-teal transition hover:text-zg-fg"
         >
           Ouvrir la page →
         </a>
       </div>
 
-      <div className="shrink-0 space-y-0.5 border-t border-[#DDEFEA]/70 px-5 pt-5 pb-8">
+      <div className="shrink-0 space-y-0.5 border-t border-zg-border/75 px-5 pt-4 pb-8">
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full rounded-lg py-2 text-left text-xs text-[#0F3F3A]/45 transition hover:bg-[#F0F9F7] hover:text-[#0F3F3A]/70"
+          className="w-full rounded-xl py-2.5 text-left text-xs font-medium text-zg-fg/48 transition hover:bg-zg-highlight/80 hover:text-zg-fg/75"
         >
           Se déconnecter
         </button>
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="w-full rounded-lg py-2 text-left text-xs text-[#0F3F3A]/45 transition hover:bg-[#F0F9F7] hover:text-[#0F3F3A]/70"
+          className="w-full rounded-xl py-2.5 text-left text-xs font-medium text-zg-fg/48 transition hover:bg-zg-highlight/80 hover:text-zg-fg/75"
         >
           Site vitrine
         </button>
@@ -128,23 +133,26 @@ function NavItem({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-full py-2.5 text-sm font-medium transition-colors",
+        "group flex items-center gap-3 rounded-xl py-2.5 font-semibold transition-colors duration-200",
         active
-          ? "bg-[#E3F5EF] px-4 text-[#0F3F3A]"
-          : "px-4 text-[#0F3F3A]/55 hover:bg-[#F0F9F7] hover:text-[#0F3F3A]/85",
+          ? "bg-gradient-to-r from-zg-highlight/95 to-zg-surface-elevated/90 px-3.5 text-zg-fg shadow-[inset_0_0_0_1px_rgba(203,230,223,0.65)]"
+          : "px-3.5 text-zg-fg/52 hover:bg-zg-surface-soft/90 hover:text-zg-fg/88",
       )}
     >
       <Icon
         size={18}
-        strokeWidth={1.75}
-        className={cn("shrink-0", active ? "text-[#1F7A6C]" : "text-[#0F3F3A]/45")}
+        strokeWidth={active ? 2 : 1.75}
+        className={cn(
+          "shrink-0 transition-colors",
+          active ? "text-zg-teal" : "text-zg-fg/40 group-hover:text-zg-teal/85",
+        )}
       />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {locked ? (
         <span
           className={cn(
             "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-            active ? "bg-white/80 text-[#1F7A6C]" : "bg-[#F0F9F7] text-[#0F3F3A]/45",
+            active ? "bg-zg-surface/90 text-zg-teal ring-1 ring-zg-border-accent/80" : "bg-zg-highlight/70 text-zg-fg/48",
           )}
         >
           Pro

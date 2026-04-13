@@ -5,12 +5,12 @@ type DivProps = {
   children: React.ReactNode;
 };
 
-/** Section dashboard — carte blanche, ombre légère, coins arrondis. */
+/** Section dashboard — surface premium alignée landing ZenGrow. */
 export function Card({ className, children }: DivProps) {
   return (
     <article
       className={cn(
-        "rounded-xl border border-[#DDEFEA]/80 bg-white p-6 shadow-md md:p-6",
+        "rounded-2xl border border-zg-border-strong/90 bg-zg-surface/92 p-6 shadow-zg-card backdrop-blur-md md:p-7",
         className,
       )}
     >
@@ -20,14 +20,14 @@ export function Card({ className, children }: DivProps) {
 }
 
 export function CardHeader({ className, children }: DivProps) {
-  return <header className={cn("mb-6 border-b border-[#DDEFEA]/70 pb-5", className)}>{children}</header>;
+  return <header className={cn("mb-6 border-b border-zg-border/85 pb-6", className)}>{children}</header>;
 }
 
 export function CardTitle({ className, children }: DivProps) {
   return (
     <h2
       className={cn(
-        "text-xl font-bold tracking-tight text-[#0F3F3A] md:text-[22px] md:leading-snug",
+        "text-xl font-bold tracking-[-0.02em] text-zg-fg md:text-[1.375rem] md:leading-snug",
         className,
       )}
     >
@@ -37,7 +37,7 @@ export function CardTitle({ className, children }: DivProps) {
 }
 
 export function CardDescription({ className, children }: DivProps) {
-  return <p className={cn("mt-2 text-sm leading-relaxed text-[#0F3F3A]/58", className)}>{children}</p>;
+  return <p className={cn("mt-2.5 text-sm leading-relaxed text-zg-fg/58", className)}>{children}</p>;
 }
 
 export function CardContent({ className, children }: DivProps) {

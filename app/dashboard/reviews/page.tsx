@@ -26,7 +26,7 @@ export default async function DashboardReviewsPage() {
 
   return (
     <div className="space-y-10">
-      <header className="border-b border-gray-100 pb-6">
+      <header className="border-b border-zg-border/80 pb-7">
         <h1 className="dashboard-section-heading">Avis Google</h1>
         <p className="dashboard-section-subtitle mt-2 max-w-2xl">
           Envoyez automatiquement un message après la visite pour collecter des avis.

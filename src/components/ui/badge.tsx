@@ -3,12 +3,12 @@ import { cn } from "@/src/lib/utils";
 type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info" | "sand";
 
 const toneClasses: Record<BadgeTone, string> = {
-  neutral: "bg-stone-100 text-stone-700 ring-1 ring-stone-200/90",
-  success: "bg-green-100 text-green-800 ring-1 ring-green-200/90",
+  neutral: "bg-zg-surface-elevated text-zg-fg/75 ring-1 ring-zg-border-strong/80",
+  success: "bg-zg-highlight text-zg-teal ring-1 ring-zg-border-accent/85",
   warning: "bg-[#fffbeb] text-[#92400e] ring-1 ring-amber-200/90",
   danger: "bg-red-50 text-red-900 ring-1 ring-red-200/90",
-  info: "bg-stone-50 text-stone-600 ring-1 ring-stone-200/90",
-  sand: "bg-[var(--badge-sand-bg)] text-[var(--badge-sand-text)] ring-1 ring-stone-200/70",
+  info: "bg-zg-surface-soft/90 text-zg-fg/68 ring-1 ring-zg-border/85",
+  sand: "bg-zg-surface-elevated text-zg-fg/58 ring-1 ring-zg-border-strong/75",
 };
 
 type BadgeProps = {

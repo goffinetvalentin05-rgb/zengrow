@@ -44,14 +44,14 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
 
   return (
     <div className="space-y-10">
-      <header className="border-b border-gray-100 pb-6">
+      <header className="border-b border-zg-border/80 pb-7">
         <h1 className="dashboard-section-heading">Réservations</h1>
         <p className="dashboard-section-subtitle mt-2 max-w-2xl">
           Filtrez la liste, ouvrez une fiche pour confirmer, refuser ou ajouter une note interne.
           {resSettings?.auto_archive_reservations !== true ? (
             <>
               {" "}
-              <span className="text-gray-500">
+              <span className="text-zg-fg/52">
                 Les créneaux déjà passés restent affichés tant que l&apos;archivage automatique est désactivé dans
                 Paramètres.
               </span>

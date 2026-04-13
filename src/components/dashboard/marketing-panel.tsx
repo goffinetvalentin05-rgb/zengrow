@@ -87,7 +87,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
 
   return (
     <section className="space-y-10">
-      <header className="flex flex-col gap-6 border-b border-gray-100 pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex flex-col gap-6 border-b border-zg-border/80 pb-7 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="dashboard-section-heading">Campagnes marketing</h1>
           <p className="dashboard-section-subtitle mt-2 max-w-2xl">
@@ -162,7 +162,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
                 Fermer
               </button>
             </div>
-            {message && <p className="text-sm text-gray-600">{message}</p>}
+            {message && <p className="text-sm text-zg-fg/62">{message}</p>}
           </CardContent>
         </Card>
       )}
@@ -174,7 +174,7 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
         </CardHeader>
         <CardContent>
           {campaigns.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50/80 py-10 text-center text-sm text-gray-500 shadow-sm">
+            <p className="rounded-2xl border border-dashed border-zg-border-strong bg-zg-surface-elevated/85 py-10 text-center text-sm text-zg-fg/52 shadow-zg-soft backdrop-blur-sm">
               Aucune campagne pour le moment.
             </p>
           ) : (
@@ -183,16 +183,16 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
                 <Link
                   key={campaign.id}
                   href={`/dashboard/marketing/${campaign.id}`}
-                  className="block rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-green-200/70 hover:shadow-md md:p-6"
+                  className="block rounded-2xl border border-zg-border/90 bg-zg-surface/95 p-5 shadow-zg-soft backdrop-blur-sm transition hover:border-zg-mint/45 hover:shadow-zg-card md:p-6"
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <p className="text-[15px] font-semibold text-gray-900">{campaign.name}</p>
-                    <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+                    <p className="text-[15px] font-semibold text-zg-fg">{campaign.name}</p>
+                    <span className="rounded-full bg-zg-highlight/80 px-2.5 py-1 text-xs font-semibold text-zg-teal ring-1 ring-zg-border-accent/70">
                       {campaign.sent_at ? campaign.sent_at.slice(0, 10) : "Brouillon"}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-gray-600">{campaign.subject}</p>
-                  <p className="mt-2 text-xs font-medium text-gray-500">{campaign.recipients_count} destinataires</p>
+                  <p className="mt-2 text-sm text-zg-fg/62">{campaign.subject}</p>
+                  <p className="mt-2 text-xs font-medium text-zg-fg/52">{campaign.recipients_count} destinataires</p>
                 </Link>
               ))}
             </div>

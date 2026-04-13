@@ -128,22 +128,22 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
                 : "Un abonnement pour conserver toutes les fonctionnalités."}
             </CardDescription>
           </div>
-          <div className="rounded-xl border border-gray-100 bg-gray-50/80 px-5 py-4 text-left shadow-sm lg:text-right">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Plan actuel</p>
-            <p className="mt-2 text-lg font-semibold text-gray-900">{plan ?? "—"}</p>
-            <p className="mt-1 text-xs text-gray-500">Statut : {subscriptionStatusLabel(status)}</p>
+          <div className="rounded-xl border border-zg-border/90 bg-zg-surface-elevated/85 px-5 py-4 text-left shadow-sm lg:text-right">
+            <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Plan actuel</p>
+            <p className="mt-2 text-lg font-semibold text-zg-fg">{plan ?? "—"}</p>
+            <p className="mt-1 text-xs text-zg-fg/52">Statut : {subscriptionStatusLabel(status)}</p>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {status === "trial" ? (
             <div className="max-w-md space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="font-medium text-gray-800">Progression de l&apos;essai</span>
+                <span className="font-medium text-zg-fg/85">Progression de l&apos;essai</span>
                 <span className="font-semibold text-green-800">
                   {remainingDays !== null ? `${remainingDays} jour${remainingDays > 1 ? "s" : ""} restants` : "—"}
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-gray-200/80">
+              <div className="h-2 overflow-hidden rounded-full bg-zg-border/75">
                 <div className="h-full rounded-full bg-green-600 transition-all" style={{ width: `${progressPercent}%` }} />
               </div>
             </div>
@@ -158,26 +158,26 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
       </Card>
 
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Offres</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Offres</p>
         <div className="mt-4 grid gap-6 lg:grid-cols-2">
           {PLAN_ITEMS.map((item) => (
             <div
               key={item.key}
               className={
                 item.featured
-                  ? "rounded-xl border border-green-200 bg-green-50/50 p-8 shadow-sm"
-                  : "rounded-xl border border-gray-100 bg-white p-8 shadow-sm"
+                  ? "rounded-2xl border border-zg-border-accent bg-zg-highlight/65 p-8 shadow-zg-card backdrop-blur-sm ring-1 ring-zg-teal/12"
+                  : "rounded-2xl border border-zg-border/90 bg-zg-surface/95 p-8 shadow-zg-soft backdrop-blur-sm"
               }
             >
               {item.featured ? (
-                <span className="text-xs font-semibold uppercase tracking-wide text-green-800">Recommandé</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-zg-teal">Recommandé</span>
               ) : null}
-              <h3 className={item.featured ? "mt-2 text-xl font-semibold text-gray-900" : "text-xl font-semibold text-gray-900"}>
+              <h3 className={item.featured ? "mt-2 text-xl font-semibold text-zg-fg" : "text-xl font-semibold text-zg-fg"}>
                 {item.title}
               </h3>
-              <p className="mt-1 text-sm text-gray-600">{item.subtitle}</p>
-              <p className="mt-4 text-3xl font-bold tabular-nums tracking-tight text-gray-900">{item.price}</p>
-              <ul className="mt-6 space-y-2.5 text-sm text-gray-800">
+              <p className="mt-1 text-sm text-zg-fg/62">{item.subtitle}</p>
+              <p className="mt-4 text-3xl font-bold tabular-nums tracking-tight text-zg-fg">{item.price}</p>
+              <ul className="mt-6 space-y-2.5 text-sm text-zg-fg/85">
                 {item.features.map((feature) => (
                   <FeatureItem key={`${item.key}-${feature.label}`} icon={feature.icon} label={feature.label} />
                 ))}
@@ -185,14 +185,16 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
               <Button type="button" className="mt-8 w-full" onClick={() => startCheckout(item.key)} disabled={Boolean(loadingPlan)}>
                 {loadingPlan === item.key ? "Redirection…" : item.cta}
               </Button>
-              <p className="mt-3 text-center text-xs text-gray-500">Sans engagement long terme</p>
+              <p className="mt-3 text-center text-xs text-zg-fg/52">Sans engagement long terme</p>
             </div>
           ))}
         </div>
       </div>
 
       {message ? (
-        <p className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">{message}</p>
+        <p className="rounded-2xl border border-zg-border-strong bg-zg-surface/95 px-4 py-3 text-sm text-zg-fg/72 shadow-zg-soft backdrop-blur-sm">
+          {message}
+        </p>
       ) : null}
     </section>
   );
@@ -201,10 +203,10 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
 function FeatureItem({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
     <li className="flex items-center gap-3">
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-green-700">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-zg-teal">
         <Check size={14} strokeWidth={2.5} />
       </span>
-      <Icon size={15} className="shrink-0 text-gray-400" strokeWidth={1.75} />
+      <Icon size={15} className="shrink-0 text-zg-fg/45" strokeWidth={1.75} />
       <span>{label}</span>
     </li>
   );

@@ -16,17 +16,17 @@ export default function PublicLinkCard({ link }: PublicLinkCardProps) {
   }
 
   return (
-    <section className="space-y-4 border-t border-gray-100 pt-10">
+    <section className="space-y-4 border-t border-zg-border/80 pt-10">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">Lien public</h3>
+        <h3 className="text-lg font-bold tracking-tight text-zg-fg">Lien public</h3>
         <p className="dashboard-section-subtitle mt-1">À partager sur vos canaux.</p>
       </div>
-      <p className="break-all text-sm text-gray-700">{link}</p>
+      <p className="break-all text-sm text-zg-fg/72">{link}</p>
       <div className="flex flex-wrap items-center gap-4">
-        <button type="button" className="text-sm font-medium text-green-700 hover:underline" onClick={handleCopy}>
+        <button type="button" className="text-sm font-semibold text-zg-teal hover:underline" onClick={handleCopy}>
           {copied ? "Copié" : "Copier le lien"}
         </button>
-        <a href={link} target="_blank" rel="noreferrer" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+        <a href={link} target="_blank" rel="noreferrer" className="text-sm font-semibold text-zg-fg/62 hover:text-zg-fg">
           Ouvrir
         </a>
       </div>

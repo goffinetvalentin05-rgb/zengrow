@@ -11,17 +11,17 @@ export default function StatsCards({
 }: StatsCardsProps) {
   return (
     <section className="grid gap-4 md:grid-cols-3">
-      <article className="rounded-xl border border-slate-200 bg-white p-5">
-        <p className="text-xs uppercase tracking-wide text-slate-500">Réservations aujourd&apos;hui</p>
-        <p className="mt-2 text-3xl font-semibold text-slate-900">{reservationsToday}</p>
+      <article className="rounded-2xl border border-zg-border-strong/88 bg-zg-surface/92 p-5 shadow-zg-soft backdrop-blur-md">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zg-fg/50">Réservations aujourd&apos;hui</p>
+        <p className="mt-2 text-3xl font-bold tabular-nums tracking-tight text-zg-fg">{reservationsToday}</p>
       </article>
-      <article className="rounded-xl border border-slate-200 bg-white p-5">
-        <p className="text-xs uppercase tracking-wide text-slate-500">Réservations confirmées</p>
-        <p className="mt-2 text-3xl font-semibold text-slate-900">{confirmedReservations}</p>
+      <article className="rounded-2xl border border-zg-border-strong/88 bg-zg-surface/92 p-5 shadow-zg-soft backdrop-blur-md">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zg-fg/50">Réservations confirmées</p>
+        <p className="mt-2 text-3xl font-bold tabular-nums tracking-tight text-zg-fg">{confirmedReservations}</p>
       </article>
-      <article className="rounded-xl border border-slate-200 bg-white p-5">
-        <p className="text-xs uppercase tracking-wide text-slate-500">Demandes d&apos;avis en attente</p>
-        <p className="mt-2 text-3xl font-semibold text-slate-900">{pendingReviewRequests}</p>
+      <article className="rounded-2xl border border-zg-border-strong/88 bg-zg-surface/92 p-5 shadow-zg-soft backdrop-blur-md">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zg-fg/50">Demandes d&apos;avis en attente</p>
+        <p className="mt-2 text-3xl font-bold tabular-nums tracking-tight text-zg-fg">{pendingReviewRequests}</p>
       </article>
     </section>
   );
