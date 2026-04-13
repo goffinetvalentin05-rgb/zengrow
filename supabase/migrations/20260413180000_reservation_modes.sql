@@ -856,14 +856,14 @@ begin
     rs.closure_end_date,
     rs.terrace_enabled,
     rs.terrace_capacity,
-    coalesce(rs.service_lunch_enabled, true),
+    coalesce(rs.service_lunch_enabled, true) as service_lunch_enabled,
     rs.service_lunch_start,
     rs.service_lunch_end,
-    coalesce(rs.service_lunch_max_covers, 40),
-    coalesce(rs.service_dinner_enabled, true),
+    coalesce(rs.service_lunch_max_covers, 40) as service_lunch_max_covers,
+    coalesce(rs.service_dinner_enabled, true) as service_dinner_enabled,
     rs.service_dinner_start,
     rs.service_dinner_end,
-    coalesce(rs.service_dinner_max_covers, 40)
+    coalesce(rs.service_dinner_max_covers, 40) as service_dinner_max_covers
   into s
   from public.restaurant_settings rs
   where rs.restaurant_id = p_restaurant_id;
