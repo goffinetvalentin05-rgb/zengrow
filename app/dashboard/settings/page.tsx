@@ -46,7 +46,7 @@ export default async function DashboardSettingsPage() {
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "reservation_duration, reservation_slot_interval, restaurant_capacity, max_covers_per_slot, max_party_size, use_tables, terrace_enabled, terrace_capacity, auto_archive_reservations, days_in_advance, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours",
+      "reservation_duration, reservation_slot_interval, restaurant_capacity, max_covers_per_slot, max_party_size, use_tables, reservation_mode, service_lunch_enabled, service_lunch_start, service_lunch_end, service_lunch_max_covers, service_dinner_enabled, service_dinner_start, service_dinner_end, service_dinner_max_covers, terrace_enabled, terrace_capacity, auto_archive_reservations, days_in_advance, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours",
     )
     .eq("restaurant_id", restaurant.id)
     .single();
@@ -104,6 +104,15 @@ export default async function DashboardSettingsPage() {
     max_covers_per_slot: 40,
     max_party_size: 8,
     use_tables: false,
+    reservation_mode: "fixed_slots",
+    service_lunch_enabled: true,
+    service_lunch_start: "11:30:00",
+    service_lunch_end: "14:30:00",
+    service_lunch_max_covers: 40,
+    service_dinner_enabled: true,
+    service_dinner_start: "18:00:00",
+    service_dinner_end: "22:30:00",
+    service_dinner_max_covers: 40,
     days_in_advance: 60,
     accent_color: "#1A6B50",
     button_color: "#1A6B50",

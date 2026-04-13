@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { calendarYmdInBusinessTz } from "@/src/lib/date/business-calendar";
+import { normalizeReservationMode } from "@/src/lib/reservation/reservation-modes";
 import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 
 type ManualReservationPayload = {
@@ -95,12 +96,13 @@ export async function POST(request: NextRequest) {
 
   const { data: settings } = await supabase
     .from("restaurant_settings")
-    .select("max_party_size, use_tables, terrace_enabled")
+    .select("max_party_size, use_tables, terrace_enabled, reservation_mode")
     .eq("restaurant_id", restaurant.id)
     .maybeSingle();
 
   const maxPartySize = settings?.max_party_size ?? 8;
-  const useTables = settings?.use_tables ?? false;
+  const reservationMode = normalizeReservationMode(settings?.reservation_mode);
+  const useTables = reservationMode === "physical_tables";
   const terraceEnabled = settings?.terrace_enabled === true;
 
   let reservationZone: "interior" | "terrace" = "interior";

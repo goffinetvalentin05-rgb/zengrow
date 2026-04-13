@@ -2,6 +2,7 @@
 
 import { ChangeEvent, DragEvent, FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { GripVertical, Trash2 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
@@ -21,6 +22,12 @@ import {
   effectiveReservationConfirmationSubject,
   sampleReservationConfirmationContext,
 } from "@/src/lib/email/reservation-confirmation-template";
+import {
+  type ReservationMode,
+  normalizeReservationMode,
+  reservationModeFromLegacy,
+  timeHhMmFromDb,
+} from "@/src/lib/reservation/reservation-modes";
 
 type RestaurantData = {
   id: string;
@@ -96,6 +103,15 @@ type SettingsData = {
   terrace_enabled?: boolean | null;
   terrace_capacity?: number | null;
   auto_archive_reservations?: boolean | null;
+  reservation_mode?: string | null;
+  service_lunch_enabled?: boolean | null;
+  service_lunch_start?: string | null;
+  service_lunch_end?: string | null;
+  service_lunch_max_covers?: number | null;
+  service_dinner_enabled?: boolean | null;
+  service_dinner_start?: string | null;
+  service_dinner_end?: string | null;
+  service_dinner_max_covers?: number | null;
 };
 
 const STORAGE_BUCKETS = ["restaurants", "restaurant-assets"] as const;
@@ -191,7 +207,25 @@ export default function SettingsForm({
   const [restaurantCapacity, setRestaurantCapacity] = useState(
     settings.max_covers_per_slot ?? settings.restaurant_capacity ?? 40,
   );
-  const [useTables, setUseTables] = useState(settings.use_tables ?? false);
+  const [reservationMode, setReservationMode] = useState<ReservationMode>(() =>
+    normalizeReservationMode(settings.reservation_mode ?? reservationModeFromLegacy(settings.use_tables)),
+  );
+  const [lunchServiceEnabled, setLunchServiceEnabled] = useState(settings.service_lunch_enabled !== false);
+  const [lunchServiceStart, setLunchServiceStart] = useState(
+    timeHhMmFromDb(settings.service_lunch_start ?? null, "11:30"),
+  );
+  const [lunchServiceEnd, setLunchServiceEnd] = useState(timeHhMmFromDb(settings.service_lunch_end ?? null, "14:30"));
+  const [lunchMaxCovers, setLunchMaxCovers] = useState(
+    Math.max(1, Math.min(500, settings.service_lunch_max_covers ?? settings.max_covers_per_slot ?? 40)),
+  );
+  const [dinnerServiceEnabled, setDinnerServiceEnabled] = useState(settings.service_dinner_enabled !== false);
+  const [dinnerServiceStart, setDinnerServiceStart] = useState(
+    timeHhMmFromDb(settings.service_dinner_start ?? null, "18:00"),
+  );
+  const [dinnerServiceEnd, setDinnerServiceEnd] = useState(timeHhMmFromDb(settings.service_dinner_end ?? null, "22:30"));
+  const [dinnerMaxCovers, setDinnerMaxCovers] = useState(
+    Math.max(1, Math.min(500, settings.service_dinner_max_covers ?? settings.max_covers_per_slot ?? 40)),
+  );
   const [terraceEnabled, setTerraceEnabled] = useState(settings.terrace_enabled ?? false);
   const [terraceCapacity, setTerraceCapacity] = useState(
     Math.max(0, Math.min(500, settings.terrace_capacity ?? 0)),
@@ -314,11 +348,11 @@ export default function SettingsForm({
   }, [pendingDelete]);
 
   useEffect(() => {
-    if (!useTables) {
+    if (reservationMode !== "physical_tables") {
       setTableListBlockError(null);
       setTableRowErrors({});
     }
-  }, [useTables]);
+  }, [reservationMode]);
 
   const sortedDocuments = useMemo(() => {
     const copy = [...documents];
@@ -696,11 +730,11 @@ export default function SettingsForm({
   function validateReservationTables(): boolean {
     setTableRowErrors({});
     setTableListBlockError(null);
-    if (!useTables) {
+    if (reservationMode !== "physical_tables") {
       return true;
     }
     if (tableRows.length === 0) {
-      setTableListBlockError("Ajoutez au moins une table pour activer ce mode.");
+      setTableListBlockError("Ajoutez au moins une table pour utiliser ce mode.");
       return false;
     }
 
@@ -753,6 +787,11 @@ export default function SettingsForm({
     setMessage(null);
     setTableRowErrors({});
     setTableListBlockError(null);
+
+    if (reservationMode === "single_service" && !lunchServiceEnabled && !dinnerServiceEnabled) {
+      setMessage("Activez au moins le service midi ou le service soir.");
+      return;
+    }
 
     if (!validateReservationTables()) {
       return;
@@ -814,15 +853,35 @@ export default function SettingsForm({
       .from("restaurant_settings")
       .upsert({
         restaurant_id: restaurant.id,
-        restaurant_capacity: restaurantCapacity,
-        max_covers_per_slot: restaurantCapacity,
+        restaurant_capacity:
+          reservationMode === "single_service"
+            ? Math.max(lunchMaxCovers, dinnerMaxCovers)
+            : restaurantCapacity,
+        max_covers_per_slot:
+          reservationMode === "single_service"
+            ? Math.max(lunchMaxCovers, dinnerMaxCovers)
+            : restaurantCapacity,
         reservation_duration: reservationDuration,
         auto_archive_reservations: autoArchiveReservations,
-        use_tables: useTables,
+        reservation_mode: reservationMode,
+        use_tables: reservationMode === "physical_tables",
+        service_lunch_enabled: lunchServiceEnabled,
+        service_lunch_start: lunchServiceStart.length === 5 ? `${lunchServiceStart}:00` : lunchServiceStart,
+        service_lunch_end: lunchServiceEnd.length === 5 ? `${lunchServiceEnd}:00` : lunchServiceEnd,
+        service_lunch_max_covers: Math.max(1, Math.min(500, lunchMaxCovers)),
+        service_dinner_enabled: dinnerServiceEnabled,
+        service_dinner_start: dinnerServiceStart.length === 5 ? `${dinnerServiceStart}:00` : dinnerServiceStart,
+        service_dinner_end: dinnerServiceEnd.length === 5 ? `${dinnerServiceEnd}:00` : dinnerServiceEnd,
+        service_dinner_max_covers: Math.max(1, Math.min(500, dinnerMaxCovers)),
         terrace_enabled: terraceEnabled,
         terrace_capacity: Math.max(0, Math.min(500, terraceCapacity)),
         days_in_advance: daysInAdvance,
-        reservation_slot_interval: slotInterval,
+        reservation_slot_interval:
+          reservationMode === "fixed_slots"
+            ? Math.max(15, reservationDuration)
+            : reservationMode === "physical_tables"
+              ? Math.max(5, slotInterval)
+              : 15,
         max_party_size: maxPartySize,
         accent_color: accentColor || null,
         button_color: buttonColor || null,
@@ -857,7 +916,7 @@ export default function SettingsForm({
       return;
     }
 
-    if (useTables) {
+    if (reservationMode === "physical_tables") {
       const { error: tablesRpcError } = await supabase.rpc("replace_restaurant_tables", {
         p_restaurant_id: restaurant.id,
         p_tables: tableRows.map((row) => ({
@@ -1667,71 +1726,272 @@ export default function SettingsForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            {useTables ? "Gestion par tables physiques" : "Gestion par couverts (mode simple)"}
-          </CardTitle>
+          <CardTitle>Réservations</CardTitle>
           <CardDescription>
-            Règles appliquées sur votre page publique de réservation : créneaux, capacité et horizon.
+            Un seul mode actif : la page publique, le tableau de bord et la validation serveur suivent exactement la
+            même règle.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="rounded-xl border border-[#CBE6DF] bg-[#F0F9F7]/60 p-4 md:p-5">
-            <h3 className="text-sm font-semibold text-[#0F3F3A]">Page « Réservations » du tableau de bord</h3>
-            <p className="mt-1 text-sm leading-relaxed text-zg-fg/62">
-              Activez l&apos;archivage pour masquer automatiquement les créneaux passés (heure + durée du repas) de la
-              liste principale ; ils restent consultables sous Historique.
-            </p>
-            <div className="mt-4">
-              <Toggle
-                checked={autoArchiveReservations}
-                onChange={setAutoArchiveReservations}
-                label="Archivage automatique des réservations"
-              />
+        <CardContent className="space-y-8">
+          <div className="space-y-3">
+            <p className="dashboard-field-label">Comment souhaitez-vous gérer vos réservations ?</p>
+            <div className="grid gap-4 md:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => setReservationMode("single_service")}
+                className={cn(
+                  "rounded-xl border p-4 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-[#0F3F3A]/35",
+                  reservationMode === "single_service"
+                    ? "border-[#0F3F3A] bg-[#F0F9F7] ring-2 ring-[#0F3F3A]/20"
+                    : "border-zg-border-strong bg-[var(--surface)] hover:border-[#0F3F3A]/35",
+                )}
+              >
+                <p className="text-sm font-semibold text-[var(--foreground)]">Service unique</p>
+                <p className="mt-2 text-xs leading-relaxed text-zg-fg/58">
+                  Recommandé pour commencer : un total de couverts pour le midi, un pour le soir, sans calcul sur la
+                  durée du repas.
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setReservationMode("fixed_slots")}
+                className={cn(
+                  "rounded-xl border p-4 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-[#0F3F3A]/35",
+                  reservationMode === "fixed_slots"
+                    ? "border-[#0F3F3A] bg-[#F0F9F7] ring-2 ring-[#0F3F3A]/20"
+                    : "border-zg-border-strong bg-[var(--surface)] hover:border-[#0F3F3A]/35",
+                )}
+              >
+                <p className="text-sm font-semibold text-[var(--foreground)]">Créneaux fixes</p>
+                <p className="mt-2 text-xs leading-relaxed text-zg-fg/58">
+                  Horaires précis qui se suivent : chaque créneau a sa propre limite de couverts, sans empiètement entre
+                  les heures.
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setReservationMode("physical_tables")}
+                className={cn(
+                  "rounded-xl border p-4 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-[#0F3F3A]/35",
+                  reservationMode === "physical_tables"
+                    ? "border-[#0F3F3A] bg-[#F0F9F7] ring-2 ring-[#0F3F3A]/20"
+                    : "border-zg-border-strong bg-[var(--surface)] hover:border-[#0F3F3A]/35",
+                )}
+              >
+                <p className="text-sm font-semibold text-[var(--foreground)]">Tables physiques</p>
+                <p className="mt-2 text-xs leading-relaxed text-zg-fg/58">
+                  Mode avancé : une place par table, selon la taille des groupes. À réserver aux équipes qui veulent
+                  aller plus loin.
+                </p>
+              </button>
             </div>
           </div>
 
-          <div className="rounded-xl border border-zg-border-strong bg-[var(--surface)] p-4 md:p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0 flex-1 space-y-3">
+          {reservationMode === "single_service" ? (
+            <div className="space-y-6 rounded-xl border border-zg-border-strong bg-[var(--surface)] p-4 md:p-6">
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">Service unique</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zg-fg/62">
+                  Les clients choisissent une heure dans vos plages d&apos;ouverture : tout est compté dans le total du
+                  midi ou du soir. Quand ce total est atteint, le service affiche complet pour la journée.
+                </p>
+                <p className="mt-3 text-sm text-zg-fg/55">
+                  <Link
+                    href="/dashboard/availability"
+                    className="font-medium text-[var(--primary)] underline-offset-2 hover:underline"
+                  >
+                    Disponibilités
+                  </Link>{" "}
+                  : jours et plages où vous acceptez des réservations.
+                </p>
+              </div>
+
+              <div className="space-y-4 rounded-lg border border-zg-border/70 bg-white/60 p-4">
+                <Toggle checked={lunchServiceEnabled} onChange={setLunchServiceEnabled} label="Activer le service midi" />
+                {lunchServiceEnabled ? (
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <label className="dashboard-field-label" htmlFor="ss-lunch-start">
+                        Début du midi
+                      </label>
+                      <Input
+                        id="ss-lunch-start"
+                        type="time"
+                        value={lunchServiceStart}
+                        onChange={(e) => setLunchServiceStart(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label" htmlFor="ss-lunch-end">
+                        Fin du midi
+                      </label>
+                      <Input
+                        id="ss-lunch-end"
+                        type="time"
+                        value={lunchServiceEnd}
+                        onChange={(e) => setLunchServiceEnd(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label" htmlFor="ss-lunch-max">
+                        Capacité max du midi
+                      </label>
+                      <Input
+                        id="ss-lunch-max"
+                        type="number"
+                        min={1}
+                        max={500}
+                        value={lunchMaxCovers}
+                        onChange={(e) => setLunchMaxCovers(Number(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="space-y-4 rounded-lg border border-zg-border/70 bg-white/60 p-4">
                 <Toggle
-                  checked={useTables}
-                  onChange={setUseTables}
-                  label={useTables ? "Tables physiques activées" : "Mode couverts globaux activé"}
+                  checked={dinnerServiceEnabled}
+                  onChange={setDinnerServiceEnabled}
+                  label="Activer le service soir"
                 />
-                {useTables ? (
-                  <>
-                    <p className="text-sm leading-relaxed text-zg-fg/62">
-                      Chaque réservation occupe une table spécifique définie dans votre base. Le système cherche
-                      automatiquement une table disponible correspondant au nombre de personnes. Si aucune table
-                      n&apos;est libre sur ce créneau, la réservation est refusée.
-                    </p>
-                    <p className="text-sm leading-relaxed text-zg-fg/52">
-                      <span className="font-medium text-zg-fg/72">Exemple :</span> vous avez une table de 2 et une
-                      table de 4 → une demande pour 3 personnes sera placée à la table de 4 si elle est libre.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm leading-relaxed text-zg-fg/62">
-                      Le système additionne les couverts de toutes les réservations sur un créneau. Quand la limite est
-                      atteinte, le créneau est automatiquement fermé. Idéal si vos tables sont mobiles ou
-                      interchangeables.
-                    </p>
-                    <p className="text-sm leading-relaxed text-zg-fg/52">
-                      <span className="font-medium text-zg-fg/72">Exemple :</span> limite fixée à 40 couverts → une
-                      réservation de 6 personnes à 12h30 sera refusée s&apos;il reste moins de 6 places sur ce créneau.
-                    </p>
-                  </>
-                )}
+                {dinnerServiceEnabled ? (
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <label className="dashboard-field-label" htmlFor="ss-dinner-start">
+                        Début du soir
+                      </label>
+                      <Input
+                        id="ss-dinner-start"
+                        type="time"
+                        value={dinnerServiceStart}
+                        onChange={(e) => setDinnerServiceStart(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label" htmlFor="ss-dinner-end">
+                        Fin du soir
+                      </label>
+                      <Input
+                        id="ss-dinner-end"
+                        type="time"
+                        value={dinnerServiceEnd}
+                        onChange={(e) => setDinnerServiceEnd(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label" htmlFor="ss-dinner-max">
+                        Capacité max du soir
+                      </label>
+                      <Input
+                        id="ss-dinner-max"
+                        type="number"
+                        min={1}
+                        max={500}
+                        value={dinnerMaxCovers}
+                        onChange={(e) => setDinnerMaxCovers(Number(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
+          ) : null}
 
-            {useTables ? (
-              <div className="mt-4 space-y-4 border-t border-zg-border/82 pt-4">
+          {reservationMode === "fixed_slots" ? (
+            <div className="space-y-6 rounded-xl border border-zg-border-strong bg-[var(--surface)] p-4 md:p-6">
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">Créneaux fixes</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zg-fg/62">
+                  Vous choisissez la durée d&apos;un créneau : ZenGrow propose des heures qui se suivent sur la journée,
+                  chacune avec sa propre capacité. Une heure pleine n&apos;empêche pas la suivante d&apos;être
+                  disponible.
+                </p>
+                <p className="mt-3 text-sm text-zg-fg/55">
+                  <Link
+                    href="/dashboard/availability"
+                    className="font-medium text-[var(--primary)] underline-offset-2 hover:underline"
+                  >
+                    Disponibilités
+                  </Link>{" "}
+                  : plages horaires où les réservations sont possibles.
+                </p>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2">
+                <ReservationField
+                  label={"Durée d'un créneau (minutes)"}
+                  description={
+                    "Exemple : 90 minutes donne des départs à 12:00, 13:30, 15:00… tant que cela rentre dans vos heures d'ouverture."
+                  }
+                >
+                  <Input
+                    type="number"
+                    min={30}
+                    step={15}
+                    value={reservationDuration}
+                    placeholder="ex : 90"
+                    onChange={(event) => setReservationDuration(Number(event.target.value))}
+                  />
+                </ReservationField>
+                <ReservationField
+                  label="Capacité max par créneau"
+                  description="Nombre maximum de convives pour une même heure proposée (salle intérieure)."
+                >
+                  <Input
+                    type="number"
+                    min={1}
+                    max={500}
+                    value={restaurantCapacity}
+                    placeholder="ex : 20"
+                    onChange={(event) => setRestaurantCapacity(Number(event.target.value))}
+                  />
+                </ReservationField>
+              </div>
+            </div>
+          ) : null}
+
+          {reservationMode === "physical_tables" ? (
+            <div className="space-y-6 rounded-xl border border-zg-border-strong bg-[var(--surface)] p-4 md:p-6">
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">Tables physiques</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zg-fg/62">
+                  Chaque réservation en salle est placée sur une table compatible. Si aucune table ne convient ou si
+                  toutes sont prises sur l&apos;heure demandée, la demande est refusée.
+                </p>
+              </div>
+
+              <div className="grid gap-4 border-t border-zg-border/82 pt-4 md:grid-cols-2">
+                <ReservationField
+                  label="Espacement des heures (minutes)"
+                  description="Créneaux proposés aux clients : 30 min donne 12:00, 12:30, 13:00…"
+                >
+                  <Input
+                    type="number"
+                    min={5}
+                    step={5}
+                    value={slotInterval}
+                    onChange={(e) => setSlotInterval(Number(e.target.value))}
+                  />
+                </ReservationField>
+                <ReservationField
+                  label={"Temps d'occupation d'une table (minutes)"}
+                  description="Durée pendant laquelle une table reste indisponible après une réservation."
+                >
+                  <Input
+                    type="number"
+                    min={30}
+                    step={15}
+                    value={reservationDuration}
+                    onChange={(e) => setReservationDuration(Number(e.target.value))}
+                  />
+                </ReservationField>
+              </div>
+
+              <div className="space-y-4 border-t border-zg-border/82 pt-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-[var(--foreground)]">Vos tables</h3>
+                  <h4 className="text-sm font-semibold text-[var(--foreground)]">Vos tables</h4>
                   <p className="mt-1 text-xs text-zg-fg/52">
-                    Une ligne = une table. Enregistrez en bas de cette section pour appliquer les changements.
+                    Une ligne = une table. Enregistrez avec le bouton en bas de la page.
                   </p>
                 </div>
 
@@ -1857,41 +2117,28 @@ export default function SettingsForm({
                   + Ajouter une table
                 </button>
               </div>
-            ) : null}
+            </div>
+          ) : null}
+
+          <div className="rounded-xl border border-[#CBE6DF] bg-[#F0F9F7]/60 p-4 md:p-5">
+            <h3 className="text-sm font-semibold text-[#0F3F3A]">Page « Réservations » du tableau de bord</h3>
+            <p className="mt-1 text-sm leading-relaxed text-zg-fg/62">
+              Masquez automatiquement les réservations dont l&apos;heure affichée est passée (archivage côté liste ;
+              l&apos;historique reste accessible).
+            </p>
+            <div className="mt-4">
+              <Toggle
+                checked={autoArchiveReservations}
+                onChange={setAutoArchiveReservations}
+                label="Archivage automatique des réservations"
+              />
+            </div>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
             <ReservationField
-              label="Intervalle entre créneaux"
-              description="Définit la fréquence des créneaux proposés aux clients. 30 min = créneaux à 12:00, 12:30, 13:00… 15 min = créneaux à 12:00, 12:15, 12:30…"
-            >
-              <Input
-                type="number"
-                min={5}
-                step={5}
-                value={slotInterval}
-                placeholder="ex : 30"
-                onChange={(event) => setSlotInterval(Number(event.target.value))}
-              />
-            </ReservationField>
-
-            <ReservationField
-              label="Durée estimée d'un repas"
-              description="Utilisée pour calculer quels créneaux sont bloqués. Si un client réserve à 12:00 pour 90 min, les créneaux 12:00, 12:30 et 13:00 seront occupés pour sa table. Évite les chevauchements."
-            >
-              <Input
-                type="number"
-                min={30}
-                step={15}
-                value={reservationDuration}
-                placeholder="ex : 90"
-                onChange={(event) => setReservationDuration(Number(event.target.value))}
-              />
-            </ReservationField>
-
-            <ReservationField
               label="Horizon de réservation (jours)"
-              description="Nombre de jours maximum pendant lesquels un client peut réserver depuis la page publique. Au-delà, les dates ne sont pas proposées."
+              description="Nombre de jours à l'avance ouverts sur la page publique."
             >
               <Input
                 type="number"
@@ -1903,24 +2150,9 @@ export default function SettingsForm({
               />
             </ReservationField>
 
-            {!useTables ? (
-              <ReservationField
-                label="Capacité max par créneau"
-                description="Nombre total de couverts acceptés simultanément sur un même créneau. Inclut toutes les réservations en attente et confirmées."
-              >
-                <Input
-                  type="number"
-                  min={1}
-                  value={restaurantCapacity}
-                  placeholder="ex : 40"
-                  onChange={(event) => setRestaurantCapacity(Number(event.target.value))}
-                />
-              </ReservationField>
-            ) : null}
-
             <ReservationField
               label="Groupe maximum accepté"
-              description="Un client ne pourra pas réserver pour plus de X personnes depuis la page publique. Les réservations plus grandes devront être gérées manuellement."
+              description={"Taille maximum d'un groupe pour une réservation en ligne."}
             >
               <Input
                 type="number"
@@ -1937,8 +2169,8 @@ export default function SettingsForm({
               {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement..." : "Enregistrer"}
             </Button>
             <p className="mt-2 text-xs text-zg-fg/52">
-              Enregistre l&apos;ensemble des paramètres de la page (y compris les tables ci-dessus), comme le bouton en
-              bas.
+              Enregistre aussi les tables ci-dessus lorsque le mode « Tables physiques » est sélectionné, comme le
+              bouton en bas de la page.
             </p>
           </div>
         </CardContent>

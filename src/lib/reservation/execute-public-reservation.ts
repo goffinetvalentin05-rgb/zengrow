@@ -7,7 +7,7 @@ import { mapReservationRpcError } from "@/src/lib/reservation/map-reservation-er
 import { asRestaurantReservationEmailRow } from "@/src/lib/reservation/restaurant-reservation-email-row";
 import type { SubscriptionStatus } from "@/src/lib/subscription";
 import type { PublicReservationPostInput } from "@/src/lib/reservation/schemas";
-import { generateTimeSlotsForDate, type OpeningHours } from "@/src/lib/utils";
+import { parseAvailabilityPayload } from "@/src/lib/reservation/parse-availability";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ExecutePublicReservationResult =
@@ -78,7 +78,7 @@ export async function executePublicReservation(
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "opening_hours, reservation_slot_interval, max_party_size, closure_start_date, closure_end_date, closure_message, days_in_advance, terrace_enabled, allow_phone, allow_email",
+      "max_party_size, closure_start_date, closure_end_date, closure_message, days_in_advance, terrace_enabled, allow_phone, allow_email",
     )
     .eq("restaurant_id", restaurantId)
     .maybeSingle();
@@ -107,10 +107,8 @@ export async function executePublicReservation(
   }
   const reservationZone: "interior" | "terrace" = terraceEnabled ? parsed.zone! : "interior";
 
-  const slotInterval = settings?.reservation_slot_interval ?? 30;
   const maxPartySize = settings?.max_party_size ?? 8;
   const daysInAdvance = settings?.days_in_advance ?? 60;
-  const openingHours = (settings?.opening_hours as OpeningHours | null) ?? null;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -141,9 +139,37 @@ export async function executePublicReservation(
     };
   }
 
-  const availableSlots = generateTimeSlotsForDate(reservationDate, openingHours, slotInterval);
-  if (!availableSlots.includes(reservationTime)) {
-    return { ok: false, status: 409, error: "Ce créneau n'est pas disponible (restaurant fermé ou horaire invalide)." };
+  const { data: availRows, error: availError } = await supabase.rpc("get_available_slots", {
+    p_restaurant_id: restaurantId,
+    p_date: reservationDate,
+    p_covers: guests,
+    p_zone: reservationZone,
+  });
+
+  if (availError) {
+    return {
+      ok: false,
+      status: 500,
+      error: "Impossible de vérifier les créneaux disponibles. Réessayez dans un instant.",
+    };
+  }
+
+  let availParsed: unknown = availRows;
+  if (typeof availRows === "string") {
+    try {
+      availParsed = JSON.parse(availRows) as unknown;
+    } catch {
+      availParsed = [];
+    }
+  }
+
+  const bookableTimes = parseAvailabilityPayload(availParsed).map((s) => s.time);
+  if (!bookableTimes.includes(reservationTime)) {
+    return {
+      ok: false,
+      status: 409,
+      error: "Ce créneau n'est pas disponible pour cette date et ce nombre de personnes.",
+    };
   }
 
   if (guests > maxPartySize) {
