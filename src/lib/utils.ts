@@ -80,8 +80,14 @@ export function getDefaultOpeningHours(): OpeningHours {
   };
 }
 
-function timeToMinutes(value: string) {
-  const [hours, minutes] = value.split(":").map(Number);
+/** Heure d'ouverture « HH:mm » ou « HH:mm:ss » → minutes depuis minuit (NaN si invalide). */
+export function openingTimeToMinutes(value: string): number {
+  const t = value.trim();
+  const m = /^(\d{1,2}):(\d{2})/.exec(t);
+  if (!m) return NaN;
+  const hours = Number(m[1]);
+  const minutes = Number(m[2]);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes) || hours > 23 || minutes > 59) return NaN;
   return hours * 60 + minutes;
 }
 
@@ -102,8 +108,9 @@ export function generateTimeSlotsForDate(
   const slots: string[] = [];
 
   for (const range of ranges) {
-    let current = timeToMinutes(range.start);
-    const end = timeToMinutes(range.end);
+    let current = openingTimeToMinutes(range.start);
+    const end = openingTimeToMinutes(range.end);
+    if (!Number.isFinite(current) || !Number.isFinite(end)) continue;
 
     while (current <= end - slotInterval) {
       slots.push(minutesToTime(current));

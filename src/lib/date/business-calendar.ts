@@ -1,6 +1,8 @@
 import { addMinutes, endOfISOWeek, startOfISOWeek } from "date-fns";
 import { formatInTimeZone, toDate, toZonedTime } from "date-fns-tz";
 
+const ISO_DOW_TO_OPENING_KEY = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+
 /** Fuseau utilisé pour « aujourd’hui », semaine ISO et prochaines réservations (défaut : Europe/Paris). */
 export function businessCalendarTimeZone(): string {
   return process.env.BUSINESS_CALENDAR_TZ?.trim() || "Europe/Paris";
@@ -9,6 +11,15 @@ export function businessCalendarTimeZone(): string {
 /** Date civile YYYY-MM-DD dans le fuseau métier, à l’instant `ref`. */
 export function calendarYmdInBusinessTz(ref: Date = new Date()): string {
   return formatInTimeZone(ref, businessCalendarTimeZone(), "yyyy-MM-dd");
+}
+
+/** Clé jour `mon`…`sun` alignée sur `opening_hours` / calendrier métier (YYYY-MM-DD). */
+export function weekdayKeyFromYmdInBusinessTz(ymd: string): (typeof ISO_DOW_TO_OPENING_KEY)[number] {
+  const tz = businessCalendarTimeZone();
+  const ref = toDate(`${ymd}T12:00:00`, { timeZone: tz });
+  const isoDow = Number.parseInt(formatInTimeZone(ref, tz, "i"), 10);
+  if (!Number.isFinite(isoDow) || isoDow < 1 || isoDow > 7) return "mon";
+  return ISO_DOW_TO_OPENING_KEY[isoDow - 1];
 }
 
 /** Heure locale HH:mm (24 h) dans le fuseau métier. */
