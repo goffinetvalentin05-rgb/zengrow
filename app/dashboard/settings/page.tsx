@@ -31,6 +31,8 @@ type DashboardRestaurantPublicConfig = {
   show_public_instagram: boolean | null;
   show_public_facebook: boolean | null;
   show_public_google_maps: boolean | null;
+  reservation_confirmation_email_subject: string | null;
+  reservation_confirmation_email_body: string | null;
 };
 
 export default async function DashboardSettingsPage() {
@@ -80,6 +82,8 @@ export default async function DashboardSettingsPage() {
         "show_public_instagram",
         "show_public_facebook",
         "show_public_google_maps",
+        "reservation_confirmation_email_subject",
+        "reservation_confirmation_email_body",
       ].join(", "),
     )
     .eq("id", restaurant.id)
@@ -174,6 +178,9 @@ export default async function DashboardSettingsPage() {
           show_public_instagram: restaurantConfig?.show_public_instagram ?? null,
           show_public_facebook: restaurantConfig?.show_public_facebook ?? null,
           show_public_google_maps: restaurantConfig?.show_public_google_maps ?? null,
+          reservation_confirmation_email_subject:
+            restaurantConfig?.reservation_confirmation_email_subject ?? null,
+          reservation_confirmation_email_body: restaurantConfig?.reservation_confirmation_email_body ?? null,
         }}
         settings={safeSettings}
         confirmationMode={

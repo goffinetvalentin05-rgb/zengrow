@@ -1,4 +1,10 @@
 import { Resend } from "resend";
+import {
+  buildReservationConfirmationVariableValues,
+  effectiveReservationConfirmationBody,
+  effectiveReservationConfirmationSubject,
+  type ReservationConfirmationTemplateContext,
+} from "@/src/lib/email/reservation-confirmation-template";
 
 /** Domaine d’envoi (ex. vérifié sur Resend) — à surcharger avec RESEND_FROM_EMAIL si besoin. */
 const FROM_EMAIL =
@@ -14,42 +20,113 @@ function getResendClient() {
   return new Resend(apiKey);
 }
 
-type ReservationConfirmationParams = {
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+export type SendReservationConfirmationEmailParams = {
   to: string;
-  customerName: string;
-  restaurantName: string;
-  date: string;
-  time: string;
-  guests: number;
+  customSubject?: string | null;
+  customBody?: string | null;
+  context: ReservationConfirmationTemplateContext;
+  restaurantLogoUrl?: string | null;
+  primaryColor?: string | null;
 };
 
 export async function sendReservationConfirmationEmail({
   to,
-  customerName,
-  restaurantName,
-  date,
-  time,
-  guests,
-}: ReservationConfirmationParams) {
+  customSubject,
+  customBody,
+  context,
+  restaurantLogoUrl,
+  primaryColor,
+}: SendReservationConfirmationEmailParams) {
   const resend = getResendClient();
+  const values = buildReservationConfirmationVariableValues(context);
+  const subject = effectiveReservationConfirmationSubject(customSubject, values);
+  const bodyPlain = effectiveReservationConfirmationBody(customBody, values);
+  const safeColor = primaryColor?.trim() || "#1F7A6C";
+  const safeRestaurantName = escapeHtml(context.restaurantName.trim() || "Restaurant");
+
+  const messageParagraphs = bodyPlain
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map(
+      (line) =>
+        `<p style="margin:0 0 10px 0;color:#334155;font-size:15px;line-height:1.65;">${escapeHtml(line)}</p>`,
+    )
+    .join("");
+
+  const html = `
+      <div style="background:#f8fafc;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">
+        <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:28px 24px;">
+          <div style="text-align:center;margin-bottom:18px;">
+            ${
+              restaurantLogoUrl
+                ? `<img src="${escapeHtml(restaurantLogoUrl)}" alt="${safeRestaurantName}" style="height:44px;max-width:180px;object-fit:contain;margin:0 auto 10px;" />`
+                : ""
+            }
+            <p style="margin:0;color:#0f172a;font-size:17px;font-weight:700;">${safeRestaurantName}</p>
+          </div>
+          <p style="margin:0 0 6px 0;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;font-weight:600;">Confirmation</p>
+          <h1 style="margin:0 0 18px 0;color:#0f172a;font-size:22px;line-height:1.3;font-weight:700;">${escapeHtml(subject)}</h1>
+          <div style="margin-bottom:22px;">${messageParagraphs}</div>
+          <div style="margin-top:8px;padding-top:18px;border-top:1px solid #e2e8f0;">
+            <p style="margin:0 0 6px 0;font-size:13px;color:#64748b;line-height:1.5;">Récapitulatif</p>
+            <p style="margin:0;font-size:14px;color:#0f172a;line-height:1.6;">
+              <strong>Date</strong> : ${escapeHtml(values.reservation_date)}<br/>
+              <strong>Heure</strong> : ${escapeHtml(values.reservation_time)}<br/>
+              <strong>Personnes</strong> : ${escapeHtml(values.party_size)}<br/>
+              <strong>Zone</strong> : ${escapeHtml(values.reservation_area)}
+            </p>
+          </div>
+          ${
+            values.restaurant_phone || values.restaurant_email
+              ? `<div style="margin-top:18px;">
+                  <p style="margin:0 0 6px 0;font-size:13px;color:#64748b;">Contact du restaurant</p>
+                  ${
+                    values.restaurant_phone
+                      ? `<p style="margin:0;font-size:14px;color:#0f172a;"><a href="tel:${escapeHtml(values.restaurant_phone.replace(/\s/g, ""))}" style="color:${safeColor};text-decoration:none;font-weight:600;">${escapeHtml(values.restaurant_phone)}</a></p>`
+                      : ""
+                  }
+                  ${
+                    values.restaurant_email
+                      ? `<p style="margin:4px 0 0 0;font-size:14px;color:#0f172a;"><a href="mailto:${escapeHtml(values.restaurant_email)}" style="color:${safeColor};text-decoration:none;font-weight:600;">${escapeHtml(values.restaurant_email)}</a></p>`
+                      : ""
+                  }
+                </div>`
+              : ""
+          }
+          <p style="margin:24px 0 0 0;font-size:12px;color:#94a3b8;line-height:1.5;">Ce message a été envoyé via ZenGrow pour ${safeRestaurantName}.</p>
+        </div>
+      </div>
+    `;
+
+  const textLines = [
+    subject,
+    "",
+    bodyPlain,
+    "",
+    `Date : ${values.reservation_date}`,
+    `Heure : ${values.reservation_time}`,
+    `Personnes : ${values.party_size}`,
+    `Zone : ${values.reservation_area}`,
+  ];
+  if (values.restaurant_phone) textLines.push("", `Téléphone : ${values.restaurant_phone}`);
+  if (values.restaurant_email) textLines.push(`E-mail : ${values.restaurant_email}`);
 
   return resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: "Votre réservation est confirmée",
-    text: [
-      `Bonjour ${customerName}`,
-      "",
-      `Votre réservation chez ${restaurantName} est confirmée.`,
-      "",
-      `Date : ${date}`,
-      `Heure : ${time}`,
-      `Personnes : ${guests}`,
-      "",
-      "Nous avons hâte de vous accueillir.",
-      "",
-      restaurantName,
-    ].join("\n"),
+    subject,
+    html,
+    text: textLines.join("\n"),
   });
 }
 
@@ -158,15 +235,6 @@ type MarketingCampaignEmailParams = {
   /** URL du pixel 1×1 pour compter les ouvertures (optionnel). */
   openTrackingPixelUrl?: string | null;
 };
-
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
 
 export async function sendReviewRequestEmail({
   to,

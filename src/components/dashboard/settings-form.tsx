@@ -12,6 +12,15 @@ import Toggle from "@/src/components/ui/toggle";
 import { cn } from "@/src/lib/utils";
 import PublicPageLivePreview, { type PublicPagePreviewDraft } from "@/src/components/dashboard/public-page-live-preview";
 import { PUBLIC_PAGE_FONT_OPTIONS } from "@/src/lib/public-page-fonts";
+import {
+  DEFAULT_RESERVATION_CONFIRMATION_EMAIL_BODY,
+  DEFAULT_RESERVATION_CONFIRMATION_EMAIL_SUBJECT,
+  RESERVATION_CONFIRMATION_EMAIL_VARIABLES,
+  buildReservationConfirmationVariableValues,
+  effectiveReservationConfirmationBody,
+  effectiveReservationConfirmationSubject,
+  sampleReservationConfirmationContext,
+} from "@/src/lib/email/reservation-confirmation-template";
 
 type RestaurantData = {
   id: string;
@@ -47,6 +56,8 @@ type RestaurantData = {
   show_public_instagram?: boolean | null;
   show_public_facebook?: boolean | null;
   show_public_google_maps?: boolean | null;
+  reservation_confirmation_email_subject?: string | null;
+  reservation_confirmation_email_body?: string | null;
 };
 
 type SettingsData = {
@@ -256,6 +267,12 @@ export default function SettingsForm({
   const [reservationConfirmationMode, setReservationConfirmationMode] = useState<"manual" | "automatic">(
     confirmationMode,
   );
+  const [reservationConfirmationEmailSubject, setReservationConfirmationEmailSubject] = useState(
+    restaurant.reservation_confirmation_email_subject?.trim() ?? "",
+  );
+  const [reservationConfirmationEmailBody, setReservationConfirmationEmailBody] = useState(
+    restaurant.reservation_confirmation_email_body?.trim() ?? "",
+  );
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [galleryUrls, setGalleryUrls] = useState<string[]>(settings.gallery_image_urls ?? []);
@@ -439,6 +456,40 @@ export default function SettingsForm({
       websiteUrl,
     ],
   );
+
+  const confirmationEmailPreviewValues = useMemo(
+    () =>
+      buildReservationConfirmationVariableValues(
+        sampleReservationConfirmationContext(name, phone || null, email || null),
+      ),
+    [name, phone, email],
+  );
+
+  const confirmationEmailPreviewSubject = useMemo(
+    () =>
+      effectiveReservationConfirmationSubject(
+        reservationConfirmationEmailSubject || null,
+        confirmationEmailPreviewValues,
+      ),
+    [reservationConfirmationEmailSubject, confirmationEmailPreviewValues],
+  );
+
+  const confirmationEmailPreviewBody = useMemo(
+    () =>
+      effectiveReservationConfirmationBody(
+        reservationConfirmationEmailBody || null,
+        confirmationEmailPreviewValues,
+      ),
+    [reservationConfirmationEmailBody, confirmationEmailPreviewValues],
+  );
+
+  async function copyReservationEmailVariable(token: string) {
+    try {
+      await navigator.clipboard.writeText(token);
+    } catch {
+      /* navigateur ou contexte non sécurisé */
+    }
+  }
 
   async function uploadAsset(file: File, type: "logo" | "cover") {
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
@@ -748,6 +799,8 @@ export default function SettingsForm({
         show_public_facebook: showPublicFacebook,
         show_public_google_maps: showPublicGoogleMaps,
         reservation_confirmation_mode: reservationConfirmationMode,
+        reservation_confirmation_email_subject: reservationConfirmationEmailSubject.trim() || null,
+        reservation_confirmation_email_body: reservationConfirmationEmailBody.trim() || null,
       })
       .eq("id", restaurant.id);
 
@@ -1485,6 +1538,98 @@ export default function SettingsForm({
               </span>
             </span>
           </label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>E-mail de confirmation</CardTitle>
+          <CardDescription>
+            Texte envoyé au client lorsque sa réservation est confirmée. L&apos;expéditeur technique reste ZenGrow ; vous
+            modifiez uniquement l&apos;objet et le message. Le design du courrier (mise en page, couleurs) est défini par
+            ZenGrow. Saisie en texte simple : les retours à ligne sont conservés ; le HTML n&apos;est pas interprété.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="rounded-xl border border-zg-border-strong bg-zg-surface-elevated/50 p-4">
+            <p className="text-sm font-semibold text-[var(--foreground)]">Variables dynamiques</p>
+            <p className="mt-1 text-xs leading-relaxed text-zg-fg/55">
+              Insérez-les dans l&apos;objet ou le corps. Cliquez sur une pastille pour copier la variable.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {RESERVATION_CONFIRMATION_EMAIL_VARIABLES.map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  title={label}
+                  onClick={() => void copyReservationEmailVariable(`{{${key}}}`)}
+                  className="rounded-lg border border-zg-border-strong bg-[var(--surface)] px-2.5 py-1 font-mono text-[11px] font-medium text-[#0F3F3A] transition-colors hover:border-[#A3D8CC] hover:bg-[#F0F9F7]"
+                >
+                  {`{{${key}}}`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="dashboard-field-label" htmlFor="reservation-confirmation-email-subject">
+              Objet du mail
+            </label>
+            <p className="text-xs text-zg-fg/52">
+              Laisser vide pour utiliser le modèle ZenGrow par défaut (
+              <span className="font-mono text-[11px]">{DEFAULT_RESERVATION_CONFIRMATION_EMAIL_SUBJECT}</span>).
+            </p>
+            <Input
+              id="reservation-confirmation-email-subject"
+              value={reservationConfirmationEmailSubject}
+              onChange={(e) => setReservationConfirmationEmailSubject(e.target.value)}
+              placeholder={DEFAULT_RESERVATION_CONFIRMATION_EMAIL_SUBJECT}
+              maxLength={200}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="dashboard-field-label" htmlFor="reservation-confirmation-email-body">
+              Contenu du mail
+            </label>
+            <p className="text-xs text-zg-fg/52">
+              Laisser vide pour le texte par défaut ZenGrow. Astuce : plusieurs phrases possibles en utilisant des
+              retours à ligne.
+            </p>
+            <Textarea
+              id="reservation-confirmation-email-body"
+              className="min-h-[140px] font-sans"
+              value={reservationConfirmationEmailBody}
+              onChange={(e) => setReservationConfirmationEmailBody(e.target.value)}
+              placeholder={DEFAULT_RESERVATION_CONFIRMATION_EMAIL_BODY}
+              maxLength={4000}
+              spellCheck
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setReservationConfirmationEmailSubject("");
+                setReservationConfirmationEmailBody("");
+              }}
+            >
+              Réinitialiser (modèle ZenGrow)
+            </Button>
+            <p className="text-xs text-zg-fg/50">
+              Efface vos textes personnalisés ; après enregistrement, les valeurs par défaut s&apos;appliquent à nouveau.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-[#CBE6DF] bg-[#F0F9F7]/55 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#0F3F3A]/70">Aperçu avec des exemples</p>
+            <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">{confirmationEmailPreviewSubject}</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zg-fg/78">{confirmationEmailPreviewBody}</p>
+          </div>
         </CardContent>
       </Card>
 

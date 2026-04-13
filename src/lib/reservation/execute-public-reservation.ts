@@ -4,6 +4,8 @@ import {
 } from "@/lib/email";
 import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 import { mapReservationRpcError } from "@/src/lib/reservation/map-reservation-error";
+import { asRestaurantReservationEmailRow } from "@/src/lib/reservation/restaurant-reservation-email-row";
+import type { SubscriptionStatus } from "@/src/lib/subscription";
 import type { PublicReservationPostInput } from "@/src/lib/reservation/schemas";
 import { generateTimeSlotsForDate, type OpeningHours } from "@/src/lib/utils";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -39,7 +41,22 @@ export async function executePublicReservation(
 
   const { data: restaurant, error: restaurantError } = await supabase
     .from("restaurants")
-    .select("id, name, reservation_confirmation_mode, subscription_status, trial_end_date, stripe_subscription_id")
+    .select(
+      [
+        "id",
+        "name",
+        "phone",
+        "email",
+        "logo_url",
+        "primary_color",
+        "reservation_confirmation_mode",
+        "reservation_confirmation_email_subject",
+        "reservation_confirmation_email_body",
+        "subscription_status",
+        "trial_end_date",
+        "stripe_subscription_id",
+      ].join(", "),
+    )
     .eq("id", restaurantId)
     .single();
 
@@ -47,7 +64,13 @@ export async function executePublicReservation(
     return { ok: false, status: 404, error: "Restaurant introuvable." };
   }
 
-  const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
+  const restaurantRow = asRestaurantReservationEmailRow(restaurant);
+  const syncedRestaurant = await expireTrialIfNeeded(supabase, {
+    id: restaurantRow.id,
+    subscription_status: restaurantRow.subscription_status as SubscriptionStatus,
+    trial_end_date: restaurantRow.trial_end_date,
+    stripe_subscription_id: restaurantRow.stripe_subscription_id,
+  });
   if (isRestaurantExpired(syncedRestaurant)) {
     return { ok: false, status: 402, error: "Les réservations sont suspendues pour ce restaurant." };
   }
@@ -132,7 +155,7 @@ export async function executePublicReservation(
   }
 
   const confirmationMode =
-    syncedRestaurant.reservation_confirmation_mode === "automatic" ? "automatic" : "manual";
+    restaurantRow.reservation_confirmation_mode === "automatic" ? "automatic" : "manual";
   const status = confirmationMode === "automatic" ? "confirmed" : "pending";
 
   const { data: rpcData, error: rpcError } = await supabase.rpc("create_public_reservation", {
@@ -168,11 +191,20 @@ export async function executePublicReservation(
     try {
       await sendReservationConfirmationEmail({
         to: guestEmail,
-        customerName: guestName || "Client",
-        restaurantName: restaurant.name,
-        date: reservationDate,
-        time: reservationTime,
-        guests,
+        customSubject: restaurantRow.reservation_confirmation_email_subject,
+        customBody: restaurantRow.reservation_confirmation_email_body,
+        context: {
+          restaurantName: restaurantRow.name,
+          guestName: guestName || "Client",
+          reservationDateIso: reservationDate,
+          reservationTime,
+          partySize: guests,
+          zone: reservationZone,
+          restaurantPhone: restaurantRow.phone,
+          restaurantEmail: restaurantRow.email,
+        },
+        restaurantLogoUrl: restaurantRow.logo_url,
+        primaryColor: restaurantRow.primary_color,
       });
     } catch (error) {
       console.error("Automatic confirmation email failed", error);
@@ -182,7 +214,7 @@ export async function executePublicReservation(
       await sendReservationReceivedEmail({
         to: guestEmail,
         customerName: guestName || "Client",
-        restaurantName: restaurant.name,
+        restaurantName: restaurantRow.name,
         date: reservationDate,
         time: reservationTime,
         guests,

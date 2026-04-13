@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { sendReservationCancellationEmail, sendReservationConfirmationEmail } from "@/lib/email";
-import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
+import { asRestaurantReservationEmailRow } from "@/src/lib/reservation/restaurant-reservation-email-row";
+import { expireTrialIfNeeded, isRestaurantExpired, type SubscriptionStatus } from "@/src/lib/subscription";
 
 const allowedStatuses = new Set(["pending", "confirmed", "refused", "completed", "cancelled", "no-show"]);
 
@@ -25,7 +26,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
   const { data: reservation, error: reservationError } = await supabase
     .from("reservations")
-    .select("id, restaurant_id, guest_name, guest_email, guests, reservation_date, reservation_time, status")
+    .select(
+      "id, restaurant_id, guest_name, guest_email, guests, reservation_date, reservation_time, status, zone",
+    )
     .eq("id", id)
     .single();
 
@@ -35,7 +38,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
   const { data: restaurant, error: restaurantError } = await supabase
     .from("restaurants")
-    .select("id, name, owner_id, subscription_status, trial_end_date, stripe_subscription_id")
+    .select(
+      [
+        "id",
+        "name",
+        "owner_id",
+        "phone",
+        "email",
+        "logo_url",
+        "primary_color",
+        "reservation_confirmation_email_subject",
+        "reservation_confirmation_email_body",
+        "subscription_status",
+        "trial_end_date",
+        "stripe_subscription_id",
+      ].join(", "),
+    )
     .eq("id", reservation.restaurant_id)
     .eq("owner_id", authData.user.id)
     .single();
@@ -44,7 +62,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Accès interdit." }, { status: 403 });
   }
 
-  const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
+  const restaurantRow = asRestaurantReservationEmailRow(restaurant);
+  const syncedRestaurant = await expireTrialIfNeeded(supabase, {
+    id: restaurantRow.id,
+    subscription_status: restaurantRow.subscription_status as SubscriptionStatus,
+    trial_end_date: restaurantRow.trial_end_date,
+    stripe_subscription_id: restaurantRow.stripe_subscription_id,
+  });
   if (isRestaurantExpired(syncedRestaurant)) {
     return NextResponse.json({ error: "Abonnement expiré. Mettez à jour votre formule." }, { status: 402 });
   }
@@ -54,7 +78,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     .from("reservations")
     .update({ status: body.status })
     .eq("id", id)
-    .eq("restaurant_id", restaurant.id);
+    .eq("restaurant_id", restaurantRow.id);
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 400 });
@@ -70,11 +94,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     try {
       await sendReservationConfirmationEmail({
         to: reservation.guest_email,
-        customerName: reservation.guest_name || "Client",
-        restaurantName: restaurant.name,
-        date: reservation.reservation_date,
-        time: reservation.reservation_time,
-        guests: reservation.guests,
+        customSubject: restaurantRow.reservation_confirmation_email_subject,
+        customBody: restaurantRow.reservation_confirmation_email_body,
+        context: {
+          restaurantName: restaurantRow.name,
+          guestName: reservation.guest_name || "Client",
+          reservationDateIso: reservation.reservation_date,
+          reservationTime: reservation.reservation_time,
+          partySize: reservation.guests,
+          zone: reservation.zone === "terrace" ? "terrace" : "interior",
+          restaurantPhone: restaurantRow.phone,
+          restaurantEmail: restaurantRow.email,
+        },
+        restaurantLogoUrl: restaurantRow.logo_url,
+        primaryColor: restaurantRow.primary_color,
       });
     } catch (error) {
       console.error("Confirmation email failed", error);
@@ -86,7 +119,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       await sendReservationCancellationEmail({
         to: reservation.guest_email,
         customerName: reservation.guest_name || "Client",
-        restaurantName: restaurant.name,
+        restaurantName: restaurantRow.name,
         date: reservation.reservation_date,
         time: reservation.reservation_time,
         guests: reservation.guests,
