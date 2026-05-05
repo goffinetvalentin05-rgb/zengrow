@@ -1,0 +1,1266 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createClient } from "@/src/lib/supabase/client";
+import Button from "@/src/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import EmptyState from "@/src/components/ui/empty-state";
+import Input from "@/src/components/ui/input";
+import Select from "@/src/components/ui/select";
+import Textarea from "@/src/components/ui/textarea";
+import Toggle from "@/src/components/ui/toggle";
+import { cn } from "@/src/lib/utils";
+import type { CSSProperties } from "react";
+
+type ZoneRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+};
+
+type FloorPlanTableShape = "round" | "square" | "rectangle";
+
+type TableRow = {
+  id: string;
+  restaurant_id: string;
+  zone_id: string | null;
+  name: string;
+  min_covers: number;
+  max_covers: number;
+  status: "active" | "inactive" | "blocked" | string;
+  note: string | null;
+  // Layout
+  x_position: number;
+  y_position: number;
+  width: number;
+  height: number;
+  shape: FloorPlanTableShape;
+  rotation: number;
+};
+
+type ReservationRow = {
+  id: string;
+  guest_name: string | null;
+  guests: number | null;
+  reservation_time: string | null;
+  status: string | null;
+  table_id: string | null;
+  zone?: "interior" | "terrace" | string | null;
+};
+
+type FloorPlanVisualPanelProps = {
+  restaurantId: string;
+  defaultLunchDurationMinutes: number;
+  defaultDinnerDurationMinutes: number;
+  autoAssignEnabled: boolean;
+  lunchStartTime?: string | null;
+  dinnerStartTime?: string | null;
+};
+
+function ymd(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function hmToMinutes(hm: string) {
+  const [h, m] = hm.split(":");
+  const hh = Number(h);
+  const mm = Number(m);
+  if (!Number.isFinite(hh) || !Number.isFinite(mm)) return 0;
+  return hh * 60 + mm;
+}
+
+function dateTimeMs(serviceDate: string, time: string) {
+  return new Date(`${serviceDate}T${time}:00`).getTime();
+}
+
+function durationForStartTime(reservationTime: string | null, lunchDuration: number, dinnerDuration: number) {
+  const t = (reservationTime ?? "").slice(0, 5);
+  if (!t || t.length !== 5) return dinnerDuration;
+  // Heuristique: lunch avant 16:00, dinner à partir de 16:00.
+  return hmToMinutes(t) < 16 * 60 ? lunchDuration : dinnerDuration;
+}
+
+function shapeToStyle(shape: FloorPlanTableShape, width: number, height: number, rotation: number): CSSProperties {
+  if (shape === "round") {
+    return {
+      width,
+      height,
+      borderRadius: Math.min(width, height) / 2,
+      transform: `rotate(${rotation}deg)`,
+    };
+  }
+
+  const radius = 14;
+  if (shape === "square") {
+    return {
+      width,
+      height: Math.max(height, 30),
+      borderRadius: radius,
+      transform: `rotate(${rotation}deg)`,
+    };
+  }
+
+  // rectangle
+  return {
+    width,
+    height: Math.max(height, 30),
+    borderRadius: radius,
+    transform: `rotate(${rotation}deg)`,
+  };
+}
+
+export default function FloorPlanVisualPanel({
+  restaurantId,
+  defaultLunchDurationMinutes,
+  defaultDinnerDurationMinutes,
+  autoAssignEnabled,
+  lunchStartTime,
+  dinnerStartTime,
+}: FloorPlanVisualPanelProps) {
+  const supabase = useMemo(() => createClient(), []);
+
+  const [mode, setMode] = useState<"edit" | "service">("edit");
+  const [serviceDate, setServiceDate] = useState(() => ymd(new Date()));
+  const [servicePeriod, setServicePeriod] = useState<"lunch" | "dinner">("dinner");
+  const [serviceTime, setServiceTime] = useState<string>(() => (dinnerStartTime ?? "19:00").slice(0, 5));
+
+  const [zones, setZones] = useState<ZoneRow[]>([]);
+  const [tables, setTables] = useState<TableRow[]>([]);
+  const [reservations, setReservations] = useState<ReservationRow[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [savingPlan, setSavingPlan] = useState(false);
+  const [savingTable, setSavingTable] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const [dirtyPlan, setDirtyPlan] = useState(false);
+
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const selectedTable = useMemo(() => tables.find((t) => t.id === selectedTableId) ?? null, [tables, selectedTableId]);
+
+  // Modals/forms
+  const [showZoneForm, setShowZoneForm] = useState(false);
+  const [zoneName, setZoneName] = useState("");
+  const [zoneDescription, setZoneDescription] = useState("");
+  const [zoneActive, setZoneActive] = useState(true);
+
+  const [showTableForm, setShowTableForm] = useState(false);
+  const [tableName, setTableName] = useState("");
+  const [tableMin, setTableMin] = useState(2);
+  const [tableMax, setTableMax] = useState(4);
+  const [tableZoneId, setTableZoneId] = useState<string>("");
+  const [tableStatus, setTableStatus] = useState<TableRow["status"]>("active");
+  const [tableNote, setTableNote] = useState("");
+  const [tableShape, setTableShape] = useState<FloorPlanTableShape>("round");
+
+  // Canvas
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef<{
+    id: string;
+    pointerId: number;
+    startX: number;
+    startY: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
+
+  const reservationState = useMemo(() => {
+    const targetMs = dateTimeMs(serviceDate, serviceTime);
+    const reserved = new Set<string>();
+    const reservedByTable = new Map<string, ReservationRow[]>();
+
+    for (const r of reservations) {
+      if (!r.table_id) continue;
+      if (!r.reservation_time) continue;
+      if (r.status !== "pending" && r.status !== "confirmed") continue;
+
+      const startMs = dateTimeMs(serviceDate, r.reservation_time);
+      const durMin = durationForStartTime(r.reservation_time, defaultLunchDurationMinutes, defaultDinnerDurationMinutes);
+      const endMs = startMs + durMin * 60_000;
+
+      if (startMs <= targetMs && targetMs < endMs) {
+        reserved.add(r.table_id);
+        const arr = reservedByTable.get(r.table_id) ?? [];
+        arr.push(r);
+        reservedByTable.set(r.table_id, arr);
+      }
+    }
+
+    return { reserved, reservedByTable };
+  }, [reservations, serviceDate, serviceTime, defaultLunchDurationMinutes, defaultDinnerDurationMinutes]);
+
+  const selectedTableReservations = useMemo(() => {
+    if (!selectedTableId) return [];
+    return reservationState.reservedByTable.get(selectedTableId) ?? [];
+  }, [reservationState.reservedByTable, selectedTableId]);
+
+  const unassignedReservationsAtSelectedTime = useMemo(() => {
+    const targetMs = dateTimeMs(serviceDate, serviceTime);
+    const arr: ReservationRow[] = [];
+
+    for (const r of reservations) {
+      if (r.table_id) continue;
+      if (!r.reservation_time) continue;
+      if (r.status !== "pending" && r.status !== "confirmed") continue;
+
+      const startMs = dateTimeMs(serviceDate, r.reservation_time);
+      const durMin = durationForStartTime(r.reservation_time, defaultLunchDurationMinutes, defaultDinnerDurationMinutes);
+      const endMs = startMs + durMin * 60_000;
+      if (startMs <= targetMs && targetMs < endMs) {
+        arr.push(r);
+      }
+    }
+    return arr.sort((a, b) => (a.reservation_time ?? "").localeCompare(b.reservation_time ?? ""));
+  }, [reservations, serviceDate, serviceTime, defaultLunchDurationMinutes, defaultDinnerDurationMinutes]);
+
+  const activeZones = useMemo(() => zones.filter((z) => z.is_active), [zones]);
+  const activeTables = useMemo(() => tables.filter((t) => t.status === "active"), [tables]);
+
+  // (Réserver dans une itération suivante : affichage par zone / tri avancé)
+
+  const refresh = useCallback(async () => {
+    setMessage(null);
+    setLoading(true);
+    const [{ data: zonesData, error: zonesError }, { data: tablesData, error: tablesError }] = await Promise.all([
+      supabase
+        .from("restaurant_zones")
+        .select("id, name, description, is_active")
+        .eq("restaurant_id", restaurantId)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("restaurant_tables")
+        .select(
+          "id, restaurant_id, zone_id, name, min_covers, max_covers, status, note, x_position, y_position, width, height, shape, rotation",
+        )
+        .eq("restaurant_id", restaurantId)
+        .order("sort_order", { ascending: true })
+        .order("name", { ascending: true }),
+    ]);
+
+    if (zonesError || tablesError) {
+      setMessage(zonesError?.message ?? tablesError?.message ?? "Impossible de charger le plan de salle.");
+      setLoading(false);
+      return;
+    }
+
+    setZones((zonesData ?? []) as ZoneRow[]);
+    setTables((tablesData ?? []) as TableRow[]);
+    setSelectedTableId((prev) => prev ?? (tablesData?.[0]?.id ?? null));
+    setLoading(false);
+  }, [restaurantId, supabase]);
+
+  const refreshReservations = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("reservations")
+      .select("id, guest_name, guests, reservation_time, status, table_id, zone")
+      .eq("restaurant_id", restaurantId)
+      .eq("reservation_date", serviceDate)
+      .order("reservation_time", { ascending: true });
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setReservations((data ?? []) as ReservationRow[]);
+  }, [restaurantId, serviceDate, supabase]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    void refreshReservations();
+  }, [refreshReservations]);
+
+  useEffect(() => {
+    // Synchronise l'heure quand on change de période (lunch/dinner).
+    const next =
+      servicePeriod === "lunch" ? (lunchStartTime ?? "12:00") : (dinnerStartTime ?? "19:00");
+    setServiceTime(next.slice(0, 5));
+  }, [servicePeriod, lunchStartTime, dinnerStartTime]);
+
+  const getTableVisual = useCallback(
+    (t: TableRow) => {
+      const isSelected = t.id === selectedTableId;
+      const isBlocked = t.status === "blocked";
+      const isInactive = t.status === "inactive";
+      const isReserved = reservationState.reserved.has(t.id);
+
+      let border = "border-zg-border/70";
+      let bg = "bg-zg-surface/40";
+      let accent = "text-zg-fg/80";
+
+      if (isBlocked) {
+        border = "border-rose-300/80";
+        bg = "bg-rose-50/70";
+        accent = "text-rose-900/90";
+      } else if (isInactive) {
+        border = "border-zg-border/55";
+        bg = "bg-zg-surface/30";
+        accent = "text-zg-fg/60";
+      } else if (isReserved) {
+        border = "border-amber-300/90";
+        bg = "bg-amber-50/85";
+        accent = "text-amber-950/90";
+      } else {
+        border = "border-emerald-300/80";
+        bg = "bg-emerald-50/75";
+        accent = "text-emerald-950/90";
+      }
+
+      if (isSelected) {
+        border = "border-zg-mint/55";
+        bg = "bg-zg-surface-elevated/75";
+      }
+
+      return { border, bg, accent };
+    },
+    [selectedTableId, reservationState.reserved],
+  );
+
+  async function createZone() {
+    setMessage(null);
+    const name = zoneName.trim();
+    if (!name) {
+      setMessage("Indiquez un nom de zone.");
+      return;
+    }
+    const { error } = await supabase.from("restaurant_zones").insert({
+      restaurant_id: restaurantId,
+      name,
+      description: zoneDescription.trim() || null,
+      is_active: zoneActive,
+    });
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    setShowZoneForm(false);
+    setZoneName("");
+    setZoneDescription("");
+    setZoneActive(true);
+    await refresh();
+  }
+
+  async function setZoneActiveById(zoneId: string, isActive: boolean) {
+    setMessage(null);
+    const { error } = await supabase
+      .from("restaurant_zones")
+      .update({ is_active: isActive })
+      .eq("id", zoneId)
+      .eq("restaurant_id", restaurantId);
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    await refresh();
+  }
+
+  async function deleteZoneById(zoneId: string) {
+    setMessage(null);
+    const { error } = await supabase.from("restaurant_zones").delete().eq("id", zoneId).eq("restaurant_id", restaurantId);
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    await refresh();
+  }
+
+  async function createTable() {
+    setMessage(null);
+    const name = tableName.trim();
+    if (!name) {
+      setMessage("Indiquez un nom de table.");
+      return;
+    }
+    const min = Math.max(1, Math.floor(tableMin));
+    const max = Math.max(min, Math.floor(tableMax));
+
+    const { error } = await supabase.from("restaurant_tables").insert({
+      restaurant_id: restaurantId,
+      zone_id: tableZoneId || null,
+      name,
+      min_covers: min,
+      max_covers: max,
+      status: tableStatus,
+      note: tableNote.trim() || null,
+      x_position: 100,
+      y_position: 100,
+      width: 90,
+      height: 90,
+      shape: tableShape,
+      rotation: 0,
+    });
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setShowTableForm(false);
+    setTableName("");
+    setTableMin(2);
+    setTableMax(4);
+    setTableZoneId("");
+    setTableStatus("active");
+    setTableNote("");
+    setTableShape("round");
+    await refresh();
+  }
+
+  async function updateSelectedTable(patch: Partial<TableRow>) {
+    if (!selectedTable) return;
+    setSavingTable(true);
+    setMessage(null);
+
+    // Éviter de mettre à jour des champs clés (id/restaurant_id).
+    const safePatch: Partial<TableRow> = { ...patch };
+    delete safePatch.id;
+    delete safePatch.restaurant_id;
+    if (typeof safePatch.note === "string") safePatch.note = safePatch.note.trim() || null;
+
+    const { error } = await supabase
+      .from("restaurant_tables")
+      .update(safePatch)
+      .eq("id", selectedTable.id)
+      .eq("restaurant_id", restaurantId);
+
+    if (error) {
+      setMessage(error.message);
+      setSavingTable(false);
+      return;
+    }
+
+    setSavingTable(false);
+    await refresh();
+  }
+
+  async function deleteTable(id: string) {
+    setMessage(null);
+    setSavingTable(true);
+    const { error } = await supabase.from("restaurant_tables").delete().eq("id", id).eq("restaurant_id", restaurantId);
+    if (error) {
+      setMessage(error.message);
+      setSavingTable(false);
+      return;
+    }
+    setSelectedTableId(null);
+    setSavingTable(false);
+    await refresh();
+  }
+
+  const savePlanPositions = useCallback(async () => {
+    setSavingPlan(true);
+    setMessage(null);
+    try {
+      // Met à jour uniquement layout (drag & drop).
+      const updates = tables.map((t) =>
+        supabase
+          .from("restaurant_tables")
+          .update({
+            x_position: Math.round(t.x_position),
+            y_position: Math.round(t.y_position),
+            width: Math.round(t.width),
+            height: Math.round(t.height),
+            shape: t.shape,
+            rotation: Math.round(t.rotation),
+          })
+          .eq("id", t.id)
+          .eq("restaurant_id", restaurantId),
+      );
+      await Promise.all(updates);
+      setDirtyPlan(false);
+      setMessage("Plan sauvegardé.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Erreur lors de la sauvegarde du plan.");
+    } finally {
+      setSavingPlan(false);
+    }
+  }, [tables, supabase, restaurantId]);
+
+  function onCanvasPointerDown(e: React.PointerEvent, tableId: string) {
+    if (mode !== "edit") return;
+
+    const t = tables.find((x) => x.id === tableId);
+    if (!t) return;
+
+    // On sélectionne au début du drag.
+    setSelectedTableId(tableId);
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+
+    // Position pointer dans le repère du canvas.
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+
+    draggingRef.current = {
+      id: tableId,
+      pointerId: e.pointerId,
+      startX: px,
+      startY: py,
+      offsetX: px - t.x_position,
+      offsetY: py - t.y_position,
+    };
+
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onCanvasPointerMove(e: React.PointerEvent) {
+    const drag = draggingRef.current;
+    if (!drag) return;
+    if (mode !== "edit") return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+
+    const nextX = Math.max(0, px - drag.offsetX);
+    const nextY = Math.max(0, py - drag.offsetY);
+
+    setTables((cur) => cur.map((t) => (t.id === drag.id ? { ...t, x_position: nextX, y_position: nextY } : t)));
+    setDirtyPlan(true);
+  }
+
+  function onCanvasPointerUp(e: React.PointerEvent) {
+    const drag = draggingRef.current;
+    if (!drag) return;
+    draggingRef.current = null;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  }
+
+  const reservedTablesCount = reservationState.reserved.size;
+
+  async function moveReservation(reservationId: string, nextTableId: string | null) {
+    setMessage(null);
+    const { error } = await supabase
+      .from("reservations")
+      .update({ table_id: nextTableId })
+      .eq("id", reservationId)
+      .eq("restaurant_id", restaurantId);
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    await refreshReservations();
+  }
+
+  async function updateReservationStatus(reservationId: string, status: ReservationRow["status"]) {
+    if (!status) return;
+    setMessage(null);
+    const res = await fetch(`/api/reservations/${reservationId}/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    const payload = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) {
+      setMessage(payload.error ?? "Impossible de mettre à jour le statut.");
+      return;
+    }
+    await refreshReservations();
+  }
+
+  return (
+    <section className="space-y-10">
+      <header className="flex flex-col gap-4 border-b border-zg-border/80 pb-7 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="dashboard-section-heading">Plan de salle</h1>
+          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
+            Dessinez votre restaurant et gérez vos tables visuellement.
+          </p>
+          <p className="mt-2 text-sm text-zg-fg/55">
+            Assignation automatique des tables:{" "}
+            <span className="font-semibold">{autoAssignEnabled ? "activée" : "désactivée"}</span>
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
+          <Button type="button" variant={mode === "edit" ? "primary" : "secondary"} onClick={() => setMode("edit")}>
+            Mode édition
+          </Button>
+          <Button type="button" variant={mode === "service" ? "primary" : "secondary"} onClick={() => setMode("service")}>
+            Mode service
+          </Button>
+          <Button type="button" variant="secondary" onClick={() => setShowTableForm(true)}>
+            Ajouter une table
+          </Button>
+          <Button type="button" variant="secondary" onClick={() => setShowZoneForm(true)}>
+            Ajouter une zone
+          </Button>
+          <Button type="button" disabled={!dirtyPlan || savingPlan || mode !== "edit"} onClick={() => void savePlanPositions()}>
+            {savingPlan ? "Sauvegarde…" : "Sauvegarder le plan"}
+          </Button>
+        </div>
+      </header>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Tables actives</CardTitle>
+            <CardDescription>Disponibles hors bloquées</CardDescription>
+          </CardHeader>
+          <CardContent className="text-3xl font-bold tabular-nums text-zg-fg">{activeTables.length}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Tables réservées</CardTitle>
+            <CardDescription>Sur le créneau sélectionné</CardDescription>
+          </CardHeader>
+          <CardContent className="text-3xl font-bold tabular-nums text-zg-fg">{reservedTablesCount}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Couverts disponibles</CardTitle>
+            <CardDescription>Somme max des tables actives</CardDescription>
+          </CardHeader>
+          <CardContent className="text-3xl font-bold tabular-nums text-zg-fg">
+            {activeTables.reduce((sum, t) => sum + Math.max(0, t.max_covers), 0)}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Réservations à placer</CardTitle>
+            <CardDescription>Sans table assignée</CardDescription>
+          </CardHeader>
+          <CardContent className="text-3xl font-bold tabular-nums text-zg-fg">{unassignedReservationsAtSelectedTime.length}</CardContent>
+        </Card>
+      </div>
+
+      {message ? <p className="text-sm text-zg-fg/62">{message}</p> : null}
+
+      {/* Barre période / heure (service mode et démo UI) */}
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="space-y-2">
+          <label className="dashboard-field-label">Date</label>
+          <Input type="date" value={serviceDate} onChange={(e) => setServiceDate(e.target.value)} disabled={mode === "service" && loading} />
+        </div>
+        <div className="space-y-2">
+          <label className="dashboard-field-label">Période</label>
+          <Select
+            value={servicePeriod}
+            onChange={(e) => setServicePeriod(e.target.value as "lunch" | "dinner")}
+            disabled={mode === "edit" && savingPlan}
+          >
+            <option value="lunch">Midi</option>
+            <option value="dinner">Soir</option>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <label className="dashboard-field-label">Heure (affichage)</label>
+          <Input type="time" value={serviceTime} onChange={(e) => setServiceTime(e.target.value.slice(0, 5))} />
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chargement…</CardTitle>
+              <CardDescription>Zones & tables</CardDescription>
+            </CardHeader>
+            <CardContent className="h-24">
+              <div className="h-24 rounded-xl bg-zg-highlight/35 animate-pulse" aria-hidden />
+              <span className="sr-only">Chargement des zones et tables</span>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Chargement…</CardTitle>
+              <CardDescription>Service du jour</CardDescription>
+            </CardHeader>
+            <CardContent className="h-24">
+              <div className="h-24 rounded-xl bg-zg-highlight/35 animate-pulse" aria-hidden />
+              <span className="sr-only">Chargement du service du jour</span>
+            </CardContent>
+          </Card>
+        </div>
+      ) : tables.length === 0 || zones.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Commencez par dessiner</CardTitle>
+            <CardDescription>Créez d’abord des zones et des tables pour activer le plan de salle intelligent.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            <Button type="button" onClick={() => setShowZoneForm(true)}>
+              Créer ma première zone
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setShowTableForm(true)}>
+              Ajouter une table
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+          {/* Canvas */}
+          <div className="min-w-0">
+            <div
+              ref={canvasRef}
+              className={cn(
+                "relative overflow-hidden rounded-3xl border border-zg-border-strong/85 bg-zg-surface/60 shadow-zg-card",
+                mode === "edit" ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+              )}
+              style={{
+                height: "min(70vh, 720px)",
+                backgroundImage:
+                  "linear-gradient(to right, color-mix(in srgb, var(--body-text) 10%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--body-text) 10%, transparent) 1px, transparent 1px)",
+                backgroundSize: "34px 34px",
+              }}
+              onPointerMove={onCanvasPointerMove}
+              onPointerUp={onCanvasPointerUp}
+            >
+              {/* Rendu tables */}
+              {tables
+                .slice()
+                .sort((a, b) => (a.status === "blocked" ? -1 : 1) - (b.status === "blocked" ? -1 : 1))
+                .map((t) => {
+                  const visual = getTableVisual(t);
+                  const isReserved = reservationState.reserved.has(t.id);
+                  const isBlocked = t.status === "blocked";
+                  const isDisabled = t.status === "inactive";
+
+                  const style = {
+                    left: t.x_position,
+                    top: t.y_position,
+                    ...shapeToStyle(t.shape, t.width, t.height, t.rotation),
+                  } as React.CSSProperties;
+
+                  const statusLine = isBlocked
+                    ? "Bloquée"
+                    : isDisabled
+                      ? "Inactive"
+                      : isReserved
+                        ? "Réservée"
+                        : "Libre";
+
+                  return (
+                    <div
+                      key={t.id}
+                      role="button"
+                      aria-label={`Table ${t.name}`}
+                      tabIndex={0}
+                      onPointerDown={(e) => onCanvasPointerDown(e, t.id)}
+                      onClick={() => {
+                        setSelectedTableId(t.id);
+                      }}
+                      className={cn(
+                        "absolute select-none transition-shadow",
+                        visual.border,
+                        visual.bg,
+                        "shadow-zg-soft",
+                        mode === "edit" ? "hover:shadow-zg-card" : "hover:shadow-zg-card",
+                      )}
+                      style={{
+                        ...style,
+                        borderWidth: t.id === selectedTableId ? 3 : 2,
+                        borderStyle: "solid",
+                      }}
+                    >
+                      <div className="flex h-full w-full flex-col items-center justify-center px-2 py-1">
+                        <div className={cn("text-xs font-bold tracking-tight", visual.accent)}>{t.name}</div>
+                        <div className="mt-1 text-[11px] text-zg-fg/65 tabular-nums">
+                          {t.min_covers}–{t.max_covers}
+                        </div>
+                        <div className={cn("mt-1 text-[10px] font-semibold", isBlocked ? "text-rose-900/75" : "text-zg-fg/60")}>
+                          {statusLine}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              {/* Zone labels (petite UX) */}
+              <div className="pointer-events-none absolute left-5 top-5 rounded-2xl border border-zg-border/70 bg-zg-surface/80 px-3 py-2 text-xs text-zg-fg/65 shadow-zg-soft">
+                <div className="font-semibold text-zg-fg">Légende</div>
+                <div className="mt-1 space-y-1">
+                  <div className="flex gap-2">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-emerald-300/80 bg-emerald-50/75" aria-hidden />
+                    Libre
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-amber-300/90 bg-amber-50/85" aria-hidden />
+                    Réservée
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-rose-300/80 bg-rose-50/70" aria-hidden />
+                    Bloquée
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar droite */}
+          <div className="space-y-6">
+            {mode === "edit" ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Paramètres table</CardTitle>
+                  <CardDescription>{selectedTable ? "Modifiez la table sélectionnée." : "Sélectionnez une table pour modifier ses paramètres."}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  {!selectedTable ? (
+                    <div className="space-y-5">
+                      <EmptyState
+                        title="Sélection requise"
+                        description="Sélectionnez une table pour modifier ses paramètres."
+                      />
+                      <div className="space-y-3">
+                        <p className="text-sm font-semibold text-zg-fg">Zones</p>
+                        {zones.length === 0 ? (
+                          <p className="text-sm text-zg-fg/55">Ajoutez une zone via le bouton “Ajouter une zone”.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {zones.map((z) => (
+                              <div
+                                key={z.id}
+                                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zg-border/70 bg-zg-surface/60 p-3"
+                              >
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-semibold text-zg-fg">{z.name}</p>
+                                  {z.description ? <p className="mt-1 line-clamp-2 text-xs text-zg-fg/55">{z.description}</p> : null}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Toggle
+                                    checked={z.is_active}
+                                    onChange={(next) => void setZoneActiveById(z.id, next)}
+                                    label={z.is_active ? "Active" : "Inactive"}
+                                  />
+                                  <Button type="button" variant="danger" onClick={() => void deleteZoneById(z.id)}>
+                                    Suppr.
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid gap-4">
+                        <div>
+                          <label className="dashboard-field-label">Nom</label>
+                          <Input value={selectedTable.name} onChange={(e) => setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, name: e.target.value } : t)))} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="dashboard-field-label">Capacité min</label>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={selectedTable.min_covers}
+                              onChange={(e) => {
+                                const v = Number(e.target.value);
+                                setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, min_covers: v } : t)));
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label className="dashboard-field-label">Capacité max</label>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={selectedTable.max_covers}
+                              onChange={(e) => {
+                                const v = Number(e.target.value);
+                                setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, max_covers: v } : t)));
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="dashboard-field-label">Forme</label>
+                          <Select
+                            value={selectedTable.shape}
+                            onChange={(e) => setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, shape: e.target.value as FloorPlanTableShape } : t)))}
+                          >
+                            <option value="round">Ronde</option>
+                            <option value="square">Carrée</option>
+                            <option value="rectangle">Rectangulaire</option>
+                          </Select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="dashboard-field-label">Largeur</label>
+                            <Input
+                              type="number"
+                              min={30}
+                              value={selectedTable.width}
+                              onChange={(e) => setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, width: Number(e.target.value) } : t)))}
+                            />
+                          </div>
+                          <div>
+                            <label className="dashboard-field-label">Hauteur</label>
+                            <Input
+                              type="number"
+                              min={30}
+                              value={selectedTable.height}
+                              onChange={(e) => setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, height: Number(e.target.value) } : t)))}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="dashboard-field-label">Rotation (°)</label>
+                          <Input
+                            type="number"
+                            min={-180}
+                            max={180}
+                            value={selectedTable.rotation}
+                            onChange={(e) => setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, rotation: Number(e.target.value) } : t)))}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="dashboard-field-label">Zone</label>
+                          <Select
+                            value={selectedTable.zone_id ?? ""}
+                            onChange={(e) =>
+                              setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, zone_id: e.target.value || null } : t)))
+                            }
+                          >
+                            <option value="">(Aucune)</option>
+                            {activeZones.map((z) => (
+                              <option key={z.id} value={z.id}>
+                                {z.name}
+                              </option>
+                            ))}
+                          </Select>
+                        </div>
+
+                        <div>
+                          <label className="dashboard-field-label">Statut</label>
+                          <Select
+                            value={selectedTable.status}
+                            onChange={(e) =>
+                              setTables((cur) =>
+                                cur.map((t) => (t.id === selectedTable.id ? { ...t, status: e.target.value } : t)),
+                              )
+                            }
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="blocked">Bloquée</option>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <label className="dashboard-field-label">Note interne</label>
+                          <Textarea
+                            value={selectedTable.note ?? ""}
+                            onChange={(e) =>
+                              setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, note: e.target.value } : t)))
+                            }
+                          />
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                          <Button
+                            type="button"
+                            disabled={savingTable}
+                            onClick={() => {
+                              // Valide min/max
+                              const cur = tables.find((t) => t.id === selectedTable.id);
+                              if (!cur) return;
+                              const safeMin = Math.max(1, Math.floor(cur.min_covers));
+                              const safeMax = Math.max(safeMin, Math.floor(cur.max_covers));
+                              void updateSelectedTable({
+                                ...cur,
+                                min_covers: safeMin,
+                                max_covers: safeMax,
+                                note: (cur.note ?? "").trim() || null,
+                              });
+                            }}
+                          >
+                            {savingTable ? "Enregistrement…" : "Enregistrer"}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                              void updateSelectedTable({ status: selectedTable.status === "blocked" ? "active" : "blocked" } as Partial<TableRow>);
+                            }}
+                            disabled={savingTable}
+                          >
+                            {selectedTable.status === "blocked" ? "Libérer" : "Bloquer temporairement"}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="danger"
+                            onClick={() => void deleteTable(selectedTable.id)}
+                            disabled={savingTable}
+                          >
+                            Supprimer
+                          </Button>
+                        </div>
+
+                        <p className="text-xs text-zg-fg/55">
+                          Astuce: déplacez la table sur le canvas puis cliquez sur <span className="font-semibold">Sauvegarder le plan</span>.
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Service</CardTitle>
+                  <CardDescription>
+                    Vue du créneau sélectionné. Cliquez sur une table pour voir sa réservation.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  {!selectedTable ? (
+                    <EmptyState title="Sélection requise" description="Cliquez sur une table du plan pour voir la réservation associée." />
+                  ) : (
+                    <>
+                      <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/60 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-lg font-bold text-zg-fg">{selectedTable.name}</div>
+                            <div className="mt-1 text-sm text-zg-fg/55">
+                              {selectedTable.min_covers}–{selectedTable.max_covers} pers. · {selectedTable.zone_id ?? "Zone"}
+                            </div>
+                          </div>
+                          <div>
+                            <span
+                              className={cn(
+                                "rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide",
+                                selectedTable.status === "blocked"
+                                  ? "border-rose-300/80 bg-rose-50/70 text-rose-900/85"
+                                  : selectedTable.status === "inactive"
+                                    ? "border-zg-border/70 bg-zg-surface/60 text-zg-fg/55"
+                                    : "border-emerald-300/80 bg-emerald-50/75 text-emerald-950/85",
+                              )}
+                            >
+                              {selectedTable.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {selectedTableReservations.length === 0 ? (
+                        <EmptyState title="Table libre" description="Aucune réservation sur ce créneau (pour cette table)." />
+                      ) : (
+                        <div className="space-y-3">
+                          {selectedTableReservations.map((r) => (
+                            <div key={r.id} className="rounded-2xl border border-zg-border/70 bg-zg-surface/60 p-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="text-sm font-semibold text-zg-fg">
+                                    {(r.reservation_time ?? "").slice(0, 5)} — {r.guest_name ?? "Client"} — {r.guests ?? "-"} pers.
+                                  </div>
+                                  <div className="mt-1 text-xs text-zg-fg/55">Statut: {r.status ?? "-"}</div>
+                                </div>
+                              </div>
+                              <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <Button type="button" variant="secondary" onClick={() => void updateReservationStatus(r.id, "confirmed")}>
+                                  Installer
+                                </Button>
+                                <Button type="button" variant="secondary" onClick={() => void updateReservationStatus(r.id, "completed")}>
+                                  Terminé
+                                </Button>
+                                <Button type="button" variant="danger" onClick={() => void updateReservationStatus(r.id, "cancelled")}>
+                                  Libérer
+                                </Button>
+                              </div>
+                              <div className="mt-3 space-y-2">
+                                <label className="dashboard-field-label">Déplacer vers une autre table</label>
+                                <Select
+                                  value={r.table_id ?? ""}
+                                  onChange={(e) => void moveReservation(r.id, e.target.value || null)}
+                                >
+                                  <option value="">À placer</option>
+                                  {activeTables
+                                    .filter((t) => t.id !== selectedTable.id)
+                                    .map((t) => (
+                                      <option key={t.id} value={t.id}>
+                                        {t.name} · {t.min_covers}–{t.max_covers}
+                                      </option>
+                                    ))}
+                                </Select>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  <div className="border-t border-zg-border/80 pt-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold text-zg-fg">Réservations à placer</div>
+                        <div className="mt-1 text-xs text-zg-fg/55">Assignées uniquement si une table libre convient.</div>
+                      </div>
+                    </div>
+                    {unassignedReservationsAtSelectedTime.length === 0 ? (
+                      <p className="mt-4 text-sm text-zg-fg/55">Aucune réservation à placer sur ce créneau.</p>
+                    ) : (
+                      <div className="mt-4 space-y-3">
+                        {unassignedReservationsAtSelectedTime.map((r) => (
+                          <div key={r.id} className="rounded-2xl border border-zg-border/70 bg-zg-surface/60 p-4">
+                            <div className="text-sm font-semibold text-zg-fg">
+                              {(r.reservation_time ?? "").slice(0, 5)} — {r.guest_name ?? "Client"} — {r.guests ?? "-"} pers.
+                            </div>
+                            <div className="mt-1 text-xs text-zg-fg/55">Statut: {r.status ?? "-"}</div>
+                            <div className="mt-3">
+                              <label className="dashboard-field-label">Assigner une table</label>
+                              <Select
+                                value=""
+                                onChange={(e) => {
+                                  const next = e.target.value || null;
+                                  if (!next) return;
+                                  void moveReservation(r.id, next);
+                                }}
+                              >
+                                <option value="">Choisir</option>
+                                {activeTables
+                                  .filter((t) => t.status !== "blocked")
+                                  .map((t) => (
+                                    <option key={t.id} value={t.id}>
+                                      {t.name} · {t.min_covers}–{t.max_covers}
+                                    </option>
+                                  ))}
+                              </Select>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Form zone */}
+      {showZoneForm ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Nouvelle zone</CardTitle>
+            <CardDescription>Ex. Salle principale, Terrasse, Véranda, Étage…</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="dashboard-field-label">Nom</label>
+                <Input value={zoneName} onChange={(e) => setZoneName(e.target.value)} placeholder="Salle principale" />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Statut</label>
+                <Toggle checked={zoneActive} onChange={setZoneActive} label={zoneActive ? "Active" : "Inactive"} />
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Description (optionnelle)</label>
+                <Textarea value={zoneDescription} onChange={(e) => setZoneDescription(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button type="button" onClick={() => void createZone()}>
+                Créer la zone
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setShowZoneForm(false)}>
+                Annuler
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Form table */}
+      {showTableForm ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Nouvelle table</CardTitle>
+            <CardDescription>Ajoutez une table dans votre plan (puis déplacez-la).</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Nom</label>
+                <Input value={tableName} onChange={(e) => setTableName(e.target.value)} placeholder="Table 1, T2, Terrasse 4…" />
+              </div>
+
+              <div>
+                <label className="dashboard-field-label">Capacité min</label>
+                <Input type="number" min={1} value={tableMin} onChange={(e) => setTableMin(Number(e.target.value))} />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Capacité max</label>
+                <Input type="number" min={1} value={tableMax} onChange={(e) => setTableMax(Number(e.target.value))} />
+              </div>
+
+              <div>
+                <label className="dashboard-field-label">Zone</label>
+                <Select value={tableZoneId} onChange={(e) => setTableZoneId(e.target.value)}>
+                  <option value="">(Aucune)</option>
+                  {activeZones.map((z) => (
+                    <option key={z.id} value={z.id}>
+                      {z.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div>
+                <label className="dashboard-field-label">Statut</label>
+                <Select value={tableStatus} onChange={(e) => setTableStatus(e.target.value)}>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="blocked">Bloquée</option>
+                </Select>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Forme</label>
+                <Select value={tableShape} onChange={(e) => setTableShape(e.target.value as FloorPlanTableShape)}>
+                  <option value="round">Ronde</option>
+                  <option value="square">Carrée</option>
+                  <option value="rectangle">Rectangulaire</option>
+                </Select>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Note (optionnelle)</label>
+                <Textarea value={tableNote} onChange={(e) => setTableNote(e.target.value)} placeholder="Près de la fenêtre, table calme…" />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button type="button" onClick={() => void createTable()}>
+                Ajouter la table
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setShowTableForm(false)}>
+                Annuler
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* List actions zones (facultatif en 2ème itération, mais utile) */}
+      {showZoneForm ? null : (
+        <div className="hidden">
+          {/* placeholder */}
+        </div>
+      )}
+
+      {/* Zones suppression est limitée par l'UI actuelle pour éviter de trop complexifier */}
+      {/* Les tables/zones se gèrent principalement via le panneau de création. */}
+    </section>
+  );
+}
+

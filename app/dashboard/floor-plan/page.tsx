@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
-import FloorPlanPanel from "@/src/components/dashboard/floor-plan-panel";
+import FloorPlanVisualPanel from "@/src/components/dashboard/floor-plan-visual-panel";
 
 export default async function DashboardFloorPlanPage() {
   const supabase = await createClient();
@@ -47,16 +47,20 @@ export default async function DashboardFloorPlanPage() {
 
   const { data: settings } = await supabase
     .from("restaurant_settings")
-    .select("floor_plan_auto_assign, floor_plan_lunch_duration, floor_plan_dinner_duration, reservation_duration")
+    .select(
+      "floor_plan_auto_assign, floor_plan_lunch_duration, floor_plan_dinner_duration, reservation_duration, service_lunch_start, service_dinner_start"
+    )
     .eq("restaurant_id", restaurant.id)
     .maybeSingle();
 
   return (
-    <FloorPlanPanel
+    <FloorPlanVisualPanel
       restaurantId={restaurant.id}
       defaultLunchDurationMinutes={settings?.floor_plan_lunch_duration ?? settings?.reservation_duration ?? 90}
       defaultDinnerDurationMinutes={settings?.floor_plan_dinner_duration ?? settings?.reservation_duration ?? 90}
       autoAssignEnabled={settings?.floor_plan_auto_assign !== false}
+      lunchStartTime={settings?.service_lunch_start ?? null}
+      dinnerStartTime={settings?.service_dinner_start ?? null}
     />
   );
 }

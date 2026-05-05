@@ -34,6 +34,7 @@ export async function executePublicReservation(
   const guests = parsed.guests;
   const reservationDate = parsed.reservationDate;
   const reservationTime = normalizeTime(parsed.reservationTime);
+  const chosenTableId = parsed.tableId ?? null;
 
   const reservationDateTimeMs = toDateTimeMs(reservationDate, reservationTime);
   if (Number.isNaN(reservationDateTimeMs) || reservationDateTimeMs < Date.now()) {
@@ -217,6 +218,26 @@ export async function executePublicReservation(
 
   const row = rpcData as { id?: string; status?: string };
   const finalStatus = typeof row.status === "string" ? row.status : status;
+
+  // Si le client a choisi une table (option premium), on remplace l’assignation automatique.
+  // Si la table n’est plus dispo au moment du changement, on annule la réservation créée
+  // afin d’éviter un état incohérent côté client.
+  if (chosenTableId && typeof row.id === "string") {
+    const { error: tableUpdateError } = await supabase
+      .from("reservations")
+      .update({ table_id: chosenTableId })
+      .eq("id", row.id)
+      .eq("restaurant_id", restaurantId);
+
+    if (tableUpdateError) {
+      await supabase.from("reservations").update({ status: "cancelled" }).eq("id", row.id).eq("restaurant_id", restaurantId);
+      return {
+        ok: false,
+        status: 409,
+        error: "Cette table n’est plus disponible. Veuillez choisir une autre table ou un autre créneau.",
+      };
+    }
+  }
 
   if (finalStatus === "confirmed" && guestEmail) {
     try {

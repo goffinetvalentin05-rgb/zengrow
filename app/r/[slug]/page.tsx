@@ -99,7 +99,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "opening_hours, reservation_slot_interval, max_party_size, allow_phone, allow_email, logo_url, cover_image_url, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours, days_in_advance, use_tables, terrace_enabled",
+      "opening_hours, reservation_slot_interval, max_party_size, allow_phone, allow_email, logo_url, cover_image_url, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours, days_in_advance, use_tables, terrace_enabled, floor_plan_clients_choose_table",
     )
     .eq("restaurant_id", restaurant.id)
     .single();
@@ -138,6 +138,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     days_in_advance: 60,
     use_tables: false,
     terrace_enabled: false,
+    floor_plan_clients_choose_table: false,
   };
 
   const { data: documents } = await supabase
@@ -247,6 +248,8 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           closureEndDate={safeSettings.closure_end_date}
           closureMessage={safeSettings.closure_message}
           terraceEnabled={safeSettings.terrace_enabled === true}
+          clientsChooseTable={safeSettings.floor_plan_clients_choose_table === true}
+          useTables={safeSettings.use_tables === true}
         />
       </main>
     </>
