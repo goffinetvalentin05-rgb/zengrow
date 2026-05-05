@@ -49,6 +49,21 @@ type ReservationRow = {
   zone?: "interior" | "terrace" | string | null;
 };
 
+type FloorPlanElementType = "wall" | "door" | "window" | "zone" | "bar" | "label" | "other";
+
+type FloorPlanElementRow = {
+  id: string;
+  restaurant_id: string;
+  type: FloorPlanElementType;
+  label: string | null;
+  x_position: number;
+  y_position: number;
+  width: number;
+  height: number;
+  rotation: number;
+  metadata: Record<string, unknown>;
+};
+
 type FloorPlanVisualPanelProps = {
   restaurantId: string;
   defaultLunchDurationMinutes: number;
@@ -130,6 +145,7 @@ export default function FloorPlanVisualPanel({
 
   const [zones, setZones] = useState<ZoneRow[]>([]);
   const [tables, setTables] = useState<TableRow[]>([]);
+  const [elements, setElements] = useState<FloorPlanElementRow[]>([]);
   const [reservations, setReservations] = useState<ReservationRow[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -139,8 +155,17 @@ export default function FloorPlanVisualPanel({
 
   const [dirtyPlan, setDirtyPlan] = useState(false);
 
-  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
-  const selectedTable = useMemo(() => tables.find((t) => t.id === selectedTableId) ?? null, [tables, selectedTableId]);
+  const [selected, setSelected] = useState<{ kind: "table" | "element"; id: string } | null>(null);
+  const selectedTableId = selected?.kind === "table" ? selected.id : null;
+  const selectedElementId = selected?.kind === "element" ? selected.id : null;
+  const selectedTable = useMemo(
+    () => (selectedTableId ? tables.find((t) => t.id === selectedTableId) ?? null : null),
+    [tables, selectedTableId],
+  );
+  const selectedElement = useMemo(
+    () => (selectedElementId ? elements.find((e) => e.id === selectedElementId) ?? null : null),
+    [elements, selectedElementId],
+  );
 
   // Modals/forms
   const [showZoneForm, setShowZoneForm] = useState(false);
@@ -157,10 +182,13 @@ export default function FloorPlanVisualPanel({
   const [tableNote, setTableNote] = useState("");
   const [tableShape, setTableShape] = useState<FloorPlanTableShape>("round");
 
+  const [addElementType, setAddElementType] = useState<FloorPlanElementType>("wall");
+
   // Canvas
   const canvasRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef<{
     id: string;
+    kind: "table" | "element";
     pointerId: number;
     startX: number;
     startY: number;
@@ -225,7 +253,11 @@ export default function FloorPlanVisualPanel({
   const refresh = useCallback(async () => {
     setMessage(null);
     setLoading(true);
-    const [{ data: zonesData, error: zonesError }, { data: tablesData, error: tablesError }] = await Promise.all([
+    const [
+      { data: zonesData, error: zonesError },
+      { data: tablesData, error: tablesError },
+      { data: elementsData, error: elementsError },
+    ] = await Promise.all([
       supabase
         .from("restaurant_zones")
         .select("id, name, description, is_active")
@@ -239,17 +271,28 @@ export default function FloorPlanVisualPanel({
         .eq("restaurant_id", restaurantId)
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true }),
+      supabase
+        .from("floor_plan_elements")
+        .select("id, restaurant_id, type, label, x_position, y_position, width, height, rotation, metadata")
+        .eq("restaurant_id", restaurantId)
+        .order("created_at", { ascending: true }),
     ]);
 
-    if (zonesError || tablesError) {
-      setMessage(zonesError?.message ?? tablesError?.message ?? "Impossible de charger le plan de salle.");
+    if (zonesError || tablesError || elementsError) {
+      setMessage(
+        zonesError?.message ??
+          tablesError?.message ??
+          elementsError?.message ??
+          "Impossible de charger le plan de salle.",
+      );
       setLoading(false);
       return;
     }
 
     setZones((zonesData ?? []) as ZoneRow[]);
     setTables((tablesData ?? []) as TableRow[]);
-    setSelectedTableId((prev) => prev ?? (tablesData?.[0]?.id ?? null));
+    setElements((elementsData ?? []) as FloorPlanElementRow[]);
+    setSelected((prev) => prev ?? (tablesData?.[0]?.id ? { kind: "table", id: tablesData[0].id } : null));
     setLoading(false);
   }, [restaurantId, supabase]);
 
@@ -321,6 +364,66 @@ export default function FloorPlanVisualPanel({
       return { border, bg, accent };
     },
     [selectedTableId, reservationState.reserved],
+  );
+
+  const getElementVisual = useCallback(
+    (el: FloorPlanElementRow) => {
+      const isSelected = selected?.kind === "element" && selected.id === el.id;
+
+      if (el.type === "wall") {
+        return {
+          className: cn(
+            "border border-zg-border-strong/70 bg-zg-fg/80",
+            isSelected && "ring-2 ring-zg-mint/55 ring-offset-2 ring-offset-zg-surface/60",
+          ),
+        };
+      }
+
+      if (el.type === "door") {
+        return {
+          className: cn(
+            "border border-zg-border-strong/70 bg-zg-surface/80",
+            isSelected && "ring-2 ring-zg-mint/55 ring-offset-2 ring-offset-zg-surface/60",
+          ),
+        };
+      }
+
+      if (el.type === "window") {
+        return {
+          className: cn(
+            "border border-sky-300/60 bg-sky-50/70",
+            isSelected && "ring-2 ring-zg-mint/55 ring-offset-2 ring-offset-zg-surface/60",
+          ),
+        };
+      }
+
+      if (el.type === "zone") {
+        return {
+          className: cn(
+            "border border-zg-border/70 bg-zg-surface/35",
+            isSelected && "ring-2 ring-zg-mint/55 ring-offset-2 ring-offset-zg-surface/60",
+          ),
+        };
+      }
+
+      if (el.type === "bar") {
+        return {
+          className: cn(
+            "border border-amber-300/60 bg-amber-50/70",
+            isSelected && "ring-2 ring-zg-mint/55 ring-offset-2 ring-offset-zg-surface/60",
+          ),
+        };
+      }
+
+      // label/other
+      return {
+        className: cn(
+          "border border-zg-border/70 bg-zg-surface/70",
+          isSelected && "ring-2 ring-zg-mint/55 ring-offset-2 ring-offset-zg-surface/60",
+        ),
+      };
+    },
+    [selected],
   );
 
   async function createZone() {
@@ -448,7 +551,7 @@ export default function FloorPlanVisualPanel({
       setSavingTable(false);
       return;
     }
-    setSelectedTableId(null);
+    setSelected(null);
     setSavingTable(false);
     await refresh();
   }
@@ -457,8 +560,8 @@ export default function FloorPlanVisualPanel({
     setSavingPlan(true);
     setMessage(null);
     try {
-      // Met à jour uniquement layout (drag & drop).
-      const updates = tables.map((t) =>
+      // Met à jour uniquement layout (drag & drop) tables + éléments.
+      const tableUpdates = tables.map((t) =>
         supabase
           .from("restaurant_tables")
           .update({
@@ -472,7 +575,25 @@ export default function FloorPlanVisualPanel({
           .eq("id", t.id)
           .eq("restaurant_id", restaurantId),
       );
-      await Promise.all(updates);
+
+      const elementUpdates = elements.map((el) =>
+        supabase
+          .from("floor_plan_elements")
+          .update({
+            type: el.type,
+            label: el.label,
+            x_position: Math.round(el.x_position),
+            y_position: Math.round(el.y_position),
+            width: Math.round(el.width),
+            height: Math.round(el.height),
+            rotation: Math.round(el.rotation),
+            metadata: el.metadata,
+          })
+          .eq("id", el.id)
+          .eq("restaurant_id", restaurantId),
+      );
+
+      await Promise.all([...tableUpdates, ...elementUpdates]);
       setDirtyPlan(false);
       setMessage("Plan sauvegardé.");
     } catch (e) {
@@ -480,16 +601,16 @@ export default function FloorPlanVisualPanel({
     } finally {
       setSavingPlan(false);
     }
-  }, [tables, supabase, restaurantId]);
+  }, [tables, elements, supabase, restaurantId]);
 
-  function onCanvasPointerDown(e: React.PointerEvent, tableId: string) {
+  function onCanvasPointerDownTable(e: React.PointerEvent, tableId: string) {
     if (mode !== "edit") return;
 
     const t = tables.find((x) => x.id === tableId);
     if (!t) return;
 
     // On sélectionne au début du drag.
-    setSelectedTableId(tableId);
+    setSelected({ kind: "table", id: tableId });
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -501,6 +622,7 @@ export default function FloorPlanVisualPanel({
 
     draggingRef.current = {
       id: tableId,
+      kind: "table",
       pointerId: e.pointerId,
       startX: px,
       startY: py,
@@ -526,7 +648,13 @@ export default function FloorPlanVisualPanel({
     const nextX = Math.max(0, px - drag.offsetX);
     const nextY = Math.max(0, py - drag.offsetY);
 
-    setTables((cur) => cur.map((t) => (t.id === drag.id ? { ...t, x_position: nextX, y_position: nextY } : t)));
+    if (drag.kind === "table") {
+      setTables((cur) => cur.map((t) => (t.id === drag.id ? { ...t, x_position: nextX, y_position: nextY } : t)));
+    } else {
+      setElements((cur) =>
+        cur.map((el) => (el.id === drag.id ? { ...el, x_position: nextX, y_position: nextY } : el)),
+      );
+    }
     setDirtyPlan(true);
   }
 
@@ -535,6 +663,85 @@ export default function FloorPlanVisualPanel({
     if (!drag) return;
     draggingRef.current = null;
     e.currentTarget.releasePointerCapture(e.pointerId);
+  }
+
+  function onCanvasPointerDownElement(e: React.PointerEvent, elementId: string) {
+    if (mode !== "edit") return;
+    const el = elements.find((x) => x.id === elementId);
+    if (!el) return;
+
+    setSelected({ kind: "element", id: elementId });
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+
+    draggingRef.current = {
+      id: elementId,
+      kind: "element",
+      pointerId: e.pointerId,
+      startX: px,
+      startY: py,
+      offsetX: px - el.x_position,
+      offsetY: py - el.y_position,
+    };
+
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  async function createElement(type: FloorPlanElementType) {
+    setMessage(null);
+    const { data, error } = await supabase
+      .from("floor_plan_elements")
+      .insert({
+        restaurant_id: restaurantId,
+        type,
+        label:
+          type === "label"
+            ? "Texte"
+            : type === "bar"
+              ? "Bar"
+              : type === "zone"
+                ? "Zone"
+                : null,
+        x_position: 120,
+        y_position: 120,
+        width: type === "wall" ? 220 : type === "zone" ? 280 : 140,
+        height: type === "wall" ? 18 : type === "zone" ? 180 : 70,
+        rotation: 0,
+        metadata: {},
+      })
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    await refresh();
+    if (data?.id) {
+      setSelected({ kind: "element", id: data.id });
+      setDirtyPlan(true);
+    }
+  }
+
+  async function deleteSelectedElement() {
+    if (!selectedElement) return;
+    setMessage(null);
+    const { error } = await supabase
+      .from("floor_plan_elements")
+      .delete()
+      .eq("id", selectedElement.id)
+      .eq("restaurant_id", restaurantId);
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    setSelected(null);
+    await refresh();
   }
 
   const reservedTablesCount = reservationState.reserved.size;
@@ -596,6 +803,21 @@ export default function FloorPlanVisualPanel({
           <Button type="button" variant="secondary" onClick={() => setShowZoneForm(true)}>
             Ajouter une zone
           </Button>
+          {mode === "edit" ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={addElementType} onChange={(e) => setAddElementType(e.target.value as FloorPlanElementType)}>
+                <option value="wall">Mur</option>
+                <option value="door">Porte</option>
+                <option value="window">Fenêtre</option>
+                <option value="zone">Zone visuelle</option>
+                <option value="bar">Bar</option>
+                <option value="label">Texte</option>
+              </Select>
+              <Button type="button" variant="secondary" onClick={() => void createElement(addElementType)}>
+                Ajouter
+              </Button>
+            </div>
+          ) : null}
           <Button type="button" disabled={!dirtyPlan || savingPlan || mode !== "edit"} onClick={() => void savePlanPositions()}>
             {savingPlan ? "Sauvegarde…" : "Sauvegarder le plan"}
           </Button>
@@ -717,6 +939,36 @@ export default function FloorPlanVisualPanel({
               onPointerMove={onCanvasPointerMove}
               onPointerUp={onCanvasPointerUp}
             >
+              {/* Éléments de plan (murs, portes, fenêtres, zones, bar, texte) */}
+              {elements.map((el) => {
+                const v = getElementVisual(el);
+                const style: CSSProperties = {
+                  left: el.x_position,
+                  top: el.y_position,
+                  width: el.width,
+                  height: el.height,
+                  transform: `rotate(${el.rotation}deg)`,
+                };
+
+                return (
+                  <div
+                    key={el.id}
+                    role="button"
+                    tabIndex={0}
+                    onPointerDown={(e) => onCanvasPointerDownElement(e, el.id)}
+                    onClick={() => setSelected({ kind: "element", id: el.id })}
+                    className={cn("absolute select-none", v.className)}
+                    style={style}
+                  >
+                    {el.type === "label" || el.type === "zone" || el.type === "bar" ? (
+                      <div className="flex h-full w-full items-center justify-center px-2 text-xs font-semibold text-zg-fg/85">
+                        {el.label ?? (el.type === "zone" ? "Zone" : el.type === "bar" ? "Bar" : "Texte")}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+
               {/* Rendu tables */}
               {tables
                 .slice()
@@ -747,9 +999,9 @@ export default function FloorPlanVisualPanel({
                       role="button"
                       aria-label={`Table ${t.name}`}
                       tabIndex={0}
-                      onPointerDown={(e) => onCanvasPointerDown(e, t.id)}
+                      onPointerDown={(e) => onCanvasPointerDownTable(e, t.id)}
                       onClick={() => {
-                        setSelectedTableId(t.id);
+                        setSelected({ kind: "table", id: t.id });
                       }}
                       className={cn(
                         "absolute select-none transition-shadow",
@@ -802,15 +1054,21 @@ export default function FloorPlanVisualPanel({
             {mode === "edit" ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Paramètres table</CardTitle>
-                  <CardDescription>{selectedTable ? "Modifiez la table sélectionnée." : "Sélectionnez une table pour modifier ses paramètres."}</CardDescription>
+                  <CardTitle>Propriétés</CardTitle>
+                  <CardDescription>
+                    {selectedTable
+                      ? "Table sélectionnée."
+                      : selectedElement
+                        ? "Élément sélectionné."
+                        : "Sélectionnez un élément pour modifier ses paramètres."}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                  {!selectedTable ? (
+                  {!selectedTable && !selectedElement ? (
                     <div className="space-y-5">
                       <EmptyState
                         title="Sélection requise"
-                        description="Sélectionnez une table pour modifier ses paramètres."
+                        description="Sélectionnez une table ou un élément (mur, porte, zone…) pour modifier ses paramètres."
                       />
                       <div className="space-y-3">
                         <p className="text-sm font-semibold text-zg-fg">Zones</p>
@@ -843,12 +1101,124 @@ export default function FloorPlanVisualPanel({
                         )}
                       </div>
                     </div>
+                  ) : selectedElement ? (
+                    <div className="grid gap-4">
+                      <div>
+                        <label className="dashboard-field-label">Type</label>
+                        <Select
+                          value={selectedElement.type}
+                          onChange={(e) =>
+                            setElements((cur) =>
+                              cur.map((x) =>
+                                x.id === selectedElement.id ? { ...x, type: e.target.value as FloorPlanElementType } : x,
+                              ),
+                            )
+                          }
+                        >
+                          <option value="wall">Mur</option>
+                          <option value="door">Porte</option>
+                          <option value="window">Fenêtre</option>
+                          <option value="zone">Zone visuelle</option>
+                          <option value="bar">Bar</option>
+                          <option value="label">Texte</option>
+                          <option value="other">Autre</option>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <label className="dashboard-field-label">Libellé</label>
+                        <Input
+                          value={selectedElement.label ?? ""}
+                          onChange={(e) =>
+                            setElements((cur) => cur.map((x) => (x.id === selectedElement.id ? { ...x, label: e.target.value } : x)))
+                          }
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="dashboard-field-label">Largeur</label>
+                          <Input
+                            type="number"
+                            min={10}
+                            value={selectedElement.width}
+                            onChange={(e) =>
+                              setElements((cur) =>
+                                cur.map((x) =>
+                                  x.id === selectedElement.id ? { ...x, width: Number(e.target.value) } : x,
+                                ),
+                              )
+                            }
+                          />
+                        </div>
+                        <div>
+                          <label className="dashboard-field-label">Hauteur</label>
+                          <Input
+                            type="number"
+                            min={10}
+                            value={selectedElement.height}
+                            onChange={(e) =>
+                              setElements((cur) =>
+                                cur.map((x) =>
+                                  x.id === selectedElement.id ? { ...x, height: Number(e.target.value) } : x,
+                                ),
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="dashboard-field-label">Rotation (°)</label>
+                        <Input
+                          type="number"
+                          min={-180}
+                          max={180}
+                          value={selectedElement.rotation}
+                          onChange={(e) =>
+                            setElements((cur) =>
+                              cur.map((x) =>
+                                x.id === selectedElement.id ? { ...x, rotation: Number(e.target.value) } : x,
+                              ),
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setDirtyPlan(true);
+                            void savePlanPositions();
+                          }}
+                        >
+                          Enregistrer
+                        </Button>
+                        <Button type="button" variant="danger" onClick={() => void deleteSelectedElement()}>
+                          Supprimer
+                        </Button>
+                      </div>
+                      <p className="text-xs text-zg-fg/55">
+                        Astuce: déplacez l’élément sur le canvas puis cliquez sur <span className="font-semibold">Sauvegarder le plan</span>.
+                      </p>
+                    </div>
                   ) : (
                     <>
+                      {!selectedTable ? (
+                        <EmptyState title="Sélection requise" description="Sélectionnez une table pour modifier ses paramètres." />
+                      ) : null}
                       <div className="grid gap-4">
                         <div>
                           <label className="dashboard-field-label">Nom</label>
-                          <Input value={selectedTable.name} onChange={(e) => setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, name: e.target.value } : t)))} />
+                          <Input
+                            value={selectedTable?.name ?? ""}
+                            onChange={(e) =>
+                              selectedTable
+                                ? setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, name: e.target.value } : t)))
+                                : null
+                            }
+                          />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
@@ -856,8 +1226,9 @@ export default function FloorPlanVisualPanel({
                             <Input
                               type="number"
                               min={1}
-                              value={selectedTable.min_covers}
+                              value={selectedTable?.min_covers ?? 2}
                               onChange={(e) => {
+                                if (!selectedTable) return;
                                 const v = Number(e.target.value);
                                 setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, min_covers: v } : t)));
                               }}
@@ -868,8 +1239,9 @@ export default function FloorPlanVisualPanel({
                             <Input
                               type="number"
                               min={1}
-                              value={selectedTable.max_covers}
+                              value={selectedTable?.max_covers ?? 4}
                               onChange={(e) => {
+                                if (!selectedTable) return;
                                 const v = Number(e.target.value);
                                 setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, max_covers: v } : t)));
                               }}
@@ -880,8 +1252,16 @@ export default function FloorPlanVisualPanel({
                         <div>
                           <label className="dashboard-field-label">Forme</label>
                           <Select
-                            value={selectedTable.shape}
-                            onChange={(e) => setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, shape: e.target.value as FloorPlanTableShape } : t)))}
+                            value={selectedTable?.shape ?? "round"}
+                            onChange={(e) =>
+                              selectedTable
+                                ? setTables((cur) =>
+                                    cur.map((t) =>
+                                      t.id === selectedTable.id ? { ...t, shape: e.target.value as FloorPlanTableShape } : t,
+                                    ),
+                                  )
+                                : null
+                            }
                           >
                             <option value="round">Ronde</option>
                             <option value="square">Carrée</option>
@@ -895,8 +1275,14 @@ export default function FloorPlanVisualPanel({
                             <Input
                               type="number"
                               min={30}
-                              value={selectedTable.width}
-                              onChange={(e) => setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, width: Number(e.target.value) } : t)))}
+                              value={selectedTable?.width ?? 90}
+                              onChange={(e) =>
+                                selectedTable
+                                  ? setTables((cur) =>
+                                      cur.map((t) => (t.id === selectedTable.id ? { ...t, width: Number(e.target.value) } : t)),
+                                    )
+                                  : null
+                              }
                             />
                           </div>
                           <div>
@@ -904,8 +1290,14 @@ export default function FloorPlanVisualPanel({
                             <Input
                               type="number"
                               min={30}
-                              value={selectedTable.height}
-                              onChange={(e) => setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, height: Number(e.target.value) } : t)))}
+                              value={selectedTable?.height ?? 90}
+                              onChange={(e) =>
+                                selectedTable
+                                  ? setTables((cur) =>
+                                      cur.map((t) => (t.id === selectedTable.id ? { ...t, height: Number(e.target.value) } : t)),
+                                    )
+                                  : null
+                              }
                             />
                           </div>
                         </div>
@@ -916,17 +1308,29 @@ export default function FloorPlanVisualPanel({
                             type="number"
                             min={-180}
                             max={180}
-                            value={selectedTable.rotation}
-                            onChange={(e) => setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, rotation: Number(e.target.value) } : t)))}
+                            value={selectedTable?.rotation ?? 0}
+                            onChange={(e) =>
+                              selectedTable
+                                ? setTables((cur) =>
+                                    cur.map((t) => (t.id === selectedTable.id ? { ...t, rotation: Number(e.target.value) } : t)),
+                                  )
+                                : null
+                            }
                           />
                         </div>
 
                         <div>
                           <label className="dashboard-field-label">Zone</label>
                           <Select
-                            value={selectedTable.zone_id ?? ""}
+                            value={selectedTable?.zone_id ?? ""}
                             onChange={(e) =>
-                              setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, zone_id: e.target.value || null } : t)))
+                              selectedTable
+                                ? setTables((cur) =>
+                                    cur.map((t) =>
+                                      t.id === selectedTable.id ? { ...t, zone_id: e.target.value || null } : t,
+                                    ),
+                                  )
+                                : null
                             }
                           >
                             <option value="">(Aucune)</option>
@@ -941,11 +1345,13 @@ export default function FloorPlanVisualPanel({
                         <div>
                           <label className="dashboard-field-label">Statut</label>
                           <Select
-                            value={selectedTable.status}
+                            value={selectedTable?.status ?? "active"}
                             onChange={(e) =>
-                              setTables((cur) =>
-                                cur.map((t) => (t.id === selectedTable.id ? { ...t, status: e.target.value } : t)),
-                              )
+                              selectedTable
+                                ? setTables((cur) =>
+                                    cur.map((t) => (t.id === selectedTable.id ? { ...t, status: e.target.value } : t)),
+                                  )
+                                : null
                             }
                           >
                             <option value="active">Active</option>
@@ -957,9 +1363,13 @@ export default function FloorPlanVisualPanel({
                         <div>
                           <label className="dashboard-field-label">Note interne</label>
                           <Textarea
-                            value={selectedTable.note ?? ""}
+                            value={selectedTable?.note ?? ""}
                             onChange={(e) =>
-                              setTables((cur) => cur.map((t) => (t.id === selectedTable.id ? { ...t, note: e.target.value } : t)))
+                              selectedTable
+                                ? setTables((cur) =>
+                                    cur.map((t) => (t.id === selectedTable.id ? { ...t, note: e.target.value } : t)),
+                                  )
+                                : null
                             }
                           />
                         </div>
@@ -970,15 +1380,22 @@ export default function FloorPlanVisualPanel({
                             disabled={savingTable}
                             onClick={() => {
                               // Valide min/max
+                              if (!selectedTable) return;
                               const cur = tables.find((t) => t.id === selectedTable.id);
                               if (!cur) return;
                               const safeMin = Math.max(1, Math.floor(cur.min_covers));
                               const safeMax = Math.max(safeMin, Math.floor(cur.max_covers));
                               void updateSelectedTable({
-                                ...cur,
                                 min_covers: safeMin,
                                 max_covers: safeMax,
                                 note: (cur.note ?? "").trim() || null,
+                                name: cur.name,
+                                zone_id: cur.zone_id,
+                                status: cur.status,
+                                shape: cur.shape,
+                                width: cur.width,
+                                height: cur.height,
+                                rotation: cur.rotation,
                               });
                             }}
                           >
@@ -988,16 +1405,17 @@ export default function FloorPlanVisualPanel({
                             type="button"
                             variant="secondary"
                             onClick={() => {
+                              if (!selectedTable) return;
                               void updateSelectedTable({ status: selectedTable.status === "blocked" ? "active" : "blocked" } as Partial<TableRow>);
                             }}
                             disabled={savingTable}
                           >
-                            {selectedTable.status === "blocked" ? "Libérer" : "Bloquer temporairement"}
+                            {(selectedTable?.status ?? "active") === "blocked" ? "Libérer" : "Bloquer temporairement"}
                           </Button>
                           <Button
                             type="button"
                             variant="danger"
-                            onClick={() => void deleteTable(selectedTable.id)}
+                            onClick={() => (selectedTable ? void deleteTable(selectedTable.id) : null)}
                             disabled={savingTable}
                           >
                             Supprimer
