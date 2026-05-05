@@ -153,13 +153,7 @@ export async function POST(request: NextRequest) {
   let tableId: string | null = null;
   if (useTables && reservationZone === "interior") {
     const suggested = slotMatch.suggestedTableId;
-    if (!suggested) {
-      return NextResponse.json(
-        { error: "Aucune table disponible pour ce créneau et ce nombre de convives." },
-        { status: 409 },
-      );
-    }
-    tableId = suggested;
+    tableId = suggested ?? null;
   }
 
   const { data: reservation, error: insertError } = await supabase

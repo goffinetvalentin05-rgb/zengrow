@@ -29,6 +29,8 @@ type ReservationRow = {
   created_at: string;
   zone?: "interior" | "terrace" | string | null;
   reservation_type?: "standard" | "walkin";
+  /** Libellé plan de salle (Table + Zone) calculé côté serveur. */
+  table_label?: string | null;
 };
 
 type ReservationsManagerProps = {
@@ -447,7 +449,7 @@ export default function ReservationsManager({
                     key={reservation.id}
                     guestName={reservation.guest_name}
                     timeLabel={reservation.reservation_time}
-                    subtitle={`${reservation.reservation_date} · ${reservation.guests} couverts`}
+                    subtitle={`${reservation.reservation_date} · ${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
                     status={reservation.status}
                     seatingZone={seatingZoneFromRow(reservation)}
                     reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
@@ -476,7 +478,7 @@ export default function ReservationsManager({
                     key={reservation.id}
                     guestName={reservation.guest_name}
                     timeLabel={`${reservation.reservation_date} · ${reservation.reservation_time}`}
-                    subtitle={`${reservation.guests} couverts`}
+                    subtitle={`${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
                     status={reservation.status}
                     seatingZone={seatingZoneFromRow(reservation)}
                     reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
@@ -506,7 +508,7 @@ export default function ReservationsManager({
                         key={reservation.id}
                         guestName={reservation.guest_name}
                         timeLabel={reservation.reservation_time}
-                        subtitle={`${reservation.reservation_date} · ${reservation.guests} couverts`}
+                        subtitle={`${reservation.reservation_date} · ${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
                         status={reservation.status}
                         statusDisplayLabel={historyStatusDisplayLabel(reservation, true)}
                         seatingZone={seatingZoneFromRow(reservation)}
@@ -527,7 +529,7 @@ export default function ReservationsManager({
                         key={reservation.id}
                         guestName={reservation.guest_name}
                         timeLabel={`${reservation.reservation_date} · ${reservation.reservation_time}`}
-                        subtitle={`${reservation.guests} couverts`}
+                        subtitle={`${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
                         status={reservation.status}
                         statusDisplayLabel={historyStatusDisplayLabel(reservation, true)}
                         seatingZone={seatingZoneFromRow(reservation)}
