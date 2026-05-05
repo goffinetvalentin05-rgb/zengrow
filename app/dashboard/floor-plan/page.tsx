@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { requireRestaurant } from "@/src/lib/auth";
+import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import FloorPlanPanel from "@/src/components/dashboard/floor-plan-panel";
 
 export default async function DashboardFloorPlanPage() {
   const supabase = await createClient();
-  const restaurant = await requireRestaurant();
+  const { restaurant, access } = await requireRestaurantSession();
 
-  const hasAccess = restaurant.subscription_status === "trial" || restaurant.subscription_plan === "pro";
+  const hasAccess = access.canUseProFeatures;
 
   if (!hasAccess) {
     return (

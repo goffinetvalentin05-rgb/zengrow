@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { requireRestaurant } from "@/src/lib/auth";
+import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 
@@ -11,9 +11,8 @@ type CampaignDetailPageProps = {
 export default async function CampaignDetailPage({ params }: CampaignDetailPageProps) {
   const { campaignId } = await params;
   const supabase = await createClient();
-  const restaurant = await requireRestaurant();
-  const hasMarketingAccess =
-    restaurant.subscription_status === "trial" || restaurant.subscription_plan === "pro";
+  const { restaurant, access } = await requireRestaurantSession();
+  const hasMarketingAccess = access.canUseProFeatures;
   if (!hasMarketingAccess) {
     redirect("/dashboard/marketing");
   }

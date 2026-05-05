@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendReviewRequestEmail } from "@/lib/email";
 import { insertPendingFeedbackTokensForReservation } from "@/src/lib/review-feedback-tokens";
-import { isRestaurantExpired } from "@/src/lib/subscription";
+import { devOwnerBypassesPublicBookingBlock } from "@/src/lib/access";
+import { isRestaurantExpired, type SubscriptionStatus } from "@/src/lib/subscription";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 
 function isAuthorized(request: NextRequest) {
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
       .in("restaurant_id", restaurantIds),
     supabase
       .from("restaurants")
-      .select("id, name, subscription_status, trial_end_date, stripe_subscription_id")
+      .select("id, name, owner_id, subscription_status, trial_end_date, stripe_subscription_id")
       .in("id", restaurantIds),
   ]);
   const { data: restaurantVisuals } = await supabase
@@ -66,6 +67,24 @@ export async function GET(request: NextRequest) {
   const restaurantsById = new Map((restaurants ?? []).map((item) => [item.id, item]));
   const visualsByRestaurant = new Map((restaurantVisuals ?? []).map((item) => [item.restaurant_id, item]));
 
+  const devOwnerBypassByOwnerId = new Map<string, boolean>();
+  async function isSubscriptionBlockingCronRestaurant(restaurant: {
+    owner_id: string | null;
+    subscription_status: SubscriptionStatus;
+    trial_end_date: string | null;
+    stripe_subscription_id: string | null;
+  }) {
+    if (!isRestaurantExpired(restaurant)) return false;
+    const ownerId = restaurant.owner_id;
+    if (!ownerId) return true;
+    if (devOwnerBypassByOwnerId.has(ownerId)) {
+      return !devOwnerBypassByOwnerId.get(ownerId);
+    }
+    const bypass = await devOwnerBypassesPublicBookingBlock(ownerId);
+    devOwnerBypassByOwnerId.set(ownerId, bypass);
+    return !bypass;
+  }
+
   let sent = 0;
 
   for (const reservation of reservations) {
@@ -73,7 +92,7 @@ export async function GET(request: NextRequest) {
     const automation = settingsByRestaurant.get(reservation.restaurant_id);
 
     if (!restaurant || !automation) continue;
-    if (isRestaurantExpired(restaurant)) continue;
+    if (await isSubscriptionBlockingCronRestaurant(restaurant)) continue;
     if (!automation.is_enabled || automation.channel !== "email") continue;
 
     const completedAt = toCompletedAt(reservation.reservation_date, reservation.reservation_time);

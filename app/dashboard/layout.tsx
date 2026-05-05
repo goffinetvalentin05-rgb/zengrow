@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { Inter } from "next/font/google";
 import DashboardTopBar from "@/src/components/dashboard/dashboard-top-bar";
 import DashboardSidebar from "@/src/components/dashboard/sidebar";
-import { requireRestaurant } from "@/src/lib/auth";
+import { requireRestaurantSession } from "@/src/lib/auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -13,7 +13,7 @@ const inter = Inter({
 export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const restaurant = await requireRestaurant();
+  const { restaurant, access } = await requireRestaurantSession();
   const headerList = await headers();
   const host = headerList.get("host");
   const protocol = headerList.get("x-forwarded-proto") ?? "http";
@@ -30,8 +30,8 @@ export default async function DashboardLayout({
       <div className="relative z-10 mx-auto flex max-w-[1440px] flex-col gap-0 px-4 py-6 md:flex-row md:items-start md:gap-8 md:px-6 md:py-8">
         <DashboardSidebar
           reservationLink={publicLink}
-          subscriptionPlan={restaurant.subscription_plan}
-          subscriptionStatus={restaurant.subscription_status}
+          subscriptionPlan={access.effectivePlan}
+          subscriptionStatus={access.effectiveStatus}
         />
         <section className="min-w-0 flex-1 md:min-w-0 md:pl-0 md:pt-0">
           <DashboardTopBar publicLink={publicLink} restaurantName={restaurant.name} />

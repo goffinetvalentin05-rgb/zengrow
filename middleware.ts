@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isOwnerEmail } from "@/src/lib/access";
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
@@ -57,7 +58,7 @@ export async function middleware(request: NextRequest) {
     await supabase.from("restaurants").update({ subscription_status: "expired" }).eq("id", restaurant.id);
   }
 
-  if (status === "expired" && !isBillingPage) {
+  if (status === "expired" && !isBillingPage && !isOwnerEmail(user.email)) {
     return NextResponse.redirect(new URL("/billing", request.url));
   }
 

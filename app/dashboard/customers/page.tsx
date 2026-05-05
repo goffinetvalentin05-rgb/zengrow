@@ -1,13 +1,12 @@
 import Link from "next/link";
 import CustomersPanel, { type CustomerRow } from "@/src/components/dashboard/customers-panel";
-import { requireRestaurant } from "@/src/lib/auth";
+import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 
 export default async function DashboardCustomersPage() {
   const supabase = await createClient();
-  const restaurant = await requireRestaurant();
-  const hasCustomersProAccess =
-    restaurant.subscription_status === "trial" || restaurant.subscription_plan === "pro";
+  const { restaurant, access } = await requireRestaurantSession();
+  const hasCustomersProAccess = access.canUseProFeatures;
 
   const { data: customersData } = await supabase
     .from("customers")

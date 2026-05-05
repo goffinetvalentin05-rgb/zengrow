@@ -547,14 +547,20 @@ export default function FloorPlanPanel({
               <CardTitle>Chargement…</CardTitle>
               <CardDescription>Zones et tables</CardDescription>
             </CardHeader>
-            <CardContent className="h-24" />
+            <CardContent className="h-24">
+              <div className="h-24 rounded-xl bg-zg-highlight/35 animate-pulse" aria-hidden />
+              <span className="sr-only">Chargement des zones et tables</span>
+            </CardContent>
           </Card>
           <Card>
             <CardHeader>
               <CardTitle>Chargement…</CardTitle>
               <CardDescription>Service du jour</CardDescription>
             </CardHeader>
-            <CardContent className="h-24" />
+            <CardContent className="h-24">
+              <div className="h-24 rounded-xl bg-zg-highlight/35 animate-pulse" aria-hidden />
+              <span className="sr-only">Chargement du service du jour</span>
+            </CardContent>
           </Card>
         </div>
       ) : empty ? (

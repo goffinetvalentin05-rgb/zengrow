@@ -16,6 +16,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import Badge from "@/src/components/ui/badge";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import type { SubscriptionPlan, SubscriptionStatus } from "@/src/lib/subscription";
@@ -24,6 +25,8 @@ type BillingPlansProps = {
   status: SubscriptionStatus;
   plan: SubscriptionPlan;
   trialEndDate: string | null;
+  /** Compte propriétaire / dev : pas de blocage d’essai, accès Pro effectif. */
+  isOwnerDev?: boolean;
 };
 
 const PLAN_ITEMS = [
@@ -80,7 +83,7 @@ function subscriptionStatusLabel(status: SubscriptionStatus): string {
   return status;
 }
 
-export default function BillingPlans({ status, plan, trialEndDate }: BillingPlansProps) {
+export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = false }: BillingPlansProps) {
   const [loadingPlan, setLoadingPlan] = useState<SubscriptionPlan>(null);
   const [message, setMessage] = useState<string | null>(null);
   const formattedTrialDate = formatDate(trialEndDate);
@@ -120,18 +123,29 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
           <div className="max-w-xl space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-green-800">Facturation ZenGrow</p>
             <CardTitle className="!mt-0">
-              {status === "trial" ? "Votre essai gratuit est actif" : "Choisissez votre formule"}
+              {isOwnerDev
+                ? "Facturation ZenGrow"
+                : status === "trial"
+                  ? "Votre essai gratuit est actif"
+                  : "Choisissez votre formule"}
             </CardTitle>
             <CardDescription className="!mt-2 max-w-2xl">
-              {status === "trial" && formattedTrialDate
-                ? `Fin de l'essai le ${formattedTrialDate}.`
-                : "Un abonnement pour conserver toutes les fonctionnalités."}
+              {isOwnerDev
+                ? "Votre compte dispose d’un accès développeur : toutes les fonctionnalités Pro sont disponibles sans abonnement Stripe."
+                : status === "trial" && formattedTrialDate
+                  ? `Fin de l'essai le ${formattedTrialDate}.`
+                  : "Un abonnement pour conserver toutes les fonctionnalités."}
             </CardDescription>
           </div>
           <div className="rounded-xl border border-zg-border/90 bg-zg-surface-elevated/85 px-5 py-4 text-left shadow-sm lg:text-right">
             <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Plan actuel</p>
             <p className="mt-2 text-lg font-semibold text-zg-fg">{plan ?? "—"}</p>
             <p className="mt-1 text-xs text-zg-fg/52">Statut : {subscriptionStatusLabel(status)}</p>
+            {isOwnerDev ? (
+              <Badge tone="success" className="mt-3">
+                Accès développeur actif
+              </Badge>
+            ) : null}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -149,7 +163,7 @@ export default function BillingPlans({ status, plan, trialEndDate }: BillingPlan
             </div>
           ) : null}
 
-          {status === "expired" ? (
+          {status === "expired" && !isOwnerDev ? (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950 shadow-sm">
               Votre essai est terminé. Choisissez un plan pour continuer à utiliser ZenGrow.
             </div>

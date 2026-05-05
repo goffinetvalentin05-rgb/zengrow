@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { calendarYmdInBusinessTz } from "@/src/lib/date/business-calendar";
 import { normalizeReservationMode } from "@/src/lib/reservation/reservation-modes";
-import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
+import { isRestaurantExpiredForUser } from "@/src/lib/access";
+import { expireTrialIfNeeded } from "@/src/lib/subscription";
 
 type ManualReservationPayload = {
   guestName?: string;
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
   }
 
   const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
-  if (isRestaurantExpired(syncedRestaurant)) {
+  if (isRestaurantExpiredForUser(user.email, syncedRestaurant)) {
     return NextResponse.json({ error: "Abonnement expiré. Mettez à jour votre formule." }, { status: 402 });
   }
 

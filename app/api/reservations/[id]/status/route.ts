@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { sendReservationCancellationEmail, sendReservationConfirmationEmail } from "@/lib/email";
 import { asRestaurantReservationEmailRow } from "@/src/lib/reservation/restaurant-reservation-email-row";
-import { expireTrialIfNeeded, isRestaurantExpired, type SubscriptionStatus } from "@/src/lib/subscription";
+import { isRestaurantExpiredForUser } from "@/src/lib/access";
+import { expireTrialIfNeeded, type SubscriptionStatus } from "@/src/lib/subscription";
 
 const allowedStatuses = new Set(["pending", "confirmed", "refused", "completed", "cancelled", "no-show"]);
 
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     trial_end_date: restaurantRow.trial_end_date,
     stripe_subscription_id: restaurantRow.stripe_subscription_id,
   });
-  if (isRestaurantExpired(syncedRestaurant)) {
+  if (isRestaurantExpiredForUser(authData.user.email, syncedRestaurant)) {
     return NextResponse.json({ error: "Abonnement expiré. Mettez à jour votre formule." }, { status: 402 });
   }
 

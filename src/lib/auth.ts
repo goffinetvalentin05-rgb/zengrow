@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getEffectiveAccessState, type EffectiveAccess } from "@/src/lib/access";
 import { createClient } from "@/src/lib/supabase/server";
 import { expireTrialIfNeeded, type SubscriptionPlan, type SubscriptionStatus } from "@/src/lib/subscription";
 
@@ -30,7 +31,13 @@ export async function requireUser() {
   return data.user;
 }
 
-export async function requireRestaurant() {
+export type RestaurantSession = {
+  user: Awaited<ReturnType<typeof requireUser>>;
+  restaurant: Restaurant;
+  access: EffectiveAccess;
+};
+
+export async function requireRestaurantSession(): Promise<RestaurantSession> {
   const supabase = await createClient();
   const user = await requireUser();
 
@@ -47,5 +54,13 @@ export async function requireRestaurant() {
   }
 
   const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
-  return { ...restaurant, ...syncedRestaurant } as Restaurant;
+  const merged = { ...restaurant, ...syncedRestaurant } as Restaurant;
+  const access = getEffectiveAccessState(user.email, merged);
+
+  return { user, restaurant: merged, access };
+}
+
+export async function requireRestaurant() {
+  const { restaurant } = await requireRestaurantSession();
+  return restaurant;
 }

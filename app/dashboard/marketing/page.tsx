@@ -1,6 +1,6 @@
 import MarketingPanel from "@/src/components/dashboard/marketing-panel";
 import Link from "next/link";
-import { requireRestaurant } from "@/src/lib/auth";
+import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 
 type CampaignListItem = {
@@ -14,9 +14,8 @@ type CampaignListItem = {
 
 export default async function DashboardMarketingPage() {
   const supabase = await createClient();
-  const restaurant = await requireRestaurant();
-  const hasMarketingAccess =
-    restaurant.subscription_status === "trial" || restaurant.subscription_plan === "pro";
+  const { restaurant, access } = await requireRestaurantSession();
+  const hasMarketingAccess = access.canUseProFeatures;
 
   if (!hasMarketingAccess) {
     return (

@@ -2,6 +2,7 @@ import {
   sendReservationConfirmationEmail,
   sendReservationReceivedEmail,
 } from "@/lib/email";
+import { devOwnerBypassesPublicBookingBlock } from "@/src/lib/access";
 import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 import { mapReservationRpcError } from "@/src/lib/reservation/map-reservation-error";
 import { asRestaurantReservationEmailRow } from "@/src/lib/reservation/restaurant-reservation-email-row";
@@ -44,6 +45,7 @@ export async function executePublicReservation(
     .select(
       [
         "id",
+        "owner_id",
         "name",
         "phone",
         "email",
@@ -71,7 +73,10 @@ export async function executePublicReservation(
     trial_end_date: restaurantRow.trial_end_date,
     stripe_subscription_id: restaurantRow.stripe_subscription_id,
   });
-  if (isRestaurantExpired(syncedRestaurant)) {
+  const subscriptionBlocksPublic =
+    isRestaurantExpired(syncedRestaurant) &&
+    !(await devOwnerBypassesPublicBookingBlock(restaurantRow.owner_id ?? null));
+  if (subscriptionBlocksPublic) {
     return { ok: false, status: 402, error: "Les réservations sont suspendues pour ce restaurant." };
   }
 

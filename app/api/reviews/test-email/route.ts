@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { sendReviewRequestEmail } from "@/lib/email";
 import { insertPendingFeedbackTokensForReservation } from "@/src/lib/review-feedback-tokens";
-import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
+import { isRestaurantExpiredForUser } from "@/src/lib/access";
+import { expireTrialIfNeeded } from "@/src/lib/subscription";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
-  if (isRestaurantExpired(syncedRestaurant)) {
+  if (isRestaurantExpiredForUser(user.email, syncedRestaurant)) {
     return NextResponse.json({ error: "Abonnement expiré. Mettez à jour votre formule." }, { status: 402 });
   }
 

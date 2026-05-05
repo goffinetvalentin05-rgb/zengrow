@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { sendMarketingCampaignEmail } from "@/lib/email";
 import { signMarketingRecipientOpenToken } from "@/src/lib/marketing/open-pixel-token";
-import { canAccessFeature, expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
+import { canAccessFeatureForUser, isRestaurantExpiredForUser } from "@/src/lib/access";
+import { expireTrialIfNeeded } from "@/src/lib/subscription";
 import { createClient } from "@/src/lib/supabase/server";
 
 type AudienceFilter = "all_customers" | "visited_last_30_days" | "visited_last_90_days" | "visited_more_than_3_times";
@@ -99,12 +100,13 @@ export async function POST(request: Request) {
   }
 
   const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
-  if (isRestaurantExpired(syncedRestaurant)) {
+  if (isRestaurantExpiredForUser(user.email, syncedRestaurant)) {
     return NextResponse.json({ error: "Abonnement expiré. Mettez à jour votre formule." }, { status: 402 });
   }
 
   if (
-    !canAccessFeature(
+    !canAccessFeatureForUser(
+      user.email,
       syncedRestaurant.subscription_plan,
       "marketing",
       syncedRestaurant.subscription_status,
