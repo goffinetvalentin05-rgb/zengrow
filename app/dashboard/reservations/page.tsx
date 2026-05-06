@@ -3,6 +3,7 @@ import PageHeader from "@/src/components/dashboard/page-header";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import { Plus } from "lucide-react";
+import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 
 type DashboardReservationsPageProps = {
   searchParams?: Promise<{ new?: string }>;
@@ -66,7 +67,7 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
   };
 
   return (
-    <div className="space-y-10">
+    <DashboardContent>
       <PageHeader
         kicker="Réservations"
         title="Réservations"
@@ -92,6 +93,6 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
         autoArchiveReservations={resSettings?.auto_archive_reservations === true}
         reservationDurationMinutes={resSettings?.reservation_duration ?? 90}
       />
-    </div>
+    </DashboardContent>
   );
 }

@@ -6,6 +6,7 @@ import GuestAvatar from "@/src/components/dashboard/guest-avatar";
 import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
 import StatusBadge from "@/src/components/dashboard/status-badge";
 import FilterBar from "@/src/components/dashboard/ui/filter-bar";
+import ActionMenu from "@/src/components/dashboard/ui/action-menu";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import EmptyState from "@/src/components/ui/empty-state";
@@ -258,16 +259,30 @@ export default function ReservationsManager({
 
   return (
     <section className="space-y-10 md:space-y-12">
-      <Card>
-        <CardHeader>
-          <CardTitle>Réservations</CardTitle>
-          <CardDescription>
-            {autoArchiveReservations
-              ? "Créneaux à venir et en cours uniquement (les passages passés sont en Historique)."
-              : "Filtrez puis cliquez une ligne pour agir."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
+        <Card>
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle>Réservations</CardTitle>
+              <CardDescription>
+                {autoArchiveReservations
+                  ? "Créneaux à venir et en cours uniquement (les passages passés sont en Historique)."
+                  : "Filtrez puis cliquez une ligne pour agir."}
+              </CardDescription>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 sm:pt-1">
+              <ActionMenu
+                items={[
+                  {
+                    kind: "action",
+                    label: showManualForm ? "Fermer la saisie" : "Saisie manuelle",
+                    onClick: () => setShowManualForm((c) => !c),
+                  },
+                ]}
+              />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-8">
           {showManualForm ? (
             <form
               onSubmit={createManualReservation}
@@ -420,25 +435,7 @@ export default function ReservationsManager({
           ) : null}
 
           <FilterBar
-            right={
-              <Button
-                type="button"
-                variant={showManualForm ? "secondary" : "primary"}
-                size="sm"
-                onClick={() => {
-                  setShowManualForm((c) => {
-                    const next = !c;
-                    if (!next) {
-                      setManualWalkInMode(false);
-                      setShowWalkInContactFields(false);
-                    }
-                    return next;
-                  });
-                }}
-              >
-                {showManualForm ? "Annuler" : "Nouvelle réservation"}
-              </Button>
-            }
+            right={null}
           >
             <div className="w-[170px]">
               <label className="dashboard-field-label">Date</label>
@@ -607,98 +604,111 @@ export default function ReservationsManager({
               </div>
             </div>
           ) : null}
-        </CardContent>
-      </Card>
-
-      {selectedReservation ? (
-        <Card>
-          <CardHeader>
-            <div className="flex flex-wrap items-start gap-4">
-              <GuestAvatar name={selectedReservation.guest_name} size="lg" />
-              <div>
-                <CardTitle>{selectedReservation.guest_name}</CardTitle>
-                <CardDescription className="mt-2 flex flex-wrap items-center gap-2">
-                  <span>
-                    {selectedReservation.reservation_date} à {selectedReservation.reservation_time} ·{" "}
-                    {selectedReservation.guests} couverts
-                  </span>
-                  {selectedReservation.reservation_type === "walkin" ? (
-                    <span className="rounded-full border border-amber-200/90 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-950">
-                      Walk-in
-                    </span>
-                  ) : null}
-                  <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-900">
-                    {seatingZoneFromRow(selectedReservation) === "terrace" ? "Terrasse" : "Intérieur"}
-                  </span>
-                </CardDescription>
-                <p className="mt-3 text-sm text-zg-fg/52">
-                  {selectedReservation.guest_phone || selectedReservation.guest_email || "Pas de contact"}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            {selectedReservation.status === "pending" ? (
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  type="button"
-                  onClick={() => updateStatus(selectedReservation.id, "confirmed")}
-                  disabled={savingId === selectedReservation.id}
-                >
-                  Confirmer
-                </Button>
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={() => updateStatus(selectedReservation.id, "refused")}
-                  disabled={savingId === selectedReservation.id}
-                >
-                  Refuser
-                </Button>
-              </div>
-            ) : null}
-
-            <div>
-              <label className="dashboard-field-label">Statut</label>
-              <Select
-                value={selectedReservation.status}
-                onChange={(e) => updateStatus(selectedReservation.id, e.target.value as ReservationRow["status"])}
-                disabled={savingId === selectedReservation.id}
-              >
-                {detailStatusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {autoArchiveReservations && status === "completed"
-                      ? "Archivée (ancien statut)"
-                      : STATUS_LABEL_FR[status]}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div>
-              <label className="dashboard-field-label">Note interne</label>
-              <Textarea
-                className="min-h-28"
-                value={noteDrafts[selectedReservation.id] ?? ""}
-                onChange={(e) =>
-                  setNoteDrafts((current) => ({
-                    ...current,
-                    [selectedReservation.id]: e.target.value,
-                  }))
-                }
-                placeholder="Pour l’équipe…"
-              />
-              <div className="mt-3">
-                <Button type="button" onClick={() => saveNote(selectedReservation.id)} disabled={savingId === selectedReservation.id}>
-                  Enregistrer la note
-                </Button>
-              </div>
-            </div>
           </CardContent>
         </Card>
-      ) : null}
 
-      {message ? <p className="text-sm text-zg-fg/62">{message}</p> : null}
+        <div className="space-y-6 lg:sticky lg:top-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Détails</CardTitle>
+              <CardDescription>
+                {selectedReservation ? "Modifiez le statut et la note interne." : "Sélectionnez une réservation."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              {!selectedReservation ? (
+                <EmptyState title="Aucune sélection" description="Cliquez sur une ligne pour voir et modifier la réservation." />
+              ) : (
+                <>
+                  <div className="flex flex-wrap items-start gap-4">
+                    <GuestAvatar name={selectedReservation.guest_name} size="lg" />
+                    <div className="min-w-0">
+                      <CardTitle>{selectedReservation.guest_name}</CardTitle>
+                      <CardDescription className="mt-2 flex flex-wrap items-center gap-2">
+                        <span>
+                          {selectedReservation.reservation_date} à {selectedReservation.reservation_time} ·{" "}
+                          {selectedReservation.guests} couverts
+                        </span>
+                        {selectedReservation.reservation_type === "walkin" ? (
+                          <span className="rounded-full border border-amber-200/90 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-950">
+                            Walk-in
+                          </span>
+                        ) : null}
+                        <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-900">
+                          {seatingZoneFromRow(selectedReservation) === "terrace" ? "Terrasse" : "Intérieur"}
+                        </span>
+                        <StatusBadge status={selectedReservation.status} displayLabel={historyStatusDisplayLabel(selectedReservation, autoArchiveReservations)} />
+                      </CardDescription>
+                      <p className="mt-3 text-sm text-zg-fg/52">
+                        {selectedReservation.guest_phone || selectedReservation.guest_email || "Pas de contact"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectedReservation.status === "pending" ? (
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        type="button"
+                        onClick={() => updateStatus(selectedReservation.id, "confirmed")}
+                        disabled={savingId === selectedReservation.id}
+                      >
+                        Confirmer
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="danger"
+                        onClick={() => updateStatus(selectedReservation.id, "refused")}
+                        disabled={savingId === selectedReservation.id}
+                      >
+                        Refuser
+                      </Button>
+                    </div>
+                  ) : null}
+
+                  <div>
+                    <label className="dashboard-field-label">Statut</label>
+                    <Select
+                      value={selectedReservation.status}
+                      onChange={(e) => updateStatus(selectedReservation.id, e.target.value as ReservationRow["status"])}
+                      disabled={savingId === selectedReservation.id}
+                    >
+                      {detailStatusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {autoArchiveReservations && status === "completed"
+                            ? "Archivée (ancien statut)"
+                            : STATUS_LABEL_FR[status]}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="dashboard-field-label">Note interne</label>
+                    <Textarea
+                      className="min-h-28"
+                      value={noteDrafts[selectedReservation.id] ?? ""}
+                      onChange={(e) =>
+                        setNoteDrafts((current) => ({
+                          ...current,
+                          [selectedReservation.id]: e.target.value,
+                        }))
+                      }
+                      placeholder="Pour l’équipe…"
+                    />
+                    <div className="mt-3">
+                      <Button type="button" onClick={() => saveNote(selectedReservation.id)} disabled={savingId === selectedReservation.id}>
+                        Enregistrer la note
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {message ? <p className="text-sm text-zg-fg/62">{message}</p> : null}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </section>
   );
 }

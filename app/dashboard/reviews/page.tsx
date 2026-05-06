@@ -2,6 +2,7 @@ import ReviewAutomationPanel from "@/src/components/dashboard/review-automation-
 import PageHeader from "@/src/components/dashboard/page-header";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
+import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 
 export const dynamic = "force-dynamic";
 
@@ -26,32 +27,34 @@ export default async function DashboardReviewsPage() {
     .limit(20);
 
   return (
-    <div className="space-y-10">
-      <PageHeader
-        kicker="Avis Google"
-        title="Avis Google"
-        subtitle="Envoyez automatiquement un message après la visite pour collecter des avis."
-      />
-      <ReviewAutomationPanel
-        key={`${restaurant.id}-${automation?.id ?? "none"}-${String(automation?.is_enabled ?? false)}`}
-        restaurantId={restaurant.id}
-        initialSettings={{
-          is_enabled: automation?.is_enabled ?? false,
-          channel: "email",
-          delay_minutes: automation?.delay_minutes ?? 90,
-          google_review_url: automation?.google_review_url ?? "",
-          email_subject:
-            automation?.email_subject ?? "Comment s'est passée votre expérience chez {{restaurant_name}} ?",
-          email_message:
-            automation?.email_message ??
-            "Merci pour votre visite chez {{restaurant_name}}.\nNous aimerions connaître votre expérience.",
-          button_positive_label: automation?.button_positive_label ?? "Excellent",
-          button_neutral_label: automation?.button_neutral_label ?? "Moyen",
-          button_negative_label: automation?.button_negative_label ?? "À améliorer",
-          primary_color: automation?.primary_color ?? "#1A6B50",
-        }}
-        initialFeedback={feedback ?? []}
-      />
-    </div>
+    <DashboardContent>
+      <div className="space-y-10">
+        <PageHeader
+          kicker="Avis Google"
+          title="Avis Google"
+          subtitle="Envoyez automatiquement un message après la visite pour collecter des avis."
+        />
+        <ReviewAutomationPanel
+          key={`${restaurant.id}-${automation?.id ?? "none"}-${String(automation?.is_enabled ?? false)}`}
+          restaurantId={restaurant.id}
+          initialSettings={{
+            is_enabled: automation?.is_enabled ?? false,
+            channel: "email",
+            delay_minutes: automation?.delay_minutes ?? 90,
+            google_review_url: automation?.google_review_url ?? "",
+            email_subject:
+              automation?.email_subject ?? "Comment s'est passée votre expérience chez {{restaurant_name}} ?",
+            email_message:
+              automation?.email_message ??
+              "Merci pour votre visite chez {{restaurant_name}}.\nNous aimerions connaître votre expérience.",
+            button_positive_label: automation?.button_positive_label ?? "Excellent",
+            button_neutral_label: automation?.button_neutral_label ?? "Moyen",
+            button_negative_label: automation?.button_negative_label ?? "À améliorer",
+            primary_color: automation?.primary_color ?? "#1A6B50",
+          }}
+          initialFeedback={feedback ?? []}
+        />
+      </div>
+    </DashboardContent>
   );
 }

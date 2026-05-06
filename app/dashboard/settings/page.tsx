@@ -3,6 +3,7 @@ import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import SettingsForm from "@/src/components/dashboard/settings-form";
 import PageHeader from "@/src/components/dashboard/page-header";
+import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 
 type DashboardRestaurantPublicConfig = {
   reservation_confirmation_mode: string | null;
@@ -142,61 +143,60 @@ export default async function DashboardSettingsPage() {
   };
 
   return (
-    <div className="space-y-10">
-      <PageHeader
-        kicker="Paramètres"
-        title="Paramètres"
-        subtitle="Configurez votre restaurant, votre page publique, vos réservations et votre abonnement."
-      />
-      <SettingsForm
-        restaurant={{
-          id: restaurant.id,
-          name: restaurant.name,
-          phone: restaurant.phone,
-          email: restaurant.email,
-          address: restaurant.address,
-          description: restaurant.description,
-          slug: restaurant.slug,
-          primary_color: restaurantConfig?.primary_color ?? "#12151c",
-          logo_url: restaurantConfig?.logo_url ?? null,
-          banner_url: restaurantConfig?.banner_url ?? null,
-          page_background_color: restaurantConfig?.page_background_color ?? null,
-          hero_primary_color: restaurantConfig?.hero_primary_color ?? null,
-          public_button_bg_color: restaurantConfig?.public_button_bg_color ?? null,
-          public_button_text_color: restaurantConfig?.public_button_text_color ?? null,
-          public_heading_text_color: restaurantConfig?.public_heading_text_color ?? null,
-          public_body_text_color: restaurantConfig?.public_body_text_color ?? null,
-          public_accent_color: restaurantConfig?.public_accent_color ?? null,
-          public_footer_bg_color: restaurantConfig?.public_footer_bg_color ?? null,
-          public_footer_text_color: restaurantConfig?.public_footer_text_color ?? null,
-          public_heading_font: restaurantConfig?.public_heading_font ?? null,
-          public_body_font: restaurantConfig?.public_body_font ?? null,
-          public_hero_title_size_px: restaurantConfig?.public_hero_title_size_px ?? null,
-          public_display_name: restaurantConfig?.public_display_name ?? null,
-          public_tagline: restaurantConfig?.public_tagline ?? null,
-          public_description: restaurantConfig?.public_description ?? null,
-          public_cta_label: restaurantConfig?.public_cta_label ?? null,
-          public_hero_height: restaurantConfig?.public_hero_height ?? null,
-          public_hero_overlay_enabled: restaurantConfig?.public_hero_overlay_enabled ?? null,
-          public_hero_overlay_opacity: restaurantConfig?.public_hero_overlay_opacity ?? null,
-          google_maps_url: restaurantConfig?.google_maps_url ?? null,
-          show_public_instagram: restaurantConfig?.show_public_instagram ?? null,
-          show_public_facebook: restaurantConfig?.show_public_facebook ?? null,
-          show_public_google_maps: restaurantConfig?.show_public_google_maps ?? null,
-          reservation_confirmation_email_subject:
-            restaurantConfig?.reservation_confirmation_email_subject ?? null,
-          reservation_confirmation_email_body: restaurantConfig?.reservation_confirmation_email_body ?? null,
-        }}
-        settings={safeSettings}
-        confirmationMode={
-          restaurantConfig?.reservation_confirmation_mode === "automatic" ? "automatic" : "manual"
-        }
-        publicLink={publicLink}
-        subscriptionStatus={access.effectiveStatus}
-        subscriptionPlan={access.effectivePlan}
-        trialEndDate={restaurant.trial_end_date}
-        isOwnerDev={access.isOwnerDev}
-      />
-    </div>
+    <DashboardContent>
+      <div className="space-y-10">
+        <PageHeader
+          kicker="Paramètres"
+          title="Paramètres"
+          subtitle="Configurez votre restaurant, votre page publique, vos réservations et votre abonnement."
+        />
+        <SettingsForm
+          restaurant={{
+            id: restaurant.id,
+            name: restaurant.name,
+            phone: restaurant.phone,
+            email: restaurant.email,
+            address: restaurant.address,
+            description: restaurant.description,
+            slug: restaurant.slug,
+            primary_color: restaurantConfig?.primary_color ?? "#12151c",
+            logo_url: restaurantConfig?.logo_url ?? null,
+            banner_url: restaurantConfig?.banner_url ?? null,
+            page_background_color: restaurantConfig?.page_background_color ?? null,
+            hero_primary_color: restaurantConfig?.hero_primary_color ?? null,
+            public_button_bg_color: restaurantConfig?.public_button_bg_color ?? null,
+            public_button_text_color: restaurantConfig?.public_button_text_color ?? null,
+            public_heading_text_color: restaurantConfig?.public_heading_text_color ?? null,
+            public_body_text_color: restaurantConfig?.public_body_text_color ?? null,
+            public_accent_color: restaurantConfig?.public_accent_color ?? null,
+            public_footer_bg_color: restaurantConfig?.public_footer_bg_color ?? null,
+            public_footer_text_color: restaurantConfig?.public_footer_text_color ?? null,
+            public_heading_font: restaurantConfig?.public_heading_font ?? null,
+            public_body_font: restaurantConfig?.public_body_font ?? null,
+            public_hero_title_size_px: restaurantConfig?.public_hero_title_size_px ?? null,
+            public_display_name: restaurantConfig?.public_display_name ?? null,
+            public_tagline: restaurantConfig?.public_tagline ?? null,
+            public_description: restaurantConfig?.public_description ?? null,
+            public_cta_label: restaurantConfig?.public_cta_label ?? null,
+            public_hero_height: restaurantConfig?.public_hero_height ?? null,
+            public_hero_overlay_enabled: restaurantConfig?.public_hero_overlay_enabled ?? null,
+            public_hero_overlay_opacity: restaurantConfig?.public_hero_overlay_opacity ?? null,
+            google_maps_url: restaurantConfig?.google_maps_url ?? null,
+            show_public_instagram: restaurantConfig?.show_public_instagram ?? null,
+            show_public_facebook: restaurantConfig?.show_public_facebook ?? null,
+            show_public_google_maps: restaurantConfig?.show_public_google_maps ?? null,
+            reservation_confirmation_email_subject: restaurantConfig?.reservation_confirmation_email_subject ?? null,
+            reservation_confirmation_email_body: restaurantConfig?.reservation_confirmation_email_body ?? null,
+          }}
+          settings={safeSettings}
+          confirmationMode={restaurantConfig?.reservation_confirmation_mode === "automatic" ? "automatic" : "manual"}
+          publicLink={publicLink}
+          subscriptionStatus={access.effectiveStatus}
+          subscriptionPlan={access.effectivePlan}
+          trialEndDate={restaurant.trial_end_date}
+          isOwnerDev={access.isOwnerDev}
+        />
+      </div>
+    </DashboardContent>
   );
 }

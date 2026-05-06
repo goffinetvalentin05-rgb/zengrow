@@ -10,7 +10,8 @@ export function Card({ className, children }: DivProps) {
   return (
     <article
       className={cn(
-        "rounded-2xl border border-zg-border-strong/90 bg-zg-surface/92 p-6 shadow-zg-card backdrop-blur-md md:p-7",
+        // Plus fin / plus “SaaS” (moins “gros pavé”)
+        "rounded-2xl border border-zg-border-strong/90 bg-zg-surface/90 p-5 shadow-zg-soft backdrop-blur-md md:p-6",
         className,
       )}
     >
@@ -20,7 +21,7 @@ export function Card({ className, children }: DivProps) {
 }
 
 export function CardHeader({ className, children }: DivProps) {
-  return <header className={cn("mb-6 border-b border-zg-border/85 pb-6", className)}>{children}</header>;
+  return <header className={cn("mb-5 border-b border-zg-border/85 pb-5", className)}>{children}</header>;
 }
 
 export function CardTitle({ className, children }: DivProps) {

@@ -86,17 +86,14 @@ export default function ReservationListRow({
         </>
       );
 
-    const listRowClass = cn(
-      "flex w-full items-start gap-4 border-b border-zg-border/75 py-5 text-left last:border-b-0",
-      className,
-    );
+    const listRowClass = cn("flex w-full items-start gap-4 border-b border-zg-border/75 py-4 text-left last:border-b-0", className);
 
     if (onClick) {
       return (
         <button
           type="button"
           onClick={onClick}
-          className={cn(listRowClass, "cursor-pointer transition hover:bg-zg-highlight/45")}
+          className={cn(listRowClass, "cursor-pointer rounded-xl px-2 transition hover:bg-zg-highlight/45")}
         >
           {listInner}
         </button>
@@ -139,8 +136,8 @@ export default function ReservationListRow({
   );
 
   const rowClass = cn(
-    "flex w-full items-center gap-4 rounded-2xl border border-zg-border-strong/85 bg-zg-surface/94 p-4 text-left shadow-zg-soft backdrop-blur-sm transition md:p-5",
-    onClick && "cursor-pointer hover:border-zg-mint/40 hover:shadow-zg-card",
+    "flex w-full items-center gap-4 rounded-2xl border border-zg-border-strong/85 bg-zg-surface/92 p-4 text-left shadow-zg-soft backdrop-blur-sm transition md:p-5",
+    onClick && "cursor-pointer hover:border-zg-mint/40 hover:bg-zg-surface/96 hover:shadow-zg-soft",
     className,
   );
 

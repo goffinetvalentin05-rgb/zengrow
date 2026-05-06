@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ExternalLink, Link2, Plus } from "lucide-react";
+import { CalendarDays, ExternalLink, LayoutGrid, Link2, Plus, Settings } from "lucide-react";
 import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
 import { DashboardStats, DashboardStatsSkeleton } from "@/src/components/dashboard/dashboard-stats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -9,6 +9,8 @@ import { calendarYmdInBusinessTz, reservationIsAtOrAfterNow } from "@/src/lib/da
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import PageHeader from "@/src/components/dashboard/page-header";
+import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
+import Button from "@/src/components/ui/button";
 
 const sectionIntroClass =
   "text-xl font-bold tracking-[-0.02em] text-zg-fg md:text-[1.375rem] md:leading-snug";
@@ -66,7 +68,7 @@ export default async function DashboardPage() {
       .sort((a, b) => a[0].localeCompare(b[0]))[0]?.[0] ?? null;
 
   return (
-    <div className="space-y-6 md:space-y-8">
+    <DashboardContent>
       <PageHeader
         kicker="Tableau de bord"
         title={restaurant.name}
@@ -110,7 +112,7 @@ export default async function DashboardPage() {
             {timelineReservations.length === 0 ? (
               <p className="py-14 text-center text-sm text-zg-fg/48">Aucune réservation aujourd&apos;hui.</p>
             ) : (
-              <div className="-mx-1">
+              <div className="-mx-2">
                 {timelineReservations.map((reservation) => (
                   <ReservationListRow
                     key={reservation.id}
@@ -158,7 +160,7 @@ export default async function DashboardPage() {
               {upcomingReservations.length === 0 ? (
                 <p className="py-10 text-center text-sm text-zg-fg/48">Rien de prévu pour l&apos;instant.</p>
               ) : (
-                <div className="-mx-1">
+                <div className="-mx-2">
                   {upcomingReservations.slice(0, 8).map((reservation) => (
                     <ReservationListRow
                       key={reservation.id}
@@ -180,8 +182,44 @@ export default async function DashboardPage() {
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Raccourcis</CardTitle>
+              <CardDescription>Accédez vite aux sections clés du dashboard.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <Link href="/dashboard/reservations" className="inline-flex">
+                <Button type="button" variant="secondary" className="w-full justify-between">
+                  <span className="inline-flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-zg-teal/70" strokeWidth={2} />
+                    Réservations
+                  </span>
+                  <span className="text-zg-fg/45">→</span>
+                </Button>
+              </Link>
+              <Link href="/dashboard/floor-plan" className="inline-flex">
+                <Button type="button" variant="secondary" className="w-full justify-between">
+                  <span className="inline-flex items-center gap-2">
+                    <LayoutGrid className="h-4 w-4 text-zg-teal/70" strokeWidth={2} />
+                    Plan de salle
+                  </span>
+                  <span className="text-zg-fg/45">→</span>
+                </Button>
+              </Link>
+              <Link href="/dashboard/settings" className="inline-flex">
+                <Button type="button" variant="secondary" className="w-full justify-between">
+                  <span className="inline-flex items-center gap-2">
+                    <Settings className="h-4 w-4 text-zg-teal/70" strokeWidth={2} />
+                    Paramètres
+                  </span>
+                  <span className="text-zg-fg/45">→</span>
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </div>
+    </DashboardContent>
   );
 }

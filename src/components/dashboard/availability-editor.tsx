@@ -105,71 +105,66 @@ export default function AvailabilityEditor({
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
-      <Card>
-        <CardHeader>
-          <CardTitle>Horaires par jour</CardTitle>
-          <CardDescription>
-            Configurez vos disponibilités jour par jour avec une interface simple.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="divide-y divide-zg-border/75 p-0">
-          {dayOrder.map((day) => {
-            const ranges = openingHours[day] ?? [];
-            const isOpen = ranges.length > 0;
-            return (
-              <div
-                key={day}
-                className="px-5 py-4 md:px-6"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-zg-fg">{dayLabels[day]}</p>
-                    <p className="mt-0.5 text-xs text-zg-fg/50">
-                      {isOpen ? `${ranges.length} créneau${ranges.length > 1 ? "x" : ""}` : "Fermé"}
-                    </p>
+        <Card className="lg:col-span-7">
+          <CardHeader>
+            <CardTitle>Horaires par jour</CardTitle>
+            <CardDescription>Configurez vos disponibilités jour par jour, avec une vue claire.</CardDescription>
+          </CardHeader>
+          <CardContent className="divide-y divide-zg-border/75 p-0">
+            {dayOrder.map((day) => {
+              const ranges = openingHours[day] ?? [];
+              const isOpen = ranges.length > 0;
+              return (
+                <div key={day} className="px-5 py-4 md:px-6">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-zg-fg">{dayLabels[day]}</p>
+                      <p className="mt-0.5 text-xs text-zg-fg/50">
+                        {isOpen ? `${ranges.length} créneau${ranges.length > 1 ? "x" : ""}` : "Fermé"}
+                      </p>
+                    </div>
+                    <Toggle checked={isOpen} onChange={(value) => toggleDay(day, value)} label={isOpen ? "Ouvert" : "Fermé"} />
                   </div>
-                  <Toggle checked={isOpen} onChange={(value) => toggleDay(day, value)} label={isOpen ? "Ouvert" : "Fermé"} />
-                </div>
 
-                {isOpen && (
-                  <div className="mt-3 space-y-2">
-                    {ranges.map((range, index) => (
-                      <div
-                        key={`${day}-${index}`}
-                        className="flex flex-wrap items-center gap-2 rounded-xl border border-zg-border/80 bg-zg-surface/75 px-3 py-2 shadow-sm"
-                      >
-                        <Input
-                          type="time"
-                          className="w-36 bg-white/80"
-                          value={range.start}
-                          onChange={(event) => updateRange(day, index, "start", event.target.value)}
-                        />
-                        <span className="text-zg-fg/38">à</span>
-                        <Input
-                          type="time"
-                          className="w-36 bg-white/80"
-                          value={range.end}
-                          onChange={(event) => updateRange(day, index, "end", event.target.value)}
-                        />
-                        <div className="ml-auto">
-                          <Button type="button" variant="ghost" size="sm" onClick={() => removeRange(day, index)}>
-                            Supprimer
-                          </Button>
+                  {isOpen ? (
+                    <div className="mt-3 space-y-2">
+                      {ranges.map((range, index) => (
+                        <div
+                          key={`${day}-${index}`}
+                          className="flex flex-wrap items-center gap-2 rounded-xl border border-zg-border/80 bg-zg-surface/75 px-3 py-2 shadow-sm"
+                        >
+                          <Input
+                            type="time"
+                            className="w-36 bg-white/80"
+                            value={range.start}
+                            onChange={(event) => updateRange(day, index, "start", event.target.value)}
+                          />
+                          <span className="text-zg-fg/38">à</span>
+                          <Input
+                            type="time"
+                            className="w-36 bg-white/80"
+                            value={range.end}
+                            onChange={(event) => updateRange(day, index, "end", event.target.value)}
+                          />
+                          <div className="ml-auto">
+                            <Button type="button" variant="ghost" size="sm" onClick={() => removeRange(day, index)}>
+                              Supprimer
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                    <Button type="button" size="sm" variant="secondary" onClick={() => addRange(day)}>
-                      Ajouter un créneau
-                    </Button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+                      ))}
+                      <Button type="button" size="sm" variant="secondary" onClick={() => addRange(day)}>
+                        Ajouter un créneau
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
 
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-5 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Paramètres de réservation</CardTitle>
@@ -178,12 +173,7 @@ export default function AvailabilityEditor({
             <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-1">
               <div>
                 <label className="dashboard-field-label">Couverts max par créneau</label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={maxGuestsPerSlot}
-                  onChange={(event) => setMaxGuestsPerSlot(Number(event.target.value))}
-                />
+                <Input type="number" min={1} value={maxGuestsPerSlot} onChange={(event) => setMaxGuestsPerSlot(Number(event.target.value))} />
               </div>
               <div>
                 <label className="dashboard-field-label">Intervalle des créneaux</label>
@@ -196,10 +186,7 @@ export default function AvailabilityEditor({
               </div>
               <div>
                 <label className="dashboard-field-label">Durée de réservation</label>
-                <Select
-                  value={String(reservationDuration)}
-                  onChange={(event) => setReservationDuration(Number(event.target.value))}
-                >
+                <Select value={String(reservationDuration)} onChange={(event) => setReservationDuration(Number(event.target.value))}>
                   <option value="60">60 min</option>
                   <option value="90">90 min</option>
                   <option value="120">120 min</option>
