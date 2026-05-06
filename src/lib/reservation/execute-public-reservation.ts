@@ -85,7 +85,7 @@ export async function executePublicReservation(
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "reservation_mode, max_party_size, closure_start_date, closure_end_date, closure_message, days_in_advance, terrace_enabled, allow_phone, allow_email",
+      "reservation_mode, reservation_duration, max_party_size, closure_start_date, closure_end_date, closure_message, days_in_advance, terrace_enabled, allow_phone, allow_email",
     )
     .eq("restaurant_id", restaurantId)
     .maybeSingle();
