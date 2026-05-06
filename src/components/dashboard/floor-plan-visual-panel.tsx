@@ -24,6 +24,7 @@ type FloorPlanTableShape = "round" | "square" | "rectangle";
 type TableRow = {
   id: string;
   restaurant_id: string;
+  floor_plan_id?: string | null;
   zone_id: string | null;
   name: string;
   min_covers: number;
@@ -54,6 +55,7 @@ type FloorPlanElementType = "wall" | "door" | "window" | "zone" | "bar" | "label
 type FloorPlanElementRow = {
   id: string;
   restaurant_id: string;
+  floor_plan_id?: string | null;
   type: FloorPlanElementType;
   label: string | null;
   x_position: number;
@@ -62,6 +64,14 @@ type FloorPlanElementRow = {
   height: number;
   rotation: number;
   metadata: Record<string, unknown>;
+};
+
+type FloorPlanRow = {
+  id: string;
+  name: string;
+  type: "indoor" | "terrace" | "custom" | string;
+  is_active: boolean;
+  sort_order: number;
 };
 
 type FloorPlanVisualPanelProps = {
@@ -147,6 +157,18 @@ export default function FloorPlanVisualPanel({
   const [tables, setTables] = useState<TableRow[]>([]);
   const [elements, setElements] = useState<FloorPlanElementRow[]>([]);
   const [reservations, setReservations] = useState<ReservationRow[]>([]);
+  const [plans, setPlans] = useState<FloorPlanRow[]>([]);
+  const [activePlanId, setActivePlanId] = useState<string | null>(null);
+
+  const visibleTables = useMemo(() => {
+    if (!activePlanId) return tables;
+    return tables.filter((t) => (t.floor_plan_id ?? null) === activePlanId);
+  }, [tables, activePlanId]);
+
+  const visibleElements = useMemo(() => {
+    if (!activePlanId) return elements;
+    return elements.filter((e) => (e.floor_plan_id ?? null) === activePlanId);
+  }, [elements, activePlanId]);
 
   const [loading, setLoading] = useState(true);
   const [savingPlan, setSavingPlan] = useState(false);
@@ -257,6 +279,7 @@ export default function FloorPlanVisualPanel({
       { data: zonesData, error: zonesError },
       { data: tablesData, error: tablesError },
       { data: elementsData, error: elementsError },
+      { data: plansData, error: plansError },
     ] = await Promise.all([
       supabase
         .from("restaurant_zones")
@@ -266,23 +289,30 @@ export default function FloorPlanVisualPanel({
       supabase
         .from("restaurant_tables")
         .select(
-          "id, restaurant_id, zone_id, name, min_covers, max_covers, status, note, x_position, y_position, width, height, shape, rotation",
+          "id, restaurant_id, floor_plan_id, zone_id, name, min_covers, max_covers, status, note, x_position, y_position, width, height, shape, rotation",
         )
         .eq("restaurant_id", restaurantId)
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true }),
       supabase
         .from("floor_plan_elements")
-        .select("id, restaurant_id, type, label, x_position, y_position, width, height, rotation, metadata")
+        .select("id, restaurant_id, floor_plan_id, type, label, x_position, y_position, width, height, rotation, metadata")
         .eq("restaurant_id", restaurantId)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("floor_plans")
+        .select("id, name, type, is_active, sort_order")
+        .eq("restaurant_id", restaurantId)
+        .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true }),
     ]);
 
-    if (zonesError || tablesError || elementsError) {
+    if (zonesError || tablesError || elementsError || plansError) {
       setMessage(
         zonesError?.message ??
           tablesError?.message ??
           elementsError?.message ??
+          plansError?.message ??
           "Impossible de charger le plan de salle.",
       );
       setLoading(false);
@@ -292,6 +322,16 @@ export default function FloorPlanVisualPanel({
     setZones((zonesData ?? []) as ZoneRow[]);
     setTables((tablesData ?? []) as TableRow[]);
     setElements((elementsData ?? []) as FloorPlanElementRow[]);
+    const nextPlans = (plansData ?? []) as FloorPlanRow[];
+    setPlans(nextPlans);
+
+    // Plan actif : préfère indoor, sinon premier
+    setActivePlanId((prev) => {
+      if (prev && nextPlans.some((p) => p.id === prev)) return prev;
+      const indoor = nextPlans.find((p) => p.type === "indoor" && p.is_active !== false);
+      return indoor?.id ?? nextPlans[0]?.id ?? null;
+    });
+
     setSelected((prev) => prev ?? (tablesData?.[0]?.id ? { kind: "table", id: tablesData[0].id } : null));
     setLoading(false);
   }, [restaurantId, supabase]);
@@ -486,6 +526,7 @@ export default function FloorPlanVisualPanel({
 
     const { error } = await supabase.from("restaurant_tables").insert({
       restaurant_id: restaurantId,
+      floor_plan_id: activePlanId,
       zone_id: tableZoneId || null,
       name,
       min_covers: min,
@@ -697,6 +738,7 @@ export default function FloorPlanVisualPanel({
       .from("floor_plan_elements")
       .insert({
         restaurant_id: restaurantId,
+        floor_plan_id: activePlanId,
         type,
         label:
           type === "label"
@@ -791,6 +833,15 @@ export default function FloorPlanVisualPanel({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
+          {plans.length > 0 ? (
+            <Select value={activePlanId ?? ""} onChange={(e) => setActivePlanId(e.target.value || null)}>
+              {plans.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+          ) : null}
           <Button type="button" variant={mode === "edit" ? "primary" : "secondary"} onClick={() => setMode("edit")}>
             Mode édition
           </Button>
@@ -940,7 +991,7 @@ export default function FloorPlanVisualPanel({
               onPointerUp={onCanvasPointerUp}
             >
               {/* Éléments de plan (murs, portes, fenêtres, zones, bar, texte) */}
-              {elements.map((el) => {
+              {visibleElements.map((el) => {
                 const v = getElementVisual(el);
                 const style: CSSProperties = {
                   left: el.x_position,
@@ -970,7 +1021,7 @@ export default function FloorPlanVisualPanel({
               })}
 
               {/* Rendu tables */}
-              {tables
+              {visibleTables
                 .slice()
                 .sort((a, b) => (a.status === "blocked" ? -1 : 1) - (b.status === "blocked" ? -1 : 1))
                 .map((t) => {

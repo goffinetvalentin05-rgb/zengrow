@@ -220,7 +220,7 @@ export default function PublicReservationForm({
   }, [daysInAdvance]);
   const resolvedPublicMode: "automatic" | "zone" | "table" =
     publicTableSelectionMode ?? (clientsChooseTable ? "table" : "automatic");
-  const allowZoneChoice = terraceEnabled && (resolvedPublicMode === "zone" || resolvedPublicMode === "table");
+  const allowZoneChoice = terraceEnabled && resolvedPublicMode === "zone";
   const canChooseTable = resolvedPublicMode === "table" && useTables === true;
   const totalSteps = canChooseTable ? 5 : 4;
   const contactStep = canChooseTable ? 5 : 4;
@@ -239,7 +239,7 @@ export default function PublicReservationForm({
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const [seatingZone, setSeatingZone] = useState<"interior" | "terrace" | null>(null);
-  const chooseTableInZone = canChooseTable && seatingZone !== "terrace";
+  const chooseTableInZone = canChooseTable;
   const datePickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -253,6 +253,8 @@ export default function PublicReservationForm({
   const [clientSelectedTableId, setClientSelectedTableId] = useState<string | null>(null);
   const [tablesChoiceLoading, setTablesChoiceLoading] = useState(false);
   const [tablesChoiceError, setTablesChoiceError] = useState<string | null>(null);
+  const [publicPlans, setPublicPlans] = useState<Array<{ id: string; name: string; type: string }>>([]);
+  const [publicPlanId, setPublicPlanId] = useState<string | null>(null);
   const [tablesChoice, setTablesChoice] = useState<
     Array<{
       id: string;
@@ -264,6 +266,13 @@ export default function PublicReservationForm({
       isSelectable: boolean;
     }>
   >([]);
+
+  const selectedPublicPlan = useMemo(
+    () => (publicPlanId ? publicPlans.find((p) => p.id === publicPlanId) ?? null : null),
+    [publicPlans, publicPlanId],
+  );
+  const zoneForSelectedPlan: "interior" | "terrace" =
+    selectedPublicPlan?.type === "terrace" ? "terrace" : "interior";
 
   const effectiveMaxParty = useMemo(
     () => Math.max(1, Math.floor(Number(maxPartySize)) || 8),
@@ -472,17 +481,47 @@ export default function PublicReservationForm({
     // Si l'utilisateur change le créneau ou les paramètres, on réinitialise le choix table.
     queueMicrotask(() => {
       setClientSelectedTableId(null);
+      setPublicPlans([]);
+      setPublicPlanId(null);
       setTablesChoice([]);
       setTablesChoiceError(null);
     });
   }, [canChooseTable, reservationTime, reservationDate, guests, seatingZone]);
 
   useEffect(() => {
+    if (!canChooseTable) return;
+    if (wizardStep !== 4) return;
+
+    let cancelled = false;
+    fetch(`/api/floor-plan/plans?${new URLSearchParams({ restaurantId }).toString()}`)
+      .then(async (r) => {
+        const payload = (await r.json().catch(() => ({}))) as { plans?: Array<{ id: string; name: string; type: string }>; error?: string };
+        if (!r.ok) throw new Error(payload.error ?? "Impossible de charger les plans.");
+        return payload.plans ?? [];
+      })
+      .then((plans) => {
+        if (cancelled) return;
+        setPublicPlans(plans);
+        if (!publicPlanId) {
+          const indoor = plans.find((p) => p.type === "indoor") ?? plans[0];
+          setPublicPlanId(indoor?.id ?? null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPublicPlans([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canChooseTable, wizardStep, restaurantId, publicPlanId]);
+
+  useEffect(() => {
     if (!chooseTableInZone) return;
     if (wizardStep !== 4) return;
     if (!reservationTime || !reservationDate) return;
-    if (!seatingZone) return;
     if (!guests || guests < 1) return;
+    if (!publicPlanId) return;
 
     let cancelled = false;
     queueMicrotask(() => {
@@ -496,7 +535,8 @@ export default function PublicReservationForm({
       date: reservationDate,
       time: reservationTime,
       covers: String(guests),
-      zone: seatingZone,
+      zone: zoneForSelectedPlan,
+      planId: publicPlanId,
     });
 
     fetch(`/api/floor-plan/tables-availability?${query.toString()}`)
@@ -529,7 +569,16 @@ export default function PublicReservationForm({
     return () => {
       cancelled = true;
     };
-  }, [chooseTableInZone, wizardStep, reservationTime, reservationDate, guests, seatingZone, restaurantId]);
+  }, [
+    chooseTableInZone,
+    wizardStep,
+    reservationTime,
+    reservationDate,
+    guests,
+    restaurantId,
+    publicPlanId,
+    zoneForSelectedPlan,
+  ]);
 
   useEffect(() => {
     queueMicrotask(() => setGuests((g) => Math.min(Math.max(1, g), effectiveMaxParty)));
@@ -595,7 +644,7 @@ export default function PublicReservationForm({
       return;
     }
 
-    if (chooseTableInZone && !clientSelectedTableId) {
+    if (canChooseTable && !clientSelectedTableId) {
       setError("Choisissez une table disponible sur le plan.");
       setIsSubmitting(false);
       return;
@@ -613,7 +662,8 @@ export default function PublicReservationForm({
         reservationDate,
         reservationTime,
         ...(allowZoneChoice && seatingZone ? { zone: seatingZone } : {}),
-        ...(chooseTableInZone && clientSelectedTableId ? { tableId: clientSelectedTableId } : {}),
+        ...(canChooseTable ? { zone: zoneForSelectedPlan } : {}),
+        ...(canChooseTable && clientSelectedTableId ? { tableId: clientSelectedTableId } : {}),
       }),
     });
     const payload = (await response.json().catch(() => ({}))) as { error?: string; status?: string };
@@ -1133,14 +1183,37 @@ export default function PublicReservationForm({
                       </p>
                     </div>
 
-                    {!chooseTableInZone ? (
-                      <p
-                        className="text-center text-sm"
-                        style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
-                      >
-                        Choix de table indisponible en terrasse pour ce mode. L’assignation se fera automatiquement.
-                      </p>
-                    ) : tablesChoiceLoading ? (
+                    {publicPlans.length > 1 ? (
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {publicPlans.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            disabled={previewMode}
+                            onClick={() => {
+                              setPublicPlanId(p.id);
+                              setClientSelectedTableId(null);
+                            }}
+                            className={cn(
+                              "min-h-[44px] rounded-[var(--radius)] border-2 px-4 text-sm font-semibold transition active:scale-[0.99] disabled:opacity-40",
+                              publicPlanId === p.id ? "border-transparent shadow-sm" : "bg-transparent",
+                            )}
+                            style={
+                              publicPlanId === p.id
+                                ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
+                                : {
+                                    borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                                    color: "color-mix(in srgb, var(--body-text) 85%, var(--page-bg))",
+                                  }
+                            }
+                          >
+                            {p.name}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {tablesChoiceLoading ? (
                       <p
                         className="text-center text-sm"
                         style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
@@ -1154,7 +1227,7 @@ export default function PublicReservationForm({
                         className="text-center text-sm"
                         style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
                       >
-                        Aucune table n’est disponible sur ce créneau.
+                        Aucune table n’est disponible pour ce créneau dans cet espace.
                       </p>
                     ) : (
                       <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
@@ -1319,7 +1392,7 @@ export default function PublicReservationForm({
                       (wizardStep === 2 &&
                         (guests < 1 || isDateInClosurePeriod || (allowZoneChoice && !seatingZone))) ||
                       (wizardStep === 3 && !reservationTime) ||
-                      (wizardStep === 4 && chooseTableInZone && !clientSelectedTableId)
+                      (wizardStep === 4 && canChooseTable && !clientSelectedTableId)
                     }
                     onClick={() => setWizardStep((s) => Math.min(totalSteps, s + 1))}
                     className="order-1 min-h-[48px] w-full rounded-[var(--radius)] border border-transparent px-6 text-sm font-semibold shadow-md transition hover:brightness-105 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-45 sm:order-2 sm:ml-auto sm:w-auto sm:min-w-[200px]"
