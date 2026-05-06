@@ -70,7 +70,6 @@ type FloorPlanVisualPanelProps = {
   restaurantId: string;
   defaultLunchDurationMinutes: number;
   defaultDinnerDurationMinutes: number;
-  autoAssignEnabled: boolean;
   lunchStartTime?: string | null;
   dinnerStartTime?: string | null;
 };
@@ -134,7 +133,6 @@ export default function FloorPlanVisualPanel({
   restaurantId,
   defaultLunchDurationMinutes,
   defaultDinnerDurationMinutes,
-  autoAssignEnabled,
   lunchStartTime,
   dinnerStartTime,
 }: FloorPlanVisualPanelProps) {
@@ -150,6 +148,7 @@ export default function FloorPlanVisualPanel({
   const [reservations, setReservations] = useState<ReservationRow[]>([]);
   const [plans, setPlans] = useState<FloorPlanRow[]>([]);
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
+  const activePlans = useMemo(() => plans.filter((p) => p.is_active !== false), [plans]);
 
   const visibleTables = useMemo(() => {
     if (!activePlanId) return tables;
@@ -192,8 +191,6 @@ export default function FloorPlanVisualPanel({
   const [tableStatus, setTableStatus] = useState<TableRow["status"]>("active");
   const [tableNote, setTableNote] = useState("");
   const [tableShape, setTableShape] = useState<FloorPlanTableShape>("round");
-
-  const [addElementType, setAddElementType] = useState<FloorPlanElementType>("wall");
 
   const [showReservationForm, setShowReservationForm] = useState(false);
   const [resGuestName, setResGuestName] = useState("");
@@ -757,7 +754,9 @@ export default function FloorPlanVisualPanel({
     await refresh();
   }
 
-  const reservedTablesCount = reservationState.reserved.size;
+  function closeActions(detailsEl?: HTMLDetailsElement | null) {
+    if (detailsEl) detailsEl.open = false;
+  }
 
   async function moveReservation(reservationId: string, nextTableId: string | null) {
     setMessage(null);
@@ -867,7 +866,7 @@ export default function FloorPlanVisualPanel({
         <div>
           <h1 className="dashboard-section-heading">Plan de salle</h1>
           <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-            Créez vos espaces, placez vos tables et suivez vos réservations.
+            Créez vos espaces, placez vos tables et suivez votre service en direct.
           </p>
         </div>
 
@@ -887,16 +886,55 @@ export default function FloorPlanVisualPanel({
                 <button
                   type="button"
                   className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-zg-fg/80 hover:bg-zg-highlight/70"
-                  onClick={() => setShowTableForm(true)}
+                  onClick={(e) => {
+                    closeActions(e.currentTarget.closest("details"));
+                    setShowTableForm(true);
+                  }}
                 >
                   Ajouter une table
                 </button>
                 <button
                   type="button"
                   className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-zg-fg/80 hover:bg-zg-highlight/70"
-                  onClick={() => setShowPlanForm(true)}
+                  onClick={(e) => {
+                    closeActions(e.currentTarget.closest("details"));
+                    setShowPlanForm(true);
+                  }}
                 >
                   Ajouter un espace
+                </button>
+                <div className="my-2 h-px bg-zg-border/80" />
+                {(
+                  [
+                    { id: "wall", label: "Ajouter un mur" },
+                    { id: "door", label: "Ajouter une porte" },
+                    { id: "window", label: "Ajouter une fenêtre" },
+                    { id: "label", label: "Ajouter un texte" },
+                  ] as Array<{ id: FloorPlanElementType; label: string }>
+                ).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-zg-fg/80 hover:bg-zg-highlight/70"
+                    onClick={(e) => {
+                      closeActions(e.currentTarget.closest("details"));
+                      void createElement(item.id);
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+                <div className="my-2 h-px bg-zg-border/80" />
+                <button
+                  type="button"
+                  className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-zg-fg/80 hover:bg-zg-highlight/70 disabled:opacity-45"
+                  disabled={!dirtyPlan || savingPlan}
+                  onClick={(e) => {
+                    closeActions(e.currentTarget.closest("details"));
+                    void savePlanPositions();
+                  }}
+                >
+                  {savingPlan ? "Sauvegarde…" : "Sauvegarder le plan"}
                 </button>
               </div>
             </details>
@@ -928,23 +966,17 @@ export default function FloorPlanVisualPanel({
       </header>
 
       <div className="flex flex-col gap-3 rounded-2xl border border-zg-border-strong bg-zg-surface/70 px-4 py-3 shadow-zg-soft md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-zg-border/70 bg-zg-surface/85 px-3 py-1 text-xs font-semibold text-zg-fg/70">
-            {activeTables.length} tables · {activeTables.reduce((sum, t) => sum + Math.max(0, t.max_covers), 0)} couverts
-          </span>
-          <span className="rounded-full border border-zg-border/70 bg-zg-surface/85 px-3 py-1 text-xs font-semibold text-zg-fg/70">
-            {reservedTablesCount} réservées · {unassignedReservationsAtSelectedTime.length} à placer
-          </span>
-          <span className="rounded-full border border-zg-border/70 bg-zg-surface/85 px-3 py-1 text-xs font-semibold text-zg-fg/70">
-            Auto-assign : {autoAssignEnabled ? "ON" : "OFF"}
-          </span>
-        </div>
+        <p className="text-sm font-semibold text-zg-fg/70">
+          {activeTables.length} tables actives ·{" "}
+          {activeTables.reduce((sum, t) => sum + Math.max(0, t.max_covers), 0)} couverts ·{" "}
+          {reservations.length} réservations · {unassignedReservationsAtSelectedTime.length} à placer
+        </p>
 
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
             <label className="dashboard-field-label">Espace</label>
-            <Select value={activePlanId ?? ""} onChange={(e) => setActivePlanId(e.target.value || null)} disabled={plans.length === 0}>
-              {(plans.length ? plans : [{ id: "", name: "Aucun espace", type: "custom", is_active: true, sort_order: 0 }]).map((p) => (
+            <Select value={activePlanId ?? ""} onChange={(e) => setActivePlanId(e.target.value || null)} disabled={activePlans.length === 0}>
+              {(activePlans.length ? activePlans : [{ id: "", name: "Aucun espace", type: "custom", is_active: true, sort_order: 0 }]).map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
@@ -1093,35 +1125,31 @@ export default function FloorPlanVisualPanel({
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
           {/* Canvas */}
           <div className="min-w-0">
-            {mode === "edit" ? (
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zg-border-strong bg-zg-surface/75 px-4 py-3 shadow-zg-soft">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-zg-fg/45">Outils</span>
-                  <Select
-                    value={addElementType}
-                    onChange={(e) => setAddElementType(e.target.value as FloorPlanElementType)}
-                  >
-                    <option value="wall">Mur</option>
-                    <option value="door">Porte</option>
-                    <option value="window">Fenêtre</option>
-                    <option value="zone">Zone</option>
-                    <option value="bar">Bar</option>
-                    <option value="label">Texte</option>
-                  </Select>
-                  <Button type="button" variant="secondary" onClick={() => void createElement(addElementType)}>
-                    Ajouter
-                  </Button>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
+            {/* Onglets espaces */}
+            {activePlans.length > 0 ? (
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                {activePlans.map((p) => (
+                  <button
+                    key={p.id}
                     type="button"
-                    disabled={!dirtyPlan || savingPlan}
-                    onClick={() => void savePlanPositions()}
+                    onClick={() => setActivePlanId(p.id)}
+                    className={cn(
+                      "rounded-full border px-4 py-2 text-sm font-semibold transition",
+                      activePlanId === p.id
+                        ? "border-zg-border-accent bg-zg-highlight/70 text-zg-fg"
+                        : "border-zg-border/70 bg-zg-surface/70 text-zg-fg/65 hover:bg-zg-surface/85 hover:text-zg-fg",
+                    )}
                   >
-                    {savingPlan ? "Sauvegarde…" : "Sauvegarder"}
-                  </Button>
-                </div>
+                    {p.name}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setShowPlanForm(true)}
+                  className="rounded-full border border-dashed border-zg-border/70 bg-zg-surface/70 px-4 py-2 text-sm font-semibold text-zg-fg/65 transition hover:bg-zg-surface/85 hover:text-zg-fg"
+                >
+                  + Ajouter
+                </button>
               </div>
             ) : null}
 
@@ -1132,7 +1160,7 @@ export default function FloorPlanVisualPanel({
                 mode === "edit" ? "cursor-grab active:cursor-grabbing" : "cursor-default",
               )}
               style={{
-                height: "min(70vh, 720px)",
+                height: "min(78vh, 820px)",
                 backgroundImage:
                   "linear-gradient(to right, color-mix(in srgb, var(--body-text) 10%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--body-text) 10%, transparent) 1px, transparent 1px)",
                 backgroundSize: "34px 34px",

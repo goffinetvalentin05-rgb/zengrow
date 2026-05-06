@@ -77,7 +77,7 @@ export default async function DashboardCustomersPage() {
                 Cette fonctionnalité est disponible dans le plan Pro (69 CHF/mois)
               </p>
               <Link
-                href="/dashboard/billing"
+                href="/dashboard/settings?section=subscription"
                 className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-gradient-to-r from-zg-teal to-zg-mint px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_32px_-14px_rgba(31,122,108,0.82)] transition hover:scale-[1.02] active:scale-[0.99]"
               >
                 Passer au plan Pro

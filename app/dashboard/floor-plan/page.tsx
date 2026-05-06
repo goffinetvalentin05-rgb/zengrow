@@ -33,7 +33,7 @@ export default async function DashboardFloorPlanPage() {
                 Zones, tables, assignation intelligente et vue du service du jour — tout au même endroit.
               </p>
               <Link
-                href="/dashboard/billing"
+                href="/dashboard/settings?section=subscription"
                 className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-gradient-to-r from-zg-teal to-zg-mint px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_32px_-14px_rgba(31,122,108,0.82)] transition hover:scale-[1.02] active:scale-[0.99]"
               >
                 Passer au plan Pro
@@ -58,7 +58,6 @@ export default async function DashboardFloorPlanPage() {
       restaurantId={restaurant.id}
       defaultLunchDurationMinutes={settings?.floor_plan_lunch_duration ?? settings?.reservation_duration ?? 90}
       defaultDinnerDurationMinutes={settings?.floor_plan_dinner_duration ?? settings?.reservation_duration ?? 90}
-      autoAssignEnabled={settings?.floor_plan_auto_assign !== false}
       lunchStartTime={settings?.service_lunch_start ?? null}
       dinnerStartTime={settings?.service_dinner_start ?? null}
     />

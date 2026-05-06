@@ -1,7 +1,7 @@
-import SettingsForm from "@/src/components/dashboard/settings-form";
 import { headers } from "next/headers";
-import { requireRestaurant } from "@/src/lib/auth";
+import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
+import SettingsForm from "@/src/components/dashboard/settings-form";
 
 type DashboardRestaurantPublicConfig = {
   reservation_confirmation_mode: string | null;
@@ -37,7 +37,7 @@ type DashboardRestaurantPublicConfig = {
 
 export default async function DashboardSettingsPage() {
   const supabase = await createClient();
-  const restaurant = await requireRestaurant();
+  const { restaurant, access } = await requireRestaurantSession();
   const headerList = await headers();
   const host = headerList.get("host");
   const protocol = headerList.get("x-forwarded-proto") ?? "http";
@@ -145,7 +145,7 @@ export default async function DashboardSettingsPage() {
       <header className="border-b border-zg-border/80 pb-7">
         <h1 className="dashboard-section-heading">Paramètres</h1>
         <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-          Page publique, règles de réservation, apparence et lien à partager.
+          Configurez votre restaurant, votre page publique, vos réservations et votre abonnement.
         </p>
       </header>
       <SettingsForm
@@ -192,6 +192,10 @@ export default async function DashboardSettingsPage() {
           restaurantConfig?.reservation_confirmation_mode === "automatic" ? "automatic" : "manual"
         }
         publicLink={publicLink}
+        subscriptionStatus={access.effectiveStatus}
+        subscriptionPlan={access.effectivePlan}
+        trialEndDate={restaurant.trial_end_date}
+        isOwnerDev={access.isOwnerDev}
       />
     </div>
   );

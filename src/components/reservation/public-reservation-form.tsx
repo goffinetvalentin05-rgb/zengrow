@@ -1188,9 +1188,22 @@ export default function PublicReservationForm({
                     ) : slotsError ? (
                       <p className="text-center text-sm text-amber-800">{slotsError}</p>
                     ) : slotTimes.length === 0 ? (
-                      <p className="text-center text-sm" style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}>
-                        Aucun créneau disponible pour cette date.
-                      </p>
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        <p
+                          className="text-center text-sm"
+                          style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
+                        >
+                          Aucun créneau disponible pour cette date.
+                        </p>
+                        <button
+                          type="button"
+                          className="text-sm font-semibold underline-offset-4 hover:underline"
+                          style={{ color: "var(--accent-color)" }}
+                          onClick={() => setWizardStep(1)}
+                        >
+                          Choisir un autre jour
+                        </button>
+                      </div>
                     ) : (
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                         {slotTimes.map((t) => (
@@ -1242,12 +1255,22 @@ export default function PublicReservationForm({
                         Chargement des espaces…
                       </p>
                     ) : availablePlanIds.size === 0 ? (
-                      <p
-                        className="text-center text-sm"
-                        style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
-                      >
-                        Aucun espace n’a de table disponible pour ce créneau.
-                      </p>
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        <p
+                          className="text-center text-sm"
+                          style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
+                        >
+                          Aucune table disponible pour ce créneau.
+                        </p>
+                        <button
+                          type="button"
+                          className="text-sm font-semibold underline-offset-4 hover:underline"
+                          style={{ color: "var(--accent-color)" }}
+                          onClick={() => setWizardStep(3)}
+                        >
+                          Choisir un autre horaire
+                        </button>
+                      </div>
                     ) : (
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         {publicPlans
@@ -1334,12 +1357,22 @@ export default function PublicReservationForm({
                     ) : tablesChoiceError ? (
                       <p className="text-center text-sm text-amber-800">{tablesChoiceError}</p>
                     ) : tablesChoice.length === 0 ? (
-                      <p
-                        className="text-center text-sm"
-                        style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
-                      >
-                        Aucune table n’est disponible pour ce créneau dans cet espace.
-                      </p>
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        <p
+                          className="text-center text-sm"
+                          style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
+                        >
+                          Aucune table disponible pour ce créneau.
+                        </p>
+                        <button
+                          type="button"
+                          className="text-sm font-semibold underline-offset-4 hover:underline"
+                          style={{ color: "var(--accent-color)" }}
+                          onClick={() => setWizardStep(3)}
+                        >
+                          Choisir un autre horaire
+                        </button>
+                      </div>
                     ) : (
                       <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
                         {tablesChoice.map((t) => {
