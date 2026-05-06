@@ -140,7 +140,7 @@ export async function POST(request: Request) {
     table_count: tableCount,
     restaurant_capacity: maxPeople,
     max_covers_per_slot: maxPeople,
-    reservation_mode: "single_service",
+    reservation_mode: "simple",
     service_lunch_max_covers: maxPeople,
     service_dinner_max_covers: maxPeople,
     use_tables: false,

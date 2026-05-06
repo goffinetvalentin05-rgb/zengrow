@@ -19,6 +19,10 @@ type PublicRestaurantRow = {
   logo_url: string | null;
   banner_url: string | null;
   primary_color: string | null;
+  subscription_plan?: string | null;
+  subscription_status?: string | null;
+  trial_end_date?: string | null;
+  stripe_subscription_id?: string | null;
   page_background_color: string | null;
   hero_primary_color: string | null;
   public_button_bg_color: string | null;
@@ -62,6 +66,10 @@ export default async function PublicReservationPage({ params }: PublicReservatio
         "logo_url",
         "banner_url",
         "primary_color",
+        "subscription_plan",
+        "subscription_status",
+        "trial_end_date",
+        "stripe_subscription_id",
         "page_background_color",
         "hero_primary_color",
         "public_button_bg_color",
@@ -99,7 +107,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "opening_hours, reservation_slot_interval, max_party_size, allow_phone, allow_email, logo_url, cover_image_url, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours, days_in_advance, use_tables, terrace_enabled, public_table_selection_mode, floor_plan_clients_choose_table",
+      "opening_hours, reservation_slot_interval, max_party_size, allow_phone, allow_email, logo_url, cover_image_url, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message, public_page_description, gallery_image_urls, public_page_show_address, public_page_show_phone, public_page_show_email, public_page_show_website, public_page_show_opening_hours, days_in_advance, terrace_enabled, reservation_mode, floor_plan_public_selection_mode, public_table_selection_mode, floor_plan_clients_choose_table",
     )
     .eq("restaurant_id", restaurant.id)
     .single();
@@ -136,8 +144,9 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     public_page_show_website: true,
     public_page_show_opening_hours: true,
     days_in_advance: 60,
-    use_tables: false,
     terrace_enabled: false,
+    reservation_mode: "simple",
+    floor_plan_public_selection_mode: "automatic",
     public_table_selection_mode: "automatic",
     floor_plan_clients_choose_table: false,
   };
@@ -249,14 +258,17 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           closureEndDate={safeSettings.closure_end_date}
           closureMessage={safeSettings.closure_message}
           terraceEnabled={safeSettings.terrace_enabled === true}
-          clientsChooseTable={
-            safeSettings.public_table_selection_mode === "table" ||
-            safeSettings.floor_plan_clients_choose_table === true
+          reservationMode={(safeSettings.reservation_mode as "simple" | "floor_plan") ?? "simple"}
+          publicFloorPlanSelectionMode={
+            (safeSettings.floor_plan_public_selection_mode as "automatic" | "area" | "table") ??
+            ((safeSettings.public_table_selection_mode as "automatic" | "zone" | "table") === "zone"
+              ? "area"
+              : (safeSettings.public_table_selection_mode as "automatic" | "zone" | "table") === "table"
+                ? "table"
+                : "automatic")
           }
-          publicTableSelectionMode={
-            (safeSettings.public_table_selection_mode as "automatic" | "zone" | "table") ?? "automatic"
-          }
-          useTables={safeSettings.use_tables === true}
+          subscriptionPlan={(restaurant.subscription_plan as string | null) ?? "starter"}
+          subscriptionStatus={(restaurant.subscription_status as string | null) ?? "active"}
         />
       </main>
     </>

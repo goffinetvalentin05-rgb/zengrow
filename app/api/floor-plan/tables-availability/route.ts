@@ -27,7 +27,9 @@ export async function GET(request: NextRequest) {
 
   const { data: settings, error: settingsError } = await supabase
     .from("restaurant_settings")
-    .select("use_tables, reservation_duration, public_table_selection_mode, floor_plan_clients_choose_table, terrace_enabled")
+    .select(
+      "reservation_mode, reservation_duration, floor_plan_public_selection_mode, public_table_selection_mode, floor_plan_clients_choose_table",
+    )
     .eq("restaurant_id", restaurantId)
     .maybeSingle();
 
@@ -36,13 +38,14 @@ export async function GET(request: NextRequest) {
   }
 
   const wantsTableChoice =
-    settings.public_table_selection_mode === "table" || settings.floor_plan_clients_choose_table === true;
-  if (!wantsTableChoice || settings.use_tables !== true) {
+    settings.floor_plan_public_selection_mode === "table" ||
+    settings.public_table_selection_mode === "table" ||
+    settings.floor_plan_clients_choose_table === true;
+
+  if (settings.reservation_mode !== "floor_plan" || !wantsTableChoice) {
     return NextResponse.json({ tables: [], error: null }, { status: 200 });
   }
 
-  // NB: le backend “Tables physiques” ne gère pas encore les tables en zone terrasse.
-  // Pour ne pas casser le comportement existant, on force la sélection aux tables de salle intérieure.
   const reservationZone = zone === "terrace" ? "terrace" : "interior";
 
   const reservationDuration = settings.reservation_duration ?? 90;

@@ -24,6 +24,8 @@ export const publicReservationPostSchema = z.object({
     .refine((d) => !Number.isNaN(Date.parse(d)), "Date invalide."),
   reservationTime: z.string().regex(/^\d{2}:\d{2}$/, "Heure invalide."),
   zone: seatingZoneSchema.optional(),
+  /** Optionnel : en mode “choix d’espace”, l’espace/plan choisi par le client. */
+  floorPlanId: z.string().uuid().optional().nullable(),
   /** Optionnel : si activé, le client choisit une table. */
   tableId: z.string().uuid().optional().nullable(),
 });

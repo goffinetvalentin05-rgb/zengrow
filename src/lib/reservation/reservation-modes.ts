@@ -1,4 +1,4 @@
-export const RESERVATION_MODES = ["single_service", "fixed_slots", "floor_plan", "physical_tables"] as const;
+export const RESERVATION_MODES = ["simple", "floor_plan"] as const;
 
 export type ReservationMode = (typeof RESERVATION_MODES)[number];
 
@@ -7,13 +7,17 @@ export function isReservationMode(value: unknown): value is ReservationMode {
 }
 
 export function normalizeReservationMode(value: unknown): ReservationMode {
+  // Legacy -> new
   if (value === "physical_tables") return "floor_plan";
-  if (isReservationMode(value)) return value;
-  return "fixed_slots";
+  if (value === "single_service") return "simple";
+  if (value === "fixed_slots") return "simple";
+  if (value === "floor_plan") return "floor_plan";
+  if (value === "simple") return "simple";
+  return "simple";
 }
 
 export function reservationModeFromLegacy(useTables: boolean | null | undefined): ReservationMode {
-  return useTables ? "floor_plan" : "fixed_slots";
+  return useTables ? "floor_plan" : "simple";
 }
 
 export function timeHhMmFromDb(value: string | null | undefined, fallback: string): string {

@@ -206,6 +206,15 @@ export default function FloorPlanVisualPanel({
 
   const [addElementType, setAddElementType] = useState<FloorPlanElementType>("wall");
 
+  const [showReservationForm, setShowReservationForm] = useState(false);
+  const [resGuestName, setResGuestName] = useState("");
+  const [resGuestPhone, setResGuestPhone] = useState("");
+  const [resGuestEmail, setResGuestEmail] = useState("");
+  const [resGuests, setResGuests] = useState(2);
+  const [resNote, setResNote] = useState("");
+  const [resTime, setResTime] = useState<string>(() => (dinnerStartTime ?? "19:00").slice(0, 5));
+  const [resTableId, setResTableId] = useState<string>("");
+
   // Canvas
   const canvasRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef<{
@@ -790,15 +799,87 @@ export default function FloorPlanVisualPanel({
 
   async function moveReservation(reservationId: string, nextTableId: string | null) {
     setMessage(null);
+    let floorPlanId: string | null = null;
+    if (nextTableId) {
+      const { data: t } = await supabase
+        .from("restaurant_tables")
+        .select("floor_plan_id")
+        .eq("restaurant_id", restaurantId)
+        .eq("id", nextTableId)
+        .maybeSingle();
+      floorPlanId = (t?.floor_plan_id as string | null) ?? null;
+    }
+
     const { error } = await supabase
       .from("reservations")
-      .update({ table_id: nextTableId })
+      .update({ table_id: nextTableId, floor_plan_id: floorPlanId })
       .eq("id", reservationId)
       .eq("restaurant_id", restaurantId);
     if (error) {
       setMessage(error.message);
       return;
     }
+    await refreshReservations();
+  }
+
+  async function createManualReservation() {
+    setMessage(null);
+    const guestName = resGuestName.trim();
+    if (!guestName) {
+      setMessage("Indiquez un nom de client.");
+      return;
+    }
+    if (!serviceDate || !resTime) {
+      setMessage("Indiquez une date et une heure.");
+      return;
+    }
+    const g = Math.max(1, Math.min(500, Math.floor(resGuests)));
+
+    let floorPlanId: string | null = activePlanId;
+    const tableId: string | null = resTableId || null;
+
+    if (tableId) {
+      const { data: t, error: tErr } = await supabase
+        .from("restaurant_tables")
+        .select("id, floor_plan_id, min_covers, max_covers, status")
+        .eq("restaurant_id", restaurantId)
+        .eq("id", tableId)
+        .maybeSingle();
+      if (tErr || !t) {
+        setMessage("Table introuvable.");
+        return;
+      }
+      floorPlanId = (t.floor_plan_id as string | null) ?? floorPlanId;
+    }
+
+    const { error } = await supabase.from("reservations").insert({
+      restaurant_id: restaurantId,
+      guest_name: guestName,
+      guest_phone: resGuestPhone.trim() || null,
+      guest_email: resGuestEmail.trim() || null,
+      guests: g,
+      reservation_date: serviceDate,
+      reservation_time: resTime.slice(0, 5),
+      status: "confirmed",
+      source: "manual_dashboard",
+      table_id: tableId,
+      floor_plan_id: floorPlanId,
+      note: resNote.trim() || null,
+    });
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setShowReservationForm(false);
+    setResGuestName("");
+    setResGuestPhone("");
+    setResGuestEmail("");
+    setResGuests(2);
+    setResNote("");
+    setResTime((dinnerStartTime ?? "19:00").slice(0, 5));
+    setResTableId("");
     await refreshReservations();
   }
 
@@ -824,11 +905,10 @@ export default function FloorPlanVisualPanel({
         <div>
           <h1 className="dashboard-section-heading">Plan de salle</h1>
           <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-            Dessinez votre restaurant et gérez vos tables visuellement.
+            Créez vos espaces, placez vos tables et suivez vos réservations.
           </p>
           <p className="mt-2 text-sm text-zg-fg/55">
-            Assignation automatique des tables:{" "}
-            <span className="font-semibold">{autoAssignEnabled ? "activée" : "désactivée"}</span>
+            Assignation automatique des tables : <span className="font-semibold">{autoAssignEnabled ? "activée" : "désactivée"}</span>
           </p>
         </div>
 
@@ -842,17 +922,20 @@ export default function FloorPlanVisualPanel({
               ))}
             </Select>
           ) : null}
-          <Button type="button" variant={mode === "edit" ? "primary" : "secondary"} onClick={() => setMode("edit")}>
-            Mode édition
-          </Button>
-          <Button type="button" variant={mode === "service" ? "primary" : "secondary"} onClick={() => setMode("service")}>
-            Mode service
+          <Button type="button" onClick={() => setShowReservationForm(true)}>
+            Ajouter une réservation
           </Button>
           <Button type="button" variant="secondary" onClick={() => setShowTableForm(true)}>
             Ajouter une table
           </Button>
           <Button type="button" variant="secondary" onClick={() => setShowZoneForm(true)}>
-            Ajouter une zone
+            Ajouter un espace
+          </Button>
+          <Button type="button" variant={mode === "edit" ? "primary" : "secondary"} onClick={() => setMode("edit")}>
+            Édition
+          </Button>
+          <Button type="button" variant={mode === "service" ? "primary" : "secondary"} onClick={() => setMode("service")}>
+            Service
           </Button>
           {mode === "edit" ? (
             <div className="flex flex-wrap items-center gap-2">
@@ -909,6 +992,66 @@ export default function FloorPlanVisualPanel({
       </div>
 
       {message ? <p className="text-sm text-zg-fg/62">{message}</p> : null}
+
+      {showReservationForm ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Ajouter une réservation</CardTitle>
+            <CardDescription>Création manuelle, avec table optionnelle (sinon “à placer”).</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Nom du client</label>
+                <Input value={resGuestName} onChange={(e) => setResGuestName(e.target.value)} placeholder="Nom / Prénom" />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Téléphone</label>
+                <Input value={resGuestPhone} onChange={(e) => setResGuestPhone(e.target.value)} placeholder="+41..." />
+              </div>
+              <div>
+                <label className="dashboard-field-label">E-mail (optionnel)</label>
+                <Input type="email" value={resGuestEmail} onChange={(e) => setResGuestEmail(e.target.value)} placeholder="email@..." />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Date</label>
+                <Input type="date" value={serviceDate} onChange={(e) => setServiceDate(e.target.value)} />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Heure</label>
+                <Input type="time" value={resTime} onChange={(e) => setResTime(e.target.value.slice(0, 5))} />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Nombre de personnes</label>
+                <Input type="number" min={1} max={500} value={resGuests} onChange={(e) => setResGuests(Number(e.target.value))} />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Table (optionnel)</label>
+                <Select value={resTableId} onChange={(e) => setResTableId(e.target.value)}>
+                  <option value="">À placer</option>
+                  {activeTables.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} · {t.min_covers}–{t.max_covers}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Note interne</label>
+                <Textarea value={resNote} onChange={(e) => setResNote(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button type="button" onClick={() => void createManualReservation()}>
+                Créer la réservation
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setShowReservationForm(false)}>
+                Annuler
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {/* Barre période / heure (service mode et démo UI) */}
       <div className="flex flex-wrap items-end gap-4">

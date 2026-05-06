@@ -107,8 +107,14 @@ type SettingsData = {
   reservation_mode?: string | null;
   /** Mode public en plan de salle: automatic | zone | table */
   public_table_selection_mode?: string | null;
+  /** Mode public canonique plan de salle: automatic | area | table */
+  floor_plan_public_selection_mode?: string | null;
   /** Legacy: ancien booléen (à migrer) */
   floor_plan_clients_choose_table?: boolean | null;
+  floor_plan_lunch_duration?: number | null;
+  floor_plan_dinner_duration?: number | null;
+  lunch_duration_minutes?: number | null;
+  dinner_duration_minutes?: number | null;
   service_lunch_enabled?: boolean | null;
   service_lunch_start?: string | null;
   service_lunch_end?: string | null;
@@ -184,20 +190,20 @@ export default function SettingsForm({
   const [address, setAddress] = useState(restaurant.address ?? "");
   const [description, setDescription] = useState(restaurant.description ?? "");
   const [slug, setSlug] = useState(restaurant.slug);
-  const [restaurantCapacity, setRestaurantCapacity] = useState(
-    settings.max_covers_per_slot ?? settings.restaurant_capacity ?? 40,
-  );
   const [reservationMode, setReservationMode] = useState<ReservationMode>(() =>
     normalizeReservationMode(settings.reservation_mode ?? reservationModeFromLegacy(settings.use_tables)),
   );
-  const [publicTableSelectionMode, setPublicTableSelectionMode] = useState<
-    "automatic" | "zone" | "table"
-  >(() => {
-    const v = settings.public_table_selection_mode;
-    if (v === "zone" || v === "table" || v === "automatic") return v;
-    if (settings.floor_plan_clients_choose_table === true) return "table";
-    return "automatic";
-  });
+  const [floorPlanPublicSelectionMode, setFloorPlanPublicSelectionMode] = useState<"automatic" | "area" | "table">(
+    () => {
+      const v = settings.floor_plan_public_selection_mode;
+      if (v === "automatic" || v === "area" || v === "table") return v;
+      const legacy = settings.public_table_selection_mode;
+      if (legacy === "table") return "table";
+      if (legacy === "zone") return "area";
+      if (settings.floor_plan_clients_choose_table === true) return "table";
+      return "automatic";
+    },
+  );
   const [lunchServiceEnabled, setLunchServiceEnabled] = useState(settings.service_lunch_enabled !== false);
   const [lunchServiceStart, setLunchServiceStart] = useState(
     timeHhMmFromDb(settings.service_lunch_start ?? null, "11:30"),
@@ -219,11 +225,15 @@ export default function SettingsForm({
     Math.max(0, Math.min(500, settings.terrace_capacity ?? 0)),
   );
   const [daysInAdvance, setDaysInAdvance] = useState(settings.days_in_advance ?? 60);
-  const [reservationDuration, setReservationDuration] = useState(settings.reservation_duration ?? 90);
+  const [floorPlanLunchDuration, setFloorPlanLunchDuration] = useState(
+    settings.lunch_duration_minutes ?? settings.floor_plan_lunch_duration ?? settings.reservation_duration ?? 90,
+  );
+  const [floorPlanDinnerDuration, setFloorPlanDinnerDuration] = useState(
+    settings.dinner_duration_minutes ?? settings.floor_plan_dinner_duration ?? settings.reservation_duration ?? 90,
+  );
   const [autoArchiveReservations, setAutoArchiveReservations] = useState(
     settings.auto_archive_reservations === true,
   );
-  const [slotInterval, setSlotInterval] = useState(settings.reservation_slot_interval ?? 15);
   const [maxPartySize, setMaxPartySize] = useState(settings.max_party_size ?? 8);
   const [pageBackgroundColor, setPageBackgroundColor] = useState(
     restaurant.page_background_color ?? "#f8fafc",
@@ -752,7 +762,7 @@ export default function SettingsForm({
     event.preventDefault();
     setMessage(null);
 
-    if (reservationMode === "single_service" && !lunchServiceEnabled && !dinnerServiceEnabled) {
+    if (reservationMode === "simple" && !lunchServiceEnabled && !dinnerServiceEnabled) {
       setMessage("Activez au moins le service midi ou le service soir.");
       return;
     }
@@ -817,19 +827,27 @@ export default function SettingsForm({
       .from("restaurant_settings")
       .upsert({
         restaurant_id: restaurant.id,
-        restaurant_capacity:
-          reservationMode === "single_service"
-            ? Math.max(lunchMaxCovers, dinnerMaxCovers)
-            : restaurantCapacity,
-        max_covers_per_slot:
-          reservationMode === "single_service"
-            ? Math.max(lunchMaxCovers, dinnerMaxCovers)
-            : restaurantCapacity,
-        reservation_duration: reservationDuration,
+        restaurant_capacity: Math.max(lunchMaxCovers, dinnerMaxCovers),
+        max_covers_per_slot: Math.max(lunchMaxCovers, dinnerMaxCovers),
+        reservation_duration: Math.max(
+          30,
+          Math.min(600, Math.round((floorPlanLunchDuration + floorPlanDinnerDuration) / 2)),
+        ),
         auto_archive_reservations: autoArchiveReservations,
         reservation_mode: reservationMode,
         use_tables: reservationMode === "floor_plan",
-        public_table_selection_mode: reservationMode === "floor_plan" ? publicTableSelectionMode : "automatic",
+        floor_plan_public_selection_mode: reservationMode === "floor_plan" ? floorPlanPublicSelectionMode : "automatic",
+        // legacy compat (zone/table/automatic)
+        public_table_selection_mode:
+          reservationMode === "floor_plan"
+            ? floorPlanPublicSelectionMode === "area"
+              ? "zone"
+              : floorPlanPublicSelectionMode
+            : "automatic",
+        lunch_duration_minutes: Math.max(30, Math.min(600, floorPlanLunchDuration)),
+        dinner_duration_minutes: Math.max(30, Math.min(600, floorPlanDinnerDuration)),
+        floor_plan_lunch_duration: Math.max(30, Math.min(600, floorPlanLunchDuration)),
+        floor_plan_dinner_duration: Math.max(30, Math.min(600, floorPlanDinnerDuration)),
         service_lunch_enabled: lunchServiceEnabled,
         service_lunch_start: lunchServiceStart.length === 5 ? `${lunchServiceStart}:00` : lunchServiceStart,
         service_lunch_end: lunchServiceEnd.length === 5 ? `${lunchServiceEnd}:00` : lunchServiceEnd,
@@ -841,12 +859,7 @@ export default function SettingsForm({
         terrace_enabled: terraceEnabled,
         terrace_capacity: Math.max(0, Math.min(500, terraceCapacity)),
         days_in_advance: daysInAdvance,
-        reservation_slot_interval:
-          reservationMode === "fixed_slots"
-            ? Math.max(15, reservationDuration)
-            : reservationMode === "floor_plan"
-              ? Math.max(5, slotInterval)
-              : 15,
+        reservation_slot_interval: 15,
         max_party_size: maxPartySize,
         accent_color: accentColor || null,
         button_color: buttonColor || null,
@@ -1674,37 +1687,21 @@ export default function SettingsForm({
         <CardContent className="space-y-8">
           <div className="space-y-3">
             <p className="dashboard-field-label">Comment souhaitez-vous gérer vos réservations ?</p>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <button
                 type="button"
-                onClick={() => setReservationMode("single_service")}
+                onClick={() => setReservationMode("simple")}
                 className={cn(
                   "rounded-xl border p-4 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-[#0F3F3A]/35",
-                  reservationMode === "single_service"
+                  reservationMode === "simple"
                     ? "border-[#0F3F3A] bg-[#F0F9F7] ring-2 ring-[#0F3F3A]/20"
                     : "border-zg-border-strong bg-[var(--surface)] hover:border-[#0F3F3A]/35",
                 )}
               >
-                <p className="text-sm font-semibold text-[var(--foreground)]">Service unique</p>
+                <p className="text-sm font-semibold text-[var(--foreground)]">Mode simple</p>
                 <p className="mt-2 text-xs leading-relaxed text-zg-fg/58">
-                  Recommandé pour commencer : un total de couverts pour le midi, un pour le soir, sans calcul sur la
-                  durée du repas.
-                </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setReservationMode("fixed_slots")}
-                className={cn(
-                  "rounded-xl border p-4 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-[#0F3F3A]/35",
-                  reservationMode === "fixed_slots"
-                    ? "border-[#0F3F3A] bg-[#F0F9F7] ring-2 ring-[#0F3F3A]/20"
-                    : "border-zg-border-strong bg-[var(--surface)] hover:border-[#0F3F3A]/35",
-                )}
-              >
-                <p className="text-sm font-semibold text-[var(--foreground)]">Créneaux fixes</p>
-                <p className="mt-2 text-xs leading-relaxed text-zg-fg/58">
-                  Horaires précis qui se suivent : chaque créneau a sa propre limite de couverts, sans empiètement entre
-                  les heures.
+                  Idéal pour commencer : définissez une capacité par service (midi/soir) et acceptez les réservations
+                  sans gérer les tables.
                 </p>
               </button>
               <button
@@ -1725,13 +1722,13 @@ export default function SettingsForm({
             </div>
           </div>
 
-          {reservationMode === "single_service" ? (
+          {reservationMode === "simple" ? (
             <div className="space-y-6 rounded-xl border border-zg-border-strong bg-[var(--surface)] p-4 md:p-6">
               <div>
-                <h3 className="text-sm font-semibold text-[var(--foreground)]">Service unique</h3>
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">Mode simple</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zg-fg/62">
-                  Les clients choisissent une heure dans vos plages d&apos;ouverture : tout est compté dans le total du
-                  midi ou du soir. Quand ce total est atteint, le service affiche complet pour la journée.
+                  Les clients choisissent une heure dans vos plages d&apos;ouverture. ZenGrow vérifie uniquement la
+                  capacité globale du service midi ou soir, sans gérer les tables.
                 </p>
                 <p className="mt-3 text-sm text-zg-fg/55">
                   <Link
@@ -1836,58 +1833,6 @@ export default function SettingsForm({
             </div>
           ) : null}
 
-          {reservationMode === "fixed_slots" ? (
-            <div className="space-y-6 rounded-xl border border-zg-border-strong bg-[var(--surface)] p-4 md:p-6">
-              <div>
-                <h3 className="text-sm font-semibold text-[var(--foreground)]">Créneaux fixes</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zg-fg/62">
-                  Vous choisissez la durée d&apos;un créneau : ZenGrow propose des heures qui se suivent sur la journée,
-                  chacune avec sa propre capacité. Une heure pleine n&apos;empêche pas la suivante d&apos;être
-                  disponible.
-                </p>
-                <p className="mt-3 text-sm text-zg-fg/55">
-                  <Link
-                    href="/dashboard/availability"
-                    className="font-medium text-[var(--primary)] underline-offset-2 hover:underline"
-                  >
-                    Disponibilités
-                  </Link>{" "}
-                  : plages horaires où les réservations sont possibles.
-                </p>
-              </div>
-              <div className="grid gap-6 md:grid-cols-2">
-                <ReservationField
-                  label={"Durée d'un créneau (minutes)"}
-                  description={
-                    "Exemple : 90 minutes donne des départs à 12:00, 13:30, 15:00… tant que cela rentre dans vos heures d'ouverture."
-                  }
-                >
-                  <Input
-                    type="number"
-                    min={30}
-                    step={15}
-                    value={reservationDuration}
-                    placeholder="ex : 90"
-                    onChange={(event) => setReservationDuration(Number(event.target.value))}
-                  />
-                </ReservationField>
-                <ReservationField
-                  label="Capacité max par créneau"
-                  description="Nombre maximum de convives pour une même heure proposée (salle intérieure)."
-                >
-                  <Input
-                    type="number"
-                    min={1}
-                    max={500}
-                    value={restaurantCapacity}
-                    placeholder="ex : 20"
-                    onChange={(event) => setRestaurantCapacity(Number(event.target.value))}
-                  />
-                </ReservationField>
-              </div>
-            </div>
-          ) : null}
-
           {reservationMode === "floor_plan" ? (
             <div className="space-y-6 rounded-xl border border-zg-border-strong bg-[var(--surface)] p-4 md:p-6">
               <div>
@@ -1901,16 +1846,28 @@ export default function SettingsForm({
 
               <div className="grid gap-4 border-t border-zg-border/82 pt-4 md:grid-cols-2">
                 <ReservationField
-                  label="Espacement des heures (minutes)"
-                  description="Créneaux proposés aux clients : 30 min donne 12:00, 12:30, 13:00…"
+                  label={"Durée moyenne d’occupation (midi, minutes)"}
+                  description="Durée pendant laquelle une table reste indisponible après une réservation du midi."
                 >
-                  <Input type="number" min={5} step={5} value={slotInterval} onChange={(e) => setSlotInterval(Number(e.target.value))} />
+                  <Input
+                    type="number"
+                    min={30}
+                    step={15}
+                    value={floorPlanLunchDuration}
+                    onChange={(e) => setFloorPlanLunchDuration(Number(e.target.value))}
+                  />
                 </ReservationField>
                 <ReservationField
-                  label={"Temps d'occupation d'une table (minutes)"}
-                  description="Durée pendant laquelle une table reste indisponible après une réservation."
+                  label={"Durée moyenne d’occupation (soir, minutes)"}
+                  description="Durée pendant laquelle une table reste indisponible après une réservation du soir."
                 >
-                  <Input type="number" min={30} step={15} value={reservationDuration} onChange={(e) => setReservationDuration(Number(e.target.value))} />
+                  <Input
+                    type="number"
+                    min={30}
+                    step={15}
+                    value={floorPlanDinnerDuration}
+                    onChange={(e) => setFloorPlanDinnerDuration(Number(e.target.value))}
+                  />
                 </ReservationField>
               </div>
 
@@ -1942,13 +1899,11 @@ export default function SettingsForm({
                   description="Par défaut, ZenGrow assigne automatiquement. Vous pouvez autoriser le choix d'une zone ou d'une table."
                 >
                   <Select
-                    value={publicTableSelectionMode}
-                    onChange={(e) =>
-                      setPublicTableSelectionMode(e.target.value as "automatic" | "zone" | "table")
-                    }
+                    value={floorPlanPublicSelectionMode}
+                    onChange={(e) => setFloorPlanPublicSelectionMode(e.target.value as "automatic" | "area" | "table")}
                   >
                     <option value="automatic">Automatique — ZenGrow choisit la meilleure table</option>
-                    <option value="zone">Choix de zone — le client choisit Salle / Terrasse</option>
+                    <option value="area">Choix d’espace — le client choisit Salle / Terrasse / etc.</option>
                     <option value="table">Choix de table — le client choisit sur le plan</option>
                   </Select>
                 </ReservationField>
