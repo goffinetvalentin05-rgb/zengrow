@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   const { data: settings, error: settingsError } = await supabase
     .from("restaurant_settings")
-    .select("use_tables, reservation_duration, floor_plan_clients_choose_table, terrace_enabled")
+    .select("use_tables, reservation_duration, public_table_selection_mode, floor_plan_clients_choose_table, terrace_enabled")
     .eq("restaurant_id", restaurantId)
     .maybeSingle();
 
@@ -34,7 +34,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ tables: [], error: settingsError?.message ?? "Paramètres introuvables." }, { status: 500 });
   }
 
-  if (!settings.floor_plan_clients_choose_table || settings.use_tables !== true) {
+  const wantsTableChoice =
+    settings.public_table_selection_mode === "table" || settings.floor_plan_clients_choose_table === true;
+  if (!wantsTableChoice || settings.use_tables !== true) {
     return NextResponse.json({ tables: [], error: null }, { status: 200 });
   }
 

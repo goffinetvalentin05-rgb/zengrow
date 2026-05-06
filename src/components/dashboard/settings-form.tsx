@@ -8,6 +8,7 @@ import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import Input from "@/src/components/ui/input";
+import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
 import { cn } from "@/src/lib/utils";
@@ -104,6 +105,10 @@ type SettingsData = {
   terrace_capacity?: number | null;
   auto_archive_reservations?: boolean | null;
   reservation_mode?: string | null;
+  /** Mode public en plan de salle: automatic | zone | table */
+  public_table_selection_mode?: string | null;
+  /** Legacy: ancien booléen (à migrer) */
+  floor_plan_clients_choose_table?: boolean | null;
   service_lunch_enabled?: boolean | null;
   service_lunch_start?: string | null;
   service_lunch_end?: string | null;
@@ -141,36 +146,12 @@ type RestaurantDocument = {
   created_at: string;
 };
 
-type RestaurantTableRow = {
-  id: string;
-  name: string;
-  min_covers: number;
-  max_covers: number;
-};
-
-type TableRowDraft = {
-  key: string;
-  name: string;
-  min_covers: number;
-  max_covers: number;
-};
-
 type SettingsFormProps = {
   restaurant: RestaurantData;
   settings: SettingsData;
   confirmationMode: "manual" | "automatic";
   publicLink: string;
-  initialRestaurantTables: RestaurantTableRow[];
 };
-
-function draftRowsFromDb(rows: RestaurantTableRow[]): TableRowDraft[] {
-  return rows.map((r) => ({
-    key: r.id,
-    name: r.name,
-    min_covers: Math.max(1, r.min_covers),
-    max_covers: Math.min(20, Math.max(1, r.max_covers)),
-  }));
-}
 
 function ReservationField({
   label,
@@ -195,7 +176,6 @@ export default function SettingsForm({
   settings,
   confirmationMode,
   publicLink,
-  initialRestaurantTables,
 }: SettingsFormProps) {
   const supabase = createClient();
   const [name, setName] = useState(restaurant.name);
@@ -210,6 +190,14 @@ export default function SettingsForm({
   const [reservationMode, setReservationMode] = useState<ReservationMode>(() =>
     normalizeReservationMode(settings.reservation_mode ?? reservationModeFromLegacy(settings.use_tables)),
   );
+  const [publicTableSelectionMode, setPublicTableSelectionMode] = useState<
+    "automatic" | "zone" | "table"
+  >(() => {
+    const v = settings.public_table_selection_mode;
+    if (v === "zone" || v === "table" || v === "automatic") return v;
+    if (settings.floor_plan_clients_choose_table === true) return "table";
+    return "automatic";
+  });
   const [lunchServiceEnabled, setLunchServiceEnabled] = useState(settings.service_lunch_enabled !== false);
   const [lunchServiceStart, setLunchServiceStart] = useState(
     timeHhMmFromDb(settings.service_lunch_start ?? null, "11:30"),
@@ -330,29 +318,58 @@ export default function SettingsForm({
   const [isUploadingDocument, setIsUploadingDocument] = useState(false);
   const [draggingDocId, setDraggingDocId] = useState<string | null>(null);
 
-  const [tableRows, setTableRows] = useState<TableRowDraft[]>(() => draftRowsFromDb(initialRestaurantTables));
-  const [tableRowErrors, setTableRowErrors] = useState<
-    Record<string, { name?: boolean; minMax?: boolean }>
-  >({});
-  const [tableListBlockError, setTableListBlockError] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<{ key: string; until: number } | null>(null);
+  const [floorPlanSummary, setFloorPlanSummary] = useState<{
+    activeTables: number;
+    blockedTables: number;
+    inactiveTables: number;
+    maxCovers: number;
+    activeZones: number;
+  } | null>(null);
 
   useEffect(() => {
-    if (!pendingDelete) return;
-    const id = window.setInterval(() => {
-      if (Date.now() >= pendingDelete.until) {
-        setPendingDelete(null);
-      }
-    }, 150);
-    return () => window.clearInterval(id);
-  }, [pendingDelete]);
-
-  useEffect(() => {
-    if (reservationMode !== "physical_tables") {
-      setTableListBlockError(null);
-      setTableRowErrors({});
+    if (reservationMode !== "floor_plan") {
+      setFloorPlanSummary(null);
+      return;
     }
-  }, [reservationMode]);
+
+    let cancelled = false;
+    (async () => {
+      const [{ data: tablesData, error: tablesError }, { data: zonesData, error: zonesError }] = await Promise.all([
+        supabase
+          .from("restaurant_tables")
+          .select("id, status, max_covers")
+          .eq("restaurant_id", restaurant.id),
+        supabase
+          .from("restaurant_zones")
+          .select("id, is_active")
+          .eq("restaurant_id", restaurant.id),
+      ]);
+
+      if (cancelled) return;
+      if (tablesError || zonesError) {
+        setFloorPlanSummary(null);
+        return;
+      }
+
+      const activeTables = (tablesData ?? []).filter((t) => t.status === "active");
+      const blockedTables = (tablesData ?? []).filter((t) => t.status === "blocked");
+      const inactiveTables = (tablesData ?? []).filter((t) => t.status === "inactive");
+      const maxCovers = activeTables.reduce((sum, t) => sum + Math.max(0, t.max_covers ?? 0), 0);
+      const activeZones = (zonesData ?? []).filter((z) => z.is_active === true).length;
+
+      setFloorPlanSummary({
+        activeTables: activeTables.length,
+        blockedTables: blockedTables.length,
+        inactiveTables: inactiveTables.length,
+        maxCovers,
+        activeZones,
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reservationMode, restaurant.id, supabase]);
 
   const sortedDocuments = useMemo(() => {
     const copy = [...documents];
@@ -728,65 +745,12 @@ export default function SettingsForm({
   }
 
   function validateReservationTables(): boolean {
-    setTableRowErrors({});
-    setTableListBlockError(null);
-    if (reservationMode !== "physical_tables") {
-      return true;
-    }
-    if (tableRows.length === 0) {
-      setTableListBlockError("Ajoutez au moins une table pour utiliser ce mode.");
-      return false;
-    }
-
-    const nextErrors: Record<string, { name?: boolean; minMax?: boolean }> = {};
-    const seen = new Set<string>();
-    let hasDup = false;
-
-    for (const row of tableRows) {
-      const trimmed = row.name.trim();
-      if (!trimmed) {
-        nextErrors[row.key] = { ...nextErrors[row.key], name: true };
-      }
-      const norm = trimmed.toLowerCase();
-      if (norm) {
-        if (seen.has(norm)) {
-          hasDup = true;
-        }
-        seen.add(norm);
-      }
-      if (row.min_covers > row.max_covers) {
-        nextErrors[row.key] = { ...nextErrors[row.key], minMax: true };
-      }
-    }
-
-    if (Object.keys(nextErrors).some((k) => nextErrors[k]?.name)) {
-      setTableRowErrors(nextErrors);
-      return false;
-    }
-    if (hasDup) {
-      setTableListBlockError("Deux tables ont le même nom.");
-      return false;
-    }
-    if (Object.keys(nextErrors).some((k) => nextErrors[k]?.minMax)) {
-      setTableRowErrors(nextErrors);
-      return false;
-    }
     return true;
-  }
-
-  function addTableRow() {
-    const newKey = crypto.randomUUID();
-    setTableRows((rows) => [...rows, { key: newKey, name: "", min_covers: 2, max_covers: 4 }]);
-    requestAnimationFrame(() => {
-      document.getElementById(`table-name-${newKey}`)?.focus();
-    });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
-    setTableRowErrors({});
-    setTableListBlockError(null);
 
     if (reservationMode === "single_service" && !lunchServiceEnabled && !dinnerServiceEnabled) {
       setMessage("Activez au moins le service midi ou le service soir.");
@@ -864,7 +828,8 @@ export default function SettingsForm({
         reservation_duration: reservationDuration,
         auto_archive_reservations: autoArchiveReservations,
         reservation_mode: reservationMode,
-        use_tables: reservationMode === "physical_tables",
+        use_tables: reservationMode === "floor_plan",
+        public_table_selection_mode: reservationMode === "floor_plan" ? publicTableSelectionMode : "automatic",
         service_lunch_enabled: lunchServiceEnabled,
         service_lunch_start: lunchServiceStart.length === 5 ? `${lunchServiceStart}:00` : lunchServiceStart,
         service_lunch_end: lunchServiceEnd.length === 5 ? `${lunchServiceEnd}:00` : lunchServiceEnd,
@@ -879,7 +844,7 @@ export default function SettingsForm({
         reservation_slot_interval:
           reservationMode === "fixed_slots"
             ? Math.max(15, reservationDuration)
-            : reservationMode === "physical_tables"
+            : reservationMode === "floor_plan"
               ? Math.max(5, slotInterval)
               : 15,
         max_party_size: maxPartySize,
@@ -914,32 +879,6 @@ export default function SettingsForm({
       setMessage(settingsError.message);
       setIsSaving(false);
       return;
-    }
-
-    if (reservationMode === "physical_tables") {
-      const { error: tablesRpcError } = await supabase.rpc("replace_restaurant_tables", {
-        p_restaurant_id: restaurant.id,
-        p_tables: tableRows.map((row) => ({
-          name: row.name.trim(),
-          min_covers: Math.max(1, Math.min(20, row.min_covers)),
-          max_covers: Math.max(1, Math.min(20, row.max_covers)),
-        })),
-      });
-
-      if (tablesRpcError) {
-        setMessage(tablesRpcError.message);
-        setIsSaving(false);
-        return;
-      }
-
-      const { data: refreshedTables } = await supabase
-        .from("restaurant_tables")
-        .select("id, name, min_covers, max_covers")
-        .eq("restaurant_id", restaurant.id)
-        .order("name", { ascending: true });
-      if (refreshedTables) {
-        setTableRows(draftRowsFromDb(refreshedTables));
-      }
     }
 
     setSaveButtonSuccess(true);
@@ -1770,18 +1709,17 @@ export default function SettingsForm({
               </button>
               <button
                 type="button"
-                onClick={() => setReservationMode("physical_tables")}
+                onClick={() => setReservationMode("floor_plan")}
                 className={cn(
                   "rounded-xl border p-4 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-[#0F3F3A]/35",
-                  reservationMode === "physical_tables"
+                  reservationMode === "floor_plan"
                     ? "border-[#0F3F3A] bg-[#F0F9F7] ring-2 ring-[#0F3F3A]/20"
                     : "border-zg-border-strong bg-[var(--surface)] hover:border-[#0F3F3A]/35",
                 )}
               >
-                <p className="text-sm font-semibold text-[var(--foreground)]">Tables physiques</p>
+                <p className="text-sm font-semibold text-[var(--foreground)]">Plan de salle</p>
                 <p className="mt-2 text-xs leading-relaxed text-zg-fg/58">
-                  Mode avancé : une place par table, selon la taille des groupes. À réserver aux équipes qui veulent
-                  aller plus loin.
+                  Mode avancé : disponibilités calculées depuis vos tables actives et votre plan visuel.
                 </p>
               </button>
             </div>
@@ -1950,13 +1888,14 @@ export default function SettingsForm({
             </div>
           ) : null}
 
-          {reservationMode === "physical_tables" ? (
+          {reservationMode === "floor_plan" ? (
             <div className="space-y-6 rounded-xl border border-zg-border-strong bg-[var(--surface)] p-4 md:p-6">
               <div>
-                <h3 className="text-sm font-semibold text-[var(--foreground)]">Tables physiques</h3>
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">Plan de salle</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zg-fg/62">
-                  Chaque réservation en salle est placée sur une table compatible. Si aucune table ne convient ou si
-                  toutes sont prises sur l&apos;heure demandée, la demande est refusée.
+                  Mode avancé : disponibilités calculées depuis vos tables actives. ZenGrow assigne automatiquement la
+                  meilleure table compatible, ou laisse la réservation « À placer » si aucune table ne convient (selon la
+                  logique existante).
                 </p>
               </div>
 
@@ -1965,157 +1904,68 @@ export default function SettingsForm({
                   label="Espacement des heures (minutes)"
                   description="Créneaux proposés aux clients : 30 min donne 12:00, 12:30, 13:00…"
                 >
-                  <Input
-                    type="number"
-                    min={5}
-                    step={5}
-                    value={slotInterval}
-                    onChange={(e) => setSlotInterval(Number(e.target.value))}
-                  />
+                  <Input type="number" min={5} step={5} value={slotInterval} onChange={(e) => setSlotInterval(Number(e.target.value))} />
                 </ReservationField>
                 <ReservationField
                   label={"Temps d'occupation d'une table (minutes)"}
                   description="Durée pendant laquelle une table reste indisponible après une réservation."
                 >
-                  <Input
-                    type="number"
-                    min={30}
-                    step={15}
-                    value={reservationDuration}
-                    onChange={(e) => setReservationDuration(Number(e.target.value))}
-                  />
+                  <Input type="number" min={30} step={15} value={reservationDuration} onChange={(e) => setReservationDuration(Number(e.target.value))} />
                 </ReservationField>
               </div>
 
               <div className="space-y-4 border-t border-zg-border/82 pt-4">
-                <div>
-                  <h4 className="text-sm font-semibold text-[var(--foreground)]">Vos tables</h4>
-                  <p className="mt-1 text-xs text-zg-fg/52">
-                    Une ligne = une table. Enregistrez avec le bouton en bas de la page.
-                  </p>
+                <div className="rounded-xl border border-zg-border-strong bg-zg-surface/95 p-4">
+                  <p className="text-sm font-semibold text-[var(--foreground)]">Résumé automatique</p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-lg border border-zg-border/70 bg-white/60 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Tables actives</p>
+                      <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.activeTables ?? "—"}</p>
+                    </div>
+                    <div className="rounded-lg border border-zg-border/70 bg-white/60 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Couverts max (actives)</p>
+                      <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.maxCovers ?? "—"}</p>
+                    </div>
+                    <div className="rounded-lg border border-zg-border/70 bg-white/60 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Zones actives</p>
+                      <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.activeZones ?? "—"}</p>
+                    </div>
+                    <div className="rounded-lg border border-zg-border/70 bg-white/60 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Tables bloquées</p>
+                      <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.blockedTables ?? "—"}</p>
+                    </div>
+                  </div>
                 </div>
 
-                {tableListBlockError ? (
-                  <p
-                    className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950"
-                    role="alert"
-                  >
-                    {tableListBlockError}
-                  </p>
-                ) : null}
-
-                <div className="hidden gap-2 text-xs font-medium uppercase tracking-wide text-zg-fg/52 sm:grid sm:grid-cols-[1fr_minmax(0,5.5rem)_minmax(0,5.5rem)_2.5rem] sm:items-end sm:gap-3">
-                  <span>Nom</span>
-                  <span>min pers.</span>
-                  <span>max pers.</span>
-                  <span className="sr-only">Supprimer</span>
-                </div>
-
-                <ul className="space-y-3">
-                  {tableRows.map((row) => {
-                    const isPendingDelete = pendingDelete?.key === row.key;
-                    const err = tableRowErrors[row.key];
-                    return (
-                      <li
-                        key={row.key}
-                        className={cn(
-                          "rounded-lg border p-3 transition-colors sm:grid sm:grid-cols-[1fr_minmax(0,5.5rem)_minmax(0,5.5rem)_2.5rem] sm:items-center sm:gap-3",
-                          isPendingDelete ? "border-red-400 bg-red-50/80" : "border-zg-border-strong bg-zg-surface/95",
-                          err?.name || err?.minMax ? "border-red-300" : "",
-                        )}
-                      >
-                        <div className="min-w-0 sm:col-span-1">
-                          <label className="sr-only" htmlFor={`table-name-${row.key}`}>
-                            Nom de la table
-                          </label>
-                          <Input
-                            id={`table-name-${row.key}`}
-                            value={row.name}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setTableRows((rows) => rows.map((r) => (r.key === row.key ? { ...r, name: v } : r)));
-                            }}
-                            placeholder="ex : Table 1, Terrasse A, Bar..."
-                            className={cn(err?.name && "border-red-500")}
-                          />
-                          {err?.name ? (
-                            <p className="mt-1 text-xs font-medium text-red-600">Nom requis</p>
-                          ) : null}
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-xs text-zg-fg/52 sm:hidden">min pers.</label>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={20}
-                            value={row.min_covers}
-                            onChange={(e) => {
-                              const v = Number(e.target.value);
-                              setTableRows((rows) =>
-                                rows.map((r) => (r.key === row.key ? { ...r, min_covers: Number.isNaN(v) ? 1 : v } : r)),
-                              );
-                            }}
-                            className={cn(err?.minMax && "border-red-500")}
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-xs text-zg-fg/52 sm:hidden">max pers.</label>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={20}
-                            value={row.max_covers}
-                            onChange={(e) => {
-                              const v = Number(e.target.value);
-                              setTableRows((rows) =>
-                                rows.map((r) => (r.key === row.key ? { ...r, max_covers: Number.isNaN(v) ? 1 : v } : r)),
-                              );
-                            }}
-                            className={cn(err?.minMax && "border-red-500")}
-                          />
-                          {err?.minMax ? (
-                            <p className="mt-1 text-xs font-medium text-red-600">
-                              Le min ne peut pas dépasser le max.
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="mt-2 flex flex-col items-stretch gap-2 sm:mt-0">
-                          {isPendingDelete ? (
-                            <button
-                              type="button"
-                              className="rounded-md border border-red-300 bg-white px-2 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50"
-                              onClick={() => {
-                                setTableRows((rows) => rows.filter((r) => r.key !== row.key));
-                                setPendingDelete(null);
-                              }}
-                            >
-                              Confirmer la suppression
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-zg-border-strong text-zg-fg/62 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
-                              aria-label="Supprimer cette table"
-                              onClick={() =>
-                                setPendingDelete({ key: row.key, until: Date.now() + 2000 })
-                              }
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-
-                <button
-                  type="button"
-                  onClick={addTableRow}
-                  className="text-sm font-semibold text-[var(--primary)] hover:underline"
+                <ReservationField
+                  label="Choix proposé au client (page publique)"
+                  description="Par défaut, ZenGrow assigne automatiquement. Vous pouvez autoriser le choix d'une zone ou d'une table."
                 >
-                  + Ajouter une table
-                </button>
+                  <Select
+                    value={publicTableSelectionMode}
+                    onChange={(e) =>
+                      setPublicTableSelectionMode(e.target.value as "automatic" | "zone" | "table")
+                    }
+                  >
+                    <option value="automatic">Automatique — ZenGrow choisit la meilleure table</option>
+                    <option value="zone">Choix de zone — le client choisit Salle / Terrasse</option>
+                    <option value="table">Choix de table — le client choisit sur le plan</option>
+                  </Select>
+                </ReservationField>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/dashboard/floor-plan"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-gradient-to-r from-zg-teal to-zg-mint px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_32px_-14px_rgba(31,122,108,0.82)] transition hover:scale-[1.02] active:scale-[0.99]"
+                  >
+                    Ouvrir le plan de salle
+                  </Link>
+                  {(floorPlanSummary?.activeTables ?? 0) === 0 ? (
+                    <p className="text-sm text-zg-fg/55">
+                      Commencez par créer votre plan de salle (zones + tables actives) pour activer pleinement ce mode.
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
           ) : null}
@@ -2169,8 +2019,8 @@ export default function SettingsForm({
               {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement..." : "Enregistrer"}
             </Button>
             <p className="mt-2 text-xs text-zg-fg/52">
-              Enregistre aussi les tables ci-dessus lorsque le mode « Tables physiques » est sélectionné, comme le
-              bouton en bas de la page.
+              Les changements de mode et les paramètres publics sont enregistrés ici. Les tables et éléments se gèrent
+              dans le module « Plan de salle ».
             </p>
           </div>
         </CardContent>

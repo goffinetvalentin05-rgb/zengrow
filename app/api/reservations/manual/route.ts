@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
   const maxPartySize = settings?.max_party_size ?? 8;
   const reservationMode = normalizeReservationMode(settings?.reservation_mode);
-  const useTables = reservationMode === "physical_tables";
+  const useTables = reservationMode === "floor_plan";
   const terraceEnabled = settings?.terrace_enabled === true;
 
   let reservationZone: "interior" | "terrace" = "interior";

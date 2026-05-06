@@ -77,6 +77,8 @@ export type PublicReservationFormProps = {
   clientsChooseTable?: boolean;
   /** Vrai si le restaurant utilise des tables physiques (sinon choix de table non applicable). */
   useTables?: boolean;
+  /** Mode public en plan de salle (si activé côté restaurant). */
+  publicTableSelectionMode?: "automatic" | "zone" | "table";
 };
 
 function scrollToReservation() {
@@ -207,6 +209,7 @@ export default function PublicReservationForm({
   terraceEnabled = false,
   clientsChooseTable = false,
   useTables = false,
+  publicTableSelectionMode = "automatic",
 }: PublicReservationFormProps) {
   const todayDate = useMemo(() => localYmd(new Date()), []);
   const maxDateStr = useMemo(() => {
@@ -215,7 +218,10 @@ export default function PublicReservationForm({
     d.setDate(d.getDate() + daysInAdvance);
     return localYmd(d);
   }, [daysInAdvance]);
-  const canChooseTable = clientsChooseTable === true && useTables === true;
+  const resolvedPublicMode: "automatic" | "zone" | "table" =
+    publicTableSelectionMode ?? (clientsChooseTable ? "table" : "automatic");
+  const allowZoneChoice = terraceEnabled && (resolvedPublicMode === "zone" || resolvedPublicMode === "table");
+  const canChooseTable = resolvedPublicMode === "table" && useTables === true;
   const totalSteps = canChooseTable ? 5 : 4;
   const contactStep = canChooseTable ? 5 : 4;
   const [wizardStep, setWizardStep] = useState(1);
@@ -235,6 +241,14 @@ export default function PublicReservationForm({
   const [seatingZone, setSeatingZone] = useState<"interior" | "terrace" | null>(null);
   const chooseTableInZone = canChooseTable && seatingZone !== "terrace";
   const datePickerRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!terraceEnabled) return;
+    if (allowZoneChoice) return;
+    // Si la terrasse est activée mais que le mode public ne propose pas le choix de zone,
+    // on force l'intérieur pour éviter un état bloquant.
+    queueMicrotask(() => setSeatingZone("interior"));
+  }, [terraceEnabled, allowZoneChoice]);
 
   const [clientSelectedTableId, setClientSelectedTableId] = useState<string | null>(null);
   const [tablesChoiceLoading, setTablesChoiceLoading] = useState(false);
@@ -385,7 +399,7 @@ export default function PublicReservationForm({
       return;
     }
 
-    if (terraceEnabled && !seatingZone) {
+    if (allowZoneChoice && !seatingZone) {
       queueMicrotask(() => {
         setAvailabilitySlots([]);
         setSlotsError(null);
@@ -397,7 +411,7 @@ export default function PublicReservationForm({
     setSlotsLoading(true);
     setSlotsError(null);
 
-    const zone: "interior" | "terrace" = terraceEnabled ? seatingZone! : "interior";
+    const zone: "interior" | "terrace" = allowZoneChoice ? seatingZone! : "interior";
     const q = new URLSearchParams({
       restaurantId,
       date: reservationDate,
@@ -441,6 +455,7 @@ export default function PublicReservationForm({
     closureEndDate,
     maxDateStr,
     terraceEnabled,
+    allowZoneChoice,
     seatingZone,
   ]);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -569,7 +584,7 @@ export default function PublicReservationForm({
       return;
     }
 
-    if (terraceEnabled && !seatingZone) {
+    if (allowZoneChoice && !seatingZone) {
       setError("Veuillez choisir un emplacement (intérieur ou terrasse).");
       setIsSubmitting(false);
       return;
@@ -597,7 +612,7 @@ export default function PublicReservationForm({
         guests,
         reservationDate,
         reservationTime,
-        ...(terraceEnabled && seatingZone ? { zone: seatingZone } : {}),
+        ...(allowZoneChoice && seatingZone ? { zone: seatingZone } : {}),
         ...(chooseTableInZone && clientSelectedTableId ? { tableId: clientSelectedTableId } : {}),
       }),
     });
@@ -975,7 +990,7 @@ export default function PublicReservationForm({
 
                 {wizardStep === 2 ? (
                   <div className="flex flex-col gap-6">
-                    {terraceEnabled ? (
+                    {allowZoneChoice ? (
                       <div className="flex flex-col gap-2" role="group" aria-label="Emplacement">
                         <p className="text-center text-sm font-medium" style={{ color: "var(--heading-color)" }}>
                           Emplacement
@@ -1302,7 +1317,7 @@ export default function PublicReservationForm({
                       (wizardStep === 1 &&
                         (!reservationDate || isDateInClosurePeriod || reservationDate > maxDateStr)) ||
                       (wizardStep === 2 &&
-                        (guests < 1 || isDateInClosurePeriod || (terraceEnabled && !seatingZone))) ||
+                        (guests < 1 || isDateInClosurePeriod || (allowZoneChoice && !seatingZone))) ||
                       (wizardStep === 3 && !reservationTime) ||
                       (wizardStep === 4 && chooseTableInZone && !clientSelectedTableId)
                     }
