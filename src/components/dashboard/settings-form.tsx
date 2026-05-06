@@ -3,10 +3,10 @@
 import { ChangeEvent, DragEvent, FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { GripVertical, Trash2 } from "lucide-react";
+import { ChevronDown, GripVertical, Trash2 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { Card, CardDescription, CardTitle } from "@/src/components/ui/card";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
@@ -174,6 +174,38 @@ function ReservationField({
       <p className="text-sm leading-relaxed text-zg-fg/52">{description}</p>
       <div>{children}</div>
     </div>
+  );
+}
+
+function AccordionCard({
+  title,
+  description,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  description: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <details open={defaultOpen} className="group">
+      <Card className="overflow-hidden p-0 transition-shadow duration-200 hover:shadow-zg-card">
+        <summary className="cursor-pointer list-none focus-visible:outline-none">
+          <div className="flex items-start justify-between gap-4 px-5 py-5 md:px-7 md:py-6">
+            <div className="min-w-0">
+              <CardTitle className="text-lg md:text-xl">{title}</CardTitle>
+              <CardDescription className="mt-2">{description}</CardDescription>
+            </div>
+            <ChevronDown
+              className="mt-1 h-5 w-5 shrink-0 text-zg-fg/55 transition-transform duration-200 group-open:rotate-180"
+              aria-hidden
+            />
+          </div>
+        </summary>
+        <div className="border-t border-zg-border/80 px-5 py-5 md:px-7 md:py-6">{children}</div>
+      </Card>
+    </details>
   );
 }
 
@@ -901,12 +933,11 @@ export default function SettingsForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Informations restaurant</CardTitle>
-          <CardDescription>Informations générales de votre établissement.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
+      <AccordionCard
+        title="Informations du restaurant"
+        description="Nom, coordonnées et informations internes."
+      >
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="dashboard-field-label">Nom du restaurant</label>
             <Input value={name} onChange={(event) => setName(event.target.value)} required />
@@ -918,25 +949,33 @@ export default function SettingsForm({
           <div className="md:col-span-2">
             <label className="dashboard-field-label">Description interne (optionnel)</label>
             <p className="mb-1 text-xs text-[var(--muted-foreground)]">
-              Notes internes ou texte brut non affiché sur la page publique (la description visible par les clients se règle dans Personnalisation).
+              Notes internes ou texte brut non affiché sur la page publique (la description visible par les clients se règle dans Page publique).
             </p>
-            <Textarea
-              className="min-h-20"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
+            <Textarea className="min-h-20" value={description} onChange={(event) => setDescription(event.target.value)} />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Personnalisation — page publique</CardTitle>
-          <CardDescription>
-            Aperçu en direct à droite (bureau) ou en bas (mobile). Tout est enregistré avec le bouton en bas de la page.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <AccordionCard
+        title="Abonnement"
+        description="Plan actuel, statut et gestion Stripe."
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/dashboard/billing"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-gradient-to-r from-zg-teal to-zg-mint px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_32px_-14px_rgba(31,122,108,0.82)] transition hover:scale-[1.02] active:scale-[0.99]"
+          >
+            Gérer mon abonnement
+          </Link>
+          <p className="text-sm text-zg-fg/55">Changement de plan, paiements et accès Pro.</p>
+        </div>
+      </AccordionCard>
+
+      <AccordionCard
+        title="Page publique"
+        description="Lien public, contenu et design affichés aux clients."
+      >
+        <div className="space-y-6">
           <p className="text-sm text-[var(--muted-foreground)]">
             Bucket Supabase : <span className="font-mono text-xs">restaurants</span> pour les fichiers. Enregistrez tout en bas de la page.
           </p>
@@ -1473,15 +1512,14 @@ export default function SettingsForm({
               placeholder="Ex : Pour les groupes de plus de 8 personnes, merci de nous contacter par téléphone."
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Confirmation des réservations</CardTitle>
-          <CardDescription>Choisissez comment les nouvelles réservations sont confirmées.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <AccordionCard
+        title="Confirmation des réservations"
+        description="Choisissez comment les nouvelles réservations sont confirmées."
+      >
+        <div className="space-y-3">
           <label
             className={cn(
               "flex cursor-pointer gap-4 rounded-lg border p-4 transition-colors",
@@ -1549,19 +1587,14 @@ export default function SettingsForm({
               </span>
             </span>
           </label>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>E-mail de confirmation</CardTitle>
-          <CardDescription>
-            Texte envoyé au client lorsque sa réservation est confirmée. L&apos;expéditeur technique reste ZenGrow ; vous
-            modifiez uniquement l&apos;objet et le message. Le design du courrier (mise en page, couleurs) est défini par
-            ZenGrow. Saisie en texte simple : les retours à ligne sont conservés ; le HTML n&apos;est pas interprété.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <AccordionCard
+        title="E-mail de confirmation"
+        description="Texte envoyé au client lorsque sa réservation est confirmée."
+      >
+        <div className="space-y-6">
           <div className="rounded-xl border border-zg-border-strong bg-zg-surface-elevated/50 p-4">
             <p className="text-sm font-semibold text-[var(--foreground)]">Variables dynamiques</p>
             <p className="mt-1 text-xs leading-relaxed text-zg-fg/55">
@@ -1641,17 +1674,14 @@ export default function SettingsForm({
             <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">{confirmationEmailPreviewSubject}</p>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zg-fg/78">{confirmationEmailPreviewBody}</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Terrasse</CardTitle>
-          <CardDescription>
-            Proposez une zone « terrasse » distincte de la salle, avec sa propre capacité par créneau.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
+      <AccordionCard
+        title="Terrasse"
+        description="Optionnel : proposer un choix Terrasse distinct, avec capacité dédiée."
+      >
+        <div className="space-y-5">
           <Toggle checked={terraceEnabled} onChange={setTerraceEnabled} label="Réservations en terrasse activées" />
           <p className="text-sm leading-relaxed text-zg-fg/62">
             Lorsque l&apos;option est désactivée, toutes les demandes sont traitées comme en salle et le choix
@@ -1673,18 +1703,15 @@ export default function SettingsForm({
               />
             </div>
           ) : null}
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Réservations</CardTitle>
-          <CardDescription>
-            Un seul mode actif : la page publique, le tableau de bord et la validation serveur suivent exactement la
-            même règle.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
+      <AccordionCard
+        title="Réservations"
+        description="Un seul mode actif : la page publique, le dashboard et la validation serveur suivent exactement la même règle."
+        defaultOpen
+      >
+        <div className="space-y-8">
           <div className="space-y-3">
             <p className="dashboard-field-label">Comment souhaitez-vous gérer vos réservations ?</p>
             <div className="grid gap-4 md:grid-cols-2">
@@ -1978,15 +2005,14 @@ export default function SettingsForm({
               dans le module « Plan de salle ».
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Lien public</CardTitle>
-          <CardDescription>Personnalisez le slug et partagez facilement la page.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <AccordionCard
+        title="Lien public"
+        description="Personnalisez le slug et partagez facilement la page."
+      >
+        <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="dashboard-field-label">Slug</label>
@@ -2014,15 +2040,14 @@ export default function SettingsForm({
               Ouvrir la page publique
             </a>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Fermeture temporaire</CardTitle>
-          <CardDescription>Bloquez les réservations pendant une période de fermeture.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
+      <AccordionCard
+        title="Fermeture temporaire"
+        description="Bloquez les réservations pendant une période de fermeture."
+      >
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="dashboard-field-label">Date de début</label>
             <Input
@@ -2046,8 +2071,8 @@ export default function SettingsForm({
               placeholder="Ex : Vacances d'ete"
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionCard>
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={isSaving} className="min-h-[44px]">

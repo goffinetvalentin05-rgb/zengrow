@@ -8,16 +8,8 @@ import EmptyState from "@/src/components/ui/empty-state";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
-import Toggle from "@/src/components/ui/toggle";
 import { cn } from "@/src/lib/utils";
 import type { CSSProperties } from "react";
-
-type ZoneRow = {
-  id: string;
-  name: string;
-  description: string | null;
-  is_active: boolean;
-};
 
 type FloorPlanTableShape = "round" | "square" | "rectangle";
 
@@ -153,7 +145,6 @@ export default function FloorPlanVisualPanel({
   const [servicePeriod, setServicePeriod] = useState<"lunch" | "dinner">("dinner");
   const [serviceTime, setServiceTime] = useState<string>(() => (dinnerStartTime ?? "19:00").slice(0, 5));
 
-  const [zones, setZones] = useState<ZoneRow[]>([]);
   const [tables, setTables] = useState<TableRow[]>([]);
   const [elements, setElements] = useState<FloorPlanElementRow[]>([]);
   const [reservations, setReservations] = useState<ReservationRow[]>([]);
@@ -190,16 +181,14 @@ export default function FloorPlanVisualPanel({
   );
 
   // Modals/forms
-  const [showZoneForm, setShowZoneForm] = useState(false);
-  const [zoneName, setZoneName] = useState("");
-  const [zoneDescription, setZoneDescription] = useState("");
-  const [zoneActive, setZoneActive] = useState(true);
+  const [showPlanForm, setShowPlanForm] = useState(false);
+  const [planName, setPlanName] = useState("");
+  const [planType, setPlanType] = useState<FloorPlanRow["type"]>("custom");
 
   const [showTableForm, setShowTableForm] = useState(false);
   const [tableName, setTableName] = useState("");
   const [tableMin, setTableMin] = useState(2);
   const [tableMax, setTableMax] = useState(4);
-  const [tableZoneId, setTableZoneId] = useState<string>("");
   const [tableStatus, setTableStatus] = useState<TableRow["status"]>("active");
   const [tableNote, setTableNote] = useState("");
   const [tableShape, setTableShape] = useState<FloorPlanTableShape>("round");
@@ -276,7 +265,6 @@ export default function FloorPlanVisualPanel({
     return arr.sort((a, b) => (a.reservation_time ?? "").localeCompare(b.reservation_time ?? ""));
   }, [reservations, serviceDate, serviceTime, defaultLunchDurationMinutes, defaultDinnerDurationMinutes]);
 
-  const activeZones = useMemo(() => zones.filter((z) => z.is_active), [zones]);
   const activeTables = useMemo(() => tables.filter((t) => t.status === "active"), [tables]);
 
   // (Réserver dans une itération suivante : affichage par zone / tri avancé)
@@ -285,16 +273,10 @@ export default function FloorPlanVisualPanel({
     setMessage(null);
     setLoading(true);
     const [
-      { data: zonesData, error: zonesError },
       { data: tablesData, error: tablesError },
       { data: elementsData, error: elementsError },
       { data: plansData, error: plansError },
     ] = await Promise.all([
-      supabase
-        .from("restaurant_zones")
-        .select("id, name, description, is_active")
-        .eq("restaurant_id", restaurantId)
-        .order("created_at", { ascending: true }),
       supabase
         .from("restaurant_tables")
         .select(
@@ -316,19 +298,14 @@ export default function FloorPlanVisualPanel({
         .order("created_at", { ascending: true }),
     ]);
 
-    if (zonesError || tablesError || elementsError || plansError) {
+    if (tablesError || elementsError || plansError) {
       setMessage(
-        zonesError?.message ??
-          tablesError?.message ??
-          elementsError?.message ??
-          plansError?.message ??
-          "Impossible de charger le plan de salle.",
+        tablesError?.message ?? elementsError?.message ?? plansError?.message ?? "Impossible de charger le plan de salle.",
       );
       setLoading(false);
       return;
     }
 
-    setZones((zonesData ?? []) as ZoneRow[]);
     setTables((tablesData ?? []) as TableRow[]);
     setElements((elementsData ?? []) as FloorPlanElementRow[]);
     const nextPlans = (plansData ?? []) as FloorPlanRow[];
@@ -475,56 +452,43 @@ export default function FloorPlanVisualPanel({
     [selected],
   );
 
-  async function createZone() {
+  async function createPlan(type: FloorPlanRow["type"], nameOverride?: string) {
     setMessage(null);
-    const name = zoneName.trim();
+    const name = (nameOverride ?? planName).trim();
     if (!name) {
-      setMessage("Indiquez un nom de zone.");
+      setMessage("Indiquez un nom d’espace.");
       return;
     }
-    const { error } = await supabase.from("restaurant_zones").insert({
-      restaurant_id: restaurantId,
-      name,
-      description: zoneDescription.trim() || null,
-      is_active: zoneActive,
-    });
+    const nextSort =
+      plans.length > 0 ? Math.max(...plans.map((p) => Number(p.sort_order ?? 0))) + 1 : 0;
+    const { data, error } = await supabase
+      .from("floor_plans")
+      .insert({
+        restaurant_id: restaurantId,
+        name,
+        type,
+        is_active: true,
+        sort_order: nextSort,
+      })
+      .select("id")
+      .maybeSingle();
     if (error) {
       setMessage(error.message);
       return;
     }
-    setShowZoneForm(false);
-    setZoneName("");
-    setZoneDescription("");
-    setZoneActive(true);
+    setShowPlanForm(false);
+    setPlanName("");
+    setPlanType("custom");
     await refresh();
-  }
-
-  async function setZoneActiveById(zoneId: string, isActive: boolean) {
-    setMessage(null);
-    const { error } = await supabase
-      .from("restaurant_zones")
-      .update({ is_active: isActive })
-      .eq("id", zoneId)
-      .eq("restaurant_id", restaurantId);
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
-    await refresh();
-  }
-
-  async function deleteZoneById(zoneId: string) {
-    setMessage(null);
-    const { error } = await supabase.from("restaurant_zones").delete().eq("id", zoneId).eq("restaurant_id", restaurantId);
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
-    await refresh();
+    if (data?.id) setActivePlanId(data.id);
   }
 
   async function createTable() {
     setMessage(null);
+    if (!activePlanId) {
+      setMessage("Créez d’abord un espace (Salle intérieure, Terrasse, etc.).");
+      return;
+    }
     const name = tableName.trim();
     if (!name) {
       setMessage("Indiquez un nom de table.");
@@ -536,7 +500,6 @@ export default function FloorPlanVisualPanel({
     const { error } = await supabase.from("restaurant_tables").insert({
       restaurant_id: restaurantId,
       floor_plan_id: activePlanId,
-      zone_id: tableZoneId || null,
       name,
       min_covers: min,
       max_covers: max,
@@ -558,7 +521,6 @@ export default function FloorPlanVisualPanel({
     setTableName("");
     setTableMin(2);
     setTableMax(4);
-    setTableZoneId("");
     setTableStatus("active");
     setTableNote("");
     setTableShape("round");
@@ -900,95 +862,111 @@ export default function FloorPlanVisualPanel({
   }
 
   return (
-    <section className="space-y-10">
-      <header className="flex flex-col gap-4 border-b border-zg-border/80 pb-7 sm:flex-row sm:items-end sm:justify-between">
+    <section className="space-y-8">
+      <header className="flex flex-col gap-4 border-b border-zg-border/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="dashboard-section-heading">Plan de salle</h1>
           <p className="dashboard-section-subtitle mt-2 max-w-2xl">
             Créez vos espaces, placez vos tables et suivez vos réservations.
           </p>
-          <p className="mt-2 text-sm text-zg-fg/55">
-            Assignation automatique des tables : <span className="font-semibold">{autoAssignEnabled ? "activée" : "désactivée"}</span>
-          </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
-          {plans.length > 0 ? (
-            <Select value={activePlanId ?? ""} onChange={(e) => setActivePlanId(e.target.value || null)}>
-              {plans.map((p) => (
+        <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+          <Button type="button" onClick={() => setShowReservationForm(true)}>
+            Nouvelle réservation
+          </Button>
+
+          <div className="relative">
+            <details className="group">
+              <summary className="list-none">
+                <Button type="button" variant="secondary">
+                  Actions
+                </Button>
+              </summary>
+              <div className="absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl border border-zg-border-strong bg-zg-surface/95 p-2 shadow-zg-card backdrop-blur">
+                <button
+                  type="button"
+                  className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-zg-fg/80 hover:bg-zg-highlight/70"
+                  onClick={() => setShowTableForm(true)}
+                >
+                  Ajouter une table
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-zg-fg/80 hover:bg-zg-highlight/70"
+                  onClick={() => setShowPlanForm(true)}
+                >
+                  Ajouter un espace
+                </button>
+              </div>
+            </details>
+          </div>
+
+          <div className="flex items-center rounded-full border border-zg-border-strong bg-zg-surface/90 p-1 shadow-zg-soft">
+            <button
+              type="button"
+              onClick={() => setMode("edit")}
+              className={cn(
+                "min-h-9 rounded-full px-4 text-sm font-semibold transition",
+                mode === "edit" ? "bg-zg-fg text-white" : "text-zg-fg/60 hover:text-zg-fg",
+              )}
+            >
+              Édition
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("service")}
+              className={cn(
+                "min-h-9 rounded-full px-4 text-sm font-semibold transition",
+                mode === "service" ? "bg-zg-fg text-white" : "text-zg-fg/60 hover:text-zg-fg",
+              )}
+            >
+              Service
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex flex-col gap-3 rounded-2xl border border-zg-border-strong bg-zg-surface/70 px-4 py-3 shadow-zg-soft md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-zg-border/70 bg-zg-surface/85 px-3 py-1 text-xs font-semibold text-zg-fg/70">
+            {activeTables.length} tables · {activeTables.reduce((sum, t) => sum + Math.max(0, t.max_covers), 0)} couverts
+          </span>
+          <span className="rounded-full border border-zg-border/70 bg-zg-surface/85 px-3 py-1 text-xs font-semibold text-zg-fg/70">
+            {reservedTablesCount} réservées · {unassignedReservationsAtSelectedTime.length} à placer
+          </span>
+          <span className="rounded-full border border-zg-border/70 bg-zg-surface/85 px-3 py-1 text-xs font-semibold text-zg-fg/70">
+            Auto-assign : {autoAssignEnabled ? "ON" : "OFF"}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-[220px] flex-1">
+            <label className="dashboard-field-label">Espace</label>
+            <Select value={activePlanId ?? ""} onChange={(e) => setActivePlanId(e.target.value || null)} disabled={plans.length === 0}>
+              {(plans.length ? plans : [{ id: "", name: "Aucun espace", type: "custom", is_active: true, sort_order: 0 }]).map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
               ))}
             </Select>
-          ) : null}
-          <Button type="button" onClick={() => setShowReservationForm(true)}>
-            Ajouter une réservation
-          </Button>
-          <Button type="button" variant="secondary" onClick={() => setShowTableForm(true)}>
-            Ajouter une table
-          </Button>
-          <Button type="button" variant="secondary" onClick={() => setShowZoneForm(true)}>
-            Ajouter un espace
-          </Button>
-          <Button type="button" variant={mode === "edit" ? "primary" : "secondary"} onClick={() => setMode("edit")}>
-            Édition
-          </Button>
-          <Button type="button" variant={mode === "service" ? "primary" : "secondary"} onClick={() => setMode("service")}>
-            Service
-          </Button>
-          {mode === "edit" ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <Select value={addElementType} onChange={(e) => setAddElementType(e.target.value as FloorPlanElementType)}>
-                <option value="wall">Mur</option>
-                <option value="door">Porte</option>
-                <option value="window">Fenêtre</option>
-                <option value="zone">Zone visuelle</option>
-                <option value="bar">Bar</option>
-                <option value="label">Texte</option>
-              </Select>
-              <Button type="button" variant="secondary" onClick={() => void createElement(addElementType)}>
-                Ajouter
-              </Button>
-            </div>
-          ) : null}
-          <Button type="button" disabled={!dirtyPlan || savingPlan || mode !== "edit"} onClick={() => void savePlanPositions()}>
-            {savingPlan ? "Sauvegarde…" : "Sauvegarder le plan"}
-          </Button>
+          </div>
+          <div className="w-[170px]">
+            <label className="dashboard-field-label">Date</label>
+            <Input type="date" value={serviceDate} onChange={(e) => setServiceDate(e.target.value)} />
+          </div>
+          <div className="w-[150px]">
+            <label className="dashboard-field-label">Service</label>
+            <Select value={servicePeriod} onChange={(e) => setServicePeriod(e.target.value as "lunch" | "dinner")}>
+              <option value="lunch">Midi</option>
+              <option value="dinner">Soir</option>
+            </Select>
+          </div>
+          <div className="w-[150px]">
+            <label className="dashboard-field-label">Heure</label>
+            <Input type="time" value={serviceTime} onChange={(e) => setServiceTime(e.target.value.slice(0, 5))} />
+          </div>
         </div>
-      </header>
-
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Tables actives</CardTitle>
-            <CardDescription>Disponibles hors bloquées</CardDescription>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold tabular-nums text-zg-fg">{activeTables.length}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Tables réservées</CardTitle>
-            <CardDescription>Sur le créneau sélectionné</CardDescription>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold tabular-nums text-zg-fg">{reservedTablesCount}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Couverts disponibles</CardTitle>
-            <CardDescription>Somme max des tables actives</CardDescription>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold tabular-nums text-zg-fg">
-            {activeTables.reduce((sum, t) => sum + Math.max(0, t.max_covers), 0)}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Réservations à placer</CardTitle>
-            <CardDescription>Sans table assignée</CardDescription>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold tabular-nums text-zg-fg">{unassignedReservationsAtSelectedTime.length}</CardContent>
-        </Card>
       </div>
 
       {message ? <p className="text-sm text-zg-fg/62">{message}</p> : null}
@@ -1053,28 +1031,7 @@ export default function FloorPlanVisualPanel({
         </Card>
       ) : null}
 
-      {/* Barre période / heure (service mode et démo UI) */}
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-2">
-          <label className="dashboard-field-label">Date</label>
-          <Input type="date" value={serviceDate} onChange={(e) => setServiceDate(e.target.value)} disabled={mode === "service" && loading} />
-        </div>
-        <div className="space-y-2">
-          <label className="dashboard-field-label">Période</label>
-          <Select
-            value={servicePeriod}
-            onChange={(e) => setServicePeriod(e.target.value as "lunch" | "dinner")}
-            disabled={mode === "edit" && savingPlan}
-          >
-            <option value="lunch">Midi</option>
-            <option value="dinner">Soir</option>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <label className="dashboard-field-label">Heure (affichage)</label>
-          <Input type="time" value={serviceTime} onChange={(e) => setServiceTime(e.target.value.slice(0, 5))} />
-        </div>
-      </div>
+      {/* Barre déplacée dans la ligne compacte au-dessus */}
 
       {loading ? (
         <div className="grid gap-6 lg:grid-cols-2">
@@ -1085,7 +1042,7 @@ export default function FloorPlanVisualPanel({
             </CardHeader>
             <CardContent className="h-24">
               <div className="h-24 rounded-xl bg-zg-highlight/35 animate-pulse" aria-hidden />
-              <span className="sr-only">Chargement des zones et tables</span>
+              <span className="sr-only">Chargement des espaces et tables</span>
             </CardContent>
           </Card>
           <Card>
@@ -1099,18 +1056,36 @@ export default function FloorPlanVisualPanel({
             </CardContent>
           </Card>
         </div>
-      ) : tables.length === 0 || zones.length === 0 ? (
+      ) : plans.length === 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>Commencez par dessiner</CardTitle>
-            <CardDescription>Créez d’abord des zones et des tables pour activer le plan de salle intelligent.</CardDescription>
+            <CardTitle>Créez votre premier espace</CardTitle>
+            <CardDescription>Exemples : Salle intérieure, Terrasse, Véranda, Étage…</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
-            <Button type="button" onClick={() => setShowZoneForm(true)}>
-              Créer ma première zone
+            <Button type="button" onClick={() => void createPlan("indoor", "Salle intérieure")}>
+              Créer une salle intérieure
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setShowTableForm(true)}>
+            <Button type="button" variant="secondary" onClick={() => void createPlan("terrace", "Terrasse")}>
+              Créer une terrasse
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setShowPlanForm(true)}>
+              Ajouter un autre espace
+            </Button>
+          </CardContent>
+        </Card>
+      ) : tables.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Ajoutez vos tables</CardTitle>
+            <CardDescription>Commencez par ajouter quelques tables dans l’espace sélectionné.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            <Button type="button" onClick={() => setShowTableForm(true)}>
               Ajouter une table
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setShowPlanForm(true)}>
+              Ajouter un espace
             </Button>
           </CardContent>
         </Card>
@@ -1118,6 +1093,38 @@ export default function FloorPlanVisualPanel({
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
           {/* Canvas */}
           <div className="min-w-0">
+            {mode === "edit" ? (
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zg-border-strong bg-zg-surface/75 px-4 py-3 shadow-zg-soft">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zg-fg/45">Outils</span>
+                  <Select
+                    value={addElementType}
+                    onChange={(e) => setAddElementType(e.target.value as FloorPlanElementType)}
+                  >
+                    <option value="wall">Mur</option>
+                    <option value="door">Porte</option>
+                    <option value="window">Fenêtre</option>
+                    <option value="zone">Zone</option>
+                    <option value="bar">Bar</option>
+                    <option value="label">Texte</option>
+                  </Select>
+                  <Button type="button" variant="secondary" onClick={() => void createElement(addElementType)}>
+                    Ajouter
+                  </Button>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    disabled={!dirtyPlan || savingPlan}
+                    onClick={() => void savePlanPositions()}
+                  >
+                    {savingPlan ? "Sauvegarde…" : "Sauvegarder"}
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
             <div
               ref={canvasRef}
               className={cn(
@@ -1264,36 +1271,6 @@ export default function FloorPlanVisualPanel({
                         title="Sélection requise"
                         description="Sélectionnez une table ou un élément (mur, porte, zone…) pour modifier ses paramètres."
                       />
-                      <div className="space-y-3">
-                        <p className="text-sm font-semibold text-zg-fg">Zones</p>
-                        {zones.length === 0 ? (
-                          <p className="text-sm text-zg-fg/55">Ajoutez une zone via le bouton “Ajouter une zone”.</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {zones.map((z) => (
-                              <div
-                                key={z.id}
-                                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zg-border/70 bg-zg-surface/60 p-3"
-                              >
-                                <div className="min-w-0">
-                                  <p className="truncate text-sm font-semibold text-zg-fg">{z.name}</p>
-                                  {z.description ? <p className="mt-1 line-clamp-2 text-xs text-zg-fg/55">{z.description}</p> : null}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Toggle
-                                    checked={z.is_active}
-                                    onChange={(next) => void setZoneActiveById(z.id, next)}
-                                    label={z.is_active ? "Active" : "Inactive"}
-                                  />
-                                  <Button type="button" variant="danger" onClick={() => void deleteZoneById(z.id)}>
-                                    Suppr.
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
                     </div>
                   ) : selectedElement ? (
                     <div className="grid gap-4">
@@ -1528,12 +1505,8 @@ export default function FloorPlanVisualPanel({
                             }
                           >
                             <option value="">(Aucune)</option>
-                            {activeZones.map((z) => (
-                              <option key={z.id} value={z.id}>
-                                {z.name}
-                              </option>
-                            ))}
                           </Select>
+                          <p className="mt-1 text-xs text-zg-fg/52">Optionnel (non affiché côté client).</p>
                         </div>
 
                         <div>
@@ -1760,32 +1733,32 @@ export default function FloorPlanVisualPanel({
       )}
 
       {/* Form zone */}
-      {showZoneForm ? (
+      {showPlanForm ? (
         <Card>
           <CardHeader>
-            <CardTitle>Nouvelle zone</CardTitle>
-            <CardDescription>Ex. Salle principale, Terrasse, Véranda, Étage…</CardDescription>
+            <CardTitle>Nouvel espace</CardTitle>
+            <CardDescription>Ex. Salle intérieure, Terrasse, Véranda, Étage…</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="dashboard-field-label">Nom</label>
-                <Input value={zoneName} onChange={(e) => setZoneName(e.target.value)} placeholder="Salle principale" />
+                <label className="dashboard-field-label">Nom de l’espace</label>
+                <Input value={planName} onChange={(e) => setPlanName(e.target.value)} placeholder="Salle intérieure" />
               </div>
               <div>
-                <label className="dashboard-field-label">Statut</label>
-                <Toggle checked={zoneActive} onChange={setZoneActive} label={zoneActive ? "Active" : "Inactive"} />
-              </div>
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Description (optionnelle)</label>
-                <Textarea value={zoneDescription} onChange={(e) => setZoneDescription(e.target.value)} />
+                <label className="dashboard-field-label">Type</label>
+                <Select value={planType} onChange={(e) => setPlanType(e.target.value as FloorPlanRow["type"])}>
+                  <option value="indoor">Salle intérieure</option>
+                  <option value="terrace">Terrasse</option>
+                  <option value="custom">Autre</option>
+                </Select>
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button type="button" onClick={() => void createZone()}>
-                Créer la zone
+              <Button type="button" onClick={() => void createPlan(planType)}>
+                Créer l’espace
               </Button>
-              <Button type="button" variant="secondary" onClick={() => setShowZoneForm(false)}>
+              <Button type="button" variant="secondary" onClick={() => setShowPlanForm(false)}>
                 Annuler
               </Button>
             </div>
@@ -1814,18 +1787,6 @@ export default function FloorPlanVisualPanel({
               <div>
                 <label className="dashboard-field-label">Capacité max</label>
                 <Input type="number" min={1} value={tableMax} onChange={(e) => setTableMax(Number(e.target.value))} />
-              </div>
-
-              <div>
-                <label className="dashboard-field-label">Zone</label>
-                <Select value={tableZoneId} onChange={(e) => setTableZoneId(e.target.value)}>
-                  <option value="">(Aucune)</option>
-                  {activeZones.map((z) => (
-                    <option key={z.id} value={z.id}>
-                      {z.name}
-                    </option>
-                  ))}
-                </Select>
               </div>
 
               <div>
@@ -1863,15 +1824,14 @@ export default function FloorPlanVisualPanel({
         </Card>
       ) : null}
 
-      {/* List actions zones (facultatif en 2ème itération, mais utile) */}
-      {showZoneForm ? null : (
+      {/* Placeholders legacy */}
+      {showPlanForm ? null : (
         <div className="hidden">
           {/* placeholder */}
         </div>
       )}
 
-      {/* Zones suppression est limitée par l'UI actuelle pour éviter de trop complexifier */}
-      {/* Les tables/zones se gèrent principalement via le panneau de création. */}
+      {/* Les espaces/tables se gèrent via les panneaux de création. */}
     </section>
   );
 }

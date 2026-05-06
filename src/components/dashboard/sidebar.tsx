@@ -8,9 +8,7 @@ import {
   CalendarDays,
   LayoutDashboard,
   LayoutGrid,
-  MessageSquare,
   Megaphone,
-  CreditCard,
   Settings,
   Star,
   Users,
@@ -30,12 +28,10 @@ const navItems = [
   { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
   { href: "/dashboard/availability", label: "Disponibilités", icon: CalendarDays },
   { href: "/dashboard/floor-plan", label: "Plan de salle", icon: LayoutGrid, requiresPro: true },
-  { href: "/dashboard/reviews", label: "Avis Google", icon: Star },
-  { href: "/dashboard/feedback", label: "Retours clients", icon: MessageSquare },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
+  { href: "/dashboard/reviews", label: "Avis Google", icon: Star },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { href: "/dashboard/billing", label: "Facturation", icon: CreditCard },
 ];
 
 export default function DashboardSidebar({
@@ -88,14 +84,29 @@ export default function DashboardSidebar({
       <div className="mt-auto shrink-0 border-t border-zg-border/75 bg-zg-surface-elevated/50 px-5 py-5">
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zg-fg/45">Lien public</p>
         <p className="mt-2 break-all text-xs leading-relaxed text-zg-fg/58">{reservationLink}</p>
-        <a
-          href={reservationLink}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-zg-teal transition hover:text-zg-fg"
-        >
-          Ouvrir la page →
-        </a>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <a
+            href={reservationLink}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-zg-teal transition hover:text-zg-fg"
+          >
+            Page publique →
+          </a>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(reservationLink);
+              } catch {
+                /* noop */
+              }
+            }}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-zg-fg/52 transition hover:text-zg-fg"
+          >
+            Copier le lien
+          </button>
+        </div>
       </div>
 
       <div className="shrink-0 space-y-0.5 border-t border-zg-border/75 px-5 pt-4 pb-8">
