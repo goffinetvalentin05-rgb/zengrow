@@ -23,7 +23,7 @@ function formatTimeLabel(reservationTime: string): string {
 
 export function DashboardStatsSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {Array.from({ length: 5 }, (_, i) => (
         <StatCardSkeleton key={i} />
       ))}
@@ -152,7 +152,7 @@ export async function DashboardStats({ restaurantId }: { restaurantId: string })
   );
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {kpis.map((kpi) => (
         <StatCard key={kpi.label} label={kpi.label} value={kpi.value} icon={kpi.icon} accent={kpi.accent} />
       ))}

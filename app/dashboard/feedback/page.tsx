@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import PageHeader from "@/src/components/dashboard/page-header";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -23,12 +24,11 @@ export default async function DashboardFeedbackPage() {
 
   return (
     <section className="space-y-10">
-      <header className="border-b border-zg-border/80 pb-7">
-        <h1 className="dashboard-section-heading">Retours clients</h1>
-        <p className="dashboard-section-subtitle mt-2 max-w-xl">
-          Messages privés envoyés après votre demande d&apos;avis.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Avis"
+        title="Retours clients"
+        subtitle="Messages privés envoyés après votre demande d’avis."
+      />
 
       <Card>
         <CardHeader>

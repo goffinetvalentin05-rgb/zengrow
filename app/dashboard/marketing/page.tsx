@@ -2,6 +2,7 @@ import MarketingPanel from "@/src/components/dashboard/marketing-panel";
 import Link from "next/link";
 import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
+import PageHeader from "@/src/components/dashboard/page-header";
 
 type CampaignListItem = {
   id: string;
@@ -20,12 +21,11 @@ export default async function DashboardMarketingPage() {
   if (!hasMarketingAccess) {
     return (
       <section className="relative space-y-6">
-        <header className="border-b border-zg-border/80 pb-7">
-          <h1 className="dashboard-section-heading">Campagnes marketing</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-            Envoyez des messages groupés à vos clients.
-          </p>
-        </header>
+        <PageHeader
+          kicker="Marketing"
+          title="Campagnes marketing"
+          subtitle="Envoyez des messages groupés à vos clients."
+        />
 
         <div className="relative min-h-[min(70vh,560px)] overflow-hidden rounded-[1.35rem] border border-zg-border-strong bg-gradient-to-b from-zg-surface-elevated/95 to-zg-surface/90 shadow-zg-card">
           <div

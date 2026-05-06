@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Toggle from "@/src/components/ui/toggle";
+import PageHeader from "@/src/components/dashboard/page-header";
+import ToastInline from "@/src/components/ui/toast-inline";
 import { createClient } from "@/src/lib/supabase/client";
 import { dayLabels, dayOrder, OpeningHours, OpeningHoursRange } from "@/src/lib/utils";
 
@@ -82,13 +84,27 @@ export default function AvailabilityEditor({
   }
 
   return (
-    <section className="space-y-10">
-      <header className="border-b border-zg-border/80 pb-7">
-        <h1 className="dashboard-section-heading">Disponibilités</h1>
-        <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-          Indiquez quand vous accueillez les réservations, jour par jour.
-        </p>
-      </header>
+    <section className="space-y-8 md:space-y-10">
+      <PageHeader
+        kicker="Disponibilités"
+        title="Disponibilités"
+        subtitle="Indiquez quand vous accueillez les réservations, configurez vos services et vos règles de capacité."
+        primaryAction={{
+          kind: "button",
+          label: saving ? "Enregistrement…" : "Enregistrer",
+          onClick: saveAvailability,
+          disabled: saving,
+        }}
+      />
+
+      {message ? (
+        <ToastInline
+          tone={message.toLowerCase().includes("enregistr") && !message.toLowerCase().includes("impossible") ? "success" : "info"}
+          message={message}
+        />
+      ) : null}
+
+      <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
       <Card>
         <CardHeader>
           <CardTitle>Horaires par jour</CardTitle>
@@ -96,40 +112,50 @@ export default function AvailabilityEditor({
             Configurez vos disponibilités jour par jour avec une interface simple.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="divide-y divide-zg-border/75 p-0">
           {dayOrder.map((day) => {
             const ranges = openingHours[day] ?? [];
             const isOpen = ranges.length > 0;
             return (
               <div
                 key={day}
-                className="rounded-2xl border border-zg-border/90 bg-zg-surface-elevated/55 p-5 shadow-zg-soft backdrop-blur-sm md:p-6"
+                className="px-5 py-4 md:px-6"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-zg-fg">{dayLabels[day]}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-zg-fg">{dayLabels[day]}</p>
+                    <p className="mt-0.5 text-xs text-zg-fg/50">
+                      {isOpen ? `${ranges.length} créneau${ranges.length > 1 ? "x" : ""}` : "Fermé"}
+                    </p>
+                  </div>
                   <Toggle checked={isOpen} onChange={(value) => toggleDay(day, value)} label={isOpen ? "Ouvert" : "Fermé"} />
                 </div>
 
                 {isOpen && (
                   <div className="mt-3 space-y-2">
                     {ranges.map((range, index) => (
-                      <div key={`${day}-${index}`} className="flex flex-wrap items-center gap-2">
+                      <div
+                        key={`${day}-${index}`}
+                        className="flex flex-wrap items-center gap-2 rounded-xl border border-zg-border/80 bg-zg-surface/75 px-3 py-2 shadow-sm"
+                      >
                         <Input
                           type="time"
-                          className="w-36"
+                          className="w-36 bg-white/80"
                           value={range.start}
                           onChange={(event) => updateRange(day, index, "start", event.target.value)}
                         />
                         <span className="text-zg-fg/38">à</span>
                         <Input
                           type="time"
-                          className="w-36"
+                          className="w-36 bg-white/80"
                           value={range.end}
                           onChange={(event) => updateRange(day, index, "end", event.target.value)}
                         />
-                        <Button type="button" variant="ghost" size="sm" onClick={() => removeRange(day, index)}>
-                          Supprimer
-                        </Button>
+                        <div className="ml-auto">
+                          <Button type="button" variant="ghost" size="sm" onClick={() => removeRange(day, index)}>
+                            Supprimer
+                          </Button>
+                        </div>
                       </div>
                     ))}
                     <Button type="button" size="sm" variant="secondary" onClick={() => addRange(day)}>
@@ -143,49 +169,45 @@ export default function AvailabilityEditor({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Paramètres de réservation</CardTitle>
-          <CardDescription>Règles générales appliquées à toutes les réservations.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
-          <div>
-            <label className="dashboard-field-label">Couverts max par créneau</label>
-            <Input
-              type="number"
-              min={1}
-              value={maxGuestsPerSlot}
-              onChange={(event) => setMaxGuestsPerSlot(Number(event.target.value))}
-            />
-          </div>
-          <div>
-            <label className="dashboard-field-label">Intervalle des créneaux</label>
-            <Select value={String(slotInterval)} onChange={(event) => setSlotInterval(Number(event.target.value))}>
-              <option value="15">15 min</option>
-              <option value="30">30 min</option>
-              <option value="45">45 min</option>
-              <option value="60">60 min</option>
-            </Select>
-          </div>
-          <div>
-            <label className="dashboard-field-label">Durée de réservation</label>
-            <Select
-              value={String(reservationDuration)}
-              onChange={(event) => setReservationDuration(Number(event.target.value))}
-            >
-              <option value="60">60 min</option>
-              <option value="90">90 min</option>
-              <option value="120">120 min</option>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex items-center gap-3">
-        <Button type="button" onClick={saveAvailability} disabled={saving}>
-          {saving ? "Enregistrement..." : "Enregistrer les horaires"}
-        </Button>
-        {message && <p className="text-sm text-[var(--muted-foreground)]">{message}</p>}
+        <div className="lg:col-span-5">
+          <Card>
+            <CardHeader>
+              <CardTitle>Paramètres de réservation</CardTitle>
+              <CardDescription>Règles générales appliquées à toutes les réservations.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-1">
+              <div>
+                <label className="dashboard-field-label">Couverts max par créneau</label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={maxGuestsPerSlot}
+                  onChange={(event) => setMaxGuestsPerSlot(Number(event.target.value))}
+                />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Intervalle des créneaux</label>
+                <Select value={String(slotInterval)} onChange={(event) => setSlotInterval(Number(event.target.value))}>
+                  <option value="15">15 min</option>
+                  <option value="30">30 min</option>
+                  <option value="45">45 min</option>
+                  <option value="60">60 min</option>
+                </Select>
+              </div>
+              <div>
+                <label className="dashboard-field-label">Durée de réservation</label>
+                <Select
+                  value={String(reservationDuration)}
+                  onChange={(event) => setReservationDuration(Number(event.target.value))}
+                >
+                  <option value="60">60 min</option>
+                  <option value="90">90 min</option>
+                  <option value="120">120 min</option>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </section>
   );

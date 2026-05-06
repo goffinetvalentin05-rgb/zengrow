@@ -1,6 +1,8 @@
 import ReservationsManager from "@/src/components/dashboard/reservations-manager";
+import PageHeader from "@/src/components/dashboard/page-header";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
+import { Plus } from "lucide-react";
 
 type DashboardReservationsPageProps = {
   searchParams?: Promise<{ new?: string }>;
@@ -65,21 +67,21 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
 
   return (
     <div className="space-y-10">
-      <header className="border-b border-zg-border/80 pb-7">
-        <h1 className="dashboard-section-heading">Réservations</h1>
-        <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-          Filtrez la liste, ouvrez une fiche pour confirmer, refuser ou ajouter une note interne.
-          {resSettings?.auto_archive_reservations !== true ? (
-            <>
-              {" "}
-              <span className="text-zg-fg/52">
-                Les créneaux déjà passés restent affichés tant que l&apos;archivage automatique est désactivé dans
-                Paramètres.
-              </span>
-            </>
-          ) : null}
-        </p>
-      </header>
+      <PageHeader
+        kicker="Réservations"
+        title="Réservations"
+        subtitle={
+          resSettings?.auto_archive_reservations !== true
+            ? "Filtrez la liste, ouvrez une fiche pour confirmer, refuser ou ajouter une note interne. Les créneaux déjà passés restent affichés tant que l’archivage automatique est désactivé dans Paramètres."
+            : "Filtrez la liste, ouvrez une fiche pour confirmer, refuser ou ajouter une note interne."
+        }
+        primaryAction={{
+          kind: "link",
+          href: "/dashboard/reservations?new=1",
+          label: "Nouvelle réservation",
+          icon: <Plus className="h-4 w-4" strokeWidth={2} />,
+        }}
+      />
       <ReservationsManager
         initialReservations={((reservations ?? []) as ReservationRow[]).map((r) => ({
           ...r,

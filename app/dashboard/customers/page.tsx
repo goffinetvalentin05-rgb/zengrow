@@ -2,6 +2,7 @@ import Link from "next/link";
 import CustomersPanel, { type CustomerRow } from "@/src/components/dashboard/customers-panel";
 import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
+import PageHeader from "@/src/components/dashboard/page-header";
 
 export default async function DashboardCustomersPage() {
   const supabase = await createClient();
@@ -59,12 +60,11 @@ export default async function DashboardCustomersPage() {
   if (!hasCustomersProAccess) {
     return (
       <section className="relative space-y-6">
-        <header className="border-b border-zg-border/80 pb-7">
-          <h1 className="dashboard-section-heading">Clients</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-xl">
-            Fiches construites à partir des réservations — idéal pour reconnaître vos habitués.
-          </p>
-        </header>
+        <PageHeader
+          kicker="Clients"
+          title="Clients"
+          subtitle="Fiches construites à partir des réservations — idéal pour reconnaître vos habitués."
+        />
 
         <div className="relative min-h-[min(70vh,560px)] overflow-hidden rounded-[1.35rem] border border-zg-border-strong bg-gradient-to-b from-zg-surface-elevated/95 to-zg-surface/90 shadow-zg-card">
           <div
@@ -91,12 +91,11 @@ export default async function DashboardCustomersPage() {
 
   return (
     <section className="space-y-10">
-      <header className="border-b border-zg-border/80 pb-7">
-        <h1 className="dashboard-section-heading">Clients</h1>
-        <p className="dashboard-section-subtitle mt-2 max-w-xl">
-          Fiches construites à partir des réservations — idéal pour reconnaître vos habitués.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Clients"
+        title="Clients"
+        subtitle="Fiches construites à partir des réservations — idéal pour reconnaître vos habitués."
+      />
 
       <CustomersPanel customers={customers} />
     </section>

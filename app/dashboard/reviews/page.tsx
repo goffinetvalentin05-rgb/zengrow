@@ -1,4 +1,5 @@
 import ReviewAutomationPanel from "@/src/components/dashboard/review-automation-panel";
+import PageHeader from "@/src/components/dashboard/page-header";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -26,12 +27,11 @@ export default async function DashboardReviewsPage() {
 
   return (
     <div className="space-y-10">
-      <header className="border-b border-zg-border/80 pb-7">
-        <h1 className="dashboard-section-heading">Avis Google</h1>
-        <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-          Envoyez automatiquement un message après la visite pour collecter des avis.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Avis Google"
+        title="Avis Google"
+        subtitle="Envoyez automatiquement un message après la visite pour collecter des avis."
+      />
       <ReviewAutomationPanel
         key={`${restaurant.id}-${automation?.id ?? "none"}-${String(automation?.is_enabled ?? false)}`}
         restaurantId={restaurant.id}

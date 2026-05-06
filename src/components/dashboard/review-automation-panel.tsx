@@ -3,12 +3,16 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, MessageCircle, Smartphone } from "lucide-react";
+import FilterBar from "@/src/components/dashboard/ui/filter-bar";
+import ActionMenu from "@/src/components/dashboard/ui/action-menu";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import EmptyState from "@/src/components/ui/empty-state";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
 import PanelToggle from "@/src/components/ui/panel-toggle";
+import ToastInline from "@/src/components/ui/toast-inline";
 import { createClient } from "@/src/lib/supabase/client";
 import { cn } from "@/src/lib/utils";
 
@@ -180,185 +184,209 @@ export default function ReviewAutomationPanel({
 
   return (
     <section className="space-y-10">
+      {message ? (
+        <ToastInline
+          tone={
+            message.toLowerCase().includes("mis à jour") || message.toLowerCase().includes("envoyé")
+              ? "success"
+              : message.toLowerCase().includes("erreur") || message.toLowerCase().includes("impossible")
+                ? "error"
+                : "info"
+          }
+          message={message}
+        />
+      ) : null}
+
       <Card>
         <CardHeader>
-          <CardTitle>Paramètres d&apos;envoi</CardTitle>
-          <CardDescription>Activez l&apos;envoi automatique et personnalisez le message reçu par vos clients.</CardDescription>
+          <CardTitle>Automatisation</CardTitle>
+          <CardDescription>Activez l’envoi automatique et personnalisez le message reçu par vos clients.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-            <div className="space-y-2">
+          <FilterBar
+            right={
+              <>
+                <ActionMenu
+                  items={[
+                    {
+                      kind: "action",
+                      label: sendingTest ? "Envoi du test…" : "Envoyer un e-mail de test",
+                      onClick: sendTestReviewEmail,
+                      disabled: sendingTest || savingToggle,
+                    },
+                  ]}
+                />
+                <Button type="button" onClick={saveSettings} disabled={saving || savingToggle}>
+                  {saving ? "Enregistrement…" : "Enregistrer"}
+                </Button>
+              </>
+            }
+          >
+            <div className="min-w-[260px] flex-1">
               <PanelToggle
                 checked={isEnabled}
                 onChange={handleAutomationToggle}
                 title="Automatisation active"
-                description="Les clients reçoivent un message après leur visite lorsque cette option est activée."
+                description="Les clients reçoivent un message après leur visite."
                 disabled={savingToggle || saving}
               />
-              {savingToggle ? (
-                <p className="text-xs font-medium text-zg-fg/52">Enregistrement…</p>
-              ) : null}
+              {savingToggle ? <p className="mt-2 text-xs font-medium text-zg-fg/52">Enregistrement…</p> : null}
               {toggleError ? (
-                <p className="text-sm text-red-600" role="alert">
+                <p className="mt-2 text-sm text-red-600" role="alert">
                   {toggleError}
                 </p>
               ) : null}
             </div>
+          </FilterBar>
 
-            <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
+            <div className="space-y-6 lg:col-span-7">
               <div>
-                <label className="dashboard-field-label">Canal de diffusion</label>
-                <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
-                  {channelOptions.map((item) => {
-                    const Icon = item.icon;
-                    const selected = item.id === channel;
-                    return (
-                      <div
-                        key={item.id}
-                        role={item.disabled ? undefined : "button"}
-                        tabIndex={item.disabled ? -1 : 0}
-                        className={cn(
-                          "flex min-w-0 flex-1 items-center gap-3 rounded-lg border px-3 py-3 shadow-sm transition-colors sm:min-w-[7.5rem] sm:flex-1",
-                          item.disabled && "cursor-not-allowed opacity-50",
-                          !item.disabled && selected && "border-l-4 border-l-zg-teal border-zg-border-strong bg-zg-highlight/55 pl-2.5",
-                          !item.disabled && !selected && "cursor-pointer border-zg-border-strong bg-zg-surface/95 hover:bg-zg-highlight/45",
-                          item.disabled && "border-zg-border/80 bg-zg-surface-elevated/70 shadow-none",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-                            selected && !item.disabled ? "bg-zg-teal text-white" : "bg-zg-surface-soft text-zg-fg/58",
-                          )}
-                        >
-                          <Icon size={18} strokeWidth={2} />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-[var(--foreground)]">{item.label}</p>
-                        </div>
-                        <span
-                          className={cn(
-                            "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-                            selected && !item.disabled
-                              ? "bg-green-100 text-green-800"
-                              : "bg-zg-border/55 text-zg-fg/48",
-                          )}
-                        >
-                          {item.badge}
-                        </span>
-                      </div>
-                    );
-                  })}
+                <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Réglages</p>
+                <div className="mt-3 grid gap-6 md:grid-cols-2">
+                  <div>
+                    <label className="dashboard-field-label">Canal</label>
+                    <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
+                      {channelOptions.map((item) => {
+                        const Icon = item.icon;
+                        const selected = item.id === channel;
+                        return (
+                          <div
+                            key={item.id}
+                            role={item.disabled ? undefined : "button"}
+                            tabIndex={item.disabled ? -1 : 0}
+                            className={cn(
+                              "flex min-w-0 flex-1 items-center gap-3 rounded-xl border px-3 py-3 shadow-sm transition-colors sm:min-w-[7.5rem] sm:flex-1",
+                              item.disabled && "cursor-not-allowed opacity-50",
+                              !item.disabled && selected && "border-l-4 border-l-zg-teal border-zg-border-strong bg-zg-highlight/55 pl-2.5",
+                              !item.disabled && !selected && "cursor-pointer border-zg-border-strong bg-zg-surface/95 hover:bg-zg-highlight/45",
+                              item.disabled && "border-zg-border/80 bg-zg-surface-elevated/70 shadow-none",
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+                                selected && !item.disabled ? "bg-zg-teal text-white" : "bg-zg-surface-soft text-zg-fg/58",
+                              )}
+                            >
+                              <Icon size={18} strokeWidth={2} />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-[var(--foreground)]">{item.label}</p>
+                            </div>
+                            <span
+                              className={cn(
+                                "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                                selected && !item.disabled ? "bg-green-100 text-green-800" : "bg-zg-border/55 text-zg-fg/48",
+                              )}
+                            >
+                              {item.badge}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Délai après visite</label>
+                    <Select
+                      className="mt-2"
+                      value={String(delayMinutes)}
+                      onChange={(event) => setDelayMinutes(Number(event.target.value))}
+                    >
+                      <option value="30">30 min</option>
+                      <option value="60">1 heure</option>
+                      <option value="90">1h30</option>
+                      <option value="120">2 heures</option>
+                      <option value="1440">24 heures</option>
+                    </Select>
+                  </div>
                 </div>
               </div>
+
               <div>
-                <label className="dashboard-field-label">Délai après visite</label>
-                <Select
-                  className="mt-2"
-                  value={String(delayMinutes)}
-                  onChange={(event) => setDelayMinutes(Number(event.target.value))}
-                >
-                  <option value="30">30 min</option>
-                  <option value="60">1 heure</option>
-                  <option value="90">1h30</option>
-                  <option value="120">2 heures</option>
-                  <option value="1440">24 heures</option>
-                </Select>
+                <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Message</p>
+                <div className="mt-3 space-y-4">
+                  <div>
+                    <label className="dashboard-field-label">Lien Google Avis</label>
+                    <Input
+                      className="mt-2"
+                      value={googleReviewUrl}
+                      onChange={(event) => setGoogleReviewUrl(event.target.value)}
+                      placeholder="https://g.page/..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="dashboard-field-label">Objet de l&apos;e-mail</label>
+                    <Input
+                      className="mt-2"
+                      value={emailSubject}
+                      onChange={(event) => setEmailSubject(event.target.value)}
+                      placeholder="Comment s'est passée votre expérience chez {{restaurant_name}} ?"
+                    />
+                    <p className="mt-1.5 text-xs text-[var(--muted-foreground)]">Variable : {"{{restaurant_name}}"}</p>
+                  </div>
+
+                  <div>
+                    <label className="dashboard-field-label">Message de l&apos;e-mail</label>
+                    <Textarea className="mt-2 min-h-32" value={emailMessage} onChange={(event) => setEmailMessage(event.target.value)} />
+                    <p className="mt-1.5 text-xs text-[var(--muted-foreground)]">Variable : {"{{restaurant_name}}"}</p>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div>
+                      <label className="dashboard-field-label">Bouton positif</label>
+                      <Input className="mt-2" value={positiveLabel} onChange={(event) => setPositiveLabel(event.target.value)} />
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label">Bouton neutre</label>
+                      <Input className="mt-2" value={neutralLabel} onChange={(event) => setNeutralLabel(event.target.value)} />
+                    </div>
+                    <div>
+                      <label className="dashboard-field-label">Bouton négatif</label>
+                      <Input className="mt-2" value={negativeLabel} onChange={(event) => setNegativeLabel(event.target.value)} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="dashboard-field-label">Couleur principale</label>
+                    <div className="mt-2 flex items-center gap-2">
+                      <Input
+                        type="color"
+                        className="h-11 w-14 shrink-0"
+                        value={primaryColor}
+                        onChange={(event) => setPrimaryColor(event.target.value)}
+                      />
+                      <Input value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="dashboard-field-label">Lien Google Avis</label>
-              <Input
-                className="mt-2"
-                value={googleReviewUrl}
-                onChange={(event) => setGoogleReviewUrl(event.target.value)}
-                placeholder="https://g.page/..."
-              />
-            </div>
-
-            <div>
-              <label className="dashboard-field-label">Objet de l&apos;e-mail</label>
-              <Input
-                className="mt-2"
-                value={emailSubject}
-                onChange={(event) => setEmailSubject(event.target.value)}
-                placeholder="Comment s'est passée votre expérience chez {{restaurant_name}} ?"
-              />
-              <p className="mt-1.5 text-xs text-[var(--muted-foreground)]">Variable supportée : {"{{restaurant_name}}"}</p>
-            </div>
-
-            <div>
-              <label className="dashboard-field-label">Message de l&apos;e-mail</label>
-              <Textarea
-                className="mt-2 min-h-32"
-                value={emailMessage}
-                onChange={(event) => setEmailMessage(event.target.value)}
-              />
-              <p className="mt-1.5 text-xs text-[var(--muted-foreground)]">Variable supportée : {"{{restaurant_name}}"}</p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="dashboard-field-label">Libellé excellent</label>
-                <Input className="mt-2" value={positiveLabel} onChange={(event) => setPositiveLabel(event.target.value)} />
-              </div>
-              <div>
-                <label className="dashboard-field-label">Libellé moyen</label>
-                <Input className="mt-2" value={neutralLabel} onChange={(event) => setNeutralLabel(event.target.value)} />
-              </div>
-              <div>
-                <label className="dashboard-field-label">Libellé à améliorer</label>
-                <Input className="mt-2" value={negativeLabel} onChange={(event) => setNegativeLabel(event.target.value)} />
+            <div className="lg:col-span-5">
+              <div className="rounded-2xl border border-zg-border-strong/85 bg-zg-surface-elevated/55 p-6 shadow-zg-soft backdrop-blur-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Aperçu</p>
+                <p className="mt-4 text-base font-semibold text-zg-fg">{previewSubject}</p>
+                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zg-fg/72">{previewMessage}</p>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <span
+                    className="rounded-lg px-2 py-2 text-center text-xs font-semibold text-white"
+                    style={{ backgroundColor: primaryColor || "#15803d" }}
+                  >
+                    {positiveLabel}
+                  </span>
+                  <span className="rounded-lg border border-zg-border-strong bg-zg-surface/95 px-2 py-2 text-center text-xs font-semibold text-zg-fg/85">
+                    {neutralLabel}
+                  </span>
+                  <span className="rounded-lg border border-zg-border-strong bg-zg-surface/95 px-2 py-2 text-center text-xs font-semibold text-zg-fg/85">
+                    {negativeLabel}
+                  </span>
+                </div>
               </div>
             </div>
-
-            <div>
-              <label className="dashboard-field-label">Couleur principale de l&apos;e-mail</label>
-              <div className="mt-2 flex items-center gap-2">
-                <Input
-                  type="color"
-                  className="h-11 w-14 shrink-0"
-                  value={primaryColor}
-                  onChange={(event) => setPrimaryColor(event.target.value)}
-                />
-                <Input value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} />
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4">
-              <Button type="button" onClick={saveSettings} disabled={saving || savingToggle}>
-                {saving ? "Enregistrement…" : "Enregistrer"}
-              </Button>
-              <button
-                type="button"
-                className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
-                onClick={sendTestReviewEmail}
-                disabled={sendingTest || savingToggle}
-              >
-                {sendingTest ? "Envoi du test…" : "E-mail de test"}
-              </button>
-            </div>
-            {message && <p className="text-sm text-zg-fg/62">{message}</p>}
-
-            <div className="rounded-2xl border border-zg-border/90 bg-zg-surface-elevated/70 p-6 shadow-zg-soft backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Aperçu</p>
-              <p className="mt-4 text-base font-semibold text-zg-fg">{previewSubject}</p>
-              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zg-fg/72">{previewMessage}</p>
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <span
-                  className="rounded-lg px-2 py-2 text-center text-xs font-semibold text-white"
-                  style={{ backgroundColor: primaryColor || "#15803d" }}
-                >
-                  {positiveLabel}
-                </span>
-                <span className="rounded-lg border border-zg-border-strong bg-zg-surface/95 px-2 py-2 text-center text-xs font-semibold text-zg-fg/85">
-                  {neutralLabel}
-                </span>
-                <span className="rounded-lg border border-zg-border-strong bg-zg-surface/95 px-2 py-2 text-center text-xs font-semibold text-zg-fg/85">
-                  {negativeLabel}
-                </span>
-              </div>
-            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -369,9 +397,7 @@ export default function ReviewAutomationPanel({
         </CardHeader>
         <CardContent>
           {initialFeedback.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-zg-border-strong bg-zg-surface-elevated/85 py-10 text-center text-sm text-zg-fg/52 shadow-zg-soft backdrop-blur-sm">
-              Aucun retour pour le moment.
-            </p>
+            <EmptyState title="Aucun retour" description="Les messages privés apparaîtront après les envois." />
           ) : (
             <div className="space-y-4">
               {initialFeedback.map((item) => (

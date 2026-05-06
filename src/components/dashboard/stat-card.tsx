@@ -5,9 +5,9 @@ import { cn } from "@/src/lib/utils";
 type StatAccent = "primary" | "amber" | "stone";
 
 const accentBar: Record<StatAccent, string> = {
-  primary: "bg-[#3DBE9F]",
-  amber: "bg-[#3DBE9F]",
-  stone: "bg-[#3DBE9F]",
+  primary: "bg-zg-mint",
+  amber: "bg-amber-400",
+  stone: "bg-zg-border-accent",
 };
 
 type StatCardProps = {
@@ -15,6 +15,7 @@ type StatCardProps = {
   value: number | string;
   icon: LucideIcon;
   accent?: StatAccent;
+  compact?: boolean;
 };
 
 export function StatCardSkeleton() {
@@ -41,7 +42,7 @@ export default function StatCard({ label, value, icon: Icon, accent = "primary" 
   return (
     <div
       className={cn(
-        "flex gap-4 rounded-2xl border border-zg-border-strong/88 bg-zg-surface/92 p-6 shadow-zg-card backdrop-blur-md",
+        "flex gap-4 rounded-2xl border border-zg-border-strong/88 bg-zg-surface/92 p-4 shadow-zg-soft backdrop-blur-md",
         "min-h-0 min-w-0",
       )}
     >
@@ -51,7 +52,7 @@ export default function StatCard({ label, value, icon: Icon, accent = "primary" 
         <p
           className={cn(
             "mt-2 font-bold tracking-tight text-zg-fg",
-            isText ? "text-xl leading-snug sm:text-2xl" : "text-4xl tabular-nums",
+            isText ? "text-lg leading-snug sm:text-xl" : "text-3xl tabular-nums",
           )}
         >
           {value}

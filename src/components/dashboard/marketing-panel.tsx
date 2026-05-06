@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PageHeader from "@/src/components/dashboard/page-header";
+import FilterBar from "@/src/components/dashboard/ui/filter-bar";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import EmptyState from "@/src/components/ui/empty-state";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
+import ToastInline from "@/src/components/ui/toast-inline";
 import Textarea from "@/src/components/ui/textarea";
 
 type AudienceFilter = "all_customers" | "visited_last_30_days" | "visited_last_90_days" | "visited_more_than_3_times";
@@ -86,18 +89,19 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
   }
 
   return (
-    <section className="space-y-10">
-      <header className="flex flex-col gap-6 border-b border-zg-border/80 pb-7 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="dashboard-section-heading">Campagnes marketing</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-            Créez un e-mail groupé pour vos clients — soirées spéciales, menus, offres.
-          </p>
-        </div>
-        <Button type="button" onClick={() => setShowForm((current) => !current)} variant={showForm ? "secondary" : "primary"}>
-          {showForm ? "Annuler" : "Nouvelle campagne"}
-        </Button>
-      </header>
+    <section className="space-y-8 md:space-y-10">
+      <PageHeader
+        kicker="Marketing"
+        title="Campagnes marketing"
+        subtitle="Créez un e-mail groupé pour vos clients — soirées spéciales, menus, offres."
+        primaryAction={{
+          kind: "button",
+          label: showForm ? "Annuler" : "Nouvelle campagne",
+          onClick: () => setShowForm((c) => !c),
+        }}
+      />
+
+      {message ? <ToastInline tone={message.toLowerCase().includes("envoy") ? "success" : "info"} message={message} /> : null}
 
       {showForm && (
         <Card>
@@ -153,16 +157,10 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
               <Button type="button" onClick={handleCreateCampaign} disabled={submitting}>
                 {submitting ? "Envoi…" : "Envoyer"}
               </Button>
-              <button
-                type="button"
-                className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
-                onClick={() => setShowForm(false)}
-                disabled={submitting}
-              >
+              <Button type="button" variant="secondary" onClick={() => setShowForm(false)} disabled={submitting}>
                 Fermer
-              </button>
+              </Button>
             </div>
-            {message && <p className="text-sm text-zg-fg/62">{message}</p>}
           </CardContent>
         </Card>
       )}
@@ -172,29 +170,51 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
           <CardTitle>Historique</CardTitle>
           <CardDescription>Campagnes envoyées.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          <FilterBar
+            right={
+              <Button type="button" variant="secondary" size="sm" onClick={() => setShowForm(true)}>
+                Créer une campagne
+              </Button>
+            }
+          >
+            <div className="w-[260px]">
+              <label className="dashboard-field-label">Vue</label>
+              <Select value="all" onChange={() => {}}>
+                <option value="all">Toutes les campagnes</option>
+              </Select>
+            </div>
+          </FilterBar>
+
           {campaigns.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-zg-border-strong bg-zg-surface-elevated/85 py-10 text-center text-sm text-zg-fg/52 shadow-zg-soft backdrop-blur-sm">
-              Aucune campagne pour le moment.
-            </p>
+            <EmptyState title="Aucune campagne" description="Créez votre première campagne marketing." />
           ) : (
-            <div className="space-y-3">
-              {campaigns.map((campaign) => (
-                <Link
-                  key={campaign.id}
-                  href={`/dashboard/marketing/${campaign.id}`}
-                  className="block rounded-2xl border border-zg-border/90 bg-zg-surface/95 p-5 shadow-zg-soft backdrop-blur-sm transition hover:border-zg-mint/45 hover:shadow-zg-card md:p-6"
-                >
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <p className="text-[15px] font-semibold text-zg-fg">{campaign.name}</p>
-                    <span className="rounded-full bg-zg-highlight/80 px-2.5 py-1 text-xs font-semibold text-zg-teal ring-1 ring-zg-border-accent/70">
-                      {campaign.sent_at ? campaign.sent_at.slice(0, 10) : "Brouillon"}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-zg-fg/62">{campaign.subject}</p>
-                  <p className="mt-2 text-xs font-medium text-zg-fg/52">{campaign.recipients_count} destinataires</p>
-                </Link>
-              ))}
+            <div className="overflow-hidden rounded-2xl border border-zg-border-strong/85 bg-zg-surface/92 shadow-zg-soft backdrop-blur-sm">
+              <div className="grid grid-cols-[minmax(180px,1.4fr)_minmax(200px,2fr)_120px_130px] gap-3 border-b border-zg-border/80 bg-zg-surface-elevated/65 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg/55">
+                <div>Campagne</div>
+                <div>Objet</div>
+                <div className="text-right">Envois</div>
+                <div className="text-right">Date</div>
+              </div>
+              <div className="divide-y divide-zg-border/75">
+                {campaigns.map((campaign) => (
+                  <a
+                    key={campaign.id}
+                    href={`/dashboard/marketing/${campaign.id}`}
+                    className="grid grid-cols-[minmax(180px,1.4fr)_minmax(200px,2fr)_120px_130px] items-center gap-3 px-4 py-3 text-sm transition hover:bg-zg-highlight/35"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold text-zg-fg">{campaign.name}</div>
+                      <div className="mt-0.5 text-xs text-zg-fg/52">{campaign.sent_at ? "Envoyée" : "Brouillon"}</div>
+                    </div>
+                    <div className="min-w-0 truncate text-zg-fg/62">{campaign.subject}</div>
+                    <div className="text-right tabular-nums text-zg-fg/72">{campaign.recipients_count}</div>
+                    <div className="text-right tabular-nums text-zg-fg/62">
+                      {(campaign.sent_at ?? campaign.created_at).slice(0, 10)}
+                    </div>
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </CardContent>

@@ -28,6 +28,23 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: "min-h-12 px-6 py-3 text-sm font-semibold",
 };
 
+export function buttonClassName({
+  variant = "primary",
+  size = "md",
+  className = "",
+}: {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  className?: string;
+}) {
+  return cn(
+    "inline-flex items-center justify-center gap-2 rounded-xl transition-all duration-200 outline-none disabled:pointer-events-none disabled:opacity-60",
+    variantClasses[variant],
+    sizeClasses[size],
+    className,
+  );
+}
+
 export default function Button({
   className = "",
   variant = "primary",
@@ -36,12 +53,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl transition-all duration-200 outline-none disabled:pointer-events-none disabled:opacity-60",
-        variantClasses[variant],
-        sizeClasses[size],
-        className,
-      )}
+      className={buttonClassName({ variant, size, className })}
       {...props}
     />
   );

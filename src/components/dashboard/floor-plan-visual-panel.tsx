@@ -8,6 +8,7 @@ import EmptyState from "@/src/components/ui/empty-state";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
+import PageHeader from "@/src/components/dashboard/page-header";
 import { cn } from "@/src/lib/utils";
 import type { CSSProperties } from "react";
 
@@ -862,84 +863,26 @@ export default function FloorPlanVisualPanel({
 
   return (
     <section className="space-y-8">
-      <header className="flex flex-col gap-4 border-b border-zg-border/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="dashboard-section-heading">Plan de salle</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-            Créez vos espaces, placez vos tables et suivez votre service en direct.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 sm:justify-end">
-          <Button type="button" onClick={() => setShowReservationForm(true)}>
-            Nouvelle réservation
-          </Button>
-
-          <div className="relative">
-            <details className="group">
-              <summary className="list-none">
-                <Button type="button" variant="secondary">
-                  Actions
-                </Button>
-              </summary>
-              <div className="absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl border border-zg-border-strong bg-zg-surface/95 p-2 shadow-zg-card backdrop-blur">
-                <button
-                  type="button"
-                  className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-zg-fg/80 hover:bg-zg-highlight/70"
-                  onClick={(e) => {
-                    closeActions(e.currentTarget.closest("details"));
-                    setShowTableForm(true);
-                  }}
-                >
-                  Ajouter une table
-                </button>
-                <button
-                  type="button"
-                  className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-zg-fg/80 hover:bg-zg-highlight/70"
-                  onClick={(e) => {
-                    closeActions(e.currentTarget.closest("details"));
-                    setShowPlanForm(true);
-                  }}
-                >
-                  Ajouter un espace
-                </button>
-                <div className="my-2 h-px bg-zg-border/80" />
-                {(
-                  [
-                    { id: "wall", label: "Ajouter un mur" },
-                    { id: "door", label: "Ajouter une porte" },
-                    { id: "window", label: "Ajouter une fenêtre" },
-                    { id: "label", label: "Ajouter un texte" },
-                  ] as Array<{ id: FloorPlanElementType; label: string }>
-                ).map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-zg-fg/80 hover:bg-zg-highlight/70"
-                    onClick={(e) => {
-                      closeActions(e.currentTarget.closest("details"));
-                      void createElement(item.id);
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-                <div className="my-2 h-px bg-zg-border/80" />
-                <button
-                  type="button"
-                  className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-zg-fg/80 hover:bg-zg-highlight/70 disabled:opacity-45"
-                  disabled={!dirtyPlan || savingPlan}
-                  onClick={(e) => {
-                    closeActions(e.currentTarget.closest("details"));
-                    void savePlanPositions();
-                  }}
-                >
-                  {savingPlan ? "Sauvegarde…" : "Sauvegarder le plan"}
-                </button>
-              </div>
-            </details>
-          </div>
-
+      <PageHeader
+        kicker="Plan de salle"
+        title="Plan de salle"
+        subtitle="Créez vos espaces, placez vos tables et suivez votre service."
+        primaryAction={{
+          kind: "button",
+          label: "Nouvelle réservation",
+          onClick: () => setShowReservationForm(true),
+        }}
+        menuItems={[
+          { kind: "action", label: "Ajouter une table", onClick: () => setShowTableForm(true) },
+          { kind: "action", label: "Ajouter un espace", onClick: () => setShowPlanForm(true) },
+          { kind: "action", label: "Ajouter un mur", onClick: () => void createElement("wall") },
+          { kind: "action", label: "Ajouter une porte", onClick: () => void createElement("door") },
+          { kind: "action", label: "Ajouter une fenêtre", onClick: () => void createElement("window") },
+          { kind: "action", label: "Ajouter un texte", onClick: () => void createElement("label") },
+          { kind: "action", label: savingPlan ? "Sauvegarde…" : "Sauvegarder le plan", onClick: () => void savePlanPositions(), disabled: !dirtyPlan || savingPlan },
+        ]}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center rounded-full border border-zg-border-strong bg-zg-surface/90 p-1 shadow-zg-soft">
             <button
               type="button"
@@ -963,15 +906,9 @@ export default function FloorPlanVisualPanel({
             </button>
           </div>
         </div>
-      </header>
+      </PageHeader>
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-zg-border-strong bg-zg-surface/70 px-4 py-3 shadow-zg-soft md:flex-row md:items-center md:justify-between">
-        <p className="text-sm font-semibold text-zg-fg/70">
-          {activeTables.length} tables actives ·{" "}
-          {activeTables.reduce((sum, t) => sum + Math.max(0, t.max_covers), 0)} couverts ·{" "}
-          {reservations.length} réservations · {unassignedReservationsAtSelectedTime.length} à placer
-        </p>
-
+      <div className="rounded-2xl border border-zg-border-strong bg-zg-surface/70 px-4 py-3 shadow-zg-soft">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
             <label className="dashboard-field-label">Espace</label>
@@ -999,6 +936,21 @@ export default function FloorPlanVisualPanel({
             <Input type="time" value={serviceTime} onChange={(e) => setServiceTime(e.target.value.slice(0, 5))} />
           </div>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-zg-fg/55">
+        <span className="rounded-full border border-zg-border/80 bg-zg-surface/70 px-3 py-1 shadow-zg-soft">
+          {activeTables.length} tables actives
+        </span>
+        <span className="rounded-full border border-zg-border/80 bg-zg-surface/70 px-3 py-1 shadow-zg-soft">
+          {activeTables.reduce((sum, t) => sum + Math.max(0, t.max_covers), 0)} couverts
+        </span>
+        <span className="rounded-full border border-zg-border/80 bg-zg-surface/70 px-3 py-1 shadow-zg-soft">
+          {reservations.length} réservations
+        </span>
+        <span className="rounded-full border border-zg-border/80 bg-zg-surface/70 px-3 py-1 shadow-zg-soft">
+          {unassignedReservationsAtSelectedTime.length} à placer
+        </span>
       </div>
 
       {message ? <p className="text-sm text-zg-fg/62">{message}</p> : null}

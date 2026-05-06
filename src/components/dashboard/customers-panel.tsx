@@ -1,8 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import FilterBar from "@/src/components/dashboard/ui/filter-bar";
+import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import EmptyState from "@/src/components/ui/empty-state";
+import Input from "@/src/components/ui/input";
+import Select from "@/src/components/ui/select";
 import { cn } from "@/src/lib/utils";
 
 export type CustomerRow = {
@@ -55,15 +59,6 @@ function downloadCsv(rows: CustomerRow[]) {
   URL.revokeObjectURL(url);
 }
 
-function pillClass(active: boolean) {
-  return cn(
-    "rounded-full border px-3 py-1.5 text-xs font-medium transition",
-    active
-      ? "border-zg-teal bg-gradient-to-r from-zg-teal to-zg-mint text-white shadow-[0_8px_24px_-12px_rgba(31,122,108,0.72)]"
-      : "border-zg-border-strong bg-zg-surface/95 text-zg-fg/72 hover:border-zg-mint/35 hover:bg-zg-highlight/50",
-  );
-}
-
 function matchesInactive(lastVisit: string | null, totalVisits: number, filter: InactiveFilter): boolean {
   if (filter === "all") return true;
   if (totalVisits === 0) return false;
@@ -94,15 +89,21 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
   const [visitFilter, setVisitFilter] = useState<VisitFilter>("all");
   const [inactiveFilter, setInactiveFilter] = useState<InactiveFilter>("all");
   const [avgFilter, setAvgFilter] = useState<AvgCoversFilter>("all");
+  const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
     return customers.filter((c) => {
       if (!matchesVisitCount(c.totalVisits, visitFilter)) return false;
       if (!matchesInactive(c.lastVisit, c.totalVisits, inactiveFilter)) return false;
       if (!matchesAvgCovers(c.avgCovers, avgFilter)) return false;
+      if (q) {
+        const hay = `${c.name} ${c.email ?? ""} ${c.phone ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
       return true;
     });
-  }, [customers, visitFilter, inactiveFilter, avgFilter]);
+  }, [customers, visitFilter, inactiveFilter, avgFilter, query]);
 
   return (
     <Card>
@@ -111,82 +112,50 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
           <CardTitle>Liste des clients</CardTitle>
           <CardDescription>Historique, segmentation et export (plan Pro).</CardDescription>
         </div>
-        <button
-          type="button"
-          onClick={() => downloadCsv(filtered)}
-          className="inline-flex min-h-[40px] shrink-0 items-center justify-center rounded-xl border border-zg-border-strong bg-zg-surface/95 px-4 py-2 text-sm font-semibold text-zg-fg shadow-zg-soft transition hover:bg-zg-highlight/55"
-        >
-          Exporter
-        </button>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex flex-col gap-4">
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Nombre de visites</p>
-            <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  ["all", "Tous"],
-                  ["gt3", "Plus de 3 visites"],
-                  ["gt5", "Plus de 5 visites"],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={pillClass(visitFilter === key)}
-                  onClick={() => setVisitFilter(key)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+        <FilterBar
+          right={
+            <Button type="button" variant="secondary" size="sm" onClick={() => downloadCsv(filtered)}>
+              Exporter CSV
+            </Button>
+          }
+        >
+          <div className="min-w-[240px] flex-1">
+            <label className="dashboard-field-label">Recherche</label>
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Nom, email, téléphone…"
+            />
           </div>
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Dernière visite</p>
-            <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  ["all", "Tous"],
-                  ["gt30", "Pas venu depuis 30 jours"],
-                  ["gt60", "Pas venu depuis 60 jours"],
-                  ["gt90", "Pas venu depuis 90 jours"],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={pillClass(inactiveFilter === key)}
-                  onClick={() => setInactiveFilter(key)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+          <div className="w-[210px]">
+            <label className="dashboard-field-label">Visites</label>
+            <Select value={visitFilter} onChange={(e) => setVisitFilter(e.target.value as VisitFilter)}>
+              <option value="all">Tous</option>
+              <option value="gt3">Plus de 3 visites</option>
+              <option value="gt5">Plus de 5 visites</option>
+            </Select>
           </div>
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Couverts moyens</p>
-            <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  ["all", "Tous"],
-                  ["gte2", "≥ 2 couverts"],
-                  ["gte3", "≥ 3 couverts"],
-                  ["gte4", "≥ 4 couverts"],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={pillClass(avgFilter === key)}
-                  onClick={() => setAvgFilter(key)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+          <div className="w-[220px]">
+            <label className="dashboard-field-label">Inactifs</label>
+            <Select value={inactiveFilter} onChange={(e) => setInactiveFilter(e.target.value as InactiveFilter)}>
+              <option value="all">Tous</option>
+              <option value="gt30">≥ 30 jours</option>
+              <option value="gt60">≥ 60 jours</option>
+              <option value="gt90">≥ 90 jours</option>
+            </Select>
           </div>
-        </div>
+          <div className="w-[210px]">
+            <label className="dashboard-field-label">Couverts moyens</label>
+            <Select value={avgFilter} onChange={(e) => setAvgFilter(e.target.value as AvgCoversFilter)}>
+              <option value="all">Tous</option>
+              <option value="gte2">≥ 2</option>
+              <option value="gte3">≥ 3</option>
+              <option value="gte4">≥ 4</option>
+            </Select>
+          </div>
+        </FilterBar>
 
         {filtered.length === 0 ? (
           customers.length === 0 ? (
@@ -195,40 +164,33 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
             <EmptyState title="Aucun client" description="Aucun client ne correspond à ces filtres." />
           )
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-zg-border/85">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b border-zg-border/80 bg-zg-surface-elevated/92 text-left">
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Nom</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Email</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Téléphone</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Résa.</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Dernière visite</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Visites</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Couverts moy.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((customer) => (
-                  <tr
-                    key={customer.id}
-                    className="border-b border-zg-border/75 bg-zg-surface/96 last:border-0 hover:bg-zg-highlight/40"
-                  >
-                    <td className="px-5 py-3.5 font-semibold text-zg-fg">{customer.name}</td>
-                    <td className="px-5 py-3.5 text-zg-fg/62">{customer.email || "—"}</td>
-                    <td className="px-5 py-3.5 text-zg-fg/62">{customer.phone || "—"}</td>
-                    <td className="px-5 py-3.5 tabular-nums text-zg-fg/62">{customer.reservations}</td>
-                    <td className="px-5 py-3.5 tabular-nums text-zg-fg/62">
-                      {customer.lastVisit ? customer.lastVisit.slice(0, 10) : "—"}
-                    </td>
-                    <td className="px-5 py-3.5 tabular-nums text-zg-fg/62">{customer.totalVisits}</td>
-                    <td className="px-5 py-3.5 tabular-nums text-zg-fg/62">
-                      {customer.avgCovers != null ? customer.avgCovers.toFixed(1) : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="overflow-hidden rounded-2xl border border-zg-border-strong/85 bg-zg-surface/92 shadow-zg-soft backdrop-blur-sm">
+            <div className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] gap-3 border-b border-zg-border/80 bg-zg-surface-elevated/65 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg/55">
+              <div>Client</div>
+              <div>Email</div>
+              <div>Téléphone</div>
+              <div className="text-right">Visites</div>
+              <div className="text-right">Dernière</div>
+              <div className="text-right">Couv.</div>
+            </div>
+            <div className="divide-y divide-zg-border/75">
+              {filtered.map((c) => (
+                <div
+                  key={c.id}
+                  className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] items-center gap-3 px-4 py-3 text-sm hover:bg-zg-highlight/35"
+                >
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold text-zg-fg">{c.name}</div>
+                    <div className="mt-0.5 text-xs text-zg-fg/52">{c.reservations} réservation{c.reservations > 1 ? "s" : ""}</div>
+                  </div>
+                  <div className="min-w-0 truncate text-zg-fg/62">{c.email || "—"}</div>
+                  <div className="min-w-0 truncate text-zg-fg/62">{c.phone || "—"}</div>
+                  <div className="text-right tabular-nums text-zg-fg/72">{c.totalVisits}</div>
+                  <div className="text-right tabular-nums text-zg-fg/62">{c.lastVisit ? c.lastVisit.slice(0, 10) : "—"}</div>
+                  <div className="text-right tabular-nums text-zg-fg/62">{c.avgCovers != null ? c.avgCovers.toFixed(1) : "—"}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </CardContent>

@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import SettingsForm from "@/src/components/dashboard/settings-form";
+import PageHeader from "@/src/components/dashboard/page-header";
 
 type DashboardRestaurantPublicConfig = {
   reservation_confirmation_mode: string | null;
@@ -142,12 +143,11 @@ export default async function DashboardSettingsPage() {
 
   return (
     <div className="space-y-10">
-      <header className="border-b border-zg-border/80 pb-7">
-        <h1 className="dashboard-section-heading">Paramètres</h1>
-        <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-          Configurez votre restaurant, votre page publique, vos réservations et votre abonnement.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Paramètres"
+        title="Paramètres"
+        subtitle="Configurez votre restaurant, votre page publique, vos réservations et votre abonnement."
+      />
       <SettingsForm
         restaurant={{
           id: restaurant.id,

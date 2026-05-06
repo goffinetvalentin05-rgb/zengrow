@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import FloorPlanVisualPanel from "@/src/components/dashboard/floor-plan-visual-panel";
+import PageHeader from "@/src/components/dashboard/page-header";
 
 export default async function DashboardFloorPlanPage() {
   const supabase = await createClient();
@@ -12,12 +13,11 @@ export default async function DashboardFloorPlanPage() {
   if (!hasAccess) {
     return (
       <section className="relative space-y-6">
-        <header className="border-b border-zg-border/80 pb-7">
-          <h1 className="dashboard-section-heading">Plan de salle</h1>
-          <p className="dashboard-section-subtitle mt-2 max-w-2xl">
-            Organisez vos tables, assignez automatiquement les réservations et visualisez votre service en temps réel.
-          </p>
-        </header>
+        <PageHeader
+          kicker="Plan de salle"
+          title="Plan de salle"
+          subtitle="Créez vos espaces, placez vos tables et suivez votre service."
+        />
 
         <div className="relative min-h-[min(70vh,560px)] overflow-hidden rounded-[1.35rem] border border-zg-border-strong bg-gradient-to-b from-zg-surface-elevated/95 to-zg-surface/90 shadow-zg-card">
           <div
