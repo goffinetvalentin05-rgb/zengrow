@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Instrument_Serif } from "next/font/google";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Check, Play } from "lucide-react";
 
 const displaySerif = Instrument_Serif({
   subsets: ["latin", "latin-ext"],
@@ -84,8 +84,14 @@ function useFadeUp(delay = 0) {
   };
 }
 
-/** Aperçu produit : une page restaurant ZenGrow, sans mockup téléphone ni widgets. */
-function HeroZenGrowPagePreview({
+const journeyLoop = {
+  duration: 9.5,
+  repeat: Number.POSITIVE_INFINITY,
+  ease: "easeInOut" as const,
+};
+
+/** Parcours invité : découverte → page ZenGrow → réservation (animation hero, pas d’admin). */
+function HeroReservationJourneyVisual({
   display,
   reduce,
 }: {
@@ -96,78 +102,275 @@ function HeroZenGrowPagePreview({
 
   return (
     <>
-      <div className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-[radial-gradient(ellipse_72%_58%_at_50%_55%,rgba(196,165,116,0.08),transparent_70%)] blur-3xl sm:-inset-10" />
-      <div className="relative overflow-hidden rounded-[1.35rem] bg-[#0c0c0d] shadow-[0_48px_120px_-48px_rgba(0,0,0,0.92),0_0_0_1px_rgba(255,255,255,0.06)_inset] ring-1 ring-white/[0.09] sm:rounded-[1.85rem]">
-      <div className="flex items-center justify-center gap-x-2 border-b border-white/[0.06] bg-[#0a0a0b]/90 px-4 py-2.5 backdrop-blur-md sm:px-6 sm:py-3">
-        <span className="text-[0.625rem] font-medium tracking-[0.14em] text-[#6b6560] sm:text-[0.6875rem]">
-          zengrow.app
-        </span>
-        <span className="text-[0.625rem] text-white/20">/</span>
-        <span className="text-[0.625rem] font-medium tracking-tight text-white/45 sm:text-[0.6875rem]">
-          maison-selene
-        </span>
-      </div>
+      <div className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-[radial-gradient(ellipse_78%_56%_at_50%_52%,rgba(196,165,116,0.09),transparent_72%)] blur-3xl sm:-inset-10" />
 
-      <div className="relative aspect-[16/9] min-h-[220px] w-full max-h-[min(64vh,580px)] sm:aspect-[2.05/1]">
-        <motion.div
-          className="absolute inset-0"
-          animate={reduce ? undefined : { scale: [1, 1.02] }}
-          transition={{
-            duration: 22,
-            repeat: Number.POSITIVE_INFINITY,
-            repeatType: "reverse",
-            ease: "easeInOut",
-          }}
-          style={{ transformOrigin: "50% 40%" }}
-        >
-          <Image
-            src={photos.hero}
-            alt=""
-            fill
-            className="object-cover object-[center_44%]"
-            sizes="(max-width: 768px) 100vw, 1200px"
-            priority
-          />
-        </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/35 to-[#0a0a0b]/55" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0b]/55 via-transparent to-[#0a0a0b]/50" />
-        {!reduce ? (
-          <motion.div
-            className="absolute inset-0 bg-[radial-gradient(ellipse_78%_62%_at_50%_38%,rgba(232,223,208,0.06),transparent_58%)]"
-            animate={{ opacity: [0.42, 0.65, 0.42] }}
-            transition={{ duration: 11, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-          />
-        ) : null}
+      <div className="relative rounded-[1.35rem] p-[1px] ring-1 ring-white/[0.08] sm:rounded-[1.85rem]">
+        <div className="overflow-hidden rounded-[1.3rem] bg-[#0a0a0b]/85 backdrop-blur-sm sm:rounded-[1.8rem]">
+          <p className="border-b border-white/[0.06] px-4 py-3 text-center text-[0.625rem] font-medium uppercase tracking-[0.26em] text-[#6b6560] sm:px-6 sm:text-[0.6875rem]">
+            De la découverte à la réservation
+          </p>
 
-        <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-11 lg:p-12">
-          <div className="max-w-xl text-left">
-            <p className="text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-white/40 sm:text-[0.6875rem]">
-              Genève
-            </p>
-            <p className={`${display} mt-2 text-[1.65rem] leading-[1.08] tracking-[-0.02em] text-[#faf8f5] sm:mt-2.5 sm:text-[2.35rem] md:text-[2.85rem] lg:text-[3.15rem]`}>
-              Maison Sélène
-            </p>
+          <div className="flex flex-col gap-0 px-3 py-5 sm:px-5 sm:py-7 lg:flex-row lg:items-center lg:gap-0 lg:px-6 lg:py-8">
+            {/* 1 — Découverte */}
+            <motion.div
+              className="relative w-full shrink-0 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0e0e10]/95 p-4 shadow-[0_28px_64px_-40px_rgba(0,0,0,0.9)] lg:w-[min(100%,240px)] lg:rounded-[1.25rem]"
+              animate={
+                reduce
+                  ? undefined
+                  : {
+                      opacity: [0.72, 1, 0.88, 0.72, 0.72],
+                      boxShadow: [
+                        "0 0 0 1px rgba(255,255,255,0.06) inset, 0 28px 64px -40px rgba(0,0,0,0.9)",
+                        "0 0 0 1px rgba(196,165,116,0.22) inset, 0 36px 72px -42px rgba(0,0,0,0.88)",
+                        "0 0 0 1px rgba(255,255,255,0.07) inset, 0 28px 64px -40px rgba(0,0,0,0.9)",
+                        "0 0 0 1px rgba(255,255,255,0.06) inset, 0 28px 64px -40px rgba(0,0,0,0.9)",
+                        "0 0 0 1px rgba(255,255,255,0.06) inset, 0 28px 64px -40px rgba(0,0,0,0.9)",
+                      ],
+                    }
+              }
+              transition={
+                reduce
+                  ? undefined
+                  : { ...journeyLoop, times: [0, 0.22, 0.42, 0.55, 1] }
+              }
+            >
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.24em] text-[#78716c]">
+                Découverte
+              </p>
+              <ul className="mt-3 space-y-2.5 text-left text-[0.8125rem] leading-snug text-[#c9c3bc]">
+                <li>
+                  <span className="text-[#9c9690]">Instagram</span>
+                  <span className="mx-1.5 text-white/15">·</span>
+                  <span className="text-[#a8a29a]">Fil & inspiration</span>
+                </li>
+                <li>
+                  <span className="text-[#9c9690]">Google Maps</span>
+                  <span className="mx-1.5 text-white/15">·</span>
+                  <span className="text-[#a8a29a]">À deux pas</span>
+                </li>
+                <li>
+                  <span className="text-[#9c9690]">Recommandation</span>
+                  <span className="mx-1.5 text-white/15">·</span>
+                  <span className="text-[#a8a29a]">Confiance</span>
+                </li>
+              </ul>
+              <div className="relative mt-3 aspect-[16/10] overflow-hidden rounded-xl ring-1 ring-white/[0.07]">
+                <Image
+                  src={photos.storyA}
+                  alt=""
+                  fill
+                  className="object-cover object-center"
+                  sizes="240px"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b]/55 to-transparent" />
+              </div>
+            </motion.div>
 
-            <div className="mt-4 flex gap-2 sm:mt-5 sm:gap-2.5">
-              {thumbs.map((src) => (
-                <div
-                  key={src}
-                  className="relative h-12 w-[4.25rem] shrink-0 overflow-hidden rounded-lg ring-1 ring-white/12 sm:h-14 sm:w-[5.25rem] sm:rounded-xl"
+            {/* Connecteur 1 */}
+            <div className="relative flex h-10 items-center justify-center lg:h-auto lg:w-8 lg:shrink-0 xl:w-11">
+              <div className="h-full w-px bg-gradient-to-b from-transparent via-white/[0.12] to-transparent lg:hidden" />
+              <motion.div
+                className="hidden h-px w-full origin-left rounded-full bg-gradient-to-r from-[#c4a574]/15 via-[#c4a574]/55 to-[#c4a574]/15 lg:block"
+                animate={reduce ? undefined : { scaleX: [0.2, 1, 1, 0.25, 0.2], opacity: [0.35, 1, 1, 0.4, 0.35] }}
+                transition={reduce ? undefined : { ...journeyLoop, times: [0, 0.18, 0.5, 0.62, 1] }}
+              />
+              {!reduce ? (
+                <motion.div
+                  className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-8 -translate-x-1/2 lg:block"
+                  aria-hidden
                 >
-                  <Image src={src} alt="" fill className="object-cover" sizes="120px" />
-                </div>
-              ))}
+                  <motion.div
+                    className="absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#d4c4a8] shadow-[0_0_14px_rgba(212,196,168,0.55)]"
+                    animate={{ left: ["0%", "100%", "100%", "0%", "0%"], opacity: [0, 1, 1, 0, 0] }}
+                    transition={{ ...journeyLoop, times: [0, 0.25, 0.48, 0.52, 1] }}
+                  />
+                </motion.div>
+              ) : null}
             </div>
 
-            <div className="mt-5 sm:mt-6">
-              <span className="inline-flex rounded-full bg-[#f2ebe3] px-5 py-2 text-[0.8125rem] font-semibold tracking-tight text-[#141210] shadow-[0_14px_36px_-18px_rgba(0,0,0,0.65)] sm:px-6 sm:py-2.5 sm:text-[0.875rem]">
-                Réserver une table
-              </span>
+            {/* 2 — Page restaurant ZenGrow */}
+            <motion.div
+              className="relative w-full min-w-0 flex-1 overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0c0c0d] shadow-[0_40px_90px_-48px_rgba(0,0,0,0.92)] lg:rounded-[1.35rem]"
+              animate={
+                reduce
+                  ? undefined
+                  : {
+                      opacity: [0.82, 0.92, 1, 1, 0.82],
+                      boxShadow: [
+                        "0 40px 90px -48px rgba(0,0,0,0.92)",
+                        "0 40px 90px -48px rgba(0,0,0,0.92)",
+                        "0 48px 100px -44px rgba(0,0,0,0.88), 0 0 0 1px rgba(196,165,116,0.18) inset",
+                        "0 48px 100px -44px rgba(0,0,0,0.88), 0 0 0 1px rgba(196,165,116,0.14) inset",
+                        "0 40px 90px -48px rgba(0,0,0,0.92)",
+                      ],
+                    }
+              }
+              transition={reduce ? undefined : { ...journeyLoop, times: [0, 0.2, 0.38, 0.72, 1] }}
+            >
+              <div className="flex items-center justify-center gap-x-2 border-b border-white/[0.06] bg-[#0a0a0b]/95 px-3 py-2 sm:px-4">
+                <span className="text-[0.6rem] font-medium tracking-[0.12em] text-[#5c5752] sm:text-[0.625rem]">
+                  zengrow.app
+                </span>
+                <span className="text-[0.6rem] text-white/18">/</span>
+                <span className="text-[0.6rem] font-medium tracking-tight text-white/42 sm:text-[0.625rem]">
+                  maison-selene
+                </span>
+              </div>
+
+              <div className="relative aspect-[16/10] min-h-[180px] w-full max-h-[min(52vh,420px)] sm:aspect-[2.05/1] sm:min-h-[200px]">
+                <motion.div
+                  className="absolute inset-0"
+                  animate={reduce ? undefined : { scale: [1, 1.02, 1.02, 1, 1] }}
+                  transition={reduce ? undefined : { ...journeyLoop, times: [0, 0.35, 0.65, 0.85, 1] }}
+                  style={{ transformOrigin: "50% 42%" }}
+                >
+                  <Image
+                    src={photos.hero}
+                    alt=""
+                    fill
+                    className="object-cover object-[center_42%]"
+                    sizes="(max-width: 1024px) 100vw, 720px"
+                    priority
+                  />
+                </motion.div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/28 to-[#0a0a0b]/50" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0b]/45 via-transparent to-[#0a0a0b]/45" />
+
+                <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 md:p-7">
+                  <p className="text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-white/38">
+                    Genève
+                  </p>
+                  <p
+                    className={`${display} mt-1 text-[1.35rem] leading-[1.06] tracking-[-0.02em] text-[#faf8f5] sm:text-[1.85rem] md:text-[2.15rem]`}
+                  >
+                    Maison Sélène
+                  </p>
+
+                  <motion.div
+                    className="mt-3 flex gap-1.5 sm:mt-4 sm:gap-2"
+                    initial={false}
+                    animate={
+                      reduce
+                        ? undefined
+                        : { opacity: [0.75, 0.75, 1, 1, 0.75], y: [4, 4, 0, 0, 4] }
+                    }
+                    transition={reduce ? undefined : { ...journeyLoop, times: [0, 0.28, 0.4, 0.78, 1] }}
+                  >
+                    {thumbs.map((src) => (
+                      <div
+                        key={src}
+                        className="relative h-10 w-[2.65rem] shrink-0 overflow-hidden rounded-md ring-1 ring-white/12 sm:h-11 sm:w-14 sm:rounded-lg"
+                      >
+                        <Image src={src} alt="" fill className="object-cover" sizes="80px" />
+                      </div>
+                    ))}
+                  </motion.div>
+
+                  <motion.div
+                    className="mt-3 space-y-1.5 sm:mt-3.5"
+                    animate={reduce ? undefined : { opacity: [0.55, 0.55, 1, 1, 0.55] }}
+                    transition={reduce ? undefined : { ...journeyLoop, times: [0, 0.32, 0.44, 0.8, 1] }}
+                  >
+                    <p className="text-[0.7rem] text-white/55 sm:text-[0.72rem]">
+                      <span className="text-white/70">Entrée</span> · Velouté & herbes fines
+                    </p>
+                    <p className="text-[0.7rem] text-white/55 sm:text-[0.72rem]">
+                      <span className="text-white/70">Plat</span> · Terre & mer
+                    </p>
+                    <p className="text-[0.7rem] text-white/55 sm:text-[0.72rem]">
+                      <span className="text-white/70">Dessert</span> · Citron & meringue
+                    </p>
+                  </motion.div>
+
+                  <div className="mt-4 sm:mt-5">
+                    <motion.span
+                      className="inline-flex rounded-full bg-[#f2ebe3] px-4 py-2 text-[0.75rem] font-semibold tracking-tight text-[#141210] shadow-[0_12px_32px_-16px_rgba(0,0,0,0.75)] sm:px-5 sm:text-[0.8125rem]"
+                      animate={
+                        reduce
+                          ? undefined
+                          : {
+                              scale: [1, 1, 1.04, 1, 1],
+                              boxShadow: [
+                                "0 12px 32px -16px rgba(0,0,0,0.75)",
+                                "0 12px 32px -16px rgba(0,0,0,0.75)",
+                                "0 18px 40px -14px rgba(212,196,168,0.35)",
+                                "0 12px 32px -16px rgba(0,0,0,0.75)",
+                                "0 12px 32px -16px rgba(0,0,0,0.75)",
+                              ],
+                            }
+                      }
+                      transition={reduce ? undefined : { ...journeyLoop, times: [0, 0.34, 0.42, 0.5, 1] }}
+                    >
+                      Réserver une table
+                    </motion.span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Connecteur 2 */}
+            <div className="relative flex h-10 items-center justify-center lg:h-auto lg:w-8 lg:shrink-0 xl:w-11">
+              <div className="h-full w-px bg-gradient-to-b from-transparent via-white/[0.12] to-transparent lg:hidden" />
+              <motion.div
+                className="hidden h-px w-full origin-left rounded-full bg-gradient-to-r from-[#c4a574]/15 via-[#c4a574]/55 to-[#c4a574]/15 lg:block"
+                animate={reduce ? undefined : { scaleX: [0.2, 0.2, 1, 1, 0.2], opacity: [0.35, 0.35, 1, 0.45, 0.35] }}
+                transition={reduce ? undefined : { ...journeyLoop, times: [0, 0.4, 0.52, 0.78, 1] }}
+              />
+              {!reduce ? (
+                <motion.div
+                  className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-8 -translate-x-1/2 lg:block"
+                  aria-hidden
+                >
+                  <motion.div
+                    className="absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#d4c4a8] shadow-[0_0_14px_rgba(212,196,168,0.55)]"
+                    animate={{ left: ["0%", "0%", "100%", "100%", "0%"], opacity: [0, 0, 1, 1, 0] }}
+                    transition={{ ...journeyLoop, times: [0, 0.42, 0.52, 0.82, 1] }}
+                  />
+                </motion.div>
+              ) : null}
             </div>
+
+            {/* 3 — Confirmation */}
+            <motion.div
+              className="relative w-full shrink-0 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0e0e10]/95 p-4 shadow-[0_28px_64px_-40px_rgba(0,0,0,0.9)] lg:w-[min(100%,248px)] lg:rounded-[1.25rem]"
+              animate={
+                reduce
+                  ? undefined
+                  : {
+                      opacity: [0.45, 0.5, 0.55, 1, 1, 0.45],
+                      y: [6, 6, 4, 0, 0, 6],
+                      boxShadow: [
+                        "0 28px 64px -40px rgba(0,0,0,0.9)",
+                        "0 28px 64px -40px rgba(0,0,0,0.9)",
+                        "0 28px 64px -40px rgba(0,0,0,0.9)",
+                        "0 36px 72px -38px rgba(0,0,0,0.85), 0 0 0 1px rgba(196,165,116,0.2) inset",
+                        "0 36px 72px -38px rgba(0,0,0,0.85), 0 0 0 1px rgba(196,165,116,0.16) inset",
+                        "0 28px 64px -40px rgba(0,0,0,0.9)",
+                      ],
+                    }
+              }
+              transition={reduce ? undefined : { ...journeyLoop, times: [0, 0.38, 0.48, 0.56, 0.82, 1] }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#c4a574]/25 bg-[#c4a574]/12">
+                  <Check className="h-4 w-4 text-[#d4c4a8]" strokeWidth={2} aria-hidden />
+                </div>
+                <div className="min-w-0 text-left">
+                  <p className={`${display} text-[1.125rem] leading-tight text-[#faf8f5] sm:text-[1.2rem]`}>
+                    Table confirmée
+                  </p>
+                  <p className="mt-2 text-[0.8125rem] leading-relaxed text-[#9c9690]">
+                    Ce soir · 20h30 · 2 personnes
+                  </p>
+                  <p className="mt-3 text-[0.65rem] font-medium uppercase tracking-[0.18em] text-[#5c5752]">
+                    Confirmation instantanée
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
-    </div>
     </>
   );
 }
@@ -341,7 +544,7 @@ export function ZenGrowLanding() {
             transition={{ duration: 1.1, ease: easeLux, delay: 0.06 }}
             aria-label="Aperçu d'une page restaurant ZenGrow"
           >
-            <HeroZenGrowPagePreview display={display} reduce={reduce ?? false} />
+            <HeroReservationJourneyVisual display={display} reduce={Boolean(reduce)} />
           </motion.div>
         </section>
 
