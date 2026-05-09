@@ -3,42 +3,43 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Cormorant_Garamond } from "next/font/google";
-import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+  useSpring,
+} from "framer-motion";
+import { ArrowRight, ArrowUpRight, Calendar, MapPin, Sparkles } from "lucide-react";
+import { useRef } from "react";
 
 const displaySerif = Cormorant_Garamond({
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   display: "swap",
   variable: "--font-zg-display",
 });
 
 const photos = {
-  heroMain:
-    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=2000&q=88",
-  heroSideA:
-    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1200&q=86",
-  heroSideB:
-    "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1200&q=86",
-  bentoTall:
-    "https://images.unsplash.com/photo-1550966871-bfbe9278ea0a?auto=format&fit=crop&w=1600&q=88",
-  bentoWide:
-    "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1600&q=86",
-  bentoSmall:
-    "https://images.unsplash.com/photo-1551218808-94e220e084d2?auto=format&fit=crop&w=1000&q=86",
-  journey1:
-    "https://images.unsplash.com/photo-1555396273-367ea4eb4db1?auto=format&fit=crop&w=900&q=85",
-  journey2:
-    "https://images.unsplash.com/photo-1514933651103-005eec066c6b?auto=format&fit=crop&w=900&q=85",
-  journey3:
-    "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=900&q=85",
-  immersion:
-    "https://images.unsplash.com/photo-1424847658872-19fb9fa8b392?auto=format&fit=crop&w=2400&q=88",
-  immersionDetail:
-    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1400&q=86",
+  heroAtmosphere:
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=2400&q=88",
+  heroDetail:
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1600&q=88",
+  mobileScene:
+    "https://images.unsplash.com/photo-1550966871-bfbe9278ea0a?auto=format&fit=crop&w=1800&q=88",
+  discovery:
+    "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1800&q=88",
+  instant:
+    "https://images.unsplash.com/photo-1555396273-367ea4eb4db1?auto=format&fit=crop&w=1600&q=88",
+  presence:
+    "https://images.unsplash.com/photo-1424847658872-19fb9fa8b392?auto=format&fit=crop&w=2200&q=88",
+  editorial:
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=88",
   closing:
-    "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=2400&q=86",
+    "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=2200&q=86",
+  phoneThumb:
+    "https://images.unsplash.com/photo-1551218808-94e220e084d2?auto=format&fit=crop&w=900&q=86",
   avatar1:
     "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
   avatar2:
@@ -51,50 +52,52 @@ const photos = {
 
 const easeLux = [0.22, 1, 0.36, 1] as const;
 
-const colors = {
-  canvas: "#f7f4ef",
-  canvas2: "#f2ebe3",
-  ink: "#141210",
-  graphite: "#5c5854",
-  mist: "#e8dfd4",
-  champagne: "#c4a574",
-  line: "rgba(20, 18, 16, 0.08)",
+const palette = {
+  ink: "#0f0e0d",
+  inkSoft: "#2a2724",
+  graphite: "#5e5a56",
+  mist: "#e6ddd2",
+  canvas: "#f4efe6",
+  canvasDeep: "#ebe3d7",
+  cream: "#faf7f1",
+  champagne: "#b8956a",
+  line: "rgba(15, 14, 13, 0.08)",
 } as const;
 
 function useFadeUp(delay = 0) {
   const reduce = useReducedMotion();
   return {
-    initial: reduce ? false : { opacity: 0, y: 24 },
+    initial: reduce ? false : { opacity: 0, y: 28 },
     whileInView: reduce ? undefined : { opacity: 1, y: 0 },
-    viewport: { once: true, amount: 0.2 },
-    transition: { duration: 0.85, delay, ease: easeLux },
+    viewport: { once: true, amount: 0.18 },
+    transition: { duration: 0.9, delay, ease: easeLux },
   };
 }
 
 const plans = [
   {
     name: "Salle",
-    tagline: "Quand la vitrine existe déjà, mais que l’accueil numérique doit être irréprochable.",
+    tagline: "Pour une vitrine numérique irréprochable, sans surcharge.",
     price: "49 CHF",
     highlight: false,
     features: [
-      "Parcours de réservation fluide, sans friction",
-      "Disponibilités et confirmations sous contrôle",
-      "Expérience mobile soignée, du premier clic à la table",
-      "Relances discrètes, ton maison",
+      "Page restaurant épurée, lisible en quelques secondes",
+      "Réservation fluide, confirmations maîtrisées",
+      "Expérience mobile soignée, du premier regard à la table",
+      "Relances discrètes, dans le ton de la maison",
     ],
     cta: "Commencer",
   },
   {
     name: "Maison",
-    tagline: "L’expérience complète : l’émotion d’abord, la réservation naturellement.",
+    tagline: "L’expérience complète : émotion, menu, relation — au même niveau que la salle.",
     price: "69 CHF",
     highlight: true,
     features: [
-      "Page restaurant éditoriale, photo et carte au même niveau",
-      "Réservation intégrée, relation client et historique",
-      "Événements, lancements, moments forts",
-      "Réputation et présence — sans bruit superflu",
+      "Mise en page éditoriale, photos et carte harmonisées",
+      "Réservation intégrée, historique et préférences utiles",
+      "Événements et lancements, racontés comme il faut",
+      "Réputation et campagnes — sans bruit inutile",
     ],
     cta: "Choisir Maison",
   },
@@ -103,68 +106,237 @@ const plans = [
 const testimonials = [
   {
     quote:
-      "On ne vend plus un logiciel aux invités. On leur donne envie, puis une date. Le reste est silencieux.",
+      "Nos invités ne « lisent » plus un site. Ils sentent l’adresse, puis réservent. C’est exactement le geste qu’on voulait.",
     name: "Camille R.",
     role: "Maison 28 places, Genève",
     src: photos.avatar1,
   },
   {
     quote:
-      "Nos équipes ne « vivent » pas dans un tableau. Elles voient l’essentiel, au bon moment.",
+      "Enfin une présence en ligne qui ressemble à notre salle : calme, chaleureuse, précise.",
     name: "Thomas V.",
     role: "Service & réservations, Lausanne",
     src: photos.avatar2,
   },
   {
     quote:
-      "La page respire enfin comme la salle. Les photos ont retrouvé leur place.",
+      "Le menu est devenu une vraie lecture. Les réservations suivent, sans friction.",
     name: "Léa M.",
     role: "Fondatrice, bistro contemporain",
     src: photos.avatar3,
   },
   {
     quote:
-      "Les réservations arrivent proprement, sans encombrer le service. C’est exactement le luxe discret qu’on cherchait.",
+      "On gagne du temps côté équipe et de la clarté côté client. Rare, aujourd’hui.",
     name: "Julien K.",
     role: "Directeur, restaurant signature",
     src: photos.avatar4,
   },
 ];
 
-const channels = [
-  "Google Maps",
-  "Instagram",
-  "TikTok",
-  "Presse locale",
-  "Bouche-à-oreille",
-  "Infolettres",
+const navLinks = [
+  { href: "#mobile", label: "Mobile" },
+  { href: "#decouverte", label: "Découverte" },
+  { href: "#reservation", label: "Réservation" },
+  { href: "#presence", label: "Présence" },
+  { href: "#plateforme", label: "Plateforme" },
+  { href: "#campagnes", label: "Campagnes" },
+  { href: "#gestion", label: "Gestion" },
+  { href: "#tarifs", label: "Tarifs" },
 ];
+
+/** Aperçu « page restaurant » clair, style produit — pas de placeholder noir */
+function RestaurantPageMiniPreview({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`overflow-hidden rounded-[1.25rem] border border-[rgba(15,14,13,0.08)] bg-[#fffcf7] shadow-[0_24px_64px_-40px_rgba(15,14,13,0.35)] ${className}`}
+    >
+      <div className="relative h-[7.5rem] w-full overflow-hidden">
+        <Image
+          src={photos.phoneThumb}
+          alt=""
+          fill
+          className="object-cover object-center"
+          sizes="280px"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#fffcf7] via-transparent to-transparent" />
+        <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[0.625rem] text-[#5e5a56]">
+          <span className="rounded-full bg-white/90 px-2 py-0.5 font-medium text-[#0f0e0d] backdrop-blur-sm">
+            Ouvert · 18h30
+          </span>
+          <MapPin className="h-3.5 w-3.5 opacity-70" strokeWidth={2} />
+        </div>
+      </div>
+      <div className="space-y-3 px-4 pb-4 pt-3">
+        <div>
+          <p className="font-[family-name:var(--font-zg-display),serif] text-[1.125rem] font-semibold leading-tight tracking-[-0.02em] text-[#0f0e0d]">
+            Maison Lumière
+          </p>
+          <p className="mt-0.5 text-[0.6875rem] text-[#7a7670]">Quartier des Arts · Genève</p>
+        </div>
+        <div className="space-y-1.5 rounded-xl bg-[#f4efe6]/80 p-2.5">
+          {[
+            ["Entrées", "Saison & marché"],
+            ["Plats", "Du feu & du soin"],
+            ["Desserts", "Douceurs maison"],
+          ].map(([t, s]) => (
+            <div
+              key={t}
+              className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[0.6875rem]"
+            >
+              <span className="font-medium text-[#2a2724]">{t}</span>
+              <span className="text-[#8a8580]">{s}</span>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="flex w-full items-center justify-center gap-1.5 rounded-full bg-[#0f0e0d] py-2.5 text-[0.6875rem] font-semibold text-[#faf7f1] shadow-[0_8px_24px_-12px_rgba(15,14,13,0.5)]"
+        >
+          <Calendar className="h-3.5 w-3.5" strokeWidth={2} />
+          Réserver une table
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Panneau type « produit Stripe » : fond clair, données lisibles */
+function OperationsPanelPreview() {
+  const rows = [
+    { label: "Ce soir", value: "24 couverts", tone: "default" as const },
+    { label: "En attente", value: "3 demandes", tone: "muted" as const },
+    { label: "Taux de confirmation", value: "94 %", tone: "accent" as const },
+  ];
+  return (
+    <div className="overflow-hidden rounded-[1.35rem] border border-[rgba(15,14,13,0.07)] bg-white shadow-[0_28px_70px_-48px_rgba(15,14,13,0.4)]">
+      <div className="flex items-center justify-between border-b border-[rgba(15,14,13,0.06)] bg-[#faf7f1]/90 px-5 py-3.5">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-[#b8956a]/90" />
+          <span className="text-[0.6875rem] font-semibold tracking-wide text-[#5e5a56]">
+            Aujourd’hui
+          </span>
+        </div>
+        <span className="text-[0.625rem] font-medium uppercase tracking-[0.14em] text-[#9c9893]">
+          ZenGrow
+        </span>
+      </div>
+      <div className="grid gap-4 p-5 sm:grid-cols-3">
+        {rows.map((r) => (
+          <div
+            key={r.label}
+            className="rounded-2xl border border-[rgba(15,14,13,0.06)] bg-[#f4efe6]/45 p-4"
+          >
+            <p className="text-[0.625rem] font-semibold uppercase tracking-[0.12em] text-[#8a8580]">
+              {r.label}
+            </p>
+            <p
+              className={`mt-2 text-[1.25rem] font-semibold tracking-tight ${
+                r.tone === "accent" ? "text-[#7a623f]" : "text-[#0f0e0d]"
+              }`}
+            >
+              {r.value}
+            </p>
+          </div>
+        ))}
+      </div>
+      <div className="space-y-2 border-t border-[rgba(15,14,13,0.05)] bg-[#fffcf7] px-5 py-4">
+        {[
+          { t: "19:30 · 2 pers.", s: "Confirmé" },
+          { t: "20:00 · 4 pers.", s: "En attente" },
+          { t: "20:45 · 2 pers.", s: "Confirmé" },
+        ].map((line) => (
+          <div
+            key={line.t}
+            className="flex items-center justify-between rounded-xl border border-[rgba(15,14,13,0.05)] bg-white px-3 py-2.5 text-[0.75rem]"
+          >
+            <span className="font-medium text-[#2a2724]">{line.t}</span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[0.625rem] font-semibold ${
+                line.s === "Confirmé"
+                  ? "bg-[#e8dfd4] text-[#4a433a]"
+                  : "bg-[#f4efe6] text-[#7a7670]"
+              }`}
+            >
+              {line.s}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CampaignStripPreview() {
+  return (
+    <div className="overflow-hidden rounded-[1.35rem] border border-[rgba(15,14,13,0.07)] bg-gradient-to-br from-[#fffcf7] to-[#ebe3d7]/80 p-6 shadow-[0_24px_60px_-44px_rgba(15,14,13,0.35)]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-[#8a8580]">
+            Campagne
+          </p>
+          <p className="font-[family-name:var(--font-zg-display),serif] mt-1 text-[1.125rem] font-semibold text-[#0f0e0d]">
+            Soirée vigneron · samedi
+          </p>
+        </div>
+        <span className="rounded-full bg-[#0f0e0d] px-3 py-1.5 text-[0.625rem] font-semibold text-[#faf7f1]">
+          Brouillon
+        </span>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-[rgba(15,14,13,0.06)] bg-white/90 p-4">
+          <p className="text-[0.625rem] font-medium uppercase tracking-[0.1em] text-[#9c9893]">
+            Audience
+          </p>
+          <p className="mt-1 text-[0.8125rem] font-medium text-[#2a2724]">
+            Clients · 12 mois · Genève
+          </p>
+        </div>
+        <div className="rounded-2xl border border-[rgba(15,14,13,0.06)] bg-white/90 p-4">
+          <p className="text-[0.625rem] font-medium uppercase tracking-[0.1em] text-[#9c9893]">
+            Message
+          </p>
+          <p className="mt-1 text-[0.8125rem] leading-snug text-[#5e5a56]">
+            « Il reste quelques tables pour découvrir le millésime… »
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function ZenGrowLanding() {
   const reduce = useReducedMotion();
   const display = displaySerif.className;
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, 80]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], reduce ? [1, 1] : [1, 1.04]);
+  const heroImageSpring = useSpring(heroScale, { stiffness: 120, damping: 28 });
 
   return (
     <div
-      className={`${displaySerif.variable} min-h-screen overflow-x-hidden text-[#141210] antialiased selection:bg-[#c4a574]/25 selection:text-[#141210]`}
-      style={{ backgroundColor: colors.canvas }}
+      className={`${displaySerif.variable} min-h-screen overflow-x-hidden text-[#0f0e0d] antialiased selection:bg-[#b8956a]/22 selection:text-[#0f0e0d]`}
+      style={{ backgroundColor: palette.canvas }}
     >
-      {/* Fond atmosphère très léger */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 z-0"
         style={{
           background: `
-            radial-gradient(ellipse 120% 80% at 50% -20%, rgba(196, 165, 116, 0.12), transparent 55%),
-            radial-gradient(ellipse 70% 50% at 100% 30%, rgba(232, 223, 212, 0.65), transparent 50%),
-            radial-gradient(ellipse 60% 45% at 0% 70%, rgba(242, 235, 227, 0.9), transparent 55%),
-            ${colors.canvas}
+            radial-gradient(ellipse 100% 70% at 50% -15%, rgba(184, 149, 106, 0.11), transparent 52%),
+            radial-gradient(ellipse 55% 45% at 100% 25%, rgba(230, 221, 210, 0.55), transparent 48%),
+            radial-gradient(ellipse 50% 40% at 0% 75%, rgba(235, 227, 215, 0.75), transparent 52%),
+            ${palette.canvas}
           `,
         }}
       />
 
-      <header className="sticky top-0 z-50 border-b border-[rgba(20,18,16,0.06)] bg-[rgba(247,244,239,0.72)] backdrop-blur-xl backdrop-saturate-150">
-        <div className="mx-auto flex h-14 max-w-[1320px] items-center justify-between gap-4 px-4 sm:h-16 sm:px-6 lg:px-10">
+      <header className="sticky top-0 z-50 border-b border-[rgba(15,14,13,0.06)] bg-[rgba(244,238,230,0.78)] backdrop-blur-2xl backdrop-saturate-150">
+        <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-10">
           <Link href="/" className="shrink-0">
             <Image
               src="/Zengrow-logo.png"
@@ -176,37 +348,24 @@ export function ZenGrowLanding() {
             />
           </Link>
 
-          <nav className="hidden items-center gap-8 text-[0.8125rem] font-medium text-[#5c5854] md:flex">
-            <a href="#experience" className="transition hover:text-[#141210]">
-              Expérience
-            </a>
-            <a href="#parcours" className="transition hover:text-[#141210]">
-              Parcours
-            </a>
-            <a href="#immersion" className="transition hover:text-[#141210]">
-              Immersion
-            </a>
-            <a href="#gestion" className="transition hover:text-[#141210]">
-              Plateforme
-            </a>
-            <a href="#presence" className="transition hover:text-[#141210]">
-              Présence
-            </a>
-            <a href="#tarifs" className="transition hover:text-[#141210]">
-              Tarifs
-            </a>
+          <nav className="hidden items-center gap-6 text-[0.75rem] font-medium text-[#6b6762] xl:flex">
+            {navLinks.slice(0, 6).map((l) => (
+              <a key={l.href} href={l.href} className="transition hover:text-[#0f0e0d]">
+                {l.label}
+              </a>
+            ))}
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/login"
-              className="hidden text-[0.8125rem] font-medium text-[#5c5854] transition hover:text-[#141210] sm:inline"
+              className="hidden text-[0.8125rem] font-medium text-[#5e5a56] transition hover:text-[#0f0e0d] sm:inline"
             >
               Connexion
             </Link>
             <Link
               href="/signup"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#141210] px-4 py-2 text-[0.75rem] font-semibold tracking-tight text-[#faf8f5] shadow-[0_12px_32px_-16px_rgba(20,18,16,0.45)] transition hover:bg-[#2a2623] sm:px-5 sm:text-[0.8125rem]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#0f0e0d] px-4 py-2 text-[0.75rem] font-semibold tracking-tight text-[#faf7f1] shadow-[0_14px_36px_-18px_rgba(15,14,13,0.45)] transition hover:bg-[#252220] sm:px-5 sm:text-[0.8125rem]"
             >
               Lancer ma page
               <ArrowUpRight className="h-3.5 w-3.5 opacity-90" strokeWidth={2.2} />
@@ -214,72 +373,94 @@ export function ZenGrowLanding() {
           </div>
         </div>
 
-        <nav className="flex items-center justify-center gap-5 overflow-x-auto border-t border-[rgba(20,18,16,0.05)] px-4 py-2.5 text-[0.7rem] font-medium text-[#7a7672] scrollbar-none md:hidden">
-          <a href="#experience" className="shrink-0 whitespace-nowrap">
-            Expérience
-          </a>
-          <a href="#parcours" className="shrink-0 whitespace-nowrap">
-            Parcours
-          </a>
-          <a href="#immersion" className="shrink-0 whitespace-nowrap">
-            Immersion
-          </a>
-          <a href="#gestion" className="shrink-0 whitespace-nowrap">
-            Plateforme
-          </a>
-          <a href="#presence" className="shrink-0 whitespace-nowrap">
-            Présence
-          </a>
-          <a href="#tarifs" className="shrink-0 whitespace-nowrap">
-            Tarifs
-          </a>
+        <nav className="flex items-center justify-center gap-4 overflow-x-auto border-t border-[rgba(15,14,13,0.05)] px-4 py-2.5 text-[0.65rem] font-medium text-[#8a8580] scrollbar-none xl:hidden">
+          {navLinks.map((l) => (
+            <a key={l.href} href={l.href} className="shrink-0 whitespace-nowrap">
+              {l.label}
+            </a>
+          ))}
         </nav>
       </header>
 
       <main className="relative z-10 font-[family-name:var(--font-geist-sans),system-ui,sans-serif]">
-        {/* 1 — Hero */}
-        <section className="relative px-4 pb-20 pt-14 sm:px-6 sm:pb-24 sm:pt-20 lg:px-10 lg:pb-28 lg:pt-24">
-          <div className="mx-auto max-w-[1100px] text-center">
+        {/* Hero — scène immersive + produit discret */}
+        <section
+          ref={heroRef}
+          className="relative min-h-[min(100svh,920px)] px-4 pb-24 pt-12 sm:px-6 sm:pb-28 sm:pt-16 lg:px-10 lg:pb-32"
+        >
+          <motion.div style={{ y: heroY }} className="pointer-events-none absolute inset-0 overflow-hidden">
+            <motion.div style={{ scale: heroImageSpring }} className="absolute inset-0">
+              <Image
+                src={photos.heroAtmosphere}
+                alt=""
+                fill
+                className="object-cover object-[center_38%]"
+                sizes="100vw"
+                priority
+              />
+              <div
+                className="absolute inset-0 bg-[radial-gradient(ellipse_90%_80%_at_50%_20%,rgba(15,14,13,0.45),rgba(15,14,13,0.72))]"
+                aria-hidden
+              />
+              <div
+                className="absolute inset-0 bg-gradient-to-b from-[#0f0e0d]/20 via-transparent to-[#f4efe6]"
+                aria-hidden
+              />
+            </motion.div>
+            {!reduce ? (
+              <motion.div
+                className="absolute -left-1/4 top-1/4 h-[min(80vw,520px)] w-[min(80vw,520px)] rounded-full bg-[#b8956a]/12 blur-[100px]"
+                animate={{ opacity: [0.35, 0.55, 0.35], scale: [1, 1.05, 1] }}
+                transition={{ duration: 14, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                aria-hidden
+              />
+            ) : null}
+          </motion.div>
+
+          <div className="relative mx-auto flex max-w-[1100px] flex-col items-center text-center">
             <motion.p
-              className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-[#8a8580]"
-              initial={reduce ? false : { opacity: 0, y: 12 }}
+              className="text-[0.6875rem] font-semibold uppercase tracking-[0.32em] text-[#d4cfc8]"
+              initial={reduce ? false : { opacity: 0, y: 14 }}
               animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: easeLux }}
+              transition={{ duration: 0.75, ease: easeLux }}
             >
-              Hospitality · présence · réservation
+              Une nouvelle façon d’exister en ligne
             </motion.p>
 
             <motion.h1
-              className={`${display} mx-auto mt-7 max-w-[14ch] text-[2.75rem] font-medium leading-[1.02] tracking-[-0.03em] text-[#141210] sm:max-w-[20ch] sm:text-[3.75rem] md:max-w-none md:text-[4.5rem] md:leading-[1.01] lg:text-[5.25rem] lg:leading-[1]`}
-              initial={reduce ? false : { opacity: 0, y: 32 }}
+              className={`${display} mt-8 max-w-[18ch] text-[2.5rem] font-medium leading-[1.04] tracking-[-0.035em] text-[#fffcf7] sm:max-w-[22ch] sm:text-[3.5rem] md:max-w-[20ch] md:text-[4.25rem] lg:text-[4.75rem]`}
+              initial={reduce ? false : { opacity: 0, y: 36 }}
               animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: easeLux, delay: 0.04 }}
+              transition={{ duration: 1.05, ease: easeLux, delay: 0.05 }}
             >
-              <span className="block text-balance">L’adresse se devine.</span>
-              <span className="mt-1 block text-balance italic font-normal text-[#3d3a37] sm:mt-2">
-                La table se confirme.
+              <span className="block text-balance">Les clients ne veulent plus chercher.</span>
+              <span className="mt-2 block text-balance sm:mt-3">
+                Ils veulent{" "}
+                <span className="italic font-normal text-[#ebe3d7]">réserver immédiatement.</span>
               </span>
             </motion.h1>
 
             <motion.p
-              className="mx-auto mt-10 max-w-lg text-balance text-[1rem] leading-[1.65] text-[#5c5854] sm:mt-12 sm:max-w-xl sm:text-[1.0625rem] sm:leading-[1.62]"
-              initial={reduce ? false : { opacity: 0, y: 18 }}
+              className="mx-auto mt-10 max-w-xl text-balance text-[1rem] leading-[1.72] text-[#d8d3cc] sm:mt-12 sm:max-w-2xl sm:text-[1.0625rem]"
+              initial={reduce ? false : { opacity: 0, y: 22 }}
               animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.85, ease: easeLux, delay: 0.1 }}
+              transition={{ duration: 0.9, ease: easeLux, delay: 0.12 }}
             >
-              ZenGrow rassemble ce que les invités attendent aujourd’hui : une ambiance lisible, quelques
-              images justes, un menu clair — et une réservation qui arrive sans friction.
+              Aujourd’hui, un restaurant se découvre en quelques secondes.
+              <span className="mt-2 block text-[#ebe3d7]/95">
+                ZenGrow transforme cette découverte en réservation.
+              </span>
             </motion.p>
 
             <motion.div
-              className="mt-11 flex flex-col items-center justify-center gap-3 sm:mt-12 sm:flex-row sm:gap-4"
-              initial={reduce ? false : { opacity: 0, y: 16 }}
+              className="mt-11 flex flex-col items-center gap-3 sm:mt-12 sm:flex-row sm:gap-4"
+              initial={reduce ? false : { opacity: 0, y: 18 }}
               animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: easeLux, delay: 0.16 }}
+              transition={{ duration: 0.85, ease: easeLux, delay: 0.18 }}
             >
               <Link
                 href="/signup"
-                className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#141210] px-8 py-3.5 text-[0.875rem] font-semibold tracking-tight text-[#faf8f5] shadow-[0_16px_40px_-24px_rgba(20,18,16,0.55)] transition hover:bg-[#2a2623] sm:w-auto"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#fffcf7] px-8 py-3.5 text-[0.875rem] font-semibold tracking-tight text-[#0f0e0d] shadow-[0_20px_50px_-28px_rgba(0,0,0,0.5)] transition hover:bg-white sm:w-auto"
               >
                 Créer ma page ZenGrow
                 <ArrowRight
@@ -288,464 +469,442 @@ export function ZenGrowLanding() {
                 />
               </Link>
               <a
-                href="#immersion"
-                className="inline-flex w-full items-center justify-center rounded-full border border-[rgba(20,18,16,0.12)] bg-white/50 px-8 py-3.5 text-[0.875rem] font-medium text-[#141210] backdrop-blur-sm transition hover:border-[rgba(20,18,16,0.2)] hover:bg-white/80 sm:w-auto"
+                href="#mobile"
+                className="inline-flex w-full items-center justify-center rounded-full border border-[rgba(255,252,247,0.35)] bg-[rgba(15,14,13,0.25)] px-8 py-3.5 text-[0.875rem] font-medium text-[#faf7f1] backdrop-blur-md transition hover:border-[rgba(255,252,247,0.5)] hover:bg-[rgba(15,14,13,0.35)] sm:w-auto"
               >
                 Voir l’expérience
               </a>
             </motion.div>
           </div>
 
-          {/* Composition visuelle hero — lifestyle, pas de mockup */}
+          {/* Produit flottant — UI remplie, animation douce */}
           <motion.div
-            className="mx-auto mt-16 grid max-w-[1240px] gap-3 sm:mt-20 sm:grid-cols-12 sm:gap-4 lg:mt-24"
-            initial={reduce ? false : { opacity: 0, y: 36 }}
+            className="relative mx-auto mt-16 flex max-w-[1180px] justify-center sm:mt-20 lg:mt-24"
+            initial={reduce ? false : { opacity: 0, y: 48 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 1.05, ease: easeLux, delay: 0.08 }}
+            transition={{ duration: 1.1, ease: easeLux, delay: 0.15 }}
           >
-            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.75rem] border border-[rgba(20,18,16,0.06)] bg-[#e8dfd4] shadow-[0_32px_64px_-48px_rgba(20,18,16,0.35)] sm:col-span-8 sm:aspect-[16/10] lg:col-span-8">
-              <Image
-                src={photos.heroMain}
-                alt="Salle de restaurant baignée de lumière chaude"
-                fill
-                className="object-cover object-[center_42%]"
-                sizes="(max-width: 1024px) 100vw, 66vw"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#141210]/25 via-transparent to-transparent" />
-              {!reduce ? (
-                <motion.div
-                  className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_80%,rgba(247,244,239,0.2),transparent_55%)]"
-                  animate={{ opacity: [0.5, 0.85, 0.5] }}
-                  transition={{ duration: 12, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-                />
-              ) : null}
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:col-span-4 sm:grid-cols-1 sm:gap-4 lg:col-span-4">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.35rem] border border-[rgba(20,18,16,0.06)] bg-[#efe8de] shadow-[0_24px_48px_-40px_rgba(20,18,16,0.3)] sm:aspect-[16/11] sm:flex-1">
+            <div className="relative w-full max-w-[920px]">
+              <div className="relative aspect-[16/10] overflow-hidden rounded-[2rem] border border-[rgba(255,252,247,0.12)] bg-[#ebe3d7] shadow-[0_40px_100px_-48px_rgba(0,0,0,0.65)] sm:rounded-[2.25rem]">
                 <Image
-                  src={photos.heroSideA}
-                  alt="Dressage et détails de table"
+                  src={photos.heroDetail}
+                  alt="Ambiance restaurant, lumière chaude"
                   fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 50vw, 33vw"
+                  className="object-cover object-[center_45%]"
+                  sizes="(max-width: 1024px) 100vw, 920px"
                 />
-              </div>
-              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.35rem] border border-[rgba(20,18,16,0.06)] bg-[#efe8de] shadow-[0_24px_48px_-40px_rgba(20,18,16,0.3)] sm:aspect-[16/11] sm:flex-1">
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#0f0e0d]/25 via-transparent to-[#f4efe6]/15" />
                 <motion.div
-                  className="relative h-full w-full"
-                  animate={reduce ? undefined : { scale: [1, 1.02, 1] }}
-                  transition={{ duration: 14, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                  className="absolute bottom-6 left-6 right-6 sm:bottom-8 sm:left-auto sm:right-10 sm:top-1/2 sm:w-[min(100%,280px)] sm:-translate-y-1/2"
+                  animate={
+                    reduce
+                      ? undefined
+                      : { y: [0, -10, 0], rotate: [-0.8, 0.4, -0.8] }
+                  }
+                  transition={{
+                    duration: 16,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "easeInOut",
+                  }}
                 >
-                  <Image
-                    src={photos.heroSideB}
-                    alt="Ambiance conviviale au comptoir"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 50vw, 33vw"
-                  />
+                  <RestaurantPageMiniPreview />
                 </motion.div>
+                {!reduce ? (
+                  <motion.div
+                    className="pointer-events-none absolute right-[12%] top-[18%] hidden h-24 w-24 rounded-full bg-[#fffcf7]/20 blur-2xl sm:block"
+                    animate={{ opacity: [0.25, 0.5, 0.25] }}
+                    transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                  />
+                ) : null}
               </div>
             </div>
           </motion.div>
         </section>
 
-        {/* 2 — Expérience moderne restaurant (bento) */}
-        <section id="experience" className="relative px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32">
-          <div className="mx-auto max-w-[1240px]">
-            <div className="mx-auto max-w-2xl text-center">
-              <motion.p
-                {...useFadeUp(0)}
-                className="text-[0.6875rem] font-semibold uppercase tracking-[0.26em] text-[#8a8580]"
+        {/* Mobile moderne */}
+        <section
+          id="mobile"
+          className="relative scroll-mt-24 px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32"
+        >
+          <div className="mx-auto grid max-w-[1280px] gap-14 lg:grid-cols-2 lg:items-center lg:gap-20">
+            <motion.div {...useFadeUp(0)}>
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-[#8a8580]">
+                Expérience mobile moderne
+              </p>
+              <h2
+                className={`${display} mt-4 text-[2.25rem] font-medium leading-[1.06] tracking-[-0.03em] text-[#0f0e0d] sm:text-[2.85rem] md:text-[3.35rem]`}
               >
-                Expérience
+                Conçu pour le pouce, la lumière du soir, et la décision en trois secondes.
+              </h2>
+              <p className="mt-6 text-[1.0625rem] leading-[1.75] text-[#5e5a56]">
+                Grands blancs, typographie hiérarchisée, images qui respirent : votre restaurant se lit
+                comme une invitation — pas comme un manuel.
+              </p>
+              <ul className="mt-8 space-y-3 text-[0.9375rem] text-[#3a3734]">
+                {[
+                  "Hiérarchie éditoriale, du hero au menu",
+                  "Gestes naturels : scroll, tap, réserver",
+                  "Ton maison, du premier écran à la confirmation",
+                ].map((item) => (
+                  <li key={item} className="flex gap-3">
+                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#b8956a]" strokeWidth={2} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+            <motion.div
+              initial={reduce ? false : { opacity: 0, scale: 0.97, y: 32 }}
+              whileInView={reduce ? undefined : { opacity: 1, scale: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 1, ease: easeLux }}
+              className="relative"
+            >
+              <div className="relative mx-auto aspect-[9/16] max-h-[560px] w-[min(100%,280px)] overflow-hidden rounded-[2.5rem] border border-[rgba(15,14,13,0.12)] bg-[#252220] p-2 shadow-[0_40px_90px_-40px_rgba(15,14,13,0.45)]">
+                <div className="relative h-full w-full overflow-hidden rounded-[2rem] bg-[#fffcf7]">
+                  <Image
+                    src={photos.mobileScene}
+                    alt="Ambiance table dressée"
+                    fill
+                    className="object-cover object-[center_40%]"
+                    sizes="280px"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#0f0e0d]/55 via-transparent to-[#fffcf7]" />
+                  <div className="absolute inset-x-4 bottom-5">
+                    <RestaurantPageMiniPreview className="scale-[0.92] origin-bottom shadow-2xl" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Découverte rapide — bento éditorial */}
+        <section
+          id="decouverte"
+          className="relative scroll-mt-24 border-y border-[rgba(15,14,13,0.06)] bg-[#ebe3d7]/35 px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32"
+        >
+          <div className="mx-auto max-w-[1280px]">
+            <div className="mx-auto max-w-3xl text-center">
+              <motion.p {...useFadeUp(0)} className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-[#7a7670]">
+                Découverte rapide
               </motion.p>
               <motion.h2
                 {...useFadeUp(0.05)}
-                className={`${display} mt-4 text-[2.125rem] font-medium leading-[1.08] tracking-[-0.025em] text-[#141210] sm:text-[2.75rem] md:text-[3.25rem]`}
+                className={`${display} mt-4 text-[2.2rem] font-medium leading-[1.07] tracking-[-0.028em] text-[#0f0e0d] sm:text-[2.95rem] md:text-[3.45rem]`}
               >
-                Un restaurant moderne se lit comme une invitation.
+                L’essentiel visible tout de suite. Le reste, invisible.
               </motion.h2>
-              <motion.p
-                {...useFadeUp(0.1)}
-                className="mt-6 text-[1rem] leading-[1.75] text-[#5c5854] sm:text-[1.0625rem]"
-              >
-                Pas de site « usine ». Une narration courte, des visuels qui respirent, une voix qui
-                ressemble à la salle — le tout pensé pour le mobile, parce que c’est là que la décision
-                se joue.
+              <motion.p {...useFadeUp(0.1)} className="mt-6 text-[1.0625rem] leading-[1.75] text-[#5e5a56]">
+                Quartier, horaires, esprit de la maison : une lecture courte, nette, mémorable — comme la
+                une d’un magazine gastronomique.
               </motion.p>
             </div>
 
-            <div className="mt-16 grid gap-4 sm:grid-cols-12 lg:mt-20 lg:gap-5">
+            <div className="mt-16 grid gap-4 sm:grid-cols-12 lg:gap-5">
               <motion.article
-                initial={reduce ? false : { opacity: 0, y: 28 }}
+                initial={reduce ? false : { opacity: 0, y: 30 }}
                 whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.9, ease: easeLux }}
-                className="relative overflow-hidden rounded-[1.75rem] border border-[rgba(20,18,16,0.07)] bg-white/60 shadow-[0_28px_56px_-44px_rgba(20,18,16,0.35)] sm:col-span-7 sm:row-span-2 sm:min-h-[420px]"
+                transition={{ duration: 0.95, ease: easeLux }}
+                className="relative overflow-hidden rounded-[1.85rem] border border-[rgba(15,14,13,0.07)] bg-white/70 shadow-[0_32px_70px_-50px_rgba(15,14,13,0.4)] sm:col-span-8 sm:min-h-[420px]"
               >
                 <div className="relative aspect-[16/11] sm:absolute sm:inset-0 sm:aspect-auto">
                   <Image
-                    src={photos.bentoTall}
-                    alt="Table et lumière douce"
+                    src={photos.discovery}
+                    alt="Dressage et lumière"
                     fill
                     className="object-cover object-[center_48%]"
-                    sizes="(max-width: 1024px) 100vw, 58vw"
+                    sizes="(max-width: 1024px) 100vw, 66vw"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#141210]/45 via-[#141210]/5 to-transparent sm:from-[#141210]/35" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f0e0d]/55 via-[#0f0e0d]/10 to-transparent sm:from-[#0f0e0d]/45" />
                 </div>
-                <div className="relative p-7 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:bg-gradient-to-t sm:from-[#141210]/85 sm:via-[#141210]/35 sm:to-transparent sm:p-8">
-                  <p className={`${display} text-[1.5rem] font-medium leading-tight text-white sm:text-[1.65rem]`}>
-                    Ambiance d’abord.
+                <div className="relative p-8 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:bg-gradient-to-t sm:from-[#0f0e0d]/88 sm:via-[#0f0e0d]/35 sm:to-transparent sm:p-10">
+                  <p className={`${display} max-w-lg text-[1.65rem] font-medium leading-tight text-white sm:text-[1.85rem]`}>
+                    Une preuve visuelle avant le premier plat.
                   </p>
-                  <p className="mt-2 max-w-md text-[0.875rem] leading-relaxed text-white/85">
-                    Quelques photos, un rythme calme : assez pour comprendre l’esprit de la maison.
+                  <p className="mt-3 max-w-md text-[0.9375rem] leading-relaxed text-white/85">
+                    Quelques images justes, un rythme calme : assez pour comprendre l’atmosphère.
                   </p>
                 </div>
               </motion.article>
 
-              <motion.article
-                initial={reduce ? false : { opacity: 0, y: 28 }}
+              <motion.div
+                initial={reduce ? false : { opacity: 0, y: 30 }}
                 whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.9, ease: easeLux, delay: 0.06 }}
-                className="flex flex-col justify-between overflow-hidden rounded-[1.75rem] border border-[rgba(20,18,16,0.07)] bg-[#faf8f5] p-7 shadow-[0_20px_48px_-40px_rgba(20,18,16,0.28)] sm:col-span-5"
+                transition={{ duration: 0.95, ease: easeLux, delay: 0.06 }}
+                className="flex flex-col justify-between gap-6 overflow-hidden rounded-[1.85rem] border border-[rgba(15,14,13,0.07)] bg-[#fffcf7] p-8 shadow-[0_24px_60px_-48px_rgba(15,14,13,0.3)] sm:col-span-4"
               >
                 <div>
                   <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.22em] text-[#8a8580]">
-                    Carte & menu
+                    Lecture
                   </p>
-                  <p className={`${display} mt-4 text-[1.65rem] font-medium leading-[1.12] text-[#141210]`}>
-                    Le menu comme un magazine, pas comme un PDF coincé.
+                  <p className={`${display} mt-4 text-[1.5rem] font-medium leading-[1.12] text-[#0f0e0d]`}>
+                    Titres larges, lignes fines, silence entre les blocs.
                   </p>
                 </div>
-                <div className="relative mt-8 aspect-[16/10] overflow-hidden rounded-2xl border border-[rgba(20,18,16,0.06)]">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[rgba(15,14,13,0.06)]">
                   <Image
-                    src={photos.bentoWide}
-                    alt="Plats et présentation soignée"
+                    src={photos.editorial}
+                    alt="Détail culinaire"
                     fill
                     className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 42vw"
+                    sizes="(max-width: 1024px) 100vw, 33vw"
                   />
                 </div>
-              </motion.article>
-
-              <motion.article
-                initial={reduce ? false : { opacity: 0, y: 28 }}
-                whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.9, ease: easeLux, delay: 0.1 }}
-                className="overflow-hidden rounded-[1.75rem] border border-[rgba(20,18,16,0.07)] bg-white/70 p-7 shadow-[0_20px_48px_-40px_rgba(20,18,16,0.26)] sm:col-span-5"
-              >
-                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.22em] text-[#8a8580]">
-                  Une main, un geste
-                </p>
-                <p className={`${display} mt-4 text-[1.5rem] font-medium leading-[1.15] text-[#141210]`}>
-                  Pensé pour être tenu — pas pour être zoomé jusqu’à la fatigue.
-                </p>
-                <div className="relative mt-6 aspect-[16/10] overflow-hidden rounded-2xl border border-[rgba(20,18,16,0.06)]">
-                  <Image
-                    src={photos.bentoSmall}
-                    alt="Service en salle, gestuelle précise"
-                    fill
-                    className="object-cover object-[center_55%]"
-                    sizes="(max-width: 1024px) 100vw, 42vw"
-                  />
-                </div>
-              </motion.article>
+              </motion.div>
             </div>
           </div>
         </section>
 
-        {/* 3 — Découverte → réservation */}
-        <section
-          id="parcours"
-          className="relative border-y border-[rgba(20,18,16,0.06)] bg-[#f2ebe3]/55 px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32"
-        >
-          <div className="mx-auto max-w-[1100px]">
-            <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
-              <motion.div {...useFadeUp(0)} className="max-w-xl">
-                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.26em] text-[#8a8580]">
-                  De la découverte à la réservation
+        {/* Réservation instantanée */}
+        <section id="reservation" className="relative scroll-mt-24 px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32">
+          <div className="mx-auto max-w-[1280px]">
+            <div className="flex flex-col gap-12 lg:flex-row lg:items-center lg:justify-between lg:gap-20">
+              <motion.div {...useFadeUp(0)} className="max-w-xl lg:max-w-[480px]">
+                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-[#8a8580]">
+                  Réservation instantanée
                 </p>
                 <h2
-                  className={`${display} mt-4 text-[2.125rem] font-medium leading-[1.08] tracking-[-0.025em] text-[#141210] sm:text-[2.65rem] md:text-[3rem]`}
+                  className={`${display} mt-4 text-[2.2rem] font-medium leading-[1.07] tracking-[-0.028em] text-[#0f0e0d] sm:text-[2.85rem]`}
                 >
-                  Le fil est court. Le geste, immédiat.
+                  Du désir à la date, sans friction ni formulaire interminable.
                 </h2>
-                <p className="mt-6 text-[1rem] leading-[1.75] text-[#5c5854] sm:text-[1.0625rem]">
-                  Les invités arrivent par mille chemins. Ce qui compte, c’est ce qui se passe quand ils
-                  atterrissent chez vous : une impression nette, une preuve visuelle, une réservation qui
-                  se fait sans se poser dix questions.
+                <p className="mt-6 text-[1.0625rem] leading-[1.75] text-[#5e5a56]">
+                  Un créneau clair, une confirmation douce, un ton qui rappelle le service en salle — pas
+                  un parcours « logiciel ».
                 </p>
               </motion.div>
               <motion.div
-                {...useFadeUp(0.08)}
-                className="flex flex-wrap gap-2 lg:max-w-sm lg:justify-end"
+                initial={reduce ? false : { opacity: 0, x: 40 }}
+                whileInView={reduce ? undefined : { opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 1, ease: easeLux }}
+                className="relative flex-1"
               >
-                {channels.slice(0, 4).map((c) => (
-                  <span
-                    key={c}
-                    className="rounded-full border border-[rgba(20,18,16,0.1)] bg-white/70 px-4 py-2 text-[0.75rem] font-medium text-[#4a4744] backdrop-blur-sm"
-                  >
-                    {c}
-                  </span>
-                ))}
+                <div className="relative aspect-[16/10] overflow-hidden rounded-[1.85rem] border border-[rgba(15,14,13,0.07)] bg-[#ebe3d7] shadow-[0_36px_80px_-50px_rgba(15,14,13,0.45)]">
+                  <Image
+                    src={photos.instant}
+                    alt="Service en salle"
+                    fill
+                    className="object-cover object-[center_52%]"
+                    sizes="(max-width: 1024px) 100vw, 55vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-l from-[#fffcf7]/95 via-[#fffcf7]/40 to-transparent" />
+                  <div className="absolute bottom-6 left-6 right-6 max-w-sm rounded-2xl border border-[rgba(15,14,13,0.08)] bg-[#fffcf7]/95 p-5 shadow-[0_24px_60px_-40px_rgba(15,14,13,0.35)] backdrop-blur-md sm:left-auto sm:right-8 sm:top-1/2 sm:max-w-xs sm:-translate-y-1/2">
+                    <p className="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-[#8a8580]">
+                      Aperçu invité
+                    </p>
+                    <p className="font-[family-name:var(--font-zg-display),serif] mt-2 text-[1.125rem] font-semibold text-[#0f0e0d]">
+                      Samedi · 20:30 · 2 personnes
+                    </p>
+                    <p className="mt-2 text-[0.8125rem] leading-relaxed text-[#5e5a56]">
+                      Confirmation envoyée. Un rappel discret avant votre venue.
+                    </p>
+                    <div className="mt-4 flex gap-2">
+                      <span className="rounded-full bg-[#e8dfd4] px-3 py-1 text-[0.625rem] font-semibold text-[#4a433a]">
+                        Confirmé
+                      </span>
+                      <span className="rounded-full border border-[rgba(15,14,13,0.1)] bg-white px-3 py-1 text-[0.625rem] font-medium text-[#5e5a56]">
+                        Modifier
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
-            </div>
-
-            <div className="mt-16 grid gap-5 md:grid-cols-3">
-              {[
-                {
-                  step: "01",
-                  title: "Découvrir",
-                  body: "Une page qui donne le ton : lumière, matière, générosité — avant même le premier plat.",
-                  src: photos.journey1,
-                },
-                {
-                  step: "02",
-                  title: "Projeter",
-                  body: "Quelques images, les essentiels : horaires, quartier, esprit. Pas de labyrinthe.",
-                  src: photos.journey2,
-                },
-                {
-                  step: "03",
-                  title: "Réserver",
-                  body: "Un créneau clair, une confirmation douce. Comme un concierge, pas comme un formulaire.",
-                  src: photos.journey3,
-                },
-              ].map((item, i) => (
-                <motion.div
-                  key={item.step}
-                  initial={reduce ? false : { opacity: 0, y: 24 }}
-                  whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ delay: i * 0.08, duration: 0.85, ease: easeLux }}
-                  className="group overflow-hidden rounded-[1.5rem] border border-[rgba(20,18,16,0.07)] bg-white/80 shadow-[0_20px_48px_-40px_rgba(20,18,16,0.22)]"
-                >
-                  <div className="relative aspect-[16/11] overflow-hidden">
-                    <Image
-                      src={item.src}
-                      alt=""
-                      fill
-                      className="object-cover transition duration-[1.2s] ease-out group-hover:scale-[1.03]"
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#141210]/40 via-transparent to-transparent" />
-                    <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[0.65rem] font-semibold tracking-wider text-[#141210] backdrop-blur-sm">
-                      {item.step}
-                    </span>
-                  </div>
-                  <div className="p-6">
-                    <p className={`${display} text-[1.35rem] font-medium text-[#141210]`}>{item.title}</p>
-                    <p className="mt-3 text-[0.875rem] leading-relaxed text-[#5c5854]">{item.body}</p>
-                  </div>
-                </motion.div>
-              ))}
             </div>
           </div>
         </section>
 
-        {/* 4 — Immersion produit */}
-        <section id="immersion" className="relative px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32">
-          <div className="mx-auto max-w-[1240px]">
+        {/* Présence digitale restaurant */}
+        <section
+          id="presence"
+          className="relative scroll-mt-24 border-t border-[rgba(15,14,13,0.06)] bg-[#faf7f1] px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32"
+        >
+          <div className="mx-auto max-w-[1280px]">
             <motion.div {...useFadeUp(0)} className="mx-auto max-w-3xl text-center">
-              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.26em] text-[#8a8580]">
-                Immersion
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-[#8a8580]">
+                Présence digitale restaurant
               </p>
               <h2
-                className={`${display} mt-4 text-[2.125rem] font-medium leading-[1.08] tracking-[-0.025em] text-[#141210] sm:text-[2.85rem] md:text-[3.35rem]`}
+                className={`${display} mt-4 text-[2.2rem] font-medium leading-[1.07] tracking-[-0.028em] text-[#0f0e0d] sm:text-[3rem] md:text-[3.45rem]`}
               >
-                Ce que vos invités voient — avant d’être assis.
+                Une adresse unique, aussi soignée que votre carte.
               </h2>
-              <p className="mt-6 text-[1rem] leading-[1.75] text-[#5c5854] sm:text-[1.0625rem]">
-                ZenGrow ne remplace pas votre maison : il la cadre. Une présence digitale aussi soignée
-                que le dressage — avec la chaleur en plus.
+              <p className="mt-6 text-[1.0625rem] leading-[1.75] text-[#5e5a56]">
+                ZenGrow n’est pas « un site de plus » : c’est le cadre numérique de votre maison — rapide à
+                mettre à jour, beau à parcourir, fidèle à votre voix.
               </p>
             </motion.div>
 
             <motion.div
-              initial={reduce ? false : { opacity: 0, y: 32 }}
+              initial={reduce ? false : { opacity: 0, y: 36 }}
               whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.12 }}
-              transition={{ duration: 1, ease: easeLux }}
-              className="relative mt-16 overflow-hidden rounded-[2rem] border border-[rgba(20,18,16,0.07)] bg-[#e8dfd4] shadow-[0_40px_80px_-52px_rgba(20,18,16,0.45)]"
+              transition={{ duration: 1.05, ease: easeLux }}
+              className="relative mt-16 overflow-hidden rounded-[2rem] border border-[rgba(15,14,13,0.07)] bg-[#ebe3d7] shadow-[0_44px_90px_-52px_rgba(15,14,13,0.45)]"
             >
-              <div className="relative aspect-[16/9] min-h-[280px] w-full sm:aspect-[2.2/1] sm:min-h-[360px]">
+              <div className="relative aspect-[2.1/1] min-h-[300px] w-full sm:min-h-[380px]">
                 <Image
-                  src={photos.immersion}
-                  alt="Grande salle de restaurant élégante"
+                  src={photos.presence}
+                  alt="Grande salle élégante"
                   fill
-                  className="object-cover object-[center_40%]"
+                  className="object-cover object-[center_42%]"
                   sizes="100vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#f7f4ef]/90 via-transparent to-transparent sm:from-[#f7f4ef]/75" />
-                <div className="absolute inset-y-0 left-0 flex max-w-md flex-col justify-center px-8 sm:px-12">
-                  <p className={`${display} text-[1.75rem] font-medium leading-[1.1] text-[#141210] sm:text-[2.125rem]`}>
-                    Une page qui respire la salle.
+                <div className="absolute inset-0 bg-gradient-to-r from-[#faf7f1]/92 via-[#faf7f1]/25 to-transparent" />
+                <div className="absolute inset-y-0 left-0 flex max-w-lg flex-col justify-center px-8 sm:px-14">
+                  <p className={`${display} text-[1.85rem] font-medium leading-[1.08] text-[#0f0e0d] sm:text-[2.2rem]`}>
+                    Le digital au service de l’émotion — pas l’inverse.
                   </p>
-                  <p className="mt-4 text-[0.9375rem] leading-[1.65] text-[#4a4744]">
-                    Typographie, blanc, images : tout sert le même récit — celui du service et du détail.
+                  <p className="mt-4 text-[0.975rem] leading-[1.7] text-[#4a4744]">
+                    Typographie, blancs, matière : tout converge vers la même promesse — celle de l’accueil et
+                    du détail.
                   </p>
                 </div>
               </div>
             </motion.div>
-
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <motion.div
-                {...useFadeUp(0)}
-                className="relative overflow-hidden rounded-[1.5rem] border border-[rgba(20,18,16,0.07)] bg-white/70"
-              >
-                <div className="relative aspect-[16/10]">
-                  <Image
-                    src={photos.immersionDetail}
-                    alt="Détail culinaire, mise en valeur"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                  />
-                </div>
-                <div className="p-7">
-                  <p className={`${display} text-[1.4rem] font-medium text-[#141210]`}>Menu & moments</p>
-                  <p className="mt-3 text-[0.875rem] leading-relaxed text-[#5c5854]">
-                    Carte, événements, lancements : ce qui bouge dans la maison se lit sans effort.
-                  </p>
-                </div>
-              </motion.div>
-              <motion.div
-                {...useFadeUp(0.06)}
-                className="flex flex-col justify-center rounded-[1.5rem] border border-[rgba(20,18,16,0.07)] bg-[linear-gradient(145deg,#faf8f5_0%,#efe8de_100%)] p-8 sm:p-10"
-              >
-                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.22em] text-[#8a8580]">
-                  Mobile first
-                </p>
-                <p className={`${display} mt-4 text-[1.65rem] font-medium leading-[1.15] text-[#141210]`}>
-                  Parce que la décision se prend entre deux messages — pas devant un écran 27 pouces.
-                </p>
-                <p className="mt-5 text-[0.9375rem] leading-[1.7] text-[#5c5854]">
-                  Chaque section est pensée pour le pouce, le scroll, l’œil qui cherche une preuve
-                  rapide. Rien d’autre.
-                </p>
-              </motion.div>
-            </div>
           </div>
         </section>
 
-        {/* 5 — Gestion & plateforme (sans dashboard factice) */}
-        <section
-          id="gestion"
-          className="relative border-t border-[rgba(20,18,16,0.06)] bg-[#faf8f5] px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32"
-        >
+        {/* Plateforme moderne — UI produit claire */}
+        <section id="plateforme" className="relative scroll-mt-24 px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32">
           <div className="mx-auto max-w-[1100px]">
             <motion.div {...useFadeUp(0)} className="mx-auto max-w-2xl text-center">
-              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.26em] text-[#8a8580]">
-                Plateforme
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-[#8a8580]">
+                Plateforme moderne
               </p>
               <h2
-                className={`${display} mt-4 text-[2.125rem] font-medium leading-[1.08] tracking-[-0.025em] text-[#141210] sm:text-[2.75rem] md:text-[3.15rem]`}
+                className={`${display} mt-4 text-[2.2rem] font-medium leading-[1.07] tracking-[-0.028em] text-[#0f0e0d] sm:text-[2.95rem]`}
               >
-                Derrière la scène : calme, clarté, contrôle.
+                Derrière la scène : clarté, calme, contrôle — dans une interface lumineuse.
               </h2>
-              <p className="mt-6 text-[1rem] leading-[1.75] text-[#5c5854] sm:text-[1.0625rem]">
-                Les outils existent pour soutenir le service — pas pour le remplacer. ZenGrow garde la
-                complexité hors de la vue des invités, et la lisibilité du côté des équipes.
+              <p className="mt-6 text-[1.0625rem] leading-[1.75] text-[#5e5a56]">
+                Les opérations restent discrètes. Ce que vous voyez est lisible, hiérarchisé, actionnable —
+                comme les meilleurs outils des équipes exigeantes.
+              </p>
+            </motion.div>
+            <motion.div
+              initial={reduce ? false : { opacity: 0, y: 32 }}
+              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 1, ease: easeLux }}
+              className="mt-14"
+            >
+              <OperationsPanelPreview />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Campagnes & clients */}
+        <section
+          id="campagnes"
+          className="relative scroll-mt-24 border-y border-[rgba(15,14,13,0.06)] bg-[#ebe3d7]/30 px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32"
+        >
+          <div className="mx-auto grid max-w-[1280px] gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
+            <motion.div {...useFadeUp(0)}>
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-[#7a7670]">
+                Campagnes & clients
+              </p>
+              <h2
+                className={`${display} mt-4 text-[2.2rem] font-medium leading-[1.07] tracking-[-0.028em] text-[#0f0e0d] sm:text-[2.85rem]`}
+              >
+                Parler aux bonnes personnes, au bon moment — sans saturer.
+              </h2>
+              <p className="mt-6 text-[1.0625rem] leading-[1.75] text-[#5e5a56]">
+                Segments utiles, messages dans le ton de la maison, suivi simple : la relation client reste
+                humaine, le reste est orchestré avec finesse.
+              </p>
+            </motion.div>
+            <motion.div
+              initial={reduce ? false : { opacity: 0, y: 28 }}
+              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.95, ease: easeLux }}
+            >
+              <CampaignStripPreview />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Gestion simplifiée + témoignages */}
+        <section id="gestion" className="relative scroll-mt-24 px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32">
+          <div className="mx-auto max-w-[1280px]">
+            <motion.div {...useFadeUp(0)} className="mx-auto max-w-2xl text-center">
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-[#8a8580]">
+                Gestion simplifiée
+              </p>
+              <h2
+                className={`${display} mt-4 text-[2.2rem] font-medium leading-[1.07] tracking-[-0.028em] text-[#0f0e0d] sm:text-[2.95rem]`}
+              >
+                Moins de bruit pour les équipes. Plus de présence pour les invités.
+              </h2>
+              <p className="mt-6 text-[1.0625rem] leading-[1.75] text-[#5e5a56]">
+                Réservations, préférences, événements, réputation : l’essentiel regroupé, sans empiler les
+                écrans inutiles.
               </p>
             </motion.div>
 
             <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[
                 {
-                  title: "Réservations",
-                  text: "Créneaux, confirmations, files d’attente — avec la douceur d’un bon accueil.",
+                  title: "File du soir",
+                  text: "Ce qui arrive, ce qui attend : une lecture immédiate pour le service.",
                 },
                 {
-                  title: "Clients & préférences",
-                  text: "Mémoire utile, jamais intrusive. Pour reconnaître sans étiqueter.",
+                  title: "Mémoire utile",
+                  text: "Reconnaître sans étiqueter — les détails qui améliorent l’accueil.",
                 },
                 {
-                  title: "Événements",
-                  text: "Soirées, dégustations, cartes saisonnières : le calendrier vit au rythme de la maison.",
+                  title: "Calendrier vivant",
+                  text: "Soirées, dégustations, cartes saisonnières : le rythme de la maison, visible.",
                 },
                 {
-                  title: "Campagnes",
-                  text: "Messages ciblés quand il le faut — sans encombrer la boîte de réception.",
+                  title: "Réponses dans le ton",
+                  text: "Avis et échanges alignés sur la voix de la salle.",
                 },
                 {
-                  title: "Réputation",
-                  text: "Avis et réponses dans le ton de la salle, avec des rappels discrets.",
+                  title: "Mises à jour rapides",
+                  text: "Menu, photos, message : publié vite, rendu impeccable.",
                 },
                 {
-                  title: "Opérations",
-                  text: "Une lecture simple pour les équipes : ce qui arrive, ce qui compte, maintenant.",
+                  title: "Vision d’ensemble",
+                  text: "Une base unique pour ce qui compte — sans tableau vide ni zones mortes.",
                 },
               ].map((card, i) => (
                 <motion.div
                   key={card.title}
-                  initial={reduce ? false : { opacity: 0, y: 20 }}
+                  initial={reduce ? false : { opacity: 0, y: 22 }}
                   whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.12 }}
-                  transition={{ delay: i * 0.05, duration: 0.8, ease: easeLux }}
-                  className="rounded-[1.35rem] border border-[rgba(20,18,16,0.08)] bg-white/85 p-7 shadow-[0_16px_40px_-36px_rgba(20,18,16,0.2)] transition hover:border-[rgba(196,165,116,0.35)] hover:shadow-[0_22px_48px_-36px_rgba(20,18,16,0.22)]"
+                  transition={{ delay: i * 0.05, duration: 0.85, ease: easeLux }}
+                  className="rounded-[1.4rem] border border-[rgba(15,14,13,0.08)] bg-white/90 p-7 shadow-[0_18px_44px_-36px_rgba(15,14,13,0.22)] transition hover:border-[rgba(184,149,106,0.35)] hover:shadow-[0_26px_52px_-36px_rgba(15,14,13,0.26)]"
                 >
-                  <p className={`${display} text-[1.25rem] font-medium text-[#141210]`}>{card.title}</p>
-                  <p className="mt-3 text-[0.875rem] leading-relaxed text-[#5c5854]">{card.text}</p>
+                  <p className={`${display} text-[1.28rem] font-medium text-[#0f0e0d]`}>{card.title}</p>
+                  <p className="mt-3 text-[0.875rem] leading-relaxed text-[#5e5a56]">{card.text}</p>
                 </motion.div>
               ))}
             </div>
-          </div>
-        </section>
 
-        {/* 6 — Présence digitale + témoignages */}
-        <section id="presence" className="relative px-4 py-24 sm:px-6 sm:py-28 lg:px-10 lg:py-32">
-          <div className="mx-auto max-w-[1240px]">
-            <div className="flex flex-col gap-12 lg:flex-row lg:items-center lg:justify-between lg:gap-20">
-              <motion.div {...useFadeUp(0)} className="max-w-xl">
-                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.26em] text-[#8a8580]">
-                  Présence digitale
-                </p>
-                <h2
-                  className={`${display} mt-4 text-[2.125rem] font-medium leading-[1.08] tracking-[-0.025em] text-[#141210] sm:text-[2.65rem]`}
-                >
-                  Branché là où votre monde circule.
-                </h2>
-                <p className="mt-6 text-[1rem] leading-[1.75] text-[#5c5854] sm:text-[1.0625rem]">
-                  Les canaux changent ; l’exigence, non. ZenGrow vous donne une base unique — propre,
-                  rapide à mettre à jour — pour capter l’attention et la transformer en rendez-vous.
-                </p>
-              </motion.div>
-              <motion.div
-                {...useFadeUp(0.06)}
-                className="flex flex-1 flex-wrap gap-2 lg:justify-end"
-              >
-                {channels.map((c) => (
-                  <span
-                    key={c}
-                    className="rounded-full border border-[rgba(20,18,16,0.1)] bg-[#f2ebe3]/80 px-4 py-2.5 text-[0.8125rem] font-medium text-[#3d3a37]"
-                  >
-                    {c}
-                  </span>
-                ))}
-              </motion.div>
-            </div>
-
-            <div className="mt-20 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+            <div className="mt-24 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
               {testimonials.map((t, i) => (
                 <motion.blockquote
                   key={t.name}
-                  initial={reduce ? false : { opacity: 0, y: 22 }}
+                  initial={reduce ? false : { opacity: 0, y: 20 }}
                   whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.15 }}
-                  transition={{ delay: i * 0.06, duration: 0.8, ease: easeLux }}
-                  className="flex h-full flex-col rounded-[1.35rem] border border-[rgba(20,18,16,0.07)] bg-white/75 p-6 shadow-[0_16px_40px_-36px_rgba(20,18,16,0.18)]"
+                  transition={{ delay: i * 0.06, duration: 0.85, ease: easeLux }}
+                  className="flex h-full flex-col rounded-[1.35rem] border border-[rgba(15,14,13,0.07)] bg-[#fffcf7]/90 p-6 shadow-[0_16px_40px_-36px_rgba(15,14,13,0.18)]"
                 >
-                  <p className="text-[0.9375rem] leading-[1.65] text-[#3d3a37]">&ldquo;{t.quote}&rdquo;</p>
+                  <p className="text-[0.9375rem] leading-[1.65] text-[#3a3734]">&ldquo;{t.quote}&rdquo;</p>
                   <div className="mt-6 flex items-center gap-3">
-                    <div className="relative h-10 w-10 overflow-hidden rounded-full border border-[rgba(20,18,16,0.08)]">
+                    <div className="relative h-10 w-10 overflow-hidden rounded-full border border-[rgba(15,14,13,0.08)]">
                       <Image src={t.src} alt="" fill className="object-cover" sizes="40px" />
                     </div>
                     <div>
-                      <p className="text-[0.8125rem] font-semibold text-[#141210]">{t.name}</p>
-                      <p className="text-[0.75rem] text-[#7a7672]">{t.role}</p>
+                      <p className="text-[0.8125rem] font-semibold text-[#0f0e0d]">{t.name}</p>
+                      <p className="text-[0.75rem] text-[#8a8580]">{t.role}</p>
                     </div>
                   </div>
                 </motion.blockquote>
@@ -754,20 +913,20 @@ export function ZenGrowLanding() {
           </div>
         </section>
 
-        {/* 7 — Tarifs */}
-        <section id="tarifs" className="relative px-4 pb-8 pt-4 sm:px-6 lg:px-10">
+        {/* Tarifs premium */}
+        <section id="tarifs" className="relative scroll-mt-24 px-4 pb-8 pt-4 sm:px-6 lg:px-10">
           <div className="mx-auto max-w-[1000px]">
             <motion.div {...useFadeUp(0)} className="text-center">
-              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.26em] text-[#8a8580]">
-                Tarifs
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-[#8a8580]">
+                Tarifs premium
               </p>
               <h2
-                className={`${display} mt-4 text-[2.25rem] font-medium tracking-[-0.025em] text-[#141210] sm:text-[2.85rem]`}
+                className={`${display} mt-4 text-[2.35rem] font-medium tracking-[-0.028em] text-[#0f0e0d] sm:text-[2.95rem]`}
               >
-                Deux façons d’entrer — une même exigence.
+                Deux profondeurs. Une même exigence.
               </h2>
-              <p className="mt-4 text-[1rem] text-[#5c5854]">
-                Facturation mensuelle, sans surprise. Vous choisissez la profondeur de l’expérience.
+              <p className="mt-4 text-[1.0625rem] text-[#5e5a56]">
+                Facturation mensuelle, transparente. Vous choisissez jusqu’où va l’expérience.
               </p>
             </motion.div>
 
@@ -775,35 +934,35 @@ export function ZenGrowLanding() {
               {plans.map((plan, i) => (
                 <motion.article
                   key={plan.name}
-                  initial={reduce ? false : { opacity: 0, y: 24 }}
+                  initial={reduce ? false : { opacity: 0, y: 26 }}
                   whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.07, duration: 0.8, ease: easeLux }}
-                  className={`relative flex flex-col rounded-[1.75rem] border p-8 sm:p-9 ${
+                  transition={{ delay: i * 0.07, duration: 0.85, ease: easeLux }}
+                  className={`relative flex flex-col rounded-[1.85rem] border p-8 sm:p-9 ${
                     plan.highlight
-                      ? "border-[rgba(196,165,116,0.45)] bg-[linear-gradient(165deg,#fffefb_0%,#f7f0e6_100%)] shadow-[0_28px_56px_-40px_rgba(196,165,116,0.35)]"
-                      : "border-[rgba(20,18,16,0.1)] bg-white/80"
+                      ? "border-[rgba(184,149,106,0.42)] bg-[linear-gradient(165deg,#fffefb_0%,#f3ebe0_100%)] shadow-[0_32px_64px_-42px_rgba(184,149,106,0.32)]"
+                      : "border-[rgba(15,14,13,0.1)] bg-white/85"
                   }`}
                 >
                   {plan.highlight ? (
-                    <span className="absolute right-6 top-6 rounded-full border border-[rgba(196,165,116,0.4)] bg-[rgba(196,165,116,0.12)] px-3 py-1 text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-[#7a623f]">
+                    <span className="absolute right-6 top-6 rounded-full border border-[rgba(184,149,106,0.38)] bg-[rgba(184,149,106,0.12)] px-3 py-1 text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-[#6e5a3f]">
                       Le plus demandé
                     </span>
                   ) : null}
-                  <h3 className={`${display} text-[1.5rem] font-medium text-[#141210] sm:text-[1.6rem]`}>
+                  <h3 className={`${display} text-[1.55rem] font-medium text-[#0f0e0d] sm:text-[1.65rem]`}>
                     {plan.name}
                   </h3>
-                  <p className="mt-2 text-[0.875rem] leading-relaxed text-[#5c5854]">{plan.tagline}</p>
-                  <p className="mt-9 text-[2.5rem] font-semibold tracking-tight text-[#141210] sm:text-[2.65rem]">
+                  <p className="mt-2 text-[0.875rem] leading-relaxed text-[#5e5a56]">{plan.tagline}</p>
+                  <p className="mt-9 text-[2.55rem] font-semibold tracking-tight text-[#0f0e0d] sm:text-[2.7rem]">
                     {plan.price}
-                    <span className="text-[1rem] font-normal text-[#7a7672]"> / mois</span>
+                    <span className="text-[1rem] font-normal text-[#8a8580]"> / mois</span>
                   </p>
                   <ul className="mt-8 flex-1 space-y-3.5">
                     {plan.features.map((f) => (
                       <li key={f} className="flex gap-3 text-[0.875rem] leading-relaxed text-[#4a4744]">
                         <span
                           className="mt-2 h-1 w-1 shrink-0 rounded-full"
-                          style={{ backgroundColor: colors.champagne }}
+                          style={{ backgroundColor: palette.champagne }}
                         />
                         {f}
                       </li>
@@ -813,8 +972,8 @@ export function ZenGrowLanding() {
                     href="/signup"
                     className={`mt-10 inline-flex w-full items-center justify-center rounded-full py-3.5 text-[0.875rem] font-semibold tracking-tight transition ${
                       plan.highlight
-                        ? "bg-[#141210] text-[#faf8f5] hover:bg-[#2a2623]"
-                        : "border border-[rgba(20,18,16,0.14)] text-[#141210] hover:bg-[#f2ebe3]/80"
+                        ? "bg-[#0f0e0d] text-[#faf7f1] hover:bg-[#252220]"
+                        : "border border-[rgba(15,14,13,0.14)] text-[#0f0e0d] hover:bg-[#ebe3d7]/75"
                     }`}
                   >
                     {plan.cta}
@@ -825,42 +984,42 @@ export function ZenGrowLanding() {
           </div>
         </section>
 
-        {/* 8 — CTA final */}
+        {/* CTA final */}
         <section className="relative px-4 pb-28 pt-16 sm:px-6 sm:pb-32 lg:px-10">
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 28 }}
+            initial={reduce ? false : { opacity: 0, y: 32 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.95, ease: easeLux }}
-            className="relative mx-auto max-w-[1240px] overflow-hidden rounded-[2rem] border border-[rgba(20,18,16,0.08)] bg-[#141210] shadow-[0_40px_80px_-48px_rgba(20,18,16,0.55)]"
+            transition={{ duration: 1, ease: easeLux }}
+            className="relative mx-auto max-w-[1280px] overflow-hidden rounded-[2rem] border border-[rgba(15,14,13,0.1)] bg-[#0f0e0d] shadow-[0_44px_90px_-50px_rgba(15,14,13,0.55)]"
           >
             <div className="relative aspect-[16/11] min-h-[320px] w-full sm:aspect-[2.25/1] sm:min-h-[380px]">
               <Image
                 src={photos.closing}
-                alt="Ambiance chaleureuse en salle"
+                alt="Ambiance chaleureuse"
                 fill
-                className="object-cover object-[center_38%] opacity-55"
+                className="object-cover object-[center_38%] opacity-50"
                 sizes="100vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#141210] via-[#141210]/75 to-[#141210]/45" />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_100%,rgba(196,165,116,0.15),transparent_55%)]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f0e0d] via-[#0f0e0d]/78 to-[#0f0e0d]/5" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_100%,rgba(184,149,106,0.14),transparent_55%)]" />
 
               <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-[#c9c3bc]">
+                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.3em] text-[#c9c3bc]">
                   ZenGrow
                 </p>
                 <h2
-                  className={`${display} mt-5 max-w-[16ch] text-[2rem] font-medium leading-[1.08] tracking-[-0.02em] text-[#faf8f5] sm:max-w-3xl sm:text-[2.85rem] md:text-[3.35rem]`}
+                  className={`${display} mt-5 max-w-[18ch] text-[2.05rem] font-medium leading-[1.08] tracking-[-0.025em] text-[#faf7f1] sm:max-w-3xl sm:text-[2.9rem] md:text-[3.35rem]`}
                 >
-                  Donnez à votre maison une présence à la hauteur du service.
+                  La présence en ligne à la hauteur de votre table.
                 </h2>
-                <p className="mx-auto mt-6 max-w-lg text-[1rem] leading-[1.7] text-[#c9c3bc] sm:mt-8 sm:text-[1.0625rem]">
-                  En quelques minutes, une page qui raconte l’essentiel — et des réservations qui
+                <p className="mx-auto mt-6 max-w-lg text-[1.0625rem] leading-[1.72] text-[#c9c3bc] sm:mt-8">
+                  En quelques minutes : une page qui raconte l’essentiel, et des réservations qui
                   s’installent sans bruit.
                 </p>
                 <Link
                   href="/signup"
-                  className="mt-10 inline-flex items-center gap-2 rounded-full bg-[#faf8f5] px-8 py-3.5 text-[0.875rem] font-semibold tracking-tight text-[#141210] transition hover:bg-white"
+                  className="mt-10 inline-flex items-center gap-2 rounded-full bg-[#faf7f1] px-8 py-3.5 text-[0.875rem] font-semibold tracking-tight text-[#0f0e0d] transition hover:bg-white"
                 >
                   Commencer avec ZenGrow
                   <ArrowRight className="h-4 w-4" strokeWidth={2} />
@@ -870,8 +1029,8 @@ export function ZenGrowLanding() {
           </motion.div>
         </section>
 
-        <footer className="border-t border-[rgba(20,18,16,0.08)] px-4 py-12 sm:px-6 lg:px-10">
-          <div className="mx-auto flex max-w-[1240px] flex-col items-center justify-between gap-6 sm:flex-row">
+        <footer className="border-t border-[rgba(15,14,13,0.08)] px-4 py-12 sm:px-6 lg:px-10">
+          <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-6 sm:flex-row">
             <Image
               src="/Zengrow-logo.png"
               alt="ZenGrow"
@@ -879,11 +1038,11 @@ export function ZenGrowLanding() {
               height={30}
               className="h-4 w-auto object-contain opacity-80"
             />
-            <div className="flex flex-wrap items-center justify-center gap-6 text-[0.75rem] text-[#7a7672]">
-              <Link href="/login" className="transition hover:text-[#141210]">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-[0.75rem] text-[#8a8580]">
+              <Link href="/login" className="transition hover:text-[#0f0e0d]">
                 Connexion
               </Link>
-              <Link href="/signup" className="transition hover:text-[#141210]">
+              <Link href="/signup" className="transition hover:text-[#0f0e0d]">
                 Inscription
               </Link>
               <span>© {new Date().getFullYear()} ZenGrow</span>
