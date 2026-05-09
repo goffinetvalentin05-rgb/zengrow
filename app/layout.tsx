@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s | ZenGrow",
   },
   description:
-    "ZenGrow — a new way for restaurants to be discovered and reserved online. Modern pages, instant bookings, and a complete system behind every guest experience.",
+    "ZenGrow — une nouvelle façon pour les restaurants d’être découverts et réservés en ligne. Pages modernes, réservations instantanées et système complet pour chaque expérience invité.",
   applicationName: "ZenGrow",
 };
 
@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="fr" className="scroll-smooth">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
