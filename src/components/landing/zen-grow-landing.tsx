@@ -1,6 +1,5 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Fraunces } from "next/font/google";
@@ -90,22 +89,6 @@ function useFadeUp(delay = 0) {
   };
 }
 
-function SoftLight({
-  className,
-  style,
-}: {
-  className?: string;
-  style?: CSSProperties;
-}) {
-  return (
-    <div
-      aria-hidden
-      className={`pointer-events-none absolute rounded-full blur-[100px] ${className ?? ""}`}
-      style={style}
-    />
-  );
-}
-
 function floatProps(
   reduce: boolean | null,
   duration: number,
@@ -124,130 +107,195 @@ function floatProps(
   };
 }
 
-function HeroAmbient() {
+/** Cadre type smartphone récent — ratio ~9:19, îlot dynamique, bords fins */
+function HeroDevice({ serif }: { serif: string }) {
   const reduce = useReducedMotion();
-  if (reduce) {
-    return (
-      <>
-        <SoftLight className="left-[15%] top-[10%] h-64 w-64 bg-[rgba(212,184,150,0.07)]" />
-        <SoftLight className="right-[10%] bottom-[20%] h-72 w-72 bg-[rgba(139,90,60,0.05)]" />
-      </>
-    );
-  }
+  return (
+    <motion.div
+      className="relative z-20 mx-auto w-[246px] sm:w-[258px]"
+      initial={reduce ? false : { opacity: 0, y: 36 }}
+      animate={reduce ? undefined : { opacity: 1, y: 0 }}
+      transition={{ duration: 0.95, ease: easeLux, delay: 0.18 }}
+    >
+      <motion.div className="relative" {...floatProps(reduce, 22, 3, 0)}>
+        <div
+          className="pointer-events-none absolute -inset-6 opacity-70 sm:-inset-8"
+          style={{
+            background:
+              "radial-gradient(ellipse 55% 45% at 50% 35%, rgba(212,184,150,0.1), transparent 70%)",
+            filter: "blur(40px)",
+          }}
+        />
+        <div
+          className="relative mx-auto h-[520px] w-[246px] rounded-[2.45rem] bg-gradient-to-b from-[#3f3f42] via-[#1c1c1e] to-[#0b0b0c] p-[9px] shadow-[0_40px_80px_-32px_rgba(0,0,0,0.85),0_0_0_1px_rgba(255,255,255,0.06)_inset,inset_0_1px_0_rgba(255,255,255,0.12)] sm:h-[556px] sm:w-[258px] sm:rounded-[2.55rem] sm:p-[10px]"
+        >
+          <div className="relative h-full w-full overflow-hidden rounded-[1.95rem] bg-black ring-1 ring-white/[0.06] sm:rounded-[2.05rem]">
+            <div
+              className="absolute left-1/2 top-[10px] z-20 h-[26px] w-[min(32%,92px)] -translate-x-1/2 rounded-full bg-black shadow-[inset_0_-1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.08]"
+              aria-hidden
+            />
+            <div className="flex h-full min-h-0 flex-col pt-[38px]">
+              <div className="relative min-h-0 flex-[1.15]">
+                <Image
+                  src={photos.phoneHero}
+                  alt=""
+                  fill
+                  className="object-cover object-center"
+                  sizes="264px"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-end justify-between gap-2">
+                  <div>
+                    <p
+                      className={`text-[8px] font-medium uppercase tracking-[0.22em] text-white/50 ${serif}`}
+                    >
+                      Ce soir
+                    </p>
+                    <p className={`mt-0.5 text-base font-medium tracking-tight text-white sm:text-[1.05rem] ${serif}`}>
+                      Maison Nord
+                    </p>
+                    <p className="mt-0.5 text-[9px] text-white/45">Contemporain · Genève</p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-white/12 bg-black/40 px-2 py-0.5 text-[9px] font-medium text-[#f5f0e8] backdrop-blur-md">
+                    Ouvert
+                  </span>
+                </div>
+              </div>
+              <div className="flex-shrink-0 space-y-2 px-2.5 pb-3 pt-2 sm:px-3 sm:pb-3.5 sm:pt-2.5">
+                <div className="flex gap-1">
+                  {[
+                    { src: photos.phoneThumbA },
+                    { src: photos.phoneThumbB },
+                    { src: photos.phoneThumbC },
+                  ].map((t, i) => (
+                    <div
+                      key={i}
+                      className="relative h-9 flex-1 overflow-hidden rounded-md ring-1 ring-white/[0.08] sm:h-10"
+                    >
+                      <Image src={t.src} alt="" fill className="object-cover" sizes="80px" />
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-lg border border-white/[0.07] bg-white/[0.04] p-2 sm:rounded-xl sm:p-2.5">
+                  <p className="text-[9px] font-medium uppercase tracking-[0.1em] text-white/35">
+                    Carte
+                  </p>
+                  <div className="mt-1.5 space-y-1.5 sm:mt-2 sm:space-y-2">
+                    <div className="flex justify-between gap-2 text-[10px] sm:text-[11px]">
+                      <span className="text-[#e8e4dc]/90">Dégustation saisonnière</span>
+                      <span className="tabular-nums text-white/40">98 €</span>
+                    </div>
+                    <div className="flex justify-between gap-2 text-[10px] sm:text-[11px]">
+                      <span className="text-[#e8e4dc]/65">Parcours végétarien</span>
+                      <span className="tabular-nums text-white/30">72 €</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className={`flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#e8dfd0] py-2 text-[12px] font-semibold tracking-tight text-[#1a1816] shadow-[0_6px_20px_-8px_rgba(0,0,0,0.55)] sm:rounded-xl sm:py-2.5 sm:text-[13px] ${serif}`}
+                >
+                  Réserver une table
+                  <ChevronRight className="h-3.5 w-3.5 opacity-70 sm:h-4 sm:w-4" strokeWidth={2} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function HeroEditorialColumn({ serif }: { serif: string }) {
+  const reduce = useReducedMotion();
   return (
     <>
       <motion.div
-        aria-hidden
-        className="pointer-events-none absolute left-[12%] top-[8%] h-[min(50vw,280px)] w-[min(50vw,280px)] rounded-full bg-[radial-gradient(circle,rgba(232,223,208,0.11),transparent_68%)] blur-[90px]"
-        animate={{ opacity: [0.45, 0.7, 0.45], scale: [1, 1.04, 1] }}
-        transition={{ duration: 14, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-      />
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        animate={reduce ? undefined : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.85, ease: easeLux, delay: 0.28 }}
+      >
+        <motion.div {...floatProps(reduce, 16, 2.5, 0.2)}>
+          <article className="overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.03] shadow-[0_24px_48px_-32px_rgba(0,0,0,0.85)] backdrop-blur-sm">
+            <div className="relative aspect-[4/5] max-h-[280px]">
+              <Image
+                src={photos.phoneThumbC}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="240px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080809]/92 via-transparent to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/50">
+                  Ambiance
+                </p>
+                <p className={`mt-1 text-sm font-medium leading-snug text-white ${serif}`}>
+                  Un lieu à découvrir
+                </p>
+                <p className="mt-1 text-[11px] text-white/55">Genève</p>
+              </div>
+            </div>
+          </article>
+        </motion.div>
+      </motion.div>
       <motion.div
-        aria-hidden
-        className="pointer-events-none absolute right-[8%] top-[35%] h-[min(45vw,260px)] w-[min(45vw,260px)] rounded-full bg-[radial-gradient(circle,rgba(180,130,90,0.08),transparent_70%)] blur-[88px]"
-        animate={{ opacity: [0.35, 0.58, 0.35] }}
-        transition={{ duration: 11, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 1.5 }}
-      />
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 bottom-[5%] h-48 w-[min(80vw,520px)] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(196,165,116,0.06),transparent_72%)] blur-[80px]"
-        animate={{ opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 9, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 0.8 }}
-      />
+        className="mt-6"
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        animate={reduce ? undefined : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.85, ease: easeLux, delay: 0.36 }}
+      >
+        <motion.div {...floatProps(reduce, 18, 2, 0.5)}>
+          <article className="overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.03] shadow-[0_20px_40px_-28px_rgba(0,0,0,0.82)] backdrop-blur-sm">
+            <div className="relative aspect-[4/3]">
+              <Image
+                src={photos.heroFloatFood}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="240px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <p
+                className={`absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-medium text-white/92 ${serif}`}
+              >
+                Le plat du moment
+              </p>
+            </div>
+          </article>
+        </motion.div>
+      </motion.div>
     </>
   );
 }
 
-function HeroPhone({ serif }: { serif: string }) {
+function HeroGuestMoment({ serif }: { serif: string }) {
   const reduce = useReducedMotion();
   return (
     <motion.div
-      className="relative z-20 mx-auto w-[min(100%,280px)] sm:w-[296px]"
-      initial={reduce ? false : { opacity: 0, y: 48 }}
+      initial={reduce ? false : { opacity: 0, y: 16 }}
       animate={reduce ? undefined : { opacity: 1, y: 0 }}
-      transition={{ duration: 1, ease: easeLux, delay: 0.2 }}
+      transition={{ duration: 0.85, ease: easeLux, delay: 0.32 }}
     >
-      <motion.div className="relative" {...floatProps(reduce, 18, 6, 0)}>
-      <div
-        className="absolute -inset-8 opacity-75"
-        style={{
-          background:
-            "radial-gradient(ellipse 65% 50% at 50% 32%, rgba(212,184,150,0.12), transparent 65%)",
-          filter: "blur(36px)",
-        }}
-      />
-      <div className="relative rounded-[2.35rem] border border-white/[0.09] bg-gradient-to-b from-[#1a1a1c] to-[#0a0a0b] p-[11px] shadow-[0_50px_100px_-45px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.06)]">
-        <div className="flex justify-center pb-2 pt-0.5">
-          <div className="h-1 w-[4.25rem] rounded-full bg-white/[0.12]" />
-        </div>
-        <div className="overflow-hidden rounded-[1.85rem] bg-[#0c0c0d] ring-1 ring-white/[0.05]">
-          <div className="relative h-[120px] w-full overflow-hidden sm:h-[128px]">
-            <Image
-              src={photos.phoneHero}
-              alt=""
-              fill
-              className="object-cover object-center"
-              sizes="(max-width: 640px) 280px, 296px"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0d] via-[#0c0c0d]/22 to-transparent" />
-            <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
-              <div>
-                <p
-                  className={`text-[9px] font-medium uppercase tracking-[0.26em] text-white/50 ${serif}`}
-                >
-                  Ce soir
-                </p>
-                <p className={`mt-0.5 text-lg font-medium tracking-tight text-white ${serif}`}>
-                  Maison Nord
-                </p>
-                <p className="mt-1 text-[10px] text-white/48">Contemporain · Genève</p>
-              </div>
-              <span className="shrink-0 rounded-full border border-white/15 bg-black/35 px-2.5 py-1 text-[10px] font-medium text-[#f5f0e8] backdrop-blur-md">
-                Ouvert
-              </span>
-            </div>
-          </div>
-          <div className="space-y-2.5 px-3 pb-3.5 pt-3">
-            <div className="flex gap-1.5">
-              {[
-                { src: photos.phoneThumbA, label: "Chef" },
-                { src: photos.phoneThumbB, label: "Vins" },
-                { src: photos.phoneThumbC, label: "Salle" },
-              ].map((t) => (
-                <div
-                  key={t.label}
-                  className="relative h-11 flex-1 overflow-hidden rounded-lg ring-1 ring-white/[0.08]"
-                >
-                  <Image src={t.src} alt="" fill className="object-cover" sizes="96px" />
-                </div>
-              ))}
-            </div>
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-2.5">
-              <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/35">
-                Carte
-              </p>
-              <div className="mt-2 space-y-2">
-                <div className="flex justify-between gap-2 text-[11px]">
-                  <span className="text-[#e8e4dc]/90">Dégustation saisonnière</span>
-                  <span className="tabular-nums text-white/40">98 €</span>
-                </div>
-                <div className="flex justify-between gap-2 text-[11px]">
-                  <span className="text-[#e8e4dc]/65">Parcours végétarien</span>
-                  <span className="tabular-nums text-white/30">72 €</span>
-                </div>
-              </div>
-            </div>
-            <button
-              type="button"
-              className={`flex w-full items-center justify-center gap-2 rounded-xl bg-[#e8dfd0] py-2.5 text-[13px] font-semibold tracking-tight text-[#1a1816] shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)] ${serif}`}
-            >
-              Réserver une table
-              <ChevronRight className="h-4 w-4 opacity-70" strokeWidth={2} />
-            </button>
+      <motion.div {...floatProps(reduce, 17, 2.5, 0.35)}>
+        <div className="rounded-2xl border border-white/[0.09] bg-[#0c0c0d]/72 p-4 shadow-[0_24px_48px_-32px_rgba(0,0,0,0.88)] backdrop-blur-xl">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#78716c]">
+            Votre soirée
+          </p>
+          <p className={`mt-2 text-[0.9375rem] font-medium leading-snug text-[#faf8f5] ${serif}`}>
+            Table pour deux
+          </p>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-[#a8a29a]">
+            Samedi · 20h30
+            <br />
+            Maison Nord
+          </p>
+          <div className="mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-[#c4a574]/25 bg-[#c4a574]/12 px-2.5 py-1 text-[10px] font-medium text-[#e8dfd0]">
+            <span className="text-[#d4b896]">✓</span> C&apos;est confirmé
           </div>
         </div>
-      </div>
       </motion.div>
     </motion.div>
   );
@@ -255,118 +303,45 @@ function HeroPhone({ serif }: { serif: string }) {
 
 function HeroComposition({ serif }: { serif: string }) {
   const reduce = useReducedMotion();
-
   return (
-    <div className="relative mx-auto mt-10 max-w-[980px] min-h-[320px] sm:mt-11 sm:min-h-[380px] lg:min-h-[400px]">
-      <HeroAmbient />
-
-      {/* Carte lieu — découverte (côté client) */}
-      <motion.div
-        className="absolute left-0 top-[6%] z-30 hidden w-[188px] sm:block lg:left-[1%] lg:top-[10%] lg:w-[208px]"
-        initial={reduce ? false : { opacity: 0, x: -20, y: 12 }}
-        animate={reduce ? undefined : { opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.85, ease: easeLux, delay: 0.3 }}
-      >
-        <motion.div className="relative" {...floatProps(reduce, 13, 4, 0.15)}>
-          <div className="overflow-hidden rounded-2xl border border-white/[0.1] shadow-[0_32px_64px_-36px_rgba(0,0,0,0.95)] ring-1 ring-white/[0.04]">
-            <div className="relative aspect-[3/4]">
-              <Image
-                src={photos.phoneThumbC}
-                alt=""
-                fill
-                className="object-cover"
-                sizes="208px"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#080809]/90 via-[#080809]/15 to-transparent" />
-              <div className="absolute bottom-3 left-3 right-3">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/50">
-                  Aperçu lieu
-                </p>
-                <p className={`mt-1 text-base font-medium tracking-tight text-white ${serif}`}>
-                  Maison Nord
-                </p>
-                <p className="mt-0.5 text-[11px] text-white/55">Genève · ambiance et lumière</p>
-              </div>
-            </div>
+    <div className="mx-auto mt-14 max-w-6xl sm:mt-16 lg:mt-20">
+      <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12 lg:gap-x-10">
+        <div className="hidden lg:col-span-3 lg:block lg:justify-self-stretch">
+          <HeroEditorialColumn serif={serif} />
+        </div>
+        <div className="flex justify-center lg:col-span-6">
+          <HeroDevice serif={serif} />
+        </div>
+        <div className="hidden lg:col-span-3 lg:block lg:justify-self-stretch">
+          <div className="flex flex-col gap-6 lg:pt-4">
+            <motion.div
+              initial={reduce ? false : { opacity: 0, y: 14 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.85, ease: easeLux, delay: 0.3 }}
+            >
+              <motion.div {...floatProps(reduce, 15, 2, 0.15)}>
+                <article className="overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.03] shadow-[0_20px_40px_-28px_rgba(0,0,0,0.82)] backdrop-blur-sm">
+                  <div className="relative aspect-square max-h-[200px]">
+                    <Image
+                      src={photos.phoneThumbA}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="200px"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+                    <p
+                      className={`absolute bottom-2.5 left-2.5 right-2.5 text-center text-[9px] font-medium uppercase tracking-[0.12em] text-white/88 ${serif}`}
+                    >
+                      Envie du moment
+                    </p>
+                  </div>
+                </article>
+              </motion.div>
+            </motion.div>
+            <HeroGuestMoment serif={serif} />
           </div>
-        </motion.div>
-      </motion.div>
-
-      {/* Moment gourmand — feeling réseaux / inspiration */}
-      <motion.div
-        className="absolute right-0 top-[4%] z-30 hidden w-[118px] overflow-hidden rounded-2xl border border-white/[0.1] shadow-[0_28px_56px_-32px_rgba(0,0,0,0.92)] ring-1 ring-white/[0.05] sm:block lg:right-[2%] lg:top-[8%] lg:w-[132px]"
-        initial={reduce ? false : { opacity: 0, x: 18, y: 10 }}
-        animate={reduce ? undefined : { opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.85, ease: easeLux, delay: 0.38 }}
-      >
-        <motion.div className="relative" {...floatProps(reduce, 15, 5, 0.5)}>
-          <div className="relative aspect-[3/4]">
-            <Image
-              src={photos.phoneThumbA}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="132px"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
-            <p className={`absolute bottom-2 left-2 right-2 text-center text-[9px] font-medium uppercase tracking-[0.14em] text-white/85 ${serif}`}>
-              Envie du moment
-            </p>
-          </div>
-        </motion.div>
-      </motion.div>
-
-      {/* Assiette — mise en scène culinaire */}
-      <motion.div
-        className="absolute bottom-[4%] left-[3%] z-20 hidden w-[128px] overflow-hidden rounded-2xl border border-white/[0.1] shadow-[0_24px_48px_-28px_rgba(0,0,0,0.9)] sm:block lg:bottom-[8%] lg:left-[7%] lg:w-[142px]"
-        initial={reduce ? false : { opacity: 0, y: 22, rotate: -2.5 }}
-        animate={reduce ? undefined : { opacity: 1, y: 0, rotate: -1.5 }}
-        transition={{ duration: 0.9, ease: easeLux, delay: 0.48 }}
-      >
-        <motion.div className="relative" {...floatProps(reduce, 17, 3.5, 0.9)}>
-          <div className="relative aspect-[4/5]">
-            <Image
-              src={photos.heroFloatFood}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="142px"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            <p className={`absolute bottom-2 left-2 right-2 text-[10px] font-medium text-white/90 ${serif}`}>
-              Signature du chef
-            </p>
-          </div>
-        </motion.div>
-      </motion.div>
-
-      {/* Confirmation invité — parcours réservation (pas interface admin) */}
-      <motion.div
-        className="absolute bottom-[6%] right-[2%] z-30 hidden w-[178px] sm:block lg:bottom-[10%] lg:right-[6%]"
-        initial={reduce ? false : { opacity: 0, y: 18 }}
-        animate={reduce ? undefined : { opacity: 1, y: 0 }}
-        transition={{ duration: 0.85, ease: easeLux, delay: 0.42 }}
-      >
-        <motion.div className="relative" {...floatProps(reduce, 14, 4, 0.35)}>
-          <div className="rounded-2xl border border-white/[0.1] bg-[#0c0c0d]/80 p-3.5 shadow-[0_28px_56px_-32px_rgba(0,0,0,0.92)] backdrop-blur-xl">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#78716c]">
-              Votre soirée
-            </p>
-            <p className={`mt-1.5 text-sm font-medium text-[#faf8f5] ${serif}`}>Table pour deux</p>
-            <p className="mt-1 text-[11px] leading-snug text-[#a8a29a]">
-              Samedi · 20h30
-              <br />
-              Maison Nord
-            </p>
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[#c4a574]/25 bg-[#c4a574]/12 px-2.5 py-1 text-[10px] font-medium text-[#e8dfd0]">
-              <span className="text-[#d4b896]">✓</span> C&apos;est confirmé
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-
-      <div className="relative z-20 flex justify-center pt-2 sm:pt-1">
-        <HeroPhone serif={serif} />
+        </div>
       </div>
     </div>
   );
@@ -472,22 +447,25 @@ export function ZenGrowLanding() {
       </header>
 
       <main className="relative z-10">
-        <section className="relative px-4 pb-10 pt-8 sm:px-6 sm:pb-12 sm:pt-10 lg:px-8 lg:pt-12">
-          <div className="mx-auto max-w-4xl text-center">
+        <section className="relative px-4 pb-10 pt-16 sm:px-6 sm:pb-12 sm:pt-20 md:pt-24 lg:px-8 lg:pt-28">
+          <div className="mx-auto max-w-3xl text-center lg:max-w-[42rem]">
             <motion.h1
-              className={`${display} text-balance px-1 text-[2rem] font-medium leading-[1.06] tracking-[-0.032em] text-[#faf8f5] sm:text-[2.65rem] sm:leading-[1.04] lg:text-[3.15rem] lg:leading-[1.02] xl:text-[3.45rem]`}
-              initial={reduce ? false : { opacity: 0, y: 32 }}
+              className={`${display} px-1 text-[1.6875rem] font-medium leading-[1.14] tracking-[-0.028em] text-[#faf8f5] sm:text-[2.25rem] sm:leading-[1.12] lg:text-[2.625rem] lg:leading-[1.1] xl:text-[2.8125rem]`}
+              initial={reduce ? false : { opacity: 0, y: 28 }}
               animate={reduce ? undefined : { opacity: 1, y: 0 }}
               transition={{ duration: 0.95, ease: easeLux }}
             >
-              Les clients ne veulent plus chercher.
-              <span className="mt-2 block text-[#d4b896] sm:mt-3">
-                Ils veulent réserver immédiatement.
+              <span className="block text-balance">
+                Les clients ne veulent plus chercher.
+              </span>
+              <span className="mt-4 block text-balance text-[#d4b896] sm:mt-5">
+                <span className="block">Ils veulent réserver</span>
+                <span className="mt-1 block sm:mt-1.5">immédiatement.</span>
               </span>
             </motion.h1>
 
             <motion.p
-              className="mx-auto mt-6 max-w-xl text-balance px-2 text-[0.95rem] font-normal leading-[1.62] text-[#a8a29a] sm:mt-7 sm:max-w-2xl sm:text-[1.0625rem] sm:leading-relaxed"
+              className="mx-auto mt-7 max-w-xl text-balance px-2 text-[0.95rem] font-normal leading-[1.68] text-[#a8a29a] sm:mt-8 sm:max-w-2xl sm:text-[1.0625rem] sm:leading-[1.72]"
               initial={reduce ? false : { opacity: 0, y: 20 }}
               animate={reduce ? undefined : { opacity: 1, y: 0 }}
               transition={{ duration: 0.9, ease: easeLux, delay: 0.1 }}
@@ -499,7 +477,7 @@ export function ZenGrowLanding() {
             </motion.p>
 
             <motion.div
-              className="mt-8 flex flex-col items-center justify-center gap-3 sm:mt-9 sm:flex-row sm:gap-4"
+              className="mt-9 flex flex-col items-center justify-center gap-3 sm:mt-10 sm:flex-row sm:gap-4"
               initial={reduce ? false : { opacity: 0, y: 20 }}
               animate={reduce ? undefined : { opacity: 1, y: 0 }}
               transition={{ duration: 0.85, ease: easeLux, delay: 0.18 }}
