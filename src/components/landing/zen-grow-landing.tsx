@@ -188,7 +188,7 @@ export function ZenGrowLanding() {
       <main className="relative z-10 font-[family-name:var(--font-geist-sans),system-ui,sans-serif]">
         {/* Hero */}
         <section className="relative px-4 pb-20 sm:px-6 sm:pb-24 lg:px-10 lg:pb-28">
-          <div className="mx-auto max-w-[1100px] pt-10 text-center sm:pt-14 md:pt-20 lg:pt-28 xl:pt-32">
+          <div className="mx-auto max-w-[1100px] pt-16 text-center sm:pt-24 md:pt-32 lg:pt-40 xl:pt-44 2xl:pt-48">
             <motion.h1
               className={`${display} mx-auto max-w-[18ch] text-[2.375rem] font-normal leading-[1.05] tracking-[-0.028em] text-[#faf8f5] sm:max-w-none sm:text-[3.25rem] sm:leading-[1.04] md:text-[4rem] md:leading-[1.02] lg:text-[4.75rem] lg:leading-[1.01] xl:text-[5.25rem]`}
               initial={reduce ? false : { opacity: 0, y: 36 }}
@@ -196,9 +196,8 @@ export function ZenGrowLanding() {
               transition={{ duration: 1.05, ease: easeLux }}
             >
               <span className="block text-balance">Les clients ne veulent plus chercher.</span>
-              <span className="mt-[0.55em] block text-balance text-[#d4c4a8] sm:mt-[0.5em]">
-                <span className="block">Ils veulent réserver</span>
-                <span className="mt-[0.2em] block sm:mt-[0.22em]">immédiatement.</span>
+              <span className="mt-[0.28em] block whitespace-nowrap text-[#d4c4a8] text-[clamp(1.05rem,4.2vw+0.65rem,5.25rem)] leading-[1.05] tracking-[-0.028em] sm:text-[3.25rem] md:text-[4rem] lg:text-[4.75rem] xl:text-[5.25rem]">
+                Ils veulent réserver immédiatement.
               </span>
             </motion.h1>
 
@@ -209,7 +208,7 @@ export function ZenGrowLanding() {
               transition={{ duration: 0.95, ease: easeLux, delay: 0.08 }}
             >
               Aujourd&apos;hui, un restaurant se découvre en quelques secondes.
-              <span className="mt-3 block sm:mt-3.5">
+              <span className="mt-1.5 block sm:mt-2">
                 ZenGrow transforme cette découverte en réservation.
               </span>
             </motion.p>
