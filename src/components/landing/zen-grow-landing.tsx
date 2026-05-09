@@ -85,14 +85,14 @@ function useFadeUp(delay = 0) {
 }
 
 const cinematicLoop = {
-  duration: 7.5,
+  duration: 8,
   repeat: Number.POSITIVE_INFINITY,
   ease: "easeInOut" as const,
 };
 
 /**
- * Scène hero : émotion & lifestyle — une image cinéma, pas une maquette produit.
- * ZenGrow n’apparaît que par de petits gestes (réserver → confirmation) dans la scène.
+ * Pub lifestyle / bande-annonce : une seule image vivante, overlays légers dans le champ.
+ * Pas de cadre « produit », pas de verre type UI — seulement émotion puis geste de réservation.
  */
 function HeroCinematicScene({
   display,
@@ -105,103 +105,102 @@ function HeroCinematicScene({
     ? undefined
     : {
         ...cinematicLoop,
-        times: [0, 0.28, 0.32, 0.36, 0.58, 0.64, 1],
+        times: [0, 0.26, 0.3, 0.34, 0.56, 0.62, 1],
       };
 
   return (
-    <>
-      <div className="pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(ellipse_88%_62%_at_50%_48%,rgba(196,165,116,0.07),transparent_74%)] blur-3xl sm:-inset-14" />
+    <div className="relative w-full">
+      <div
+        className="pointer-events-none absolute -inset-x-4 -bottom-6 top-1/4 bg-[radial-gradient(ellipse_85%_70%_at_50%_60%,rgba(180,150,118,0.09),transparent_70%)] blur-3xl sm:-inset-x-8"
+        aria-hidden
+      />
 
-      <div className="relative mx-auto max-w-[1180px] overflow-hidden rounded-[1.15rem] shadow-[0_40px_100px_-50px_rgba(0,0,0,0.85)] sm:rounded-[1.65rem]">
-        <div className="relative aspect-[16/10] min-h-[240px] w-full max-h-[min(64vh,580px)] sm:aspect-[2.15/1] sm:min-h-[280px]">
+      <div className="relative mx-auto w-full max-w-[1280px] overflow-hidden sm:rounded-[2rem]">
+        <div className="relative aspect-[16/11] min-h-[260px] w-full max-h-[min(70vh,620px)] sm:aspect-[2.1/1] sm:min-h-[300px]">
           <motion.div
             className="absolute inset-0"
-            animate={
-              reduce ? undefined : { scale: [1, 1.042] }
-            }
+            animate={reduce ? undefined : { scale: [1, 1.032] }}
             transition={{
-              duration: 18,
+              duration: 22,
               repeat: Number.POSITIVE_INFINITY,
               repeatType: "reverse",
               ease: "easeInOut",
             }}
-            style={{ transformOrigin: "50% 36%" }}
+            style={{ transformOrigin: "50% 32%" }}
           >
             <Image
-              src={photos.closing}
-              alt="Ambiance chaleureuse d’un restaurant moderne"
+              src={photos.hero}
+              alt="Table dressée, lumière douce — soirée au restaurant"
               fill
-              className="object-cover object-[center_38%]"
-              sizes="(max-width: 768px) 100vw, 1180px"
+              className="object-cover object-[center_45%]"
+              sizes="(max-width: 768px) 100vw, 1280px"
               priority
             />
           </motion.div>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b]/88 via-[#0a0a0b]/12 to-[#0a0a0b]/35" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0b]/40 via-transparent to-[#0a0a0b]/40" />
-          {!reduce ? (
-            <motion.div
-              aria-hidden
-              className="absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_50%_40%,rgba(250,248,245,0.06),transparent_62%)]"
-              animate={{ opacity: [0.25, 0.45, 0.25] }}
-              transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-            />
-          ) : null}
+          {/* Lisibilité basse image seulement — pas de voile sombre global façon interface */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-black/15" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/15 via-transparent to-black/15" />
 
           <p
-            className={`${display} pointer-events-none absolute left-0 right-0 top-[10%] px-6 text-center text-[0.6875rem] font-normal uppercase tracking-[0.38em] text-white/32 sm:top-[12%] sm:text-[0.71875rem]`}
+            className={`${display} pointer-events-none absolute left-0 right-0 top-[8%] px-6 text-center text-[0.625rem] font-normal italic text-white/45 sm:top-[10%] sm:text-[0.6875rem]`}
           >
-            Ce soir
+            Une table vous attend
           </p>
 
           <motion.div
-            className="pointer-events-none absolute bottom-[26%] left-0 right-0 flex flex-col items-center px-5 sm:bottom-[28%]"
+            className="pointer-events-none absolute bottom-[30%] left-0 right-0 flex flex-col items-center px-6 sm:bottom-[32%]"
             animate={
               reduce
                 ? { opacity: 1, y: 0 }
                 : {
                     opacity: [0, 0, 0, 1, 1, 0, 0],
-                    y: [12, 12, 12, 0, 0, 8, 12],
+                    y: [10, 10, 10, 0, 0, 6, 10],
                   }
             }
             transition={reduce ? { duration: 0 } : t}
           >
             <p
-              className={`${display} text-center text-[1.125rem] leading-tight text-[#faf8f5] drop-shadow-[0_4px_28px_rgba(0,0,0,0.5)] sm:text-[1.35rem]`}
+              className={`${display} text-center text-[1.2rem] leading-[1.15] text-[#faf8f5] sm:text-[1.45rem]`}
+              style={{ textShadow: "0 2px 40px rgba(0,0,0,0.35)" }}
             >
               C’est réservé
             </p>
-            <p className="mt-1.5 text-center text-[0.8125rem] font-medium tracking-tight text-white/78 sm:text-[0.84375rem]">
-              Ce soir · 20h30 · 2 personnes
-            </p>
-            <p className="mt-3 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-white/38">
-              ZenGrow
+            <p className="mt-2 text-center text-[0.8125rem] font-normal tracking-wide text-white/85">
+              Ce soir · 20h30 · deux convives
             </p>
           </motion.div>
 
-          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center px-5 pb-8 pt-16 sm:pb-10 sm:pt-20">
+          <div className="absolute inset-x-0 bottom-0 flex justify-center px-6 pb-9 pt-24 sm:pb-11 sm:pt-28">
             <motion.div
               animate={
                 reduce
                   ? { scale: 1, opacity: 1 }
                   : {
-                      scale: [1, 1.02, 1, 0.96, 1.01, 1, 1],
-                      opacity: [1, 1, 1, 0.55, 0.55, 1, 1],
+                      scale: [1, 1.015, 1, 0.97, 1.008, 1, 1],
+                      opacity: [1, 1, 1, 0.5, 0.5, 1, 1],
                     }
               }
               transition={reduce ? { duration: 0 } : t}
             >
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center rounded-full border border-white/22 bg-white/14 px-7 py-3 text-[0.8125rem] font-semibold tracking-tight text-[#faf8f5] shadow-[0_20px_50px_-24px_rgba(0,0,0,0.65)] backdrop-blur-xl transition hover:border-white/30 hover:bg-white/20 sm:px-8 sm:py-3.5 sm:text-[0.875rem]"
+                className="inline-flex items-center justify-center rounded-full bg-[#f4ede6] px-8 py-3.5 text-[0.8125rem] font-semibold tracking-tight text-[#1c1917] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.35)] transition hover:bg-white hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.25)] sm:px-9 sm:py-4 sm:text-[0.875rem]"
               >
                 Réserver
               </Link>
             </motion.div>
           </div>
+
+          <p
+            className="pointer-events-none absolute bottom-4 right-4 text-[0.5625rem] font-medium uppercase tracking-[0.28em] text-white/30 sm:bottom-5 sm:right-6"
+            aria-hidden
+          >
+            Zen Grow
+          </p>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
