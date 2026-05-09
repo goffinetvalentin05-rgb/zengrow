@@ -56,6 +56,30 @@ const photos = {
 
 const easeLux = [0.22, 1, 0.36, 1] as const;
 
+/** Grain cinéma très léger — même sur toute la page */
+const FILM_GRAIN =
+  "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)' opacity='0.035'/%3E%3C/svg%3E\")";
+
+function UnifiedBackground() {
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0">
+      <div className="absolute inset-0 bg-[#080809]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_85%_at_50%_-15%,rgba(212,184,150,0.075),transparent_52%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_95%_35%,rgba(100,75,58,0.07),transparent_48%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_5%_75%,rgba(35,32,30,0.5),transparent_55%)]" />
+      <div
+        className="absolute inset-0 opacity-[0.55]"
+        style={{
+          backgroundImage: FILM_GRAIN,
+          backgroundRepeat: "repeat",
+          backgroundSize: "256px 256px",
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#080809]/40" />
+    </div>
+  );
+}
+
 function useFadeUp(delay = 0) {
   const reduce = useReducedMotion();
   return {
@@ -157,7 +181,7 @@ function HeroPhone({ serif }: { serif: string }) {
           <div className="h-1 w-[4.25rem] rounded-full bg-white/[0.12]" />
         </div>
         <div className="overflow-hidden rounded-[1.85rem] bg-[#0c0c0d] ring-1 ring-white/[0.05]">
-          <div className="relative h-[140px] w-full overflow-hidden">
+          <div className="relative h-[120px] w-full overflow-hidden sm:h-[128px]">
             <Image
               src={photos.phoneHero}
               alt=""
@@ -233,113 +257,115 @@ function HeroComposition({ serif }: { serif: string }) {
   const reduce = useReducedMotion();
 
   return (
-    <div className="relative mx-auto mt-16 max-w-[1100px] min-h-[460px] sm:mt-20 sm:min-h-[520px] lg:min-h-[560px]">
+    <div className="relative mx-auto mt-10 max-w-[980px] min-h-[320px] sm:mt-11 sm:min-h-[380px] lg:min-h-[400px]">
       <HeroAmbient />
 
-      {/* Carte réservation — gauche */}
+      {/* Carte lieu — découverte (côté client) */}
       <motion.div
-        className="absolute left-0 top-[8%] z-30 hidden w-[220px] sm:block lg:left-[2%] lg:top-[12%]"
-        initial={reduce ? false : { opacity: 0, x: -24, y: 16 }}
+        className="absolute left-0 top-[6%] z-30 hidden w-[188px] sm:block lg:left-[1%] lg:top-[10%] lg:w-[208px]"
+        initial={reduce ? false : { opacity: 0, x: -20, y: 12 }}
         animate={reduce ? undefined : { opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.9, ease: easeLux, delay: 0.35 }}
+        transition={{ duration: 0.85, ease: easeLux, delay: 0.3 }}
       >
-        <motion.div className="relative" {...floatProps(reduce, 12, 5, 0.2)}>
-        <div className="rounded-2xl border border-white/[0.08] bg-[#121214]/95 p-4 shadow-[0_28px_56px_-32px_rgba(0,0,0,0.92)] backdrop-blur-xl">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#57534e]">
-            Nouvelle réservation
-          </p>
-          <p className="mt-2 text-sm font-medium text-[#faf8f5]">Marie Lefèvre</p>
-          <p className="mt-1 text-xs text-[#a8a29a]">Ce soir · 20h30 · 4 personnes</p>
-          <div className="mt-3 flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.04] px-3 py-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2c2a28] text-[11px] text-[#d4b896]">
-              ✓
-            </span>
-            <span className="text-xs font-medium text-[#d6d3cd]">Confirmée</span>
-          </div>
-        </div>
-        </motion.div>
-      </motion.div>
-
-      {/* Aperçu tableau de bord — droite */}
-      <motion.div
-        className="absolute right-0 top-[6%] z-30 hidden w-[200px] sm:block lg:right-[1%] lg:top-[10%]"
-        initial={reduce ? false : { opacity: 0, x: 24, y: 12 }}
-        animate={reduce ? undefined : { opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.9, ease: easeLux, delay: 0.45 }}
-      >
-        <motion.div className="relative" {...floatProps(reduce, 14, 6, 0.6)}>
-        <div className="rounded-2xl border border-white/[0.08] bg-[#121214]/95 p-4 shadow-[0_28px_56px_-32px_rgba(0,0,0,0.92)] backdrop-blur-xl">
-          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#57534e]">
-            <BarChart3 className="h-3.5 w-3.5 text-[#a89078]" />
-            Vue d&apos;ensemble
-          </div>
-          <p className="mt-3 text-2xl font-semibold tracking-tight text-[#faf8f5]">12</p>
-          <p className="text-[10px] text-[#78716c]">Couverts · ce soir</p>
-          <div className="mt-3 flex h-10 items-end gap-1">
-            {[40, 65, 45, 80, 55, 72].map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 rounded-t-sm bg-gradient-to-t from-[#c4a574]/25 to-[#c4a574]/10"
-                style={{ height: `${h}%` }}
+        <motion.div className="relative" {...floatProps(reduce, 13, 4, 0.15)}>
+          <div className="overflow-hidden rounded-2xl border border-white/[0.1] shadow-[0_32px_64px_-36px_rgba(0,0,0,0.95)] ring-1 ring-white/[0.04]">
+            <div className="relative aspect-[3/4]">
+              <Image
+                src={photos.phoneThumbC}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="208px"
               />
-            ))}
-          </div>
-        </div>
-        </motion.div>
-      </motion.div>
-
-      {/* Photo flottante — bas gauche */}
-      <motion.div
-        className="absolute bottom-[6%] left-[2%] z-20 hidden w-[140px] overflow-hidden rounded-2xl border border-white/[0.1] shadow-[0_24px_48px_-28px_rgba(0,0,0,0.9)] sm:block lg:bottom-[10%] lg:left-[6%] lg:w-[160px]"
-        initial={reduce ? false : { opacity: 0, y: 28, rotate: -3 }}
-        animate={reduce ? undefined : { opacity: 1, y: 0, rotate: -2 }}
-        transition={{ duration: 0.95, ease: easeLux, delay: 0.55 }}
-      >
-        <motion.div className="relative" {...floatProps(reduce, 16, 4, 1)}>
-        <div className="relative aspect-[4/5]">
-          <Image
-            src={photos.heroFloatFood}
-            alt=""
-            fill
-            className="object-cover"
-            sizes="160px"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-          <p className={`absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-medium text-white/90 ${serif}`}>
-            Carte du soir
-          </p>
-        </div>
-        </motion.div>
-      </motion.div>
-
-      {/* Snippet calendrier — bas droite */}
-      <motion.div
-        className="absolute bottom-[8%] right-[3%] z-30 hidden w-[188px] sm:block lg:bottom-[12%] lg:right-[7%]"
-        initial={reduce ? false : { opacity: 0, y: 20 }}
-        animate={reduce ? undefined : { opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: easeLux, delay: 0.5 }}
-      >
-        <motion.div className="relative" {...floatProps(reduce, 13, 5, 0.4)}>
-        <div className="rounded-2xl border border-white/[0.08] bg-[#121214]/95 p-3.5 shadow-[0_28px_56px_-32px_rgba(0,0,0,0.92)] backdrop-blur-xl">
-          <div className="flex items-center gap-2 text-[10px] font-medium text-[#78716c]">
-            <CalendarDays className="h-3.5 w-3.5 text-[#c4a574]" />
-            Salle · étage
-          </div>
-          <div className="mt-2 space-y-1.5">
-            {["19h00 · 2", "19h30 · 4", "21h00 · 6"].map((row) => (
-              <div
-                key={row}
-                className="rounded-lg border border-white/[0.05] bg-white/[0.03] px-2.5 py-1.5 text-[10px] text-[#d6d3cd]"
-              >
-                {row}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080809]/90 via-[#080809]/15 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/50">
+                  Aperçu lieu
+                </p>
+                <p className={`mt-1 text-base font-medium tracking-tight text-white ${serif}`}>
+                  Maison Nord
+                </p>
+                <p className="mt-0.5 text-[11px] text-white/55">Genève · ambiance et lumière</p>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
         </motion.div>
       </motion.div>
 
-      <div className="relative z-20 flex justify-center pt-4 sm:pt-2">
+      {/* Moment gourmand — feeling réseaux / inspiration */}
+      <motion.div
+        className="absolute right-0 top-[4%] z-30 hidden w-[118px] overflow-hidden rounded-2xl border border-white/[0.1] shadow-[0_28px_56px_-32px_rgba(0,0,0,0.92)] ring-1 ring-white/[0.05] sm:block lg:right-[2%] lg:top-[8%] lg:w-[132px]"
+        initial={reduce ? false : { opacity: 0, x: 18, y: 10 }}
+        animate={reduce ? undefined : { opacity: 1, x: 0, y: 0 }}
+        transition={{ duration: 0.85, ease: easeLux, delay: 0.38 }}
+      >
+        <motion.div className="relative" {...floatProps(reduce, 15, 5, 0.5)}>
+          <div className="relative aspect-[3/4]">
+            <Image
+              src={photos.phoneThumbA}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="132px"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
+            <p className={`absolute bottom-2 left-2 right-2 text-center text-[9px] font-medium uppercase tracking-[0.14em] text-white/85 ${serif}`}>
+              Envie du moment
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* Assiette — mise en scène culinaire */}
+      <motion.div
+        className="absolute bottom-[4%] left-[3%] z-20 hidden w-[128px] overflow-hidden rounded-2xl border border-white/[0.1] shadow-[0_24px_48px_-28px_rgba(0,0,0,0.9)] sm:block lg:bottom-[8%] lg:left-[7%] lg:w-[142px]"
+        initial={reduce ? false : { opacity: 0, y: 22, rotate: -2.5 }}
+        animate={reduce ? undefined : { opacity: 1, y: 0, rotate: -1.5 }}
+        transition={{ duration: 0.9, ease: easeLux, delay: 0.48 }}
+      >
+        <motion.div className="relative" {...floatProps(reduce, 17, 3.5, 0.9)}>
+          <div className="relative aspect-[4/5]">
+            <Image
+              src={photos.heroFloatFood}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="142px"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <p className={`absolute bottom-2 left-2 right-2 text-[10px] font-medium text-white/90 ${serif}`}>
+              Signature du chef
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* Confirmation invité — parcours réservation (pas interface admin) */}
+      <motion.div
+        className="absolute bottom-[6%] right-[2%] z-30 hidden w-[178px] sm:block lg:bottom-[10%] lg:right-[6%]"
+        initial={reduce ? false : { opacity: 0, y: 18 }}
+        animate={reduce ? undefined : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.85, ease: easeLux, delay: 0.42 }}
+      >
+        <motion.div className="relative" {...floatProps(reduce, 14, 4, 0.35)}>
+          <div className="rounded-2xl border border-white/[0.1] bg-[#0c0c0d]/80 p-3.5 shadow-[0_28px_56px_-32px_rgba(0,0,0,0.92)] backdrop-blur-xl">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#78716c]">
+              Votre soirée
+            </p>
+            <p className={`mt-1.5 text-sm font-medium text-[#faf8f5] ${serif}`}>Table pour deux</p>
+            <p className="mt-1 text-[11px] leading-snug text-[#a8a29a]">
+              Samedi · 20h30
+              <br />
+              Maison Nord
+            </p>
+            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[#c4a574]/25 bg-[#c4a574]/12 px-2.5 py-1 text-[10px] font-medium text-[#e8dfd0]">
+              <span className="text-[#d4b896]">✓</span> C&apos;est confirmé
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      <div className="relative z-20 flex justify-center pt-2 sm:pt-1">
         <HeroPhone serif={serif} />
       </div>
     </div>
@@ -380,13 +406,10 @@ export function ZenGrowLanding() {
   const display = displaySerif.className;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#080809] text-[#e8e4dc] selection:bg-[#c4a574]/25 selection:text-[#faf8f5]">
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_50%_-25%,rgba(212,184,150,0.06),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_40%_at_90%_30%,rgba(139,90,60,0.05),transparent_50%)]" />
-      </div>
+    <div className="relative min-h-screen overflow-x-hidden bg-[#080809] text-[#e8e4dc] selection:bg-[#c4a574]/25 selection:text-[#faf8f5]">
+      <UnifiedBackground />
 
-      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#080809]/80 backdrop-blur-2xl backdrop-saturate-150">
+      <header className="sticky top-0 z-50 border-b border-white/[0.05] bg-[#080809]/65 backdrop-blur-2xl backdrop-saturate-150">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2">
             <Image
@@ -448,51 +471,49 @@ export function ZenGrowLanding() {
         </div>
       </header>
 
-      <main>
-        <section className="relative px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pt-20">
-          <SoftLight className="left-1/2 top-0 h-[min(85vw,560px)] w-[min(100vw,760px)] -translate-x-1/2 bg-[radial-gradient(circle,rgba(232,223,208,0.08),transparent_68%)]" />
-
-          <div className="mx-auto max-w-5xl text-center">
+      <main className="relative z-10">
+        <section className="relative px-4 pb-10 pt-8 sm:px-6 sm:pb-12 sm:pt-10 lg:px-8 lg:pt-12">
+          <div className="mx-auto max-w-4xl text-center">
             <motion.h1
-              className={`${display} text-balance px-1 text-[2.35rem] font-medium leading-[1.02] tracking-[-0.035em] text-[#faf8f5] sm:text-6xl sm:leading-[0.98] lg:text-7xl lg:leading-[0.97] xl:text-[4.75rem]`}
-              initial={reduce ? false : { opacity: 0, y: 40 }}
+              className={`${display} text-balance px-1 text-[2rem] font-medium leading-[1.06] tracking-[-0.032em] text-[#faf8f5] sm:text-[2.65rem] sm:leading-[1.04] lg:text-[3.15rem] lg:leading-[1.02] xl:text-[3.45rem]`}
+              initial={reduce ? false : { opacity: 0, y: 32 }}
               animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: easeLux }}
+              transition={{ duration: 0.95, ease: easeLux }}
             >
               Les clients ne veulent plus chercher.
-              <span className="mt-3 block text-[#d4b896] sm:mt-5">
+              <span className="mt-2 block text-[#d4b896] sm:mt-3">
                 Ils veulent réserver immédiatement.
               </span>
             </motion.h1>
 
             <motion.p
-              className="mx-auto mt-10 max-w-2xl text-balance px-2 text-base font-normal leading-[1.65] text-[#a8a29a] sm:mt-12 sm:text-xl sm:leading-relaxed"
-              initial={reduce ? false : { opacity: 0, y: 24 }}
+              className="mx-auto mt-6 max-w-xl text-balance px-2 text-[0.95rem] font-normal leading-[1.62] text-[#a8a29a] sm:mt-7 sm:max-w-2xl sm:text-[1.0625rem] sm:leading-relaxed"
+              initial={reduce ? false : { opacity: 0, y: 20 }}
               animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.95, ease: easeLux, delay: 0.12 }}
+              transition={{ duration: 0.9, ease: easeLux, delay: 0.1 }}
             >
               Aujourd&apos;hui, un restaurant se découvre en quelques secondes.
-              <span className="mt-2 block sm:mt-3">
+              <span className="mt-2 block sm:mt-2.5">
                 ZenGrow transforme cette découverte en réservation.
               </span>
             </motion.p>
 
             <motion.div
-              className="mt-11 flex flex-col items-center justify-center gap-3 sm:mt-12 sm:flex-row sm:gap-4"
+              className="mt-8 flex flex-col items-center justify-center gap-3 sm:mt-9 sm:flex-row sm:gap-4"
               initial={reduce ? false : { opacity: 0, y: 20 }}
               animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.85, ease: easeLux, delay: 0.22 }}
+              transition={{ duration: 0.85, ease: easeLux, delay: 0.18 }}
             >
               <Link
                 href="/signup"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f5f0e8] px-8 py-3.5 text-sm font-semibold tracking-tight text-[#1a1816] transition hover:bg-white sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f5f0e8] px-7 py-3 text-sm font-semibold tracking-tight text-[#1a1816] transition hover:bg-white sm:w-auto"
               >
                 Créer ma page restaurant
                 <ArrowRight className="h-4 w-4" strokeWidth={2} />
               </Link>
               <a
                 href="#story"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.02] px-8 py-3.5 text-sm font-medium text-[#e8e4dc] transition hover:border-white/[0.16] hover:bg-white/[0.04] sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.02] px-7 py-3 text-sm font-medium text-[#e8e4dc] transition hover:border-white/[0.16] hover:bg-white/[0.04] sm:w-auto"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.06]">
                   <Play className="h-3 w-3 fill-current" />
@@ -506,31 +527,27 @@ export function ZenGrowLanding() {
 
           {/* Sur mobile : rappel visuel léger sous le téléphone */}
           <motion.div
-            className="mx-auto mt-8 max-w-sm sm:hidden"
+            className="mx-auto mt-6 max-w-sm sm:hidden"
             initial={reduce ? false : { opacity: 0 }}
             animate={reduce ? undefined : { opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
+            transition={{ delay: 0.55, duration: 0.75 }}
           >
-            <div className="flex gap-3 rounded-2xl border border-white/[0.07] bg-[#121214]/90 p-3 backdrop-blur-lg">
-              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl">
+            <div className="flex gap-3 rounded-2xl border border-white/[0.08] bg-[#0c0c0d]/75 p-3 backdrop-blur-lg">
+              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/[0.06]">
                 <Image src={photos.heroFloatFood} alt="" fill className="object-cover" sizes="56px" />
               </div>
               <div className="min-w-0 text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-[#57534e]">
-                  Réservation
+                  Votre soirée
                 </p>
-                <p className="truncate text-sm font-medium text-[#faf8f5]">Marie L. · 20h30</p>
-                <p className="text-xs text-[#78716c]">Confirmée</p>
+                <p className="truncate text-sm font-medium text-[#faf8f5]">Table pour deux · 20h30</p>
+                <p className="text-xs text-[#78716c]">C&apos;est confirmé</p>
               </div>
             </div>
           </motion.div>
         </section>
 
-        <section
-          id="story"
-          className="relative border-t border-white/[0.05] bg-[#0c0c0e] px-4 py-24 sm:px-6 lg:px-8"
-        >
-          <SoftLight className="right-0 top-1/3 h-72 w-72 translate-x-1/4 bg-[rgba(196,165,116,0.07)]" />
+        <section id="story" className="relative px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
           <div className="mx-auto max-w-6xl">
             <motion.h2
               {...useFadeUp(0)}
@@ -539,7 +556,7 @@ export function ZenGrowLanding() {
               Aujourd&apos;hui, on décide en quelques secondes.
             </motion.h2>
 
-            <div className="mt-20 space-y-12">
+            <div className="mt-16 space-y-12 sm:mt-20">
               <motion.div
                 initial={reduce ? false : { opacity: 0, y: 20 }}
                 whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
@@ -560,7 +577,7 @@ export function ZenGrowLanding() {
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.07, duration: 0.55, ease: easeLux }}
                     whileHover={{ y: -2 }}
-                    className="rounded-2xl border border-white/[0.07] bg-[#141416]/90 px-5 py-3.5 shadow-[0_24px_48px_-32px_rgba(0,0,0,0.85)] backdrop-blur-md"
+                    className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-3.5 shadow-[0_24px_48px_-32px_rgba(0,0,0,0.75)] backdrop-blur-md"
                   >
                     <span className="text-sm font-medium tracking-tight text-[#e8e4dc]">
                       {p.label}
@@ -589,7 +606,7 @@ export function ZenGrowLanding() {
                 className="relative mx-auto max-w-lg"
               >
                 <div className="absolute -inset-px rounded-[1.6rem] bg-gradient-to-b from-white/[0.08] to-transparent opacity-35 blur-xl" />
-                <div className="relative overflow-hidden rounded-[1.45rem] border border-white/[0.08] bg-[#111113]/95 p-5 shadow-[0_40px_80px_-48px_rgba(0,0,0,0.95)] backdrop-blur-xl">
+                <div className="relative overflow-hidden rounded-[1.45rem] border border-white/[0.08] bg-[#0c0c0d]/75 p-5 shadow-[0_40px_80px_-48px_rgba(0,0,0,0.9)] backdrop-blur-xl">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#78716c]">
                       Page ZenGrow
@@ -664,7 +681,7 @@ export function ZenGrowLanding() {
           </div>
         </section>
 
-        <section id="experience" className="relative px-4 py-24 sm:px-6 lg:px-8">
+        <section id="experience" className="relative px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
           <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[minmax(0,1fr)_min(380px,38vw)] lg:gap-16 lg:items-start">
             <motion.div {...useFadeUp(0)} className="max-w-xl lg:pt-4">
               <h2
@@ -737,7 +754,7 @@ export function ZenGrowLanding() {
                 viewport={{ once: true, amount: 0.12 }}
                 transition={{ duration: 0.6, delay: i * 0.05, ease: easeLux }}
                 whileHover={{ y: -3, transition: { duration: 0.35, ease: easeLux } }}
-                className={`group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0f0f11]/90 p-1 shadow-[0_28px_64px_-44px_rgba(0,0,0,0.9)] ${
+                className={`group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.025] p-1 shadow-[0_28px_64px_-44px_rgba(0,0,0,0.88)] backdrop-blur-[2px] ${
                   i === 4 ? "sm:col-span-2 lg:col-span-1" : ""
                 }`}
               >
@@ -749,7 +766,7 @@ export function ZenGrowLanding() {
                     className="object-cover transition duration-[1.1s] ease-out group-hover:scale-[1.03]"
                     sizes="(max-width: 640px) 100vw, 280px"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0e]/90 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#080809]/88 via-transparent to-transparent" />
                   {card.visual === "flow" && (
                     <div className="absolute inset-0 flex items-center justify-center gap-2 p-3">
                       <div className="h-1.5 w-1.5 rounded-full bg-[#c4a574]" />
@@ -823,11 +840,7 @@ export function ZenGrowLanding() {
           </motion.div>
         </section>
 
-        <section
-          id="system"
-          className="relative overflow-hidden border-t border-white/[0.05] bg-[#0a0a0b] px-4 py-24 sm:px-6 lg:px-8"
-        >
-          <SoftLight className="left-0 bottom-0 h-[28rem] w-[28rem] -translate-x-1/3 translate-y-1/4 bg-[rgba(90,70,55,0.06)]" />
+        <section id="system" className="relative overflow-hidden px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
           <div className="mx-auto max-w-6xl">
             <motion.div {...useFadeUp(0)} className="max-w-3xl">
               <h2
@@ -959,7 +972,7 @@ export function ZenGrowLanding() {
           </div>
         </section>
 
-        <section className="px-4 py-24 sm:px-6 lg:px-8">
+        <section className="px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
           <div className="mx-auto max-w-6xl lg:grid lg:grid-cols-[1fr_1.1fr] lg:gap-16 lg:items-center">
             <motion.h2
               {...useFadeUp(0)}
@@ -981,7 +994,7 @@ export function ZenGrowLanding() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.07, duration: 0.6, ease: easeLux }}
                   whileHover={{ y: -2 }}
-                  className="group overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0f0f11]"
+                  className="group overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.025] backdrop-blur-[2px]"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <Image
@@ -1012,7 +1025,7 @@ export function ZenGrowLanding() {
           </motion.p>
         </section>
 
-        <section className="border-t border-white/[0.05] bg-[#0c0c0e] px-4 py-24 sm:px-6 lg:px-8">
+        <section className="px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
           <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-2">
             {[
               {
@@ -1036,7 +1049,7 @@ export function ZenGrowLanding() {
                 whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.7, delay: i * 0.1, ease: easeLux }}
-                className="relative overflow-hidden rounded-[1.65rem] border border-white/[0.07] bg-[#111113]"
+                className="relative overflow-hidden rounded-[1.65rem] border border-white/[0.07] bg-white/[0.02]"
               >
                 <div className="relative aspect-[21/9] w-full sm:aspect-[2/1]">
                   <Image
@@ -1046,7 +1059,7 @@ export function ZenGrowLanding() {
                     className="object-cover"
                     sizes="(max-width: 1024px) 100vw, 50vw"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#111113] via-[#111113]/40 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#080809] via-[#080809]/35 to-transparent" />
                 </div>
                 <div className="relative p-8 pt-6">
                   <h3 className="max-w-sm text-xl font-medium leading-snug tracking-tight text-[#faf8f5] sm:text-2xl">
@@ -1076,17 +1089,18 @@ export function ZenGrowLanding() {
           </motion.p>
         </section>
 
-        <section className="relative overflow-hidden px-4 py-28 sm:px-6 lg:px-8">
+        <section className="relative overflow-hidden px-4 py-24 sm:px-6 sm:py-28 lg:px-8">
           <div className="absolute inset-0">
             <Image
               src={photos.visionAtmosphere}
               alt=""
               fill
-              className="object-cover opacity-40"
+              className="object-cover opacity-[0.34]"
               sizes="100vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#080809] via-[#080809]/92 to-[#080809]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,184,150,0.08),transparent_55%)]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#080809] via-[#080809]/82 to-[#080809]" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#080809]/90 via-transparent to-[#080809]/90" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(212,184,150,0.06),transparent_62%)]" />
           </div>
           <motion.div
             {...useFadeUp(0)}
@@ -1133,10 +1147,10 @@ export function ZenGrowLanding() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08, duration: 0.6, ease: easeLux }}
                   whileHover={{ y: -2, transition: { duration: 0.35, ease: easeLux } }}
-                  className={`relative flex flex-col rounded-[1.65rem] border p-8 ${
+                  className={`relative flex flex-col rounded-[1.65rem] border p-8 backdrop-blur-sm ${
                     plan.highlight
-                      ? "border-[#c4a574]/25 bg-gradient-to-b from-[#1a1816]/90 to-[#0f0f11] shadow-[0_0_0_1px_rgba(196,165,116,0.12)_inset]"
-                      : "border-white/[0.07] bg-[#111113]/80"
+                      ? "border-[#c4a574]/28 bg-gradient-to-b from-white/[0.07] to-white/[0.02] shadow-[0_0_0_1px_rgba(196,165,116,0.1)_inset]"
+                      : "border-white/[0.07] bg-white/[0.03]"
                   }`}
                 >
                   {plan.highlight ? (
@@ -1179,7 +1193,7 @@ export function ZenGrowLanding() {
           </div>
         </section>
 
-        <footer className="border-t border-white/[0.06] px-4 py-12 sm:px-6 lg:px-8">
+        <footer className="border-t border-white/[0.04] px-4 py-12 sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
             <Image
               src="/Zengrow-logo.png"
