@@ -48,6 +48,17 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
+  /* Landing ZenGrow (palette orange chaud) */
+  --color-landing-bg: #0a0806;
+  --color-landing-section: #100c09;
+  --color-landing-card: #16110d;
+  --color-landing-border: #2a1f17;
+  --color-landing-fg: #faf7f2;
+  --color-landing-muted: #8a7f73;
+  --color-landing-accent: #ff6b2c;
+  --color-landing-accent-soft: #ffa86b;
+  --font-landing-serif: var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
+
   --color-zg-canvas: var(--zg-canvas);
   --color-zg-canvas-mid: var(--zg-canvas-mid);
   --color-zg-fg: var(--zg-fg);
@@ -80,6 +91,32 @@ body {
 
 ::selection {
   background: rgba(22, 101, 52, 0.12);
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+.animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
 }
 
 .dashboard-field-label {

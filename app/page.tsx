@@ -1,12 +1,41 @@
 import type { Metadata } from "next";
-import { ZenGrowLanding } from "@/src/components/landing/zen-grow-landing";
+import { Navbar } from "@/components/sections/Navbar";
+import { Hero } from "@/components/sections/Hero";
+import { Globe } from "@/components/sections/Globe";
+import { Connected } from "@/components/sections/Connected";
+import { Solutions } from "@/components/sections/Solutions";
+import { Testimonials } from "@/components/sections/Testimonials";
+import { Tarifs } from "@/components/sections/Tarifs";
+import { FAQ } from "@/components/sections/FAQ";
+import { CTA } from "@/components/sections/CTA";
+import { Footer } from "@/components/sections/Footer";
 
 export const metadata: Metadata = {
-  title: "ZenGrow — La découverte devient réservation",
+  title: "ZenGrow — Page web pro & réservation pour restaurants",
   description:
-    "ZenGrow transforme la découverte mobile en réservation instantanée : page restaurant premium, expérience fluide et plateforme pour réservations, clients, campagnes et données.",
+    "ZenGrow crée des pages web professionnelles avec réservation intégrée pour les restaurants. Conversion, design premium, sans friction.",
 };
 
 export default function Home() {
-  return <ZenGrowLanding />;
+  return (
+    <div
+      className="min-h-screen bg-landing-bg text-landing-fg antialiased"
+      style={{
+        fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
+      }}
+    >
+      <Navbar />
+      <main>
+        <Hero />
+        <Globe />
+        <Connected />
+        <Solutions />
+        <Testimonials />
+        <Tarifs />
+        <FAQ />
+        <CTA />
+      </main>
+      <Footer />
+    </div>
+  );
 }

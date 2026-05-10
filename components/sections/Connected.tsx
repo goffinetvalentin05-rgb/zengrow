@@ -1,0 +1,127 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { UtensilsCrossed } from "lucide-react";
+import { Reveal } from "@/components/sections/Reveal";
+
+const cards = [
+  {
+    position: "col-start-1 row-start-1",
+    kicker: "Page web pro",
+    title: "Une vraie page restaurant complète, pas juste un widget de réservation.",
+  },
+  {
+    position: "col-start-3 row-start-1",
+    kicker: "Réservation en 1 clic",
+    title: "Le client réserve en moins de 30 secondes, sans friction.",
+  },
+  {
+    position: "col-start-1 row-start-3",
+    kicker: "Avis Google auto",
+    title: "Email automatique post-visite pour booster ta note.",
+  },
+  {
+    position: "col-start-3 row-start-3",
+    kicker: "CRM clients intégré",
+    title: "Récupère et exploite chaque donnée client automatiquement.",
+  },
+];
+
+function ConnectorLines() {
+  const paths = [
+    "M 50 50 L 22 24",
+    "M 50 50 L 78 24",
+    "M 50 50 L 22 76",
+    "M 50 50 L 78 76",
+  ];
+
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#FF6B2C" stopOpacity="0.05" />
+          <stop offset="50%" stopColor="#FF6B2C" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#FF6B2C" stopOpacity="0.05" />
+        </linearGradient>
+      </defs>
+      {paths.map((d, i) => (
+        <motion.path
+          key={d}
+          d={d}
+          fill="none"
+          stroke="url(#line-grad)"
+          strokeWidth="0.35"
+          vectorEffect="non-scaling-stroke"
+          initial={{ pathLength: 0, opacity: 0 }}
+          whileInView={{ pathLength: 1, opacity: 1 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 1.1, delay: 0.08 * i, ease: [0.22, 1, 0.36, 1] }}
+        />
+      ))}
+    </svg>
+  );
+}
+
+export function Connected() {
+  return (
+    <section id="fonctionnalites" className="relative bg-landing-bg py-24 sm:py-28">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_0%,rgba(255,107,44,0.1),transparent)]" />
+      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
+        <Reveal className="mx-auto max-w-3xl text-center">
+          <h2 className="font-landing-serif text-[clamp(2rem,4vw,3rem)] font-normal text-landing-fg">
+            Tout ce qu&apos;il faut pour <em className="italic text-landing-accent">convertir</em> un visiteur
+          </h2>
+          <p className="mt-4 text-landing-muted">Une page web qui vend, pas juste qui informe.</p>
+        </Reveal>
+
+        <div className="relative mx-auto mt-16 max-w-5xl overflow-x-auto pb-2">
+          <div className="relative mx-auto min-w-[640px]">
+            <ConnectorLines />
+            <div className="relative z-10 grid grid-cols-3 grid-rows-3 gap-x-6 gap-y-10 sm:gap-x-10 sm:gap-y-12">
+            {cards.map((c, i) => (
+              <motion.div
+                key={c.kicker}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.08 + i * 0.1, duration: 0.55 }}
+                className={`${c.position} rounded-2xl border border-landing-border bg-landing-card/90 p-6 shadow-[0_0_50px_-30px_rgba(255,107,44,0.35)] backdrop-blur-sm`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-wider text-landing-accent">{c.kicker}</p>
+                <p className="mt-3 text-sm leading-relaxed text-landing-fg/90">{c.title}</p>
+              </motion.div>
+            ))}
+            <div className="col-start-2 row-start-2 flex items-center justify-center">
+              <motion.div
+                className="relative flex size-24 items-center justify-center rounded-full border border-landing-accent/50 bg-gradient-to-br from-landing-accent/25 to-landing-card text-landing-accent-soft shadow-[0_0_60px_12px_rgba(255,107,44,0.45)]"
+                initial={{ scale: 0.85, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                viewport={{ once: true }}
+                animate={{
+                  boxShadow: [
+                    "0 0 50px 8px rgba(255,107,44,0.35)",
+                    "0 0 72px 18px rgba(255,107,44,0.55)",
+                    "0 0 50px 8px rgba(255,107,44,0.35)",
+                  ],
+                }}
+                transition={{
+                  scale: { duration: 0.55, delay: 0.15 },
+                  opacity: { duration: 0.55, delay: 0.15 },
+                  boxShadow: { duration: 3.2, repeat: Infinity, ease: "easeInOut" },
+                }}
+              >
+                <UtensilsCrossed className="size-9 text-landing-accent-soft" strokeWidth={1.25} />
+              </motion.div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
