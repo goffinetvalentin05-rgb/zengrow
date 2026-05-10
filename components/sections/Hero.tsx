@@ -22,13 +22,6 @@ const stats = [
   },
 ];
 
-const mentions = [
-  "Sans engagement",
-  "Setup en 48h",
-  "Support 100% français",
-  "-30% les 3 premiers mois",
-];
-
 function NeonArc({ flip = false }: { flip?: boolean }) {
   return (
     <div
@@ -64,46 +57,44 @@ function NeonArc({ flip = false }: { flip?: boolean }) {
 
 export function Hero() {
   return (
-    <section id="accueil" className="relative min-h-screen overflow-hidden pb-32 pt-40 sm:pb-40">
+    <section
+      id="accueil"
+      className="relative flex min-h-screen flex-col items-center overflow-hidden pt-32 pb-20"
+    >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(255,107,44,0.18),transparent)]" />
-      <div className="relative z-10 mx-auto max-w-5xl px-4 text-center sm:px-6">
-        <Reveal>
-          <h1 className="font-landing-serif text-5xl font-normal leading-[1.08] tracking-tight text-landing-fg sm:text-6xl lg:text-7xl">
-            Transforme chaque visite en{" "}
-            <em className="italic text-landing-accent">réservation</em>
-          </h1>
-        </Reveal>
-        <Reveal delay={0.08} className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-landing-muted">
-          <p>
-            ZenGrow, c&apos;est une page web professionnelle pensée pour les restaurants, avec un système de
-            réservation intégré qui convertit chaque visiteur en client. Plus besoin de payer 2&apos;500 CHF pour un site
-            puis encore un outil de résa séparé : tout est inclus, en 48h, à 49 CHF/mois.
-          </p>
-        </Reveal>
-        <Reveal delay={0.12} className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="#cta"
-            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-landing-accent px-7 text-sm font-semibold text-white shadow-[0_0_48px_-10px_rgba(255,107,44,0.85)] transition hover:brightness-110"
-          >
-            Démarrer maintenant
-          </Link>
-          <Link
-            href="#demo"
-            className="inline-flex min-h-12 items-center justify-center rounded-xl border border-landing-border bg-landing-card/40 px-7 text-sm font-semibold text-landing-fg backdrop-blur-sm transition hover:border-landing-accent/50 hover:bg-landing-card/70"
-          >
-            Voir une démo
-          </Link>
-        </Reveal>
-        <Reveal delay={0.14} className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-landing-muted">
-          {mentions.map((m) => (
-            <span key={m} className="inline-flex items-center gap-1.5">
-              <span className="text-landing-accent-soft">✓</span> {m}
-            </span>
-          ))}
-        </Reveal>
+
+      <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4 sm:px-6">
+        <div className="mx-auto max-w-5xl text-center">
+          <Reveal>
+            <h1 className="font-landing-serif text-5xl font-normal leading-[1.08] tracking-tight text-landing-fg sm:text-6xl lg:text-7xl">
+              Transforme chaque visite en{" "}
+              <em className="italic text-landing-accent">réservation</em>
+            </h1>
+          </Reveal>
+          <Reveal delay={0.08} className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-landing-muted">
+            <p>
+              La page web professionnelle qui transforme chaque visiteur en réservation. Pensée pour les restaurants
+              qui veulent grandir.
+            </p>
+          </Reveal>
+          <Reveal delay={0.12} className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="#cta"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-landing-accent px-7 text-sm font-semibold text-white shadow-[0_0_48px_-10px_rgba(255,107,44,0.85)] transition hover:brightness-110"
+            >
+              Démarrer maintenant
+            </Link>
+            <Link
+              href="#demo"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-landing-border bg-landing-card/40 px-7 text-sm font-semibold text-landing-fg backdrop-blur-sm transition hover:border-landing-accent/50 hover:bg-landing-card/70"
+            >
+              Voir une démo
+            </Link>
+          </Reveal>
+        </div>
       </div>
 
-      <div className="relative z-20 mx-auto mt-20 max-w-6xl px-4 sm:px-6">
+      <div className="relative z-20 mt-16 w-full max-w-6xl shrink-0 px-4 sm:px-6">
         <div className="relative flex flex-col items-center">
           <div className="relative z-30 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
             {stats.map((s, i) => (
