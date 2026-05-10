@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/sections/Reveal";
-import { Particles } from "@/components/sections/Particles";
+import { WaveBackground } from "@/components/sections/WaveBackground";
 
 const stats = [
   {
@@ -21,80 +21,6 @@ const stats = [
     label: "et ta page restaurant est en ligne, optimisée et prête à recevoir tes premières réservations.",
   },
 ];
-
-function HeroBackground() {
-  return (
-    <>
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute bottom-0 left-1/2 h-[80%] w-[200%] -translate-x-1/2"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(255, 107, 44, 0.2) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255, 107, 44, 0.2) 1px, transparent 1px)
-            `,
-            backgroundSize: "80px 80px",
-            transform: "perspective(800px) rotateX(65deg)",
-            transformOrigin: "center bottom",
-            maskImage: "radial-gradient(ellipse at center bottom, black 0%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse at center bottom, black 0%, transparent 70%)",
-          }}
-          animate={{ backgroundPositionY: ["0px", "80px"] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-        />
-      </div>
-
-      <motion.div
-        className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(255, 107, 44, 0.25) 0%, transparent 60%)",
-          filter: "blur(80px)",
-        }}
-        animate={{
-          x: [0, 60, -40, 0],
-          y: [0, -40, 60, 0],
-          scale: [1, 1.2, 0.9, 1],
-        }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        aria-hidden
-      />
-
-      <motion.div
-        className="absolute bottom-1/4 right-1/4 h-[600px] w-[600px] rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(255, 168, 107, 0.2) 0%, transparent 60%)",
-          filter: "blur(100px)",
-        }}
-        animate={{
-          x: [0, -80, 50, 0],
-          y: [0, 50, -30, 0],
-          scale: [1, 0.8, 1.3, 1],
-        }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        aria-hidden
-      />
-
-      <div
-        className="absolute bottom-[20%] left-0 right-0 h-[2px]"
-        style={{
-          background: "linear-gradient(to right, transparent 0%, rgba(255, 107, 44, 1) 50%, transparent 100%)",
-          boxShadow: "0 0 60px rgba(255, 107, 44, 0.8), 0 0 100px rgba(255, 107, 44, 0.4)",
-        }}
-        aria-hidden
-      />
-
-      <Particles />
-
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: "radial-gradient(ellipse at center, transparent 30%, rgba(10, 8, 6, 0.8) 100%)",
-        }}
-        aria-hidden
-      />
-    </>
-  );
-}
 
 /** Arc néon (utilisé par la section CTA uniquement). */
 function NeonArc({ flip = false }: { flip?: boolean }) {
@@ -136,9 +62,7 @@ export function Hero() {
       id="accueil"
       className="relative flex h-screen w-full items-center justify-center overflow-hidden"
     >
-      <div className="absolute inset-0 z-0">
-        <HeroBackground />
-      </div>
+      <WaveBackground />
 
       <div className="container relative z-10 mx-auto flex flex-col items-center gap-8 px-6 text-center">
         <Reveal>
@@ -182,7 +106,7 @@ export function Hero() {
                   <motion.div
                     animate={{ y: [0, -12, 0] }}
                     transition={{ duration: 4 + i * 0.5, repeat: Infinity, ease: "easeInOut" }}
-                    className="rounded-2xl border border-landing-border bg-gradient-to-br from-landing-card to-landing-card/50 p-6 shadow-[0_0_40px_-24px_rgba(255,107,44,0.5)] backdrop-blur-sm"
+                    className="rounded-2xl border border-landing-border bg-landing-card/80 p-6 shadow-[0_0_40px_-24px_rgba(255,107,44,0.5)] backdrop-blur-md"
                   >
                     <p className="mb-3 font-landing-serif text-4xl text-landing-fg">{s.value}</p>
                     <p className="text-sm leading-relaxed text-landing-muted">{s.label}</p>
