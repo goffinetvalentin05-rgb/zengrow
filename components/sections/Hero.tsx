@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
 import { Reveal } from "@/components/sections/Reveal";
+import { Particles } from "@/components/sections/Particles";
 
 const stats = [
   {
@@ -22,45 +22,77 @@ const stats = [
   },
 ];
 
-function HeroPerspectiveGrid() {
+function HeroBackground() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[60vh] overflow-hidden">
+    <>
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          className="absolute bottom-0 left-1/2 h-[80%] w-[200%] -translate-x-1/2"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(255, 107, 44, 0.2) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255, 107, 44, 0.2) 1px, transparent 1px)
+            `,
+            backgroundSize: "80px 80px",
+            transform: "perspective(800px) rotateX(65deg)",
+            transformOrigin: "center bottom",
+            maskImage: "radial-gradient(ellipse at center bottom, black 0%, transparent 70%)",
+            WebkitMaskImage: "radial-gradient(ellipse at center bottom, black 0%, transparent 70%)",
+          }}
+          animate={{ backgroundPositionY: ["0px", "80px"] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        />
+      </div>
+
       <motion.div
-        className="absolute inset-0"
-        initial={{ backgroundPosition: "0px 0px" }}
-        animate={{ backgroundPosition: ["0px 0px", "0px 60px"] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+        className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full"
         style={{
-          backgroundImage: `
-            linear-gradient(rgba(255, 107, 44, 0.15) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 107, 44, 0.15) 1px, transparent 1px)
-          `,
-          backgroundSize: "60px 60px",
-          transform: "perspective(500px) rotateX(60deg)",
-          transformOrigin: "center top",
-          maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
+          background: "radial-gradient(circle, rgba(255, 107, 44, 0.25) 0%, transparent 60%)",
+          filter: "blur(80px)",
         }}
+        animate={{
+          x: [0, 60, -40, 0],
+          y: [0, -40, 60, 0],
+          scale: [1, 1.2, 0.9, 1],
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        aria-hidden
       />
+
+      <motion.div
+        className="absolute bottom-1/4 right-1/4 h-[600px] w-[600px] rounded-full"
+        style={{
+          background: "radial-gradient(circle, rgba(255, 168, 107, 0.2) 0%, transparent 60%)",
+          filter: "blur(100px)",
+        }}
+        animate={{
+          x: [0, -80, 50, 0],
+          y: [0, 50, -30, 0],
+          scale: [1, 0.8, 1.3, 1],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        aria-hidden
+      />
+
       <div
-        className="absolute left-1/2 top-0 h-[400px] w-full max-w-[800px] -translate-x-1/2 rounded-full"
+        className="absolute bottom-[20%] left-0 right-0 h-[2px]"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(255, 107, 44, 0.4) 0%, transparent 70%)",
-          filter: "blur(60px)",
+          background: "linear-gradient(to right, transparent 0%, rgba(255, 107, 44, 1) 50%, transparent 100%)",
+          boxShadow: "0 0 60px rgba(255, 107, 44, 0.8), 0 0 100px rgba(255, 107, 44, 0.4)",
         }}
         aria-hidden
       />
-      <motion.div
-        className="absolute left-0 right-0 top-0 h-[2px]"
+
+      <Particles />
+
+      <div
+        className="pointer-events-none absolute inset-0"
         style={{
-          background: "linear-gradient(to right, transparent 0%, rgba(255, 107, 44, 0.8) 50%, transparent 100%)",
-          boxShadow: "0 0 40px rgba(255, 107, 44, 0.6)",
+          background: "radial-gradient(ellipse at center, transparent 30%, rgba(10, 8, 6, 0.8) 100%)",
         }}
-        animate={{ opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         aria-hidden
       />
-    </div>
+    </>
   );
 }
 
@@ -102,24 +134,27 @@ export function Hero() {
   return (
     <section
       id="accueil"
-      className="relative flex min-h-screen items-center justify-center overflow-hidden"
+      className="relative flex h-screen w-full items-center justify-center overflow-hidden"
     >
-      <div className="pointer-events-none absolute inset-0 -z-20 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(255,107,44,0.18),transparent)]" />
-      <HeroPerspectiveGrid />
+      <div className="absolute inset-0 z-0">
+        <HeroBackground />
+      </div>
 
-      <div className="container relative z-10 mx-auto flex flex-col items-center px-6 text-center">
+      <div className="container relative z-10 mx-auto flex flex-col items-center gap-8 px-6 text-center">
         <Reveal>
           <h1 className="font-landing-serif text-5xl font-normal leading-[1.08] tracking-tight text-landing-fg sm:text-6xl lg:text-7xl">
             Transforme chaque visite en <em className="italic text-landing-accent">réservation</em>
           </h1>
         </Reveal>
-        <Reveal delay={0.08} className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-landing-muted">
+
+        <Reveal delay={0.08} className="mx-auto max-w-2xl text-lg leading-relaxed text-landing-muted">
           <p>
             La page web professionnelle qui transforme chaque visiteur en réservation. Pensée pour les restaurants qui
             veulent grandir.
           </p>
         </Reveal>
-        <Reveal delay={0.12} className="mt-10 flex flex-wrap items-center justify-center gap-4">
+
+        <Reveal delay={0.12} className="flex flex-wrap items-center justify-center gap-4">
           <Link
             href="#cta"
             className="inline-flex min-h-12 items-center justify-center rounded-xl bg-landing-accent px-7 text-sm font-semibold text-white shadow-[0_0_48px_-10px_rgba(255,107,44,0.85)] transition hover:brightness-110"
@@ -134,7 +169,7 @@ export function Hero() {
           </Link>
         </Reveal>
 
-        <div className="relative z-20 mt-20 w-full max-w-4xl">
+        <Reveal delay={0.16} className="w-full max-w-4xl">
           <div className="grid w-full grid-cols-1 gap-4 text-left sm:grid-cols-3">
             {stats.map((s, i) => (
               <div key={s.value} className="min-h-0">
@@ -156,20 +191,7 @@ export function Hero() {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="relative z-20 mt-10 flex w-full max-w-4xl flex-col items-start gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <p className="max-w-md text-left text-sm text-landing-muted">
-            Réservations sans interruption, à toute heure, partout dans le monde.
-          </p>
-          <Link
-            href="#fonctionnalites"
-            className="inline-flex items-center gap-2 rounded-full border border-landing-border/80 bg-landing-card/50 px-4 py-2 text-xs font-medium text-landing-fg backdrop-blur-sm transition hover:border-landing-accent/40"
-          >
-            Explorer
-            <ChevronDown className="size-4 text-landing-accent" />
-          </Link>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
