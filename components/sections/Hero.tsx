@@ -7,20 +7,30 @@ import { WaveBackground } from "@/components/sections/WaveBackground";
 
 const stats = [
   {
-    value: "73%",
-    label:
-      "des clients abandonnent une réservation qui prend plus de 30 secondes. Chaque seconde compte.",
+    title: "10 minutes",
+    body: "C'est tout ce qu'il te faut pour créer ta page restaurant et commencer à recevoir des réservations. Pas de développeur, pas de jargon technique.",
   },
   {
-    value: "2'500 CHF",
-    label:
-      "économisés en moyenne par rapport à un site web classique + outil de réservation séparé.",
+    title: "2'500 CHF économisés",
+    body: "Pas besoin de payer un site web séparé, un outil de réservation et un système d'avis. ZenGrow regroupe tout pour 49 CHF/mois.",
   },
   {
-    value: "48h",
-    label: "et ta page restaurant est en ligne, optimisée et prête à recevoir tes premières réservations.",
+    title: "+40% de réservations",
+    body: "Une page optimisée conversion, c'est en moyenne 40% de réservations en plus par rapport à un site classique sans formulaire intégré.",
   },
 ];
+
+const statTilt = [
+  { rotateY: 11, baseScale: 1, translateZ: 0 },
+  { rotateY: 0, baseScale: 1.065, translateZ: 32 },
+  { rotateY: -11, baseScale: 1, translateZ: 0 },
+] as const;
+
+const statFloat = [
+  { duration: 4.35, delay: 0 },
+  { duration: 5.4, delay: 0.62 },
+  { duration: 3.55, delay: 0.33 },
+] as const;
 
 /** Arc néon (utilisé par la section CTA uniquement). */
 function NeonArc({ flip = false }: { flip?: boolean }) {
@@ -93,27 +103,66 @@ export function Hero() {
           </Link>
         </Reveal>
 
-        <Reveal delay={0.16} className="w-full max-w-4xl">
-          <div className="grid w-full grid-cols-1 gap-4 text-left sm:grid-cols-3">
-            {stats.map((s, i) => (
-              <div key={s.value} className="min-h-0">
-                <motion.div
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.12 + i * 0.1, duration: 0.55 }}
-                >
+        <Reveal delay={0.16} className="w-full max-w-5xl">
+          <div
+            className="grid w-full grid-cols-1 gap-6 text-left sm:grid-cols-3 sm:gap-5"
+            style={{ perspective: "1200px" }}
+          >
+            {stats.map((s, i) => {
+              const tilt = statTilt[i];
+              const fl = statFloat[i];
+              const hoverScale = i === 1 ? 1.09 : 1.045;
+
+              return (
+                <div key={s.title} className="min-h-0 [transform-style:preserve-3d]">
                   <motion.div
-                    animate={{ y: [0, -12, 0] }}
-                    transition={{ duration: 4 + i * 0.5, repeat: Infinity, ease: "easeInOut" }}
-                    className="rounded-2xl border border-landing-border bg-landing-card/80 p-6 shadow-[0_0_40px_-24px_rgba(255,107,44,0.5)] backdrop-blur-md"
+                    initial={{ opacity: 0, y: 28 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.12 + i * 0.1, duration: 0.55 }}
+                    className="h-full [transform-style:preserve-3d]"
                   >
-                    <p className="mb-3 font-landing-serif text-4xl text-landing-fg">{s.value}</p>
-                    <p className="text-sm leading-relaxed text-landing-muted">{s.label}</p>
+                    <motion.div
+                      className="h-full cursor-default rounded-2xl border border-landing-border bg-landing-card/80 p-6 shadow-[0_0_40px_-24px_rgba(255,107,44,0.45)] backdrop-blur-md will-change-transform"
+                      style={{ transformStyle: "preserve-3d" }}
+                      animate={{
+                        y: [0, -11, 0],
+                        rotateY: tilt.rotateY,
+                        rotateX: 0,
+                        scale: tilt.baseScale,
+                        translateZ: tilt.translateZ,
+                      }}
+                      transition={{
+                        y: {
+                          duration: fl.duration,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: fl.delay,
+                        },
+                        rotateY: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+                        rotateX: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+                        scale: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+                        translateZ: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+                      }}
+                      whileHover={{
+                        rotateY: 0,
+                        rotateX: 0,
+                        scale: hoverScale,
+                        translateZ: 52,
+                        boxShadow:
+                          "0 24px 56px -22px rgba(0,0,0,0.6), 0 0 48px -8px rgba(255,107,44,0.42)",
+                        transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
+                      }}
+                    >
+                      <p className="mb-3 font-landing-serif text-3xl leading-tight text-landing-fg sm:text-4xl">
+                        {s.title}
+                      </p>
+                      <p className="text-sm leading-relaxed text-landing-muted">{s.body}</p>
+                    </motion.div>
                   </motion.div>
-                </motion.div>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </Reveal>
       </div>
