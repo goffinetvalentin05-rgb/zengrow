@@ -20,17 +20,142 @@ const stats = [
   },
 ];
 
-const statTilt = [
-  { rotateY: 11, baseScale: 1, translateZ: 0 },
-  { rotateY: 0, baseScale: 1.065, translateZ: 32 },
-  { rotateY: -11, baseScale: 1, translateZ: 0 },
-] as const;
+const hoverGlow =
+  "0 24px 56px -22px rgba(0,0,0,0.58), 0 0 44px -6px rgba(255,107,44,0.38)";
 
-const statFloat = [
-  { duration: 4.35, delay: 0 },
-  { duration: 5.4, delay: 0.62 },
-  { duration: 3.55, delay: 0.33 },
-] as const;
+type OrbitCardConfig = {
+  stat: (typeof stats)[0];
+  posClass: string;
+  animate: {
+    y: number[];
+    rotateY: number | number[];
+    rotateZ: number;
+    scale: number;
+    translateZ: number;
+  };
+  transition: {
+    y: { duration: number; repeat: number; ease: "easeInOut"; delay: number };
+    rotateY:
+      | { duration: number; repeat: number; ease: "easeInOut"; delay: number }
+      | { duration: number };
+  };
+  hoverScale: number;
+};
+
+const orbitCards: OrbitCardConfig[] = [
+  {
+    stat: stats[0],
+    posClass:
+      "relative z-10 mx-auto w-full max-w-sm md:absolute md:left-[1%] md:top-[58%] md:z-20 md:mx-0 md:w-[min(272px,31vw)] md:-translate-y-1/2 lg:left-[4%]",
+    animate: {
+      y: [40, 52, 34, 40],
+      rotateY: [18, 22, 19, 21, 18],
+      rotateZ: -4,
+      scale: 0.8,
+      translateZ: 40,
+    },
+    transition: {
+      y: { duration: 5.5, repeat: Infinity, ease: "easeInOut" as const, delay: 0.2 },
+      rotateY: { duration: 6.8, repeat: Infinity, ease: "easeInOut" as const, delay: 0 },
+    },
+    hoverScale: 0.85,
+  },
+  {
+    stat: stats[1],
+    posClass:
+      "relative z-30 mx-auto w-full max-w-sm md:absolute md:left-1/2 md:top-1/2 md:w-[min(340px,34vw)] md:max-w-none md:-translate-x-1/2 md:-translate-y-1/2",
+    animate: {
+      y: [0, -12, -4, 0],
+      rotateY: 0,
+      rotateZ: 0,
+      scale: 1,
+      translateZ: 64,
+    },
+    transition: {
+      y: { duration: 4.9, repeat: Infinity, ease: "easeInOut" as const, delay: 0.45 },
+      rotateY: { duration: 0 },
+    },
+    hoverScale: 1.05,
+  },
+  {
+    stat: stats[2],
+    posClass:
+      "relative z-10 mx-auto w-full max-w-sm md:absolute md:right-[1%] md:top-[38%] md:z-20 md:mx-0 md:w-[min(272px,31vw)] md:-translate-y-1/2 lg:right-[4%]",
+    animate: {
+      y: [-42, -30, -48, -42],
+      rotateY: [-22, -18, -20.5, -19, -22],
+      rotateZ: 4,
+      scale: 0.8,
+      translateZ: 40,
+    },
+    transition: {
+      y: { duration: 5.1, repeat: Infinity, ease: "easeInOut" as const, delay: 0.35 },
+      rotateY: { duration: 7.4, repeat: Infinity, ease: "easeInOut" as const, delay: 0.12 },
+    },
+    hoverScale: 0.85,
+  },
+];
+
+function HeroOrbitCards() {
+  return (
+    <div
+      className="relative mx-auto w-full min-h-[400px] py-6 sm:min-h-[440px] sm:py-4 md:min-h-[460px]"
+      style={{ perspective: "1500px" }}
+    >
+      <div
+        className="relative flex min-h-[400px] flex-col gap-10 sm:min-h-[420px] md:block md:min-h-[440px]"
+        style={{ transformStyle: "preserve-3d" }}
+      >
+        {orbitCards.map((cfg, i) => (
+          <motion.div
+            key={cfg.stat.title}
+            initial={{ opacity: 0, y: 26 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 + i * 0.08, duration: 0.55 }}
+            className={cfg.posClass}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <motion.div
+              className="h-full cursor-default rounded-2xl border border-landing-border bg-landing-card/80 p-5 shadow-[0_0_40px_-24px_rgba(255,107,44,0.45)] backdrop-blur-md will-change-transform sm:p-6"
+              style={{ transformStyle: "preserve-3d" }}
+              animate={{
+                y: cfg.animate.y,
+                rotateY: cfg.animate.rotateY,
+                rotateZ: cfg.animate.rotateZ,
+                scale: cfg.animate.scale,
+                translateZ: cfg.animate.translateZ,
+              }}
+              transition={{
+                y: cfg.transition.y,
+                rotateY:
+                  "repeat" in cfg.transition.rotateY
+                    ? cfg.transition.rotateY
+                    : { duration: 0 },
+                rotateZ: { duration: 0 },
+                scale: { duration: 0 },
+                translateZ: { duration: 0 },
+              }}
+              whileHover={{
+                rotateY: 0,
+                rotateZ: 0,
+                scale: cfg.hoverScale,
+                translateZ: 88,
+                boxShadow: hoverGlow,
+                transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+              }}
+            >
+              <p className="mb-3 font-landing-serif text-3xl leading-tight text-landing-fg sm:text-4xl">
+                {cfg.stat.title}
+              </p>
+              <p className="text-sm leading-relaxed text-landing-muted">{cfg.stat.body}</p>
+            </motion.div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /** Arc néon (utilisé par la section CTA uniquement). */
 function NeonArc({ flip = false }: { flip?: boolean }) {
@@ -70,7 +195,7 @@ export function Hero() {
   return (
     <section
       id="accueil"
-      className="relative flex h-screen w-full items-center justify-center overflow-hidden"
+      className="relative flex h-screen w-full items-center justify-center overflow-x-hidden overflow-y-visible"
     >
       <WaveBackground />
 
@@ -103,67 +228,8 @@ export function Hero() {
           </Link>
         </Reveal>
 
-        <Reveal delay={0.16} className="w-full max-w-5xl">
-          <div
-            className="grid w-full grid-cols-1 gap-6 text-left sm:grid-cols-3 sm:gap-5"
-            style={{ perspective: "1200px" }}
-          >
-            {stats.map((s, i) => {
-              const tilt = statTilt[i];
-              const fl = statFloat[i];
-              const hoverScale = i === 1 ? 1.09 : 1.045;
-
-              return (
-                <div key={s.title} className="min-h-0 [transform-style:preserve-3d]">
-                  <motion.div
-                    initial={{ opacity: 0, y: 28 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.12 + i * 0.1, duration: 0.55 }}
-                    className="h-full [transform-style:preserve-3d]"
-                  >
-                    <motion.div
-                      className="h-full cursor-default rounded-2xl border border-landing-border bg-landing-card/80 p-6 shadow-[0_0_40px_-24px_rgba(255,107,44,0.45)] backdrop-blur-md will-change-transform"
-                      style={{ transformStyle: "preserve-3d" }}
-                      animate={{
-                        y: [0, -11, 0],
-                        rotateY: tilt.rotateY,
-                        rotateX: 0,
-                        scale: tilt.baseScale,
-                        translateZ: tilt.translateZ,
-                      }}
-                      transition={{
-                        y: {
-                          duration: fl.duration,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: fl.delay,
-                        },
-                        rotateY: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-                        rotateX: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-                        scale: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-                        translateZ: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-                      }}
-                      whileHover={{
-                        rotateY: 0,
-                        rotateX: 0,
-                        scale: hoverScale,
-                        translateZ: 52,
-                        boxShadow:
-                          "0 24px 56px -22px rgba(0,0,0,0.6), 0 0 48px -8px rgba(255,107,44,0.42)",
-                        transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
-                      }}
-                    >
-                      <p className="mb-3 font-landing-serif text-3xl leading-tight text-landing-fg sm:text-4xl">
-                        {s.title}
-                      </p>
-                      <p className="text-sm leading-relaxed text-landing-muted">{s.body}</p>
-                    </motion.div>
-                  </motion.div>
-                </div>
-              );
-            })}
-          </div>
+        <Reveal delay={0.16} className="w-full max-w-6xl pb-8">
+          <HeroOrbitCards />
         </Reveal>
       </div>
     </section>
