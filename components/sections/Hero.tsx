@@ -194,7 +194,7 @@ function NeonArc({ flip = false }: { flip?: boolean }) {
 export function Hero() {
   return (
     <section
-      id="accueil"
+      id="hero"
       className="relative flex min-h-screen w-full items-center justify-center overflow-x-hidden overflow-y-visible"
     >
       <WaveBackground />
@@ -215,13 +215,13 @@ export function Hero() {
 
         <Reveal delay={0.12} className="flex flex-wrap items-center justify-center gap-4">
           <Link
-            href="#cta"
+            href="/signup"
             className="inline-flex min-h-12 items-center justify-center rounded-xl bg-landing-accent px-7 text-sm font-semibold text-white shadow-[0_0_48px_-10px_rgba(255,107,44,0.85)] transition hover:brightness-110"
           >
             Démarrer maintenant
           </Link>
           <Link
-            href="#demo"
+            href="/demo"
             className="inline-flex min-h-12 items-center justify-center rounded-xl border border-landing-border bg-landing-card/40 px-7 text-sm font-semibold text-landing-fg backdrop-blur-sm transition hover:border-landing-accent/50 hover:bg-landing-card/70"
           >
             Voir une démo

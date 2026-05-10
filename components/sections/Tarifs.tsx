@@ -14,7 +14,7 @@ const perks = [
 
 export function Tarifs() {
   return (
-    <section id="tarifs" className="relative bg-landing-section py-24 sm:py-28">
+    <section id="pricing" className="relative bg-landing-section py-24 sm:py-28">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_50%_50%,rgba(255,107,44,0.1),transparent)]" />
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal className="mx-auto max-w-2xl text-center">
@@ -46,7 +46,7 @@ export function Tarifs() {
             ))}
           </ul>
           <Link
-            href="#cta"
+            href="/signup"
             className="mt-8 flex min-h-12 w-full items-center justify-center rounded-xl bg-landing-accent text-sm font-semibold text-white shadow-[0_0_40px_-8px_rgba(255,107,44,0.75)] transition hover:brightness-110"
           >
             Commencer

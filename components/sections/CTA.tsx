@@ -22,7 +22,7 @@ export function CTA() {
             Rejoins les restaurants qui ont arrêté de perdre des clients.
           </p>
           <Link
-            href="#tarifs"
+            href="/#pricing"
             className="mt-10 inline-flex min-h-12 items-center justify-center rounded-xl bg-landing-accent px-8 text-sm font-semibold text-white shadow-[0_0_48px_-10px_rgba(255,107,44,0.85)] transition hover:brightness-110"
           >
             Démarrer maintenant

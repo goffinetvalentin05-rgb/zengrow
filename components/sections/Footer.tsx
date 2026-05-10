@@ -4,10 +4,10 @@ import Link from "next/link";
 import { Instagram, Linkedin, Twitter } from "lucide-react";
 
 const main = [
-  { href: "#accueil", label: "Accueil" },
-  { href: "#fonctionnalites", label: "Fonctionnalités" },
-  { href: "#tarifs", label: "Tarifs" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#hero", label: "Accueil" },
+  { href: "/#features", label: "Fonctionnalités" },
+  { href: "/#pricing", label: "Tarifs" },
+  { href: "/#faq", label: "FAQ" },
   { href: "mailto:contact@zengrow.ch", label: "Contact" },
 ];
 

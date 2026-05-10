@@ -4,10 +4,10 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 const links = [
-  { href: "#accueil", label: "Accueil" },
-  { href: "#fonctionnalites", label: "Fonctionnalités" },
-  { href: "#tarifs", label: "Tarifs" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#hero", label: "Accueil" },
+  { href: "/#features", label: "Fonctionnalités" },
+  { href: "/#pricing", label: "Tarifs" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 export function Navbar() {
@@ -33,7 +33,7 @@ export function Navbar() {
         className="pointer-events-auto relative flex w-full max-w-5xl items-center justify-between gap-4 rounded-full border border-landing-border/50 bg-landing-card/60 px-6 py-3 shadow-2xl backdrop-blur-xl"
       >
         <Link
-          href="#accueil"
+          href="/"
           className="font-landing-serif text-xl font-normal italic tracking-tight text-landing-fg"
         >
           ZenGrow
@@ -49,12 +49,20 @@ export function Navbar() {
           ))}
         </ul>
 
-        <Link
-          href="#cta"
-          className="ml-auto rounded-full bg-[#FF6B2C] px-5 py-2 text-sm font-medium text-white shadow-[0_0_24px_rgba(255,107,44,0.25)] transition hover:shadow-[0_0_36px_rgba(255,107,44,0.45)] md:ml-0"
-        >
-          Commencer
-        </Link>
+        <div className="ml-auto flex items-center gap-1 sm:gap-2 md:ml-0">
+          <Link
+            href="/login"
+            className="rounded-full px-3 py-2 text-sm text-landing-fg transition hover:text-landing-accent hover:underline hover:decoration-landing-accent/40 hover:underline-offset-4"
+          >
+            Connexion
+          </Link>
+          <Link
+            href="/signup"
+            className="rounded-full bg-[#FF6B2C] px-5 py-2 text-sm font-medium text-white shadow-[0_0_24px_rgba(255,107,44,0.25)] transition hover:shadow-[0_0_36px_rgba(255,107,44,0.45)]"
+          >
+            Commencer
+          </Link>
+        </div>
       </motion.nav>
     </header>
   );
