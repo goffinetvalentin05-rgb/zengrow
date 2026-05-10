@@ -199,7 +199,7 @@ export function Hero() {
     >
       <WaveBackground />
 
-      <div className="container relative z-10 mx-auto flex flex-col items-center gap-8 px-6 pb-28 pt-32 text-center sm:pb-32 sm:pt-36 lg:pb-40 lg:pt-40">
+      <div className="container relative z-10 mx-auto flex flex-col items-center gap-8 px-6 pb-28 pt-64 text-center sm:pb-32 sm:pt-72 lg:pb-40 lg:pt-80">
         <Reveal>
           <h1 className="font-landing-serif text-5xl font-normal leading-[1.08] tracking-tight text-landing-fg sm:text-6xl lg:text-7xl">
             Transforme chaque visite en <em className="italic text-landing-accent">réservation</em>
