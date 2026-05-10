@@ -3,7 +3,23 @@
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/sections/Reveal";
 
-const logos = ["Logo 1", "Logo 2", "Logo 3", "Logo 4", "Logo 5", "Logo 6"];
+const classicPoints = [
+  "Statique, ne convertit pas",
+  "2'500 CHF + maintenance",
+  "Réservation = autre outil à payer",
+  "Tu attends que les clients t'appellent",
+  "Aucune donnée client récupérée",
+  "Avis Google : tu les demandes à la main",
+];
+
+const zengrowPoints = [
+  "Optimisé pour la conversion",
+  "49 CHF/mois, tout inclus",
+  "Réservation intégrée native",
+  "Tu reçois des réservations 24h/24",
+  "CRM clients automatique",
+  "Avis Google automatisés post-visite",
+];
 
 function WireframeGlobe() {
   const longitudes = Array.from({ length: 14 }, (_, i) => (i * 180) / 14);
@@ -95,27 +111,68 @@ export function Globe() {
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal className="mx-auto max-w-3xl text-center">
           <h2 className="font-landing-serif text-[clamp(2rem,4vw,3rem)] font-normal text-landing-fg">
-            Conçu pour les restaurants qui veulent <em className="italic text-landing-accent">grandir</em>
+            On a réinventé la page web <em className="italic text-landing-accent">restaurant</em>
           </h2>
           <p className="mt-4 text-landing-muted">
-            Une vitrine en ligne digne d&apos;un grand établissement — sans l&apos;agence, sans la complexité.
+            Fini les sites vitrines statiques qui ne servent à rien. ZenGrow transforme ta présence en ligne en un
+            véritable système de conversion, actif 24h/24, qui capte chaque visiteur et le transforme en réservation.
           </p>
         </Reveal>
         <Reveal delay={0.1} className="mt-14">
           <WireframeGlobe />
         </Reveal>
-        <Reveal delay={0.15} className="mt-16">
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 border-t border-landing-border/60 pt-10">
-            {logos.map((name) => (
-              <span
-                key={name}
-                className="text-sm font-medium tracking-wide text-landing-fg/25"
-              >
-                {name}
+
+        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 pt-20 md:grid-cols-2 md:pt-24">
+          <motion.div
+            className="rounded-2xl border border-landing-border bg-landing-card p-8 opacity-70"
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 0.7, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h3 className="flex items-center justify-center gap-2 text-center font-landing-serif text-xl text-landing-muted sm:text-2xl">
+              Site web classique
+              <span className="text-red-500" aria-hidden>
+                ❌
               </span>
-            ))}
-          </div>
-        </Reveal>
+            </h3>
+            <ul className="mt-6 space-y-3 text-left text-sm text-landing-muted">
+              {classicPoints.map((line) => (
+                <li key={line} className="flex gap-3">
+                  <span className="mt-0.5 shrink-0 font-semibold text-red-500/90" aria-hidden>
+                    ✗
+                  </span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          <motion.div
+            className="rounded-2xl border border-landing-accent/45 bg-landing-card p-8 shadow-[0_0_48px_-14px_rgba(255,107,44,0.4)]"
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h3 className="flex items-center justify-center gap-2 text-center font-landing-serif text-xl text-landing-fg sm:text-2xl">
+              Page ZenGrow
+              <span className="text-landing-accent" aria-hidden>
+                ✓
+              </span>
+            </h3>
+            <ul className="mt-6 space-y-3 text-left text-sm text-landing-fg/90">
+              {zengrowPoints.map((line) => (
+                <li key={line} className="flex gap-3">
+                  <span className="mt-0.5 shrink-0 font-semibold text-landing-accent" aria-hidden>
+                    ✓
+                  </span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
