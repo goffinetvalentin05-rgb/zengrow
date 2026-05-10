@@ -195,11 +195,11 @@ export function Hero() {
   return (
     <section
       id="accueil"
-      className="relative flex h-screen w-full items-center justify-center overflow-x-hidden overflow-y-visible"
+      className="relative flex min-h-screen w-full items-center justify-center overflow-x-hidden overflow-y-visible"
     >
       <WaveBackground />
 
-      <div className="container relative z-10 mx-auto flex flex-col items-center gap-8 px-6 text-center">
+      <div className="container relative z-10 mx-auto flex flex-col items-center gap-8 px-6 pb-28 pt-32 text-center sm:pb-32 sm:pt-36 lg:pb-40 lg:pt-40">
         <Reveal>
           <h1 className="font-landing-serif text-5xl font-normal leading-[1.08] tracking-tight text-landing-fg sm:text-6xl lg:text-7xl">
             Transforme chaque visite en <em className="italic text-landing-accent">réservation</em>
@@ -228,7 +228,7 @@ export function Hero() {
           </Link>
         </Reveal>
 
-        <Reveal delay={0.16} className="w-full max-w-6xl pb-8">
+        <Reveal delay={0.16} className="w-full max-w-6xl">
           <HeroOrbitCards />
         </Reveal>
       </div>
