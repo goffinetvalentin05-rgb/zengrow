@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 const links = [
   { href: "#accueil", label: "Accueil" },
@@ -11,9 +11,21 @@ const links = [
 ];
 
 export function Navbar() {
+  const { scrollY } = useScroll();
+
+  const scale = useTransform(scrollY, [0, 120], [1, 0.97]);
+  const boxShadow = useTransform(
+    scrollY,
+    [0, 160],
+    [
+      "0 25px 50px -12px rgb(0 0 0 / 0.35), 0 0 40px rgba(255,107,44,0.08)",
+      "0 28px 56px -12px rgb(0 0 0 / 0.5), 0 0 52px rgba(255,107,44,0.2)",
+    ],
+  );
+
   return (
-    <>
-      <div className="border-b border-landing-border/60 bg-landing-bg/95 px-4 py-2 text-center text-[11px] text-landing-muted sm:text-xs">
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
+      <div className="pointer-events-auto border-b border-landing-accent/20 bg-landing-accent/10 px-4 py-2 text-center text-[11px] text-landing-muted sm:text-xs">
         <span className="text-landing-fg/90">
           🔥 Offre de lancement : -30% les 3 premiers mois.{" "}
         </span>
@@ -21,36 +33,43 @@ export function Navbar() {
           En savoir plus →
         </Link>
       </div>
-      <motion.header
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 border-b border-white/[0.06] bg-landing-bg/70 backdrop-blur-xl"
-      >
-        <nav className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-4 sm:px-6">
+
+      <div className="pointer-events-auto flex justify-center px-4 pt-6">
+        <motion.nav
+          style={{ scale, boxShadow }}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+          className="relative flex w-full max-w-5xl items-center justify-between gap-4 rounded-full border border-landing-border/50 bg-landing-card/60 px-6 py-3 shadow-2xl backdrop-blur-xl"
+        >
           <Link
             href="#accueil"
-            className="font-landing-serif text-xl font-normal italic tracking-tight text-landing-fg sm:text-2xl"
+            className="font-landing-serif text-xl font-normal italic tracking-tight text-landing-fg"
           >
             ZenGrow
           </Link>
-          <ul className="hidden items-center gap-8 text-sm text-landing-muted md:flex">
+
+          <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 md:flex">
             {links.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="transition-colors hover:text-landing-fg">
+                <Link
+                  href={l.href}
+                  className="text-sm text-landing-muted transition hover:text-landing-fg"
+                >
                   {l.label}
                 </Link>
               </li>
             ))}
           </ul>
+
           <Link
             href="#cta"
-            className="rounded-xl bg-landing-accent px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_40px_-8px_rgba(255,107,44,0.75)] transition hover:brightness-110"
+            className="ml-auto rounded-full bg-[#FF6B2C] px-5 py-2 text-sm font-medium text-white shadow-[0_0_24px_rgba(255,107,44,0.25)] transition hover:shadow-[0_0_36px_rgba(255,107,44,0.45)] md:ml-0"
           >
             Commencer
           </Link>
-        </nav>
-      </motion.header>
-    </>
+        </motion.nav>
+      </div>
+    </header>
   );
 }

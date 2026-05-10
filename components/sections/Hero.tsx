@@ -6,14 +6,32 @@ import { ChevronDown } from "lucide-react";
 import { Reveal } from "@/components/sections/Reveal";
 
 const stats = [
-  { value: "73%", label: "des clients abandonnent une résa qui prend +30s" },
-  { value: "2'500 CHF", label: "économisés vs un site classique" },
-  { value: "48h", label: "et ta page restaurant est en ligne" },
+  {
+    value: "73%",
+    label:
+      "des clients abandonnent une réservation qui prend plus de 30 secondes. Chaque seconde compte.",
+  },
+  {
+    value: "2'500 CHF",
+    label:
+      "économisés en moyenne par rapport à un site web classique + outil de réservation séparé.",
+  },
+  {
+    value: "48h",
+    label: "et ta page restaurant est en ligne, optimisée et prête à recevoir tes premières réservations.",
+  },
+];
+
+const mentions = [
+  "Sans engagement",
+  "Setup en 48h",
+  "Support 100% français",
+  "-30% les 3 premiers mois",
 ];
 
 function NeonArc({ flip = false }: { flip?: boolean }) {
   return (
-    <motion.div
+    <div
       className="pointer-events-none absolute inset-x-0 flex justify-center"
       style={{
         bottom: flip ? undefined : "-18%",
@@ -21,8 +39,6 @@ function NeonArc({ flip = false }: { flip?: boolean }) {
         transform: flip ? "scaleY(-1)" : undefined,
       }}
       aria-hidden
-      animate={{ opacity: [0.85, 1, 0.9], scale: [1, 1.02, 1] }}
-      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
     >
       <div className="relative h-[min(42vw,520px)] w-[min(125vw,1400px)]">
         <div
@@ -36,15 +52,19 @@ function NeonArc({ flip = false }: { flip?: boolean }) {
           className="absolute inset-[2px] rounded-[100%] bg-gradient-to-t from-landing-accent/25 via-landing-accent-soft/10 to-transparent"
           style={{ filter: "blur(2px)" }}
         />
-        <div className="absolute left-1/2 top-0 h-[45%] w-[55%] -translate-x-1/2 rounded-[100%] bg-white/25 blur-[100px] opacity-50" />
+        <motion.div
+          className="absolute left-1/2 top-0 h-[45%] w-[55%] -translate-x-1/2 rounded-[100%] bg-white/25 blur-[100px] opacity-70"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 export function Hero() {
   return (
-    <section id="accueil" className="relative overflow-hidden pb-32 pt-10 sm:pb-40 sm:pt-16">
+    <section id="accueil" className="relative min-h-screen overflow-hidden pb-32 pt-40 sm:pb-40">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(255,107,44,0.18),transparent)]" />
       <div className="relative z-10 mx-auto max-w-5xl px-4 text-center sm:px-6">
         <Reveal>
@@ -53,13 +73,14 @@ export function Hero() {
             <em className="italic text-landing-accent">réservation</em>
           </h1>
         </Reveal>
-        <Reveal delay={0.08} className="mx-auto mt-6 max-w-2xl text-base text-landing-muted sm:text-lg">
+        <Reveal delay={0.08} className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-landing-muted">
           <p>
-            Une page web pro avec réservation intégrée. Conçue pour les restaurants qui veulent arrêter de perdre des
-            clients.
+            ZenGrow, c&apos;est une page web professionnelle pensée pour les restaurants, avec un système de
+            réservation intégré qui convertit chaque visiteur en client. Plus besoin de payer 2&apos;500 CHF pour un site
+            puis encore un outil de résa séparé : tout est inclus, en 48h, à 49 CHF/mois.
           </p>
         </Reveal>
-        <Reveal delay={0.14} className="mt-10 flex flex-wrap items-center justify-center gap-4">
+        <Reveal delay={0.12} className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
             href="#cta"
             className="inline-flex min-h-12 items-center justify-center rounded-xl bg-landing-accent px-7 text-sm font-semibold text-white shadow-[0_0_48px_-10px_rgba(255,107,44,0.85)] transition hover:brightness-110"
@@ -73,23 +94,36 @@ export function Hero() {
             Voir une démo
           </Link>
         </Reveal>
+        <Reveal delay={0.14} className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-landing-muted">
+          {mentions.map((m) => (
+            <span key={m} className="inline-flex items-center gap-1.5">
+              <span className="text-landing-accent-soft">✓</span> {m}
+            </span>
+          ))}
+        </Reveal>
       </div>
 
-      <div className="relative z-20 mx-auto mt-16 max-w-6xl px-4 sm:px-6">
+      <div className="relative z-20 mx-auto mt-20 max-w-6xl px-4 sm:px-6">
         <div className="relative flex flex-col items-center">
           <div className="relative z-30 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
             {stats.map((s, i) => (
-              <motion.div
-                key={s.value}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.12 + i * 0.1, duration: 0.55 }}
-                className="rounded-2xl border border-white/[0.08] bg-landing-card/55 px-5 py-4 text-left shadow-[0_0_40px_-24px_rgba(255,107,44,0.5)] backdrop-blur-md"
-              >
-                <p className="font-landing-serif text-3xl text-landing-fg">{s.value}</p>
-                <p className="mt-1 text-xs leading-snug text-landing-muted">{s.label}</p>
-              </motion.div>
+              <div key={s.value} className="min-h-0">
+                <motion.div
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.12 + i * 0.1, duration: 0.55 }}
+                >
+                  <motion.div
+                    animate={{ y: [0, -12, 0] }}
+                    transition={{ duration: 4 + i * 0.5, repeat: Infinity, ease: "easeInOut" }}
+                    className="rounded-2xl border border-landing-border bg-gradient-to-br from-landing-card to-landing-card/50 p-6 text-left shadow-[0_0_40px_-24px_rgba(255,107,44,0.5)] backdrop-blur-sm"
+                  >
+                    <p className="mb-3 font-landing-serif text-4xl text-landing-fg">{s.value}</p>
+                    <p className="text-sm leading-relaxed text-landing-muted">{s.label}</p>
+                  </motion.div>
+                </motion.div>
+              </div>
             ))}
           </div>
 
