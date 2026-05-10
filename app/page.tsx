@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { ZenGrowLanding } from "@/src/components/landing/zen-grow-landing";
 
 export const metadata: Metadata = {
-  title: "ZenGrow — Page restaurant moderne & plateforme",
+  title: "ZenGrow — La découverte devient réservation",
   description:
-    "ZenGrow : une page restaurant rapide et professionnelle pour que vos clients comprennent vite et réservent tout de suite — avec une plateforme pour réservations, clients, campagnes, événements et avis Google.",
+    "ZenGrow transforme la découverte mobile en réservation instantanée : page restaurant premium, expérience fluide et plateforme pour réservations, clients, campagnes et données.",
 };
 
 export default function Home() {
