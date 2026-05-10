@@ -221,7 +221,7 @@ export function Hero() {
             Démarrer maintenant
           </Link>
           <Link
-            href="/demo"
+            href="/#demo"
             className="inline-flex min-h-12 items-center justify-center rounded-xl border border-landing-border bg-landing-card/40 px-7 text-sm font-semibold text-landing-fg backdrop-blur-sm transition hover:border-landing-accent/50 hover:bg-landing-card/70"
           >
             Voir une démo
