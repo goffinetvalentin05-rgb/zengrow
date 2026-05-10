@@ -12,14 +12,13 @@ import {
   ArrowUpRight,
   Calendar,
   Check,
+  ChevronDown,
   ChevronRight,
   Clock,
-  ImageIcon,
   LayoutGrid,
   MapPin,
   Menu as MenuIcon,
   ScrollText,
-  X,
   Sparkles,
   Star,
   UtensilsCrossed,
@@ -29,11 +28,14 @@ import {
   Megaphone,
   PartyPopper,
   ChefHat,
+  X,
+  Layers,
+  RefreshCw,
 } from "lucide-react";
 import { useState } from "react";
-import { Outfit } from "next/font/google";
+import { Inter } from "next/font/google";
 
-const landingSans = Outfit({
+const landingSans = Inter({
   subsets: ["latin", "latin-ext"],
   weight: ["300", "400", "500", "600", "700"],
   display: "swap",
@@ -43,31 +45,27 @@ const landingSans = Outfit({
 const easeOut = [0.22, 1, 0.36, 1] as const;
 
 const cx = {
-  page: "min-h-screen overflow-x-hidden antialiased selection:bg-indigo-400/20 selection:text-white",
-  border: "border-white/[0.08]",
-  card:
-    "rounded-[1.25rem] border border-white/[0.09] bg-white/[0.035] shadow-[0_24px_80px_-52px_rgba(0,0,0,0.85)] backdrop-blur-xl",
+  page: "min-h-screen overflow-x-hidden antialiased selection:bg-violet-500/25 selection:text-white",
+  card: "rounded-[1.75rem] border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl shadow-[0_24px_80px_-48px_rgba(0,0,0,0.9)]",
   cardHover:
-    "transition-all duration-500 ease-out hover:-translate-y-0.5 hover:border-white/[0.14] hover:bg-white/[0.05] hover:shadow-[0_32px_90px_-48px_rgba(99,102,241,0.12)]",
-  glow: "pointer-events-none absolute rounded-full blur-3xl opacity-[0.55]",
+    "transition-all duration-500 ease-out hover:border-white/[0.14] hover:bg-white/[0.045] hover:-translate-y-0.5",
+  glow: "pointer-events-none absolute rounded-full blur-[100px] opacity-50",
 } as const;
 
-function fadeUp(delay = 0, y = 18): Variants {
+function fadeUp(delay = 0, y = 20): Variants {
   return {
     hidden: { opacity: 0, y },
     show: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.7, ease: easeOut, delay },
+      transition: { duration: 0.65, ease: easeOut, delay },
     },
   };
 }
 
 const stagger: Variants = {
   hidden: {},
-  show: {
-    transition: { staggerChildren: 0.06, delayChildren: 0.04 },
-  },
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
 };
 
 function useViewMotion() {
@@ -75,35 +73,22 @@ function useViewMotion() {
   return {
     initial: reduce ? false : "hidden",
     whileInView: reduce ? undefined : "show",
-    viewport: { once: true, amount: 0.18 },
+    viewport: { once: true, amount: 0.15 },
   } as const;
 }
 
-function SectionGlow({ tone = "indigo" }: { tone?: "indigo" | "blue" | "sage" }) {
-  const a =
-    tone === "indigo"
-      ? "bg-indigo-500/18"
-      : tone === "blue"
-        ? "bg-sky-500/14"
-        : "bg-emerald-500/10";
-  const b =
-    tone === "indigo"
-      ? "bg-violet-500/12"
-      : tone === "blue"
-        ? "bg-blue-500/10"
-        : "bg-teal-500/8";
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-    >
-      <div className={`${cx.glow} -left-32 top-0 h-[380px] w-[380px] ${a}`} />
-      <div className={`${cx.glow} -right-24 top-1/3 h-[320px] w-[320px] ${b}`} />
-      <div
-        className={`${cx.glow} left-1/4 bottom-0 h-[240px] w-[min(520px,90vw)] bg-slate-400/6`}
-      />
-    </div>
-  );
+function useFloat(delay: number) {
+  const reduce = useReducedMotion();
+  if (reduce) return undefined;
+  return {
+    y: [0, -8, 0],
+    transition: {
+      duration: 6 + delay,
+      repeat: Number.POSITIVE_INFINITY,
+      ease: "easeInOut" as const,
+      delay,
+    },
+  };
 }
 
 const navLinks = [
@@ -111,6 +96,7 @@ const navLinks = [
   { href: "#plateforme", label: "Plateforme" },
   { href: "#pour-qui", label: "Pour qui" },
   { href: "#tarifs", label: "Tarifs" },
+  { href: "#faq", label: "FAQ" },
   { href: "#contact", label: "Contact" },
 ] as const;
 
@@ -118,46 +104,40 @@ function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#060814]/80 backdrop-blur-2xl supports-[backdrop-filter]:bg-[#060814]/65">
-      <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:h-[72px] sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="flex shrink-0 items-center text-lg font-semibold tracking-tight text-white"
-        >
+    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#050508]/75 backdrop-blur-2xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:h-[4.5rem] sm:px-6 lg:px-10">
+        <Link href="/" className="text-[1.05rem] font-semibold tracking-tight text-white">
           ZenGrow
         </Link>
-
-        <nav className="hidden items-center gap-0.5 md:flex">
+        <nav className="hidden items-center gap-1 lg:flex">
           {navLinks.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+              className="rounded-full px-3 py-2 text-[0.8125rem] font-medium text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
             >
               {l.label}
             </a>
           ))}
         </nav>
-
         <div className="flex items-center gap-2">
           <Link
             href="/signup"
-            className="group hidden items-center gap-1.5 rounded-full bg-gradient-to-r from-[#eef2ff] via-[#e0e7ff] to-[#dbeafe] px-5 py-2.5 text-sm font-semibold text-[#0b1020] shadow-[0_12px_40px_-18px_rgba(129,140,248,0.45)] transition hover:brightness-[1.03] sm:inline-flex"
+            className="group hidden items-center gap-1 rounded-full bg-white px-5 py-2.5 text-[0.8125rem] font-semibold text-[#0a0a0c] shadow-[0_8px_32px_-8px_rgba(255,255,255,0.35)] transition hover:bg-slate-100 sm:inline-flex"
           >
             Créer ma page
-            <ArrowUpRight className="h-4 w-4 transition group-hover:-translate-y-px group-hover:translate-x-px" />
+            <ArrowUpRight className="h-3.5 w-3.5 opacity-80 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white lg:hidden"
             aria-label="Menu"
           >
             {open ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
           </button>
         </div>
       </div>
-
       <AnimatePresence>
         {open ? (
           <motion.div
@@ -165,9 +145,9 @@ function Header() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.35, ease: easeOut }}
-            className="overflow-hidden border-t border-white/[0.06] bg-[#060814]/96 md:hidden"
+            className="overflow-hidden border-t border-white/[0.06] bg-[#050508]/95 lg:hidden"
           >
-            <div className="space-y-1 px-4 py-3">
+            <div className="space-y-0.5 px-4 py-3">
               {navLinks.map((l) => (
                 <a
                   key={l.href}
@@ -182,7 +162,7 @@ function Header() {
               <Link
                 href="/signup"
                 onClick={() => setOpen(false)}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#eef2ff] to-[#dbeafe] py-3 text-sm font-semibold text-[#0b1020]"
+                className="mt-2 flex w-full justify-center rounded-full bg-white py-3 text-sm font-semibold text-[#0a0a0c]"
               >
                 Créer ma page
               </Link>
@@ -194,18 +174,21 @@ function Header() {
   );
 }
 
-function useFloat(delay: number) {
-  const reduce = useReducedMotion();
-  if (reduce) return undefined;
-  return {
-    y: [0, -7, 0],
-    transition: {
-      duration: 5.5 + delay,
-      repeat: Number.POSITIVE_INFINITY,
-      ease: "easeInOut" as const,
-      delay,
-    },
-  };
+function FeatureGraphic({ variant }: { variant: 0 | 1 | 2 | 3 }) {
+  const gradients = [
+    "from-violet-600/30 via-fuchsia-600/15 to-transparent",
+    "from-sky-500/25 via-indigo-600/20 to-transparent",
+    "from-emerald-500/20 via-teal-600/15 to-transparent",
+    "from-amber-500/20 via-orange-600/15 to-transparent",
+  ] as const;
+  return (
+    <div
+      className={`relative h-36 overflow-hidden rounded-2xl bg-gradient-to-br ${gradients[variant]} ring-1 ring-white/10`}
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.12),transparent_50%)]" />
+      <div className="absolute -right-6 bottom-0 h-24 w-24 rounded-full bg-white/5 blur-2xl" />
+    </div>
+  );
 }
 
 function HeroFloatingChip({
@@ -219,23 +202,18 @@ function HeroFloatingChip({
 }) {
   return (
     <div
-      className={`${cx.card} max-w-[200px] p-3.5 sm:max-w-[220px] sm:p-4`}
-      style={{
-        boxShadow:
-          "0 0 0 1px rgba(148,163,255,0.12), 0 24px 60px -40px rgba(0,0,0,0.9)",
-      }}
+      className={`${cx.card} max-w-[200px] p-3.5 shadow-xl sm:max-w-[218px]`}
+      style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.06), 0 24px 64px -32px rgba(0,0,0,0.85)" }}
     >
       <div className="mb-2 flex items-center gap-2">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-200/90">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.08] text-white/90">
           <Icon className="h-3.5 w-3.5" strokeWidth={2} />
         </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-300">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
           {title}
         </span>
       </div>
-      <p className="text-xs font-medium leading-snug text-slate-200 sm:text-[13px]">
-        {subtitle}
-      </p>
+      <p className="text-[11px] font-medium leading-snug text-slate-200 sm:text-xs">{subtitle}</p>
     </div>
   );
 }
@@ -243,53 +221,42 @@ function HeroFloatingChip({
 function HeroMainPreview() {
   return (
     <div
-      className={`${cx.card} relative w-full max-w-[340px] overflow-hidden p-4 sm:max-w-[380px] sm:p-5`}
-      style={{
-        boxShadow:
-          "0 0 0 1px rgba(165,180,252,0.14), 0 40px 100px -50px rgba(0,0,0,0.95)",
-      }}
+      className={`${cx.card} relative w-full max-w-[360px] overflow-hidden p-5 sm:max-w-[400px]`}
+      style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.1), 0 40px 100px -40px rgba(0,0,0,0.95)" }}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-indigo-200/75">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
             Page restaurant
           </p>
-          <p className="mt-1 text-xl font-semibold tracking-tight text-white sm:text-2xl">
-            Restaurant Luna
-          </p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-white">Restaurant Luna</p>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] font-medium text-slate-300">
           <Star className="h-3 w-3 text-amber-200/90" fill="currentColor" />
           4,9
         </span>
       </div>
-
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <div className="col-span-2 aspect-[4/3] rounded-xl bg-gradient-to-br from-slate-700/80 via-slate-800/60 to-indigo-950/40 ring-1 ring-white/10" />
+        <div className="col-span-2 aspect-[4/3] rounded-2xl bg-gradient-to-br from-zinc-700/90 via-zinc-900/70 to-violet-950/50 ring-1 ring-white/10" />
         <div className="flex flex-col gap-2">
-          <div className="aspect-square rounded-xl bg-slate-800/50 ring-1 ring-white/8" />
-          <div className="aspect-square rounded-xl bg-slate-800/40 ring-1 ring-white/8" />
+          <div className="aspect-square rounded-xl bg-zinc-800/60 ring-1 ring-white/[0.07]" />
+          <div className="aspect-square rounded-xl bg-zinc-800/50 ring-1 ring-white/[0.07]" />
         </div>
       </div>
-
-      <p className="mt-3 text-xs leading-relaxed text-slate-400">
-        Ambiance feutrée · cuisine de saison · cave soignée
-      </p>
-
-      <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-300">
-        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1">
-          <Clock className="h-3 w-3 text-indigo-200/80" />
-          Mar–Dim · 12h–14h30 · 19h–23h
+      <p className="mt-3 text-xs text-slate-500">Ambiance feutrée · saison · cave soignée</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[10px] text-slate-400">
+          <Clock className="h-3 w-3" />
+          Mar–Dim · 12h–23h
         </span>
-        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1">
-          <MapPin className="h-3 w-3 text-indigo-200/80" />
-          Rue du Lac 12, Lausanne
+        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[10px] text-slate-400">
+          <MapPin className="h-3 w-3" />
+          Lausanne
         </span>
       </div>
-
       <button
         type="button"
-        className="mt-4 w-full rounded-full bg-gradient-to-r from-[#eef2ff] to-[#dbeafe] py-3 text-sm font-semibold text-[#0b1020] shadow-[0_16px_40px_-24px_rgba(129,140,248,0.5)]"
+        className="mt-4 w-full rounded-full bg-white py-3 text-sm font-semibold text-[#0a0a0c]"
       >
         Réserver une table
       </button>
@@ -302,142 +269,129 @@ function Hero() {
   const float = useFloat;
 
   return (
-    <section className="relative overflow-hidden px-4 pb-24 pt-14 sm:px-6 sm:pb-28 sm:pt-16 lg:px-8">
+    <section className="relative overflow-hidden px-4 pb-20 pt-10 sm:px-6 sm:pb-28 sm:pt-14 lg:px-10">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_85%_55%_at_50%_-8%,rgba(99,102,241,0.11),transparent_58%),radial-gradient(ellipse_45%_35%_at_100%_15%,rgba(56,189,248,0.06),transparent_50%),linear-gradient(180deg,#060814_0%,#0a0f1c_42%,#060814_100%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_90%_60%_at_50%_-20%,rgba(120,80,200,0.12),transparent_55%),radial-gradient(ellipse_50%_40%_at_100%_0%,rgba(59,130,246,0.08),transparent_45%),linear-gradient(180deg,#050508_0%,#0c0c12_45%,#050508_100%)]"
       />
+      <div className={`${cx.glow} -left-20 top-20 h-72 w-72 bg-violet-600/25`} aria-hidden />
+      <div className={`${cx.glow} right-0 top-40 h-80 w-80 bg-blue-600/15`} aria-hidden />
 
       <div className="relative mx-auto max-w-4xl text-center">
-        <motion.div
-          initial={reduce ? false : { opacity: 0, y: 12 }}
+        <motion.p
+          initial={reduce ? false : { opacity: 0, y: 10 }}
           animate={reduce ? undefined : { opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: easeOut }}
-          className="mx-auto inline-flex items-center gap-2 rounded-full border border-indigo-400/20 bg-indigo-500/[0.07] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-100/90 sm:text-xs"
+          transition={{ duration: 0.5, ease: easeOut }}
+          className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 sm:text-xs"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-indigo-300 shadow-[0_0_12px_rgba(165,180,252,0.7)]" />
-          Nouvelle génération pour restaurants
-        </motion.div>
+          Expérience en ligne pour restaurants
+        </motion.p>
 
         <motion.h1
-          initial={reduce ? false : { opacity: 0, y: 26 }}
+          initial={reduce ? false : { opacity: 0, y: 28 }}
           animate={reduce ? undefined : { opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: easeOut, delay: 0.06 }}
-          className="mt-8 text-balance text-4xl font-semibold leading-[1.06] tracking-tight text-white sm:text-5xl md:text-[3.25rem] lg:text-[3.5rem]"
+          transition={{ duration: 0.75, ease: easeOut, delay: 0.05 }}
+          className="mt-6 text-[clamp(2.5rem,6vw,4.25rem)] font-semibold leading-[1.02] tracking-[-0.03em] text-white"
         >
-          Les clients ne veulent plus chercher un restaurant.
-          <span className="mt-3 block text-balance font-medium text-slate-300 sm:mt-4 sm:text-[2.5rem] md:text-[2.75rem]">
-            Ils veulent le comprendre et réserver immédiatement.
-          </span>
+          ZenGrow
         </motion.h1>
 
         <motion.p
-          initial={reduce ? false : { opacity: 0, y: 18 }}
+          initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={reduce ? undefined : { opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, ease: easeOut, delay: 0.12 }}
-          className="mx-auto mt-7 max-w-2xl text-balance text-base leading-relaxed text-slate-400 sm:text-lg"
+          transition={{ duration: 0.6, ease: easeOut, delay: 0.1 }}
+          className="mx-auto mt-5 max-w-2xl text-balance text-lg font-medium text-slate-400 sm:text-xl"
         >
-          ZenGrow transforme la manière dont les restaurants se présentent en ligne : une page
-          rapide, moderne et pensée pour convertir un visiteur en réservation en quelques secondes.
+          Une page restaurant moderne, une réservation fluide, une plateforme complète derrière.
         </motion.p>
 
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 14 }}
           animate={reduce ? undefined : { opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: easeOut, delay: 0.18 }}
-          className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center"
+          transition={{ duration: 0.55, ease: easeOut, delay: 0.15 }}
+          className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center"
         >
           <Link
             href="/signup"
-            className="group inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#eef2ff] via-[#e0e7ff] to-[#dbeafe] px-8 py-3.5 text-sm font-semibold text-[#0b1020] shadow-[0_18px_50px_-22px_rgba(129,140,248,0.5)] transition hover:brightness-[1.03]"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-[#0a0a0c] shadow-lg transition hover:bg-slate-100"
           >
             Créer ma page restaurant
-            <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+          </Link>
+          <Link
+            href="/signup"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
+          >
+            Créer ma page restaurant
           </Link>
           <a
-            href="#demo"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-8 py-3.5 text-sm font-semibold text-white transition hover:border-indigo-400/25 hover:bg-white/[0.07]"
+            href="#services"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-transparent px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-white/[0.06]"
           >
-            Voir la démo
+            Voir les services
           </a>
+        </motion.div>
+
+        <motion.div
+          initial={reduce ? false : { opacity: 0 }}
+          animate={reduce ? undefined : { opacity: 1 }}
+          transition={{ delay: 0.35, duration: 0.6 }}
+          className="mx-auto mt-14 flex max-w-2xl flex-wrap items-center justify-center gap-6 opacity-60 grayscale"
+        >
+          {["Carte", "Réservation", "Clients", "Événements", "Avis"].map((label) => (
+            <span
+              key={label}
+              className="rounded-lg border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-medium text-slate-500"
+            >
+              {label}
+            </span>
+          ))}
         </motion.div>
       </div>
 
-      <div className="relative mx-auto mt-20 max-w-6xl lg:mt-24">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[min(480px,72vw)] w-[min(480px,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500/12 blur-[100px]"
-        />
-
-        <div className="relative flex min-h-[440px] items-center justify-center sm:min-h-[480px]">
-          <motion.div
-            animate={float(0)}
-            className="absolute left-0 top-[6%] z-20 hidden sm:block lg:left-[1%]"
-          >
+      <div className="relative mx-auto mt-20 max-w-6xl lg:mt-28">
+        <div className="relative flex min-h-[420px] items-center justify-center sm:min-h-[460px]">
+          <motion.div animate={float(0)} className="absolute left-0 top-[4%] z-20 hidden sm:block lg:left-[2%]">
             <HeroFloatingChip
               icon={Calendar}
               title="Nouvelle réservation"
-              subtitle="Table 2 · ce soir · 20h00 — confirmée"
+              subtitle="Table 2 · ce soir · 20h00"
             />
           </motion.div>
-
-          <motion.div
-            animate={float(0.35)}
-            className="absolute right-0 top-[8%] z-20 hidden sm:block lg:right-[1%]"
-          >
+          <motion.div animate={float(0.4)} className="absolute right-0 top-[6%] z-20 hidden sm:block lg:right-[2%]">
             <HeroFloatingChip
               icon={Star}
               title="Avis Google programmé"
-              subtitle="Envoi automatique après la visite"
+              subtitle="Envoi après la visite"
             />
           </motion.div>
-
-          <motion.div
-            animate={float(0.7)}
-            className="absolute bottom-[10%] left-[2%] z-20 hidden md:block lg:left-[4%]"
-          >
+          <motion.div animate={float(0.8)} className="absolute bottom-[8%] left-[2%] z-20 hidden md:block">
             <HeroFloatingChip
               icon={UtensilsCrossed}
               title="Menu spécial publié"
-              subtitle="Dégustation · visible sur la page"
+              subtitle="Visible instantanément"
             />
           </motion.div>
-
-          <motion.div
-            animate={float(1)}
-            className="absolute bottom-[8%] right-[2%] z-20 hidden md:block lg:right-[5%]"
-          >
-            <HeroFloatingChip
-              icon={Users}
-              title="Client ajouté"
-              subtitle="Profil enrichi dans votre espace"
-            />
+          <motion.div animate={float(1.1)} className="absolute bottom-[6%] right-[3%] z-20 hidden md:block">
+            <HeroFloatingChip icon={Users} title="Client ajouté" subtitle="Fiche enrichie" />
           </motion.div>
-
           <motion.div
-            animate={float(0.5)}
-            className="absolute left-1/2 top-2 z-10 -translate-x-1/2 sm:top-0"
+            animate={float(0.55)}
+            className="absolute left-1/2 top-0 z-10 -translate-x-1/2"
           >
-            <div
-              className={`${cx.card} flex items-center gap-2 px-3 py-2`}
-              style={{ boxShadow: "0 18px 50px -36px rgba(99,102,241,0.35)" }}
-            >
-              <Smartphone className="h-4 w-4 text-indigo-200" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-200">
+            <div className={`${cx.card} flex items-center gap-2 px-3 py-2`}>
+              <Smartphone className="h-4 w-4 text-slate-300" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                 Mobile-first
               </span>
             </div>
           </motion.div>
-
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 28, scale: 0.98 }}
+            initial={reduce ? false : { opacity: 0, y: 32, scale: 0.97 }}
             animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.85, ease: easeOut, delay: 0.22 }}
-            className="relative z-30 w-full px-2 sm:px-0"
+            transition={{ duration: 0.85, ease: easeOut, delay: 0.2 }}
+            className="relative z-30 flex justify-center px-2"
           >
-            <div className="mx-auto flex justify-center">
-              <HeroMainPreview />
-            </div>
+            <HeroMainPreview />
           </motion.div>
         </div>
       </div>
@@ -445,238 +399,27 @@ function Hero() {
   );
 }
 
-function SectionHeading({
-  kicker,
-  title,
-  subtitle,
-  align = "center",
-}: {
-  kicker?: string;
-  title: string;
-  subtitle?: string;
-  align?: "center" | "left";
-}) {
-  const a = align === "center" ? "text-center mx-auto" : "text-left";
-  return (
-    <div className={`max-w-3xl ${a}`}>
-      {kicker ? (
-        <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-200/70">
-          <span className="h-px w-8 bg-indigo-400/35" />
-          {kicker}
-        </span>
-      ) : null}
-      <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.65rem] md:leading-[1.08]">
-        {title}
-      </h2>
-      {subtitle ? (
-        <p className="mt-5 text-base leading-relaxed text-slate-400 sm:text-lg">{subtitle}</p>
-      ) : null}
-    </div>
-  );
-}
-
-function ProblemSection() {
+function QuoteSection() {
   const v = useViewMotion();
-  const cards = [
-    { label: "Photos", Icon: ImageIcon },
-    { label: "Menu", Icon: ScrollText },
-    { label: "Ambiance", Icon: Sparkles },
-    { label: "Réservation", Icon: Calendar },
-  ] as const;
-
   return (
-    <section
-      id="contexte"
-      className="relative scroll-mt-24 px-4 py-28 sm:px-6 lg:px-8 lg:py-32"
-    >
-      <SectionGlow tone="blue" />
-      <div className="relative mx-auto max-w-6xl">
-        <motion.div {...v} variants={fadeUp()}>
-          <SectionHeading
-            title="Aujourd’hui, tout va plus vite."
-            subtitle="Quand quelqu’un découvre un restaurant, il prend une décision presque immédiatement."
-          />
-        </motion.div>
-
+    <section className="relative px-4 py-16 sm:px-6 lg:px-10 lg:py-20">
+      <div className="mx-auto max-w-4xl">
         <motion.div
           {...v}
-          variants={stagger}
-          className="mx-auto mt-12 max-w-3xl space-y-6 text-center text-base leading-relaxed text-slate-400 sm:text-lg"
+          variants={fadeUp()}
+          className={`${cx.card} relative overflow-hidden p-8 sm:p-10`}
         >
-          <motion.p variants={fadeUp(0.02)}>
-            Il ouvre un lien. Regarde quelques photos. Jette un œil au menu. Observe l’ambiance.
-          </motion.p>
-          <motion.p variants={fadeUp(0.04)} className="font-medium text-slate-200">
-            Puis il réserve… ou passe au suivant.
-          </motion.p>
-          <motion.p variants={fadeUp(0.06)}>
-            Le problème, c’est que beaucoup de restaurants utilisent encore des expériences pensées
-            comme des vitrines classiques, alors que les comportements ont complètement changé.
-          </motion.p>
-        </motion.div>
-
-        <motion.div
-          {...v}
-          variants={stagger}
-          className="mt-16 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4"
-        >
-          {cards.map((c, i) => (
-            <motion.div
-              key={c.label}
-              variants={fadeUp(i * 0.03)}
-              className={`${cx.card} ${cx.cardHover} flex flex-col items-center gap-4 p-8 text-center`}
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.05] text-indigo-200/90 ring-1 ring-white/10">
-                <c.Icon className="h-5 w-5" strokeWidth={1.75} />
-              </span>
-              <p className="text-sm font-semibold text-white">{c.label}</p>
-              <p className="text-xs text-slate-500">Parcours de décision en quelques secondes</p>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        <motion.div {...v} variants={fadeUp(0.08)} className="mt-14">
-          <div
-            className={`${cx.card} relative overflow-hidden px-6 py-10 text-center sm:px-12 sm:py-12`}
-          >
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_80%_at_50%_120%,rgba(99,102,241,0.12),transparent_55%)]"
-            />
-            <p className="relative text-lg font-medium text-slate-200 sm:text-xl">
-              Dans ce rythme, chaque friction fait la différence entre{" "}
-              <span className="text-white">« je réserve »</span> et{" "}
-              <span className="text-slate-400">« suivant »</span>.
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-function NewExperienceSection() {
-  const v = useViewMotion();
-
-  return (
-    <section
-      id="experience"
-      className="relative scroll-mt-24 border-y border-white/[0.06] bg-[#070a14]/90 px-4 py-28 sm:px-6 lg:px-8 lg:py-32"
-    >
-      <SectionGlow />
-      <div className="relative mx-auto max-w-6xl">
-        <motion.div {...v} variants={fadeUp()}>
-          <SectionHeading
-            title="Une page pensée pour décider vite."
-            subtitle="ZenGrow a été conçu pour cette nouvelle manière de découvrir un restaurant."
-          />
-        </motion.div>
-
-        <motion.div
-          {...v}
-          variants={stagger}
-          className="mx-auto mt-12 max-w-3xl space-y-5 text-center text-base leading-relaxed text-slate-400 sm:text-lg"
-        >
-          <motion.p variants={fadeUp(0.02)}>
-            Chaque page va droit à l’essentiel. Le client arrive et comprend immédiatement le style
-            du restaurant, l’ambiance, les informations importantes et comment réserver.
-          </motion.p>
-          <motion.p variants={fadeUp(0.05)} className="font-medium text-slate-200">
-            Tout est fluide. Rapide. Pensé mobile dès le départ.
-          </motion.p>
-          <motion.p variants={fadeUp(0.08)}>
-            Parce qu’aujourd’hui, chaque seconde d’hésitation compte.
-          </motion.p>
-        </motion.div>
-
-        <motion.div
-          id="demo"
-          {...v}
-          variants={fadeUp(0.1)}
-          className="relative mx-auto mt-16 max-w-4xl scroll-mt-28"
-        >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-gradient-to-b from-indigo-500/10 via-transparent to-sky-500/5 blur-2xl"
-          />
-          <div
-            className={`${cx.card} relative overflow-hidden border-indigo-400/15 p-4 sm:p-6 lg:p-8`}
-            style={{
-              boxShadow:
-                "0 0 0 1px rgba(129,140,248,0.12), 0 40px 100px -50px rgba(0,0,0,0.85)",
-            }}
-          >
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,280px)_1fr] lg:items-start lg:gap-10">
-              <div className="mx-auto w-full max-w-[280px]">
-                <div className="rounded-[1.75rem] border border-white/10 bg-[#0c101c] p-3 shadow-inner ring-1 ring-white/5">
-                  <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-gradient-to-b from-[#121826] to-[#0a0e18]">
-                    <div className="flex items-center justify-between px-4 pt-4">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                        Aperçu
-                      </span>
-                      <span className="h-2 w-10 rounded-full bg-white/10" />
-                    </div>
-                    <div className="mt-3 space-y-3 px-4 pb-4">
-                      <div className="aspect-[16/10] rounded-xl bg-gradient-to-br from-slate-700/70 to-indigo-950/50 ring-1 ring-white/10" />
-                      <div>
-                        <p className="text-lg font-semibold text-white">Restaurant Luna</p>
-                        <p className="mt-1 text-xs text-slate-500">Bistro contemporain · centre-ville</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="rounded-full bg-white/[0.05] px-2.5 py-1 text-[10px] text-slate-300 ring-1 ring-white/10">
-                          Ambiance feutrée
-                        </span>
-                        <span className="rounded-full bg-white/[0.05] px-2.5 py-1 text-[10px] text-slate-300 ring-1 ring-white/10">
-                          Carte courte
-                        </span>
-                      </div>
-                      <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
-                        <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                          Adresse
-                        </p>
-                        <p className="mt-1 text-xs text-slate-200">Quai de l’Ouche 4 · Genève</p>
-                      </div>
-                      <button
-                        type="button"
-                        className="w-full rounded-full bg-gradient-to-r from-[#eef2ff] to-[#dbeafe] py-2.5 text-xs font-semibold text-[#0b1020]"
-                      >
-                        Réserver
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className={`${cx.card} ${cx.cardHover} border-white/[0.07] p-4`}>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                      Menu & événements
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-white">Soirée accord mets & vins</p>
-                    <p className="mt-1 text-xs text-slate-500">Publié · visible immédiatement</p>
-                  </div>
-                  <div className={`${cx.card} ${cx.cardHover} border-white/[0.07] p-4`}>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                      Nouveautés
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-white">Carte de printemps</p>
-                    <p className="mt-1 text-xs text-slate-500">Mise en avant sur la page</p>
-                  </div>
-                </div>
-                <div
-                  className={`${cx.card} flex flex-wrap items-center gap-4 border-indigo-400/12 p-5`}
-                >
-                  <LayoutGrid className="h-8 w-8 text-indigo-200/80" strokeWidth={1.25} />
-                  <div>
-                    <p className="text-sm font-semibold text-white">Une lecture claire, sans détour</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Le visiteur comprend où il est, ce qu’il mange, et comment réserver — sans
-                      chercher.
-                    </p>
-                  </div>
-                </div>
-              </div>
+          <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-violet-500/80 to-transparent" />
+          <p className="text-lg font-medium leading-relaxed text-slate-200 sm:text-xl md:text-2xl">
+            « Nous structurons votre présentation, clarifions l’offre, et faisons en sorte qu’un
+            visiteur passe de la curiosité à la réservation sans friction. Le meilleur dans tout ça ?
+            Vous gardez la main sur le quotidien. »
+          </p>
+          <div className="mt-8 flex items-center gap-3">
+            <div className="h-11 w-11 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 ring-2 ring-white/10" />
+            <div>
+              <p className="text-sm font-semibold text-white">Équipe ZenGrow</p>
+              <p className="text-xs text-slate-500">Produit & hospitality</p>
             </div>
           </div>
         </motion.div>
@@ -685,82 +428,304 @@ function NewExperienceSection() {
   );
 }
 
-const platformModules = [
+function BenefitsSection() {
+  const v = useViewMotion();
+  const bullets = [
+    "Mise en ligne plus rapide",
+    "Parcours client simplifié",
+    "Contenus évolutifs",
+    "Expériences personnalisées",
+    "Pilotage centralisé",
+    "Indicateurs lisibles",
+    "Moins de friction à la réservation",
+    "Décisions basées sur le réel",
+  ] as const;
+
+  return (
+    <section id="avantages" className="relative scroll-mt-24 px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+      <div className={`${cx.glow} left-1/4 top-0 h-64 w-64 -translate-x-1/2 bg-violet-600/15`} aria-hidden />
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Avantages</p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem] md:leading-[1.1]">
+            Pourquoi nous choisir
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            Associez une page publique premium à une plateforme de gestion pensée pour les équipes
+            terrain.
+          </p>
+        </motion.div>
+
+        <div className="mt-16 grid gap-8 lg:grid-cols-2 lg:gap-12 lg:items-center">
+          <motion.div {...v} variants={stagger} className="grid grid-cols-2 gap-3 sm:gap-4">
+            {[
+              { t: "Parcours express", d: "Le client comprend votre restaurant en quelques secondes." },
+              { t: "Mise à jour vivante", d: "Carte, photos et offres publiées sans délai technique." },
+            ].map((item, i) => (
+              <motion.div key={item.t} variants={fadeUp(i * 0.05)} className={`${cx.card} ${cx.cardHover} p-6`}>
+                <RefreshCw className="h-5 w-5 text-violet-300/80" />
+                <p className="mt-4 text-base font-semibold text-white">{item.t}</p>
+                <p className="mt-2 text-sm text-slate-500">{item.d}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div {...v} variants={fadeUp(0.08)} className={`${cx.card} overflow-hidden p-6 sm:p-8`}>
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.08]">
+                <Layers className="h-5 w-5 text-white/90" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Tout synchronisé</p>
+                <p className="text-xs text-slate-500">
+                  Page publique et espace restaurateur restent alignés en permanence.
+                </p>
+              </div>
+            </div>
+            <div className="mt-8 grid grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Avant</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-500">Friction</p>
+                <p className="mt-1 text-xs text-slate-600">Infos éclatées</p>
+              </div>
+              <div className="rounded-2xl border border-violet-500/25 bg-violet-500/10 p-4 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-200/80">Après</p>
+                <p className="mt-2 text-2xl font-semibold text-white">Clarté</p>
+                <p className="mt-1 text-xs text-slate-400">Un seul fil direct</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        <motion.div
+          {...v}
+          variants={fadeUp(0.1)}
+          className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        >
+          {bullets.map((b, i) => (
+            <motion.div
+              key={b}
+              variants={fadeUp(i * 0.02)}
+              className="flex items-start gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3"
+            >
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-300/90" strokeWidth={2.5} />
+              <span className="text-sm text-slate-400">{b}</span>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+const featureBlocks = [
   {
-    title: "Réservations",
-    text: "Chaque demande arrive au bon endroit, avec le contexte nécessaire pour décider vite.",
-    Icon: Calendar,
+    title: "Présentation soignée",
+    text: "Photos, ton et informations structurés pour que votre restaurant se comprenne tout de suite.",
   },
   {
-    title: "Clients",
-    text: "Historique et préférences utiles pour accueillir et fidéliser sans friction.",
-    Icon: Users,
+    title: "Flux de réservation",
+    text: "Un parcours court, clair et fiable — du premier clic à la confirmation.",
   },
   {
-    title: "Campagnes",
-    text: "Annoncez une offre, une soirée ou une nouveauté — et touchez les bonnes personnes.",
-    Icon: Megaphone,
+    title: "Pilotage & statistiques",
+    text: "Suivez l’activité, les demandes et l’impact de vos mises en avant sans tableur.",
   },
   {
-    title: "Événements",
-    text: "Soirées, brunchs, dégustations : créez l’événement et mettez-le en ligne en un geste.",
-    Icon: PartyPopper,
-  },
-  {
-    title: "Menus spéciaux",
-    text: "Mettez en avant une carte limitée, un menu dégustation ou une séquence saisonnière.",
-    Icon: ChefHat,
-  },
-  {
-    title: "Avis Google",
-    text: "Après la visite, le bon message part au bon moment — sans travail manuel supplémentaire.",
-    Icon: Star,
+    title: "Relation client",
+    text: "Confirmations, rappels et demandes d’avis orchestrés depuis un seul espace.",
   },
 ] as const;
 
-function PlatformSection() {
+function FeaturesSection() {
   const v = useViewMotion();
-
   return (
     <section
-      id="plateforme"
-      className="relative scroll-mt-24 px-4 py-28 sm:px-6 lg:px-8 lg:py-32"
+      id="fonctionnalites"
+      className="relative scroll-mt-24 border-y border-white/[0.06] bg-[#08080f]/80 px-4 py-24 sm:px-6 lg:px-10 lg:py-32"
     >
-      <SectionGlow tone="sage" />
-      <div className="relative mx-auto max-w-6xl">
-        <motion.div {...v} variants={fadeUp()}>
-          <SectionHeading
-            title="Derrière une page simple, une vraie plateforme."
-            subtitle="ZenGrow ne sert pas uniquement à afficher un restaurant."
-          />
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+            Fonctionnalités
+          </p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+            Tout l’essentiel, dans un seul outil
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            Découvrez des blocs pensés pour simplifier le quotidien et accélérer la conversion.
+          </p>
         </motion.div>
-
-        <motion.p
-          {...v}
-          variants={fadeUp(0.05)}
-          className="mx-auto mt-8 max-w-3xl text-center text-base leading-relaxed text-slate-400 sm:text-lg"
-        >
-          Toute l’expérience est connectée derrière une seule interface : réservations, clients,
-          campagnes, événements, menus spéciaux, nouveautés et avis Google. Le restaurant garde enfin
-          le contrôle total de son expérience en ligne.
-        </motion.p>
 
         <motion.div
           {...v}
           variants={stagger}
           className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
-          {platformModules.map((m, i) => (
+          {featureBlocks.map((f, i) => (
             <motion.article
-              key={m.title}
-              variants={fadeUp(i * 0.02)}
-              className={`${cx.card} ${cx.cardHover} p-7`}
+              key={f.title}
+              variants={fadeUp(i * 0.04)}
+              className={`${cx.card} ${cx.cardHover} overflow-hidden p-0`}
             >
-              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/12 text-indigo-100 ring-1 ring-indigo-400/15">
-                <m.Icon className="h-5 w-5" strokeWidth={1.65} />
+              <div className="p-1">
+                <FeatureGraphic variant={(i % 4) as 0 | 1 | 2 | 3} />
               </div>
-              <h3 className="text-lg font-semibold text-white">{m.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-slate-400">{m.text}</p>
+              <div className="p-6 pt-4">
+                <h3 className="text-lg font-semibold text-white">{f.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-500">{f.text}</p>
+              </div>
+            </motion.article>
+          ))}
+        </motion.div>
+
+        <motion.div
+          {...v}
+          variants={fadeUp(0.12)}
+          className="mt-14 flex flex-col items-center justify-center gap-3 sm:flex-row"
+        >
+          <Link
+            href="/signup"
+            className="inline-flex items-center justify-center rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-[#0a0a0c]"
+          >
+            Créer ma page restaurant
+          </Link>
+          <a
+            href="#services"
+            className="inline-flex items-center justify-center rounded-full border border-white/15 px-8 py-3.5 text-sm font-semibold text-white hover:bg-white/[0.06]"
+          >
+            Voir les services
+          </a>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+const services = [
+  {
+    title: "Stratégie de présentation",
+    text: "Arborescence, messages clés et hiérarchie visuelle pour une page qui convertit.",
+    Icon: LayoutGrid,
+  },
+  {
+    title: "Mise en page & contenus",
+    text: "Blocs éditoriaux pour menus, événements et actualités — sans dépendre d’un développeur.",
+    Icon: ScrollText,
+  },
+  {
+    title: "Réservation intégrée",
+    text: "Formulaire rapide, règles de capacité et confirmations cohérentes avec votre marque.",
+    Icon: Calendar,
+  },
+  {
+    title: "Campagnes & annonces",
+    text: "Mettez en avant une offre ou une soirée et touchez vos clients au bon moment.",
+    Icon: Megaphone,
+  },
+  {
+    title: "Automatisations post-visite",
+    text: "Demandes d’avis et relances structurées pour protéger votre réputation.",
+    Icon: Star,
+  },
+  {
+    title: "Workflows opérationnels",
+    text: "Réservations, files d’attente et tâches équipe reliées à une seule interface.",
+    Icon: Zap,
+  },
+] as const;
+
+function ServicesSection() {
+  const v = useViewMotion();
+  return (
+    <section id="services" className="relative scroll-mt-24 px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Services</p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+            Des services pensés pour performer
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            Des modules qui renforcent votre image et accélèrent vos opérations au quotidien.
+          </p>
+        </motion.div>
+
+        <motion.div
+          {...v}
+          variants={stagger}
+          className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {services.map((s, i) => (
+            <motion.div
+              key={s.title}
+              variants={fadeUp(i * 0.03)}
+              className={`${cx.card} ${cx.cardHover} flex gap-4 p-6`}
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/[0.06]">
+                <s.Icon className="h-5 w-5 text-white/85" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-500">{s.text}</p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+const steps = [
+  {
+    n: "01",
+    title: "Audit & structure",
+    text: "Nous cartographions votre offre, vos créneaux et vos objectifs pour cadrer la page.",
+  },
+  {
+    n: "02",
+    title: "Déploiement maîtrisé",
+    text: "Mise en ligne de la page et connexion à votre espace : réservations, clients, campagnes.",
+  },
+  {
+    n: "03",
+    title: "Amélioration continue",
+    text: "Ajustements, nouveautés et optimisations pour garder une présence toujours à jour.",
+  },
+] as const;
+
+function ProcessSection() {
+  const v = useViewMotion();
+  return (
+    <section
+      id="processus"
+      className="relative scroll-mt-24 border-y border-white/[0.06] bg-[#06060c]/90 px-4 py-24 sm:px-6 lg:px-10 lg:py-32"
+    >
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Processus</p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+            Simple & évolutif
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            Un cadre transparent, des itérations courtes, des retours intégrés rapidement.
+          </p>
+        </motion.div>
+
+        <motion.div
+          {...v}
+          variants={stagger}
+          className="mt-16 grid gap-4 lg:grid-cols-3"
+        >
+          {steps.map((s, i) => (
+            <motion.article
+              key={s.n}
+              variants={fadeUp(i * 0.05)}
+              className={`${cx.card} relative overflow-hidden p-8`}
+            >
+              <p className="text-5xl font-semibold tabular-nums text-white/[0.08]">{s.n}</p>
+              <h3 className="relative mt-4 text-xl font-semibold text-white">{s.title}</h3>
+              <p className="relative mt-3 text-sm leading-relaxed text-slate-500">{s.text}</p>
             </motion.article>
           ))}
         </motion.div>
@@ -769,223 +734,174 @@ function PlatformSection() {
   );
 }
 
-function LivingPresenceSection() {
+const projects = [
+  {
+    tag: "01",
+    title: "Luna Bistro — page & réservations unifiées",
+    text: "Une vitrine épurée, menu événementiel et file de réservation synchronisée avec la salle.",
+    a: "−35%",
+    aLabel: "Temps de réponse aux demandes",
+    b: "+28%",
+    bLabel: "Réservations en ligne",
+  },
+  {
+    tag: "02",
+    title: "Quai 14 — saisonnalité & offres flash",
+    text: "Mise en avant des menus courts et des soirées thématiques, mises à jour en direct.",
+    a: "2×",
+    aLabel: "Vitesse de publication",
+    b: "−40%",
+    bLabel: "Allers-retours avec l’agence",
+  },
+  {
+    tag: "03",
+    title: "Maison Nord — réputation & fidélité",
+    text: "Parcours post-visite structuré pour capter les avis et sécuriser le retour client.",
+    a: "+42%",
+    aLabel: "Avis Google qualifiés",
+    b: "Stable",
+    bLabel: "Charge équipe salle",
+  },
+] as const;
+
+function ProjectsSection() {
   const v = useViewMotion();
-  const items = [
-    "Nouvelle carte publiée",
-    "Soirée spéciale ajoutée",
-    "Offre du week-end en ligne",
-    "Photos mises à jour",
-    "Menu spécial activé",
-  ] as const;
+  const [active, setActive] = useState(0);
 
   return (
-    <section className="relative border-y border-white/[0.06] bg-[#060914]/75 px-4 py-28 sm:px-6 lg:px-8 lg:py-32">
-      <div className="relative mx-auto max-w-6xl">
-        <motion.div {...v} variants={fadeUp()}>
-          <SectionHeading
-            title="Un restaurant n’est jamais figé. Sa présence en ligne non plus."
-            subtitle="Une nouvelle carte. Une soirée spéciale. Une offre du week-end. Une nouvelle ambiance."
-          />
+    <section id="projets" className="relative px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Projets</p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+            Impact mesurable
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            Quelques exemples de déploiements — chiffres indicatifs pour illustrer le potentiel.
+          </p>
+        </motion.div>
+
+        <motion.div {...v} variants={fadeUp(0.06)} className="mt-8 flex justify-center gap-2">
+          {projects.map((p, i) => (
+            <button
+              key={p.tag}
+              type="button"
+              onClick={() => setActive(i)}
+              className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                active === i
+                  ? "bg-white text-[#0a0a0c]"
+                  : "border border-white/10 bg-white/[0.04] text-slate-400 hover:text-white"
+              }`}
+            >
+              Projet {p.tag}
+            </button>
+          ))}
         </motion.div>
 
         <motion.div
-          {...v}
-          variants={fadeUp(0.06)}
-          className="mx-auto mt-8 max-w-3xl text-center text-base leading-relaxed text-slate-400 sm:text-lg"
+          key={active}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: easeOut }}
+          className={`${cx.card} mx-auto mt-10 max-w-4xl p-8 sm:p-10`}
         >
-          <p>
-            Avec ZenGrow, tout peut évoluer immédiatement — sans devoir contacter quelqu’un, sans
-            attendre plusieurs jours, sans dépendre d’une agence pour modifier un simple détail.
+          <p className="text-xs font-semibold uppercase tracking-wider text-violet-300/80">
+            {projects[active].tag}
+          </p>
+          <h3 className="mt-3 text-xl font-semibold text-white sm:text-2xl">{projects[active].title}</h3>
+          <p className="mt-3 text-sm text-slate-500 sm:text-base">{projects[active].text}</p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-center">
+              <p className="text-3xl font-semibold text-white">{projects[active].a}</p>
+              <p className="mt-1 text-xs text-slate-500">{projects[active].aLabel}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-center">
+              <p className="text-3xl font-semibold text-white">{projects[active].b}</p>
+              <p className="mt-1 text-xs text-slate-500">{projects[active].bLabel}</p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+const testimonials = [
+  {
+    quote:
+      "Notre page raconte enfin ce qu’on est. Les clients réservent sans nous solliciter pour des détails basiques.",
+    name: "Brendan",
+    role: "Directeur marketing, StratIQ",
+  },
+  {
+    quote:
+      "On a gagné en clarté interne et en image externe. Les mises à jour ne nous bloquent plus des semaines.",
+    name: "Lena M.",
+    role: "Manager, NovaTech",
+  },
+  {
+    quote:
+      "Le lien entre la salle et la page est fluide. Moins de friction, plus de contrôle sur l’expérience.",
+    name: "Eli R.",
+    role: "COO, GridFrame",
+  },
+] as const;
+
+function CustomersSection() {
+  const v = useViewMotion();
+  return (
+    <section className="relative border-y border-white/[0.06] bg-[#08080f]/70 px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Clients</p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+            Ils nous font confiance
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            Formulations indicatives — témoignages de démonstration.
           </p>
         </motion.div>
 
         <motion.div
           {...v}
           variants={stagger}
-          className="mt-14 flex flex-wrap justify-center gap-3"
+          className="mt-16 grid gap-4 md:grid-cols-3"
         >
-          {items.map((t, i) => (
-            <motion.div
-              key={t}
-              variants={fadeUp(i * 0.03)}
-              className={`${cx.card} ${cx.cardHover} inline-flex items-center gap-2 px-5 py-3`}
+          {testimonials.map((t, i) => (
+            <motion.blockquote
+              key={t.name}
+              variants={fadeUp(i * 0.04)}
+              className={`${cx.card} ${cx.cardHover} p-7`}
             >
-              <Zap className="h-4 w-4 text-amber-200/80" />
-              <span className="text-sm font-medium text-slate-200">{t}</span>
-            </motion.div>
+              <p className="text-base font-medium leading-relaxed text-slate-200">« {t.quote} »</p>
+              <div className="mt-6 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-zinc-600 to-zinc-800" />
+                <div>
+                  <p className="text-sm font-semibold text-white">{t.name}</p>
+                  <p className="text-xs text-slate-500">{t.role}</p>
+                </div>
+              </div>
+            </motion.blockquote>
+          ))}
+        </motion.div>
+
+        <motion.div
+          {...v}
+          variants={fadeUp(0.1)}
+          className="mt-16 grid grid-cols-3 gap-4 border-t border-white/[0.06] pt-12"
+        >
+          {[
+            { n: "10+", l: "Établissements accompagnés" },
+            { n: "98%", l: "Satisfaction déclarée" },
+            { n: "5+", l: "Années d’expérience produit" },
+          ].map((s) => (
+            <div key={s.l} className="text-center">
+              <p className="text-3xl font-semibold text-white sm:text-4xl">{s.n}</p>
+              <p className="mt-1 text-xs text-slate-500 sm:text-sm">{s.l}</p>
+            </div>
           ))}
         </motion.div>
       </div>
-    </section>
-  );
-}
-
-function ClientRestaurantSection() {
-  const v = useViewMotion();
-  const client = [
-    "Découvre le restaurant",
-    "Comprend l’ambiance",
-    "Réserve rapidement",
-    "Reçoit une confirmation",
-  ] as const;
-  const restaurant = [
-    "Reçoit la réservation",
-    "Enregistre le client",
-    "Lance une campagne",
-    "Automatise les avis Google",
-  ] as const;
-
-  return (
-    <section className="relative px-4 py-28 sm:px-6 lg:px-8 lg:py-32">
-      <SectionGlow tone="blue" />
-      <div className="relative mx-auto max-w-6xl">
-        <motion.div {...v} variants={fadeUp()}>
-          <SectionHeading
-            title="Une expérience moderne pour les clients. Une gestion simple pour le restaurant."
-          />
-        </motion.div>
-
-        <motion.p
-          {...v}
-          variants={fadeUp(0.05)}
-          className="mx-auto mt-8 max-w-3xl text-center text-base leading-relaxed text-slate-400 sm:text-lg"
-        >
-          D’un côté, les clients découvrent, comprennent et réservent plus rapidement. De l’autre,
-          le restaurant centralise réservations, clients, campagnes, événements et avis Google dans
-          une seule plateforme claire, moderne et pensée pour le quotidien.
-        </motion.p>
-
-        <motion.div
-          {...v}
-          variants={stagger}
-          className="mt-16 grid gap-4 lg:grid-cols-2 lg:gap-6"
-        >
-          <motion.div
-            variants={fadeUp(0, 22)}
-            className={`${cx.card} border-indigo-400/12 bg-gradient-to-b from-indigo-500/[0.07] to-transparent p-8 sm:p-9`}
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-200/75">
-              Côté client
-            </p>
-            <ul className="mt-8 space-y-4">
-              {client.map((line) => (
-                <li key={line} className="flex gap-3 text-sm text-slate-200">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-400/15 text-indigo-100">
-                    <Check className="h-3 w-3" strokeWidth={3} />
-                  </span>
-                  {line}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          <motion.div
-            variants={fadeUp(0.05, 22)}
-            className={`${cx.card} p-8 sm:p-9`}
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Côté restaurant
-            </p>
-            <ul className="mt-8 space-y-4">
-              {restaurant.map((line) => (
-                <li key={line} className="flex gap-3 text-sm text-slate-300">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-slate-100">
-                    <Check className="h-3 w-3" strokeWidth={3} />
-                  </span>
-                  {line}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-function ForWhoSection() {
-  const v = useViewMotion();
-
-  return (
-    <section
-      id="pour-qui"
-      className="relative scroll-mt-24 border-y border-white/[0.06] bg-[#070a14]/80 px-4 py-28 sm:px-6 lg:px-8 lg:py-32"
-    >
-      <div className="relative mx-auto max-w-6xl">
-        <motion.div {...v} variants={fadeUp()}>
-          <SectionHeading
-            title="Une page principale ou une expérience de réservation plus moderne."
-            subtitle="Certains restaurants utilisent ZenGrow comme présence principale en ligne. D’autres pour moderniser leur expérience de réservation actuelle, même s’ils ont déjà un site."
-          />
-        </motion.div>
-
-        <motion.p
-          {...v}
-          variants={fadeUp(0.05)}
-          className="mx-auto mt-8 max-w-3xl text-center text-base font-medium text-slate-200 sm:text-lg"
-        >
-          Dans les deux cas, le résultat reste le même : une expérience plus rapide, plus moderne,
-          plus connectée.
-        </motion.p>
-
-        <motion.div
-          {...v}
-          variants={stagger}
-          className="mt-14 grid gap-5 lg:grid-cols-2"
-        >
-          <motion.article
-            variants={fadeUp(0, 24)}
-            className={`${cx.card} ${cx.cardHover} p-8 sm:p-10`}
-          >
-            <h3 className="text-xl font-semibold text-white">Restaurants sans site moderne</h3>
-            <p className="mt-4 text-sm leading-relaxed text-slate-400 sm:text-base">
-              ZenGrow peut devenir leur page principale : claire, rapide, professionnelle et orientée
-              réservation.
-            </p>
-          </motion.article>
-          <motion.article
-            variants={fadeUp(0.05, 24)}
-            className={`${cx.card} ${cx.cardHover} border-indigo-400/12 bg-gradient-to-br from-indigo-500/[0.06] to-transparent p-8 sm:p-10`}
-          >
-            <h3 className="text-xl font-semibold text-white">Restaurants avec un site existant</h3>
-            <p className="mt-4 text-sm leading-relaxed text-slate-400 sm:text-base">
-              ZenGrow peut devenir leur page de réservation moderne, connectée à une vraie plateforme
-              de gestion.
-            </p>
-          </motion.article>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-function VisionSection() {
-  const v = useViewMotion();
-
-  return (
-    <section className="relative overflow-hidden px-4 py-32 sm:px-6 lg:px-8 lg:py-40">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,rgba(99,102,241,0.14),transparent_65%),linear-gradient(180deg,#060814_0%,#0a0f1c_50%,#060814_100%)]"
-      />
-      <motion.div
-        {...v}
-        variants={fadeUp(0, 26)}
-        className="relative mx-auto max-w-4xl text-center"
-      >
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-indigo-200/65">
-          Vision
-        </p>
-        <h2 className="mt-6 text-balance text-3xl font-semibold leading-[1.12] tracking-tight text-white sm:text-4xl md:text-[2.85rem]">
-          Le web restaurant évolue enfin.
-        </h2>
-        <p className="mx-auto mt-8 max-w-2xl text-balance text-base leading-relaxed text-slate-400 sm:text-lg">
-          Pendant longtemps, les restaurants avaient simplement besoin « d’un site ». Aujourd’hui,
-          ils ont surtout besoin d’une expérience rapide, mobile et connectée à leurs clients. C’est
-          exactement ce que ZenGrow apporte.
-        </p>
-      </motion.div>
     </section>
   );
 }
@@ -1004,59 +920,254 @@ const pricingIncluded = [
 
 function PricingSection() {
   const v = useViewMotion();
+  const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
 
   return (
-    <section id="tarifs" className="relative scroll-mt-24 px-4 py-28 sm:px-6 lg:px-8 lg:py-32">
-      <SectionGlow />
-      <div className="relative mx-auto max-w-3xl text-center">
-        <motion.div {...v} variants={fadeUp()}>
-          <SectionHeading
-            title="Une nouvelle génération d’expérience restaurant."
-            subtitle="Une page restaurant moderne, une réservation fluide et une plateforme complète pour gérer l’essentiel au quotidien."
-          />
+    <section id="tarifs" className="relative scroll-mt-24 px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+      <div className={`${cx.glow} left-1/2 top-20 h-72 w-[28rem] -translate-x-1/2 bg-violet-600/12`} aria-hidden />
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Tarifs</p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+            Un prix simple pour tout le nécessaire
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            Flexible, transparent, pensé pour démarrer vite sans sacrifier la qualité.
+          </p>
+        </motion.div>
+
+        <motion.div {...v} variants={fadeUp(0.06)} className="mt-10 flex justify-center">
+          <div className="inline-flex rounded-full border border-white/10 bg-white/[0.04] p-1">
+            <button
+              type="button"
+              onClick={() => setCycle("monthly")}
+              className={`rounded-full px-5 py-2 text-xs font-semibold transition ${
+                cycle === "monthly" ? "bg-white text-[#0a0a0c]" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Mensuel
+            </button>
+            <button
+              type="button"
+              onClick={() => setCycle("yearly")}
+              className={`rounded-full px-5 py-2 text-xs font-semibold transition ${
+                cycle === "yearly" ? "bg-white text-[#0a0a0c]" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Annuel
+            </button>
+            <span className="hidden items-center px-3 text-[10px] font-semibold uppercase tracking-wider text-emerald-400/90 sm:inline-flex">
+              −30% annuel
+            </span>
+          </div>
         </motion.div>
 
         <motion.div
           {...v}
-          variants={fadeUp(0.08)}
-          className={`${cx.card} relative mx-auto mt-14 overflow-hidden border-indigo-400/20 p-8 sm:p-11`}
-          style={{
-            boxShadow:
-              "0 0 0 1px rgba(165,180,252,0.18), 0 0 80px -30px rgba(99,102,241,0.25)",
-          }}
+          variants={fadeUp(0.1)}
+          className="mx-auto mt-12 grid max-w-5xl gap-4 lg:grid-cols-3 lg:gap-6"
         >
+          <div className={`${cx.card} flex flex-col p-8 opacity-80`}>
+            <p className="text-sm font-medium text-slate-500">Essentiel</p>
+            <p className="mt-4 text-3xl font-semibold text-white">39 CHF</p>
+            <p className="text-sm text-slate-500">/ mois</p>
+            <p className="mt-4 text-sm text-slate-500">Même offre — libellé alternatif pour comparaison visuelle.</p>
+            <Link
+              href="/signup"
+              className="mt-8 inline-flex justify-center rounded-full border border-white/15 py-3 text-sm font-semibold text-white hover:bg-white/[0.06]"
+            >
+              Choisir
+            </Link>
+          </div>
+
           <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-10%,rgba(129,140,248,0.15),transparent_55%)]"
-          />
-          <div className="relative">
-            <div className="flex flex-wrap items-end justify-center gap-2">
-              <span className="text-5xl font-semibold tracking-tight text-white sm:text-6xl">
-                39 CHF
-              </span>
-              <span className="pb-2 text-base font-medium text-slate-400">/ mois</span>
-            </div>
-            <p className="mt-6 text-sm text-slate-400">Inclus :</p>
-            <ul className="mx-auto mt-5 max-w-md space-y-3 text-left">
-              {pricingIncluded.map((f) => (
-                <li key={f} className="flex gap-3 text-sm text-slate-300">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-400/18 text-indigo-100">
-                    <Check className="h-3 w-3" strokeWidth={3} />
-                  </span>
+            className={`${cx.card} relative flex flex-col border-violet-400/25 bg-gradient-to-b from-violet-500/[0.08] to-transparent p-8 shadow-[0_0_60px_-20px_rgba(139,92,246,0.35)] lg:scale-[1.02]`}
+          >
+            <span className="absolute right-4 top-4 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#0a0a0c]">
+              Populaire
+            </span>
+            <p className="text-sm font-medium text-violet-200/90">ZenGrow</p>
+            <p className="mt-4 text-4xl font-semibold text-white sm:text-5xl">39 CHF</p>
+            <p className="text-sm text-slate-400">/ mois</p>
+            <p className="mt-4 text-sm text-slate-400">
+              {cycle === "yearly"
+                ? "Facturation annuelle indicative — ajustez selon votre offre commerciale."
+                : "Facturation mensuelle simple. Sans surprise."}
+            </p>
+            <ul className="mt-6 flex-1 space-y-2.5">
+              {pricingIncluded.slice(0, 6).map((f) => (
+                <li key={f} className="flex gap-2 text-sm text-slate-300">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-300" strokeWidth={2.5} />
                   {f}
                 </li>
               ))}
             </ul>
             <Link
               href="/signup"
-              className="mt-10 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#eef2ff] via-[#e0e7ff] to-[#dbeafe] py-3.5 text-sm font-semibold text-[#0b1020] shadow-[0_18px_55px_-26px_rgba(129,140,248,0.55)] transition hover:brightness-[1.03] sm:w-auto sm:px-14"
+              className="mt-8 inline-flex justify-center rounded-full bg-white py-3.5 text-sm font-semibold text-[#0a0a0c] hover:bg-slate-100"
             >
               Créer ma page restaurant
-              <ArrowRight className="h-4 w-4" />
             </Link>
-            <p className="mt-4 text-xs text-slate-500">
-              Simple à mettre en place. Simple à gérer.
+          </div>
+
+          <div className={`${cx.card} flex flex-col p-8 opacity-80`}>
+            <p className="text-sm font-medium text-slate-500">Collectif</p>
+            <p className="mt-4 text-3xl font-semibold text-white">Sur mesure</p>
+            <p className="text-sm text-slate-500">multi-établissements</p>
+            <p className="mt-4 text-sm text-slate-500">
+              Pour les groupes : gouvernance, branding et déploiements coordonnés.
             </p>
+            <a
+              href="#contact"
+              className="mt-8 inline-flex justify-center rounded-full border border-white/15 py-3 text-sm font-semibold text-white hover:bg-white/[0.06]"
+            >
+              Nous contacter
+            </a>
+          </div>
+        </motion.div>
+
+        <p className="mt-8 text-center text-xs text-slate-600">
+          Simple à mettre en place. Simple à gérer.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function ComparisonSection() {
+  const v = useViewMotion();
+  const zg = [
+    "Parcours de réservation fluide",
+    "Stratégie éditoriale claire",
+    "Indicateurs et suivi en direct",
+    "Évolutif sans dépendre d’une agence",
+    "Automatisations post-visite",
+    "Contenus rapides à publier",
+    "Analyse des comportements visiteurs",
+  ] as const;
+  const other = [
+    "Formulaires rigides",
+    "Pages figées",
+    "Décisions à l’instinct",
+    "Mises à jour lentes",
+    "Relances manuelles",
+    "Production de contenu lourde",
+    "Peu de visibilité sur la conversion",
+  ] as const;
+
+  return (
+    <section className="relative px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+            Comparaison
+          </p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+            Précision vs basique
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            Pourquoi une expérience ZenGrow surpasse une simple page statique.
+          </p>
+        </motion.div>
+
+        <motion.div
+          {...v}
+          variants={stagger}
+          className="mt-16 grid gap-4 lg:grid-cols-2"
+        >
+          <motion.div
+            variants={fadeUp(0, 24)}
+            className={`${cx.card} border-violet-400/20 bg-gradient-to-b from-violet-500/[0.07] to-transparent p-8 sm:p-10`}
+          >
+            <h3 className="text-lg font-semibold text-white">ZenGrow</h3>
+            <ul className="mt-8 space-y-3">
+              {zg.map((line) => (
+                <li key={line} className="flex gap-3 text-sm text-slate-200">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-300" strokeWidth={2.5} />
+                  {line}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/signup"
+              className="mt-10 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#0a0a0c]"
+            >
+              Créer ma page restaurant
+            </Link>
+          </motion.div>
+          <motion.div variants={fadeUp(0.05, 24)} className={`${cx.card} p-8 sm:p-10`}>
+            <h3 className="text-lg font-semibold text-slate-500">Autres approches</h3>
+            <ul className="mt-8 space-y-3">
+              {other.map((line) => (
+                <li key={line} className="flex gap-3 text-sm text-slate-600">
+                  <X className="mt-0.5 h-4 w-4 shrink-0 text-slate-600" />
+                  {line}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function NewExperienceDemoSection() {
+  const v = useViewMotion();
+  return (
+    <section
+      id="experience"
+      className="relative scroll-mt-24 border-y border-white/[0.06] bg-[#0a0a12]/60 px-4 py-24 sm:px-6 lg:px-10 lg:py-32"
+    >
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+            Expérience
+          </p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+            Une page pensée pour décider vite
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            ZenGrow a été conçu pour cette nouvelle manière de découvrir un restaurant — fluide,
+            rapide, pensé mobile dès le départ.
+          </p>
+        </motion.div>
+
+        <motion.div id="demo" {...v} variants={fadeUp(0.08)} className="relative mx-auto mt-14 max-w-4xl scroll-mt-28">
+          <div className={`${cx.card} overflow-hidden p-6 sm:p-8`}>
+            <div className="grid gap-8 lg:grid-cols-[280px_1fr] lg:items-center">
+              <div className="mx-auto w-full max-w-[280px]">
+                <div className="rounded-[1.75rem] border border-white/10 bg-[#0c0c14] p-3 ring-1 ring-white/5">
+                  <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-gradient-to-b from-[#14141f] to-[#0a0a10] p-4">
+                    <div className="aspect-[16/10] rounded-xl bg-gradient-to-br from-zinc-700/80 to-violet-950/40 ring-1 ring-white/10" />
+                    <p className="mt-3 text-lg font-semibold text-white">Restaurant Luna</p>
+                    <p className="text-xs text-slate-500">Bistro · centre-ville</p>
+                    <button
+                      type="button"
+                      className="mt-4 w-full rounded-full bg-white py-2.5 text-xs font-semibold text-[#0a0a0c]"
+                    >
+                      Réserver
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4 text-left">
+                <p className="text-sm text-slate-400">
+                  Chaque page va droit à l’essentiel : style, ambiance, infos clés, réservation.
+                  Parce qu’aujourd’hui, chaque seconde d’hésitation compte.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {["Photos", "Menu", "Ambiance", "Carte"].map((x) => (
+                    <span
+                      key={x}
+                      className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-400"
+                    >
+                      {x}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -1064,38 +1175,242 @@ function PricingSection() {
   );
 }
 
-function FinalCtaSection() {
+const platformModules = [
+  { title: "Réservations", text: "Demandes centralisées, contexte clair, décisions rapides.", Icon: Calendar },
+  { title: "Clients", text: "Historique utile pour accueillir et fidéliser.", Icon: Users },
+  { title: "Campagnes", text: "Offres et nouveautés diffusées au bon moment.", Icon: Megaphone },
+  { title: "Événements", text: "Soirées et brunchs publiés en un geste.", Icon: PartyPopper },
+  { title: "Menus spéciaux", text: "Cartes limitées, dégustations, saisons.", Icon: ChefHat },
+  { title: "Avis Google", text: "Relances structurées après la visite.", Icon: Star },
+] as const;
+
+function PlatformGridSection() {
   const v = useViewMotion();
+  return (
+    <section id="plateforme" className="relative scroll-mt-24 px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+            Plateforme
+          </p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+            Derrière une page simple, une vraie plateforme
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            Réservations, clients, campagnes, événements, menus spéciaux et avis : un seul espace.
+          </p>
+        </motion.div>
+        <motion.div
+          {...v}
+          variants={stagger}
+          className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {platformModules.map((m, i) => (
+            <motion.article
+              key={m.title}
+              variants={fadeUp(i * 0.02)}
+              className={`${cx.card} ${cx.cardHover} p-7`}
+            >
+              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.06]">
+                <m.Icon className="h-5 w-5 text-white/85" strokeWidth={1.6} />
+              </div>
+              <h3 className="text-lg font-semibold text-white">{m.title}</h3>
+              <p className="mt-3 text-sm text-slate-500">{m.text}</p>
+            </motion.article>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function ForWhoSection() {
+  const v = useViewMotion();
+  return (
+    <section
+      id="pour-qui"
+      className="relative scroll-mt-24 border-y border-white/[0.06] bg-[#06060c]/85 px-4 py-24 sm:px-6 lg:px-10 lg:py-32"
+    >
+      <div className="relative mx-auto max-w-7xl">
+        <motion.div {...v} variants={fadeUp()} className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Pour qui</p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+            Page principale ou réservation moderne
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-slate-400">
+            Dans les deux cas : plus rapide, plus moderne, plus connecté.
+          </p>
+        </motion.div>
+        <motion.div {...v} variants={stagger} className="mt-14 grid gap-5 lg:grid-cols-2">
+          <motion.article variants={fadeUp(0)} className={`${cx.card} ${cx.cardHover} p-8 sm:p-10`}>
+            <h3 className="text-xl font-semibold text-white">Sans site moderne</h3>
+            <p className="mt-4 text-slate-500">
+              ZenGrow devient votre page principale : claire, rapide, professionnelle, orientée
+              réservation.
+            </p>
+          </motion.article>
+          <motion.article
+            variants={fadeUp(0.05)}
+            className={`${cx.card} ${cx.cardHover} border-violet-400/15 bg-violet-500/[0.05] p-8 sm:p-10`}
+          >
+            <h3 className="text-xl font-semibold text-white">Avec un site existant</h3>
+            <p className="mt-4 text-slate-500">
+              ZenGrow devient votre page de réservation moderne, reliée à une vraie plateforme de
+              gestion.
+            </p>
+          </motion.article>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+const faqs = [
+  {
+    q: "ZenGrow remplace-t-il mon site actuel ?",
+    a: "Pas nécessairement. ZenGrow peut être votre vitrine principale ou une page de réservation connectée à votre site existant.",
+  },
+  {
+    q: "Combien de temps pour être en ligne ?",
+    a: "Selon vos contenus, comptez en général quelques jours à quelques semaines pour une mise en ligne soignée.",
+  },
+  {
+    q: "Mes clients doivent-ils créer un compte ?",
+    a: "Non. Ils réservent depuis la page publique, sans friction inutile.",
+  },
+  {
+    q: "Puis-je modifier ma page moi-même ?",
+    a: "Oui. Menus, photos, événements et offres peuvent évoluer depuis votre espace restaurateur.",
+  },
+  {
+    q: "Comment fonctionnent les avis Google ?",
+    a: "Après une visite, un message peut être envoyé automatiquement pour inviter à laisser un avis, selon vos réglages.",
+  },
+] as const;
+
+function FaqItem({
+  q,
+  a,
+  open,
+  onToggle,
+}: {
+  q: string;
+  a: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className={`overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]`}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-white/[0.04] sm:px-6 sm:py-5"
+      >
+        <span className="text-sm font-semibold text-white sm:text-base">{q}</span>
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] transition ${
+            open ? "rotate-180 bg-white/[0.08]" : ""
+          }`}
+        >
+          <ChevronDown className="h-4 w-4 text-slate-400" />
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.35, ease: easeOut }}
+            className="overflow-hidden"
+          >
+            <p className="px-5 pb-5 text-sm leading-relaxed text-slate-500 sm:px-6 sm:pb-6">{a}</p>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function FaqSection() {
+  const v = useViewMotion();
+  const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="relative px-4 pb-8 pt-4 sm:px-6 lg:px-8">
+    <section id="faq" className="relative scroll-mt-24 px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+      <div className="relative mx-auto max-w-7xl">
+        <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
+          <motion.div {...v} variants={fadeUp()}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">FAQ</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Questions, réponses
+            </h2>
+            <p className="mt-5 text-slate-400">
+              Des réponses courtes. Pour aller plus loin :{" "}
+              <a href="mailto:support@zengrow.app" className="text-white underline-offset-4 hover:underline">
+                support@zengrow.app
+              </a>
+            </p>
+          </motion.div>
+          <motion.div {...v} variants={stagger} className="space-y-3">
+            {faqs.map((f, i) => (
+              <motion.div key={f.q} variants={fadeUp(i * 0.02)}>
+                <FaqItem
+                  q={f.q}
+                  a={f.a}
+                  open={open === i}
+                  onToggle={() => setOpen(open === i ? null : i)}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PreFooterCta() {
+  const v = useViewMotion();
+  return (
+    <section className="relative px-4 pb-6 pt-4 sm:px-6 lg:px-10">
       <motion.div
         {...v}
-        variants={fadeUp(0, 24)}
-        className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-indigo-400/18 bg-gradient-to-br from-indigo-500/[0.12] via-[#0b101f] to-sky-500/[0.08] px-6 py-16 text-center sm:px-14 sm:py-20"
+        variants={fadeUp(0, 20)}
+        className="relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-violet-600/20 via-[#0c0c14] to-blue-600/15 px-6 py-16 text-center sm:px-12 sm:py-20"
       >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-24 top-0 h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-20 bottom-0 h-56 w-56 rounded-full bg-sky-400/12 blur-3xl"
-        />
-        <h2 className="relative text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.65rem]">
-          Les restaurants changent. L’expérience en ligne aussi.
-        </h2>
-        <p className="relative mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-          Offrez à vos clients une manière plus rapide, plus claire et plus moderne de découvrir
-          votre restaurant et de réserver.
+        <div className="pointer-events-none absolute -left-20 top-0 h-64 w-64 rounded-full bg-violet-500/30 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 bottom-0 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl" />
+        <p className="relative text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
+          ZenGrow
         </p>
+        <h2 className="relative mx-auto mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
+          La nouvelle génération d’expérience pour les restaurants qui veulent avancer.
+        </h2>
         <Link
           href="/signup"
-          className="relative mt-10 inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-[#0b1020] shadow-[0_22px_60px_-28px_rgba(255,255,255,0.35)] transition hover:brightness-[0.98]"
+          className="relative mt-10 inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-[#0a0a0c] hover:bg-slate-100"
         >
           Créer ma page restaurant
           <ArrowRight className="h-4 w-4" />
         </Link>
+        <div className="relative mt-10 flex flex-wrap justify-center gap-4 text-sm text-slate-500">
+          <a href="#fonctionnalites" className="hover:text-white">
+            Fonctionnalités
+          </a>
+          <span className="text-slate-700">·</span>
+          <a href="#contact" className="hover:text-white">
+            Contact
+          </a>
+          <span className="text-slate-700">·</span>
+          <a href="#projets" className="hover:text-white">
+            Projets
+          </a>
+          <span className="text-slate-700">·</span>
+          <Link href="/login" className="hover:text-white">
+            Connexion
+          </Link>
+        </div>
       </motion.div>
     </section>
   );
@@ -1103,21 +1418,15 @@ function FinalCtaSection() {
 
 function ContactSection() {
   const v = useViewMotion();
-
   return (
-    <section
-      id="contact"
-      className="relative scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8 lg:py-24"
-    >
-      <div className="relative mx-auto max-w-3xl text-center">
+    <section id="contact" className="relative scroll-mt-24 px-4 py-20 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-3xl text-center">
         <motion.div {...v} variants={fadeUp()}>
-          <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Contact</h2>
-          <p className="mt-4 text-base text-slate-400">
-            Une question sur ZenGrow ou sur la mise en place ? Écrivez-nous, nous répondons vite.
-          </p>
+          <h2 className="text-2xl font-semibold text-white sm:text-3xl">Contact</h2>
+          <p className="mt-4 text-slate-400">Une question ? Écrivez-nous, nous répondons vite.</p>
           <a
             href="mailto:support@zengrow.app"
-            className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-5 py-2.5 text-sm font-medium text-slate-200 transition hover:border-indigo-400/25"
+            className="mt-6 inline-flex rounded-full border border-white/12 bg-white/[0.04] px-5 py-2.5 text-sm font-medium text-slate-200 hover:border-white/20"
           >
             support@zengrow.app
           </a>
@@ -1132,34 +1441,35 @@ function Footer() {
     { label: "Expérience", href: "#experience" },
     { label: "Plateforme", href: "#plateforme" },
     { label: "Tarifs", href: "#tarifs" },
+    { label: "FAQ", href: "#faq" },
     { label: "Contact", href: "#contact" },
     { label: "Connexion", href: "/login" },
   ] as const;
 
   return (
-    <footer className="border-t border-white/[0.06] bg-[#050814] px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 sm:flex-row sm:items-start sm:justify-between">
-        <div className="max-w-md">
-          <Link href="/" className="text-lg font-semibold tracking-tight text-white">
+    <footer className="border-t border-white/[0.06] bg-[#030305] px-4 py-16 sm:px-6 lg:px-10">
+      <div className="mx-auto flex max-w-7xl flex-col gap-12 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <Link href="/" className="text-xl font-semibold text-white">
             ZenGrow
           </Link>
-          <p className="mt-4 text-sm leading-relaxed text-slate-500">
+          <p className="mt-4 max-w-sm text-sm text-slate-500">
             La nouvelle génération d’expérience en ligne pour restaurants.
           </p>
         </div>
-        <nav className="flex flex-wrap gap-x-8 gap-y-3">
+        <nav className="flex flex-wrap gap-x-10 gap-y-3">
           {footLinks.map((l) => (
             <Link
               key={l.href + l.label}
               href={l.href}
-              className="text-sm font-medium text-slate-400 transition hover:text-white"
+              className="text-sm font-medium text-slate-500 transition hover:text-white"
             >
               {l.label}
             </Link>
           ))}
         </nav>
       </div>
-      <p className="mx-auto mt-12 max-w-6xl text-center text-xs text-slate-600 sm:text-left">
+      <p className="mx-auto mt-12 max-w-7xl text-center text-xs text-slate-700 lg:text-left">
         © {new Date().getFullYear()} ZenGrow
       </p>
     </footer>
@@ -1170,22 +1480,25 @@ export function ZenGrowLanding() {
   return (
     <div
       className={`${landingSans.variable} ${cx.page} font-[family-name:var(--font-zg-landing),system-ui,sans-serif] text-slate-100`}
-      style={{
-        background: "linear-gradient(180deg, #060814 0%, #0a0f1c 42%, #060814 100%)",
-      }}
+      style={{ background: "linear-gradient(180deg,#050508 0%,#0c0c12 40%,#050508 100%)" }}
     >
       <Header />
       <main>
         <Hero />
-        <ProblemSection />
-        <NewExperienceSection />
-        <PlatformSection />
-        <LivingPresenceSection />
-        <ClientRestaurantSection />
-        <ForWhoSection />
-        <VisionSection />
+        <QuoteSection />
+        <BenefitsSection />
+        <FeaturesSection />
+        <ServicesSection />
+        <ProcessSection />
+        <NewExperienceDemoSection />
+        <PlatformGridSection />
+        <ProjectsSection />
+        <CustomersSection />
         <PricingSection />
-        <FinalCtaSection />
+        <ComparisonSection />
+        <ForWhoSection />
+        <FaqSection />
+        <PreFooterCta />
         <ContactSection />
       </main>
       <Footer />
