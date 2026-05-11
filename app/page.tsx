@@ -3,7 +3,7 @@ import { Navbar } from "@/components/sections/Navbar";
 import { Hero } from "@/components/sections/Hero";
 import { Globe } from "@/components/sections/Globe";
 import { Connected } from "@/components/sections/Connected";
-import { Solutions } from "@/components/sections/Solutions";
+import { HowItWorks } from "@/components/sections/HowItWorks";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { Tarifs } from "@/components/sections/Tarifs";
 import { FAQ } from "@/components/sections/FAQ";
@@ -29,7 +29,7 @@ export default function Home() {
         <Hero />
         <Globe />
         <Connected />
-        <Solutions />
+        <HowItWorks />
         <Testimonials />
         <Tarifs />
         <FAQ />
