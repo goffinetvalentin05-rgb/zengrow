@@ -157,8 +157,34 @@ function HeroOrbitCards() {
   );
 }
 
-/** Arc néon (utilisé par la section CTA uniquement). */
-function NeonArc({ flip = false }: { flip?: boolean }) {
+/** Arc / halo néon (section CTA : `align="center"`). */
+function NeonArc({ flip = false, align = "bottom" }: { flip?: boolean; align?: "bottom" | "center" }) {
+  if (align === "center") {
+    return (
+      <div
+        className="pointer-events-none relative w-[min(100vw,1100px)] min-h-[min(58vh,620px)] shrink-0"
+        aria-hidden
+      >
+        <div
+          className="absolute inset-0 rounded-[100%] border border-landing-accent/35"
+          style={{
+            boxShadow:
+              "0 -40px 120px 40px rgba(255, 107, 44, 0.45), inset 0 0 80px rgba(255, 168, 107, 0.12)",
+          }}
+        />
+        <div
+          className="absolute inset-[2px] rounded-[100%] bg-gradient-to-t from-landing-accent/25 via-landing-accent-soft/10 to-transparent"
+          style={{ filter: "blur(2px)" }}
+        />
+        <motion.div
+          className="absolute left-1/2 top-1/2 h-[48%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-[100%] bg-white/22 blur-[100px] opacity-70"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="pointer-events-none absolute inset-x-0 flex justify-center"
