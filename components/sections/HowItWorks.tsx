@@ -1,9 +1,11 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useId } from "react";
 import { motion } from "framer-motion";
 import { Palette, Rocket, UserPlus } from "lucide-react";
 import { Reveal } from "@/components/sections/Reveal";
+
+const NEON = "#FF6B2C";
 
 const steps = [
   {
@@ -29,43 +31,116 @@ const steps = [
   },
 ] as const;
 
-function VerticalConnector({ delay }: { delay: number }) {
+function VerticalNeonConnector({ delay }: { delay: number }) {
+  const id = useId().replace(/:/g, "");
+  const filterId = `hiw-v-glow-${id}`;
+
   return (
     <div className="flex justify-center py-1 md:hidden">
       <motion.div
-        className="h-12 w-px origin-top border-l-2 border-dashed border-landing-accent/30"
-        initial={{ scaleY: 0, opacity: 0.4 }}
-        whileInView={{ scaleY: 1, opacity: 1 }}
+        className="relative h-14 w-10 overflow-visible"
+        initial={{ opacity: 0, scaleY: 0.6 }}
+        whileInView={{ opacity: 1, scaleY: 1 }}
         viewport={{ once: true, margin: "-20px" }}
         transition={{ delay, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      />
+        style={{ transformOrigin: "top center" }}
+        aria-hidden
+      >
+        <svg className="absolute inset-x-0 top-1 bottom-1 w-full" viewBox="0 0 12 100" preserveAspectRatio="none">
+          <defs>
+            <filter id={filterId} x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="1.2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <motion.line
+            x1="6"
+            y1="2"
+            x2="6"
+            y2="98"
+            stroke={NEON}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+            filter={`url(#${filterId})`}
+            animate={{ opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </svg>
+        <motion.div
+          className="absolute left-1/2 size-2 -translate-x-1/2 rounded-full bg-[#FFA86B] shadow-[0_0_10px_4px_rgba(255,107,44,0.95),0_0_22px_8px_rgba(255,107,44,0.35)]"
+          animate={{ top: ["6%", "88%"] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        />
+      </motion.div>
     </div>
   );
 }
 
-function HorizontalConnector({ delay }: { delay: number }) {
+function HorizontalNeonConnector({ delay }: { delay: number }) {
+  const id = useId().replace(/:/g, "");
+  const filterId = `hiw-h-glow-${id}`;
+
   return (
     <div className="relative hidden min-h-[1px] w-full min-w-0 items-center self-start pt-[6.75rem] md:flex">
-      <div className="relative h-0 w-full">
-        <motion.div
-          className="absolute left-0 right-5 top-0 h-0 w-full border-t-2 border-dashed border-landing-accent/40"
-          initial={{ scaleX: 0, opacity: 0.5 }}
-          whileInView={{ scaleX: 1, opacity: 1 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          style={{ transformOrigin: "left center" }}
-        />
+      <motion.div
+        className="flex w-full min-w-0 items-center gap-1.5 pr-0.5"
+        initial={{ opacity: 0, scaleX: 0.25 }}
+        whileInView={{ opacity: 1, scaleX: 1 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        style={{ transformOrigin: "left center" }}
+      >
+        <div className="relative h-4 min-w-0 flex-1 overflow-visible">
+          <svg
+            className="absolute inset-y-0 left-0 w-[calc(100%-2px)]"
+            viewBox="0 0 100 12"
+            preserveAspectRatio="none"
+            aria-hidden
+          >
+            <defs>
+              <filter id={filterId} x="-20%" y="-200%" width="140%" height="500%">
+                <feGaussianBlur stdDeviation="1.1" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <motion.line
+              x1="0"
+              y1="6"
+              x2="100"
+              y2="6"
+              stroke={NEON}
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+              filter={`url(#${filterId})`}
+              animate={{ opacity: [0.4, 0.7, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </svg>
+          <motion.div
+            className="absolute top-1/2 left-0 size-2 -translate-y-1/2 rounded-full bg-[#FFA86B] shadow-[0_0_10px_4px_rgba(255,107,44,0.95),0_0_22px_8px_rgba(255,107,44,0.35)]"
+            animate={{ left: ["0%", "92%"] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          />
+        </div>
         <motion.span
-          className="absolute -right-0.5 -top-[0.55rem] select-none text-base text-landing-accent"
+          className="shrink-0 translate-y-px select-none text-base leading-none text-[#FF6B2C] drop-shadow-[0_0_8px_rgba(255,107,44,0.75)]"
           initial={{ opacity: 0, x: -4 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-40px" }}
-          transition={{ delay: delay + 0.28, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ delay: delay + 0.22, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           aria-hidden
         >
           →
         </motion.span>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -123,8 +198,8 @@ export function HowItWorks() {
                   </motion.div>
                   {i < 2 ? (
                     <>
-                      <VerticalConnector delay={lineDelay} />
-                      <HorizontalConnector delay={lineDelay} />
+                      <VerticalNeonConnector delay={lineDelay} />
+                      <HorizontalNeonConnector delay={lineDelay} />
                     </>
                   ) : null}
                 </Fragment>
