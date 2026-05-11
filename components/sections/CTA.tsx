@@ -42,10 +42,9 @@ export function CTA() {
       </div>
 
       <motion.div
-        className="pointer-events-none absolute bottom-2 left-1/2 z-[5] w-[120vw] max-w-none -translate-x-1/2 select-none text-center font-landing-serif text-[clamp(5rem,16vw,11rem)] font-normal italic leading-none text-[#FF6B2C]"
-        style={{ opacity: 0.08 }}
+        className="pointer-events-none absolute bottom-0 left-1/2 z-[5] w-max max-w-[100vw] -translate-x-1/2 translate-y-1/2 select-none whitespace-nowrap text-center font-landing-serif text-[clamp(3.75rem,18vw,12rem)] font-normal italic leading-none text-[#FF6B2C] sm:text-[clamp(4.5rem,15vw,12rem)]"
         initial={{ opacity: 0 }}
-        whileInView={{ opacity: 0.08 }}
+        whileInView={{ opacity: 0.1 }}
         viewport={{ once: true }}
         transition={{ duration: 1 }}
         aria-hidden
