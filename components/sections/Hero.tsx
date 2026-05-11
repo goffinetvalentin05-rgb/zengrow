@@ -12,7 +12,7 @@ const stats = [
   },
   {
     title: "2'500 CHF économisés",
-    body: "Pas besoin de payer un site web séparé, un outil de réservation et un système d'avis. ZenGrow regroupe tout pour 49 CHF/mois.",
+    body: "Pas besoin de payer un site web séparé, un outil de réservation et un système d'avis. ZenGrow regroupe tout dès 49 CHF/mois (Starter) ou 69 CHF/mois (Pro).",
   },
   {
     title: "+40% de réservations",

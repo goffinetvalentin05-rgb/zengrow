@@ -5,12 +5,41 @@ import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { Reveal } from "@/components/sections/Reveal";
 
-const perks = [
-  "Page restaurant pro + réservation intégrée",
-  "Personnalisation (photos, couleurs, menu)",
-  "Emails & relances marketing",
-  "Support en français",
-];
+const plans = [
+  {
+    key: "starter",
+    title: "Starter",
+    subtitle: "Pour bien démarrer",
+    amount: "49",
+    unit: "CHF / mois",
+    featured: false,
+    features: [
+      "Réservations en ligne",
+      "Gestion des disponibilités",
+      "Page de réservation personnalisable",
+      "Demandes d'avis Google automatiques",
+      "Feedback privé clients",
+      "Base clients",
+    ],
+    cta: "Choisir Starter",
+  },
+  {
+    key: "pro",
+    title: "Pro",
+    subtitle: "Pour accélérer",
+    amount: "69",
+    unit: "CHF / mois",
+    featured: true,
+    features: [
+      "Tout le plan Starter",
+      "Campagnes e-mail marketing",
+      "Segmentation clients",
+      "Stats clients",
+      "Export clients",
+    ],
+    cta: "Choisir Pro",
+  },
+] as const;
 
 export function Tarifs() {
   return (
@@ -19,39 +48,61 @@ export function Tarifs() {
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal className="mx-auto max-w-2xl text-center">
           <h2 className="font-landing-serif text-[clamp(2rem,4vw,3rem)] font-normal text-landing-fg">
-            Un tarif <em className="italic text-landing-accent">simple</em>, tout inclus
+            Des tarifs <em className="italic text-landing-accent">simples</em>, tout inclus
           </h2>
           <p className="mt-4 text-landing-muted">
-            49 CHF/mois TTC. Sans engagement. Offre de lancement : -30% les 3 premiers mois.
+            Deux formules alignées sur l&apos;app : Starter ou Pro. <strong className="font-medium text-landing-fg/90">14 jours d&apos;essai gratuit</strong> pour tout
+            tester. Sans engagement long terme.
           </p>
         </Reveal>
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mx-auto mt-12 max-w-lg rounded-3xl border border-landing-border bg-landing-card/95 p-8 shadow-[0_0_60px_-24px_rgba(255,107,44,0.45)] backdrop-blur-sm sm:p-10"
-        >
-          <div className="flex items-end justify-center gap-2">
-            <span className="font-landing-serif text-5xl text-landing-fg">49</span>
-            <span className="pb-1 text-lg font-medium text-landing-muted">CHF / mois</span>
-          </div>
-          <p className="mt-2 text-center text-xs text-landing-accent-soft">Puis 34 CHF/mois les 3 premiers mois avec l&apos;offre 🔥</p>
-          <ul className="mt-8 space-y-3 text-sm text-landing-fg/90">
-            {perks.map((p) => (
-              <li key={p} className="flex gap-3">
-                <Check className="mt-0.5 size-4 shrink-0 text-landing-accent" strokeWidth={2.5} />
-                <span>{p}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/signup"
-            className="mt-8 flex min-h-12 w-full items-center justify-center rounded-xl bg-landing-accent text-sm font-semibold text-white shadow-[0_0_40px_-8px_rgba(255,107,44,0.75)] transition hover:brightness-110"
-          >
-            Commencer
-          </Link>
-        </motion.div>
+
+        <div className="mx-auto mt-14 grid max-w-5xl gap-8 md:grid-cols-2">
+          {plans.map((plan, i) => (
+            <motion.div
+              key={plan.key}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.55, delay: 0.1 * i, ease: [0.22, 1, 0.36, 1] }}
+              className={
+                plan.featured
+                  ? "relative flex flex-col rounded-3xl border border-landing-accent/45 bg-landing-card/95 p-8 shadow-[0_0_56px_-18px_rgba(255,107,44,0.5)] backdrop-blur-sm sm:p-10"
+                  : "flex flex-col rounded-3xl border border-landing-border bg-landing-card/95 p-8 shadow-[0_0_48px_-28px_rgba(255,107,44,0.25)] backdrop-blur-sm sm:p-10"
+              }
+            >
+              {plan.featured ? (
+                <span className="mb-2 inline-flex self-start rounded-full border border-landing-accent/35 bg-landing-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-landing-accent">
+                  Recommandé
+                </span>
+              ) : null}
+              <h3 className="font-landing-serif text-2xl font-normal text-landing-fg">{plan.title}</h3>
+              <p className="mt-1 text-sm text-landing-muted">{plan.subtitle}</p>
+              <div className="mt-6 flex items-end gap-2">
+                <span className="font-landing-serif text-5xl tabular-nums text-landing-fg">{plan.amount}</span>
+                <span className="pb-1 text-base font-medium text-landing-muted">{plan.unit}</span>
+              </div>
+              <ul className="mt-8 flex-1 space-y-3 text-sm text-landing-fg/90">
+                {plan.features.map((line) => (
+                  <li key={line} className="flex gap-3">
+                    <Check className="mt-0.5 size-4 shrink-0 text-landing-accent" strokeWidth={2.5} />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/signup"
+                className={
+                  plan.featured
+                    ? "mt-8 flex min-h-12 w-full items-center justify-center rounded-xl bg-landing-accent text-sm font-semibold text-white shadow-[0_0_40px_-8px_rgba(255,107,44,0.75)] transition hover:brightness-110"
+                    : "mt-8 flex min-h-12 w-full items-center justify-center rounded-xl border border-landing-border bg-landing-card text-sm font-semibold text-landing-fg transition hover:border-landing-accent/40 hover:text-landing-accent"
+                }
+              >
+                {plan.cta}
+              </Link>
+              <p className="mt-3 text-center text-xs text-landing-muted">Sans engagement long terme</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

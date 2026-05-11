@@ -19,7 +19,7 @@ const faqs = [
   },
   {
     q: "Comment fonctionne le paiement ?",
-    a: "49 CHF/mois TTC, prélevé chaque mois. Pas de frais cachés, pas de commission sur tes réservations.",
+    a: "Deux formules : Starter à 49 CHF/mois et Pro à 69 CHF/mois TTC, prélevées chaque mois via Stripe après ton essai. Pas de frais cachés, pas de commission sur tes réservations.",
   },
   {
     q: "Puis-je personnaliser ma page ?",
