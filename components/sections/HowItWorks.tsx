@@ -2,30 +2,30 @@
 
 import { Fragment } from "react";
 import { motion } from "framer-motion";
-import { FileEdit, Rocket, Sparkles } from "lucide-react";
+import { Palette, Rocket, UserPlus } from "lucide-react";
 import { Reveal } from "@/components/sections/Reveal";
 
 const steps = [
   {
     n: "01",
-    Icon: FileEdit,
-    title: "Tu remplis tes infos",
+    Icon: UserPlus,
+    title: "Crée ton compte",
     description:
-      "Nom du resto, type de cuisine, photos, horaires, menu. En 5 minutes c'est fait depuis ton téléphone.",
+      "Remplis les infos de base de ton restaurant : nom, adresse, type de cuisine, horaires, menu. En 5 minutes c'est fait depuis ton téléphone.",
   },
   {
     n: "02",
-    Icon: Sparkles,
-    title: "On génère ta page",
+    Icon: Palette,
+    title: "Personnalise ta page",
     description:
-      "ZenGrow assemble ta page web pro avec ton branding, ton menu et ton formulaire de réservation intégré.",
+      "Couleurs, photos, style, ambiance : tu fais ta page à ton image en quelques minutes. Besoin d'un visuel plus poussé ? Notre équipe t'accompagne.",
   },
   {
     n: "03",
     Icon: Rocket,
-    title: "Tu reçois tes premières réservations",
+    title: "Mets en ligne et reçois tes réservations",
     description:
-      "Ta page est en ligne. Tu partages le lien, et les réservations commencent à tomber dans ton dashboard.",
+      "Ta page est publiée. Tu partages le lien, et les réservations commencent à tomber dans ton dashboard.",
   },
 ] as const;
 
