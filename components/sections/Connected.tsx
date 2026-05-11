@@ -1,29 +1,44 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { UtensilsCrossed } from "lucide-react";
+import { CalendarDays, LayoutDashboard, Send, Star, UserCheck, type LucideIcon } from "lucide-react";
 import { Reveal } from "@/components/sections/Reveal";
 
-const cards = [
+type FeatureCard = {
+  position: string;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+};
+
+const cards: FeatureCard[] = [
   {
     position: "col-start-1 row-start-1",
-    kicker: "Page web pro",
-    title: "Une vraie page restaurant complète, pas juste un widget de réservation.",
+    icon: CalendarDays,
+    title: "Toutes tes réservations au même endroit",
+    description:
+      "Vue calendrier, statut de chaque table, pilotage en un coup d'œil. Tu gères ton service depuis un seul écran.",
   },
   {
     position: "col-start-3 row-start-1",
-    kicker: "Réservation en 1 clic",
-    title: "Le client réserve en moins de 30 secondes, sans friction.",
+    icon: UserCheck,
+    title: "Une base clients qui se construit toute seule",
+    description:
+      "Chaque réservation enrichit ton fichier. Tu sais qui revient, qui dépense, qui fête son anniversaire.",
   },
   {
     position: "col-start-1 row-start-3",
-    kicker: "Avis Google auto",
-    title: "Email automatique post-visite pour booster ta note.",
+    icon: Star,
+    title: "Ta note Google grimpe sans rien faire",
+    description:
+      "Email post-visite envoyé tout seul. Plus d'avis, meilleure note, plus de visibilité, plus de réservations.",
   },
   {
     position: "col-start-3 row-start-3",
-    kicker: "CRM clients intégré",
-    title: "Récupère et exploite chaque donnée client automatiquement.",
+    icon: Send,
+    title: "Des campagnes en 2 clics",
+    description:
+      "Relance tes inactifs, annonce un événement, fais revenir tes clients fidèles. Tu choisis le message, ZenGrow l'envoie.",
   },
 ];
 
@@ -74,51 +89,62 @@ export function Connected() {
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal className="mx-auto max-w-3xl text-center">
           <h2 className="font-landing-serif text-[clamp(2rem,4vw,3rem)] font-normal text-landing-fg">
-            Tout ce qu&apos;il faut pour <em className="italic text-landing-accent">convertir</em> un visiteur
+            Et derrière, une <em className="italic text-landing-accent">vraie plateforme</em> business
           </h2>
-          <p className="mt-4 text-landing-muted">Une page web qui vend, pas juste qui informe.</p>
+          <p className="mt-4 text-landing-muted">
+            ZenGrow, c&apos;est bien plus qu&apos;une page web. Une fois le client réservé, tout un système se met en
+            marche pour faire grandir ton resto.
+          </p>
         </Reveal>
 
         <div className="relative mx-auto mt-16 max-w-5xl overflow-x-auto pb-2">
           <div className="relative mx-auto min-w-[640px]">
             <ConnectorLines />
             <div className="relative z-10 grid grid-cols-3 grid-rows-3 gap-x-6 gap-y-10 sm:gap-x-10 sm:gap-y-12">
-            {cards.map((c, i) => (
-              <motion.div
-                key={c.kicker}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.08 + i * 0.1, duration: 0.55 }}
-                className={`${c.position} rounded-2xl border border-landing-border bg-landing-card/90 p-6 shadow-[0_0_50px_-30px_rgba(255,107,44,0.35)] backdrop-blur-sm`}
-              >
-                <p className="text-xs font-semibold uppercase tracking-wider text-landing-accent">{c.kicker}</p>
-                <p className="mt-3 text-sm leading-relaxed text-landing-fg/90">{c.title}</p>
-              </motion.div>
-            ))}
-            <div className="col-start-2 row-start-2 flex items-center justify-center">
-              <motion.div
-                className="relative flex size-24 items-center justify-center rounded-full border border-landing-accent/50 bg-gradient-to-br from-landing-accent/25 to-landing-card text-landing-accent-soft shadow-[0_0_60px_12px_rgba(255,107,44,0.45)]"
-                initial={{ scale: 0.85, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                animate={{
-                  boxShadow: [
-                    "0 0 50px 8px rgba(255,107,44,0.35)",
-                    "0 0 72px 18px rgba(255,107,44,0.55)",
-                    "0 0 50px 8px rgba(255,107,44,0.35)",
-                  ],
-                }}
-                transition={{
-                  scale: { duration: 0.55, delay: 0.15 },
-                  opacity: { duration: 0.55, delay: 0.15 },
-                  boxShadow: { duration: 3.2, repeat: Infinity, ease: "easeInOut" },
-                }}
-              >
-                <UtensilsCrossed className="size-9 text-landing-accent-soft" strokeWidth={1.25} />
-              </motion.div>
+              {cards.map((c, i) => {
+                const Icon = c.icon;
+                return (
+                  <motion.div
+                    key={c.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.08 + i * 0.1, duration: 0.55 }}
+                    className={`${c.position} rounded-2xl border border-landing-border bg-landing-card/90 p-6 shadow-[0_0_50px_-30px_rgba(255,107,44,0.35)] backdrop-blur-sm`}
+                  >
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-landing-accent/45 bg-landing-accent/10 text-landing-accent-soft">
+                      <Icon className="size-5" strokeWidth={1.35} aria-hidden />
+                    </div>
+                    <h3 className="mt-4 font-landing-serif text-lg font-normal leading-snug text-landing-fg">
+                      {c.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-landing-muted">{c.description}</p>
+                  </motion.div>
+                );
+              })}
+              <div className="col-start-2 row-start-2 flex items-center justify-center">
+                <motion.div
+                  className="relative flex size-24 items-center justify-center rounded-full border border-landing-accent/50 bg-gradient-to-br from-landing-accent/25 to-landing-card text-landing-accent-soft shadow-[0_0_60px_12px_rgba(255,107,44,0.45)]"
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  whileInView={{ scale: 1, opacity: 1 }}
+                  viewport={{ once: true }}
+                  animate={{
+                    boxShadow: [
+                      "0 0 50px 8px rgba(255,107,44,0.35)",
+                      "0 0 72px 18px rgba(255,107,44,0.55)",
+                      "0 0 50px 8px rgba(255,107,44,0.35)",
+                    ],
+                  }}
+                  transition={{
+                    scale: { duration: 0.55, delay: 0.15 },
+                    opacity: { duration: 0.55, delay: 0.15 },
+                    boxShadow: { duration: 3.2, repeat: Infinity, ease: "easeInOut" },
+                  }}
+                >
+                  <LayoutDashboard className="size-9 text-landing-accent-soft" strokeWidth={1.25} />
+                </motion.div>
+              </div>
             </div>
-          </div>
           </div>
         </div>
       </div>
