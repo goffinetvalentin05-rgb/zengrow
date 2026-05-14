@@ -7,7 +7,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar,
-  Clock,
   Copy,
   LayoutDashboard,
   LayoutGrid,
@@ -45,7 +44,6 @@ type DashboardSidebarProps = {
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
-  { href: "/dashboard/availability", label: "Disponibilités", icon: Clock },
   { href: "/dashboard/floor-plan", label: "Plan de salle", icon: LayoutGrid, requiresPro: true },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
   { href: "/dashboard/reviews", label: "Avis Google", icon: Star },

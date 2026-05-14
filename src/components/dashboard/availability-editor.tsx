@@ -19,11 +19,14 @@ type AvailabilityEditorProps = {
     reservation_slot_interval: number;
     reservation_duration: number;
   };
+  /** Intégré dans Paramètres : pas de PageHeader (évite d’écraser le titre du dashboard). */
+  embedded?: boolean;
 };
 
 export default function AvailabilityEditor({
   restaurantId,
   settings,
+  embedded = false,
 }: AvailabilityEditorProps) {
   const supabase = createClient();
   const [openingHours, setOpeningHours] = useState<OpeningHours>(settings.opening_hours);
@@ -84,17 +87,31 @@ export default function AvailabilityEditor({
   }
 
   return (
-    <section className="space-y-8 md:space-y-10">
-      <PageHeader
-        title="Disponibilités"
-        subtitle="Indiquez quand vous accueillez les réservations, configurez vos services et vos règles de capacité."
-        primaryAction={{
-          kind: "button",
-          label: saving ? "Enregistrement…" : "Enregistrer",
-          onClick: saveAvailability,
-          disabled: saving,
-        }}
-      />
+    <section className={embedded ? "space-y-6" : "space-y-8 md:space-y-10"}>
+      {embedded ? (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold tracking-tight text-zg-fg">Disponibilités</h2>
+            <p className="mt-1 text-sm text-zg-text-muted">
+              Indiquez quand vous accueillez les réservations, configurez vos services et vos règles de capacité.
+            </p>
+          </div>
+          <Button type="button" onClick={saveAvailability} disabled={saving} className="w-full shrink-0 sm:w-auto">
+            {saving ? "Enregistrement…" : "Enregistrer"}
+          </Button>
+        </div>
+      ) : (
+        <PageHeader
+          title="Disponibilités"
+          subtitle="Indiquez quand vous accueillez les réservations, configurez vos services et vos règles de capacité."
+          primaryAction={{
+            kind: "button",
+            label: saving ? "Enregistrement…" : "Enregistrer",
+            onClick: saveAvailability,
+            disabled: saving,
+          }}
+        />
+      )}
 
       {message ? (
         <ToastInline

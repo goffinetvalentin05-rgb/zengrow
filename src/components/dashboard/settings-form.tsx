@@ -6,13 +6,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Building2,
+  CalendarCheck2,
+  Clock,
   CreditCard,
   Globe2,
   LayoutGrid,
   Megaphone,
   Shield,
   Star,
-  CalendarCheck2,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
@@ -21,7 +22,8 @@ import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
-import { cn } from "@/src/lib/utils";
+import { cn, type OpeningHours } from "@/src/lib/utils";
+import AvailabilityEditor from "@/src/components/dashboard/availability-editor";
 import PublicPageLivePreview, { type PublicPagePreviewDraft } from "@/src/components/dashboard/public-page-live-preview";
 import BillingPlans from "@/src/components/dashboard/billing-plans";
 import ReviewAutomationPanel from "@/src/components/dashboard/review-automation-panel";
@@ -146,6 +148,12 @@ type SettingsFormProps = {
   subscriptionPlan: "starter" | "pro" | null;
   trialEndDate: string | null;
   isOwnerDev: boolean;
+  availabilitySettings: {
+    opening_hours: OpeningHours;
+    max_guests_per_slot: number;
+    reservation_slot_interval: number;
+    reservation_duration: number;
+  };
 };
 
 function ReservationField({
@@ -168,6 +176,7 @@ function ReservationField({
 
 type SettingsSectionKey =
   | "restaurant"
+  | "availability"
   | "public_page"
   | "reservations"
   | "floor_plan"
@@ -180,6 +189,8 @@ function sectionLabel(key: SettingsSectionKey) {
   switch (key) {
     case "restaurant":
       return { title: "Restaurant", description: "Nom, logo et informations" };
+    case "availability":
+      return { title: "Disponibilités", description: "Horaires, créneaux et capacité" };
     case "public_page":
       return { title: "Page publique", description: "Lien, présentation et réseaux sociaux" };
     case "reservations":
@@ -201,6 +212,8 @@ function sectionIcon(key: SettingsSectionKey) {
   switch (key) {
     case "restaurant":
       return Building2;
+    case "availability":
+      return Clock;
     case "public_page":
       return Globe2;
     case "reservations":
@@ -254,6 +267,7 @@ export default function SettingsForm({
   subscriptionStatus,
   trialEndDate,
   isOwnerDev,
+  availabilitySettings,
 }: SettingsFormProps) {
   const supabase = createClient();
   const router = useRouter();
@@ -262,6 +276,7 @@ export default function SettingsForm({
   const [activeSection, setActiveSection] = useState<SettingsSectionKey>(() =>
     ([
       "restaurant",
+      "availability",
       "public_page",
       "reservations",
       "floor_plan",
@@ -278,6 +293,7 @@ export default function SettingsForm({
     if (
       ([
         "restaurant",
+        "availability",
         "public_page",
         "reservations",
         "floor_plan",
@@ -846,6 +862,7 @@ export default function SettingsForm({
 
   const desktopSections: SettingsSectionKey[] = [
     "restaurant",
+    "availability",
     "public_page",
     "reservations",
     "floor_plan",
@@ -965,6 +982,12 @@ export default function SettingsForm({
     section: SettingsSectionKey;
     renderForm: (children: ReactNode, footer?: ReactNode) => ReactNode;
   }) {
+    if (section === "availability") {
+      return (
+        <AvailabilityEditor embedded restaurantId={restaurant.id} settings={availabilitySettings} />
+      );
+    }
+
     if (section === "subscription") {
       return (
         <SettingsSectionCard
