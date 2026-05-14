@@ -1,4 +1,5 @@
-import { addMinutes, endOfISOWeek, startOfISOWeek } from "date-fns";
+import { addMinutes, endOfISOWeek, endOfMonth, startOfISOWeek, startOfMonth, subDays } from "date-fns";
+import { fr } from "date-fns/locale";
 import { formatInTimeZone, toDate, toZonedTime } from "date-fns-tz";
 
 const ISO_DOW_TO_OPENING_KEY = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
@@ -99,4 +100,40 @@ export function isReservationSlotPastInBusinessTz(
   const end = reservationSlotEndInBusinessTz(reservationDate, reservationTime, durationMinutes);
   if (Number.isNaN(end.getTime())) return true;
   return ref.getTime() >= end.getTime();
+}
+
+/** Début et fin du mois civil (YYYY-MM-DD) dans le fuseau métier + libellé « mois année ». */
+export function monthBoundsInBusinessTz(ref: Date = new Date()): { startYmd: string; endYmd: string; label: string } {
+  const tz = businessCalendarTimeZone();
+  const z = toZonedTime(ref, tz);
+  const start = startOfMonth(z);
+  const end = endOfMonth(z);
+  return {
+    startYmd: formatInTimeZone(start, tz, "yyyy-MM-dd"),
+    endYmd: formatInTimeZone(end, tz, "yyyy-MM-dd"),
+    label: formatInTimeZone(start, tz, "LLLL yyyy", { locale: fr }),
+  };
+}
+
+/** Liste des YYYY-MM-DD des `n` derniers jours (du plus ancien au plus récent), fuseau métier. */
+export function lastNYmdDaysInBusinessTz(n: number, ref: Date = new Date()): string[] {
+  const tz = businessCalendarTimeZone();
+  const z = toZonedTime(ref, tz);
+  const out: string[] = [];
+  for (let i = n - 1; i >= 0; i -= 1) {
+    out.push(formatInTimeZone(subDays(z, i), tz, "yyyy-MM-dd"));
+  }
+  return out;
+}
+
+/** Instant ISO (début du jour YMD dans le fuseau métier). */
+export function startOfBusinessYmdAsUtcIso(ymd: string): string {
+  const tz = businessCalendarTimeZone();
+  return toDate(`${ymd}T00:00:00`, { timeZone: tz }).toISOString();
+}
+
+/** Fin du jour YMD (23:59:59.999) dans le fuseau métier, en ISO UTC. */
+export function endOfBusinessYmdAsUtcIso(ymd: string): string {
+  const tz = businessCalendarTimeZone();
+  return toDate(`${ymd}T23:59:59.999`, { timeZone: tz }).toISOString();
 }

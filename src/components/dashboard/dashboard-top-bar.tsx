@@ -22,7 +22,7 @@ type DashboardTopBarProps = {
 
 function fallbackTitleForPath(pathname: string | null, restaurantName: string): { title: string; subtitle?: string } {
   if (!pathname || pathname === "/dashboard") {
-    return { title: "Tableau de bord", subtitle: "Vue d'ensemble de votre activité" };
+    return { title: "Vue d'ensemble", subtitle: "Suivi de l'activité de ton restaurant" };
   }
   if (pathname.startsWith("/dashboard/reservations")) {
     return { title: "Réservations", subtitle: "Gère les demandes et confirmations." };
