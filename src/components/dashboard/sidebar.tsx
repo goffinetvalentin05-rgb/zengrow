@@ -4,23 +4,24 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Calendar,
-  CalendarDays,
   Clock,
   Copy,
-  ExternalLink,
-  Grid3x3,
   LayoutDashboard,
+  LayoutGrid,
   LogOut,
   Megaphone,
   Settings,
+  Sparkles,
   Star,
   Users,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import { cn } from "@/src/lib/utils";
-import Button, { buttonClassName } from "@/src/components/ui/button";
+import { buttonClassName } from "@/src/components/ui/button";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
+
+const NEW_RESERVATIONS_BADGE = 3;
 
 type DashboardSidebarProps = {
   reservationLink: string;
@@ -32,9 +33,9 @@ type DashboardSidebarProps = {
 
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
+  { href: "/dashboard/reservations", label: "Réservations", icon: Calendar, showNewBadge: true },
   { href: "/dashboard/availability", label: "Disponibilités", icon: Clock },
-  { href: "/dashboard/floor-plan", label: "Plan de salle", icon: Grid3x3, requiresPro: true },
+  { href: "/dashboard/floor-plan", label: "Plan de salle", icon: LayoutGrid, requiresPro: true },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
   { href: "/dashboard/reviews", label: "Avis Google", icon: Star },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
@@ -71,32 +72,37 @@ export default function DashboardSidebar({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col border-r border-zg-sidebar-border bg-zg-sidebar-bg transition-transform duration-150 ease-out md:static md:z-0 md:translate-x-0 md:border-r md:border-zg-sidebar-border",
-        mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0 md:shadow-none",
+        "fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-zg-border bg-zg-sidebar-bg transition-transform duration-200 ease-out md:static md:z-0 md:translate-x-0",
+        mobileOpen ? "translate-x-0 shadow-2xl shadow-black/40" : "-translate-x-full md:translate-x-0 md:shadow-none",
       )}
     >
-      <div className="shrink-0 px-6 py-6">
+      <div className="shrink-0 px-3 pb-2 pt-6">
         <Link
           href="/dashboard"
           onClick={onNavigate}
-          className="font-landing-serif text-xl italic leading-none text-zg-on-dark transition-opacity duration-150 hover:opacity-90"
+          className="flex items-center gap-2.5 px-3"
           aria-label="ZenGrow — tableau de bord"
         >
-          ZenGrow
+          <span className="font-landing-serif text-2xl italic leading-none text-zg-on-dark">ZenGrow</span>
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-zg-accent opacity-40" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-zg-accent" />
+          </span>
         </Link>
       </div>
 
-      <p className="mb-2 ml-3 mt-1 shrink-0 text-xs font-medium uppercase tracking-wider text-zg-on-dark-muted">
-        Navigation
+      <p className="mb-3 ml-3 mt-2 shrink-0 text-xs font-medium uppercase tracking-wider text-zg-on-dark-muted">
+        Menu
       </p>
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3 pb-4">
+      <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pb-4">
         {navItems.map((item) => (
           <NavItem
             key={item.href}
             href={item.href}
             label={item.label}
             icon={item.icon}
+            showNewBadge={item.showNewBadge}
             active={
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
@@ -108,42 +114,56 @@ export default function DashboardSidebar({
         ))}
       </nav>
 
-      <div className="mt-auto shrink-0 space-y-3 px-4 pb-4">
-        <div className="rounded-xl bg-white/5 p-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-zg-on-dark-muted">Lien public</p>
-          <p className="mt-2 truncate text-sm text-zg-on-dark" title={reservationLink}>
-            {reservationLink}
+      <div className="mt-auto shrink-0 space-y-3 px-3 pb-6">
+        <div className="rounded-2xl border border-zg-border-accent/50 bg-zg-surface p-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zg-accent-soft-bg">
+            <Sparkles className="h-[18px] w-[18px] text-zg-accent" strokeWidth={1.85} aria-hidden />
+          </div>
+          <p className="mt-3 text-sm font-semibold text-zg-on-dark">Booste ton resto</p>
+          <p className="mt-1 text-xs leading-relaxed text-zg-on-dark-muted">
+            Active toutes les automatisations en 1 clic.
           </p>
-          <div className="mt-3 flex gap-2">
-            <a
-              href={reservationLink}
-              target="_blank"
-              rel="noreferrer"
-              className={buttonClassName({
-                variant: "ghostDark",
-                size: "sm",
-                className: "flex-1 border border-white/10",
-              })}
+          <Link
+            href="/dashboard/settings?section=subscription"
+            onClick={onNavigate}
+            className={buttonClassName({
+              variant: "primary",
+              size: "md",
+              className: "mt-3 w-full",
+            })}
+          >
+            Activer Pro
+          </Link>
+        </div>
+
+        <div className="rounded-xl px-1">
+          <div className="flex items-center gap-2">
+            <p className="min-w-0 flex-1 truncate text-xs text-zg-on-dark-muted" title={reservationLink}>
+              {reservationLink}
+            </p>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zg-on-dark-muted transition-all duration-200 ease-out hover:bg-white/5 hover:text-zg-on-dark"
+              aria-label="Copier le lien public"
             >
-              <ExternalLink className="h-4 w-4" strokeWidth={2} aria-hidden />
-              Page publique
-            </a>
-            <Button type="button" variant="ghostDark" size="sm" className="flex-1 border border-white/10" onClick={handleCopy}>
-              <Copy className="h-4 w-4" strokeWidth={2} aria-hidden />
-              Copier
-            </Button>
+              <Copy className="h-4 w-4" strokeWidth={2} />
+            </button>
           </div>
         </div>
 
-        <Button
+        <button
           type="button"
-          variant="ghostDark"
-          className="w-full justify-start gap-2 border border-transparent px-3"
+          className={buttonClassName({
+            variant: "ghostDark",
+            size: "md",
+            className: "w-full justify-start gap-3 px-3 text-zg-on-dark-muted hover:text-zg-on-dark",
+          })}
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-          Se déconnecter
-        </Button>
+          Déconnexion
+        </button>
       </div>
     </aside>
   );
@@ -155,6 +175,7 @@ function NavItem({
   icon: Icon,
   active,
   locked,
+  showNewBadge,
   onNavigate,
 }: {
   href: string;
@@ -162,6 +183,7 @@ function NavItem({
   icon: LucideIcon;
   active: boolean;
   locked?: boolean;
+  showNewBadge?: boolean;
   onNavigate?: () => void;
 }) {
   return (
@@ -169,21 +191,33 @@ function NavItem({
       href={href}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
-        active
-          ? "border-l-[3px] border-zg-accent bg-zg-accent/15 text-zg-accent"
-          : "border-l-[3px] border-transparent text-zg-on-dark-muted hover:bg-white/5 hover:text-zg-on-dark",
+        "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 ease-out",
+        locked
+          ? "text-zg-on-dark-muted/80 hover:bg-white/[0.04] hover:text-zg-on-dark"
+          : active
+            ? "bg-zg-accent text-white shadow-[0_0_24px_-8px_rgba(232,93,44,0.65)]"
+            : "text-zg-on-dark-muted hover:bg-white/5 hover:text-zg-on-dark",
       )}
     >
-      <Icon size={18} strokeWidth={active ? 2 : 1.75} className="shrink-0" aria-hidden />
+      <Icon
+        size={20}
+        strokeWidth={active && !locked ? 2 : 1.75}
+        className={cn("shrink-0", active && !locked ? "text-white" : "")}
+        aria-hidden
+      />
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      {locked ? (
+      {showNewBadge ? (
         <span
           className={cn(
-            "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-            active ? "bg-white/10 text-zg-on-dark" : "bg-white/5 text-zg-on-dark-muted",
+            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums",
+            active && !locked ? "bg-white/25 text-white" : "bg-zg-accent text-white",
           )}
         >
+          {NEW_RESERVATIONS_BADGE}
+        </span>
+      ) : null}
+      {locked ? (
+        <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-on-dark-muted">
           Pro
         </span>
       ) : null}

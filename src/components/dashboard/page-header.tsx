@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ReactNode } from "react";
+import { ReactNode, useLayoutEffect } from "react";
 import { CheckCircle2, Copy } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import ActionMenu, { ActionMenuItem } from "@/src/components/dashboard/ui/action-menu";
 import Button, { buttonClassName } from "@/src/components/ui/button";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
+import { useSetDashboardTitle } from "@/src/components/dashboard/dashboard-title-context";
 
 type HeaderAction =
   | { kind: "link"; href: string; label: string; icon?: ReactNode }
@@ -89,6 +90,16 @@ export default function PageHeader({
   menuItems,
   children,
 }: PageHeaderProps) {
+  const setDashboardTitle = useSetDashboardTitle();
+
+  useLayoutEffect(() => {
+    if (!setDashboardTitle) return;
+    setDashboardTitle({ title, subtitle });
+    return () => {
+      setDashboardTitle(null);
+    };
+  }, [title, subtitle, setDashboardTitle]);
+
   return (
     <section className={cn("space-y-4 md:space-y-5", className)}>
       <header className="dashboard-page-header flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-6">
