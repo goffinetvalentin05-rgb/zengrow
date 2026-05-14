@@ -32,10 +32,11 @@ type PageHeaderProps = {
 
 function HeaderActionButton({ action, variant }: { action: HeaderAction; variant: "primary" | "secondary" | "ghost" }) {
   const showToast = useDashboardToast();
+  const responsiveBtn = "w-full justify-center sm:w-auto";
 
   if (action.kind === "link") {
     return (
-      <Link href={action.href} className={buttonClassName({ variant, size: "sm" })}>
+      <Link href={action.href} className={buttonClassName({ variant, size: "sm", className: responsiveBtn })}>
         {action.icon}
         {action.label}
       </Link>
@@ -44,7 +45,12 @@ function HeaderActionButton({ action, variant }: { action: HeaderAction; variant
 
   if (action.kind === "external") {
     return (
-      <a href={action.href} target="_blank" rel="noreferrer" className={buttonClassName({ variant, size: "sm" })}>
+      <a
+        href={action.href}
+        target="_blank"
+        rel="noreferrer"
+        className={buttonClassName({ variant, size: "sm", className: responsiveBtn })}
+      >
         {action.icon}
         {action.label}
       </a>
@@ -53,7 +59,7 @@ function HeaderActionButton({ action, variant }: { action: HeaderAction; variant
 
   if (action.kind === "button") {
     return (
-      <Button type="button" variant={variant} size="sm" onClick={action.onClick} disabled={action.disabled}>
+      <Button type="button" variant={variant} size="sm" className={responsiveBtn} onClick={action.onClick} disabled={action.disabled}>
         {action.icon}
         {action.label}
       </Button>
@@ -65,6 +71,7 @@ function HeaderActionButton({ action, variant }: { action: HeaderAction; variant
       type="button"
       variant={variant}
       size="sm"
+      className={responsiveBtn}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(action.value);
@@ -109,7 +116,7 @@ export default function PageHeader({
           {subtitle ? <p className="dashboard-section-subtitle mt-2 max-w-2xl">{subtitle}</p> : null}
         </div>
         {(primaryAction || secondaryActions.length > 0 || (menuItems && menuItems.length > 0)) ? (
-          <div className="flex shrink-0 flex-wrap items-center gap-2 md:justify-end md:pt-1">
+          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center md:justify-end md:pt-1">
             {secondaryActions.slice(0, 2).map((action) => (
               <HeaderActionButton key={action.label} action={action} variant="secondary" />
             ))}

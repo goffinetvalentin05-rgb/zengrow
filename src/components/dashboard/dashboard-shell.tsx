@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/src/lib/utils";
 import DashboardSidebar from "@/src/components/dashboard/sidebar";
 import DashboardTopBar from "@/src/components/dashboard/dashboard-top-bar";
@@ -34,18 +35,27 @@ export default function DashboardShell({
 }: DashboardShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+  const overlayTransition = { type: "tween" as const, duration: 0.25, ease: [0, 0, 0.2, 1] as const };
+
   return (
     <DashboardToastProvider>
       <DashboardTitleProvider>
         <div className={cn(fontClassName, "min-h-screen bg-zg-app text-zg-fg antialiased")}>
-          {mobileNavOpen ? (
-            <button
-              type="button"
-              className="fixed inset-0 z-40 bg-black/55 backdrop-blur-[2px] transition-opacity duration-200 ease-out md:hidden"
-              aria-label="Fermer le menu"
-              onClick={() => setMobileNavOpen(false)}
-            />
-          ) : null}
+          <AnimatePresence>
+            {mobileNavOpen ? (
+              <motion.button
+                key="dashboard-nav-overlay"
+                type="button"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={overlayTransition}
+                className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+                aria-label="Fermer le menu de navigation"
+                onClick={() => setMobileNavOpen(false)}
+              />
+            ) : null}
+          </AnimatePresence>
 
           <div className="flex min-h-screen">
             <DashboardSidebar

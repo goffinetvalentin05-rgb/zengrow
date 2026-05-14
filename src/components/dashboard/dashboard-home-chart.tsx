@@ -116,47 +116,51 @@ export default function DashboardHomeChart({ series }: { series: DashboardChartD
         </span>
       </div>
 
-      <div className="mt-6 h-[320px] w-full min-w-0">
+      <div className="mt-6 min-w-0 overflow-x-auto md:overflow-x-visible">
         {empty ? (
-          <EmptyState
-            className="h-full py-8"
-            icon={BarChart3}
-            title="Pas encore de données"
-            description="Tes premières réservations apparaîtront ici. Partage ta page publique pour remplir ce graphique."
-          />
+          <div className="h-[320px] w-full min-w-0">
+            <EmptyState
+              className="h-full py-8"
+              icon={BarChart3}
+              title="Pas encore de données"
+              description="Tes premières réservations apparaîtront ici. Partage ta page publique pour remplir ce graphique."
+            />
+          </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barGap={4} barCategoryGap="18%">
-              <CartesianGrid strokeDasharray="3 6" stroke="var(--zg-border)" vertical={false} opacity={0.85} />
-              <XAxis
-                dataKey="label"
-                tick={{ fill: "#6B6258", fontSize: 11 }}
-                tickLine={false}
-                axisLine={{ stroke: "#2A1F17" }}
-              />
-              <YAxis
-                tick={{ fill: "#6B6258", fontSize: 11 }}
-                tickLine={false}
-                axisLine={{ stroke: "#2A1F17" }}
-                allowDecimals={false}
-                width={36}
-              />
-              <Tooltip
-                cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                contentStyle={{
-                  background: "#1C1612",
-                  border: "1px solid rgba(232, 93, 44, 0.25)",
-                  borderRadius: "12px",
-                  fontSize: "12px",
-                  color: "#FAF7F2",
-                }}
-                labelStyle={{ color: "#B5ABA0", marginBottom: 4 }}
-              />
-              <Bar dataKey="reservations" name="Réservations" fill="#E85D2C" radius={[6, 6, 0, 0]} maxBarSize={28} />
-              <Bar dataKey="covers" name="Couverts" fill="#A855F7" radius={[6, 6, 0, 0]} maxBarSize={28} />
-              <Bar dataKey="newClients" name="Nouveaux clients" fill="#3B82F6" radius={[6, 6, 0, 0]} maxBarSize={28} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-[320px] w-full min-w-[540px] md:min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barGap={4} barCategoryGap="18%">
+                <CartesianGrid strokeDasharray="3 6" stroke="var(--zg-border)" vertical={false} opacity={0.85} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: "#6B6258", fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={{ stroke: "#2A1F17" }}
+                />
+                <YAxis
+                  tick={{ fill: "#6B6258", fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={{ stroke: "#2A1F17" }}
+                  allowDecimals={false}
+                  width={36}
+                />
+                <Tooltip
+                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                  contentStyle={{
+                    background: "#1C1612",
+                    border: "1px solid rgba(232, 93, 44, 0.25)",
+                    borderRadius: "12px",
+                    fontSize: "12px",
+                    color: "#FAF7F2",
+                  }}
+                  labelStyle={{ color: "#B5ABA0", marginBottom: 4 }}
+                />
+                <Bar dataKey="reservations" name="Réservations" fill="#E85D2C" radius={[6, 6, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="covers" name="Couverts" fill="#A855F7" radius={[6, 6, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="newClients" name="Nouveaux clients" fill="#3B82F6" radius={[6, 6, 0, 0]} maxBarSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </div>
     </div>
