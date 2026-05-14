@@ -11,15 +11,15 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "border border-transparent bg-gradient-to-r from-[#1F7A6C] to-[#3DBE9F] text-white shadow-[0_10px_28px_-12px_rgba(31,122,108,0.78)] hover:brightness-[1.03] active:brightness-[0.98] focus-visible:ring-2 focus-visible:ring-[#1F7A6C]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-canvas",
+    "border border-transparent bg-gradient-to-r from-[#E85D2C] to-[#EA7349] text-white shadow-[0_10px_28px_-12px_rgba(232,93,44,0.45)] hover:brightness-[1.02] active:brightness-[0.98] focus-visible:ring-2 focus-visible:ring-[#E85D2C]/35 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-canvas",
   secondary:
-    "border border-[#CBE6DF] bg-white/95 text-[#0F3F3A] shadow-sm hover:border-[#A3D8CC] hover:bg-[#F0F9F7] focus-visible:ring-2 focus-visible:ring-[#1F7A6C]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-canvas",
+    "border border-zg-border-strong bg-zg-surface text-zg-fg shadow-sm hover:border-zg-border-accent hover:bg-zg-highlight/70 focus-visible:ring-2 focus-visible:ring-zg-teal/22 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-canvas",
   ghost:
-    "border border-transparent bg-transparent text-[#0F3F3A]/72 hover:bg-[#F0F9F7] hover:text-[#0F3F3A] focus-visible:ring-2 focus-visible:ring-[#1F7A6C]/22 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-canvas",
+    "border border-transparent bg-transparent text-zg-muted hover:bg-zg-highlight/80 hover:text-zg-fg focus-visible:ring-2 focus-visible:ring-zg-teal/18 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-canvas",
   ghostInverse:
-    "border border-transparent bg-transparent text-[#0F3F3A]/72 hover:bg-[#F0F9F7] hover:text-[#0F3F3A] focus-visible:ring-2 focus-visible:ring-[#1F7A6C]/22 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+    "border border-transparent bg-transparent text-zg-muted hover:bg-zg-highlight/80 hover:text-zg-fg focus-visible:ring-2 focus-visible:ring-zg-teal/18 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
   danger:
-    "border border-transparent bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-400/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-canvas",
+    "border border-transparent bg-[#DC2626] text-white shadow-sm hover:bg-[#B91C1C] focus-visible:ring-2 focus-visible:ring-red-400/45 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-canvas",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

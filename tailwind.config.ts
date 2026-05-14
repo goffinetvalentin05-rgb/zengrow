@@ -1,9 +1,8 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Palette landing ZenGrow (miroir de `app/globals.css` @theme).
- * Tailwind v4 applique surtout les tokens via CSS ; ce fichier documente
- * la palette et assure la compatibilité si le thème JS est pris en charge.
+ * Tailwind v4 : la palette dashboard vit surtout dans `app/globals.css` (:root + @theme).
+ * Ici : landing + rappel des chemins `content`.
  */
 const config: Config = {
   content: [

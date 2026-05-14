@@ -21,13 +21,13 @@ export default async function DashboardLayout({
   const publicLink = origin ? `${origin}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
 
   return (
-    <div className={`${inter.className} relative min-h-screen text-zg-fg`}>
+    <div className={`${inter.className} relative min-h-screen bg-zg-canvas font-sans text-zg-fg antialiased`}>
       <div className="zg-dashboard-backdrop" aria-hidden>
         <div className="zg-dashboard-backdrop__glow-a" />
         <div className="zg-dashboard-backdrop__glow-b" />
         <div className="zg-dashboard-backdrop__glow-c" />
       </div>
-      <div className="relative z-10 mx-auto flex max-w-[1440px] flex-col gap-0 px-4 py-6 md:flex-row md:items-start md:gap-8 md:px-6 md:py-8">
+      <div className="relative z-10 mx-auto flex max-w-[1480px] flex-col gap-0 px-4 py-5 md:flex-row md:items-stretch md:gap-6 md:px-6 md:py-7">
         <DashboardSidebar
           reservationLink={publicLink}
           subscriptionPlan={access.effectivePlan}

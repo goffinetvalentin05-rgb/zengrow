@@ -24,26 +24,32 @@ html {
   --badge-sand-text: #6b7280;
   --danger-bg: #fef2f2;
   --danger-text: #991b1b;
-  --focus-ring: 0 0 0 3px rgba(22, 101, 52, 0.2);
+  --focus-ring: 0 0 0 3px rgba(232, 93, 44, 0.22);
 
-  /* ZenGrow — aligné landing + dashboard (réutilisable) */
-  --zg-canvas: #f6fbfa;
-  --zg-canvas-mid: #f1faf7;
-  --zg-fg: #0f3f3a;
-  --zg-teal: #1f7a6c;
-  --zg-mint: #3dbe9f;
-  --zg-border: #ddefea;
-  --zg-border-strong: #d1eae4;
-  --zg-border-accent: #cbe6df;
+  /* ZenGrow dashboard — light premium (warm neutrals + accent orange) */
+  --zg-canvas: #fafaf7;
+  --zg-canvas-mid: #f7f5f0;
+  --zg-fg: #1a1614;
+  --zg-muted: #6b6258;
+  --zg-fg-muted: #a39b8e;
+  /* Tokens historiques zg-teal / zg-mint = accent (évite de renommer toutes les classes) */
+  --zg-teal: #e85d2c;
+  --zg-mint: #ea7349;
+  --zg-border: #ede9e1;
+  --zg-border-strong: #e5e0d6;
+  --zg-border-accent: #edd5c8;
   --zg-surface: #ffffff;
-  --zg-surface-elevated: #f9fdfc;
-  --zg-surface-soft: #f3fbf8;
-  --zg-highlight: #eaf8f4;
-  --zg-glow-from: rgba(31, 122, 108, 0.2);
-  --zg-glow-via: rgba(61, 190, 159, 0.16);
-  --zg-shadow-card: 0 22px 48px -34px rgba(15, 63, 58, 0.42);
-  --zg-shadow-card-soft: 0 14px 34px -28px rgba(15, 63, 58, 0.3);
-  --zg-shadow-sidebar: 0 28px 56px -40px rgba(15, 63, 58, 0.38);
+  --zg-surface-elevated: #ffffff;
+  --zg-surface-soft: #f5f2ec;
+  --zg-highlight: #fff4ed;
+  --zg-glow-from: rgba(232, 93, 44, 0.07);
+  --zg-glow-via: rgba(232, 93, 44, 0.035);
+  --zg-shadow-card: 0 1px 0 rgba(26, 22, 20, 0.04), 0 14px 44px -28px rgba(26, 22, 20, 0.14);
+  --zg-shadow-card-soft: 0 1px 0 rgba(26, 22, 20, 0.03), 0 10px 32px -22px rgba(26, 22, 20, 0.1);
+  --zg-shadow-sidebar: 0 18px 50px -32px rgba(26, 22, 20, 0.12);
+  --zg-success: #16a34a;
+  --zg-warning: #f59e0b;
+  --zg-danger: #dc2626;
 }
 
 @theme inline {
@@ -66,6 +72,8 @@ html {
   --color-zg-canvas: var(--zg-canvas);
   --color-zg-canvas-mid: var(--zg-canvas-mid);
   --color-zg-fg: var(--zg-fg);
+  --color-zg-muted: var(--zg-muted);
+  --color-zg-fg-muted: var(--zg-fg-muted);
   --color-zg-teal: var(--zg-teal);
   --color-zg-mint: var(--zg-mint);
   --color-zg-border: var(--zg-border);
@@ -75,6 +83,9 @@ html {
   --color-zg-surface-elevated: var(--zg-surface-elevated);
   --color-zg-surface-soft: var(--zg-surface-soft);
   --color-zg-highlight: var(--zg-highlight);
+  --color-zg-success: var(--zg-success);
+  --color-zg-warning: var(--zg-warning);
+  --color-zg-danger: var(--zg-danger);
 
   --shadow-zg-card: var(--zg-shadow-card);
   --shadow-zg-soft: var(--zg-shadow-card-soft);
@@ -94,7 +105,7 @@ body {
 }
 
 ::selection {
-  background: rgba(22, 101, 52, 0.12);
+  background: rgba(232, 93, 44, 0.14);
 }
 
 @keyframes accordion-down {
@@ -130,7 +141,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(15, 63, 58, 0.52);
+  color: color-mix(in srgb, var(--zg-fg-muted) 92%, transparent);
 }
 
 .dashboard-section-kicker {
@@ -138,18 +149,19 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: rgba(15, 63, 58, 0.48);
+  color: color-mix(in srgb, var(--zg-fg-muted) 88%, transparent);
 }
 
 .dashboard-page-title {
-  font-size: clamp(1.375rem, 1.2rem + 0.45vw, 1.625rem);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.22;
+  font-family: var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 1.25rem + 0.55vw, 1.875rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
   color: var(--zg-fg);
 }
 
-/* Titres de page dashboard (sous la barre supérieure) */
+/* Titres de section (Inter) */
 .dashboard-section-heading {
   font-size: clamp(1.35rem, 1.15rem + 0.45vw, 1.5rem);
   font-weight: 700;
@@ -161,7 +173,7 @@ body {
 .dashboard-section-subtitle {
   font-size: 0.9375rem;
   line-height: 1.55;
-  color: rgba(15, 63, 58, 0.56);
+  color: color-mix(in srgb, var(--zg-muted) 92%, transparent);
 }
 
 .dashboard-link-secondary {
@@ -178,7 +190,7 @@ body {
 }
 
 .dashboard-link-secondary:hover {
-  background: rgba(240, 249, 247, 0.95);
+  background: color-mix(in srgb, var(--zg-highlight) 85%, white);
   color: var(--zg-fg);
 }
 
@@ -186,10 +198,10 @@ body {
 .dashboard-page-header {
   margin-bottom: 1.75rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--zg-border) 88%, transparent);
+  border-bottom: 1px solid var(--zg-border);
 }
 
-/* Fond décoratif type landing (héros) — utilisé par le layout dashboard */
+/* Fond dashboard — très léger, type SaaS premium */
 .zg-dashboard-backdrop {
   pointer-events: none;
   position: fixed;
@@ -204,45 +216,45 @@ body {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    165deg,
+    180deg,
     var(--zg-canvas) 0%,
-    color-mix(in srgb, var(--zg-canvas-mid) 92%, white) 42%,
+    color-mix(in srgb, var(--zg-canvas-mid) 55%, var(--zg-canvas)) 38%,
     var(--zg-canvas) 100%
   );
 }
 
 .zg-dashboard-backdrop__glow-a {
   position: absolute;
-  left: min(8vw, 6rem);
-  top: -6rem;
-  height: min(70vw, 28rem);
-  width: min(90vw, 44rem);
+  left: min(6vw, 4rem);
+  top: -20%;
+  height: min(55vw, 22rem);
+  width: min(70vw, 32rem);
   border-radius: 9999px;
-  background: linear-gradient(135deg, var(--zg-glow-from), var(--zg-glow-via), transparent 72%);
-  filter: blur(48px);
-  opacity: 0.85;
+  background: linear-gradient(135deg, var(--zg-glow-from), transparent 72%);
+  filter: blur(56px);
+  opacity: 0.55;
 }
 
 .zg-dashboard-backdrop__glow-b {
   position: absolute;
-  right: -4rem;
-  bottom: 10%;
-  height: min(65vw, 22rem);
-  width: min(85vw, 36rem);
+  right: -5%;
+  bottom: 5%;
+  height: min(50vw, 18rem);
+  width: min(65vw, 28rem);
   border-radius: 9999px;
-  background: linear-gradient(200deg, rgba(61, 190, 159, 0.12), rgba(31, 122, 108, 0.08), transparent 70%);
-  filter: blur(44px);
-  opacity: 0.75;
+  background: linear-gradient(200deg, var(--zg-glow-via), transparent 75%);
+  filter: blur(48px);
+  opacity: 0.45;
 }
 
 .zg-dashboard-backdrop__glow-c {
   position: absolute;
-  left: 40%;
-  top: 45%;
-  height: 14rem;
-  width: 14rem;
+  left: 42%;
+  top: 38%;
+  height: 12rem;
+  width: 12rem;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(61, 190, 159, 0.09) 0%, transparent 68%);
-  filter: blur(32px);
-  opacity: 0.9;
+  background: radial-gradient(circle, rgba(232, 93, 44, 0.04) 0%, transparent 70%);
+  filter: blur(28px);
+  opacity: 0.85;
 }

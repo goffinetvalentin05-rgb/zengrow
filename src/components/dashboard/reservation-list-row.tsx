@@ -52,14 +52,14 @@ export default function ReservationListRow({
         <>
           <GuestAvatar name={guestName} size="md" />
           <div className="min-w-0 flex-1">
-            <p className="text-base font-bold tabular-nums text-[#1F7A6C]">{timeLabel}</p>
-            <p className="mt-1 truncate text-[15px] font-bold text-[#0F3F3A]">{guestName}</p>
-            {subtitle ? <p className="mt-0.5 text-sm text-[#0F3F3A]/55">{subtitle}</p> : null}
+            <p className="text-base font-bold tabular-nums text-zg-teal">{timeLabel}</p>
+            <p className="mt-1 truncate text-[15px] font-bold text-zg-fg">{guestName}</p>
+            {subtitle ? <p className="mt-0.5 text-sm text-zg-muted">{subtitle}</p> : null}
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
             {walkInBadge}
             {showZoneBadge ? (
-              <span className="rounded-full border border-[#CBE6DF] bg-[#F0F9F7] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#1F7A6C]">
+              <span className="rounded-full border border-zg-border bg-zg-highlight px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-teal">
                 {zoneLabel}
               </span>
             ) : null}
@@ -70,30 +70,30 @@ export default function ReservationListRow({
         <>
           <GuestAvatar name={guestName} size="md" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] font-bold text-[#0F3F3A]">{guestName}</p>
-            {subtitle ? <p className="mt-0.5 text-sm text-[#0F3F3A]/55">{subtitle}</p> : null}
+            <p className="truncate text-[15px] font-bold text-zg-fg">{guestName}</p>
+            {subtitle ? <p className="mt-0.5 text-sm text-zg-muted">{subtitle}</p> : null}
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
             {walkInBadge}
             {showZoneBadge ? (
-              <span className="rounded-full border border-[#CBE6DF] bg-[#F0F9F7] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#1F7A6C]">
+              <span className="rounded-full border border-zg-border bg-zg-highlight px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-teal">
                 {zoneLabel}
               </span>
             ) : null}
-            <span className="text-[15px] font-bold tabular-nums text-[#1F7A6C]">{timeLabel}</span>
+            <span className="text-[15px] font-bold tabular-nums text-zg-teal">{timeLabel}</span>
             <StatusBadge status={status} displayLabel={statusDisplayLabel} />
           </div>
         </>
       );
 
-    const listRowClass = cn("flex w-full items-start gap-4 border-b border-zg-border/75 py-4 text-left last:border-b-0", className);
+    const listRowClass = cn("flex w-full items-start gap-4 border-b border-zg-border py-4 text-left last:border-b-0", className);
 
     if (onClick) {
       return (
         <button
           type="button"
           onClick={onClick}
-          className={cn(listRowClass, "cursor-pointer rounded-xl px-2 transition hover:bg-zg-highlight/45")}
+          className={cn(listRowClass, "cursor-pointer rounded-xl px-2 transition hover:bg-zg-highlight/55")}
         >
           {listInner}
         </button>
@@ -109,15 +109,15 @@ export default function ReservationListRow({
       <div className="min-w-0 flex-1">
         {emphasizeTime ? (
           <>
-            <p className="text-base font-semibold tabular-nums text-[#1F7A6C]">{timeLabel}</p>
-            <p className="mt-1 truncate text-[15px] font-semibold text-[#0F3F3A]">{guestName}</p>
-            {subtitle ? <p className="mt-0.5 text-sm text-[#0F3F3A]/55">{subtitle}</p> : null}
+            <p className="text-base font-semibold tabular-nums text-zg-teal">{timeLabel}</p>
+            <p className="mt-1 truncate text-[15px] font-semibold text-zg-fg">{guestName}</p>
+            {subtitle ? <p className="mt-0.5 text-sm text-zg-muted">{subtitle}</p> : null}
           </>
         ) : (
           <>
-            <p className="truncate text-[15px] font-semibold text-[#0F3F3A]">{guestName}</p>
-            <p className="mt-0.5 text-sm text-[#0F3F3A]/55">
-              <span className="font-semibold tabular-nums text-[#1F7A6C]">{timeLabel}</span>
+            <p className="truncate text-[15px] font-semibold text-zg-fg">{guestName}</p>
+            <p className="mt-0.5 text-sm text-zg-muted">
+              <span className="font-semibold tabular-nums text-zg-teal">{timeLabel}</span>
               {subtitle ? <span>{` · ${subtitle}`}</span> : null}
             </p>
           </>
@@ -126,7 +126,7 @@ export default function ReservationListRow({
       <div className="flex shrink-0 flex-col items-end gap-2">
         {walkInBadge}
         {showZoneBadge ? (
-          <span className="rounded-full border border-[#CBE6DF] bg-[#F0F9F7] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#1F7A6C]">
+          <span className="rounded-full border border-zg-border bg-zg-highlight px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-teal">
             {zoneLabel}
           </span>
         ) : null}
@@ -136,8 +136,8 @@ export default function ReservationListRow({
   );
 
   const rowClass = cn(
-    "flex w-full items-center gap-4 rounded-2xl border border-zg-border-strong/85 bg-zg-surface/92 p-4 text-left shadow-zg-soft backdrop-blur-sm transition md:p-5",
-    onClick && "cursor-pointer hover:border-zg-mint/40 hover:bg-zg-surface/96 hover:shadow-zg-soft",
+    "flex w-full items-center gap-4 rounded-2xl border border-zg-border bg-zg-surface p-4 text-left shadow-zg-soft transition md:p-5",
+    onClick && "cursor-pointer hover:border-zg-border-accent hover:bg-zg-highlight/35 hover:shadow-zg-soft",
     className,
   );
 

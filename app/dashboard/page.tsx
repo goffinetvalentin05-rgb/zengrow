@@ -14,7 +14,7 @@ import Button from "@/src/components/ui/button";
 
 const sectionIntroClass =
   "text-xl font-bold tracking-[-0.02em] text-zg-fg md:text-[1.375rem] md:leading-snug";
-const sectionDescClass = "mt-2 text-sm leading-relaxed text-zg-fg/58";
+const sectionDescClass = "mt-2 text-sm leading-relaxed text-zg-muted";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -110,7 +110,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {timelineReservations.length === 0 ? (
-              <p className="py-14 text-center text-sm text-zg-fg/48">Aucune réservation aujourd&apos;hui.</p>
+              <p className="py-14 text-center text-sm text-zg-fg-muted">Aucune réservation aujourd&apos;hui.</p>
             ) : (
               <div className="-mx-2">
                 {timelineReservations.map((reservation) => (
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               {upcomingReservations.length === 0 ? (
-                <p className="py-10 text-center text-sm text-zg-fg/48">Rien de prévu pour l&apos;instant.</p>
+                <p className="py-10 text-center text-sm text-zg-fg-muted">Rien de prévu pour l&apos;instant.</p>
               ) : (
                 <div className="-mx-2">
                   {upcomingReservations.slice(0, 8).map((reservation) => (
@@ -192,28 +192,28 @@ export default async function DashboardPage() {
               <Link href="/dashboard/reservations" className="inline-flex">
                 <Button type="button" variant="secondary" className="w-full justify-between">
                   <span className="inline-flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-zg-teal/70" strokeWidth={2} />
+                    <CalendarDays className="h-4 w-4 text-zg-teal/80" strokeWidth={2} />
                     Réservations
                   </span>
-                  <span className="text-zg-fg/45">→</span>
+                  <span className="text-zg-fg-muted">→</span>
                 </Button>
               </Link>
               <Link href="/dashboard/floor-plan" className="inline-flex">
                 <Button type="button" variant="secondary" className="w-full justify-between">
                   <span className="inline-flex items-center gap-2">
-                    <LayoutGrid className="h-4 w-4 text-zg-teal/70" strokeWidth={2} />
+                    <LayoutGrid className="h-4 w-4 text-zg-teal/80" strokeWidth={2} />
                     Plan de salle
                   </span>
-                  <span className="text-zg-fg/45">→</span>
+                  <span className="text-zg-fg-muted">→</span>
                 </Button>
               </Link>
               <Link href="/dashboard/settings" className="inline-flex">
                 <Button type="button" variant="secondary" className="w-full justify-between">
                   <span className="inline-flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-zg-teal/70" strokeWidth={2} />
+                    <Settings className="h-4 w-4 text-zg-teal/80" strokeWidth={2} />
                     Paramètres
                   </span>
-                  <span className="text-zg-fg/45">→</span>
+                  <span className="text-zg-fg-muted">→</span>
                 </Button>
               </Link>
             </CardContent>
