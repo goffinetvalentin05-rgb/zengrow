@@ -44,11 +44,11 @@ export function DashboardToastProvider({ children }: { children: React.ReactNode
               <motion.div
                 key={t.id}
                 layout
-                initial={{ x: 56, opacity: 0 }}
+                initial={{ x: 48, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 56, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                className="pointer-events-auto flex items-start gap-3 rounded-xl border border-white/10 bg-[#1A1614] px-4 py-3 text-sm leading-snug text-white shadow-[0_0_0_1px_rgba(232,93,44,0.14),0_0_28px_-4px_rgba(232,93,44,0.35),0_16px_40px_-12px_rgba(0,0,0,0.5)]"
+                exit={{ x: 48, opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.33, 1, 0.68, 1] }}
+                className="pointer-events-auto flex items-start gap-3 rounded-xl border border-zg-accent/30 bg-zg-surface-elevated px-4 py-3 text-sm leading-snug text-zg-fg shadow-2xl shadow-black/40 ring-1 ring-zg-accent/20"
                 role="status"
               >
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-zg-accent" aria-hidden />

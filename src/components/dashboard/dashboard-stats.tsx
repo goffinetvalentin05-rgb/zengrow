@@ -85,13 +85,15 @@ export async function DashboardStats({ restaurantId }: { restaurantId: string })
         label="Réservations aujourd'hui"
         value={reservationsToday === null ? EMPTY : reservationsToday}
         icon={Calendar}
+        dataTone="accent"
       />
-      <StatCard label="Couverts attendus ce midi" value={lunchValue} icon={Sun} />
-      <StatCard label="Couverts attendus ce soir" value={dinnerValue} icon={Moon} />
+      <StatCard label="Couverts attendus ce midi" value={lunchValue} icon={Sun} dataTone="warning" />
+      <StatCard label="Couverts attendus ce soir" value={dinnerValue} icon={Moon} dataTone="premium" />
       <StatCard
         label="Réservations cette semaine"
         value={reservationsWeek === null ? EMPTY : reservationsWeek}
         icon={CalendarDays}
+        dataTone="success"
       />
     </div>
   );

@@ -19,12 +19,12 @@ export default function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center py-10 text-center", className)}>
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-zg-surface-elevated ring-1 ring-zg-border transition-all duration-150">
-        <Icon className="h-8 w-8 text-zg-text-muted" strokeWidth={1.5} aria-hidden />
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-zg-accent-soft-bg transition-all duration-200 ease-out">
+        <Icon className="h-10 w-10 text-zg-accent" strokeWidth={1.5} aria-hidden />
       </div>
-      <p className="mt-3 text-sm font-medium text-zg-text-secondary">{title}</p>
-      <p className="mt-1 max-w-md text-xs leading-relaxed text-zg-text-muted">{description}</p>
-      {action ? <div className="mt-5 flex w-full max-w-xs justify-center">{action}</div> : null}
+      <p className="mt-4 text-base font-medium text-zg-fg">{title}</p>
+      <p className="mt-1 max-w-md text-sm leading-relaxed text-zg-text-muted">{description}</p>
+      {action ? <div className="mt-4 flex w-full max-w-xs justify-center">{action}</div> : null}
     </div>
   );
 }

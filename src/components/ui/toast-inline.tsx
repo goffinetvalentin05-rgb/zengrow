@@ -6,11 +6,20 @@ type ToastInlineProps = {
 };
 
 const toneClass = {
-  success: "bg-emerald-50 text-emerald-700",
-  error: "bg-rose-50 text-rose-700",
-  info: "bg-blue-50 text-blue-700",
+  success: "border-zg-success/25 bg-zg-success-soft-bg text-zg-success",
+  error: "border-zg-danger/25 bg-zg-danger-soft-bg text-zg-danger",
+  info: "border-zg-info/25 bg-zg-info-soft-bg text-zg-info",
 };
 
 export default function ToastInline({ tone = "info", message }: ToastInlineProps) {
-  return <p className={cn("rounded-xl px-3 py-2 text-sm", toneClass[tone])}>{message}</p>;
+  return (
+    <p
+      className={cn(
+        "rounded-xl border px-3 py-2 text-sm transition-colors duration-200 ease-out",
+        toneClass[tone],
+      )}
+    >
+      {message}
+    </p>
+  );
 }

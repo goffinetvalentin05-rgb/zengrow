@@ -20,7 +20,7 @@ const config: Config = {
           border: "#2A1F17",
           fg: "#FAF7F2",
           muted: "#8A7F73",
-          accent: "#FF6B2C",
+          accent: "#E85D2C",
           "accent-soft": "#FFA86B",
         },
       },
