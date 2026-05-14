@@ -1,28 +1,27 @@
 "use client";
 
-import { ChangeEvent, FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Building2,
+  Bell,
   CalendarCheck2,
-  Clock,
   CreditCard,
   Globe2,
-  LayoutGrid,
-  Megaphone,
-  Shield,
-  Star,
+  Store,
+  UserRound,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/src/components/ui/card";
+import Badge from "@/src/components/ui/badge";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
-import { cn, type OpeningHours } from "@/src/lib/utils";
+import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-accordion";
+import { SettingsCategoryCard } from "@/src/components/dashboard/settings/settings-category-card";
+import { cn, formatOpeningHoursLines, type OpeningHours } from "@/src/lib/utils";
 import AvailabilityEditor from "@/src/components/dashboard/availability-editor";
 import PublicPageLivePreview, { type PublicPagePreviewDraft } from "@/src/components/dashboard/public-page-live-preview";
 import BillingPlans from "@/src/components/dashboard/billing-plans";
@@ -174,87 +173,11 @@ function ReservationField({
   );
 }
 
-type SettingsSectionKey =
-  | "restaurant"
-  | "availability"
-  | "public_page"
-  | "reservations"
-  | "floor_plan"
-  | "reviews"
-  | "marketing"
-  | "subscription"
-  | "account";
-
-function sectionLabel(key: SettingsSectionKey) {
-  switch (key) {
-    case "restaurant":
-      return { title: "Restaurant", description: "Nom, logo et informations" };
-    case "availability":
-      return { title: "Disponibilités", description: "Horaires, créneaux et capacité" };
-    case "public_page":
-      return { title: "Page publique", description: "Lien, présentation et réseaux sociaux" };
-    case "reservations":
-      return { title: "Réservations", description: "Horaires et mode de réservation" };
-    case "floor_plan":
-      return { title: "Plan de salle", description: "Espaces, tables et choix côté client" };
-    case "reviews":
-      return { title: "Avis Google", description: "Automatisation des demandes d’avis" };
-    case "marketing":
-      return { title: "Marketing", description: "Campagnes et relances" };
-    case "subscription":
-      return { title: "Abonnement", description: "Plan, essai et paiement" };
-    case "account":
-      return { title: "Compte", description: "Connexion et sécurité" };
-  }
-}
-
-function sectionIcon(key: SettingsSectionKey) {
-  switch (key) {
-    case "restaurant":
-      return Building2;
-    case "availability":
-      return Clock;
-    case "public_page":
-      return Globe2;
-    case "reservations":
-      return CalendarCheck2;
-    case "floor_plan":
-      return LayoutGrid;
-    case "reviews":
-      return Star;
-    case "marketing":
-      return Megaphone;
-    case "subscription":
-      return CreditCard;
-    case "account":
-      return Shield;
-  }
-}
-
-function SettingsSectionCard({
-  title,
-  description,
-  children,
-  footer,
-}: {
-  title: string;
-  description: string;
-  children: ReactNode;
-  footer?: ReactNode;
-}) {
+function SoonBadge() {
   return (
-    <Card className="overflow-hidden p-0 transition-all duration-200 ease-out">
-      <div className="px-6 py-6 md:px-8">
-        <CardTitle className="text-xl">{title}</CardTitle>
-        <CardDescription className="mt-2 max-w-2xl">{description}</CardDescription>
-      </div>
-      <div className="border-t border-zg-border/80 px-6 py-6 md:px-8">{children}</div>
-      {footer ? (
-        <div className="border-t border-zg-border/80 bg-zg-surface-elevated/35 px-6 py-4 md:px-8">
-          {footer}
-        </div>
-      ) : null}
-    </Card>
+    <Badge tone="sand" className="shrink-0 text-[10px] font-semibold uppercase tracking-wide">
+      Bientôt disponible
+    </Badge>
   );
 }
 
@@ -272,40 +195,7 @@ export default function SettingsForm({
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sectionFromUrl = (searchParams.get("section") ?? "") as SettingsSectionKey;
-  const [activeSection, setActiveSection] = useState<SettingsSectionKey>(() =>
-    ([
-      "restaurant",
-      "availability",
-      "public_page",
-      "reservations",
-      "floor_plan",
-      "reviews",
-      "marketing",
-      "subscription",
-      "account",
-    ] as SettingsSectionKey[]).includes(sectionFromUrl)
-      ? sectionFromUrl
-      : "restaurant",
-  );
-
-  useEffect(() => {
-    if (
-      ([
-        "restaurant",
-        "availability",
-        "public_page",
-        "reservations",
-        "floor_plan",
-        "reviews",
-        "marketing",
-        "subscription",
-        "account",
-      ] as SettingsSectionKey[]).includes(sectionFromUrl)
-    ) {
-      setActiveSection(sectionFromUrl);
-    }
-  }, [sectionFromUrl]);
+  const availabilityAnchorRef = useRef<HTMLDivElement | null>(null);
   const [name, setName] = useState(restaurant.name);
   const [phone, setPhone] = useState(restaurant.phone ?? "");
   const [email, setEmail] = useState(restaurant.email ?? "");
@@ -346,7 +236,7 @@ export default function SettingsForm({
   const [terraceCapacity] = useState(
     Math.max(0, Math.min(500, settings.terrace_capacity ?? 0)),
   );
-  const [daysInAdvance] = useState(settings.days_in_advance ?? 60);
+  const [daysInAdvance, setDaysInAdvance] = useState(settings.days_in_advance ?? 60);
   const [floorPlanLunchDuration] = useState(
     settings.lunch_duration_minutes ?? settings.floor_plan_lunch_duration ?? settings.reservation_duration ?? 90,
   );
@@ -356,11 +246,11 @@ export default function SettingsForm({
   const [autoArchiveReservations] = useState(
     settings.auto_archive_reservations === true,
   );
-  const [maxPartySize] = useState(settings.max_party_size ?? 8);
+  const [maxPartySize, setMaxPartySize] = useState(settings.max_party_size ?? 8);
   const [pageBackgroundColor] = useState(
     restaurant.page_background_color ?? "#f8fafc",
   );
-  const [heroPrimaryColor] = useState(
+  const [heroPrimaryColor, setHeroPrimaryColor] = useState(
     restaurant.hero_primary_color ?? restaurant.primary_color ?? "#12151c",
   );
   const [buttonColor] = useState(
@@ -410,7 +300,7 @@ export default function SettingsForm({
     (settings.card_style as "flat" | "elevated" | "bordered") ?? "elevated",
   );
   const [logoUrl, setLogoUrl] = useState(settings.logo_url ?? restaurant.logo_url ?? "");
-  const [coverImageUrl] = useState(settings.cover_image_url ?? restaurant.banner_url ?? "");
+  const [coverImageUrl, setCoverImageUrl] = useState(settings.cover_image_url ?? restaurant.banner_url ?? "");
   const [instagramUrl, setInstagramUrl] = useState(settings.instagram_url ?? "");
   const [facebookUrl, setFacebookUrl] = useState(settings.facebook_url ?? "");
   const [websiteUrl, setWebsiteUrl] = useState(settings.website_url ?? "");
@@ -418,7 +308,7 @@ export default function SettingsForm({
   const [closureStartDate] = useState(settings.closure_start_date ?? "");
   const [closureEndDate] = useState(settings.closure_end_date ?? "");
   const [closureMessage] = useState(settings.closure_message ?? "");
-  const [reservationConfirmationMode] = useState<"manual" | "automatic">(
+  const [reservationConfirmationMode, setReservationConfirmationMode] = useState<"manual" | "automatic">(
     confirmationMode,
   );
   const [reservationConfirmationEmailSubject] = useState(
@@ -440,6 +330,7 @@ export default function SettingsForm({
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveButtonSuccess, setSaveButtonSuccess] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
 
   const [authEmail, setAuthEmail] = useState<string | null>(null);
   useEffect(() => {
@@ -453,6 +344,15 @@ export default function SettingsForm({
       cancelled = true;
     };
   }, [supabase]);
+
+  useEffect(() => {
+    const section = searchParams.get("section");
+    if (section !== "availability") return;
+    const id = window.requestAnimationFrame(() => {
+      availabilityAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [searchParams]);
 
   const [reviewAutomationLoading, setReviewAutomationLoading] = useState(true);
   const [reviewAutomation, setReviewAutomation] = useState<{
@@ -670,6 +570,11 @@ export default function SettingsForm({
     ],
   );
 
+  const openingSummaryLines = useMemo(
+    () => formatOpeningHoursLines(availabilitySettings.opening_hours),
+    [availabilitySettings.opening_hours],
+  );
+
   const confirmationEmailPreviewValues = useMemo(
     () =>
       buildReservationConfirmationVariableValues(
@@ -860,318 +765,424 @@ export default function SettingsForm({
     setIsSaving(false);
   }
 
-  const desktopSections: SettingsSectionKey[] = [
-    "restaurant",
-    "availability",
-    "public_page",
-    "reservations",
-    "floor_plan",
-    "reviews",
-    "marketing",
-    "subscription",
-    "account",
-  ];
-
-  function setSection(next: SettingsSectionKey) {
-    setActiveSection(next);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("section", next);
-    router.replace(`/dashboard/settings?${params.toString()}`);
-  }
+  const effectivePublicLink = useMemo(() => publicLink.replace(restaurant.slug, slug), [publicLink, restaurant.slug, slug]);
 
   return (
-    <div className="grid gap-10 md:grid-cols-[260px_minmax(0,1fr)] md:items-start">
-      <aside className="hidden md:block">
-        <div className="sticky top-5 space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zg-fg-muted">Sections</p>
-          <nav className="space-y-1 rounded-2xl border border-zg-border bg-zg-surface-elevated p-2 transition-all duration-200 ease-out">
-            {desktopSections.map((key) => {
-              const Icon = sectionIcon(key);
-              const meta = sectionLabel(key);
-              const active = activeSection === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSection(key)}
-                  className={cn(
-                    "flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-all duration-200 ease-out",
-                    active
-                      ? "border border-zg-border-accent bg-zg-accent-soft-bg"
-                      : "border border-transparent hover:bg-zg-card-hover",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
-                      active
-                        ? "border-zg-border-accent bg-zg-surface text-zg-accent"
-                        : "border-zg-border/70 bg-zg-surface text-zg-text-muted",
-                    )}
-                  >
-                    <Icon size={18} strokeWidth={2} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className={cn("block text-sm font-semibold", active ? "text-zg-fg" : "text-zg-muted")}>
-                      {meta.title}
-                    </span>
-                    <span className="mt-0.5 block text-xs leading-relaxed text-zg-muted">{meta.description}</span>
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </aside>
-
-      <div className="min-w-0">
-        {/* Mobile: sections en accordéons nommés */}
-        <div className="space-y-4 md:hidden">
-          {desktopSections.map((key) => {
-            const Icon = sectionIcon(key);
-            const meta = sectionLabel(key);
-            return (
-              <details key={key} className="group overflow-hidden rounded-2xl border border-zg-border bg-zg-surface-elevated transition-all duration-200 ease-out">
-                <summary className="list-none cursor-pointer px-5 py-5">
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-zg-border/70 bg-zg-surface/85 text-zg-muted">
-                      <Icon size={18} strokeWidth={2} />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-zg-fg">{meta.title}</p>
-                      <p className="mt-1 text-xs leading-relaxed text-zg-muted">{meta.description}</p>
-                    </div>
-                  </div>
-                </summary>
-                <div className="border-t border-zg-border/80 px-5 py-5">
-                  <ActiveSettingsSection
-                    section={key}
-                    renderForm={(children, footer) => (
-                      <form onSubmit={handleSubmit} className="space-y-4">
-                        {children}
-                        {footer}
-                      </form>
-                    )}
-                  />
-                </div>
-              </details>
-            );
-          })}
-        </div>
-
-        {/* Desktop: contenu section sélectionnée */}
-        <div className="hidden md:block">
-          <ActiveSettingsSection
-            section={activeSection}
-            renderForm={(children, footer) => (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {children}
-                {footer}
-              </form>
-            )}
-          />
-        </div>
-      </div>
-    </div>
-  );
-
-  function ActiveSettingsSection({
-    section,
-    renderForm,
-  }: {
-    section: SettingsSectionKey;
-    renderForm: (children: ReactNode, footer?: ReactNode) => ReactNode;
-  }) {
-    if (section === "availability") {
-      return (
-        <AvailabilityEditor embedded restaurantId={restaurant.id} settings={availabilitySettings} />
-      );
-    }
-
-    if (section === "subscription") {
-      return (
-        <SettingsSectionCard
-          title="Abonnement"
-          description="Plan actuel, essai et gestion du paiement."
+    <>
+      <form id="settings-main-form" onSubmit={handleSubmit} className="relative mx-auto max-w-5xl space-y-6 pb-28">
+        <SettingsCategoryCard
+          icon={CreditCard}
+          iconWrapClassName="bg-[#A855F7]/15 text-[#A855F7]"
+          iconClassName="text-[#A855F7]"
+          title="Facturation"
+          subtitle="Gère ton abonnement, ton plan et tes factures."
         >
-          <BillingPlans
-            status={subscriptionStatus}
-            plan={subscriptionPlan}
-            trialEndDate={trialEndDate}
-            isOwnerDev={isOwnerDev}
-          />
-        </SettingsSectionCard>
-      );
-    }
-
-    if (section === "reviews") {
-      return (
-        <SettingsSectionCard
-          title="Avis Google"
-          description="Activez l’envoi automatique après la visite et personnalisez le message."
-        >
-          {reviewAutomationLoading || !reviewAutomation ? (
-            <div className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-soft/60 py-10 text-center text-sm text-zg-muted">
-              Chargement des réglages…
-            </div>
-          ) : (
-            <ReviewAutomationPanel
-              restaurantId={restaurant.id}
-              initialSettings={{
-                ...reviewAutomation,
-                channel: "email",
-              }}
-              initialFeedback={reviewFeedback}
+          <SettingsAccordion title="Plan actuel et abonnement">
+            <BillingPlans
+              status={subscriptionStatus}
+              plan={subscriptionPlan}
+              trialEndDate={trialEndDate}
+              isOwnerDev={isOwnerDev}
             />
-          )}
-        </SettingsSectionCard>
-      );
-    }
-
-    if (section === "marketing") {
-      return (
-        <SettingsSectionCard
-          title="Marketing"
-          description="Campagnes e-mail et relances clients (Pro)."
-          footer={
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-zg-muted">Les campagnes se gèrent dans le module Marketing.</p>
-              <Link href="/dashboard/marketing" className="inline-flex">
-                <Button type="button" variant="secondary" className="min-h-11">
-                  Ouvrir Marketing
-                </Button>
-              </Link>
-            </div>
-          }
-        >
-          <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-5">
-            <p className="text-sm font-semibold text-zg-fg">Campagnes</p>
-            <p className="mt-2 text-sm leading-relaxed text-zg-muted">
-              Créez des e-mails groupés pour annoncer une soirée spéciale, un menu ou une offre.
-            </p>
-          </div>
-        </SettingsSectionCard>
-      );
-    }
-
-    if (section === "account") {
-      return (
-        <SettingsSectionCard
-          title="Compte"
-          description="Connexion et sécurité."
-          footer={
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                className="min-h-11"
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  router.push("/login");
-                }}
-              >
-                Se déconnecter
-              </Button>
-            </div>
-          }
-        >
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">E-mail connecté</p>
-              <p className="mt-2 text-sm font-semibold text-zg-fg">{authEmail ?? "—"}</p>
-            </div>
-            <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Sécurité</p>
-              <p className="mt-2 text-sm text-zg-muted">
-                La gestion du mot de passe dépend de votre méthode de connexion.
-              </p>
-            </div>
-          </div>
-        </SettingsSectionCard>
-      );
-    }
-
-    if (section === "restaurant") {
-      return renderForm(
-        <SettingsSectionCard
-          title="Restaurant"
-          description="Nom, coordonnées et informations visibles ou internes."
-          footer={
-            <div className="flex flex-wrap items-center gap-3">
-              <Button type="submit" disabled={isSaving} className="min-h-11 min-w-[180px]">
-                {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer"}
-              </Button>
-              {message ? <p className="text-sm text-zg-muted">{message}</p> : null}
-            </div>
-          }
-        >
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Nom du restaurant</label>
-              <Input value={name} onChange={(event) => setName(event.target.value)} required />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Téléphone</label>
-              <Input value={phone} onChange={(event) => setPhone(event.target.value)} />
-            </div>
-            <div>
-              <label className="dashboard-field-label">E-mail</label>
-              <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-            </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Adresse</label>
-              <Input value={address} onChange={(event) => setAddress(event.target.value)} />
-            </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Site web</label>
-              <Input value={websiteUrl} onChange={(event) => setWebsiteUrl(event.target.value)} placeholder="https://..." />
-            </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Description interne</label>
-              <p className="mt-1 text-xs text-zg-muted">
-                Notes internes. Le texte affiché côté clients se règle dans Page publique.
-              </p>
-              <Textarea className="mt-2 min-h-24" value={description} onChange={(event) => setDescription(event.target.value)} />
-            </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Logo</label>
-              <div className="mt-2 grid gap-3 md:grid-cols-[1fr_220px] md:items-start">
-                <div className="space-y-2">
-                  <Input type="file" accept="image/*" onChange={handleLogoUpload} />
-                  {isUploadingLogo ? <p className="text-xs text-zg-muted">Envoi du logo…</p> : null}
-                  <Input value={logoUrl} onChange={(event) => setLogoUrl(event.target.value)} placeholder="URL du logo (optionnel)" />
-                </div>
-                <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                  {logoUrl ? (
-                    <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-zg-border/70 bg-zg-surface-elevated">
-                      <Image src={logoUrl} alt="" fill className="object-contain p-2" unoptimized sizes="80px" />
-                    </div>
-                  ) : (
-                    <p className="text-sm text-zg-muted">Aucun logo.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </SettingsSectionCard>,
-      );
-    }
-
-    if (section === "public_page") {
-      const effectivePublicLink = publicLink.replace(restaurant.slug, slug);
-      return renderForm(
-        <SettingsSectionCard
-          title="Page publique"
-          description="Lien à partager, présentation et informations visibles par vos clients."
-          footer={
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="submit" disabled={isSaving} className="min-h-11 min-w-[180px]">
-                  {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer"}
-                </Button>
-                {message ? <p className="text-sm text-zg-muted">{message}</p> : null}
+          </SettingsAccordion>
+          <SettingsAccordion title="Méthode de paiement">
+            <div className="flex flex-col gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">Carte enregistrée</p>
+                <p className="mt-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm text-zg-fg">•••• •••• •••• 4242</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <Button type="button" variant="secondary" className="min-h-11" disabled>
+                  Mettre à jour
+                </Button>
+                <SoonBadge />
+              </div>
+            </div>
+          </SettingsAccordion>
+          <SettingsAccordion title="Historique des factures">
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-zg-text-muted">Aucune facture à afficher pour le moment.</p>
+              <SoonBadge />
+            </div>
+          </SettingsAccordion>
+        </SettingsCategoryCard>
+
+        <SettingsCategoryCard
+          icon={Store}
+          iconWrapClassName="bg-zg-accent/15 text-zg-accent"
+          iconClassName="text-zg-accent"
+          title="Informations du restaurant"
+          subtitle="Identité, coordonnées et présentation de ton resto."
+        >
+          <SettingsAccordion title="Identité">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Nom du restaurant</label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Type de cuisine</label>
+                <Input disabled placeholder="À venir" value="" readOnly />
+                <div className="mt-2 flex items-center gap-2">
+                  <SoonBadge />
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Description courte</label>
+                <Textarea className="min-h-24" value={description} onChange={(e) => setDescription(e.target.value)} />
+              </div>
+            </div>
+          </SettingsAccordion>
+          <SettingsAccordion title="Coordonnées">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Adresse complète</label>
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Téléphone</label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </div>
+              <div>
+                <label className="dashboard-field-label">E-mail de contact</label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Site web</label>
+                <Input value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://..." />
+              </div>
+            </div>
+          </SettingsAccordion>
+          <SettingsAccordion title="Horaires d'ouverture">
+            <ul className="space-y-2 text-sm text-zg-fg">
+              {openingSummaryLines.map((line) => (
+                <li key={line} className="rounded-lg border border-zg-border/70 bg-zg-surface/60 px-3 py-2">
+                  {line}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-zg-text-muted">
+              Ces horaires reflètent tes disponibilités de réservation. Pour les modifier, ouvre la section « Disponibilités & réservations ».
+            </p>
+          </SettingsAccordion>
+        </SettingsCategoryCard>
+
+        <div ref={availabilityAnchorRef} id="settings-availability">
+          <SettingsCategoryCard
+            icon={CalendarCheck2}
+            iconWrapClassName="bg-[#3B82F6]/15 text-[#3B82F6]"
+            iconClassName="text-[#3B82F6]"
+            title="Disponibilités & réservations"
+            subtitle="Configure tes créneaux et les règles de réservation."
+          >
+            <SettingsAccordion title="Horaires de réservation par jour">
+              <AvailabilityEditor embedded embeddedPart="hours" restaurantId={restaurant.id} settings={availabilitySettings} />
+            </SettingsAccordion>
+            <SettingsAccordion title="Paramètres de réservation">
+              <div className="flex flex-col gap-6">
+                <AvailabilityEditor embedded embeddedPart="params" restaurantId={restaurant.id} settings={availabilitySettings} />
+                <div className="grid gap-4 border-t border-zg-border/60 pt-4 md:grid-cols-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <label className="dashboard-field-label">Délai minimum avant réservation</label>
+                      <SoonBadge />
+                    </div>
+                    <Input className="mt-2" disabled placeholder="—" />
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Délai max. de réservation à l'avance (jours)</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={365}
+                      className="mt-2"
+                      value={daysInAdvance}
+                      onChange={(e) => setDaysInAdvance(Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="dashboard-field-label">Convives max. par groupe (réservation)</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={50}
+                      className="mt-2"
+                      value={maxPartySize}
+                      onChange={(e) => setMaxPartySize(Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </div>
+            </SettingsAccordion>
+            <SettingsAccordion title="Règles de capacité">
+              <div className="space-y-6">
+                <div>
+                  <label className="dashboard-field-label">Capacité totale (mode simple)</label>
+                  <p className="mt-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-semibold text-zg-fg">
+                    {Math.max(lunchMaxCovers, dinnerMaxCovers)} couverts (max. midi / soir)
+                  </p>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setReservationMode("simple")}
+                    className={cn(
+                      "rounded-2xl border p-5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30",
+                      reservationMode === "simple"
+                        ? "border-zg-border-focus bg-zg-accent-soft-bg ring-1 ring-zg-accent/25"
+                        : "border-zg-border bg-zg-surface hover:border-zg-border-hover",
+                    )}
+                  >
+                    <p className="text-sm font-semibold text-zg-fg">Mode simple</p>
+                    <p className="mt-2 text-sm leading-relaxed text-zg-muted">
+                      Capacité par service (midi / soir), sans gestion des tables.
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReservationMode("floor_plan")}
+                    className={cn(
+                      "rounded-2xl border p-5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30",
+                      reservationMode === "floor_plan"
+                        ? "border-zg-border-focus bg-zg-accent-soft-bg ring-1 ring-zg-accent/25"
+                        : "border-zg-border bg-zg-surface hover:border-zg-border-hover",
+                    )}
+                  >
+                    <p className="text-sm font-semibold text-zg-fg">Plan de salle</p>
+                    <p className="mt-2 text-sm leading-relaxed text-zg-muted">
+                      Disponibilités basées sur espaces, tables et plan visuel.
+                    </p>
+                  </button>
+                </div>
+
+                {reservationMode === "simple" ? (
+                  <div className="space-y-6 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">Limite par service</p>
+                    <div className="grid gap-4">
+                      <Toggle checked={lunchServiceEnabled} onChange={setLunchServiceEnabled} label="Service midi activé" />
+                      {lunchServiceEnabled ? (
+                        <div className="grid gap-4 sm:grid-cols-3">
+                          <div>
+                            <label className="dashboard-field-label">Début midi</label>
+                            <Input type="time" value={lunchServiceStart} onChange={(e) => setLunchServiceStart(e.target.value)} />
+                          </div>
+                          <div>
+                            <label className="dashboard-field-label">Fin midi</label>
+                            <Input type="time" value={lunchServiceEnd} onChange={(e) => setLunchServiceEnd(e.target.value)} />
+                          </div>
+                          <div>
+                            <label className="dashboard-field-label">Capacité midi</label>
+                            <Input type="number" min={1} max={500} value={lunchMaxCovers} onChange={(e) => setLunchMaxCovers(Number(e.target.value))} />
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="grid gap-4">
+                      <Toggle checked={dinnerServiceEnabled} onChange={setDinnerServiceEnabled} label="Service soir activé" />
+                      {dinnerServiceEnabled ? (
+                        <div className="grid gap-4 sm:grid-cols-3">
+                          <div>
+                            <label className="dashboard-field-label">Début soir</label>
+                            <Input type="time" value={dinnerServiceStart} onChange={(e) => setDinnerServiceStart(e.target.value)} />
+                          </div>
+                          <div>
+                            <label className="dashboard-field-label">Fin soir</label>
+                            <Input type="time" value={dinnerServiceEnd} onChange={(e) => setDinnerServiceEnd(e.target.value)} />
+                          </div>
+                          <div>
+                            <label className="dashboard-field-label">Capacité soir</label>
+                            <Input type="number" min={1} max={500} value={dinnerMaxCovers} onChange={(e) => setDinnerMaxCovers(Number(e.target.value))} />
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
+
+                {reservationMode === "floor_plan" ? (
+                  <div className="space-y-5 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Espaces actifs</p>
+                        <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.activeZones ?? "—"}</p>
+                      </div>
+                      <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Tables actives</p>
+                        <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.activeTables ?? "—"}</p>
+                      </div>
+                      <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Capacité totale</p>
+                        <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.maxCovers ?? "—"}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-sm text-zg-muted">Gère ton plan dans l'éditeur dédié.</p>
+                      <Link href="/dashboard/floor-plan">
+                        <Button type="button" className="min-h-11">
+                          Ouvrir le plan de salle
+                        </Button>
+                      </Link>
+                    </div>
+                    <ReservationField
+                      label="Choix côté client"
+                      description="Assignation auto, espace ou table sur le plan."
+                    >
+                      <Select
+                        value={floorPlanPublicSelectionMode}
+                        onChange={(e) => setFloorPlanPublicSelectionMode(e.target.value as "automatic" | "area" | "table")}
+                      >
+                        <option value="automatic">ZenGrow choisit automatiquement la table</option>
+                        <option value="area">Le client choisit un espace</option>
+                        <option value="table">Le client choisit une table sur le plan</option>
+                      </Select>
+                    </ReservationField>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-zg-border bg-zg-surface p-5">
+                    <p className="text-sm text-zg-muted">
+                      Passe en mode plan de salle pour une capacité calculée depuis tes tables.
+                    </p>
+                    <Button type="button" className="mt-4 min-h-11" onClick={() => setReservationMode("floor_plan")}>
+                      Activer le mode plan de salle
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </SettingsAccordion>
+          </SettingsCategoryCard>
+        </div>
+
+        <SettingsCategoryCard
+          icon={Globe2}
+          iconWrapClassName="bg-[#EC4899]/15 text-[#EC4899]"
+          iconClassName="text-[#EC4899]"
+          title="Page publique"
+          subtitle="Personnalise l'apparence de ta page restaurant visible par tes clients."
+        >
+          <SettingsAccordion title="Identité visuelle">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Logo</label>
+                <div className="mt-2 grid gap-3 md:grid-cols-[1fr_220px] md:items-start">
+                  <div className="space-y-2">
+                    <Input type="file" accept="image/*" onChange={handleLogoUpload} />
+                    {isUploadingLogo ? <p className="text-xs text-zg-muted">Envoi du logo…</p> : null}
+                    <Input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="URL du logo" />
+                  </div>
+                  <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
+                    {logoUrl ? (
+                      <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-zg-border/70 bg-zg-surface-elevated">
+                        <Image src={logoUrl} alt="" fill className="object-contain p-2" unoptimized sizes="80px" />
+                      </div>
+                    ) : (
+                      <p className="text-sm text-zg-muted">Aucun logo.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="dashboard-field-label">Couleur d'accent</label>
+                <div className="mt-2 flex items-center gap-2">
+                  <Input type="color" className="h-11 w-14 shrink-0" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
+                  <Input value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="dashboard-field-label">Couleur hero</label>
+                <div className="mt-2 flex items-center gap-2">
+                  <Input type="color" className="h-11 w-14 shrink-0" value={heroPrimaryColor} onChange={(e) => setHeroPrimaryColor(e.target.value)} />
+                  <Input value={heroPrimaryColor} onChange={(e) => setHeroPrimaryColor(e.target.value)} />
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Image hero (URL bannière)</label>
+                <Input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." />
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Typographie & aperçu</label>
+                <div className="mt-2 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="dashboard-field-label">Police des titres</label>
+                    <select
+                      className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm text-zg-fg"
+                      value={headingFont}
+                      onChange={(e) => setHeadingFont(e.target.value)}
+                    >
+                      {PUBLIC_PAGE_FONT_OPTIONS.map((f) => (
+                        <option key={f} value={f}>
+                          {f}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="dashboard-field-label">Police du texte</label>
+                    <select
+                      className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm text-zg-fg"
+                      value={bodyFont}
+                      onChange={(e) => setBodyFont(e.target.value)}
+                    >
+                      {PUBLIC_PAGE_FONT_OPTIONS.map((f) => (
+                        <option key={f} value={f}>
+                          {f}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <PublicPageLivePreview draft={previewDraft} publicPath={publicLink} />
+                </div>
+              </div>
+            </div>
+          </SettingsAccordion>
+          <SettingsAccordion title="Contenu">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Menu (lien ou PDF)</label>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Input readOnly value="" placeholder="https://…" className="flex-1 min-w-[200px]" />
+                  <SoonBadge />
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Ambiance / description</label>
+                <Textarea className="min-h-28" value={publicPageDescription} maxLength={500} onChange={(e) => setPublicPageDescription(e.target.value)} />
+                <p className="mt-1 text-xs text-zg-text-muted">{publicPageDescription.length}/500</p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Sous-titre / accroche</label>
+                <Input readOnly value={publicTagline} placeholder="—" />
+              </div>
+              <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <label className="dashboard-field-label">Ton de voix</label>
+                  <p className="mt-1 text-sm text-zg-muted">Personnalisation du ton éditorial.</p>
+                </div>
+                <SoonBadge />
+              </div>
+              <div className="md:col-span-2 rounded-xl border border-zg-border/70 bg-zg-surface/60 p-4">
+                <p className="text-sm font-semibold text-zg-fg">Marketing</p>
+                <p className="mt-1 text-sm text-zg-muted">Campagnes e-mail et relances : module dédié.</p>
+                <Link href="/dashboard/marketing" className="mt-3 inline-flex">
+                  <Button type="button" variant="secondary" className="min-h-11">
+                    Ouvrir Marketing
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </SettingsAccordion>
+          <SettingsAccordion title="URL personnalisée">
+            <div className="grid gap-4">
+              <div>
+                <label className="dashboard-field-label">Slug</label>
+                <Input id="settings-slug-field" value={slug} onChange={(e) => setSlug(e.target.value)} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">Lien public</p>
+                <p className="mt-2 break-all text-sm font-semibold text-zg-fg">{effectivePublicLink}</p>
+              </div>
+              <div className="flex flex-wrap justify-end gap-2">
                 <Button
                   type="button"
                   variant="secondary"
@@ -1192,307 +1203,205 @@ export default function SettingsForm({
                     Voir la page
                   </Button>
                 </a>
-              </div>
-            </div>
-          }
-        >
-          <div className="grid gap-5">
-            <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Lien public</p>
-              <p className="mt-2 break-all text-sm font-semibold text-zg-fg">{effectivePublicLink}</p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="dashboard-field-label">Slug</label>
-                <Input value={slug} onChange={(event) => setSlug(event.target.value)} />
-              </div>
-              <div>
-                <label className="dashboard-field-label">Couleur principale</label>
-                <div className="mt-2 flex items-center gap-2">
-                  <Input type="color" className="h-11 w-14 shrink-0" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
-                  <Input value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Titre d’accueil</label>
-                <Input value={publicDisplayName} onChange={(event) => setPublicDisplayName(event.target.value)} />
-              </div>
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Texte d’accueil</label>
-                <Textarea className="min-h-24" value={publicPageDescription} maxLength={500} onChange={(event) => setPublicPageDescription(event.target.value)} />
-                <p className="mt-1 text-xs text-zg-muted">{publicPageDescription.length}/500</p>
-              </div>
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Réseaux sociaux</label>
-                <div className="mt-2 grid gap-3 md:grid-cols-2">
-                  <Input value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="Instagram (URL)" />
-                  <Input value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="Facebook (URL)" />
-                  <Input value={googleMapsUrl} onChange={(e) => setGoogleMapsUrl(e.target.value)} placeholder="Google Maps (URL)" className="md:col-span-2" />
-                </div>
-              </div>
-            </div>
-
-            <details className="rounded-2xl border border-zg-border bg-zg-surface-soft/50 p-5">
-              <summary className="cursor-pointer text-sm font-semibold text-zg-fg">
-                Options avancées
-              </summary>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="dashboard-field-label">Police des titres</label>
-                  <select
-                    className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm text-zg-fg"
-                    value={headingFont}
-                    onChange={(event) => setHeadingFont(event.target.value)}
-                  >
-                    {PUBLIC_PAGE_FONT_OPTIONS.map((f) => (
-                      <option key={f} value={f}>
-                        {f}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="dashboard-field-label">Police du texte</label>
-                  <select
-                    className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm text-zg-fg"
-                    value={bodyFont}
-                    onChange={(event) => setBodyFont(event.target.value)}
-                  >
-                    {PUBLIC_PAGE_FONT_OPTIONS.map((f) => (
-                      <option key={f} value={f}>
-                        {f}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="mt-4">
-                <PublicPageLivePreview draft={previewDraft} publicPath={publicLink} />
-              </div>
-            </details>
-          </div>
-        </SettingsSectionCard>,
-      );
-    }
-
-    if (section === "reservations") {
-      return renderForm(
-        <SettingsSectionCard
-          title="Réservations"
-          description="Choisissez un mode simple ou un plan de salle. ZenGrow applique la même règle partout."
-          footer={
-            <div className="flex flex-wrap items-center gap-3">
-              <Button type="submit" disabled={isSaving} className="min-h-11 min-w-[180px]">
-                {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer"}
-              </Button>
-              {message ? <p className="text-sm text-zg-muted">{message}</p> : null}
-            </div>
-          }
-        >
-          <div className="space-y-8">
-            <div className="grid gap-4 md:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setReservationMode("simple")}
-                className={cn(
-                  "rounded-2xl border p-5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30",
-                  reservationMode === "simple"
-                    ? "border-zg-border-focus bg-zg-accent-soft-bg ring-1 ring-zg-accent/25"
-                    : "border-zg-border bg-zg-surface hover:border-zg-border-hover",
-                )}
-              >
-                <p className="text-sm font-semibold text-zg-fg">Mode simple</p>
-                <p className="mt-2 text-sm leading-relaxed text-zg-muted">
-                  Idéal pour commencer : ZenGrow vérifie une capacité par service, sans gérer les tables.
-                </p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setReservationMode("floor_plan")}
-                className={cn(
-                  "rounded-2xl border p-5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30",
-                  reservationMode === "floor_plan"
-                    ? "border-zg-border-focus bg-zg-accent-soft-bg ring-1 ring-zg-accent/25"
-                    : "border-zg-border bg-zg-surface hover:border-zg-border-hover",
-                )}
-              >
-                <p className="text-sm font-semibold text-zg-fg">Plan de salle</p>
-                <p className="mt-2 text-sm leading-relaxed text-zg-muted">
-                  Disponibilités calculées depuis vos espaces, vos tables et votre plan visuel.
-                </p>
-              </button>
-            </div>
-
-            {reservationMode === "simple" ? (
-              <div className="space-y-6 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
-                <div className="grid gap-4">
-                  <Toggle checked={lunchServiceEnabled} onChange={setLunchServiceEnabled} label="Service midi activé" />
-                  {lunchServiceEnabled ? (
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <div>
-                        <label className="dashboard-field-label">Horaires midi — début</label>
-                        <Input type="time" value={lunchServiceStart} onChange={(e) => setLunchServiceStart(e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="dashboard-field-label">Horaires midi — fin</label>
-                        <Input type="time" value={lunchServiceEnd} onChange={(e) => setLunchServiceEnd(e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="dashboard-field-label">Capacité midi</label>
-                        <Input type="number" min={1} max={500} value={lunchMaxCovers} onChange={(e) => setLunchMaxCovers(Number(e.target.value))} />
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-                <div className="grid gap-4">
-                  <Toggle checked={dinnerServiceEnabled} onChange={setDinnerServiceEnabled} label="Service soir activé" />
-                  {dinnerServiceEnabled ? (
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <div>
-                        <label className="dashboard-field-label">Horaires soir — début</label>
-                        <Input type="time" value={dinnerServiceStart} onChange={(e) => setDinnerServiceStart(e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="dashboard-field-label">Horaires soir — fin</label>
-                        <Input type="time" value={dinnerServiceEnd} onChange={(e) => setDinnerServiceEnd(e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="dashboard-field-label">Capacité soir</label>
-                        <Input type="number" min={1} max={500} value={dinnerMaxCovers} onChange={(e) => setDinnerMaxCovers(Number(e.target.value))} />
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-
-            {reservationMode === "floor_plan" ? (
-              <div className="space-y-5 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Espaces actifs</p>
-                    <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.activeZones ?? "—"}</p>
-                  </div>
-                  <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Tables actives</p>
-                    <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.activeTables ?? "—"}</p>
-                  </div>
-                  <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Capacité totale</p>
-                    <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.maxCovers ?? "—"}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-zg-muted">
-                    Ouvrez le plan de salle pour créer vos espaces et placer vos tables.
-                  </p>
-                  <Link href="/dashboard/floor-plan">
-                    <Button type="button" className="min-h-11">
-                      Ouvrir le plan de salle
-                    </Button>
-                  </Link>
-                </div>
-
-                <ReservationField
-                  label="Choix côté client"
-                  description="ZenGrow peut assigner automatiquement, proposer un espace, ou laisser le client choisir une table sur le plan."
-                >
-                  <Select
-                    value={floorPlanPublicSelectionMode}
-                    onChange={(e) => setFloorPlanPublicSelectionMode(e.target.value as "automatic" | "area" | "table")}
-                  >
-                    <option value="automatic">ZenGrow choisit automatiquement la table</option>
-                    <option value="area">Le client choisit un espace</option>
-                    <option value="table">Le client choisit une table sur le plan</option>
-                  </Select>
-                </ReservationField>
-              </div>
-            ) : null}
-          </div>
-        </SettingsSectionCard>,
-      );
-    }
-
-    if (section === "floor_plan") {
-      return renderForm(
-        <SettingsSectionCard
-          title="Plan de salle"
-          description="Espaces, tables et configuration côté client."
-          footer={
-            <div className="flex flex-wrap items-center gap-3">
-              <Button type="submit" disabled={isSaving} className="min-h-11 min-w-[180px]">
-                {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer"}
-              </Button>
-              {message ? <p className="text-sm text-zg-muted">{message}</p> : null}
-            </div>
-          }
-        >
-          {reservationMode === "floor_plan" ? (
-            <div className="space-y-5">
-              <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-5">
-                <p className="text-sm font-semibold text-zg-fg">Résumé</p>
-                <p className="mt-2 text-sm text-zg-muted">
-                  {floorPlanSummary
-                    ? `${floorPlanSummary.activeZones} espaces actifs · ${floorPlanSummary.activeTables} tables actives · ${floorPlanSummary.maxCovers} couverts`
-                    : "—"}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Link href="/dashboard/floor-plan">
-                  <Button type="button" className="min-h-11">
-                    Ouvrir le plan de salle
-                  </Button>
-                </Link>
-                <p className="text-sm text-zg-muted">
-                  Créez vos espaces (Salle intérieure, Terrasse…) et ajoutez vos tables.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-zg-border bg-zg-surface p-6">
-              <p className="text-sm font-semibold text-zg-fg">Disponible avec le mode Plan de salle</p>
-              <p className="mt-2 text-sm leading-relaxed text-zg-muted">
-                Le plan de salle est disponible lorsque vous activez le mode Plan de salle dans Réservations.
-              </p>
-              <div className="mt-4">
                 <Button
                   type="button"
-                  onClick={() => {
-                    setReservationMode("floor_plan");
-                    setActiveSection("reservations");
-                    setSection("reservations");
-                  }}
+                  variant="secondary"
                   className="min-h-11"
+                  onClick={() => document.getElementById("settings-slug-field")?.focus()}
                 >
-                  Activer le mode Plan de salle
+                  Modifier
                 </Button>
               </div>
             </div>
-          )}
-        </SettingsSectionCard>,
-      );
-    }
+          </SettingsAccordion>
+        </SettingsCategoryCard>
 
-    // fallback (ne devrait pas arriver)
-    return (
-      <SettingsSectionCard
-        title="Paramètres"
-        description="Sélectionnez une section."
-      >
-        <div className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-soft/60 py-10 text-center text-sm text-zg-muted">
-          Sélectionnez une section dans le menu.
+        <SettingsCategoryCard
+          icon={Bell}
+          iconWrapClassName="bg-[#F59E0B]/15 text-[#F59E0B]"
+          iconClassName="text-[#F59E0B]"
+          title="Notifications"
+          subtitle="Configure les alertes pour toi et tes clients."
+        >
+          <SettingsAccordion title="Notifications clients (envoyées automatiquement)">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="text-sm font-medium text-zg-fg">E-mail de confirmation de réservation</span>
+                <Toggle
+                  checked={reservationConfirmationMode === "automatic"}
+                  onChange={(v) => setReservationConfirmationMode(v ? "automatic" : "manual")}
+                />
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 opacity-70">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-zg-fg">E-mail de rappel J-1</span>
+                  <SoonBadge />
+                </div>
+                <Toggle checked={false} onChange={() => {}} disabled />
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 opacity-70">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-zg-fg">E-mail de demande d'avis post-visite</span>
+                  <SoonBadge />
+                </div>
+                <Toggle checked={false} onChange={() => {}} disabled />
+              </div>
+            </div>
+          </SettingsAccordion>
+          <SettingsAccordion title="Automatisation des avis Google">
+            {reviewAutomationLoading || !reviewAutomation ? (
+              <div className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-soft/60 py-10 text-center text-sm text-zg-muted">
+                Chargement des réglages…
+              </div>
+            ) : (
+              <ReviewAutomationPanel
+                restaurantId={restaurant.id}
+                initialSettings={{
+                  ...reviewAutomation,
+                  channel: "email",
+                }}
+                initialFeedback={reviewFeedback}
+              />
+            )}
+          </SettingsAccordion>
+          <SettingsAccordion title="Tes notifications (ce que tu reçois)">
+            <div className="flex flex-col gap-4">
+              {["Nouvelle réservation par e-mail", "Nouvelle réservation par SMS", "Digest quotidien des réservations", "Alerte annulation"].map(
+                (label) => (
+                  <div key={label} className="flex flex-wrap items-center justify-between gap-3 opacity-70">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-zg-fg">{label}</span>
+                      <SoonBadge />
+                    </div>
+                    <Toggle checked={false} onChange={() => {}} disabled />
+                  </div>
+                ),
+              )}
+            </div>
+          </SettingsAccordion>
+        </SettingsCategoryCard>
+
+        <SettingsCategoryCard
+          icon={UserRound}
+          iconWrapClassName="bg-[#22C55E]/15 text-[#22C55E]"
+          iconClassName="text-[#22C55E]"
+          title="Compte"
+          subtitle="Tes infos personnelles et préférences."
+        >
+          <SettingsAccordion title="Profil">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="dashboard-field-label">Prénom</label>
+                <Input disabled placeholder="—" />
+                <SoonBadge />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Nom</label>
+                <Input disabled placeholder="—" />
+                <SoonBadge />
+              </div>
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">E-mail de connexion</label>
+                <Input readOnly value={authEmail ?? ""} />
+              </div>
+              <div className="md:col-span-2 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-11"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    router.push("/login");
+                  }}
+                >
+                  Se déconnecter
+                </Button>
+              </div>
+            </div>
+          </SettingsAccordion>
+          <SettingsAccordion title="Sécurité">
+            <p className="text-sm text-zg-muted">La gestion du mot de passe dépend de ta méthode de connexion.</p>
+            <div className="mt-3 flex items-center gap-2">
+              <Button type="button" variant="secondary" className="min-h-11" disabled>
+                Changer le mot de passe
+              </Button>
+              <SoonBadge />
+            </div>
+          </SettingsAccordion>
+          <SettingsAccordion title="Préférences">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="dashboard-field-label">Langue</label>
+                <Input readOnly value="Français" />
+                <SoonBadge />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Fuseau horaire</label>
+                <Input readOnly value="Europe/Zurich" />
+                <SoonBadge />
+              </div>
+            </div>
+          </SettingsAccordion>
+          <SettingsAccordion title="Zone de danger" danger>
+            <p className="text-sm text-zg-muted">
+              La suppression est définitive : réservations, page publique et données associées seront perdues.
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              className="mt-4 min-h-11 border border-zg-danger/50 bg-transparent text-zg-danger hover:bg-zg-danger/10"
+              onClick={() => setDeleteAccountOpen(true)}
+            >
+              Supprimer mon compte
+            </Button>
+          </SettingsAccordion>
+        </SettingsCategoryCard>
+      </form>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-4 pt-10">
+        <div className="pointer-events-auto flex w-full max-w-5xl items-center justify-between gap-4 rounded-2xl border border-zg-border bg-zg-surface/95 px-4 py-3 shadow-lg backdrop-blur-md">
+          <p className="min-w-0 truncate text-sm text-zg-text-muted">
+            {message ? <span className="text-zg-fg">{message}</span> : <span>Enregistre les modifications du formulaire principal.</span>}
+          </p>
+          <Button type="submit" form="settings-main-form" disabled={isSaving} className="min-h-11 shrink-0 px-6">
+            {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer les modifications"}
+          </Button>
         </div>
-      </SettingsSectionCard>
-    );
-  }
+      </div>
 
-  /*
-   * NOTE: le reste du formulaire historique (PDF, galerie, e-mails, fermeture, etc.) a été déplacé
-   * dans une UX “Options avancées” au sein de la section Page publique, pour garder une interface premium.
-   * Les handlers et états restent inchangés afin de ne pas toucher à la logique métier.
-   */
-
+      {deleteAccountOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="presentation"
+          onClick={() => setDeleteAccountOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-md rounded-2xl border border-zg-border bg-zg-surface p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-lg font-semibold text-zg-fg">Supprimer ton compte ?</p>
+            <p className="mt-2 text-sm text-zg-muted">Cette action est irréversible. Fonctionnalité en préparation.</p>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button type="button" variant="secondary" className="min-h-11" onClick={() => setDeleteAccountOpen(false)}>
+                Annuler
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                className="min-h-11"
+                onClick={() => {
+                  setDeleteAccountOpen(false);
+                  setMessage("Suppression de compte : bientôt disponible. Contacte le support si besoin.");
+                }}
+              >
+                Confirmer
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
 }

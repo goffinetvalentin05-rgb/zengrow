@@ -155,7 +155,9 @@ export default async function DashboardSettingsPage() {
       <div className="space-y-10">
         <PageHeader
           title="Paramètres"
-          subtitle="Configurez votre restaurant, votre page publique, vos réservations et votre abonnement."
+          subtitle="Configure ton restaurant, ta page publique et tes préférences."
+          titleClassName="text-3xl font-bold tracking-tight"
+          subtitleClassName="text-sm text-zg-text-muted"
         />
         <SettingsForm
           restaurant={{

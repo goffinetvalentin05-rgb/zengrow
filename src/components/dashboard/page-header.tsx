@@ -20,6 +20,8 @@ type PageHeaderProps = {
   title: string;
   subtitle?: string;
   className?: string;
+  titleClassName?: string;
+  subtitleClassName?: string;
   /** Action principale (droite). */
   primaryAction?: HeaderAction;
   /** 0-2 actions secondaires (droite). */
@@ -92,6 +94,8 @@ export default function PageHeader({
   title,
   subtitle,
   className,
+  titleClassName,
+  subtitleClassName,
   primaryAction,
   secondaryActions = [],
   menuItems,
@@ -112,8 +116,10 @@ export default function PageHeader({
       <header className="dashboard-page-header flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-6">
         <div className="min-w-0">
           {kicker ? <p className="dashboard-section-kicker">{kicker}</p> : null}
-          <h1 className={cn("dashboard-page-title", kicker ? "mt-2" : "", "truncate")}>{title}</h1>
-          {subtitle ? <p className="dashboard-section-subtitle mt-2 max-w-2xl">{subtitle}</p> : null}
+          <h1 className={cn("dashboard-page-title", kicker ? "mt-2" : "", "truncate", titleClassName)}>{title}</h1>
+          {subtitle ? (
+            <p className={cn("dashboard-section-subtitle mt-2 max-w-2xl", subtitleClassName)}>{subtitle}</p>
+          ) : null}
         </div>
         {(primaryAction || secondaryActions.length > 0 || (menuItems && menuItems.length > 0)) ? (
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center md:justify-end md:pt-1">

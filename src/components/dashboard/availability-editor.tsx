@@ -21,12 +21,18 @@ type AvailabilityEditorProps = {
   };
   /** Intégré dans Paramètres : pas de PageHeader (évite d’écraser le titre du dashboard). */
   embedded?: boolean;
+  /**
+   * En mode `embedded`, n’affiche qu’une partie du formulaire (accordéons séparés).
+   * La sauvegarde envoie toujours l’ensemble des champs gérés par cet éditeur.
+   */
+  embeddedPart?: "all" | "hours" | "params";
 };
 
 export default function AvailabilityEditor({
   restaurantId,
   settings,
   embedded = false,
+  embeddedPart = "all",
 }: AvailabilityEditorProps) {
   const supabase = createClient();
   const [openingHours, setOpeningHours] = useState<OpeningHours>(settings.opening_hours);
@@ -86,9 +92,13 @@ export default function AvailabilityEditor({
     setMessage(error ? error.message : "Disponibilités enregistrées.");
   }
 
+  const splitEmbedded = embedded && embeddedPart !== "all";
+  const showHours = !embedded || embeddedPart === "all" || embeddedPart === "hours";
+  const showParams = !embedded || embeddedPart === "all" || embeddedPart === "params";
+
   return (
     <section className={embedded ? "space-y-6" : "space-y-8 md:space-y-10"}>
-      {embedded ? (
+      {embedded && !splitEmbedded ? (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div className="min-w-0">
             <h2 className="text-xl font-semibold tracking-tight text-zg-fg">Disponibilités</h2>
@@ -100,7 +110,9 @@ export default function AvailabilityEditor({
             {saving ? "Enregistrement…" : "Enregistrer"}
           </Button>
         </div>
-      ) : (
+      ) : null}
+
+      {!embedded ? (
         <PageHeader
           title="Disponibilités"
           subtitle="Indiquez quand vous accueillez les réservations, configurez vos services et vos règles de capacité."
@@ -111,17 +123,44 @@ export default function AvailabilityEditor({
             disabled: saving,
           }}
         />
-      )}
+      ) : null}
 
-      {message ? (
+      {splitEmbedded ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {message ? (
+            <ToastInline
+              tone={
+                message.toLowerCase().includes("enregistr") && !message.toLowerCase().includes("impossible")
+                  ? "success"
+                  : "info"
+              }
+              message={message}
+            />
+          ) : (
+            <span />
+          )}
+          <Button type="button" onClick={saveAvailability} disabled={saving} className="w-full shrink-0 sm:w-auto">
+            {saving ? "Enregistrement…" : "Enregistrer"}
+          </Button>
+        </div>
+      ) : message ? (
         <ToastInline
           tone={message.toLowerCase().includes("enregistr") && !message.toLowerCase().includes("impossible") ? "success" : "info"}
           message={message}
         />
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
-        <Card className="lg:col-span-7">
+      <div
+        className={
+          embedded && embeddedPart === "all"
+            ? "grid gap-6 lg:grid-cols-12 lg:items-start"
+            : embedded && splitEmbedded
+              ? "space-y-6"
+              : "grid gap-6 lg:grid-cols-12 lg:items-start"
+        }
+      >
+        {showHours ? (
+        <Card className={embedded && embeddedPart === "all" ? "lg:col-span-7" : undefined}>
           <CardHeader>
             <CardTitle>Horaires par jour</CardTitle>
             <CardDescription>Configurez vos disponibilités jour par jour, avec une vue claire.</CardDescription>
@@ -179,8 +218,10 @@ export default function AvailabilityEditor({
             })}
           </CardContent>
         </Card>
+        ) : null}
 
-        <div className="lg:col-span-5 space-y-6">
+        {showParams ? (
+        <div className={embedded && embeddedPart === "all" ? "lg:col-span-5 space-y-6" : "space-y-6"}>
           <Card>
             <CardHeader>
               <CardTitle>Paramètres de réservation</CardTitle>
@@ -206,11 +247,13 @@ export default function AvailabilityEditor({
                   <option value="60">60 min</option>
                   <option value="90">90 min</option>
                   <option value="120">120 min</option>
+                  <option value="150">150 min</option>
                 </Select>
               </div>
             </CardContent>
           </Card>
         </div>
+        ) : null}
       </div>
     </section>
   );
