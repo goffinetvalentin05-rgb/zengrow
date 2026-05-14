@@ -189,8 +189,8 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
           {campaigns.length === 0 ? (
             <EmptyState title="Aucune campagne" description="Créez votre première campagne marketing." />
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-zg-border-strong/85 bg-zg-surface/92 shadow-zg-soft backdrop-blur-sm">
-              <div className="grid grid-cols-[minmax(180px,1.4fr)_minmax(200px,2fr)_120px_130px] gap-3 border-b border-zg-border/80 bg-zg-surface-elevated/65 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg/55">
+            <div className="overflow-hidden rounded-2xl border border-zg-border bg-zg-surface shadow-zg-soft">
+              <div className="grid grid-cols-[minmax(180px,1.4fr)_minmax(200px,2fr)_120px_130px] gap-3 border-b border-zg-border bg-zg-surface-soft/70 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg-muted">
                 <div>Campagne</div>
                 <div>Objet</div>
                 <div className="text-right">Envois</div>
@@ -201,15 +201,15 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
                   <a
                     key={campaign.id}
                     href={`/dashboard/marketing/${campaign.id}`}
-                    className="grid grid-cols-[minmax(180px,1.4fr)_minmax(200px,2fr)_120px_130px] items-center gap-3 px-4 py-3 text-sm transition hover:bg-zg-highlight/35"
+                    className="grid grid-cols-[minmax(180px,1.4fr)_minmax(200px,2fr)_120px_130px] items-center gap-3 px-4 py-3 text-sm transition hover:bg-zg-highlight/50"
                   >
                     <div className="min-w-0">
                       <div className="truncate font-semibold text-zg-fg">{campaign.name}</div>
-                      <div className="mt-0.5 text-xs text-zg-fg/52">{campaign.sent_at ? "Envoyée" : "Brouillon"}</div>
+                      <div className="mt-0.5 text-xs text-zg-muted">{campaign.sent_at ? "Envoyée" : "Brouillon"}</div>
                     </div>
-                    <div className="min-w-0 truncate text-zg-fg/62">{campaign.subject}</div>
-                    <div className="text-right tabular-nums text-zg-fg/72">{campaign.recipients_count}</div>
-                    <div className="text-right tabular-nums text-zg-fg/62">
+                    <div className="min-w-0 truncate text-zg-muted">{campaign.subject}</div>
+                    <div className="text-right tabular-nums text-zg-muted">{campaign.recipients_count}</div>
+                    <div className="text-right tabular-nums text-zg-muted">
                       {(campaign.sent_at ?? campaign.created_at).slice(0, 10)}
                     </div>
                   </a>

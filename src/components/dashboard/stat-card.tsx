@@ -29,8 +29,8 @@ export function StatCardSkeleton() {
     >
       <Skeleton className="mt-0.5 h-14 w-1 shrink-0 self-start rounded-full bg-zg-teal/25" />
       <div className="min-w-0 flex-1 space-y-3">
-        <Skeleton className="h-3 w-2/3 max-w-[180px] bg-zg-fg/8" />
-        <Skeleton className="h-10 w-16 max-w-full bg-zg-fg/8" />
+        <Skeleton className="h-3 w-2/3 max-w-[180px] bg-zg-border/90" />
+        <Skeleton className="h-10 w-16 max-w-full bg-zg-border/90" />
       </div>
       <Skeleton className="mt-1 h-5 w-5 shrink-0 rounded-md bg-zg-teal/12" />
     </div>

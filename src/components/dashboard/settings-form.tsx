@@ -160,7 +160,7 @@ function ReservationField({
   return (
     <div className="space-y-2">
       <label className="dashboard-field-label">{label}</label>
-      <p className="text-sm leading-relaxed text-zg-fg/52">{description}</p>
+      <p className="text-sm leading-relaxed text-zg-muted">{description}</p>
       <div>{children}</div>
     </div>
   );
@@ -348,7 +348,7 @@ export default function SettingsForm({
     restaurant.hero_primary_color ?? restaurant.primary_color ?? "#12151c",
   );
   const [buttonColor] = useState(
-    restaurant.public_button_bg_color ?? settings.button_color ?? "#1F7A6C",
+    restaurant.public_button_bg_color ?? settings.button_color ?? "#E85D2C",
   );
   const [buttonTextColor] = useState(restaurant.public_button_text_color ?? "#ffffff");
   const [headingTextColor] = useState(restaurant.public_heading_text_color ?? "#0f172a");
@@ -356,7 +356,7 @@ export default function SettingsForm({
     restaurant.public_body_text_color ?? settings.text_color ?? "#334155",
   );
   const [accentColor, setAccentColor] = useState(
-    restaurant.public_accent_color ?? settings.accent_color ?? "#1F7A6C",
+    restaurant.public_accent_color ?? settings.accent_color ?? "#E85D2C",
   );
   const [footerBgColor] = useState(restaurant.public_footer_bg_color ?? "#0f172a");
   const [footerTextColor] = useState(restaurant.public_footer_text_color ?? "#e2e8f0");
@@ -866,8 +866,8 @@ export default function SettingsForm({
     <div className="grid gap-10 md:grid-cols-[260px_minmax(0,1fr)] md:items-start">
       <aside className="hidden md:block">
         <div className="sticky top-5 space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zg-fg/45">Sections</p>
-          <nav className="space-y-1 rounded-2xl border border-zg-border-strong bg-zg-surface/70 p-2 shadow-zg-soft">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zg-fg-muted">Sections</p>
+          <nav className="space-y-1 rounded-2xl border border-zg-border bg-zg-surface-soft/70 p-2 shadow-zg-soft">
             {desktopSections.map((key) => {
               const Icon = sectionIcon(key);
               const meta = sectionLabel(key);
@@ -880,7 +880,7 @@ export default function SettingsForm({
                   className={cn(
                     "flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition",
                     active
-                      ? "bg-gradient-to-r from-zg-highlight/95 to-zg-surface-elevated/90 shadow-[inset_0_0_0_1px_rgba(203,230,223,0.7)]"
+                      ? "bg-gradient-to-r from-zg-highlight/90 to-zg-surface shadow-[inset_0_0_0_1px_var(--zg-border-accent)]"
                       : "hover:bg-zg-highlight/60",
                   )}
                 >
@@ -889,16 +889,16 @@ export default function SettingsForm({
                       "mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
                       active
                         ? "border-zg-border-accent bg-zg-surface/90 text-zg-teal"
-                        : "border-zg-border/70 bg-zg-surface/85 text-zg-fg/55",
+                        : "border-zg-border/70 bg-zg-surface/85 text-zg-muted",
                     )}
                   >
                     <Icon size={18} strokeWidth={2} />
                   </span>
                   <span className="min-w-0">
-                    <span className={cn("block text-sm font-semibold", active ? "text-zg-fg" : "text-zg-fg/80")}>
+                    <span className={cn("block text-sm font-semibold", active ? "text-zg-fg" : "text-zg-muted")}>
                       {meta.title}
                     </span>
-                    <span className="mt-0.5 block text-xs leading-relaxed text-zg-fg/55">{meta.description}</span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-zg-muted">{meta.description}</span>
                   </span>
                 </button>
               );
@@ -914,15 +914,15 @@ export default function SettingsForm({
             const Icon = sectionIcon(key);
             const meta = sectionLabel(key);
             return (
-              <details key={key} className="group overflow-hidden rounded-2xl border border-zg-border-strong bg-zg-surface/70 shadow-zg-soft">
+              <details key={key} className="group overflow-hidden rounded-2xl border border-zg-border bg-zg-surface-soft/70 shadow-zg-soft">
                 <summary className="list-none cursor-pointer px-5 py-5">
                   <div className="flex items-start gap-3">
-                    <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-zg-border/70 bg-zg-surface/85 text-zg-fg/55">
+                    <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-zg-border/70 bg-zg-surface/85 text-zg-muted">
                       <Icon size={18} strokeWidth={2} />
                     </span>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-zg-fg">{meta.title}</p>
-                      <p className="mt-1 text-xs leading-relaxed text-zg-fg/55">{meta.description}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-zg-muted">{meta.description}</p>
                     </div>
                   </div>
                 </summary>
@@ -988,7 +988,7 @@ export default function SettingsForm({
           description="Activez l’envoi automatique après la visite et personnalisez le message."
         >
           {reviewAutomationLoading || !reviewAutomation ? (
-            <div className="rounded-2xl border border-dashed border-zg-border-strong bg-zg-surface-elevated/70 py-10 text-center text-sm text-zg-fg/52">
+            <div className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-soft/60 py-10 text-center text-sm text-zg-muted">
               Chargement des réglages…
             </div>
           ) : (
@@ -1012,7 +1012,7 @@ export default function SettingsForm({
           description="Campagnes e-mail et relances clients (Pro)."
           footer={
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-zg-fg/55">Les campagnes se gèrent dans le module Marketing.</p>
+              <p className="text-sm text-zg-muted">Les campagnes se gèrent dans le module Marketing.</p>
               <Link href="/dashboard/marketing" className="inline-flex">
                 <Button type="button" variant="secondary" className="min-h-11">
                   Ouvrir Marketing
@@ -1023,7 +1023,7 @@ export default function SettingsForm({
         >
           <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-5">
             <p className="text-sm font-semibold text-zg-fg">Campagnes</p>
-            <p className="mt-2 text-sm leading-relaxed text-zg-fg/62">
+            <p className="mt-2 text-sm leading-relaxed text-zg-muted">
               Créez des e-mails groupés pour annoncer une soirée spéciale, un menu ou une offre.
             </p>
           </div>
@@ -1054,12 +1054,12 @@ export default function SettingsForm({
         >
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">E-mail connecté</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">E-mail connecté</p>
               <p className="mt-2 text-sm font-semibold text-zg-fg">{authEmail ?? "—"}</p>
             </div>
             <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Sécurité</p>
-              <p className="mt-2 text-sm text-zg-fg/62">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Sécurité</p>
+              <p className="mt-2 text-sm text-zg-muted">
                 La gestion du mot de passe dépend de votre méthode de connexion.
               </p>
             </div>
@@ -1078,7 +1078,7 @@ export default function SettingsForm({
               <Button type="submit" disabled={isSaving} className="min-h-11 min-w-[180px]">
                 {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer"}
               </Button>
-              {message ? <p className="text-sm text-zg-fg/55">{message}</p> : null}
+              {message ? <p className="text-sm text-zg-muted">{message}</p> : null}
             </div>
           }
         >
@@ -1105,7 +1105,7 @@ export default function SettingsForm({
             </div>
             <div className="md:col-span-2">
               <label className="dashboard-field-label">Description interne</label>
-              <p className="mt-1 text-xs text-zg-fg/52">
+              <p className="mt-1 text-xs text-zg-muted">
                 Notes internes. Le texte affiché côté clients se règle dans Page publique.
               </p>
               <Textarea className="mt-2 min-h-24" value={description} onChange={(event) => setDescription(event.target.value)} />
@@ -1115,7 +1115,7 @@ export default function SettingsForm({
               <div className="mt-2 grid gap-3 md:grid-cols-[1fr_220px] md:items-start">
                 <div className="space-y-2">
                   <Input type="file" accept="image/*" onChange={handleLogoUpload} />
-                  {isUploadingLogo ? <p className="text-xs text-zg-fg/52">Envoi du logo…</p> : null}
+                  {isUploadingLogo ? <p className="text-xs text-zg-muted">Envoi du logo…</p> : null}
                   <Input value={logoUrl} onChange={(event) => setLogoUrl(event.target.value)} placeholder="URL du logo (optionnel)" />
                 </div>
                 <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
@@ -1124,7 +1124,7 @@ export default function SettingsForm({
                       <Image src={logoUrl} alt="" fill className="object-contain p-2" unoptimized sizes="80px" />
                     </div>
                   ) : (
-                    <p className="text-sm text-zg-fg/52">Aucun logo.</p>
+                    <p className="text-sm text-zg-muted">Aucun logo.</p>
                   )}
                 </div>
               </div>
@@ -1146,7 +1146,7 @@ export default function SettingsForm({
                 <Button type="submit" disabled={isSaving} className="min-h-11 min-w-[180px]">
                   {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer"}
                 </Button>
-                {message ? <p className="text-sm text-zg-fg/55">{message}</p> : null}
+                {message ? <p className="text-sm text-zg-muted">{message}</p> : null}
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Button
@@ -1175,7 +1175,7 @@ export default function SettingsForm({
         >
           <div className="grid gap-5">
             <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Lien public</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Lien public</p>
               <p className="mt-2 break-all text-sm font-semibold text-zg-fg">{effectivePublicLink}</p>
             </div>
 
@@ -1198,7 +1198,7 @@ export default function SettingsForm({
               <div className="md:col-span-2">
                 <label className="dashboard-field-label">Texte d’accueil</label>
                 <Textarea className="min-h-24" value={publicPageDescription} maxLength={500} onChange={(event) => setPublicPageDescription(event.target.value)} />
-                <p className="mt-1 text-xs text-zg-fg/52">{publicPageDescription.length}/500</p>
+                <p className="mt-1 text-xs text-zg-muted">{publicPageDescription.length}/500</p>
               </div>
               <div className="md:col-span-2">
                 <label className="dashboard-field-label">Réseaux sociaux</label>
@@ -1210,7 +1210,7 @@ export default function SettingsForm({
               </div>
             </div>
 
-            <details className="rounded-2xl border border-zg-border-strong bg-zg-surface-elevated/45 p-5">
+            <details className="rounded-2xl border border-zg-border bg-zg-surface-soft/50 p-5">
               <summary className="cursor-pointer text-sm font-semibold text-zg-fg">
                 Options avancées
               </summary>
@@ -1218,7 +1218,7 @@ export default function SettingsForm({
                 <div>
                   <label className="dashboard-field-label">Police des titres</label>
                   <select
-                    className="mt-2 h-11 w-full rounded-xl border border-zg-border-strong bg-zg-surface/98 px-3 text-sm text-zg-fg"
+                    className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm text-zg-fg"
                     value={headingFont}
                     onChange={(event) => setHeadingFont(event.target.value)}
                   >
@@ -1232,7 +1232,7 @@ export default function SettingsForm({
                 <div>
                   <label className="dashboard-field-label">Police du texte</label>
                   <select
-                    className="mt-2 h-11 w-full rounded-xl border border-zg-border-strong bg-zg-surface/98 px-3 text-sm text-zg-fg"
+                    className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm text-zg-fg"
                     value={bodyFont}
                     onChange={(event) => setBodyFont(event.target.value)}
                   >
@@ -1263,7 +1263,7 @@ export default function SettingsForm({
               <Button type="submit" disabled={isSaving} className="min-h-11 min-w-[180px]">
                 {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer"}
               </Button>
-              {message ? <p className="text-sm text-zg-fg/55">{message}</p> : null}
+              {message ? <p className="text-sm text-zg-muted">{message}</p> : null}
             </div>
           }
         >
@@ -1276,11 +1276,11 @@ export default function SettingsForm({
                   "rounded-2xl border p-5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30",
                   reservationMode === "simple"
                     ? "border-zg-border-accent bg-zg-highlight/60 ring-1 ring-zg-teal/10"
-                    : "border-zg-border-strong bg-zg-surface/95 hover:border-zg-border-accent/70",
+                    : "border-zg-border bg-zg-surface hover:border-zg-border-accent/70",
                 )}
               >
                 <p className="text-sm font-semibold text-zg-fg">Mode simple</p>
-                <p className="mt-2 text-sm leading-relaxed text-zg-fg/62">
+                <p className="mt-2 text-sm leading-relaxed text-zg-muted">
                   Idéal pour commencer : ZenGrow vérifie une capacité par service, sans gérer les tables.
                 </p>
               </button>
@@ -1292,18 +1292,18 @@ export default function SettingsForm({
                   "rounded-2xl border p-5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30",
                   reservationMode === "floor_plan"
                     ? "border-zg-border-accent bg-zg-highlight/60 ring-1 ring-zg-teal/10"
-                    : "border-zg-border-strong bg-zg-surface/95 hover:border-zg-border-accent/70",
+                    : "border-zg-border bg-zg-surface hover:border-zg-border-accent/70",
                 )}
               >
                 <p className="text-sm font-semibold text-zg-fg">Plan de salle</p>
-                <p className="mt-2 text-sm leading-relaxed text-zg-fg/62">
+                <p className="mt-2 text-sm leading-relaxed text-zg-muted">
                   Disponibilités calculées depuis vos espaces, vos tables et votre plan visuel.
                 </p>
               </button>
             </div>
 
             {reservationMode === "simple" ? (
-              <div className="space-y-6 rounded-2xl border border-zg-border-strong bg-zg-surface/90 p-5 md:p-6">
+              <div className="space-y-6 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
                 <div className="grid gap-4">
                   <Toggle checked={lunchServiceEnabled} onChange={setLunchServiceEnabled} label="Service midi activé" />
                   {lunchServiceEnabled ? (
@@ -1346,24 +1346,24 @@ export default function SettingsForm({
             ) : null}
 
             {reservationMode === "floor_plan" ? (
-              <div className="space-y-5 rounded-2xl border border-zg-border-strong bg-zg-surface/90 p-5 md:p-6">
+              <div className="space-y-5 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Espaces actifs</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Espaces actifs</p>
                     <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.activeZones ?? "—"}</p>
                   </div>
                   <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Tables actives</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Tables actives</p>
                     <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.activeTables ?? "—"}</p>
                   </div>
                   <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Capacité totale</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Capacité totale</p>
                     <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.maxCovers ?? "—"}</p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-zg-fg/62">
+                  <p className="text-sm text-zg-muted">
                     Ouvrez le plan de salle pour créer vos espaces et placer vos tables.
                   </p>
                   <Link href="/dashboard/floor-plan">
@@ -1403,7 +1403,7 @@ export default function SettingsForm({
               <Button type="submit" disabled={isSaving} className="min-h-11 min-w-[180px]">
                 {saveButtonSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer"}
               </Button>
-              {message ? <p className="text-sm text-zg-fg/55">{message}</p> : null}
+              {message ? <p className="text-sm text-zg-muted">{message}</p> : null}
             </div>
           }
         >
@@ -1411,7 +1411,7 @@ export default function SettingsForm({
             <div className="space-y-5">
               <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-5">
                 <p className="text-sm font-semibold text-zg-fg">Résumé</p>
-                <p className="mt-2 text-sm text-zg-fg/62">
+                <p className="mt-2 text-sm text-zg-muted">
                   {floorPlanSummary
                     ? `${floorPlanSummary.activeZones} espaces actifs · ${floorPlanSummary.activeTables} tables actives · ${floorPlanSummary.maxCovers} couverts`
                     : "—"}
@@ -1423,15 +1423,15 @@ export default function SettingsForm({
                     Ouvrir le plan de salle
                   </Button>
                 </Link>
-                <p className="text-sm text-zg-fg/55">
+                <p className="text-sm text-zg-muted">
                   Créez vos espaces (Salle intérieure, Terrasse…) et ajoutez vos tables.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-zg-border-strong bg-zg-surface/90 p-6">
+            <div className="rounded-2xl border border-zg-border bg-zg-surface p-6">
               <p className="text-sm font-semibold text-zg-fg">Disponible avec le mode Plan de salle</p>
-              <p className="mt-2 text-sm leading-relaxed text-zg-fg/62">
+              <p className="mt-2 text-sm leading-relaxed text-zg-muted">
                 Le plan de salle est disponible lorsque vous activez le mode Plan de salle dans Réservations.
               </p>
               <div className="mt-4">
@@ -1459,7 +1459,7 @@ export default function SettingsForm({
         title="Paramètres"
         description="Sélectionnez une section."
       >
-        <div className="rounded-2xl border border-dashed border-zg-border-strong bg-zg-surface-elevated/70 py-10 text-center text-sm text-zg-fg/52">
+        <div className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-soft/60 py-10 text-center text-sm text-zg-muted">
           Sélectionnez une section dans le menu.
         </div>
       </SettingsSectionCard>

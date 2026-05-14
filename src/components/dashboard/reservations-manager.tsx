@@ -286,12 +286,12 @@ export default function ReservationsManager({
           {showManualForm ? (
             <form
               onSubmit={createManualReservation}
-              className="space-y-5 rounded-2xl border border-zg-border-strong/85 bg-zg-surface-elevated/70 p-5 shadow-zg-soft backdrop-blur-sm md:p-6"
+              className="space-y-5 rounded-2xl border border-zg-border bg-zg-surface-soft/80 p-5 shadow-zg-soft md:p-6"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-zg-fg">Nouvelle réservation</p>
-                  <p className="mt-1 text-sm text-zg-fg/55">Saisie manuelle (walk-in possible).</p>
+                  <p className="mt-1 text-sm text-zg-muted">Saisie manuelle (walk-in possible).</p>
                 </div>
                 <Button
                   type="button"
@@ -306,10 +306,10 @@ export default function ReservationsManager({
                   Fermer
                 </Button>
               </div>
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-zg-border-strong bg-zg-surface-elevated/80 p-4 text-sm text-zg-fg/85">
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-zg-border bg-zg-surface p-4 text-sm text-zg-fg">
                 <input
                   type="checkbox"
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-zg-border-strong/75"
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-zg-border"
                   checked={manualWalkInMode}
                   onChange={(e) => {
                     const on = e.target.checked;
@@ -327,7 +327,7 @@ export default function ReservationsManager({
                 />
                 <span>
                   <span className="font-semibold text-zg-fg">Walk-in (client sans réservation)</span>
-                  <span className="mt-1 block text-zg-fg/62">
+                  <span className="mt-1 block text-zg-muted">
                     Enregistrement minimal : date, créneau, couverts{terraceEnabled ? ", zone" : ""}. Le badge Walk-in apparaît dans la liste.
                   </span>
                 </span>
@@ -394,7 +394,7 @@ export default function ReservationsManager({
                   <div className="md:col-span-2">
                     <button
                       type="button"
-                      className="text-sm font-semibold text-[#1F7A6C] underline decoration-[#CBE6DF] underline-offset-2 hover:text-[#0F3F3A]"
+                      className="text-sm font-semibold text-zg-teal underline decoration-zg-border-accent underline-offset-2 hover:text-zg-fg"
                       onClick={() => setShowWalkInContactFields(true)}
                     >
                       Ajouter nom, email ou téléphone (optionnel)
@@ -465,8 +465,8 @@ export default function ReservationsManager({
                 }
               />
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-zg-border-strong/85 bg-zg-surface/92 shadow-zg-soft backdrop-blur-sm">
-                <div className="grid grid-cols-[110px_110px_minmax(160px,1fr)_110px_170px_150px] gap-3 border-b border-zg-border/80 bg-zg-surface-elevated/65 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg/55">
+              <div className="overflow-hidden rounded-2xl border border-zg-border bg-zg-surface shadow-zg-soft">
+                <div className="grid grid-cols-[110px_110px_minmax(160px,1fr)_110px_170px_150px] gap-3 border-b border-zg-border bg-zg-surface-soft/70 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg-muted">
                   <div>Date</div>
                   <div>Heure</div>
                   <div>Client</div>
@@ -489,14 +489,14 @@ export default function ReservationsManager({
                           isSelected && "bg-zg-highlight/55",
                         )}
                       >
-                        <div className="font-semibold tabular-nums text-zg-fg/72">{r.reservation_date}</div>
+                        <div className="font-semibold tabular-nums text-zg-muted">{r.reservation_date}</div>
                         <div className="font-bold tabular-nums text-zg-teal">{r.reservation_time}</div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-3">
                             <GuestAvatar name={r.guest_name} size="sm" />
                             <div className="min-w-0">
                               <div className="truncate font-semibold text-zg-fg">{r.guest_name}</div>
-                              <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zg-fg/55">
+                              <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zg-muted">
                                 {walkin ? (
                                   <span className="rounded-full border border-amber-200/90 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-950">
                                     Walk-in
@@ -511,8 +511,8 @@ export default function ReservationsManager({
                             </div>
                           </div>
                         </div>
-                        <div className="font-semibold tabular-nums text-zg-fg/72">{r.guests}</div>
-                        <div className="truncate text-zg-fg/70">{r.table_label ?? "À placer"}</div>
+                        <div className="font-semibold tabular-nums text-zg-muted">{r.guests}</div>
+                        <div className="truncate text-zg-muted">{r.table_label ?? "À placer"}</div>
                         <div className="flex justify-end">
                           <StatusBadge status={r.status} displayLabel={historyStatusDisplayLabel(r, autoArchiveReservations)} />
                         </div>
@@ -556,7 +556,7 @@ export default function ReservationsManager({
             <div className="border-t border-zg-border/80 pt-10">
               <div className="mb-4">
                 <p className="text-base font-semibold text-zg-fg">Historique</p>
-                <p className="mt-1 text-sm text-zg-fg/52">
+                <p className="mt-1 text-sm text-zg-muted">
                   Réservations dont l’heure de fin (passage + durée du repas, {mealDuration} min) est dépassée. Lecture
                   seule.
                 </p>
@@ -639,7 +639,7 @@ export default function ReservationsManager({
                         </span>
                         <StatusBadge status={selectedReservation.status} displayLabel={historyStatusDisplayLabel(selectedReservation, autoArchiveReservations)} />
                       </CardDescription>
-                      <p className="mt-3 text-sm text-zg-fg/52">
+                      <p className="mt-3 text-sm text-zg-muted">
                         {selectedReservation.guest_phone || selectedReservation.guest_email || "Pas de contact"}
                       </p>
                     </div>
@@ -704,7 +704,7 @@ export default function ReservationsManager({
                 </>
               )}
 
-              {message ? <p className="text-sm text-zg-fg/62">{message}</p> : null}
+              {message ? <p className="text-sm text-zg-muted">{message}</p> : null}
             </CardContent>
           </Card>
         </div>

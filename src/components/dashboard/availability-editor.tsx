@@ -119,7 +119,7 @@ export default function AvailabilityEditor({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-zg-fg">{dayLabels[day]}</p>
-                      <p className="mt-0.5 text-xs text-zg-fg/50">
+                      <p className="mt-0.5 text-xs text-zg-fg-muted">
                         {isOpen ? `${ranges.length} créneau${ranges.length > 1 ? "x" : ""}` : "Fermé"}
                       </p>
                     </div>
@@ -139,7 +139,7 @@ export default function AvailabilityEditor({
                             value={range.start}
                             onChange={(event) => updateRange(day, index, "start", event.target.value)}
                           />
-                          <span className="text-zg-fg/38">à</span>
+                          <span className="text-zg-fg-muted">à</span>
                           <Input
                             type="time"
                             className="w-36 bg-white/80"

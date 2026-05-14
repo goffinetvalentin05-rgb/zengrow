@@ -360,7 +360,7 @@ export default function FloorPlanVisualPanel({
 
       let border = "border-zg-border/70";
       let bg = "bg-zg-surface/40";
-      let accent = "text-zg-fg/80";
+      let accent = "text-zg-muted";
 
       if (isBlocked) {
         border = "border-rose-300/80";
@@ -369,7 +369,7 @@ export default function FloorPlanVisualPanel({
       } else if (isInactive) {
         border = "border-zg-border/55";
         bg = "bg-zg-surface/30";
-        accent = "text-zg-fg/60";
+        accent = "text-zg-muted";
       } else if (isReserved) {
         border = "border-amber-300/90";
         bg = "bg-amber-50/85";
@@ -397,7 +397,7 @@ export default function FloorPlanVisualPanel({
       if (el.type === "wall") {
         return {
           className: cn(
-            "border border-zg-border-strong/70 bg-zg-fg/80",
+            "border border-zg-border bg-[color-mix(in_srgb,var(--zg-fg)_78%,transparent)]",
             isSelected && "ring-2 ring-zg-mint/55 ring-offset-2 ring-offset-zg-surface/60",
           ),
         };
@@ -406,7 +406,7 @@ export default function FloorPlanVisualPanel({
       if (el.type === "door") {
         return {
           className: cn(
-            "border border-zg-border-strong/70 bg-zg-surface/80",
+            "border border-zg-border bg-zg-surface",
             isSelected && "ring-2 ring-zg-mint/55 ring-offset-2 ring-offset-zg-surface/60",
           ),
         };
@@ -883,13 +883,13 @@ export default function FloorPlanVisualPanel({
         ]}
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center rounded-full border border-zg-border-strong bg-zg-surface/90 p-1 shadow-zg-soft">
+          <div className="flex items-center rounded-full border border-zg-border bg-zg-surface p-1 shadow-zg-soft">
             <button
               type="button"
               onClick={() => setMode("edit")}
               className={cn(
                 "min-h-9 rounded-full px-4 text-sm font-semibold transition",
-                mode === "edit" ? "bg-zg-fg text-white" : "text-zg-fg/60 hover:text-zg-fg",
+                mode === "edit" ? "bg-zg-fg text-white" : "text-zg-muted hover:text-zg-fg",
               )}
             >
               Édition
@@ -899,7 +899,7 @@ export default function FloorPlanVisualPanel({
               onClick={() => setMode("service")}
               className={cn(
                 "min-h-9 rounded-full px-4 text-sm font-semibold transition",
-                mode === "service" ? "bg-zg-fg text-white" : "text-zg-fg/60 hover:text-zg-fg",
+                mode === "service" ? "bg-zg-fg text-white" : "text-zg-muted hover:text-zg-fg",
               )}
             >
               Service
@@ -908,7 +908,7 @@ export default function FloorPlanVisualPanel({
         </div>
       </PageHeader>
 
-      <div className="rounded-2xl border border-zg-border-strong bg-zg-surface/70 px-4 py-3 shadow-zg-soft">
+      <div className="rounded-2xl border border-zg-border bg-zg-surface-soft/80 px-4 py-3 shadow-zg-soft">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
             <label className="dashboard-field-label">Espace</label>
@@ -938,7 +938,7 @@ export default function FloorPlanVisualPanel({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-zg-fg/55">
+      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-zg-muted">
         <span className="rounded-full border border-zg-border/80 bg-zg-surface/70 px-3 py-1 shadow-zg-soft">
           {activeTables.length} tables actives
         </span>
@@ -953,7 +953,7 @@ export default function FloorPlanVisualPanel({
         </span>
       </div>
 
-      {message ? <p className="text-sm text-zg-fg/62">{message}</p> : null}
+      {message ? <p className="text-sm text-zg-muted">{message}</p> : null}
 
       {showReservationForm ? (
         <Card>
@@ -1089,7 +1089,7 @@ export default function FloorPlanVisualPanel({
                       "rounded-full border px-4 py-2 text-sm font-semibold transition",
                       activePlanId === p.id
                         ? "border-zg-border-accent bg-zg-highlight/70 text-zg-fg"
-                        : "border-zg-border/70 bg-zg-surface/70 text-zg-fg/65 hover:bg-zg-surface/85 hover:text-zg-fg",
+                        : "border-zg-border/70 bg-zg-surface/70 text-zg-muted hover:bg-zg-surface/85 hover:text-zg-fg",
                     )}
                   >
                     {p.name}
@@ -1098,7 +1098,7 @@ export default function FloorPlanVisualPanel({
                 <button
                   type="button"
                   onClick={() => setShowPlanForm(true)}
-                  className="rounded-full border border-dashed border-zg-border/70 bg-zg-surface/70 px-4 py-2 text-sm font-semibold text-zg-fg/65 transition hover:bg-zg-surface/85 hover:text-zg-fg"
+                  className="rounded-full border border-dashed border-zg-border/70 bg-zg-surface/70 px-4 py-2 text-sm font-semibold text-zg-muted transition hover:bg-zg-surface/85 hover:text-zg-fg"
                 >
                   + Ajouter
                 </button>
@@ -1108,7 +1108,7 @@ export default function FloorPlanVisualPanel({
             <div
               ref={canvasRef}
               className={cn(
-                "relative overflow-hidden rounded-3xl border border-zg-border-strong/85 bg-zg-surface/60 shadow-zg-card",
+                "relative overflow-hidden rounded-3xl border border-zg-border bg-zg-surface shadow-zg-card",
                 mode === "edit" ? "cursor-grab active:cursor-grabbing" : "cursor-default",
               )}
               style={{
@@ -1142,7 +1142,7 @@ export default function FloorPlanVisualPanel({
                     style={style}
                   >
                     {el.type === "label" || el.type === "zone" || el.type === "bar" ? (
-                      <div className="flex h-full w-full items-center justify-center px-2 text-xs font-semibold text-zg-fg/85">
+                      <div className="flex h-full w-full items-center justify-center px-2 text-xs font-semibold text-zg-fg">
                         {el.label ?? (el.type === "zone" ? "Zone" : el.type === "bar" ? "Bar" : "Texte")}
                       </div>
                     ) : null}
@@ -1199,10 +1199,10 @@ export default function FloorPlanVisualPanel({
                     >
                       <div className="flex h-full w-full flex-col items-center justify-center px-2 py-1">
                         <div className={cn("text-xs font-bold tracking-tight", visual.accent)}>{t.name}</div>
-                        <div className="mt-1 text-[11px] text-zg-fg/65 tabular-nums">
+                        <div className="mt-1 text-[11px] text-zg-muted tabular-nums">
                           {t.min_covers}–{t.max_covers}
                         </div>
-                        <div className={cn("mt-1 text-[10px] font-semibold", isBlocked ? "text-rose-900/75" : "text-zg-fg/60")}>
+                        <div className={cn("mt-1 text-[10px] font-semibold", isBlocked ? "text-rose-900/75" : "text-zg-muted")}>
                           {statusLine}
                         </div>
                       </div>
@@ -1210,7 +1210,7 @@ export default function FloorPlanVisualPanel({
                   );
                 })}
               {/* Zone labels (petite UX) */}
-              <div className="pointer-events-none absolute left-5 top-5 rounded-2xl border border-zg-border/70 bg-zg-surface/80 px-3 py-2 text-xs text-zg-fg/65 shadow-zg-soft">
+              <div className="pointer-events-none absolute left-5 top-5 rounded-2xl border border-zg-border/70 bg-zg-surface/80 px-3 py-2 text-xs text-zg-muted shadow-zg-soft">
                 <div className="font-semibold text-zg-fg">Légende</div>
                 <div className="mt-1 space-y-1">
                   <div className="flex gap-2">
@@ -1350,7 +1350,7 @@ export default function FloorPlanVisualPanel({
                           Supprimer
                         </Button>
                       </div>
-                      <p className="text-xs text-zg-fg/55">
+                      <p className="text-xs text-zg-muted">
                         Astuce: déplacez l’élément sur le canvas puis cliquez sur <span className="font-semibold">Sauvegarder le plan</span>.
                       </p>
                     </div>
@@ -1486,7 +1486,7 @@ export default function FloorPlanVisualPanel({
                           >
                             <option value="">(Aucune)</option>
                           </Select>
-                          <p className="mt-1 text-xs text-zg-fg/52">Optionnel (non affiché côté client).</p>
+                          <p className="mt-1 text-xs text-zg-muted">Optionnel (non affiché côté client).</p>
                         </div>
 
                         <div>
@@ -1569,7 +1569,7 @@ export default function FloorPlanVisualPanel({
                           </Button>
                         </div>
 
-                        <p className="text-xs text-zg-fg/55">
+                        <p className="text-xs text-zg-muted">
                           Astuce: déplacez la table sur le canvas puis cliquez sur <span className="font-semibold">Sauvegarder le plan</span>.
                         </p>
                       </div>
@@ -1594,7 +1594,7 @@ export default function FloorPlanVisualPanel({
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="text-lg font-bold text-zg-fg">{selectedTable.name}</div>
-                            <div className="mt-1 text-sm text-zg-fg/55">
+                            <div className="mt-1 text-sm text-zg-muted">
                               {selectedTable.min_covers}–{selectedTable.max_covers} pers. · {selectedTable.zone_id ?? "Zone"}
                             </div>
                           </div>
@@ -1605,7 +1605,7 @@ export default function FloorPlanVisualPanel({
                                 selectedTable.status === "blocked"
                                   ? "border-rose-300/80 bg-rose-50/70 text-rose-900/85"
                                   : selectedTable.status === "inactive"
-                                    ? "border-zg-border/70 bg-zg-surface/60 text-zg-fg/55"
+                                    ? "border-zg-border/70 bg-zg-surface/60 text-zg-muted"
                                     : "border-emerald-300/80 bg-emerald-50/75 text-emerald-950/85",
                               )}
                             >
@@ -1626,7 +1626,7 @@ export default function FloorPlanVisualPanel({
                                   <div className="text-sm font-semibold text-zg-fg">
                                     {(r.reservation_time ?? "").slice(0, 5)} — {r.guest_name ?? "Client"} — {r.guests ?? "-"} pers.
                                   </div>
-                                  <div className="mt-1 text-xs text-zg-fg/55">Statut: {r.status ?? "-"}</div>
+                                  <div className="mt-1 text-xs text-zg-muted">Statut: {r.status ?? "-"}</div>
                                 </div>
                               </div>
                               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -1667,11 +1667,11 @@ export default function FloorPlanVisualPanel({
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <div className="text-sm font-semibold text-zg-fg">Réservations à placer</div>
-                        <div className="mt-1 text-xs text-zg-fg/55">Assignées uniquement si une table libre convient.</div>
+                        <div className="mt-1 text-xs text-zg-muted">Assignées uniquement si une table libre convient.</div>
                       </div>
                     </div>
                     {unassignedReservationsAtSelectedTime.length === 0 ? (
-                      <p className="mt-4 text-sm text-zg-fg/55">Aucune réservation à placer sur ce créneau.</p>
+                      <p className="mt-4 text-sm text-zg-muted">Aucune réservation à placer sur ce créneau.</p>
                     ) : (
                       <div className="mt-4 space-y-3">
                         {unassignedReservationsAtSelectedTime.map((r) => (
@@ -1679,7 +1679,7 @@ export default function FloorPlanVisualPanel({
                             <div className="text-sm font-semibold text-zg-fg">
                               {(r.reservation_time ?? "").slice(0, 5)} — {r.guest_name ?? "Client"} — {r.guests ?? "-"} pers.
                             </div>
-                            <div className="mt-1 text-xs text-zg-fg/55">Statut: {r.status ?? "-"}</div>
+                            <div className="mt-1 text-xs text-zg-muted">Statut: {r.status ?? "-"}</div>
                             <div className="mt-3">
                               <label className="dashboard-field-label">Assigner une table</label>
                               <Select

@@ -8,7 +8,7 @@ export default function QuickActions() {
         <Link href="/dashboard/reservations" className="text-sm font-semibold text-zg-teal hover:underline">
           Réservations
         </Link>
-        <Link href="/dashboard/settings" className="text-sm font-semibold text-zg-fg/62 hover:text-zg-fg">
+        <Link href="/dashboard/settings" className="text-sm font-semibold text-zg-muted hover:text-zg-fg">
           Paramètres
         </Link>
       </div>

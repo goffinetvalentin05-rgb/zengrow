@@ -81,7 +81,7 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
   }, [fontsHref]);
 
   return (
-    <div className="rounded-2xl border border-zg-border-strong bg-zg-surface/95 p-4 shadow-zg-soft backdrop-blur-sm">
+    <div className="rounded-2xl border border-zg-border bg-zg-surface p-4 shadow-zg-soft">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-[var(--foreground)]">Aperçu en direct</p>
@@ -90,12 +90,12 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
             <span className="font-mono text-[11px]">{publicPath}</span>
           </p>
         </div>
-        <div className="flex rounded-xl border border-zg-border-strong p-0.5 text-xs font-semibold">
+        <div className="flex rounded-xl border border-zg-border p-0.5 text-xs font-semibold">
           <button
             type="button"
             className={cn(
               "rounded-lg px-3 py-1.5 transition-colors",
-              viewport === "mobile" ? "bg-zg-fg text-white shadow-sm" : "text-zg-fg/62 hover:bg-zg-highlight/55",
+              viewport === "mobile" ? "bg-zg-fg text-white shadow-sm" : "text-zg-muted hover:bg-zg-highlight/70",
             )}
             onClick={() => setViewport("mobile")}
           >
@@ -105,7 +105,7 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
             type="button"
             className={cn(
               "rounded-lg px-3 py-1.5 transition-colors",
-              viewport === "desktop" ? "bg-zg-fg text-white shadow-sm" : "text-zg-fg/62 hover:bg-zg-highlight/55",
+              viewport === "desktop" ? "bg-zg-fg text-white shadow-sm" : "text-zg-muted hover:bg-zg-highlight/70",
             )}
             onClick={() => setViewport("desktop")}
           >
@@ -116,7 +116,7 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
 
       <div
         className={cn(
-          "mt-4 overflow-hidden rounded-xl border border-zg-border-strong bg-zg-surface-soft/90",
+          "mt-4 overflow-hidden rounded-xl border border-zg-border bg-zg-surface-soft/90",
           viewport === "mobile" ? "mx-auto max-w-[390px]" : "w-full",
         )}
       >

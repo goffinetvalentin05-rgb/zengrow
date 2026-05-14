@@ -77,14 +77,14 @@ export default function ActionMenu({ items, label = "Actions", className }: Acti
         <div
           id={menuId}
           role="menu"
-          className="absolute right-0 z-50 mt-2 min-w-52 overflow-hidden rounded-2xl border border-zg-border-strong/90 bg-zg-surface/98 p-1 shadow-zg-sidebar backdrop-blur-md"
+          className="absolute right-0 z-50 mt-2 min-w-52 overflow-hidden rounded-2xl border border-zg-border bg-zg-surface p-1 shadow-zg-sidebar"
         >
           {items.map((item) => {
             const itemClass = cn(
               "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition",
               item.tone === "danger"
                 ? "text-red-700 hover:bg-red-50 disabled:opacity-50"
-                : "text-zg-fg/80 hover:bg-zg-surface-soft/90 hover:text-zg-fg disabled:opacity-50",
+                : "text-zg-muted hover:bg-zg-highlight/80 hover:text-zg-fg disabled:opacity-50",
             );
 
             if (item.kind === "link") {

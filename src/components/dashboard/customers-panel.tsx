@@ -164,8 +164,8 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
             <EmptyState title="Aucun client" description="Aucun client ne correspond à ces filtres." />
           )
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-zg-border-strong/85 bg-zg-surface/92 shadow-zg-soft backdrop-blur-sm">
-            <div className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] gap-3 border-b border-zg-border/80 bg-zg-surface-elevated/65 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg/55">
+          <div className="overflow-hidden rounded-2xl border border-zg-border bg-zg-surface shadow-zg-soft">
+            <div className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] gap-3 border-b border-zg-border bg-zg-surface-soft/70 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg-muted">
               <div>Client</div>
               <div>Email</div>
               <div>Téléphone</div>
@@ -177,17 +177,17 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
               {filtered.map((c) => (
                 <div
                   key={c.id}
-                  className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] items-center gap-3 px-4 py-3 text-sm hover:bg-zg-highlight/35"
+                  className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] items-center gap-3 px-4 py-3 text-sm hover:bg-zg-highlight/50"
                 >
                   <div className="min-w-0">
                     <div className="truncate font-semibold text-zg-fg">{c.name}</div>
-                    <div className="mt-0.5 text-xs text-zg-fg/52">{c.reservations} réservation{c.reservations > 1 ? "s" : ""}</div>
+                    <div className="mt-0.5 text-xs text-zg-muted">{c.reservations} réservation{c.reservations > 1 ? "s" : ""}</div>
                   </div>
-                  <div className="min-w-0 truncate text-zg-fg/62">{c.email || "—"}</div>
-                  <div className="min-w-0 truncate text-zg-fg/62">{c.phone || "—"}</div>
-                  <div className="text-right tabular-nums text-zg-fg/72">{c.totalVisits}</div>
-                  <div className="text-right tabular-nums text-zg-fg/62">{c.lastVisit ? c.lastVisit.slice(0, 10) : "—"}</div>
-                  <div className="text-right tabular-nums text-zg-fg/62">{c.avgCovers != null ? c.avgCovers.toFixed(1) : "—"}</div>
+                  <div className="min-w-0 truncate text-zg-muted">{c.email || "—"}</div>
+                  <div className="min-w-0 truncate text-zg-muted">{c.phone || "—"}</div>
+                  <div className="text-right tabular-nums text-zg-muted">{c.totalVisits}</div>
+                  <div className="text-right tabular-nums text-zg-muted">{c.lastVisit ? c.lastVisit.slice(0, 10) : "—"}</div>
+                  <div className="text-right tabular-nums text-zg-muted">{c.avgCovers != null ? c.avgCovers.toFixed(1) : "—"}</div>
                 </div>
               ))}
             </div>

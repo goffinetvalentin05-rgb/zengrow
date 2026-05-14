@@ -137,10 +137,10 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
                   : "Un abonnement pour conserver toutes les fonctionnalités."}
             </CardDescription>
           </div>
-          <div className="rounded-xl border border-zg-border/90 bg-zg-surface-elevated/85 px-5 py-4 text-left shadow-sm lg:text-right">
-            <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Plan actuel</p>
+          <div className="rounded-xl border border-zg-border bg-zg-surface-soft/80 px-5 py-4 text-left shadow-sm lg:text-right">
+            <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg-muted">Plan actuel</p>
             <p className="mt-2 text-lg font-semibold text-zg-fg">{plan ?? "—"}</p>
-            <p className="mt-1 text-xs text-zg-fg/52">Statut : {subscriptionStatusLabel(status)}</p>
+            <p className="mt-1 text-xs text-zg-muted">Statut : {subscriptionStatusLabel(status)}</p>
             {isOwnerDev ? (
               <Badge tone="success" className="mt-3">
                 Accès développeur actif
@@ -152,7 +152,7 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
           {status === "trial" ? (
             <div className="max-w-md space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="font-medium text-zg-fg/85">Progression de l&apos;essai</span>
+                <span className="font-medium text-zg-fg">Progression de l&apos;essai</span>
                 <span className="font-semibold text-green-800">
                   {remainingDays !== null ? `${remainingDays} jour${remainingDays > 1 ? "s" : ""} restants` : "—"}
                 </span>
@@ -172,15 +172,15 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
       </Card>
 
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">Offres</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg-muted">Offres</p>
         <div className="mt-4 grid gap-6 lg:grid-cols-2">
           {PLAN_ITEMS.map((item) => (
             <div
               key={item.key}
               className={
                 item.featured
-                  ? "rounded-2xl border border-zg-border-accent bg-zg-highlight/65 p-8 shadow-zg-card backdrop-blur-sm ring-1 ring-zg-teal/12"
-                  : "rounded-2xl border border-zg-border/90 bg-zg-surface/95 p-8 shadow-zg-soft backdrop-blur-sm"
+                  ? "rounded-2xl border border-zg-border-accent bg-zg-highlight/80 p-8 shadow-zg-card ring-1 ring-zg-teal/15"
+                  : "rounded-2xl border border-zg-border bg-zg-surface p-8 shadow-zg-soft"
               }
             >
               {item.featured ? (
@@ -189,9 +189,9 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
               <h3 className={item.featured ? "mt-2 text-xl font-semibold text-zg-fg" : "text-xl font-semibold text-zg-fg"}>
                 {item.title}
               </h3>
-              <p className="mt-1 text-sm text-zg-fg/62">{item.subtitle}</p>
+              <p className="mt-1 text-sm text-zg-muted">{item.subtitle}</p>
               <p className="mt-4 text-3xl font-bold tabular-nums tracking-tight text-zg-fg">{item.price}</p>
-              <ul className="mt-6 space-y-2.5 text-sm text-zg-fg/85">
+              <ul className="mt-6 space-y-2.5 text-sm text-zg-fg">
                 {item.features.map((feature) => (
                   <FeatureItem key={`${item.key}-${feature.label}`} icon={feature.icon} label={feature.label} />
                 ))}
@@ -199,14 +199,14 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
               <Button type="button" className="mt-8 w-full" onClick={() => startCheckout(item.key)} disabled={Boolean(loadingPlan)}>
                 {loadingPlan === item.key ? "Redirection…" : item.cta}
               </Button>
-              <p className="mt-3 text-center text-xs text-zg-fg/52">Sans engagement long terme</p>
+              <p className="mt-3 text-center text-xs text-zg-muted">Sans engagement long terme</p>
             </div>
           ))}
         </div>
       </div>
 
       {message ? (
-        <p className="rounded-2xl border border-zg-border-strong bg-zg-surface/95 px-4 py-3 text-sm text-zg-fg/72 shadow-zg-soft backdrop-blur-sm">
+        <p className="rounded-2xl border border-zg-border bg-zg-surface px-4 py-3 text-sm text-zg-muted shadow-zg-soft">
           {message}
         </p>
       ) : null}
@@ -220,7 +220,7 @@ function FeatureItem({ icon: Icon, label }: { icon: LucideIcon; label: string })
       <span className="flex h-5 w-5 shrink-0 items-center justify-center text-zg-teal">
         <Check size={14} strokeWidth={2.5} />
       </span>
-      <Icon size={15} className="shrink-0 text-zg-fg/45" strokeWidth={1.75} />
+      <Icon size={15} className="shrink-0 text-zg-fg-muted" strokeWidth={1.75} />
       <span>{label}</span>
     </li>
   );

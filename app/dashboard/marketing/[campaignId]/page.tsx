@@ -64,7 +64,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
               </div>
               <div>
                 <p className="dashboard-field-label">Corps du message</p>
-                <p className="mt-3 whitespace-pre-wrap rounded-xl border border-zg-border/90 bg-zg-surface-elevated/80 p-5 text-sm leading-relaxed text-zg-fg/82 shadow-zg-soft backdrop-blur-sm">
+                <p className="mt-3 whitespace-pre-wrap rounded-xl border border-zg-border bg-zg-surface-soft/80 p-5 text-sm leading-relaxed text-zg-fg shadow-zg-soft">
                   {campaign.content}
                 </p>
               </div>
@@ -78,14 +78,14 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
                 <CardDescription>Suivi simplifié.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
-                <div className="rounded-2xl border border-zg-border/90 bg-zg-surface/95 p-5 shadow-zg-soft backdrop-blur-sm">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">E-mails envoyés</p>
+                <div className="rounded-2xl border border-zg-border bg-zg-surface p-5 shadow-zg-soft">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg-muted">E-mails envoyés</p>
                   <p className="mt-2 text-3xl font-bold tabular-nums text-zg-fg">{sentCount}</p>
                 </div>
-                <div className="rounded-2xl border border-zg-border/90 bg-zg-surface/95 p-5 shadow-zg-soft backdrop-blur-sm">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg/52">E-mails ouverts</p>
+                <div className="rounded-2xl border border-zg-border bg-zg-surface p-5 shadow-zg-soft">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg-muted">E-mails ouverts</p>
                   <p className="mt-2 text-3xl font-bold tabular-nums text-zg-fg">{openedCount}</p>
-                  <p className="mt-2 text-xs text-zg-fg/52">
+                  <p className="mt-2 text-xs text-zg-muted">
                     Comptage via pixel de suivi (désactivez les images pour une mesure partielle).
                   </p>
                 </div>
@@ -107,7 +107,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
                 {emails.map((email) => (
                   <li
                     key={email}
-                    className="rounded-xl border border-zg-border/85 bg-zg-surface-elevated/65 px-4 py-2.5 text-sm text-zg-fg/82 shadow-zg-soft"
+                    className="rounded-xl border border-zg-border bg-zg-surface-soft/70 px-4 py-2.5 text-sm text-zg-fg shadow-zg-soft"
                   >
                     {email}
                   </li>

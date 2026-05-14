@@ -39,7 +39,7 @@ export default async function DashboardFeedbackPage() {
           </CardHeader>
           <CardContent>
             {!feedbacks || feedbacks.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-zg-border-strong bg-zg-surface-elevated/85 py-10 text-center text-sm text-zg-fg/52 shadow-zg-soft backdrop-blur-sm">
+              <p className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-soft/70 py-10 text-center text-sm text-zg-muted shadow-zg-soft">
                 Aucun retour pour le moment.
               </p>
             ) : (
@@ -47,7 +47,7 @@ export default async function DashboardFeedbackPage() {
                 {feedbacks.map((item) => (
                   <article
                     key={item.id}
-                    className="rounded-2xl border border-zg-border/90 bg-zg-surface/95 p-5 shadow-zg-soft backdrop-blur-sm md:p-6"
+                    className="rounded-2xl border border-zg-border bg-zg-surface p-5 shadow-zg-soft md:p-6"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-[15px] font-semibold text-zg-fg">{item.customer_name || "Client"}</p>
@@ -55,11 +55,11 @@ export default async function DashboardFeedbackPage() {
                         {formatDate(item.created_at)}
                       </time>
                     </div>
-                    <p className="mt-3 text-sm text-zg-fg/62">
-                      <span className="font-semibold text-zg-fg/72">Note</span> {item.rating ?? 0}/5
+                    <p className="mt-3 text-sm text-zg-muted">
+                      <span className="font-semibold text-zg-fg">Note</span> {item.rating ?? 0}/5
                     </p>
-                    <p className="mt-2 text-sm leading-relaxed text-zg-fg/82">{item.message || "(Aucun message)"}</p>
-                    <p className="mt-3 text-xs text-zg-fg/52">{item.customer_email || "Email non renseigné"}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-zg-muted">{item.message || "(Aucun message)"}</p>
+                    <p className="mt-3 text-xs text-zg-fg-muted">{item.customer_email || "Email non renseigné"}</p>
                   </article>
                 ))}
               </div>
