@@ -4,6 +4,7 @@ import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
+import { buttonClassName } from "@/src/components/ui/button";
 
 export default async function DashboardCustomersPage() {
   const supabase = await createClient();
@@ -67,19 +68,23 @@ export default async function DashboardCustomersPage() {
             subtitle="Fiches construites à partir des réservations — idéal pour reconnaître vos habitués."
           />
 
-          <div className="relative min-h-[min(70vh,560px)] overflow-hidden rounded-[1.35rem] border border-zg-border bg-gradient-to-b from-zg-surface-soft to-zg-surface shadow-zg-card">
+          <div className="relative min-h-[min(70vh,560px)] overflow-hidden rounded-2xl border border-zg-border bg-zg-surface transition-all duration-200 ease-out">
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zg-highlight/50 via-transparent to-transparent opacity-90"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(232,93,44,0.08),transparent_55%)]"
             />
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-5 px-6 py-16 text-center">
-              <div className="max-w-md rounded-2xl border border-zg-border bg-zg-surface px-8 py-10 shadow-zg-sidebar">
+              <div className="max-w-md rounded-2xl border border-zg-border bg-zg-surface-elevated px-8 py-10">
                 <p className="text-base font-semibold leading-relaxed text-zg-fg">
                   Cette fonctionnalité est disponible dans le plan Pro (69 CHF/mois)
                 </p>
                 <Link
                   href="/dashboard/settings?section=subscription"
-                  className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-gradient-to-r from-zg-teal to-zg-mint px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_32px_-14px_rgba(232,93,44,0.42)] transition hover:scale-[1.02] active:scale-[0.99]"
+                  className={buttonClassName({
+                    variant: "primary",
+                    size: "md",
+                    className: "mt-6 w-full",
+                  })}
                 >
                   Passer au plan Pro
                 </Link>

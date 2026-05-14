@@ -597,7 +597,7 @@ export default function FloorPlanPanel({
                   {zones.map((z) => {
                     const zTables = groupedTables.get(z.id) ?? [];
                     return (
-                      <div key={z.id} className="rounded-2xl border border-zg-border bg-zg-surface p-4 shadow-zg-soft">
+                      <div key={z.id} className="rounded-2xl border border-zg-border bg-zg-surface p-4 transition-all duration-200 ease-out">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="text-base font-semibold text-zg-fg">{z.name}</p>
@@ -698,13 +698,13 @@ export default function FloorPlanPanel({
                     return (
                       <div
                         key={r.id}
-                        className="flex flex-col gap-3 rounded-2xl border border-zg-border bg-zg-surface p-4 shadow-zg-soft md:flex-row md:items-center md:justify-between"
+                        className="flex flex-col gap-3 rounded-2xl border border-zg-border bg-zg-surface p-4 transition-all duration-200 ease-out md:flex-row md:items-center md:justify-between"
                       >
                         <div className="min-w-0">
                           <p className="font-semibold text-zg-fg">
                             <span className="tabular-nums text-zg-teal">{(r.reservation_time ?? "--:--").slice(0, 5)}</span>{" "}
                             — {r.guest_name ?? "Client"} — {r.guests ?? "-"} pers. —{" "}
-                            <span className={isUnassigned ? "text-amber-700" : ""}>{tableLabel}</span>
+                            <span className={isUnassigned ? "text-zg-warning" : ""}>{tableLabel}</span>
                           </p>
                           <p className="mt-1 text-sm text-zg-muted">Statut: {r.status ?? "-"}</p>
                         </div>

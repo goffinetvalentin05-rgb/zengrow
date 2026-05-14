@@ -200,16 +200,16 @@ body {
 
 .dashboard-page-title {
   font-family: inherit;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.875rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.25;
+  line-height: 1.2;
   color: var(--zg-fg);
 }
 
 .dashboard-section-heading {
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.015em;
   line-height: 1.35;
   color: var(--zg-fg);
@@ -227,7 +227,7 @@ body {
   justify-content: center;
   min-height: 2.5rem;
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--zg-fg);

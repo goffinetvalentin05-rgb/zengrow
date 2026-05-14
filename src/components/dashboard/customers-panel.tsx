@@ -173,7 +173,7 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
             />
           )
         ) : (
-          <div className="overflow-hidden rounded-xl border border-zg-border bg-zg-surface shadow-sm transition-all duration-150">
+          <div className="overflow-hidden rounded-2xl border border-zg-border bg-zg-surface transition-all duration-200 ease-out">
             <div className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] gap-3 border-b border-zg-border bg-zg-surface-elevated px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-zg-text-muted">
               <div>Client</div>
               <div>Email</div>
@@ -186,7 +186,7 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
               {filtered.map((c) => (
                 <div
                   key={c.id}
-                  className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] items-center gap-3 px-4 py-3 text-sm transition-all duration-150 hover:bg-zg-card-hover"
+                  className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] items-center gap-3 px-4 py-3 text-sm transition-all duration-200 ease-out hover:bg-zg-card-hover"
                 >
                   <div className="min-w-0">
                     <div className="truncate font-semibold text-zg-fg">{c.name}</div>

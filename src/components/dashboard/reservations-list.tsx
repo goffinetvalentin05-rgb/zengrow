@@ -16,7 +16,7 @@ export default function ReservationsList({ reservations }: ReservationsListProps
   return (
     <section>
       <div className="mb-4">
-        <h2 className="text-base font-medium text-zg-fg">Prochaines réservations</h2>
+        <h2 className="text-base font-semibold text-zg-fg">Prochaines réservations</h2>
         <p className="mt-1 text-sm text-zg-text-secondary">Liste synthétique des passages à venir.</p>
       </div>
       <Table>

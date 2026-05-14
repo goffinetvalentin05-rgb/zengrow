@@ -500,7 +500,7 @@ export default function ReservationsManager({
                               <div className="truncate font-semibold text-zg-fg">{r.guest_name}</div>
                               <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zg-muted">
                                 {walkin ? (
-                                  <span className="rounded-full border border-amber-200/90 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-950">
+                                  <span className="rounded-full border border-zg-warning/35 bg-zg-warning-soft-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-warning">
                                     Walk-in
                                   </span>
                                 ) : null}
@@ -645,11 +645,11 @@ export default function ReservationsManager({
                           {selectedReservation.guests} couverts
                         </span>
                         {selectedReservation.reservation_type === "walkin" ? (
-                          <span className="rounded-full border border-amber-200/90 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-950">
+                          <span className="rounded-full border border-zg-warning/35 bg-zg-warning-soft-bg px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-warning">
                             Walk-in
                           </span>
                         ) : null}
-                        <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-900">
+                        <span className="rounded-full border border-zg-success/35 bg-zg-success-soft-bg px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-success">
                           {seatingZoneFromRow(selectedReservation) === "terrace" ? "Terrasse" : "Intérieur"}
                         </span>
                         <StatusBadge status={selectedReservation.status} displayLabel={historyStatusDisplayLabel(selectedReservation, autoArchiveReservations)} />

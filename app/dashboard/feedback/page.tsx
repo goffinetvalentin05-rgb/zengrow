@@ -38,7 +38,7 @@ export default async function DashboardFeedbackPage() {
           </CardHeader>
           <CardContent>
             {!feedbacks || feedbacks.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-soft/70 py-10 text-center text-sm text-zg-muted shadow-zg-soft">
+              <p className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-elevated/50 py-10 text-center text-sm text-zg-text-muted transition-all duration-200 ease-out">
                 Aucun retour pour le moment.
               </p>
             ) : (
@@ -46,11 +46,11 @@ export default async function DashboardFeedbackPage() {
                 {feedbacks.map((item) => (
                   <article
                     key={item.id}
-                    className="rounded-2xl border border-zg-border bg-zg-surface p-5 shadow-zg-soft md:p-6"
+                    className="rounded-2xl border border-zg-border bg-zg-surface p-5 transition-all duration-200 ease-out hover:border-zg-border-hover md:p-6"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-[15px] font-semibold text-zg-fg">{item.customer_name || "Client"}</p>
-                      <time className="rounded-full bg-zg-highlight px-3 py-1 text-xs font-semibold text-zg-teal ring-1 ring-zg-border-accent/80">
+                      <time className="rounded-full border border-zg-border bg-zg-accent-soft-bg px-3 py-1 text-xs font-semibold text-zg-accent">
                         {formatDate(item.created_at)}
                       </time>
                     </div>

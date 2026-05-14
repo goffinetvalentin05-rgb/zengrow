@@ -23,7 +23,7 @@ export default function GuestAvatar({ name, size = "md", className }: GuestAvata
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-zg-highlight font-semibold text-zg-teal",
+        "flex shrink-0 items-center justify-center rounded-full bg-zg-accent-soft-bg font-semibold text-zg-accent",
         sizeMap[size],
         className,
       )}

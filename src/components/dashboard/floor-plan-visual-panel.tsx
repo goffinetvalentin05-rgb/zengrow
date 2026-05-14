@@ -363,26 +363,27 @@ export default function FloorPlanVisualPanel({
       let accent = "text-zg-muted";
 
       if (isBlocked) {
-        border = "border-rose-300/80";
-        bg = "bg-rose-50/70";
-        accent = "text-rose-900/90";
+        border = "border-zg-danger/50";
+        bg = "bg-zg-danger-soft-bg";
+        accent = "text-zg-danger";
       } else if (isInactive) {
         border = "border-zg-border/55";
         bg = "bg-zg-surface/30";
-        accent = "text-zg-muted";
+        accent = "text-zg-text-muted";
       } else if (isReserved) {
-        border = "border-amber-300/90";
-        bg = "bg-amber-50/85";
-        accent = "text-amber-950/90";
+        border = "border-zg-warning/45";
+        bg = "bg-zg-warning-soft-bg/90";
+        accent = "text-zg-warning";
       } else {
-        border = "border-emerald-300/80";
-        bg = "bg-emerald-50/75";
-        accent = "text-emerald-950/90";
+        border = "border-zg-success/45";
+        bg = "bg-zg-success-soft-bg";
+        accent = "text-zg-success";
       }
 
       if (isSelected) {
-        border = "border-zg-mint/55";
-        bg = "bg-zg-surface-elevated/75";
+        border = "border-zg-accent";
+        bg = "bg-zg-accent-soft-bg";
+        accent = "text-zg-accent";
       }
 
       return { border, bg, accent };
@@ -433,7 +434,7 @@ export default function FloorPlanVisualPanel({
       if (el.type === "bar") {
         return {
           className: cn(
-            "border border-amber-300/60 bg-amber-50/70",
+            "border border-zg-warning/40 bg-zg-warning-soft-bg/80",
             isSelected && "ring-2 ring-zg-mint/55 ring-offset-2 ring-offset-zg-surface/60",
           ),
         };
@@ -883,7 +884,7 @@ export default function FloorPlanVisualPanel({
         ]}
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center rounded-full border border-zg-border bg-zg-surface p-1 shadow-zg-soft">
+          <div className="flex items-center rounded-full border border-zg-border bg-zg-surface-elevated p-1 transition-all duration-200 ease-out">
             <button
               type="button"
               onClick={() => setMode("edit")}
@@ -908,7 +909,7 @@ export default function FloorPlanVisualPanel({
         </div>
       </PageHeader>
 
-      <div className="rounded-2xl border border-zg-border bg-zg-surface-soft/80 px-4 py-3 shadow-zg-soft">
+      <div className="rounded-2xl border border-zg-border bg-zg-surface-elevated px-4 py-3 transition-all duration-200 ease-out">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
             <label className="dashboard-field-label">Espace</label>
@@ -939,16 +940,16 @@ export default function FloorPlanVisualPanel({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-zg-muted">
-        <span className="rounded-full border border-zg-border/80 bg-zg-surface/70 px-3 py-1 shadow-zg-soft">
+        <span className="rounded-full border border-zg-border/80 bg-zg-surface-elevated px-3 py-1">
           {activeTables.length} tables actives
         </span>
-        <span className="rounded-full border border-zg-border/80 bg-zg-surface/70 px-3 py-1 shadow-zg-soft">
+        <span className="rounded-full border border-zg-border/80 bg-zg-surface-elevated px-3 py-1">
           {activeTables.reduce((sum, t) => sum + Math.max(0, t.max_covers), 0)} couverts
         </span>
-        <span className="rounded-full border border-zg-border/80 bg-zg-surface/70 px-3 py-1 shadow-zg-soft">
+        <span className="rounded-full border border-zg-border/80 bg-zg-surface-elevated px-3 py-1">
           {reservations.length} réservations
         </span>
-        <span className="rounded-full border border-zg-border/80 bg-zg-surface/70 px-3 py-1 shadow-zg-soft">
+        <span className="rounded-full border border-zg-border/80 bg-zg-surface-elevated px-3 py-1">
           {unassignedReservationsAtSelectedTime.length} à placer
         </span>
       </div>
@@ -1108,7 +1109,7 @@ export default function FloorPlanVisualPanel({
             <div
               ref={canvasRef}
               className={cn(
-                "relative overflow-hidden rounded-3xl border border-zg-border bg-zg-surface shadow-zg-card",
+                "relative overflow-hidden rounded-3xl border border-zg-border bg-zg-surface transition-all duration-200 ease-out",
                 mode === "edit" ? "cursor-grab active:cursor-grabbing" : "cursor-default",
               )}
               style={{
@@ -1185,11 +1186,10 @@ export default function FloorPlanVisualPanel({
                         setSelected({ kind: "table", id: t.id });
                       }}
                       className={cn(
-                        "absolute select-none transition-shadow",
+                        "absolute select-none transition-all duration-200 ease-out",
                         visual.border,
                         visual.bg,
-                        "shadow-zg-soft",
-                        mode === "edit" ? "hover:shadow-zg-card" : "hover:shadow-zg-card",
+                        mode === "edit" ? "hover:ring-2 hover:ring-zg-accent/25" : "hover:ring-2 hover:ring-zg-accent/15",
                       )}
                       style={{
                         ...style,
@@ -1202,7 +1202,7 @@ export default function FloorPlanVisualPanel({
                         <div className="mt-1 text-[11px] text-zg-muted tabular-nums">
                           {t.min_covers}–{t.max_covers}
                         </div>
-                        <div className={cn("mt-1 text-[10px] font-semibold", isBlocked ? "text-rose-900/75" : "text-zg-muted")}>
+                        <div className={cn("mt-1 text-[10px] font-semibold", isBlocked ? "text-zg-danger/90" : "text-zg-text-muted")}>
                           {statusLine}
                         </div>
                       </div>
@@ -1210,19 +1210,19 @@ export default function FloorPlanVisualPanel({
                   );
                 })}
               {/* Zone labels (petite UX) */}
-              <div className="pointer-events-none absolute left-5 top-5 rounded-2xl border border-zg-border/70 bg-zg-surface/80 px-3 py-2 text-xs text-zg-muted shadow-zg-soft">
+              <div className="pointer-events-none absolute left-5 top-5 rounded-2xl border border-zg-border/70 bg-zg-surface-elevated/95 px-3 py-2 text-xs text-zg-text-muted backdrop-blur-sm">
                 <div className="font-semibold text-zg-fg">Légende</div>
                 <div className="mt-1 space-y-1">
                   <div className="flex gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-emerald-300/80 bg-emerald-50/75" aria-hidden />
+                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-zg-success/40 bg-zg-success-soft-bg" aria-hidden />
                     Libre
                   </div>
                   <div className="flex gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-amber-300/90 bg-amber-50/85" aria-hidden />
+                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-zg-warning/40 bg-zg-warning-soft-bg" aria-hidden />
                     Réservée
                   </div>
                   <div className="flex gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-rose-300/80 bg-rose-50/70" aria-hidden />
+                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-zg-danger/40 bg-zg-danger-soft-bg" aria-hidden />
                     Bloquée
                   </div>
                 </div>
@@ -1603,10 +1603,10 @@ export default function FloorPlanVisualPanel({
                               className={cn(
                                 "rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide",
                                 selectedTable.status === "blocked"
-                                  ? "border-rose-300/80 bg-rose-50/70 text-rose-900/85"
+                                  ? "border-zg-danger/45 bg-zg-danger-soft-bg text-zg-danger"
                                   : selectedTable.status === "inactive"
-                                    ? "border-zg-border/70 bg-zg-surface/60 text-zg-muted"
-                                    : "border-emerald-300/80 bg-emerald-50/75 text-emerald-950/85",
+                                    ? "border-zg-border/70 bg-zg-surface-elevated text-zg-text-muted"
+                                    : "border-zg-success/45 bg-zg-success-soft-bg text-zg-success",
                               )}
                             >
                               {selectedTable.status}

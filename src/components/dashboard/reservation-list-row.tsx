@@ -41,7 +41,7 @@ export default function ReservationListRow({
   const zoneLabel = seatingZone === "terrace" ? "Terrasse" : "Intérieur";
   const walkInBadge =
     reservationType === "walkin" ? (
-      <span className="rounded-full border border-amber-200/90 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-950">
+      <span className="rounded-full border border-zg-warning/35 bg-zg-warning-soft-bg px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-warning">
         Walk-in
       </span>
     ) : null;
@@ -59,7 +59,7 @@ export default function ReservationListRow({
           <div className="flex shrink-0 flex-col items-end gap-2">
             {walkInBadge}
             {showZoneBadge ? (
-              <span className="rounded-full border border-zg-border bg-zg-highlight px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-teal">
+              <span className="rounded-full border border-zg-border bg-zg-accent-soft-bg px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-accent">
                 {zoneLabel}
               </span>
             ) : null}
@@ -76,7 +76,7 @@ export default function ReservationListRow({
           <div className="flex shrink-0 flex-col items-end gap-2">
             {walkInBadge}
             {showZoneBadge ? (
-              <span className="rounded-full border border-zg-border bg-zg-highlight px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-teal">
+              <span className="rounded-full border border-zg-border bg-zg-accent-soft-bg px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-accent">
                 {zoneLabel}
               </span>
             ) : null}
@@ -93,7 +93,10 @@ export default function ReservationListRow({
         <button
           type="button"
           onClick={onClick}
-          className={cn(listRowClass, "cursor-pointer rounded-xl px-2 transition hover:bg-zg-highlight/55")}
+          className={cn(
+            listRowClass,
+            "cursor-pointer rounded-xl px-2 transition-all duration-200 ease-out hover:bg-zg-card-hover",
+          )}
         >
           {listInner}
         </button>
@@ -126,7 +129,7 @@ export default function ReservationListRow({
       <div className="flex shrink-0 flex-col items-end gap-2">
         {walkInBadge}
         {showZoneBadge ? (
-          <span className="rounded-full border border-zg-border bg-zg-highlight px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-teal">
+          <span className="rounded-full border border-zg-border bg-zg-accent-soft-bg px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-accent">
             {zoneLabel}
           </span>
         ) : null}
@@ -136,8 +139,8 @@ export default function ReservationListRow({
   );
 
   const rowClass = cn(
-    "flex w-full items-center gap-4 rounded-2xl border border-zg-border bg-zg-surface p-4 text-left shadow-zg-soft transition md:p-5",
-    onClick && "cursor-pointer hover:border-zg-border-accent hover:bg-zg-highlight/35 hover:shadow-zg-soft",
+    "flex w-full items-center gap-4 rounded-2xl border border-zg-border bg-zg-surface p-4 text-left transition-all duration-200 ease-out md:p-5",
+    onClick && "cursor-pointer hover:border-zg-border-hover hover:bg-zg-card-hover",
     className,
   );
 

@@ -81,10 +81,10 @@ export default function ActionMenu({ items, label = "Actions", className }: Acti
         >
           {items.map((item) => {
             const itemClass = cn(
-              "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition",
+              "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-all duration-200 ease-out",
               item.tone === "danger"
-                ? "text-red-700 hover:bg-red-50 disabled:opacity-50"
-                : "text-zg-muted hover:bg-zg-highlight/80 hover:text-zg-fg disabled:opacity-50",
+                ? "text-zg-danger hover:bg-zg-danger-soft-bg disabled:opacity-50"
+                : "text-zg-text-secondary hover:bg-zg-card-hover hover:text-zg-fg disabled:opacity-50",
             );
 
             if (item.kind === "link") {

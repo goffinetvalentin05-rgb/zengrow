@@ -230,7 +230,7 @@ function SettingsSectionCard({
   footer?: ReactNode;
 }) {
   return (
-    <Card className="overflow-hidden p-0 shadow-zg-soft">
+    <Card className="overflow-hidden p-0 transition-all duration-200 ease-out">
       <div className="px-6 py-6 md:px-8">
         <CardTitle className="text-xl">{title}</CardTitle>
         <CardDescription className="mt-2 max-w-2xl">{description}</CardDescription>
@@ -867,7 +867,7 @@ export default function SettingsForm({
       <aside className="hidden md:block">
         <div className="sticky top-5 space-y-3">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zg-fg-muted">Sections</p>
-          <nav className="space-y-1 rounded-2xl border border-zg-border bg-zg-surface-soft/70 p-2 shadow-zg-soft">
+          <nav className="space-y-1 rounded-2xl border border-zg-border bg-zg-surface-elevated p-2 transition-all duration-200 ease-out">
             {desktopSections.map((key) => {
               const Icon = sectionIcon(key);
               const meta = sectionLabel(key);
@@ -878,18 +878,18 @@ export default function SettingsForm({
                   type="button"
                   onClick={() => setSection(key)}
                   className={cn(
-                    "flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition",
+                    "flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-all duration-200 ease-out",
                     active
-                      ? "bg-gradient-to-r from-zg-highlight/90 to-zg-surface shadow-[inset_0_0_0_1px_var(--zg-border-accent)]"
-                      : "hover:bg-zg-highlight/60",
+                      ? "border border-zg-border-accent bg-zg-accent-soft-bg"
+                      : "border border-transparent hover:bg-zg-card-hover",
                   )}
                 >
                   <span
                     className={cn(
                       "mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
                       active
-                        ? "border-zg-border-accent bg-zg-surface/90 text-zg-teal"
-                        : "border-zg-border/70 bg-zg-surface/85 text-zg-muted",
+                        ? "border-zg-border-accent bg-zg-surface text-zg-accent"
+                        : "border-zg-border/70 bg-zg-surface text-zg-text-muted",
                     )}
                   >
                     <Icon size={18} strokeWidth={2} />
@@ -914,7 +914,7 @@ export default function SettingsForm({
             const Icon = sectionIcon(key);
             const meta = sectionLabel(key);
             return (
-              <details key={key} className="group overflow-hidden rounded-2xl border border-zg-border bg-zg-surface-soft/70 shadow-zg-soft">
+              <details key={key} className="group overflow-hidden rounded-2xl border border-zg-border bg-zg-surface-elevated transition-all duration-200 ease-out">
                 <summary className="list-none cursor-pointer px-5 py-5">
                   <div className="flex items-start gap-3">
                     <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-zg-border/70 bg-zg-surface/85 text-zg-muted">
@@ -1120,7 +1120,7 @@ export default function SettingsForm({
                 </div>
                 <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
                   {logoUrl ? (
-                    <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-zg-border/70 bg-white/70">
+                    <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-zg-border/70 bg-zg-surface-elevated">
                       <Image src={logoUrl} alt="" fill className="object-contain p-2" unoptimized sizes="80px" />
                     </div>
                   ) : (
@@ -1275,8 +1275,8 @@ export default function SettingsForm({
                 className={cn(
                   "rounded-2xl border p-5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30",
                   reservationMode === "simple"
-                    ? "border-zg-border-accent bg-zg-highlight/60 ring-1 ring-zg-teal/10"
-                    : "border-zg-border bg-zg-surface hover:border-zg-border-accent/70",
+                    ? "border-zg-border-focus bg-zg-accent-soft-bg ring-1 ring-zg-accent/25"
+                    : "border-zg-border bg-zg-surface hover:border-zg-border-hover",
                 )}
               >
                 <p className="text-sm font-semibold text-zg-fg">Mode simple</p>
@@ -1291,8 +1291,8 @@ export default function SettingsForm({
                 className={cn(
                   "rounded-2xl border p-5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30",
                   reservationMode === "floor_plan"
-                    ? "border-zg-border-accent bg-zg-highlight/60 ring-1 ring-zg-teal/10"
-                    : "border-zg-border bg-zg-surface hover:border-zg-border-accent/70",
+                    ? "border-zg-border-focus bg-zg-accent-soft-bg ring-1 ring-zg-accent/25"
+                    : "border-zg-border bg-zg-surface hover:border-zg-border-hover",
                 )}
               >
                 <p className="text-sm font-semibold text-zg-fg">Plan de salle</p>

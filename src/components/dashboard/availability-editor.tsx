@@ -134,14 +134,14 @@ export default function AvailabilityEditor({
                         >
                           <Input
                             type="time"
-                            className="w-36 bg-white/80"
+                            className="w-36 bg-zg-surface-elevated"
                             value={range.start}
                             onChange={(event) => updateRange(day, index, "start", event.target.value)}
                           />
                           <span className="text-zg-fg-muted">à</span>
                           <Input
                             type="time"
-                            className="w-36 bg-white/80"
+                            className="w-36 bg-zg-surface-elevated"
                             value={range.end}
                             onChange={(event) => updateRange(day, index, "end", event.target.value)}
                           />

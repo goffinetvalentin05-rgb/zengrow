@@ -366,7 +366,7 @@ export default function ReviewAutomationPanel({
             </div>
 
             <div className="lg:col-span-5">
-              <div className="rounded-2xl border border-zg-border bg-zg-surface-soft/60 p-6 shadow-zg-soft">
+              <div className="rounded-2xl border border-zg-border bg-zg-surface-elevated p-6 transition-all duration-200 ease-out">
                 <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg-muted">Aperçu</p>
                 <p className="mt-4 text-base font-semibold text-zg-fg">{previewSubject}</p>
                 <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zg-muted">{previewMessage}</p>

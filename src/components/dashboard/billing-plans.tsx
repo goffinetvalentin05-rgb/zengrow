@@ -153,18 +153,18 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
             <div className="max-w-md space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="font-medium text-zg-fg">Progression de l&apos;essai</span>
-                <span className="font-semibold text-green-800">
+                <span className="font-semibold text-zg-success">
                   {remainingDays !== null ? `${remainingDays} jour${remainingDays > 1 ? "s" : ""} restants` : "—"}
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-zg-border/75">
-                <div className="h-full rounded-full bg-green-600 transition-all" style={{ width: `${progressPercent}%` }} />
+              <div className="h-2 overflow-hidden rounded-full bg-zg-border">
+                <div className="h-full rounded-full bg-zg-success transition-all duration-200 ease-out" style={{ width: `${progressPercent}%` }} />
               </div>
             </div>
           ) : null}
 
           {status === "expired" && !isOwnerDev ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950 shadow-sm">
+            <div className="rounded-xl border border-zg-warning/40 bg-zg-warning-soft-bg px-5 py-4 text-sm text-zg-warning">
               Votre essai est terminé. Choisissez un plan pour continuer à utiliser ZenGrow.
             </div>
           ) : null}
@@ -179,12 +179,12 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
               key={item.key}
               className={
                 item.featured
-                  ? "rounded-2xl border border-zg-border-accent bg-zg-highlight/80 p-8 shadow-zg-card ring-1 ring-zg-teal/15"
-                  : "rounded-2xl border border-zg-border bg-zg-surface p-8 shadow-zg-soft"
+                  ? "rounded-2xl border border-zg-border-accent bg-zg-surface-elevated p-8 ring-1 ring-zg-accent/25 transition-all duration-200 ease-out"
+                  : "rounded-2xl border border-zg-border bg-zg-surface p-8 transition-all duration-200 ease-out hover:border-zg-border-hover"
               }
             >
               {item.featured ? (
-                <span className="text-xs font-semibold uppercase tracking-wide text-zg-teal">Recommandé</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-zg-accent">Recommandé</span>
               ) : null}
               <h3 className={item.featured ? "mt-2 text-xl font-semibold text-zg-fg" : "text-xl font-semibold text-zg-fg"}>
                 {item.title}
@@ -206,7 +206,7 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
       </div>
 
       {message ? (
-        <p className="rounded-2xl border border-zg-border bg-zg-surface px-4 py-3 text-sm text-zg-muted shadow-zg-soft">
+        <p className="rounded-2xl border border-zg-border bg-zg-surface-elevated px-4 py-3 text-sm text-zg-text-secondary transition-all duration-200 ease-out">
           {message}
         </p>
       ) : null}
@@ -217,7 +217,7 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
 function FeatureItem({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
     <li className="flex items-center gap-3">
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-zg-teal">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-zg-success">
         <Check size={14} strokeWidth={2.5} />
       </span>
       <Icon size={15} className="shrink-0 text-zg-fg-muted" strokeWidth={1.75} />

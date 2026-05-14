@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { Bell, Menu, Search } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { buttonClassName } from "@/src/components/ui/button";
-import { useDashboardTitleMeta, useSetDashboardTitle } from "@/src/components/dashboard/dashboard-title-context";
+import { useDashboardTitleMeta } from "@/src/components/dashboard/dashboard-title-context";
 
 type DashboardTopBarProps = {
   publicLink: string;

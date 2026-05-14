@@ -13,7 +13,7 @@ export default function FilterBar({ className, children, right }: FilterBarProps
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-2xl border border-zg-border bg-zg-surface px-4 py-3 shadow-zg-soft md:flex-row md:items-end md:justify-between",
+        "flex flex-col gap-3 rounded-2xl border border-zg-border bg-zg-surface px-4 py-3 transition-all duration-200 ease-out md:flex-row md:items-end md:justify-between",
         className,
       )}
     >
