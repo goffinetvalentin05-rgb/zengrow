@@ -7,9 +7,9 @@ export default function Textarea({ className = "", ...props }: TextareaProps) {
   return (
     <textarea
       className={cn(
-        "w-full rounded-xl border border-zg-border bg-zg-surface px-4 py-3 text-sm text-zg-fg outline-none transition duration-200 shadow-sm",
-        "placeholder:text-zg-fg-muted",
-        "focus:border-zg-teal/35 focus:ring-2 focus:ring-zg-teal/12",
+        "w-full rounded-lg border border-zg-border bg-zg-surface px-3 py-2.5 text-sm text-zg-fg outline-none transition-all duration-150",
+        "placeholder:text-zg-text-muted/60",
+        "focus:border-zg-border-focus focus:ring-2 focus:ring-zg-accent/15",
         className,
       )}
       {...props}

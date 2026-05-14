@@ -86,7 +86,6 @@ export default function AvailabilityEditor({
   return (
     <section className="space-y-8 md:space-y-10">
       <PageHeader
-        kicker="Disponibilités"
         title="Disponibilités"
         subtitle="Indiquez quand vous accueillez les réservations, configurez vos services et vos règles de capacité."
         primaryAction={{

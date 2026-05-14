@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Calendar,
   CalendarDays,
+  Clock,
+  Copy,
+  ExternalLink,
+  Grid3x3,
   LayoutDashboard,
-  LayoutGrid,
+  LogOut,
   Megaphone,
   Settings,
   Star,
@@ -16,18 +19,22 @@ import {
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import { cn } from "@/src/lib/utils";
+import Button, { buttonClassName } from "@/src/components/ui/button";
+import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 
 type DashboardSidebarProps = {
   reservationLink: string;
   subscriptionPlan: "starter" | "pro" | null;
   subscriptionStatus: "trial" | "active" | "expired";
+  mobileOpen?: boolean;
+  onNavigate?: () => void;
 };
 
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
-  { href: "/dashboard/availability", label: "Disponibilités", icon: CalendarDays },
-  { href: "/dashboard/floor-plan", label: "Plan de salle", icon: LayoutGrid, requiresPro: true },
+  { href: "/dashboard/availability", label: "Disponibilités", icon: Clock },
+  { href: "/dashboard/floor-plan", label: "Plan de salle", icon: Grid3x3, requiresPro: true },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
   { href: "/dashboard/reviews", label: "Avis Google", icon: Star },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
@@ -38,9 +45,12 @@ export default function DashboardSidebar({
   reservationLink,
   subscriptionPlan,
   subscriptionStatus,
+  mobileOpen = false,
+  onNavigate,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const showToast = useDashboardToast();
   const hasProMarketingAccess = subscriptionStatus === "trial" || subscriptionPlan === "pro";
 
   async function handleLogout() {
@@ -49,81 +59,91 @@ export default function DashboardSidebar({
     router.push("/login");
   }
 
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(reservationLink);
+      showToast({ message: "Lien public copié.", icon: Copy });
+    } catch {
+      showToast({ message: "Impossible de copier le lien.", icon: Copy });
+    }
+  }
+
   return (
     <aside
-      className="flex w-full min-w-0 flex-col overflow-hidden border-b border-zg-border bg-zg-surface-soft md:sticky md:top-7 md:min-h-[calc(100vh-3.5rem)] md:min-w-[220px] md:w-[248px] md:max-w-[248px] md:shrink-0 md:self-start md:rounded-2xl md:border md:border-zg-border md:border-b-0 md:shadow-zg-sidebar"
-      style={{ overflow: "hidden" }}
+      className={cn(
+        "fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col border-r border-zg-sidebar-border bg-zg-sidebar-bg transition-transform duration-150 ease-out md:static md:z-0 md:translate-x-0 md:border-r md:border-zg-sidebar-border",
+        mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0 md:shadow-none",
+      )}
     >
-      <div className="shrink-0 border-b border-zg-border px-5 pt-6 pb-5">
+      <div className="shrink-0 px-6 py-6">
         <Link
           href="/dashboard"
-          className="inline-flex rounded-xl ring-offset-zg-surface-soft transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30 focus-visible:ring-offset-2"
+          onClick={onNavigate}
+          className="font-landing-serif text-xl italic leading-none text-zg-on-dark transition-opacity duration-150 hover:opacity-90"
           aria-label="ZenGrow — tableau de bord"
         >
-          <Image src="/Zengrow-logo.png" alt="" width={156} height={42} className="h-9 w-auto object-contain sm:h-10" priority />
+          ZenGrow
         </Link>
-        <p className="mt-3.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-zg-fg-muted">Navigation</p>
       </div>
 
-      <nav
-        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden px-2.5 pb-2 pt-3 text-[13px] leading-snug"
-        style={{ overflow: "hidden" }}
-      >
+      <p className="mb-2 ml-3 mt-1 shrink-0 text-xs font-medium uppercase tracking-wider text-zg-on-dark-muted">
+        Navigation
+      </p>
+
+      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3 pb-4">
         {navItems.map((item) => (
           <NavItem
             key={item.href}
             href={item.href}
             label={item.label}
             icon={item.icon}
-            active={pathname === item.href}
+            active={
+              item.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : pathname === item.href || pathname.startsWith(`${item.href}/`)
+            }
             locked={Boolean(item.requiresPro && !hasProMarketingAccess)}
+            onNavigate={onNavigate}
           />
         ))}
       </nav>
 
-      <div className="mt-auto shrink-0 border-t border-zg-border bg-zg-surface/40 px-5 py-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zg-fg-muted">Lien public</p>
-        <p className="mt-2 break-all text-xs leading-relaxed text-zg-muted">{reservationLink}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <a
-            href={reservationLink}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-zg-teal transition hover:text-zg-fg"
-          >
-            Page publique →
-          </a>
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(reservationLink);
-              } catch {
-                /* noop */
-              }
-            }}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-zg-muted transition hover:text-zg-fg"
-          >
-            Copier le lien
-          </button>
+      <div className="mt-auto shrink-0 space-y-3 px-4 pb-4">
+        <div className="rounded-xl bg-white/5 p-4">
+          <p className="text-xs font-medium uppercase tracking-wider text-zg-on-dark-muted">Lien public</p>
+          <p className="mt-2 truncate text-sm text-zg-on-dark" title={reservationLink}>
+            {reservationLink}
+          </p>
+          <div className="mt-3 flex gap-2">
+            <a
+              href={reservationLink}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonClassName({
+                variant: "ghostDark",
+                size: "sm",
+                className: "flex-1 border border-white/10",
+              })}
+            >
+              <ExternalLink className="h-4 w-4" strokeWidth={2} aria-hidden />
+              Page publique
+            </a>
+            <Button type="button" variant="ghostDark" size="sm" className="flex-1 border border-white/10" onClick={handleCopy}>
+              <Copy className="h-4 w-4" strokeWidth={2} aria-hidden />
+              Copier
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div className="shrink-0 space-y-0.5 border-t border-zg-border px-5 pt-3 pb-6">
-        <button
+        <Button
           type="button"
+          variant="ghostDark"
+          className="w-full justify-start gap-2 border border-transparent px-3"
           onClick={handleLogout}
-          className="w-full rounded-xl py-2.5 text-left text-xs font-medium text-zg-muted transition hover:bg-zg-highlight/90 hover:text-zg-fg"
         >
+          <LogOut className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
           Se déconnecter
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="w-full rounded-xl py-2.5 text-left text-xs font-medium text-zg-muted transition hover:bg-zg-highlight/90 hover:text-zg-fg"
-        >
-          Site vitrine
-        </button>
+        </Button>
       </div>
     </aside>
   );
@@ -135,37 +155,33 @@ function NavItem({
   icon: Icon,
   active,
   locked,
+  onNavigate,
 }: {
   href: string;
   label: string;
   icon: LucideIcon;
   active: boolean;
   locked?: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={cn(
-        "group flex items-center gap-3 rounded-xl py-2.5 font-semibold transition-colors duration-200",
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
         active
-          ? "bg-zg-surface px-3.5 text-zg-fg shadow-[inset_0_0_0_1px_var(--zg-border-accent)]"
-          : "px-3.5 text-zg-muted hover:bg-zg-surface/80 hover:text-zg-fg",
+          ? "border-l-[3px] border-zg-accent bg-zg-accent/15 text-zg-accent"
+          : "border-l-[3px] border-transparent text-zg-on-dark-muted hover:bg-white/5 hover:text-zg-on-dark",
       )}
     >
-      <Icon
-        size={18}
-        strokeWidth={active ? 2 : 1.75}
-        className={cn(
-          "shrink-0 transition-colors",
-          active ? "text-zg-teal" : "text-zg-fg-muted group-hover:text-zg-teal/90",
-        )}
-      />
+      <Icon size={18} strokeWidth={active ? 2 : 1.75} className="shrink-0" aria-hidden />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {locked ? (
         <span
           className={cn(
             "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-            active ? "bg-zg-highlight text-zg-teal ring-1 ring-zg-border-accent" : "bg-zg-surface/70 text-zg-fg-muted",
+            active ? "bg-white/10 text-zg-on-dark" : "bg-white/5 text-zg-on-dark-muted",
           )}
         >
           Pro

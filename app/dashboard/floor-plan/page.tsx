@@ -16,7 +16,6 @@ export default async function DashboardFloorPlanPage() {
       <DashboardContent width="wide">
         <section className="relative space-y-6">
           <PageHeader
-            kicker="Plan de salle"
             title="Plan de salle"
             subtitle="Créez vos espaces, placez vos tables et suivez votre service."
           />

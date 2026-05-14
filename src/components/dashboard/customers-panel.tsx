@@ -8,6 +8,7 @@ import EmptyState from "@/src/components/ui/empty-state";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import { cn } from "@/src/lib/utils";
+import { Filter, Users } from "lucide-react";
 
 export type CustomerRow = {
   id: string;
@@ -159,13 +160,21 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
 
         {filtered.length === 0 ? (
           customers.length === 0 ? (
-            <EmptyState title="Aucun client" description="Les fiches apparaîtront après des réservations." />
+            <EmptyState
+              icon={Users}
+              title="Fichier tout neuf"
+              description="Ton fichier client est encore vide. Les premiers vont bientôt arriver."
+            />
           ) : (
-            <EmptyState title="Aucun client" description="Aucun client ne correspond à ces filtres." />
+            <EmptyState
+              icon={Filter}
+              title="Aucun résultat"
+              description="Aucun client ne correspond à ces filtres — élargis un peu les critères, les habitués sont peut-être cachés derrière."
+            />
           )
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-zg-border bg-zg-surface shadow-zg-soft">
-            <div className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] gap-3 border-b border-zg-border bg-zg-surface-soft/70 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg-muted">
+          <div className="overflow-hidden rounded-xl border border-zg-border bg-zg-surface shadow-sm transition-all duration-150">
+            <div className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] gap-3 border-b border-zg-border bg-zg-surface-elevated px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-zg-text-muted">
               <div>Client</div>
               <div>Email</div>
               <div>Téléphone</div>
@@ -173,11 +182,11 @@ export default function CustomersPanel({ customers }: CustomersPanelProps) {
               <div className="text-right">Dernière</div>
               <div className="text-right">Couv.</div>
             </div>
-            <div className="divide-y divide-zg-border/75">
+            <div className="divide-y divide-zg-border">
               {filtered.map((c) => (
                 <div
                   key={c.id}
-                  className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] items-center gap-3 px-4 py-3 text-sm hover:bg-zg-highlight/50"
+                  className="grid grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_90px_110px_90px] items-center gap-3 px-4 py-3 text-sm transition-all duration-150 hover:bg-zg-card-hover"
                 >
                   <div className="min-w-0">
                     <div className="truncate font-semibold text-zg-fg">{c.name}</div>

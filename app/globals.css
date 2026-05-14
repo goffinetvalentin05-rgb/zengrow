@@ -5,48 +5,61 @@ html {
 }
 
 :root {
-  --background: #ffffff;
-  --background-elevated: #fafafa;
-  --foreground: #111827;
+  --background: #fafaf7;
+  --background-elevated: #f4f1eb;
+  --foreground: #1a1614;
   --surface: #ffffff;
   --surface-card: #ffffff;
-  --surface-muted: #f9fafb;
-  --border: rgba(17, 24, 39, 0.08);
-  --border-soft: rgba(17, 24, 39, 0.06);
-  --primary: #15803d;
-  --primary-hover: #166534;
-  --primary-muted: rgba(22, 101, 52, 0.1);
+  --surface-muted: #f4f1eb;
+  --border: #eae6dd;
+  --border-soft: #eae6dd;
+  --primary: #e85d2c;
+  --primary-hover: #d14e1f;
+  --primary-muted: rgba(232, 93, 44, 0.12);
   --primary-foreground: #ffffff;
-  --muted-foreground: #6b7280;
+  --muted-foreground: #968d7f;
   --accent-amber: #d97706;
   --accent-amber-soft: #fffbeb;
-  --badge-sand-bg: #f9fafb;
-  --badge-sand-text: #6b7280;
+  --badge-sand-bg: #f4f1eb;
+  --badge-sand-text: #5c544a;
   --danger-bg: #fef2f2;
   --danger-text: #991b1b;
   --focus-ring: 0 0 0 3px rgba(232, 93, 44, 0.22);
 
-  /* ZenGrow dashboard — light premium (warm neutrals + accent orange) */
+  /* ZenGrow dashboard — palette premium (spec restaurateur) */
+  --zg-app: #fafaf7;
+  --zg-sidebar-bg: #0a0806;
+  --zg-sidebar-border: #1f1a15;
+  --zg-on-dark: #faf7f2;
+  --zg-on-dark-muted: #8a7f73;
   --zg-canvas: #fafaf7;
   --zg-canvas-mid: #f7f5f0;
   --zg-fg: #1a1614;
-  --zg-muted: #6b6258;
-  --zg-fg-muted: #a39b8e;
-  /* Tokens historiques zg-teal / zg-mint = accent (évite de renommer toutes les classes) */
+  --zg-text-secondary: #5c544a;
+  --zg-muted: #5c544a;
+  --zg-text-muted: #968d7f;
+  --zg-fg-muted: #968d7f;
   --zg-teal: #e85d2c;
+  --zg-accent: #e85d2c;
+  --zg-accent-hover: #d14e1f;
   --zg-mint: #ea7349;
-  --zg-border: #ede9e1;
-  --zg-border-strong: #e5e0d6;
+  --zg-border: #eae6dd;
+  --zg-border-strong: #eae6dd;
+  --zg-border-hover: #d4cfc2;
   --zg-border-accent: #edd5c8;
+  --zg-border-focus: #e85d2c;
   --zg-surface: #ffffff;
-  --zg-surface-elevated: #ffffff;
-  --zg-surface-soft: #f5f2ec;
+  --zg-surface-elevated: #f4f1eb;
+  --zg-surface-soft: #f4f1eb;
+  --zg-card-hover: #fafaf7;
   --zg-highlight: #fff4ed;
+  --zg-accent-soft-bg: #fff4ed;
+  --zg-accent-soft-text: #c44a1a;
   --zg-glow-from: rgba(232, 93, 44, 0.07);
   --zg-glow-via: rgba(232, 93, 44, 0.035);
-  --zg-shadow-card: 0 1px 0 rgba(26, 22, 20, 0.04), 0 14px 44px -28px rgba(26, 22, 20, 0.14);
-  --zg-shadow-card-soft: 0 1px 0 rgba(26, 22, 20, 0.03), 0 10px 32px -22px rgba(26, 22, 20, 0.1);
-  --zg-shadow-sidebar: 0 18px 50px -32px rgba(26, 22, 20, 0.12);
+  --zg-shadow-card: 0 1px 2px rgba(26, 22, 20, 0.04);
+  --zg-shadow-card-soft: 0 1px 2px rgba(26, 22, 20, 0.03);
+  --zg-shadow-sidebar: 0 18px 50px -32px rgba(0, 0, 0, 0.35);
   --zg-success: #16a34a;
   --zg-warning: #f59e0b;
   --zg-danger: #dc2626;
@@ -58,7 +71,7 @@ html {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Landing ZenGrow (palette orange chaud) */
+  /* Landing ZenGrow */
   --color-landing-bg: #0a0806;
   --color-landing-section: #100c09;
   --color-landing-card: #16110d;
@@ -69,20 +82,34 @@ html {
   --color-landing-accent-soft: #ffa86b;
   --font-landing-serif: var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
 
+  --color-zg-app: var(--zg-app);
+  --color-zg-sidebar-bg: var(--zg-sidebar-bg);
+  --color-zg-sidebar-border: var(--zg-sidebar-border);
+  --color-zg-on-dark: var(--zg-on-dark);
+  --color-zg-on-dark-muted: var(--zg-on-dark-muted);
   --color-zg-canvas: var(--zg-canvas);
   --color-zg-canvas-mid: var(--zg-canvas-mid);
   --color-zg-fg: var(--zg-fg);
+  --color-zg-text-secondary: var(--zg-text-secondary);
   --color-zg-muted: var(--zg-muted);
+  --color-zg-text-muted: var(--zg-text-muted);
   --color-zg-fg-muted: var(--zg-fg-muted);
   --color-zg-teal: var(--zg-teal);
+  --color-zg-accent: var(--zg-accent);
+  --color-zg-accent-hover: var(--zg-accent-hover);
   --color-zg-mint: var(--zg-mint);
   --color-zg-border: var(--zg-border);
   --color-zg-border-strong: var(--zg-border-strong);
+  --color-zg-border-hover: var(--zg-border-hover);
   --color-zg-border-accent: var(--zg-border-accent);
+  --color-zg-border-focus: var(--zg-border-focus);
   --color-zg-surface: var(--zg-surface);
   --color-zg-surface-elevated: var(--zg-surface-elevated);
   --color-zg-surface-soft: var(--zg-surface-soft);
+  --color-zg-card-hover: var(--zg-card-hover);
   --color-zg-highlight: var(--zg-highlight);
+  --color-zg-accent-soft-bg: var(--zg-accent-soft-bg);
+  --color-zg-accent-soft-text: var(--zg-accent-soft-text);
   --color-zg-success: var(--zg-success);
   --color-zg-warning: var(--zg-warning);
   --color-zg-danger: var(--zg-danger);
@@ -141,7 +168,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: color-mix(in srgb, var(--zg-fg-muted) 92%, transparent);
+  color: var(--zg-text-muted);
 }
 
 .dashboard-section-kicker {
@@ -149,31 +176,30 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: color-mix(in srgb, var(--zg-fg-muted) 88%, transparent);
+  color: var(--zg-text-muted);
 }
 
 .dashboard-page-title {
-  font-family: var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
-  font-size: clamp(1.5rem, 1.25rem + 0.55vw, 1.875rem);
-  font-weight: 400;
+  font-family: inherit;
+  font-size: 1.5rem;
+  font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.18;
+  line-height: 1.25;
   color: var(--zg-fg);
 }
 
-/* Titres de section (Inter) */
 .dashboard-section-heading {
-  font-size: clamp(1.35rem, 1.15rem + 0.45vw, 1.5rem);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.28;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
   color: var(--zg-fg);
 }
 
 .dashboard-section-subtitle {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   line-height: 1.55;
-  color: color-mix(in srgb, var(--zg-muted) 92%, transparent);
+  color: var(--zg-text-secondary);
 }
 
 .dashboard-link-secondary {
@@ -182,26 +208,37 @@ body {
   justify-content: center;
   min-height: 2.5rem;
   padding: 0.5rem 1rem;
-  border-radius: 0.875rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--zg-fg);
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  transition: all 150ms ease;
 }
 
 .dashboard-link-secondary:hover {
-  background: color-mix(in srgb, var(--zg-highlight) 85%, white);
+  background: var(--zg-surface-soft);
   color: var(--zg-fg);
 }
 
-/* En-têtes de section pleine largeur (pages dashboard) */
 .dashboard-page-header {
-  margin-bottom: 1.75rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--zg-border);
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
-/* Fond dashboard — très léger, type SaaS premium */
+.zg-signature-line {
+  height: 2px;
+  width: 100%;
+  flex-shrink: 0;
+  background: linear-gradient(to right, transparent 0%, #e85d2c 50%, transparent 100%);
+}
+
+.zg-stat-value {
+  font-family: var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+}
+
 .zg-dashboard-backdrop {
   pointer-events: none;
   position: fixed;
@@ -232,7 +269,7 @@ body {
   border-radius: 9999px;
   background: linear-gradient(135deg, var(--zg-glow-from), transparent 72%);
   filter: blur(56px);
-  opacity: 0.55;
+  opacity: 0.45;
 }
 
 .zg-dashboard-backdrop__glow-b {
@@ -244,7 +281,7 @@ body {
   border-radius: 9999px;
   background: linear-gradient(200deg, var(--zg-glow-via), transparent 75%);
   filter: blur(48px);
-  opacity: 0.45;
+  opacity: 0.35;
 }
 
 .zg-dashboard-backdrop__glow-c {

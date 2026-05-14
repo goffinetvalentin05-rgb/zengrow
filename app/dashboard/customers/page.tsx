@@ -63,7 +63,6 @@ export default async function DashboardCustomersPage() {
       <DashboardContent>
         <section className="relative space-y-6">
           <PageHeader
-            kicker="Clients"
             title="Clients"
             subtitle="Fiches construites à partir des réservations — idéal pour reconnaître vos habitués."
           />
@@ -96,7 +95,6 @@ export default async function DashboardCustomersPage() {
     <DashboardContent>
       <section className="space-y-10">
         <PageHeader
-          kicker="Clients"
           title="Clients"
           subtitle="Fiches construites à partir des réservations — idéal pour reconnaître vos habitués."
         />

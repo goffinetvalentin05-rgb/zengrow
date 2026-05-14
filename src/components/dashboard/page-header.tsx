@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { ReactNode } from "react";
+import { CheckCircle2, Copy } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import ActionMenu, { ActionMenuItem } from "@/src/components/dashboard/ui/action-menu";
 import Button, { buttonClassName } from "@/src/components/ui/button";
+import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 
 type HeaderAction =
   | { kind: "link"; href: string; label: string; icon?: ReactNode }
@@ -28,6 +30,8 @@ type PageHeaderProps = {
 };
 
 function HeaderActionButton({ action, variant }: { action: HeaderAction; variant: "primary" | "secondary" | "ghost" }) {
+  const showToast = useDashboardToast();
+
   if (action.kind === "link") {
     return (
       <Link href={action.href} className={buttonClassName({ variant, size: "sm" })}>
@@ -63,8 +67,9 @@ function HeaderActionButton({ action, variant }: { action: HeaderAction; variant
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(action.value);
+          showToast({ message: "Lien copié dans le presse-papiers.", icon: CheckCircle2 });
         } catch {
-          // noop
+          showToast({ message: "Impossible de copier le lien.", icon: Copy });
         }
       }}
     >
@@ -89,7 +94,7 @@ export default function PageHeader({
       <header className="dashboard-page-header flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-6">
         <div className="min-w-0">
           {kicker ? <p className="dashboard-section-kicker">{kicker}</p> : null}
-          <h1 className="dashboard-page-title mt-2 truncate">{title}</h1>
+          <h1 className={cn("dashboard-page-title", kicker ? "mt-2" : "", "truncate")}>{title}</h1>
           {subtitle ? <p className="dashboard-section-subtitle mt-2 max-w-2xl">{subtitle}</p> : null}
         </div>
         {(primaryAction || secondaryActions.length > 0 || (menuItems && menuItems.length > 0)) ? (

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, MessageCircle, Smartphone } from "lucide-react";
+import { Mail, MessageCircle, Smartphone, Star } from "lucide-react";
 import FilterBar from "@/src/components/dashboard/ui/filter-bar";
 import ActionMenu from "@/src/components/dashboard/ui/action-menu";
 import Button from "@/src/components/ui/button";
@@ -397,16 +397,20 @@ export default function ReviewAutomationPanel({
         </CardHeader>
         <CardContent>
           {initialFeedback.length === 0 ? (
-            <EmptyState title="Aucun retour" description="Les messages privés apparaîtront après les envois." />
+            <EmptyState
+              icon={Star}
+              title="Pas encore de retours"
+              description="Pas encore d'avis Google côté messages privés. ZenGrow va commencer à les collecter pour toi."
+            />
           ) : (
             <div className="space-y-4">
               {initialFeedback.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-2xl border border-zg-border bg-zg-surface p-5 shadow-zg-soft md:p-6"
+                  className="rounded-xl border border-zg-border bg-zg-surface p-5 shadow-sm transition-all duration-150 md:p-6"
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg-muted">{item.created_at.slice(0, 10)}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-zg-muted">{item.message || "(Aucun message)"}</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-zg-text-muted">{item.created_at.slice(0, 10)}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-zg-text-secondary">{item.message || "(Aucun message)"}</p>
                 </div>
               ))}
             </div>

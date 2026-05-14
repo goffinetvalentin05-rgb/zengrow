@@ -1,20 +1,17 @@
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Suspense } from "react";
-import { CalendarDays, ExternalLink, LayoutGrid, Link2, Plus, Settings } from "lucide-react";
+import { Calendar, Copy, ExternalLink, Plus } from "lucide-react";
 import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
 import { DashboardStats, DashboardStatsSkeleton } from "@/src/components/dashboard/dashboard-stats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import EmptyState from "@/src/components/ui/empty-state";
 import { calendarYmdInBusinessTz, reservationIsAtOrAfterNow } from "@/src/lib/date/business-calendar";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 import Button from "@/src/components/ui/button";
-
-const sectionIntroClass =
-  "text-xl font-bold tracking-[-0.02em] text-zg-fg md:text-[1.375rem] md:leading-snug";
-const sectionDescClass = "mt-2 text-sm leading-relaxed text-zg-muted";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -70,9 +67,8 @@ export default async function DashboardPage() {
   return (
     <DashboardContent>
       <PageHeader
-        kicker="Tableau de bord"
-        title={restaurant.name}
-        subtitle="Vue d’ensemble de votre activité."
+        title="Tableau de bord"
+        subtitle="Vue d'ensemble de votre activité"
         secondaryActions={[
           {
             kind: "external",
@@ -83,7 +79,7 @@ export default async function DashboardPage() {
           {
             kind: "copy",
             label: "Copier le lien",
-            icon: <Link2 className="h-4 w-4" strokeWidth={2} />,
+            icon: <Copy className="h-4 w-4" strokeWidth={2} />,
             value: publicLink,
           },
         ]}
@@ -95,24 +91,48 @@ export default async function DashboardPage() {
         }}
       />
 
-      <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
-        <Card className="lg:col-span-7">
+      <section aria-labelledby="dashboard-stats-heading" className="space-y-3">
+        <div>
+          <h2 id="dashboard-stats-heading" className="dashboard-section-heading">
+            En chiffres
+          </h2>
+          <p className="dashboard-section-subtitle mt-1">Vue synthétique de votre journée.</p>
+        </div>
+        <Suspense fallback={<DashboardStatsSkeleton />}>
+          <DashboardStats restaurantId={restaurant.id} />
+        </Suspense>
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+        <Card className="flex h-full min-h-0 flex-col">
           <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <CardTitle>Service d&apos;aujourd&apos;hui</CardTitle>
-              <CardDescription>Réservations du jour, par heure de passage.</CardDescription>
+              <CardDescription>Réservations du jour, par heure.</CardDescription>
             </div>
             {fullFromSlot ? (
-              <div className="shrink-0 rounded-full border border-amber-200/90 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-950">
+              <div className="shrink-0 rounded-full border border-amber-200/90 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-950">
                 Complet dès {fullFromSlot}
               </div>
             ) : null}
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-1 flex-col">
             {timelineReservations.length === 0 ? (
-              <p className="py-14 text-center text-sm text-zg-fg-muted">Aucune réservation aujourd&apos;hui.</p>
+              <EmptyState
+                className="flex-1 py-12"
+                icon={Calendar}
+                title="Journée tranquille"
+                description="Aucune réservation aujourd'hui — profite du calme avant l'orage 🍽️"
+                action={
+                  <Link href="/dashboard/reservations?new=1" className="inline-flex w-full max-w-xs">
+                    <Button type="button" variant="secondary" className="w-full">
+                      Nouvelle réservation
+                    </Button>
+                  </Link>
+                }
+              />
             ) : (
-              <div className="-mx-2">
+              <div className="-mx-2 flex-1">
                 {timelineReservations.map((reservation) => (
                   <ReservationListRow
                     key={reservation.id}
@@ -131,94 +151,49 @@ export default async function DashboardPage() {
             )}
             <Link
               href="/dashboard/reservations"
-              className="mt-7 inline-flex text-sm font-semibold text-zg-teal transition hover:text-zg-fg hover:underline"
+              className="mt-6 inline-flex text-sm font-medium text-zg-accent transition-all duration-150 hover:text-zg-accent-hover"
             >
               Voir toutes les réservations →
             </Link>
           </CardContent>
         </Card>
 
-        <div className="space-y-6 lg:col-span-5">
-          <section aria-labelledby="dashboard-stats-heading">
-            <div className="mb-3">
-              <h2 id="dashboard-stats-heading" className={sectionIntroClass}>
-                En chiffres
-              </h2>
-              <p className={sectionDescClass}>Vue synthétique de votre journée.</p>
-            </div>
-            <Suspense fallback={<DashboardStatsSkeleton />}>
-              <DashboardStats restaurantId={restaurant.id} />
-            </Suspense>
-          </section>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Prochaines tables</CardTitle>
-              <CardDescription>Réservations à venir (confirmées ou en attente).</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {upcomingReservations.length === 0 ? (
-                <p className="py-10 text-center text-sm text-zg-fg-muted">Rien de prévu pour l&apos;instant.</p>
-              ) : (
-                <div className="-mx-2">
-                  {upcomingReservations.slice(0, 8).map((reservation) => (
-                    <ReservationListRow
-                      key={reservation.id}
-                      guestName={reservation.guest_name ?? "Client"}
-                      timeLabel={
-                        reservation.reservation_date === today
-                          ? reservation.reservation_time
-                          : `${reservation.reservation_date.slice(8, 10)}.${reservation.reservation_date.slice(5, 7)} · ${reservation.reservation_time.trim().slice(0, 5)}`
-                      }
-                      subtitle={`${reservation.guests} couverts`}
-                      status={reservation.status as "pending" | "confirmed"}
-                      seatingZone={(reservation.zone === "terrace" ? "terrace" : "interior") as "interior" | "terrace"}
-                      reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
-                      presentation="list"
-                      showZoneBadge={showZoneOnDashboard}
-                    />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Raccourcis</CardTitle>
-              <CardDescription>Accédez vite aux sections clés du dashboard.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              <Link href="/dashboard/reservations" className="inline-flex">
-                <Button type="button" variant="secondary" className="w-full justify-between">
-                  <span className="inline-flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-zg-teal/80" strokeWidth={2} />
-                    Réservations
-                  </span>
-                  <span className="text-zg-fg-muted">→</span>
-                </Button>
-              </Link>
-              <Link href="/dashboard/floor-plan" className="inline-flex">
-                <Button type="button" variant="secondary" className="w-full justify-between">
-                  <span className="inline-flex items-center gap-2">
-                    <LayoutGrid className="h-4 w-4 text-zg-teal/80" strokeWidth={2} />
-                    Plan de salle
-                  </span>
-                  <span className="text-zg-fg-muted">→</span>
-                </Button>
-              </Link>
-              <Link href="/dashboard/settings" className="inline-flex">
-                <Button type="button" variant="secondary" className="w-full justify-between">
-                  <span className="inline-flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-zg-teal/80" strokeWidth={2} />
-                    Paramètres
-                  </span>
-                  <span className="text-zg-fg-muted">→</span>
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="flex h-full min-h-0 flex-col">
+          <CardHeader>
+            <CardTitle>Prochaines tables</CardTitle>
+            <CardDescription>Réservations à venir.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col">
+            {upcomingReservations.length === 0 ? (
+              <EmptyState
+                className="flex-1 py-12"
+                icon={Calendar}
+                title="Rien à l’horizon"
+                description="Pas de réservation à venir pour l’instant — ton planning se remplira bientôt."
+              />
+            ) : (
+              <div className="-mx-2 flex-1">
+                {upcomingReservations.slice(0, 8).map((reservation) => (
+                  <ReservationListRow
+                    key={reservation.id}
+                    guestName={reservation.guest_name ?? "Client"}
+                    timeLabel={
+                      reservation.reservation_date === today
+                        ? reservation.reservation_time
+                        : `${reservation.reservation_date.slice(8, 10)}.${reservation.reservation_date.slice(5, 7)} · ${reservation.reservation_time.trim().slice(0, 5)}`
+                    }
+                    subtitle={`${reservation.guests} couverts`}
+                    status={reservation.status as "pending" | "confirmed"}
+                    seatingZone={(reservation.zone === "terrace" ? "terrace" : "interior") as "interior" | "terrace"}
+                    reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
+                    presentation="list"
+                    showZoneBadge={showZoneOnDashboard}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardContent>
   );

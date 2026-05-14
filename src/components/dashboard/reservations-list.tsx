@@ -1,3 +1,5 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table";
+
 type ReservationItem = {
   id: string;
   guest_name: string | null;
@@ -12,40 +14,39 @@ type ReservationsListProps = {
 
 export default function ReservationsList({ reservations }: ReservationsListProps) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-zg-border bg-zg-surface shadow-zg-soft">
-      <div className="border-b border-zg-border/80 px-6 py-4">
-        <h2 className="text-lg font-bold tracking-tight text-zg-fg">Prochaines réservations</h2>
+    <section>
+      <div className="mb-4">
+        <h2 className="text-base font-medium text-zg-fg">Prochaines réservations</h2>
+        <p className="mt-1 text-sm text-zg-text-secondary">Liste synthétique des passages à venir.</p>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-zg-border/70 text-sm">
-          <thead className="bg-zg-surface-soft/80 text-left text-zg-muted">
-            <tr>
-              <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide">Date</th>
-              <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide">Heure</th>
-              <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide">Nom du client</th>
-              <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide">Couverts</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zg-border/60">
-            {reservations.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-6 py-6 text-zg-muted">
-                  Aucune réservation pour le moment.
-                </td>
-              </tr>
-            ) : (
-              reservations.map((reservation) => (
-                <tr key={reservation.id} className="text-zg-fg transition-colors hover:bg-zg-highlight/45">
-                  <td className="px-6 py-4">{reservation.reservation_date ?? "-"}</td>
-                  <td className="px-6 py-4">{reservation.reservation_time ?? "-"}</td>
-                  <td className="px-6 py-4">{reservation.guest_name ?? "-"}</td>
-                  <td className="px-6 py-4">{reservation.guests ?? "-"}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Table>
+        <TableHeader>
+          <tr>
+            <TableHead>Date</TableHead>
+            <TableHead>Heure</TableHead>
+            <TableHead>Nom du client</TableHead>
+            <TableHead>Couverts</TableHead>
+          </tr>
+        </TableHeader>
+        <TableBody>
+          {reservations.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="py-8 text-center text-sm text-zg-text-muted">
+                Aucune réservation pour le moment.
+              </TableCell>
+            </TableRow>
+          ) : (
+            reservations.map((reservation) => (
+              <TableRow key={reservation.id}>
+                <TableCell>{reservation.reservation_date ?? "—"}</TableCell>
+                <TableCell>{reservation.reservation_time ?? "—"}</TableCell>
+                <TableCell>{reservation.guest_name ?? "—"}</TableCell>
+                <TableCell>{reservation.guests ?? "—"}</TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </section>
   );
 }

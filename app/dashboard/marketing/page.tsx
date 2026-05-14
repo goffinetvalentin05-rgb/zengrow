@@ -24,7 +24,6 @@ export default async function DashboardMarketingPage() {
       <DashboardContent>
         <section className="relative space-y-6">
           <PageHeader
-            kicker="Marketing"
             title="Campagnes marketing"
             subtitle="Envoyez des messages groupés à vos clients."
           />

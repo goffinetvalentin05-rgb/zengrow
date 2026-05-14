@@ -11,6 +11,7 @@ import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import ToastInline from "@/src/components/ui/toast-inline";
 import Textarea from "@/src/components/ui/textarea";
+import { Megaphone } from "lucide-react";
 
 type AudienceFilter = "all_customers" | "visited_last_30_days" | "visited_last_90_days" | "visited_more_than_3_times";
 
@@ -91,7 +92,6 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
   return (
     <section className="space-y-8 md:space-y-10">
       <PageHeader
-        kicker="Marketing"
         title="Campagnes marketing"
         subtitle="Créez un e-mail groupé pour vos clients — soirées spéciales, menus, offres."
         primaryAction={{
@@ -187,21 +187,25 @@ export default function MarketingPanel({ campaigns }: MarketingPanelProps) {
           </FilterBar>
 
           {campaigns.length === 0 ? (
-            <EmptyState title="Aucune campagne" description="Créez votre première campagne marketing." />
+            <EmptyState
+              icon={Megaphone}
+              title="Pas encore de campagne"
+              description="Lance ta première campagne : un message bien chaleureux, et tes clients sentent déjà l’ambiance du restaurant."
+            />
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-zg-border bg-zg-surface shadow-zg-soft">
-              <div className="grid grid-cols-[minmax(180px,1.4fr)_minmax(200px,2fr)_120px_130px] gap-3 border-b border-zg-border bg-zg-surface-soft/70 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg-muted">
+            <div className="overflow-hidden rounded-xl border border-zg-border bg-zg-surface shadow-sm transition-all duration-150">
+              <div className="grid grid-cols-[minmax(180px,1.4fr)_minmax(200px,2fr)_120px_130px] gap-3 border-b border-zg-border bg-zg-surface-elevated px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-zg-text-muted">
                 <div>Campagne</div>
                 <div>Objet</div>
                 <div className="text-right">Envois</div>
                 <div className="text-right">Date</div>
               </div>
-              <div className="divide-y divide-zg-border/75">
+              <div className="divide-y divide-zg-border">
                 {campaigns.map((campaign) => (
                   <a
                     key={campaign.id}
                     href={`/dashboard/marketing/${campaign.id}`}
-                    className="grid grid-cols-[minmax(180px,1.4fr)_minmax(200px,2fr)_120px_130px] items-center gap-3 px-4 py-3 text-sm transition hover:bg-zg-highlight/50"
+                    className="grid grid-cols-[minmax(180px,1.4fr)_minmax(200px,2fr)_120px_130px] items-center gap-3 px-4 py-3 text-sm transition-all duration-150 hover:bg-zg-card-hover"
                   >
                     <div className="min-w-0">
                       <div className="truncate font-semibold text-zg-fg">{campaign.name}</div>

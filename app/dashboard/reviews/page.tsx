@@ -30,7 +30,6 @@ export default async function DashboardReviewsPage() {
     <DashboardContent>
       <div className="space-y-10">
         <PageHeader
-          kicker="Avis Google"
           title="Avis Google"
           subtitle="Envoyez automatiquement un message après la visite pour collecter des avis."
         />

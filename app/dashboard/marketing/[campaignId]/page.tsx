@@ -45,7 +45,6 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
     <DashboardContent>
       <section className="space-y-10">
         <PageHeader
-          kicker="Marketing"
           title={campaign.name}
           subtitle={`${(campaign.sent_at ?? campaign.created_at).slice(0, 10)} · ${sentCount} envoi${sentCount > 1 ? "s" : ""}`}
           secondaryActions={[{ kind: "link", href: "/dashboard/marketing", label: "Retour" }]}

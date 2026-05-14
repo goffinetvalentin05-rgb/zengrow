@@ -27,7 +27,6 @@ export default async function DashboardFeedbackPage() {
     <DashboardContent>
       <section className="space-y-10">
         <PageHeader
-          kicker="Avis"
           title="Retours clients"
           subtitle="Messages privés envoyés après votre demande d’avis."
         />

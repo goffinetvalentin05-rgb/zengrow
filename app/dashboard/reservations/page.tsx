@@ -69,7 +69,6 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
   return (
     <DashboardContent>
       <PageHeader
-        kicker="Réservations"
         title="Réservations"
         subtitle={
           resSettings?.auto_archive_reservations !== true

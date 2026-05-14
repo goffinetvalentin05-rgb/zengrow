@@ -1,43 +1,45 @@
-import { headers } from "next/headers";
 import { Inter } from "next/font/google";
-import DashboardTopBar from "@/src/components/dashboard/dashboard-top-bar";
-import DashboardSidebar from "@/src/components/dashboard/sidebar";
+import { headers } from "next/headers";
+import DashboardShell from "@/src/components/dashboard/dashboard-shell";
 import { requireRestaurantSession } from "@/src/lib/auth";
 
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
 });
+
+function initialsFromUser(meta: Record<string, unknown> | undefined, email: string | undefined) {
+  const name = typeof meta?.full_name === "string" ? meta.full_name.trim() : "";
+  if (name) {
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`;
+    return name.slice(0, 2);
+  }
+  if (email) return email.slice(0, 2);
+  return "?";
+}
 
 export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const { restaurant, access } = await requireRestaurantSession();
+  const { restaurant, access, user } = await requireRestaurantSession();
   const headerList = await headers();
   const host = headerList.get("host");
   const protocol = headerList.get("x-forwarded-proto") ?? "http";
   const origin = host ? `${protocol}://${host}` : "";
   const publicLink = origin ? `${origin}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
+  const userInitials = initialsFromUser(user.user_metadata as Record<string, unknown> | undefined, user.email ?? undefined);
 
   return (
-    <div className={`${inter.className} relative min-h-screen bg-zg-canvas font-sans text-zg-fg antialiased`}>
-      <div className="zg-dashboard-backdrop" aria-hidden>
-        <div className="zg-dashboard-backdrop__glow-a" />
-        <div className="zg-dashboard-backdrop__glow-b" />
-        <div className="zg-dashboard-backdrop__glow-c" />
-      </div>
-      <div className="relative z-10 mx-auto flex max-w-[1480px] flex-col gap-0 px-4 py-5 md:flex-row md:items-stretch md:gap-6 md:px-6 md:py-7">
-        <DashboardSidebar
-          reservationLink={publicLink}
-          subscriptionPlan={access.effectivePlan}
-          subscriptionStatus={access.effectiveStatus}
-        />
-        <section className="min-w-0 flex-1 md:min-w-0 md:pl-0 md:pt-0">
-          <DashboardTopBar publicLink={publicLink} restaurantName={restaurant.name} />
-          <div className="pb-12 md:pb-14">{children}</div>
-        </section>
-      </div>
-    </div>
+    <DashboardShell
+      fontClassName={inter.className}
+      publicLink={publicLink}
+      restaurantName={restaurant.name}
+      userInitials={userInitials}
+      subscriptionPlan={access.effectivePlan}
+      subscriptionStatus={access.effectiveStatus}
+    >
+      {children}
+    </DashboardShell>
   );
 }

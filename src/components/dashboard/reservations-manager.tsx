@@ -19,6 +19,7 @@ import {
   reservationSlotEndInBusinessTz,
   reservationStartInBusinessTz,
 } from "@/src/lib/date/business-calendar";
+import { Calendar, History, MousePointer2 } from "lucide-react";
 
 type ReservationRow = {
   id: string;
@@ -286,7 +287,7 @@ export default function ReservationsManager({
           {showManualForm ? (
             <form
               onSubmit={createManualReservation}
-              className="space-y-5 rounded-2xl border border-zg-border bg-zg-surface-soft/80 p-5 shadow-zg-soft md:p-6"
+              className="space-y-5 rounded-xl border border-zg-border bg-zg-surface-elevated/80 p-5 shadow-sm transition-all duration-150 md:p-6"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -457,16 +458,17 @@ export default function ReservationsManager({
           <div className="hidden md:block">
             {mainListReservations.length === 0 ? (
               <EmptyState
-                title="Aucune réservation"
+                icon={Calendar}
+                title="Rien sur cette plage"
                 description={
                   autoArchiveReservations
-                    ? "Aucun créneau à venir ou en cours pour ces filtres. Consultez l’historique ci-dessous."
-                    : "Modifiez les filtres."
+                    ? "Aucun créneau ne correspond à ces filtres — jette un œil à l’historique plus bas, les tables passées s’y retrouvent."
+                    : "Ajuste la date ou le statut : la salle se remplit vite, les prochains passages sont souvent à portée de clic."
                 }
               />
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-zg-border bg-zg-surface shadow-zg-soft">
-                <div className="grid grid-cols-[110px_110px_minmax(160px,1fr)_110px_170px_150px] gap-3 border-b border-zg-border bg-zg-surface-soft/70 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-zg-fg-muted">
+              <div className="overflow-hidden rounded-xl border border-zg-border bg-zg-surface shadow-sm transition-all duration-150">
+                <div className="grid grid-cols-[110px_110px_minmax(160px,1fr)_110px_170px_150px] gap-3 border-b border-zg-border bg-zg-surface-elevated px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-zg-text-muted">
                   <div>Date</div>
                   <div>Heure</div>
                   <div>Client</div>
@@ -474,7 +476,7 @@ export default function ReservationsManager({
                   <div>Table</div>
                   <div className="text-right">Statut</div>
                 </div>
-                <div className="divide-y divide-zg-border/75">
+                <div className="divide-y divide-zg-border">
                   {mainListReservations.map((r) => {
                     const isSelected = selectedReservationId === r.id;
                     const walkin = r.reservation_type === "walkin";
@@ -484,9 +486,9 @@ export default function ReservationsManager({
                         type="button"
                         onClick={() => setSelectedReservationId(r.id)}
                         className={cn(
-                          "grid w-full grid-cols-[110px_110px_minmax(160px,1fr)_110px_170px_150px] items-center gap-3 px-4 py-3 text-left text-sm transition",
-                          "hover:bg-zg-highlight/35",
-                          isSelected && "bg-zg-highlight/55",
+                          "grid w-full grid-cols-[110px_110px_minmax(160px,1fr)_110px_170px_150px] items-center gap-3 px-4 py-3 text-left text-sm transition-all duration-150",
+                          "hover:bg-zg-card-hover",
+                          isSelected && "bg-zg-accent-soft-bg",
                         )}
                       >
                         <div className="font-semibold tabular-nums text-zg-muted">{r.reservation_date}</div>
@@ -527,11 +529,12 @@ export default function ReservationsManager({
           <div className="md:hidden">
             {mainListReservations.length === 0 ? (
               <EmptyState
-                title="Aucune réservation"
+                icon={Calendar}
+                title="Rien sur cette plage"
                 description={
                   autoArchiveReservations
-                    ? "Aucun créneau à venir ou en cours pour ces filtres. Consultez l’historique ci-dessous."
-                    : "Modifiez les filtres."
+                    ? "Aucun créneau ne correspond à ces filtres — jette un œil à l’historique plus bas, les tables passées s’y retrouvent."
+                    : "Ajuste la date ou le statut : la salle se remplit vite, les prochains passages sont souvent à portée de clic."
                 }
               />
             ) : (
@@ -555,15 +558,19 @@ export default function ReservationsManager({
           {autoArchiveReservations ? (
             <div className="border-t border-zg-border/80 pt-10">
               <div className="mb-4">
-                <p className="text-base font-semibold text-zg-fg">Historique</p>
-                <p className="mt-1 text-sm text-zg-muted">
+                <p className="dashboard-section-heading">Historique</p>
+                <p className="dashboard-section-subtitle mt-1">
                   Réservations dont l’heure de fin (passage + durée du repas, {mealDuration} min) est dépassée. Lecture
                   seule.
                 </p>
               </div>
               <div className="hidden md:block">
                 {historyListReservations.length === 0 ? (
-                  <EmptyState title="Historique vide" description="Aucune réservation archivée pour ces filtres." />
+                  <EmptyState
+                    icon={History}
+                    title="Historique tout calme"
+                    description="Rien d’archivé pour ces filtres — quand le service s’écoule, les souvenirs de tables s’accumulent ici."
+                  />
                 ) : (
                   <div className="space-y-2">
                     {historyListReservations.map((reservation) => (
@@ -584,7 +591,11 @@ export default function ReservationsManager({
               </div>
               <div className="md:hidden">
                 {historyListReservations.length === 0 ? (
-                  <EmptyState title="Historique vide" description="Aucune réservation archivée pour ces filtres." />
+                  <EmptyState
+                    icon={History}
+                    title="Historique tout calme"
+                    description="Rien d’archivé pour ces filtres — quand le service s’écoule, les souvenirs de tables s’accumulent ici."
+                  />
                 ) : (
                   <div className="space-y-3">
                     {historyListReservations.map((reservation) => (
@@ -617,7 +628,11 @@ export default function ReservationsManager({
             </CardHeader>
             <CardContent className="space-y-8">
               {!selectedReservation ? (
-                <EmptyState title="Aucune sélection" description="Cliquez sur une ligne pour voir et modifier la réservation." />
+                <EmptyState
+                  icon={MousePointer2}
+                  title="Choisis une ligne"
+                  description="Clique sur une réservation dans la liste pour afficher les détails, le statut et la note interne."
+                />
               ) : (
                 <>
                   <div className="flex flex-wrap items-start gap-4">

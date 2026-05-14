@@ -146,7 +146,6 @@ export default async function DashboardSettingsPage() {
     <DashboardContent>
       <div className="space-y-10">
         <PageHeader
-          kicker="Paramètres"
           title="Paramètres"
           subtitle="Configurez votre restaurant, votre page publique, vos réservations et votre abonnement."
         />

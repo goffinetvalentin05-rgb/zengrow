@@ -5,12 +5,11 @@ type DivProps = {
   children: React.ReactNode;
 };
 
-/** Section dashboard — surface premium alignée landing ZenGrow. */
 export function Card({ className, children }: DivProps) {
   return (
     <article
       className={cn(
-        "rounded-2xl border border-zg-border bg-zg-surface p-5 shadow-zg-soft md:p-6",
+        "h-full rounded-xl border border-zg-border bg-zg-surface p-6 shadow-sm transition-all duration-150",
         className,
       )}
     >
@@ -25,19 +24,14 @@ export function CardHeader({ className, children }: DivProps) {
 
 export function CardTitle({ className, children }: DivProps) {
   return (
-    <h2
-      className={cn(
-        "text-xl font-bold tracking-[-0.02em] text-zg-fg md:text-[1.375rem] md:leading-snug",
-        className,
-      )}
-    >
+    <h2 className={cn("text-base font-medium tracking-tight text-zg-fg", className)}>
       {children}
     </h2>
   );
 }
 
 export function CardDescription({ className, children }: DivProps) {
-  return <p className={cn("mt-2.5 text-sm leading-relaxed text-zg-muted", className)}>{children}</p>;
+  return <p className={cn("mt-1.5 text-sm leading-relaxed text-zg-text-secondary", className)}>{children}</p>;
 }
 
 export function CardContent({ className, children }: DivProps) {
