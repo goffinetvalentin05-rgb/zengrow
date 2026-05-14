@@ -16,9 +16,9 @@ import {
   PanelLeftOpen,
   Settings,
   Sparkles,
-  Star,
   Users,
   X,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
@@ -46,7 +46,7 @@ const navItems = [
   { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
   { href: "/dashboard/floor-plan", label: "Plan de salle", icon: LayoutGrid, requiresPro: true },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
-  { href: "/dashboard/reviews", label: "Avis Google", icon: Star },
+  { href: "/dashboard/feedbacks", label: "Feedbacks", icon: MessageSquare },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];

@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, MessageCircle, Smartphone, Star } from "lucide-react";
 import FilterBar from "@/src/components/dashboard/ui/filter-bar";
 import ActionMenu from "@/src/components/dashboard/ui/action-menu";
 import Button from "@/src/components/ui/button";
+import Badge from "@/src/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import EmptyState from "@/src/components/ui/empty-state";
 import Input from "@/src/components/ui/input";
@@ -13,11 +14,15 @@ import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
 import PanelToggle from "@/src/components/ui/panel-toggle";
 import ToastInline from "@/src/components/ui/toast-inline";
+import Toggle from "@/src/components/ui/toggle";
+import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-accordion";
 import { createClient } from "@/src/lib/supabase/client";
 import { cn } from "@/src/lib/utils";
 
 type ReviewAutomationPanelProps = {
   restaurantId: string;
+  /** Page dédiée (historique + config) ou intégration Paramètres (accordéons). */
+  layout?: "page" | "settings";
   initialSettings: {
     is_enabled: boolean;
     channel: "email";
@@ -61,8 +66,17 @@ const channelOptions = [
   },
 ];
 
+function SoonBadge() {
+  return (
+    <Badge tone="sand" className="shrink-0 text-[10px] font-semibold uppercase tracking-wide">
+      Bientôt disponible
+    </Badge>
+  );
+}
+
 export default function ReviewAutomationPanel({
   restaurantId,
+  layout = "page",
   initialSettings,
   initialFeedback,
 }: ReviewAutomationPanelProps) {
@@ -71,6 +85,10 @@ export default function ReviewAutomationPanel({
   const [isEnabled, setIsEnabled] = useState(initialSettings.is_enabled);
   const [channel] = useState<"email">("email");
   const [delayMinutes, setDelayMinutes] = useState(initialSettings.delay_minutes);
+  const [delayHoursInput, setDelayHoursInput] = useState(() =>
+    Math.round((initialSettings.delay_minutes / 60) * 100) / 100,
+  );
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
   const [googleReviewUrl, setGoogleReviewUrl] = useState(initialSettings.google_review_url);
   const [emailSubject, setEmailSubject] = useState(initialSettings.email_subject);
   const [emailMessage, setEmailMessage] = useState(initialSettings.email_message);
@@ -84,6 +102,10 @@ export default function ReviewAutomationPanel({
   const [sendingTest, setSendingTest] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    setDelayHoursInput(Math.round((initialSettings.delay_minutes / 60) * 100) / 100);
+  }, [initialSettings.delay_minutes]);
+
   const previewSubject = useMemo(
     () => emailSubject.replaceAll("{{restaurant_name}}", "Votre restaurant"),
     [emailSubject],
@@ -93,12 +115,13 @@ export default function ReviewAutomationPanel({
     [emailMessage],
   );
 
-  function buildAutomationUpsertPayload(enabled: boolean) {
+  function buildAutomationUpsertPayload(enabled: boolean, delayOverride?: number) {
+    const dm = delayOverride ?? delayMinutes;
     return {
       restaurant_id: restaurantId,
       is_enabled: enabled,
       channel,
-      delay_minutes: delayMinutes,
+      delay_minutes: dm,
       google_review_url: googleReviewUrl || null,
       email_subject: emailSubject,
       email_message: emailMessage,
@@ -113,7 +136,12 @@ export default function ReviewAutomationPanel({
     setSaving(true);
     setMessage(null);
 
-    const { error } = await supabase.from("review_automation_settings").upsert(buildAutomationUpsertPayload(isEnabled), {
+    const resolvedDelay =
+      layout === "settings"
+        ? Math.max(30, Math.round((Number(String(delayHoursInput).replace(",", ".")) || 0.5) * 60))
+        : delayMinutes;
+
+    const { error } = await supabase.from("review_automation_settings").upsert(buildAutomationUpsertPayload(isEnabled, resolvedDelay), {
       onConflict: "restaurant_id",
     });
 
@@ -121,6 +149,9 @@ export default function ReviewAutomationPanel({
     if (error) {
       setMessage(error.message);
       return;
+    }
+    if (layout === "settings") {
+      setDelayMinutes(resolvedDelay);
     }
     setMessage("Automatisation mise à jour.");
     router.refresh();
@@ -182,20 +213,172 @@ export default function ReviewAutomationPanel({
     setSendingTest(false);
   }
 
+  const toastBlock =
+    message ? (
+      <ToastInline
+        tone={
+          message.toLowerCase().includes("mis à jour") || message.toLowerCase().includes("envoyé")
+            ? "success"
+            : message.toLowerCase().includes("erreur") || message.toLowerCase().includes("impossible")
+              ? "error"
+              : "info"
+        }
+        message={message}
+      />
+    ) : null;
+
+  if (layout === "settings") {
+    return (
+      <section className="space-y-4">
+        {toastBlock}
+        <SettingsAccordion title="Lien Google Reviews">
+          <div className="space-y-2">
+            <label className="dashboard-field-label">URL de la fiche Google Business</label>
+            <Input
+              value={googleReviewUrl}
+              onChange={(event) => setGoogleReviewUrl(event.target.value)}
+              placeholder="https://g.page/… ou lien avis Google"
+            />
+          </div>
+        </SettingsAccordion>
+
+        <SettingsAccordion title="E-mail automatique post-visite">
+          <div className="flex flex-col gap-4">
+            <PanelToggle
+              checked={isEnabled}
+              onChange={handleAutomationToggle}
+              title="Envoi automatique activé"
+              description="Les clients reçoivent un e-mail après leur visite pour collecter un retour puis un lien vers Google."
+              disabled={savingToggle || saving}
+            />
+            {savingToggle ? <p className="text-xs font-medium text-zg-muted">Enregistrement…</p> : null}
+            {toggleError ? (
+              <p className="text-sm text-red-600" role="alert">
+                {toggleError}
+              </p>
+            ) : null}
+
+            <div>
+              <label className="dashboard-field-label">Délai d&apos;envoi après la visite (heures)</label>
+              <Input
+                type="number"
+                className="mt-2 max-w-[200px]"
+                min={0.5}
+                step={0.5}
+                value={delayHoursInput}
+                onChange={(event) => setDelayHoursInput(Number(event.target.value))}
+              />
+              <p className="mt-1 text-xs text-zg-muted">Minimum 30 minutes (0,5 h). Valeur convertie en minutes à l&apos;enregistrement.</p>
+            </div>
+
+            <div>
+              <label className="dashboard-field-label">Objet de l&apos;e-mail</label>
+              <Input
+                className="mt-2"
+                value={emailSubject}
+                onChange={(event) => setEmailSubject(event.target.value)}
+                placeholder="Comment s'est passée votre expérience chez {{restaurant_name}} ?"
+              />
+              <p className="mt-1.5 text-xs text-zg-muted">
+                Variables supportées côté envoi : {"{{restaurant_name}}"} (équivalent conceptuel : {"{nom_resto}"}).
+              </p>
+            </div>
+
+            <div>
+              <label className="dashboard-field-label">Corps de l&apos;e-mail</label>
+              <Textarea className="mt-2 min-h-36" value={emailMessage} onChange={(event) => setEmailMessage(event.target.value)} />
+              <p className="mt-1.5 text-xs text-zg-muted">
+                Tu peux t&apos;inspirer de : {"{prenom}"}, {"{nom_resto}"}, {"{lien_avis}"} — le moteur actuel remplace surtout {"{{restaurant_name}}"} dans les modèles existants.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <label className="dashboard-field-label">Bouton positif</label>
+                <Input className="mt-2" value={positiveLabel} onChange={(event) => setPositiveLabel(event.target.value)} />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Bouton neutre</label>
+                <Input className="mt-2" value={neutralLabel} onChange={(event) => setNeutralLabel(event.target.value)} />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Bouton négatif</label>
+                <Input className="mt-2" value={negativeLabel} onChange={(event) => setNegativeLabel(event.target.value)} />
+              </div>
+            </div>
+
+            <div>
+              <label className="dashboard-field-label">Couleur principale (boutons)</label>
+              <div className="mt-2 flex items-center gap-2">
+                <Input type="color" className="h-11 w-14 shrink-0" value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} />
+                <Input value={primaryColor} onChange={(event) => setPrimaryColor(event.target.value)} />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button type="button" variant="secondary" className="min-h-11" onClick={() => setEmailPreviewOpen((open) => !open)}>
+                {emailPreviewOpen ? "Masquer l'aperçu" : "Aperçu de l'e-mail"}
+              </Button>
+            </div>
+
+            {emailPreviewOpen ? (
+              <div className="rounded-2xl border border-zg-border bg-zg-surface-elevated p-4 transition-all duration-200 ease-out">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg-muted">Aperçu</p>
+                <p className="mt-3 text-base font-semibold text-zg-fg">{previewSubject}</p>
+                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zg-muted">{previewMessage}</p>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <span
+                    className="rounded-lg px-2 py-2 text-center text-xs font-semibold text-white"
+                    style={{ backgroundColor: primaryColor || "#15803d" }}
+                  >
+                    {positiveLabel}
+                  </span>
+                  <span className="rounded-lg border border-zg-border bg-zg-surface px-2 py-2 text-center text-xs font-semibold text-zg-fg">
+                    {neutralLabel}
+                  </span>
+                  <span className="rounded-lg border border-zg-border bg-zg-surface px-2 py-2 text-center text-xs font-semibold text-zg-fg">
+                    {negativeLabel}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </SettingsAccordion>
+
+        <SettingsAccordion title="Filtrage intelligent">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-zg-fg">
+                Ne demander un avis Google qu&apos;aux clients ayant laissé un feedback privé positif.
+              </p>
+              <SoonBadge />
+            </div>
+            <Toggle checked={false} onChange={() => {}} label="Filtrage actif (bientôt)" disabled />
+          </div>
+        </SettingsAccordion>
+
+        <div className="flex flex-wrap justify-end gap-2 border-t border-zg-border/60 pt-4">
+          <ActionMenu
+            items={[
+              {
+                kind: "action",
+                label: sendingTest ? "Envoi du test…" : "Envoyer un e-mail de test",
+                onClick: sendTestReviewEmail,
+                disabled: sendingTest || savingToggle,
+              },
+            ]}
+          />
+          <Button type="button" onClick={saveSettings} disabled={saving || savingToggle} className="min-h-11 min-w-[160px]">
+            {saving ? "Enregistrement…" : "Enregistrer"}
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="space-y-10">
-      {message ? (
-        <ToastInline
-          tone={
-            message.toLowerCase().includes("mis à jour") || message.toLowerCase().includes("envoyé")
-              ? "success"
-              : message.toLowerCase().includes("erreur") || message.toLowerCase().includes("impossible")
-                ? "error"
-                : "info"
-          }
-          message={message}
-        />
-      ) : null}
+      {toastBlock}
 
       <Card>
         <CardHeader>

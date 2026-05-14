@@ -9,6 +9,7 @@ import {
   CalendarCheck2,
   CreditCard,
   Globe2,
+  Star,
   Store,
   UserRound,
 } from "lucide-react";
@@ -366,30 +367,18 @@ export default function SettingsForm({
     button_negative_label: string;
     primary_color: string;
   } | null>(null);
-  const [reviewFeedback, setReviewFeedback] = useState<Array<{ id: string; message: string | null; created_at: string }>>(
-    [],
-  );
 
   useEffect(() => {
     let cancelled = false;
     setReviewAutomationLoading(true);
     (async () => {
-      const [{ data: automation }, { data: feedback }] = await Promise.all([
-        supabase
-          .from("review_automation_settings")
-          .select(
-            "is_enabled, delay_minutes, google_review_url, email_subject, email_message, button_positive_label, button_neutral_label, button_negative_label, primary_color",
-          )
-          .eq("restaurant_id", restaurant.id)
-          .maybeSingle(),
-        supabase
-          .from("feedbacks")
-          .select("id, message, created_at")
-          .eq("restaurant_id", restaurant.id)
-          .not("responded_at", "is", null)
-          .order("created_at", { ascending: false })
-          .limit(20),
-      ]);
+      const { data: automation } = await supabase
+        .from("review_automation_settings")
+        .select(
+          "is_enabled, delay_minutes, google_review_url, email_subject, email_message, button_positive_label, button_neutral_label, button_negative_label, primary_color",
+        )
+        .eq("restaurant_id", restaurant.id)
+        .maybeSingle();
 
       if (cancelled) return;
       setReviewAutomation({
@@ -406,7 +395,6 @@ export default function SettingsForm({
         button_negative_label: automation?.button_negative_label ?? "À améliorer",
         primary_color: automation?.primary_color ?? "#1A6B50",
       });
-      setReviewFeedback((feedback ?? []) as Array<{ id: string; message: string | null; created_at: string }>);
       setReviewAutomationLoading(false);
     })();
 
@@ -1239,30 +1227,15 @@ export default function SettingsForm({
                 </div>
                 <Toggle checked={false} onChange={() => {}} disabled />
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-3 opacity-70">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-zg-fg">E-mail de demande d'avis post-visite</span>
-                  <SoonBadge />
+              <div className="flex flex-wrap items-center justify-between gap-3 opacity-90">
+                <div className="min-w-0">
+                  <span className="text-sm font-medium text-zg-fg">Demande d&apos;avis après la visite</span>
+                  <p className="mt-1 text-xs text-zg-text-muted">
+                    Configure le message et le délai dans la section « Avis Google » ci-dessous.
+                  </p>
                 </div>
-                <Toggle checked={false} onChange={() => {}} disabled />
               </div>
             </div>
-          </SettingsAccordion>
-          <SettingsAccordion title="Automatisation des avis Google">
-            {reviewAutomationLoading || !reviewAutomation ? (
-              <div className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-soft/60 py-10 text-center text-sm text-zg-muted">
-                Chargement des réglages…
-              </div>
-            ) : (
-              <ReviewAutomationPanel
-                restaurantId={restaurant.id}
-                initialSettings={{
-                  ...reviewAutomation,
-                  channel: "email",
-                }}
-                initialFeedback={reviewFeedback}
-              />
-            )}
           </SettingsAccordion>
           <SettingsAccordion title="Tes notifications (ce que tu reçois)">
             <div className="flex flex-col gap-4">
@@ -1279,6 +1252,30 @@ export default function SettingsForm({
               )}
             </div>
           </SettingsAccordion>
+        </SettingsCategoryCard>
+
+        <SettingsCategoryCard
+          icon={Star}
+          iconWrapClassName="bg-zg-warning-soft-bg text-zg-warning"
+          iconClassName="text-zg-warning"
+          title="Avis Google"
+          subtitle="Configure l'automatisation des demandes d'avis Google envoyées à tes clients après leur visite."
+        >
+          {reviewAutomationLoading || !reviewAutomation ? (
+            <div className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-soft/60 py-10 text-center text-sm text-zg-muted">
+              Chargement des réglages…
+            </div>
+          ) : (
+            <ReviewAutomationPanel
+              layout="settings"
+              restaurantId={restaurant.id}
+              initialSettings={{
+                ...reviewAutomation,
+                channel: "email",
+              }}
+              initialFeedback={[]}
+            />
+          )}
         </SettingsCategoryCard>
 
         <SettingsCategoryCard
