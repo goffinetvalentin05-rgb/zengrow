@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bell, Menu, Search } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { buttonClassName } from "@/src/components/ui/button";
-import { useDashboardTitleMeta } from "@/src/components/dashboard/dashboard-title-context";
 
 type DashboardTopBarProps = {
   publicLink: string;
@@ -21,40 +19,9 @@ type DashboardTopBarProps = {
   hasNotifications?: boolean;
 };
 
-function fallbackTitleForPath(pathname: string | null, restaurantName: string): { title: string; subtitle?: string } {
-  if (!pathname || pathname === "/dashboard") {
-    return { title: "Vue d'ensemble", subtitle: "Suivi de l'activité de ton restaurant" };
-  }
-  if (pathname.startsWith("/dashboard/reservations")) {
-    return { title: "Réservations", subtitle: "Gère les demandes et confirmations." };
-  }
-  if (pathname.startsWith("/dashboard/availability")) {
-    return { title: "Disponibilités", subtitle: "Créneaux, capacité et règles d'accueil." };
-  }
-  if (pathname.startsWith("/dashboard/floor-plan")) {
-    return { title: "Plan de salle", subtitle: "Espaces, tables et service." };
-  }
-  if (pathname.startsWith("/dashboard/customers")) {
-    return { title: "Clients", subtitle: "Fiches et historique des passages." };
-  }
-  if (pathname.startsWith("/dashboard/reviews")) {
-    return { title: "Avis Google", subtitle: "Automatisation et suivi des demandes." };
-  }
-  if (pathname.startsWith("/dashboard/marketing")) {
-    return { title: "Campagnes marketing", subtitle: "Messages groupés à ta base clients." };
-  }
-  if (pathname.startsWith("/dashboard/feedback")) {
-    return { title: "Retours clients", subtitle: "Messages privés après la visite." };
-  }
-  if (pathname.startsWith("/dashboard/settings")) {
-    return { title: "Paramètres", subtitle: "Restaurant, page publique, abonnement." };
-  }
-  return { title: restaurantName, subtitle: "Espace restaurant" };
-}
-
 export default function DashboardTopBar({
   publicLink,
-  restaurantName,
+  restaurantName: _restaurantName,
   userDisplayName,
   userRoleLabel,
   userInitials,
@@ -62,12 +29,7 @@ export default function DashboardTopBar({
   onOpenMobileNav,
   hasNotifications = false,
 }: DashboardTopBarProps) {
-  const pathname = usePathname();
-  const registeredMeta = useDashboardTitleMeta();
-  const fallback = useMemo(() => fallbackTitleForPath(pathname, restaurantName), [pathname, restaurantName]);
-  const title = registeredMeta?.title ?? fallback.title;
-  const subtitle = registeredMeta?.subtitle ?? fallback.subtitle;
-
+  void _restaurantName;
   const initials = (userInitials || "?").slice(0, 2).toUpperCase();
   const [search, setSearch] = useState("");
   const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
@@ -136,12 +98,6 @@ export default function DashboardTopBar({
         >
           <Menu className="h-5 w-5" strokeWidth={2} />
         </button>
-        <div className="min-w-0">
-          <h1 className="truncate text-xl font-bold tracking-tight text-zg-fg md:text-2xl">{title}</h1>
-          {subtitle ? (
-            <p className="mt-0.5 truncate text-xs text-zg-text-muted md:text-sm">{subtitle}</p>
-          ) : null}
-        </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">

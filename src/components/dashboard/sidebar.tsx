@@ -28,7 +28,6 @@ import { buttonClassName } from "@/src/components/ui/button";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import { useIsMdUp } from "@/src/hooks/use-is-md-up";
 
-const NEW_RESERVATIONS_BADGE = 3;
 const STORAGE_KEY = "zengrow_dashboard_sidebar_collapsed";
 const WIDTH_EXPANDED = 260;
 const WIDTH_COLLAPSED = 72;
@@ -45,7 +44,7 @@ type DashboardSidebarProps = {
 
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/dashboard/reservations", label: "Réservations", icon: Calendar, showNewBadge: true },
+  { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
   { href: "/dashboard/availability", label: "Disponibilités", icon: Clock },
   { href: "/dashboard/floor-plan", label: "Plan de salle", icon: LayoutGrid, requiresPro: true },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
@@ -248,7 +247,6 @@ export default function DashboardSidebar({
               href={item.href}
               label={item.label}
               icon={item.icon}
-              showNewBadge={item.showNewBadge}
               compact={showCompactNav}
               hoverTip={tipEnabled ? bindHoverTip(item.label) : undefined}
               active={
@@ -350,7 +348,6 @@ function NavItem({
   icon: Icon,
   active,
   locked,
-  showNewBadge,
   compact,
   hoverTip,
   onNavigate,
@@ -360,7 +357,6 @@ function NavItem({
   icon: LucideIcon;
   active: boolean;
   locked?: boolean;
-  showNewBadge?: boolean;
   compact: boolean;
   hoverTip?: {
     onMouseEnter: (e: React.MouseEvent<HTMLElement>) => void;
@@ -394,11 +390,6 @@ function NavItem({
           className={cn("shrink-0", active && !locked ? "text-white" : "")}
           aria-hidden
         />
-        {showNewBadge && !locked ? (
-          <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-zg-accent px-1 text-[10px] font-bold leading-none text-white ring-2 ring-zg-sidebar-bg">
-            {NEW_RESERVATIONS_BADGE}
-          </span>
-        ) : null}
         {locked ? (
           <span className="absolute -bottom-1 -right-1 rounded bg-white/10 px-1 py-px text-[8px] font-bold uppercase text-zg-on-dark-muted ring-1 ring-zg-border">
             P
@@ -428,16 +419,6 @@ function NavItem({
         aria-hidden
       />
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      {showNewBadge ? (
-        <span
-          className={cn(
-            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums",
-            active && !locked ? "bg-white/25 text-white" : "bg-zg-accent text-white",
-          )}
-        >
-          {NEW_RESERVATIONS_BADGE}
-        </span>
-      ) : null}
       {locked ? (
         <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-on-dark-muted">
           Pro

@@ -70,11 +70,7 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
     <DashboardContent>
       <PageHeader
         title="Réservations"
-        subtitle={
-          resSettings?.auto_archive_reservations !== true
-            ? "Filtrez la liste, ouvrez une fiche pour confirmer, refuser ou ajouter une note interne. Les créneaux déjà passés restent affichés tant que l’archivage automatique est désactivé dans Paramètres."
-            : "Filtrez la liste, ouvrez une fiche pour confirmer, refuser ou ajouter une note interne."
-        }
+        subtitle="Gère tes réservations du jour et celles à venir."
         primaryAction={{
           kind: "link",
           href: "/dashboard/reservations?new=1",

@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { addDays } from "date-fns";
+import { formatInTimeZone, toDate } from "date-fns-tz";
 import { createClient } from "@/src/lib/supabase/client";
 import GuestAvatar from "@/src/components/dashboard/guest-avatar";
 import ReservationListRow from "@/src/components/dashboard/reservation-list-row";
@@ -15,11 +17,11 @@ import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
 import { cn } from "@/src/lib/utils";
 import {
-  isReservationSlotPastInBusinessTz,
-  reservationSlotEndInBusinessTz,
+  businessCalendarTimeZone,
+  calendarYmdInBusinessTz,
   reservationStartInBusinessTz,
 } from "@/src/lib/date/business-calendar";
-import { Calendar, History, MousePointer2 } from "lucide-react";
+import { Calendar, MousePointer2 } from "lucide-react";
 
 type ReservationRow = {
   id: string;
@@ -34,7 +36,6 @@ type ReservationRow = {
   created_at: string;
   zone?: "interior" | "terrace" | string | null;
   reservation_type?: "standard" | "walkin";
-  /** Libellé plan de salle (Table + Zone) calculé côté serveur. */
   table_label?: string | null;
 };
 
@@ -42,17 +43,23 @@ type ReservationsManagerProps = {
   initialReservations: ReservationRow[];
   initialShowManualForm?: boolean;
   terraceEnabled?: boolean;
-  /** Archivage par temps (heure + durée du repas), filtrage côté client au chargement. */
   autoArchiveReservations?: boolean;
   reservationDurationMinutes?: number;
 };
+
+type DayStatusFilter = "all" | "confirmed" | "pending" | "cancelled";
+
+function addCalendarDaysYmd(ymd: string, deltaDays: number): string {
+  const tz = businessCalendarTimeZone();
+  const base = toDate(`${ymd}T12:00:00`, { timeZone: tz });
+  return formatInTimeZone(addDays(base, deltaDays), tz, "yyyy-MM-dd");
+}
 
 function seatingZoneFromRow(row: ReservationRow): "interior" | "terrace" {
   return row.zone === "terrace" ? "terrace" : "interior";
 }
 
 const editableStatuses = ["pending", "confirmed", "refused", "completed", "cancelled", "no-show"] as const;
-
 const statusesWithoutCompleted = ["pending", "confirmed", "refused", "cancelled", "no-show"] as const;
 
 function historyStatusDisplayLabel(reservation: ReservationRow, autoArchive: boolean) {
@@ -78,6 +85,13 @@ function sortReservations(values: ReservationRow[]) {
   return [...values].sort((a, b) => reservationDateTimeValue(a) - reservationDateTimeValue(b));
 }
 
+const DAY_STATUS_OPTIONS: { value: DayStatusFilter; label: string }[] = [
+  { value: "all", label: "Tous" },
+  { value: "confirmed", label: "Confirmé" },
+  { value: "pending", label: "En attente" },
+  { value: "cancelled", label: "Annulé" },
+];
+
 export default function ReservationsManager({
   initialReservations,
   initialShowManualForm = false,
@@ -85,12 +99,17 @@ export default function ReservationsManager({
   autoArchiveReservations = false,
   reservationDurationMinutes = 90,
 }: ReservationsManagerProps) {
+  void reservationDurationMinutes;
   const supabase = createClient();
   const [reservations, setReservations] = useState(sortReservations(initialReservations));
-  /** Instantané au montage : le filtre archive / actif est évalué une fois au chargement de la page. */
-  const [clientNow] = useState(() => new Date());
-  const [filterDate, setFilterDate] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | ReservationRow["status"]>("all");
+  const [daySectionDate, setDaySectionDate] = useState(() => calendarYmdInBusinessTz());
+  const [daySectionStatus, setDaySectionStatus] = useState<DayStatusFilter>("all");
+  const [upcomingRangeStart, setUpcomingRangeStart] = useState(() =>
+    addCalendarDaysYmd(calendarYmdInBusinessTz(), 1),
+  );
+  const [upcomingRangeEnd, setUpcomingRangeEnd] = useState(() =>
+    addCalendarDaysYmd(calendarYmdInBusinessTz(), 7),
+  );
   const [savingId, setSavingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
@@ -109,50 +128,30 @@ export default function ReservationsManager({
     Object.fromEntries(initialReservations.map((reservation) => [reservation.id, reservation.internal_note ?? ""])),
   );
 
-  const mealDuration = Math.max(1, reservationDurationMinutes);
+  const todayRows = useMemo(() => {
+    let rows = reservations.filter((r) => r.reservation_date === daySectionDate);
+    if (daySectionStatus === "confirmed") rows = rows.filter((r) => r.status === "confirmed");
+    else if (daySectionStatus === "pending") rows = rows.filter((r) => r.status === "pending");
+    else if (daySectionStatus === "cancelled") rows = rows.filter((r) => r.status === "cancelled");
+    return sortReservations(rows);
+  }, [reservations, daySectionDate, daySectionStatus]);
 
-  const baseFiltered = useMemo(() => {
-    return reservations.filter((reservation) => {
-      if (filterDate && reservation.reservation_date !== filterDate) return false;
-      if (filterStatus !== "all" && reservation.status !== filterStatus) return false;
-      return true;
-    });
-  }, [reservations, filterDate, filterStatus]);
+  const upcomingRows = useMemo(() => {
+    const bizToday = calendarYmdInBusinessTz();
+    const minFuture = addCalendarDaysYmd(bizToday, 1);
+    let from = upcomingRangeStart;
+    if (from < minFuture) from = minFuture;
+    let to = upcomingRangeEnd;
+    if (to < from) to = from;
+    return sortReservations(reservations.filter((r) => r.reservation_date >= from && r.reservation_date <= to));
+  }, [reservations, upcomingRangeStart, upcomingRangeEnd]);
 
-  const { mainListReservations, historyListReservations } = useMemo(() => {
-    if (!autoArchiveReservations) {
-      return { mainListReservations: baseFiltered, historyListReservations: [] as ReservationRow[] };
-    }
-    const main: ReservationRow[] = [];
-    const hist: ReservationRow[] = [];
-    for (const r of baseFiltered) {
-      if (isReservationSlotPastInBusinessTz(r.reservation_date, r.reservation_time, mealDuration, clientNow))
-        hist.push(r);
-      else main.push(r);
-    }
-    return {
-      mainListReservations: sortReservations(main),
-      historyListReservations: [...hist].sort(
-        (a, b) =>
-          reservationSlotEndInBusinessTz(b.reservation_date, b.reservation_time, mealDuration).getTime() -
-          reservationSlotEndInBusinessTz(a.reservation_date, a.reservation_time, mealDuration).getTime(),
-      ),
-    };
-  }, [autoArchiveReservations, baseFiltered, mealDuration, clientNow]);
+  const isDayFilterToday = daySectionDate === calendarYmdInBusinessTz();
 
   const selectedReservation = useMemo(() => {
-    const row = baseFiltered.find((reservation) => reservation.id === selectedReservationId) ?? null;
-    if (!row) return null;
-    if (
-      autoArchiveReservations &&
-      isReservationSlotPastInBusinessTz(row.reservation_date, row.reservation_time, mealDuration, clientNow)
-    ) {
-      return null;
-    }
-    return row;
-  }, [baseFiltered, selectedReservationId, autoArchiveReservations, mealDuration, clientNow]);
-
-  const statusFilterOptions = autoArchiveReservations ? statusesWithoutCompleted : editableStatuses;
+    if (!selectedReservationId) return null;
+    return reservations.find((r) => r.id === selectedReservationId) ?? null;
+  }, [reservations, selectedReservationId]);
 
   const detailStatusOptions: readonly ReservationRow["status"][] = useMemo(() => {
     if (!autoArchiveReservations) return editableStatuses;
@@ -179,9 +178,7 @@ export default function ReservationsManager({
       return;
     }
 
-    setReservations((current) =>
-      current.map((item) => (item.id === id ? { ...item, status } : item)),
-    );
+    setReservations((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
     setMessage("Statut mis à jour.");
     setSavingId(null);
   }
@@ -206,7 +203,11 @@ export default function ReservationsManager({
       return;
     }
 
-    setReservations((current) => current.map((item) => (item.id === id ? data : item)));
+    setReservations((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, ...data, table_label: item.table_label } : item,
+      ),
+    );
     setMessage("Note enregistrée.");
     setSavingId(null);
   }
@@ -258,20 +259,306 @@ export default function ReservationsManager({
     setSavingId(null);
   }
 
+  function renderDayTableDesktop(rows: ReservationRow[]) {
+    return (
+      <div className="overflow-hidden rounded-xl border border-zg-border bg-zg-surface shadow-sm transition-all duration-150">
+        <div className="grid grid-cols-[100px_minmax(160px,1fr)_90px_minmax(100px,1fr)_130px] gap-3 border-b border-zg-border bg-zg-surface-elevated px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-zg-text-muted">
+          <div>Heure</div>
+          <div>Client</div>
+          <div>Couverts</div>
+          <div>Table</div>
+          <div className="text-right">Statut</div>
+        </div>
+        <div className="divide-y divide-zg-border">
+          {rows.map((r) => {
+            const isSelected = selectedReservationId === r.id;
+            const walkin = r.reservation_type === "walkin";
+            return (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setSelectedReservationId(r.id)}
+                className={cn(
+                  "grid w-full grid-cols-[100px_minmax(160px,1fr)_90px_minmax(100px,1fr)_130px] items-center gap-3 px-4 py-3 text-left text-sm transition-all duration-150",
+                  "hover:bg-zg-card-hover",
+                  isSelected && "bg-zg-accent-soft-bg",
+                )}
+              >
+                <div className="font-bold tabular-nums text-zg-teal">{r.reservation_time}</div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-3">
+                    <GuestAvatar name={r.guest_name} size="sm" />
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold text-zg-fg">{r.guest_name}</div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zg-muted">
+                        {walkin ? (
+                          <span className="rounded-full border border-zg-warning/35 bg-zg-warning-soft-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-warning">
+                            Walk-in
+                          </span>
+                        ) : null}
+                        {terraceEnabled ? (
+                          <span className="rounded-full border border-zg-border-accent bg-zg-surface-soft/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-teal">
+                            {seatingZoneFromRow(r) === "terrace" ? "Terrasse" : "Intérieur"}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="font-semibold tabular-nums text-zg-muted">{r.guests}</div>
+                <div className="truncate text-zg-muted">{r.table_label ?? "À placer"}</div>
+                <div className="flex justify-end">
+                  <StatusBadge status={r.status} displayLabel={historyStatusDisplayLabel(r, autoArchiveReservations)} />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  function renderUpcomingTableDesktop(rows: ReservationRow[]) {
+    return (
+      <div className="overflow-hidden rounded-xl border border-zg-border bg-zg-surface shadow-sm transition-all duration-150">
+        <div className="grid grid-cols-[110px_100px_minmax(160px,1fr)_90px_minmax(100px,1fr)_130px] gap-3 border-b border-zg-border bg-zg-surface-elevated px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-zg-text-muted">
+          <div>Date</div>
+          <div>Heure</div>
+          <div>Client</div>
+          <div>Couverts</div>
+          <div>Table</div>
+          <div className="text-right">Statut</div>
+        </div>
+        <div className="divide-y divide-zg-border">
+          {rows.map((r) => {
+            const isSelected = selectedReservationId === r.id;
+            const walkin = r.reservation_type === "walkin";
+            return (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setSelectedReservationId(r.id)}
+                className={cn(
+                  "grid w-full grid-cols-[110px_100px_minmax(160px,1fr)_90px_minmax(100px,1fr)_130px] items-center gap-3 px-4 py-3 text-left text-sm transition-all duration-150",
+                  "hover:bg-zg-card-hover",
+                  isSelected && "bg-zg-accent-soft-bg",
+                )}
+              >
+                <div className="font-semibold tabular-nums text-zg-muted">{r.reservation_date}</div>
+                <div className="font-bold tabular-nums text-zg-teal">{r.reservation_time}</div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-3">
+                    <GuestAvatar name={r.guest_name} size="sm" />
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold text-zg-fg">{r.guest_name}</div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zg-muted">
+                        {walkin ? (
+                          <span className="rounded-full border border-zg-warning/35 bg-zg-warning-soft-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-warning">
+                            Walk-in
+                          </span>
+                        ) : null}
+                        {terraceEnabled ? (
+                          <span className="rounded-full border border-zg-border-accent bg-zg-surface-soft/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-teal">
+                            {seatingZoneFromRow(r) === "terrace" ? "Terrasse" : "Intérieur"}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="font-semibold tabular-nums text-zg-muted">{r.guests}</div>
+                <div className="truncate text-zg-muted">{r.table_label ?? "À placer"}</div>
+                <div className="flex justify-end">
+                  <StatusBadge status={r.status} displayLabel={historyStatusDisplayLabel(r, autoArchiveReservations)} />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section className="space-y-10 md:space-y-12">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
-        <Card>
-          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      {showManualForm ? (
+        <form
+          onSubmit={createManualReservation}
+          className="space-y-5 rounded-xl border border-zg-border bg-zg-surface-elevated/80 p-5 shadow-sm transition-all duration-150 md:p-6"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <CardTitle>Réservations</CardTitle>
-              <CardDescription>
-                {autoArchiveReservations
-                  ? "Créneaux à venir et en cours uniquement (les passages passés sont en Historique)."
-                  : "Filtrez puis cliquez une ligne pour agir."}
-              </CardDescription>
+              <p className="text-sm font-semibold text-zg-fg">Nouvelle réservation</p>
+              <p className="mt-1 text-sm text-zg-muted">Saisie manuelle (walk-in possible).</p>
             </div>
-            <div className="flex shrink-0 items-center gap-2 sm:pt-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowManualForm(false);
+                setManualWalkInMode(false);
+                setShowWalkInContactFields(false);
+              }}
+            >
+              Fermer
+            </Button>
+          </div>
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-zg-border bg-zg-surface p-4 text-sm text-zg-fg">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-zg-border"
+              checked={manualWalkInMode}
+              onChange={(e) => {
+                const on = e.target.checked;
+                setManualWalkInMode(on);
+                if (on) {
+                  setManualGuestName("");
+                  setManualGuestPhone("");
+                  setManualGuestEmail("");
+                  setManualNote("");
+                  setShowWalkInContactFields(false);
+                } else {
+                  setShowWalkInContactFields(false);
+                }
+              }}
+            />
+            <span>
+              <span className="font-semibold text-zg-fg">Walk-in (client sans réservation)</span>
+              <span className="mt-1 block text-zg-muted">
+                Enregistrement minimal : date, créneau, couverts{terraceEnabled ? ", zone" : ""}. Le badge Walk-in
+                apparaît dans la liste.
+              </span>
+            </span>
+          </label>
+          <div className="grid gap-5 md:grid-cols-2">
+            {!manualWalkInMode ? (
+              <>
+                <div>
+                  <label className="dashboard-field-label">Nom</label>
+                  <Input value={manualGuestName} onChange={(e) => setManualGuestName(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Téléphone</label>
+                  <Input value={manualGuestPhone} onChange={(e) => setManualGuestPhone(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Email</label>
+                  <Input type="email" value={manualGuestEmail} onChange={(e) => setManualGuestEmail(e.target.value)} />
+                </div>
+              </>
+            ) : null}
+            <div>
+              <label className="dashboard-field-label">Date</label>
+              <Input
+                type="date"
+                value={manualReservationDate}
+                onChange={(e) => setManualReservationDate(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Heure</label>
+              <Input
+                type="time"
+                value={manualReservationTime}
+                onChange={(e) => setManualReservationTime(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Couverts</label>
+              <Input
+                type="number"
+                min={1}
+                value={manualGuests}
+                onChange={(e) => setManualGuests(Number(e.target.value))}
+                required
+              />
+            </div>
+            {terraceEnabled ? (
+              <div className="space-y-2 md:col-span-2">
+                <p className="dashboard-field-label">Zone</p>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="radio"
+                      name="manual-zone"
+                      value="interior"
+                      checked={manualZone === "interior"}
+                      onChange={() => setManualZone("interior")}
+                      required
+                    />
+                    Intérieur
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="radio"
+                      name="manual-zone"
+                      value="terrace"
+                      checked={manualZone === "terrace"}
+                      onChange={() => setManualZone("terrace")}
+                      required
+                    />
+                    Terrasse
+                  </label>
+                </div>
+              </div>
+            ) : null}
+            {manualWalkInMode && !showWalkInContactFields ? (
+              <div className="md:col-span-2">
+                <button
+                  type="button"
+                  className="text-sm font-semibold text-zg-teal underline decoration-zg-border-accent underline-offset-2 hover:text-zg-fg"
+                  onClick={() => setShowWalkInContactFields(true)}
+                >
+                  Ajouter nom, email ou téléphone (optionnel)
+                </button>
+              </div>
+            ) : null}
+            {manualWalkInMode && showWalkInContactFields ? (
+              <>
+                <div>
+                  <label className="dashboard-field-label">Nom (optionnel)</label>
+                  <Input value={manualGuestName} onChange={(e) => setManualGuestName(e.target.value)} />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Téléphone (optionnel)</label>
+                  <Input value={manualGuestPhone} onChange={(e) => setManualGuestPhone(e.target.value)} />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Email (optionnel)</label>
+                  <Input type="email" value={manualGuestEmail} onChange={(e) => setManualGuestEmail(e.target.value)} />
+                </div>
+              </>
+            ) : null}
+            {!manualWalkInMode ? (
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Note</label>
+                <Textarea className="min-h-24" value={manualNote} onChange={(e) => setManualNote(e.target.value)} />
+              </div>
+            ) : null}
+          </div>
+          <Button type="submit" disabled={savingId === "manual-create"}>
+            {savingId === "manual-create"
+              ? "Enregistrement…"
+              : manualWalkInMode
+                ? "Ajouter le walk-in"
+                : "Enregistrer"}
+          </Button>
+        </form>
+      ) : null}
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
+        <div className="space-y-10 md:space-y-12">
+          <div>
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-zg-fg">Réservations du jour</h2>
+                <p className="mt-1 text-sm text-zg-text-muted">
+                  Toutes les réservations du jour choisi, triées par heure.
+                </p>
+              </div>
               <ActionMenu
                 items={[
                   {
@@ -282,348 +569,145 @@ export default function ReservationsManager({
                 ]}
               />
             </div>
-          </CardHeader>
-          <CardContent className="space-y-8">
-          {showManualForm ? (
-            <form
-              onSubmit={createManualReservation}
-              className="space-y-5 rounded-xl border border-zg-border bg-zg-surface-elevated/80 p-5 shadow-sm transition-all duration-150 md:p-6"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-zg-fg">Nouvelle réservation</p>
-                  <p className="mt-1 text-sm text-zg-muted">Saisie manuelle (walk-in possible).</p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setShowManualForm(false);
-                    setManualWalkInMode(false);
-                    setShowWalkInContactFields(false);
-                  }}
-                >
-                  Fermer
-                </Button>
-              </div>
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-zg-border bg-zg-surface p-4 text-sm text-zg-fg">
-                <input
-                  type="checkbox"
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-zg-border"
-                  checked={manualWalkInMode}
-                  onChange={(e) => {
-                    const on = e.target.checked;
-                    setManualWalkInMode(on);
-                    if (on) {
-                      setManualGuestName("");
-                      setManualGuestPhone("");
-                      setManualGuestEmail("");
-                      setManualNote("");
-                      setShowWalkInContactFields(false);
-                    } else {
-                      setShowWalkInContactFields(false);
-                    }
-                  }}
-                />
-                <span>
-                  <span className="font-semibold text-zg-fg">Walk-in (client sans réservation)</span>
-                  <span className="mt-1 block text-zg-muted">
-                    Enregistrement minimal : date, créneau, couverts{terraceEnabled ? ", zone" : ""}. Le badge Walk-in apparaît dans la liste.
-                  </span>
-                </span>
-              </label>
-              <div className="grid gap-5 md:grid-cols-2">
-                {!manualWalkInMode ? (
-                  <>
-                    <div>
-                      <label className="dashboard-field-label">Nom</label>
-                      <Input value={manualGuestName} onChange={(e) => setManualGuestName(e.target.value)} required />
-                    </div>
-                    <div>
-                      <label className="dashboard-field-label">Téléphone</label>
-                      <Input value={manualGuestPhone} onChange={(e) => setManualGuestPhone(e.target.value)} required />
-                    </div>
-                    <div>
-                      <label className="dashboard-field-label">Email</label>
-                      <Input type="email" value={manualGuestEmail} onChange={(e) => setManualGuestEmail(e.target.value)} />
-                    </div>
-                  </>
-                ) : null}
-                <div>
-                  <label className="dashboard-field-label">Date</label>
-                  <Input type="date" value={manualReservationDate} onChange={(e) => setManualReservationDate(e.target.value)} required />
-                </div>
-                <div>
-                  <label className="dashboard-field-label">Heure</label>
-                  <Input type="time" value={manualReservationTime} onChange={(e) => setManualReservationTime(e.target.value)} required />
-                </div>
-                <div>
-                  <label className="dashboard-field-label">Couverts</label>
-                  <Input type="number" min={1} value={manualGuests} onChange={(e) => setManualGuests(Number(e.target.value))} required />
-                </div>
-                {terraceEnabled ? (
-                  <div className="md:col-span-2 space-y-2">
-                    <p className="dashboard-field-label">Zone</p>
-                    <div className="flex flex-wrap gap-4 text-sm">
-                      <label className="flex cursor-pointer items-center gap-2">
-                        <input
-                          type="radio"
-                          name="manual-zone"
-                          value="interior"
-                          checked={manualZone === "interior"}
-                          onChange={() => setManualZone("interior")}
-                          required
-                        />
-                        Intérieur
-                      </label>
-                      <label className="flex cursor-pointer items-center gap-2">
-                        <input
-                          type="radio"
-                          name="manual-zone"
-                          value="terrace"
-                          checked={manualZone === "terrace"}
-                          onChange={() => setManualZone("terrace")}
-                          required
-                        />
-                        Terrasse
-                      </label>
-                    </div>
+            <Card>
+              <CardContent className="space-y-4 pt-6">
+                <FilterBar right={null}>
+                  <div className="w-[170px]">
+                    <label className="dashboard-field-label">Date</label>
+                    <Input type="date" value={daySectionDate} onChange={(e) => setDaySectionDate(e.target.value)} />
                   </div>
-                ) : null}
-                {manualWalkInMode && !showWalkInContactFields ? (
-                  <div className="md:col-span-2">
-                    <button
-                      type="button"
-                      className="text-sm font-semibold text-zg-teal underline decoration-zg-border-accent underline-offset-2 hover:text-zg-fg"
-                      onClick={() => setShowWalkInContactFields(true)}
+                  <div className="w-[210px]">
+                    <label className="dashboard-field-label">Statut</label>
+                    <Select
+                      value={daySectionStatus}
+                      onChange={(e) => setDaySectionStatus(e.target.value as DayStatusFilter)}
                     >
-                      Ajouter nom, email ou téléphone (optionnel)
-                    </button>
+                      {DAY_STATUS_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </Select>
                   </div>
-                ) : null}
-                {manualWalkInMode && showWalkInContactFields ? (
-                  <>
-                    <div>
-                      <label className="dashboard-field-label">Nom (optionnel)</label>
-                      <Input value={manualGuestName} onChange={(e) => setManualGuestName(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="dashboard-field-label">Téléphone (optionnel)</label>
-                      <Input value={manualGuestPhone} onChange={(e) => setManualGuestPhone(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="dashboard-field-label">Email (optionnel)</label>
-                      <Input type="email" value={manualGuestEmail} onChange={(e) => setManualGuestEmail(e.target.value)} />
-                    </div>
-                  </>
-                ) : null}
-                {!manualWalkInMode ? (
-                  <div className="md:col-span-2">
-                    <label className="dashboard-field-label">Note</label>
-                    <Textarea className="min-h-24" value={manualNote} onChange={(e) => setManualNote(e.target.value)} />
-                  </div>
-                ) : null}
-              </div>
-              <Button type="submit" disabled={savingId === "manual-create"}>
-                {savingId === "manual-create"
-                  ? "Enregistrement…"
-                  : manualWalkInMode
-                    ? "Ajouter le walk-in"
-                    : "Enregistrer"}
-              </Button>
-            </form>
-          ) : null}
+                </FilterBar>
 
-          <FilterBar
-            right={null}
-          >
-            <div className="w-[170px]">
-              <label className="dashboard-field-label">Date</label>
-              <Input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
-            </div>
-            <div className="w-[210px]">
-              <label className="dashboard-field-label">Statut</label>
-              <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as "all" | ReservationRow["status"])}>
-                <option value="all">Tous</option>
-                {statusFilterOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {STATUS_LABEL_FR[status]}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          </FilterBar>
-
-          <div className="hidden md:block">
-            {mainListReservations.length === 0 ? (
-              <EmptyState
-                icon={Calendar}
-                title="Rien sur cette plage"
-                description={
-                  autoArchiveReservations
-                    ? "Aucun créneau ne correspond à ces filtres — jette un œil à l’historique plus bas, les tables passées s’y retrouvent."
-                    : "Ajuste la date ou le statut : la salle se remplit vite, les prochains passages sont souvent à portée de clic."
-                }
-              />
-            ) : (
-              <div className="overflow-hidden rounded-xl border border-zg-border bg-zg-surface shadow-sm transition-all duration-150">
-                <div className="grid grid-cols-[110px_110px_minmax(160px,1fr)_110px_170px_150px] gap-3 border-b border-zg-border bg-zg-surface-elevated px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-zg-text-muted">
-                  <div>Date</div>
-                  <div>Heure</div>
-                  <div>Client</div>
-                  <div>Couverts</div>
-                  <div>Table</div>
-                  <div className="text-right">Statut</div>
+                <div className="hidden md:block">
+                  {todayRows.length === 0 ? (
+                    <EmptyState
+                      icon={Calendar}
+                      title="Journée tranquille"
+                      description={
+                        isDayFilterToday
+                          ? "Aucune réservation prévue aujourd'hui."
+                          : "Aucune réservation pour cette date."
+                      }
+                    />
+                  ) : (
+                    renderDayTableDesktop(todayRows)
+                  )}
                 </div>
-                <div className="divide-y divide-zg-border">
-                  {mainListReservations.map((r) => {
-                    const isSelected = selectedReservationId === r.id;
-                    const walkin = r.reservation_type === "walkin";
-                    return (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => setSelectedReservationId(r.id)}
-                        className={cn(
-                          "grid w-full grid-cols-[110px_110px_minmax(160px,1fr)_110px_170px_150px] items-center gap-3 px-4 py-3 text-left text-sm transition-all duration-150",
-                          "hover:bg-zg-card-hover",
-                          isSelected && "bg-zg-accent-soft-bg",
-                        )}
-                      >
-                        <div className="font-semibold tabular-nums text-zg-muted">{r.reservation_date}</div>
-                        <div className="font-bold tabular-nums text-zg-teal">{r.reservation_time}</div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-3">
-                            <GuestAvatar name={r.guest_name} size="sm" />
-                            <div className="min-w-0">
-                              <div className="truncate font-semibold text-zg-fg">{r.guest_name}</div>
-                              <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zg-muted">
-                                {walkin ? (
-                                  <span className="rounded-full border border-zg-warning/35 bg-zg-warning-soft-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-warning">
-                                    Walk-in
-                                  </span>
-                                ) : null}
-                                {terraceEnabled ? (
-                                  <span className="rounded-full border border-zg-border-accent bg-zg-surface-soft/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-teal">
-                                    {seatingZoneFromRow(r) === "terrace" ? "Terrasse" : "Intérieur"}
-                                  </span>
-                                ) : null}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="font-semibold tabular-nums text-zg-muted">{r.guests}</div>
-                        <div className="truncate text-zg-muted">{r.table_label ?? "À placer"}</div>
-                        <div className="flex justify-end">
-                          <StatusBadge status={r.status} displayLabel={historyStatusDisplayLabel(r, autoArchiveReservations)} />
-                        </div>
-                      </button>
-                    );
-                  })}
+                <div className="md:hidden">
+                  {todayRows.length === 0 ? (
+                    <EmptyState
+                      icon={Calendar}
+                      title="Journée tranquille"
+                      description={
+                        isDayFilterToday
+                          ? "Aucune réservation prévue aujourd'hui."
+                          : "Aucune réservation pour cette date."
+                      }
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {todayRows.map((reservation) => (
+                        <ReservationListRow
+                          key={reservation.id}
+                          guestName={reservation.guest_name}
+                          timeLabel={reservation.reservation_time}
+                          subtitle={`${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
+                          status={reservation.status}
+                          seatingZone={seatingZoneFromRow(reservation)}
+                          reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
+                          onClick={() => setSelectedReservationId(reservation.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              </CardContent>
+            </Card>
           </div>
 
-          <div className="md:hidden">
-            {mainListReservations.length === 0 ? (
-              <EmptyState
-                icon={Calendar}
-                title="Rien sur cette plage"
-                description={
-                  autoArchiveReservations
-                    ? "Aucun créneau ne correspond à ces filtres — jette un œil à l’historique plus bas, les tables passées s’y retrouvent."
-                    : "Ajuste la date ou le statut : la salle se remplit vite, les prochains passages sont souvent à portée de clic."
-                }
-              />
-            ) : (
-              <div className="space-y-3">
-                {mainListReservations.map((reservation) => (
-                  <ReservationListRow
-                    key={reservation.id}
-                    guestName={reservation.guest_name}
-                    timeLabel={`${reservation.reservation_date} · ${reservation.reservation_time}`}
-                    subtitle={`${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
-                    status={reservation.status}
-                    seatingZone={seatingZoneFromRow(reservation)}
-                    reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
-                    onClick={() => setSelectedReservationId(reservation.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {autoArchiveReservations ? (
-            <div className="border-t border-zg-border/80 pt-10">
-              <div className="mb-4">
-                <p className="dashboard-section-heading">Historique</p>
-                <p className="dashboard-section-subtitle mt-1">
-                  Réservations dont l’heure de fin (passage + durée du repas, {mealDuration} min) est dépassée. Lecture
-                  seule.
-                </p>
-              </div>
-              <div className="hidden md:block">
-                {historyListReservations.length === 0 ? (
-                  <EmptyState
-                    icon={History}
-                    title="Historique tout calme"
-                    description="Rien d’archivé pour ces filtres — quand le service s’écoule, les souvenirs de tables s’accumulent ici."
-                  />
-                ) : (
-                  <div className="space-y-2">
-                    {historyListReservations.map((reservation) => (
-                      <ReservationListRow
-                        key={reservation.id}
-                        guestName={reservation.guest_name}
-                        timeLabel={reservation.reservation_time}
-                        subtitle={`${reservation.reservation_date} · ${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
-                        status={reservation.status}
-                        statusDisplayLabel={historyStatusDisplayLabel(reservation, true)}
-                        seatingZone={seatingZoneFromRow(reservation)}
-                        reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
-                        emphasizeTime
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="md:hidden">
-                {historyListReservations.length === 0 ? (
-                  <EmptyState
-                    icon={History}
-                    title="Historique tout calme"
-                    description="Rien d’archivé pour ces filtres — quand le service s’écoule, les souvenirs de tables s’accumulent ici."
-                  />
-                ) : (
-                  <div className="space-y-3">
-                    {historyListReservations.map((reservation) => (
-                      <ReservationListRow
-                        key={reservation.id}
-                        guestName={reservation.guest_name}
-                        timeLabel={`${reservation.reservation_date} · ${reservation.reservation_time}`}
-                        subtitle={`${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
-                        status={reservation.status}
-                        statusDisplayLabel={historyStatusDisplayLabel(reservation, true)}
-                        seatingZone={seatingZoneFromRow(reservation)}
-                        reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+          <div>
+            <div className="mb-3">
+              <h2 className="text-base font-semibold text-zg-fg">Prochaines réservations</h2>
+              <p className="mt-1 text-sm text-zg-text-muted">
+                À partir de demain, dans l&apos;intervalle de dates (7 jours par défaut).
+              </p>
             </div>
-          ) : null}
-          </CardContent>
-        </Card>
+            <Card>
+              <CardContent className="space-y-4 pt-6">
+                <FilterBar right={null}>
+                  <div className="w-[170px]">
+                    <label className="dashboard-field-label">Du</label>
+                    <Input
+                      type="date"
+                      value={upcomingRangeStart}
+                      onChange={(e) => setUpcomingRangeStart(e.target.value)}
+                    />
+                  </div>
+                  <div className="w-[170px]">
+                    <label className="dashboard-field-label">Au</label>
+                    <Input type="date" value={upcomingRangeEnd} onChange={(e) => setUpcomingRangeEnd(e.target.value)} />
+                  </div>
+                </FilterBar>
+
+                <div className="hidden md:block">
+                  {upcomingRows.length === 0 ? (
+                    <EmptyState
+                      icon={Calendar}
+                      title="Pas de réservations à venir"
+                      description="Tu n&apos;as pas encore de réservations à venir."
+                    />
+                  ) : (
+                    renderUpcomingTableDesktop(upcomingRows)
+                  )}
+                </div>
+                <div className="md:hidden">
+                  {upcomingRows.length === 0 ? (
+                    <EmptyState
+                      icon={Calendar}
+                      title="Pas de réservations à venir"
+                      description="Tu n&apos;as pas encore de réservations à venir."
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {upcomingRows.map((reservation) => (
+                        <ReservationListRow
+                          key={reservation.id}
+                          guestName={reservation.guest_name}
+                          timeLabel={`${reservation.reservation_date} · ${reservation.reservation_time}`}
+                          subtitle={`${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
+                          status={reservation.status}
+                          seatingZone={seatingZoneFromRow(reservation)}
+                          reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
+                          onClick={() => setSelectedReservationId(reservation.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         <div className="space-y-6 lg:sticky lg:top-6">
           <Card>
             <CardHeader>
               <CardTitle>Détails</CardTitle>
               <CardDescription>
-                {selectedReservation ? "Modifiez le statut et la note interne." : "Sélectionnez une réservation."}
+                {selectedReservation ? "Modifiez le statut et la note interne." : "Choisis une ligne"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
@@ -631,7 +715,7 @@ export default function ReservationsManager({
                 <EmptyState
                   icon={MousePointer2}
                   title="Choisis une ligne"
-                  description="Clique sur une réservation dans la liste pour afficher les détails, le statut et la note interne."
+                  description="Clique sur une réservation dans l'une des listes pour afficher les détails, le statut et la note interne."
                 />
               ) : (
                 <>
@@ -649,10 +733,15 @@ export default function ReservationsManager({
                             Walk-in
                           </span>
                         ) : null}
-                        <span className="rounded-full border border-zg-success/35 bg-zg-success-soft-bg px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-success">
-                          {seatingZoneFromRow(selectedReservation) === "terrace" ? "Terrasse" : "Intérieur"}
-                        </span>
-                        <StatusBadge status={selectedReservation.status} displayLabel={historyStatusDisplayLabel(selectedReservation, autoArchiveReservations)} />
+                        {terraceEnabled ? (
+                          <span className="rounded-full border border-zg-success/35 bg-zg-success-soft-bg px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-success">
+                            {seatingZoneFromRow(selectedReservation) === "terrace" ? "Terrasse" : "Intérieur"}
+                          </span>
+                        ) : null}
+                        <StatusBadge
+                          status={selectedReservation.status}
+                          displayLabel={historyStatusDisplayLabel(selectedReservation, autoArchiveReservations)}
+                        />
                       </CardDescription>
                       <p className="mt-3 text-sm text-zg-muted">
                         {selectedReservation.guest_phone || selectedReservation.guest_email || "Pas de contact"}
@@ -711,7 +800,11 @@ export default function ReservationsManager({
                       placeholder="Pour l’équipe…"
                     />
                     <div className="mt-3">
-                      <Button type="button" onClick={() => saveNote(selectedReservation.id)} disabled={savingId === selectedReservation.id}>
+                      <Button
+                        type="button"
+                        onClick={() => saveNote(selectedReservation.id)}
+                        disabled={savingId === selectedReservation.id}
+                      >
                         Enregistrer la note
                       </Button>
                     </div>
