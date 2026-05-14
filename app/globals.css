@@ -28,7 +28,8 @@ html {
 
   /* ZenGrow dashboard — palette full dark premium (spec SaaS data-driven) */
   --zg-app: #0a0806;
-  --zg-sidebar-bg: #0f0c09;
+  /* Légèrement au-dessus de l’app pour séparer la sidebar sans bordure */
+  --zg-sidebar-bg: #100d0a;
   --zg-sidebar-border: #2a1f17;
   --zg-on-dark: #faf7f2;
   --zg-on-dark-muted: #b5aba0;

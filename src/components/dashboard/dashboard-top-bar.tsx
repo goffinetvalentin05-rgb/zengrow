@@ -86,7 +86,7 @@ export default function DashboardTopBar({
   return (
     <header
       className={cn(
-        "relative flex h-[72px] shrink-0 items-center justify-between gap-4 border-b border-zg-border bg-zg-app px-4 transition-colors duration-200 ease-out md:px-8",
+        "relative flex h-[72px] shrink-0 items-center justify-between gap-4 bg-zg-app px-4 transition-colors duration-200 ease-out md:px-8",
       )}
     >
       <AnimatePresence>
@@ -181,9 +181,7 @@ export default function DashboardTopBar({
           ) : null}
         </button>
 
-        <div className="hidden h-8 w-px shrink-0 bg-zg-border sm:block" aria-hidden />
-
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3 sm:pl-1">
           {userAvatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

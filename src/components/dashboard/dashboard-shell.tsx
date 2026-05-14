@@ -76,7 +76,7 @@ export default function DashboardShell({
                 userAvatarUrl={userAvatarUrl}
                 onOpenMobileNav={() => setMobileNavOpen(true)}
               />
-              <main className="flex-1 overflow-x-hidden px-4 py-6 md:px-8 md:py-8">{children}</main>
+              <main className="flex-1 overflow-x-hidden px-4 pb-6 pt-8 md:px-8 md:pb-8 md:pt-10">{children}</main>
             </div>
           </div>
         </div>
