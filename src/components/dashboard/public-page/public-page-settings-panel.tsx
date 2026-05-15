@@ -7,15 +7,24 @@ import {
   useMemo,
   useState,
   type ChangeEvent,
+  type ReactNode,
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  Camera,
+  Check,
   Copy,
   ExternalLink,
   ImageIcon,
-  Palette,
+  Layout,
+  Phone,
+  Plus,
+  Settings2,
   Sparkles,
+  Trash2,
+  Upload,
+  Utensils,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
@@ -24,7 +33,6 @@ import Input from "@/src/components/ui/input";
 import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
 import PublicPagePreviewStudio, { type ExtendedPreviewDraft } from "@/src/components/dashboard/public-page/public-page-preview-studio";
-import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-accordion";
 import {
   type PublicPageEditorConfig,
   parseEditorConfig,
@@ -55,48 +63,131 @@ import {
 import {
   computeConversionScore,
   conversionRecommendations,
-  CTA_PLACEMENT_OPTIONS,
-  PAGE_GOAL_OPTIONS,
-  PERSUASION_OPTIONS,
 } from "@/src/lib/public-page/conversion";
-import { newEditorialSection, newMenuOffer } from "@/src/lib/public-page/premium-content";
-import type { EditorialLayout } from "@/src/lib/public-page/premium-content";
+import { newMenuOffer } from "@/src/lib/public-page/premium-content";
 import {
   MAX_DESCRIPTION_CHARS,
   MAX_GALLERY_PHOTOS,
   MAX_HIGHLIGHTS,
-  PUBLIC_AMBIANCE_OPTIONS,
-  PUBLIC_STYLE_PRESETS,
   type PublicAmbiance,
   type PublicStylePreset,
 } from "@/src/lib/public-page/constants";
 import type { PageBlockId } from "@/src/lib/public-page/editor-config";
 
-const BLOCK_LABELS: Record<PageBlockId, string> = {
-  trust: "Confiance (points forts)",
-  reservation: "Réservation",
-  gallery: "Galerie photos",
-  about: "Concept / à propos",
-  highlights: "Points forts",
-  menu: "Menu",
-  hours: "Horaires",
-  reviews: "Avis & crédibilité",
-  location: "Infos pratiques (pied de page)",
-  social: "Réseaux sociaux",
-  final_cta: "CTA final",
+/** Visuels distincts pour chaque style — préview rapide des cartes du Step 1. */
+const PRESET_VISUALS: Partial<
+  Record<PagePresetId, { gradient: string; foreground: string; accent: string; tagline: string }>
+> = {
+  premium_experience: {
+    gradient: "linear-gradient(135deg, #0c0f14 0%, #1a1f29 65%, #2a2018 100%)",
+    foreground: "#f8f5ef",
+    accent: "#c9a26b",
+    tagline: "Sombre · éditorial · grandes images",
+  },
+  warm_restaurant: {
+    gradient: "linear-gradient(135deg, #fff1e3 0%, #f5d8b8 50%, #c98e5a 100%)",
+    foreground: "#3a1f0e",
+    accent: "#9b4a1e",
+    tagline: "Chaleureux · convivial · familial",
+  },
+  modern_brasserie: {
+    gradient: "linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 60%, #1f2937 100%)",
+    foreground: "#0f172a",
+    accent: "#0ea5e9",
+    tagline: "Net · urbain · efficace",
+  },
+  event_venue: {
+    gradient: "linear-gradient(135deg, #1e293b 0%, #475569 60%, #d4b483 100%)",
+    foreground: "#f8fafc",
+    accent: "#c8a674",
+    tagline: "Hero en split · formules · contact",
+  },
+  minimal_conversion: {
+    gradient: "linear-gradient(135deg, #ffffff 0%, #f4f4f5 70%, #18181b 100%)",
+    foreground: "#09090b",
+    accent: "#27272a",
+    tagline: "Court · direct · ultra réservation",
+  },
 };
 
-/** Blocs dont le toggle a un effet réel sur /r/[slug]. */
-const PUBLIC_PAGE_BLOCK_TOGGLES: PageBlockId[] = [
-  "about",
-  "reservation",
-  "gallery",
-  "menu",
-  "reviews",
-  "location",
-  "social",
-  "final_cta",
+/** Sections personnalisables affichées au Step 3 (avec leur libellé et description). */
+const PAGE_SECTIONS: { id: PageBlockId; label: string; description: string }[] = [
+  { id: "about", label: "Concept", description: "Présentez votre restaurant en quelques mots." },
+  { id: "menu", label: "Menu / carte", description: "Mettez en avant 3 plats ou formules et un lien menu." },
+  { id: "gallery", label: "Galerie", description: "Vos plus belles photos du lieu et des plats." },
+  { id: "reservation", label: "Réservation", description: "Formulaire intégré (paramétré à l'étape suivante)." },
+  { id: "hours", label: "Horaires", description: "Affichés dans le formulaire et le pied de page." },
+  { id: "location", label: "Contact & localisation", description: "Adresse, téléphone, itinéraire." },
+  { id: "final_cta", label: "Rappel final", description: "Bandeau de fin de page qui ramène à la réservation." },
 ];
+
+/** Petite carte d'étape réutilisée pour structurer le panneau. */
+function StepCard({
+  step,
+  title,
+  subtitle,
+  icon,
+  children,
+}: {
+  step: number;
+  title: string;
+  subtitle?: string;
+  icon?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-3xl border border-zg-border bg-zg-surface p-6 shadow-sm sm:p-8">
+      <header className="mb-5 flex items-start gap-4">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zg-accent/10 text-sm font-semibold text-zg-accent">
+          {icon ?? step}
+        </span>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zg-muted">
+            Étape {step}
+          </p>
+          <h2 className="mt-0.5 text-lg font-semibold text-zg-fg sm:text-xl">{title}</h2>
+          {subtitle ? (
+            <p className="mt-1 max-w-2xl text-sm text-zg-muted">{subtitle}</p>
+          ) : null}
+        </div>
+      </header>
+      <div>{children}</div>
+    </section>
+  );
+}
+
+/** Sélecteur de couleur compact (carré couleur + champ hex). */
+function ColorField({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="dashboard-field-label">{label}</label>
+      {hint ? <p className="mt-1 text-xs text-zg-muted">{hint}</p> : null}
+      <div className="mt-2 flex items-center gap-2">
+        <Input
+          type="color"
+          className="h-11 w-14 shrink-0 cursor-pointer p-1"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <Input
+          className="font-mono text-sm"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </div>
+    </div>
+  );
+}
 
 export type PublicPageSettingsInitial = {
   restaurantId: string;
@@ -251,43 +342,43 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const [address, setAddress] = useState(initial.address);
     const [phone, setPhone] = useState(initial.phone);
     const [email, setEmail] = useState(initial.email);
-    const [websiteUrl, setWebsiteUrl] = useState(initial.websiteUrl);
+    const [websiteUrl] = useState(initial.websiteUrl);
     const [googleMapsUrl, setGoogleMapsUrl] = useState(initial.googleMapsUrl);
-    const [instagramUrl, setInstagramUrl] = useState(initial.instagramUrl);
-    const [facebookUrl, setFacebookUrl] = useState(initial.facebookUrl);
-    const [tiktokUrl, setTiktokUrl] = useState(initial.tiktokUrl);
+    const [instagramUrl] = useState(initial.instagramUrl);
+    const [facebookUrl] = useState(initial.facebookUrl);
+    const [tiktokUrl] = useState(initial.tiktokUrl);
 
     const [primaryColor, setPrimaryColor] = useState(initial.primaryColor || DEFAULT_PRIMARY);
     const [secondaryColor, setSecondaryColor] = useState(initial.secondaryColor || DEFAULT_SECONDARY);
     const [stylePreset, setStylePreset] = useState<PublicStylePreset | null>(initial.stylePreset);
-    const [ambiance, setAmbiance] = useState<PublicAmbiance | null>(initial.ambiance);
+    const [ambiance] = useState<PublicAmbiance | null>(initial.ambiance);
 
-    const [heroTitle, setHeroTitle] = useState(initial.heroTitle);
+    const [heroTitle] = useState(initial.heroTitle);
     const [heroSubtitle, setHeroSubtitle] = useState(initial.heroSubtitle);
     const [shortDescription, setShortDescription] = useState(initial.shortDescription);
-    const [highlights, setHighlights] = useState<string[]>(initial.highlights.slice(0, MAX_HIGHLIGHTS));
-    const [specialMessage, setSpecialMessage] = useState(initial.specialMessage);
+    const [highlights] = useState<string[]>(initial.highlights.slice(0, MAX_HIGHLIGHTS));
+    const [specialMessage] = useState(initial.specialMessage);
 
     const [logoUrl, setLogoUrl] = useState(initial.logoUrl);
     const [coverImageUrl, setCoverImageUrl] = useState(initial.coverImageUrl);
     const [galleryUrls, setGalleryUrls] = useState<string[]>(
       initial.galleryUrls.filter(Boolean).slice(0, MAX_GALLERY_PHOTOS),
     );
-    const [featuredGalleryIndex, setFeaturedGalleryIndex] = useState(initial.featuredGalleryIndex);
+    const [featuredGalleryIndex] = useState(initial.featuredGalleryIndex);
 
     const [menuMode, setMenuMode] = useState<"url" | "pdf" | null>(initial.menuMode);
     const [menuUrl, setMenuUrl] = useState(initial.menuUrl);
 
     const [ctaLabel, setCtaLabel] = useState(initial.ctaLabel);
-    const [reservationEnabled, setReservationEnabled] = useState(initial.reservationEnabled);
+    const [reservationEnabled] = useState(initial.reservationEnabled);
     const [preBookingMessage, setPreBookingMessage] = useState(initial.preBookingMessage);
-    const [minBookingLeadMinutes, setMinBookingLeadMinutes] = useState(initial.minBookingLeadMinutes);
-    const [noSlotsMessage, setNoSlotsMessage] = useState(initial.noSlotsMessage);
-    const [showHoursBeforeForm, setShowHoursBeforeForm] = useState(initial.showHoursBeforeForm);
+    const [minBookingLeadMinutes] = useState(initial.minBookingLeadMinutes);
+    const [noSlotsMessage] = useState(initial.noSlotsMessage);
+    const [showHoursBeforeForm] = useState(initial.showHoursBeforeForm);
     const [showPhoneCta, setShowPhoneCta] = useState(initial.showPhoneCta);
 
-    const [seoTitle, setSeoTitle] = useState(initial.seoTitle);
-    const [seoDescription, setSeoDescription] = useState(initial.seoDescription);
+    const [seoTitle] = useState(initial.seoTitle);
+    const [seoDescription] = useState(initial.seoDescription);
 
     const [pageStatus, setPageStatus] = useState<"draft" | "published">(initial.pageStatus);
     const [publishedAt, setPublishedAt] = useState<string | null>(initial.publishedAt);
@@ -297,17 +388,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const [accentColor, setAccentColor] = useState(initial.accentColor);
     const [pageBackgroundColor] = useState(initial.pageBackgroundColor);
     const [buttonColor] = useState(initial.buttonColor);
-    const [buttonTextColor] = useState(initial.buttonTextColor);
-    const [headingTextColor] = useState(initial.headingTextColor);
-    const [bodyTextColor] = useState(initial.bodyTextColor);
-    const [footerBgColor] = useState(initial.footerBgColor);
-    const [footerTextColor] = useState(initial.footerTextColor);
     const [headingFont, setHeadingFont] = useState(initial.headingFont);
     const [bodyFont, setBodyFont] = useState(initial.bodyFont);
-    const [heroTitleSizePx] = useState(initial.heroTitleSizePx);
     const [heroHeight, setHeroHeight] = useState(initial.heroHeight);
-    const [heroOverlayEnabled] = useState(initial.heroOverlayEnabled);
-    const [heroOverlayOpacity] = useState(initial.heroOverlayOpacity);
 
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
@@ -318,8 +401,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const publicPath = publicLinkBase.replace(/\/r\/[^/]+$/, `/r/${effectiveSlug}`);
 
     const resolvedHeroTitle = heroTitle.trim() || defaultHeroTitle(displayName);
-    const resolvedHeroSubtitle =
-      heroSubtitle.trim() || defaultHeroSubtitle(cuisineType, city, ambiance);
 
     const checklist = useMemo(
       () => ({
@@ -382,44 +463,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       if (pageStatus === "published") setHasUnpublishedChanges(true);
     }, [pageStatus]);
 
-    const applyPreset = useCallback(
-      (preset: PublicStylePreset) => {
-        const applied = applyStylePresetColors(preset, primaryColor, secondaryColor);
-        setStylePreset(preset);
-        setPrimaryColor(applied.heroPrimary);
-        setSecondaryColor(applied.accent);
-        setHeroPrimaryColor(applied.heroPrimary);
-        setAccentColor(applied.accent);
-        setHeadingFont(applied.headingFont);
-        setBodyFont(applied.bodyFont);
-        setHeroHeight(applied.heroHeight);
-        setEditorConfig((c) =>
-          parseEditorConfig({
-            ...c,
-            appearance: {
-              ...c.appearance,
-              stylePreset: preset,
-              primaryColor: applied.heroPrimary,
-              secondaryColor: applied.accent,
-              accentColor: applied.accent,
-              backgroundColor: applied.pageBg,
-              surfaceColor: applied.surfaceColor,
-              textColor: applied.bodyColor,
-              headingColor: applied.headingColor,
-              footerBgColor: applied.footerBg,
-              footerTextColor: applied.footerText,
-              buttonTextColor: applied.buttonText,
-              headingFont: applied.headingFont,
-              bodyFont: applied.bodyFont,
-              themeMode: applied.themeMode,
-            },
-          }),
-        );
-        markDirty();
-      },
-      [primaryColor, secondaryColor, markDirty],
-    );
-
     // Confirmation avant d'appliquer un preset complet de page.
     const [pendingPresetId, setPendingPresetId] = useState<PagePresetId | null>(null);
 
@@ -470,15 +513,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       if (pendingPresetId) applyFullPagePreset(pendingPresetId);
       setPendingPresetId(null);
     }, [pendingPresetId, applyFullPagePreset]);
-
-    const resetStyle = useCallback(() => {
-      setPrimaryColor(DEFAULT_PRIMARY);
-      setSecondaryColor(DEFAULT_SECONDARY);
-      setStylePreset(null);
-      setHeroPrimaryColor(DEFAULT_PRIMARY);
-      setAccentColor(DEFAULT_SECONDARY);
-      markDirty();
-    }, [markDirty]);
 
     async function uploadAsset(file: File, type: "logo" | "cover" | "gallery") {
       const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
@@ -840,212 +874,165 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       pageStatus === "published" && !hasUnpublishedChanges ? ("success" as const) : ("sand" as const);
 
     const editor = (
-      <div className="space-y-6">
+      <div className="space-y-8">
         {showSummaryBar ? (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge tone={statusTone}>{statusLabel}</Badge>
-              <span className="text-sm font-semibold text-zg-fg">
-                Potentiel de conversion : {conversionScore}%
-              </span>
-              <span className="text-sm text-zg-muted">· Publication {completionPercent}%</span>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge tone={statusTone}>{statusLabel}</Badge>
+                <span className="text-sm font-semibold text-zg-fg">
+                  Potentiel de conversion : {conversionScore}%
+                </span>
+                <span className="text-sm text-zg-muted">
+                  · Publication {completionPercent}%
+                </span>
+              </div>
+              <div className="mt-2 h-2 w-full max-w-md overflow-hidden rounded-full bg-zg-border/60">
+                <div
+                  className="h-full rounded-full bg-zg-accent transition-all"
+                  style={{ width: `${conversionScore}%` }}
+                />
+              </div>
+              {conversionRecs.length > 0 ? (
+                <p className="mt-2 max-w-2xl text-sm text-zg-muted">
+                  Prochaine étape :{" "}
+                  {conversionRecs.find((r) => r.priority === "high")?.message ??
+                    conversionRecs[0]?.message}
+                </p>
+              ) : null}
             </div>
-            <div className="mt-2 h-2 w-full max-w-md overflow-hidden rounded-full bg-zg-border/60">
-              <div
-                className="h-full rounded-full bg-zg-accent transition-all"
-                style={{ width: `${conversionScore}%` }}
-              />
-            </div>
-            {conversionRecs.length > 0 ? (
-              <p className="mt-2 max-w-2xl text-sm text-zg-muted">
-                Prochaine étape : {conversionRecs.find((r) => r.priority === "high")?.message ?? conversionRecs[0]?.message}
-              </p>
-            ) : null}
           </div>
-        </div>
         ) : null}
 
-        <div className="space-y-3">
-        <SettingsAccordion
-          title="Conversion & structure"
-          description="Modèle de page, objectif et sections visibles sur votre page publique."
-          defaultOpen
+        {/* ============================================================
+            STEP 1 — STYLE DE PAGE
+            ============================================================ */}
+        <StepCard
+          step={1}
+          icon={<Layout className="h-5 w-5" />}
+          title="Style de page"
+          subtitle="Choisissez une direction visuelle. Le hero, les couleurs, la structure et l'ambiance sont appliqués d'un coup. Vous pouvez ensuite tout personnaliser."
         >
-          <div className="space-y-5">
-            <FieldHint>
-              Chaque modèle applique une structure, un style visuel et une posture de
-              persuasion adaptés. Vos textes déjà saisis sont conservés.
-            </FieldHint>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {PAGE_PRESETS.map((t) => (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {PAGE_PRESETS.map((preset) => {
+              const visuals = PRESET_VISUALS[preset.id] ?? {
+                gradient: "linear-gradient(135deg,#f5f5f4,#e7e5e4)",
+                foreground: "#0f172a",
+                accent: "#0f172a",
+                tagline: preset.description,
+              };
+              const selected = editorConfig.conversion.structureTemplate === preset.id;
+              return (
                 <button
-                  key={t.id}
+                  key={preset.id}
                   type="button"
-                  aria-pressed={editorConfig.conversion.structureTemplate === t.id}
+                  aria-pressed={selected}
+                  onClick={() => handlePresetClick(preset.id)}
                   className={cn(
-                    "rounded-xl border p-4 text-left transition",
-                    editorConfig.conversion.structureTemplate === t.id
-                      ? "border-zg-accent bg-zg-accent/5 ring-1 ring-zg-accent"
-                      : "border-zg-border hover:border-zg-accent/40",
+                    "group relative overflow-hidden rounded-2xl border text-left transition-all",
+                    selected
+                      ? "border-zg-accent shadow-lg ring-2 ring-zg-accent"
+                      : "border-zg-border hover:border-zg-accent/60 hover:shadow-md",
                   )}
-                  onClick={() => handlePresetClick(t.id)}
                 >
-                  <p className="font-semibold text-zg-fg">{t.label}</p>
-                  <p className="mt-1 text-xs text-zg-muted">{t.description}</p>
+                  <div
+                    className="relative h-32 w-full overflow-hidden"
+                    style={{ background: visuals.gradient }}
+                  >
+                    <div className="absolute inset-x-4 bottom-3 flex items-end justify-between gap-2">
+                      <span
+                        className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]"
+                        style={{
+                          backgroundColor: visuals.accent,
+                          color: visuals.foreground,
+                        }}
+                      >
+                        Aa Aperçu
+                      </span>
+                      {selected ? (
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-zg-accent shadow-sm">
+                          <Check className="h-4 w-4" />
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-sm font-semibold text-zg-fg">{preset.label}</p>
+                    <p className="mt-1 text-xs text-zg-muted">{visuals.tagline}</p>
+                    <p className="mt-2 text-xs leading-relaxed text-zg-muted/80 line-clamp-2">
+                      {preset.description}
+                    </p>
+                  </div>
                 </button>
-              ))}
-            </div>
-            <div>
-              <label className="dashboard-field-label">Objectif principal</label>
-              <select
-                className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
-                value={editorConfig.conversion.pageGoal}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      conversion: { ...c.conversion, pageGoal: e.target.value as typeof c.conversion.pageGoal },
-                    }),
-                  );
-                  markDirty();
-                }}
-              >
-                {PAGE_GOAL_OPTIONS.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="dashboard-field-label">Style de persuasion</label>
-              <select
-                className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
-                value={editorConfig.conversion.persuasionStyle}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      conversion: {
-                        ...c.conversion,
-                        persuasionStyle: e.target.value as typeof c.conversion.persuasionStyle,
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-              >
-                {PERSUASION_OPTIONS.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="dashboard-field-label">Répétition du CTA</label>
-              <FieldHint>Un bon bouton de réservation doit être visible avant même de scroller.</FieldHint>
-              <select
-                className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
-                value={editorConfig.conversion.ctaPlacement}
-                onChange={(e) => {
-                  const ctaPlacement = e.target.value as typeof editorConfig.conversion.ctaPlacement;
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      conversion: {
-                        ...c.conversion,
-                        ctaPlacement,
-                        stickyMobile: ctaPlacement === "full",
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-              >
-                {CTA_PLACEMENT_OPTIONS.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <Toggle
-              checked={editorConfig.conversion.stickyMobile}
-              onChange={(v) => {
-                setEditorConfig((c) =>
-                  parseEditorConfig({
-                    ...c,
-                    conversion: { ...c.conversion, stickyMobile: v },
-                  }),
-                );
-                markDirty();
-              }}
-              label="Bouton sticky mobile « Réserver »"
-            />
-            <div className="space-y-3 border-t border-zg-border/60 pt-4">
-              <label className="dashboard-field-label">Sections affichées</label>
-              <FieldHint>Désactivez une section pour la masquer sur la page et dans l&apos;aperçu.</FieldHint>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {PUBLIC_PAGE_BLOCK_TOGGLES.map((id) => (
-                  <Toggle
-                    key={id}
-                    checked={editorConfig.blocks[id]?.enabled !== false}
-                    onChange={(v) => {
-                      setEditorConfig((c) =>
-                        parseEditorConfig({
-                          ...c,
-                          blocks: {
-                            ...c.blocks,
-                            [id]: { ...c.blocks[id], enabled: v },
-                          },
-                        }),
-                      );
-                      markDirty();
-                    }}
-                    label={BLOCK_LABELS[id]}
-                  />
-                ))}
-              </div>
-            </div>
+              );
+            })}
           </div>
-        </SettingsAccordion>
+        </StepCard>
 
-        <SettingsAccordion
-          title="Concept & expérience"
-          description="Votre histoire, vos piliers et le style de la galerie."
+        {/* ============================================================
+            STEP 2 — CONTENU PRINCIPAL
+            ============================================================ */}
+        <StepCard
+          step={2}
+          icon={<Settings2 className="h-5 w-5" />}
+          title="Contenu principal"
+          subtitle="Les informations essentielles affichées en haut de votre page."
         >
-          <div className="space-y-5">
-            <FieldHint>Racontez votre concept comme sur un vrai site restaurant — pas des badges génériques.</FieldHint>
-            <Toggle
-              checked={editorConfig.premium.navigationEnabled}
-              onChange={(v) => {
-                setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, navigationEnabled: v } }));
-                markDirty();
-              }}
-              label="Navigation type site (Accueil, Concept, Menu…)"
-            />
-            <div>
-              <label className="dashboard-field-label">Titre de la section concept</label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <label className="dashboard-field-label">Nom du restaurant</label>
               <Input
                 className="mt-2"
-                value={editorConfig.premium.concept.title}
+                value={name}
                 onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: { ...c.premium, concept: { ...c.premium.concept, title: e.target.value } },
-                    }),
-                  );
+                  setName(e.target.value);
                   markDirty();
                 }}
+                required
               />
             </div>
             <div>
-              <label className="dashboard-field-label">Présentation courte</label>
+              <label className="dashboard-field-label">Type de cuisine</label>
+              <Input
+                className="mt-2"
+                value={cuisineType}
+                onChange={(e) => {
+                  setCuisineType(e.target.value);
+                  markDirty();
+                }}
+                placeholder="Italienne, française, brasserie…"
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Ville</label>
+              <Input
+                className="mt-2"
+                value={city}
+                onChange={(e) => {
+                  setCity(e.target.value);
+                  markDirty();
+                }}
+                placeholder="Genève"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="dashboard-field-label">Phrase d&apos;accroche</label>
+              <FieldHint>Une phrase courte affichée sous le titre principal du hero.</FieldHint>
+              <Input
+                className="mt-2"
+                value={heroSubtitle}
+                onChange={(e) => {
+                  setHeroSubtitle(e.target.value);
+                  markDirty();
+                }}
+                placeholder={defaultHeroSubtitle(cuisineType, city, ambiance)}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="dashboard-field-label">Petite description</label>
+              <FieldHint>Présentez votre concept en 2 ou 3 phrases — pas plus.</FieldHint>
               <Textarea
-                className="mt-2 min-h-28"
+                className="mt-2 min-h-24"
                 maxLength={MAX_DESCRIPTION_CHARS}
                 value={shortDescription}
                 onChange={(e) => {
@@ -1061,1270 +1048,814 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                   );
                   markDirty();
                 }}
+                placeholder="Cuisine maison, ambiance chaleureuse, produits de saison."
               />
               <p className="mt-1 text-xs text-zg-text-muted">
                 {shortDescription.length}/{MAX_DESCRIPTION_CHARS}
               </p>
             </div>
-            <div>
-              <label className="dashboard-field-label">Image concept (URL)</label>
-              <Input
-                className="mt-2"
-                value={editorConfig.premium.concept.imageUrl}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: { ...c.premium, concept: { ...c.premium.concept, imageUrl: e.target.value } },
-                    }),
-                  );
-                  markDirty();
-                }}
-                placeholder="Sinon, 1ère photo de la galerie"
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Style galerie</label>
-              <select
-                className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
-                value={editorConfig.premium.gallery.style}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: {
-                        ...c.premium,
-                        gallery: { style: e.target.value as typeof c.premium.gallery.style },
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-              >
-                <option value="showcase">Showcase (grande image + vignettes)</option>
-                <option value="grid">Grille masonry</option>
-                <option value="instagram">Style Instagram</option>
-              </select>
-            </div>
-            <div className="space-y-3">
-              <label className="dashboard-field-label">Piliers du concept (3 accroches)</label>
-              {editorConfig.premium.concept.pillars.map((pillar, idx) => (
-                <div key={idx} className="grid gap-2 sm:grid-cols-2">
-                  <Input
-                    placeholder="Titre"
-                    value={pillar.title}
-                    onChange={(e) => {
-                      const pillars = [...editorConfig.premium.concept.pillars];
-                      pillars[idx] = { ...pillar, title: e.target.value };
-                      setEditorConfig((c) =>
-                        parseEditorConfig({
-                          ...c,
-                          premium: { ...c.premium, concept: { ...c.premium.concept, pillars } },
-                        }),
-                      );
-                      markDirty();
-                    }}
-                  />
-                  <Input
-                    placeholder="Description courte"
-                    value={pillar.text}
-                    onChange={(e) => {
-                      const pillars = [...editorConfig.premium.concept.pillars];
-                      pillars[idx] = { ...pillar, text: e.target.value };
-                      setEditorConfig((c) =>
-                        parseEditorConfig({
-                          ...c,
-                          premium: { ...c.premium, concept: { ...c.premium.concept, pillars } },
-                        }),
-                      );
-                      markDirty();
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
           </div>
-        </SettingsAccordion>
 
-        <SettingsAccordion
-          title="Points forts"
-          description="3 à 6 points forts visibles en haut de la page (selon le modèle choisi)."
-        >
-          <div className="space-y-3">
-            <FieldHint>
-              Apparaissent dans le bandeau « Points forts » de la page si le bloc est activé
-              (ex. modèle « Restaurant chaleureux »).
-            </FieldHint>
-            <Toggle
-              checked={editorConfig.blocks.highlights?.enabled === true}
-              onChange={(v) => {
-                setEditorConfig((c) =>
-                  parseEditorConfig({
-                    ...c,
-                    blocks: {
-                      ...c.blocks,
-                      highlights: { ...c.blocks.highlights, enabled: v },
-                    },
-                  }),
-                );
-                markDirty();
-              }}
-              label="Afficher la section « Points forts » sur la page"
-            />
-            <div className="space-y-2">
-              {highlights.map((value, idx) => (
-                <div key={idx} className="flex gap-2">
-                  <Input
-                    value={value}
-                    onChange={(e) => {
-                      const next = [...highlights];
-                      next[idx] = e.target.value;
-                      setHighlights(next);
-                      markDirty();
-                    }}
-                    placeholder="Ex. Produits frais, terrasse, ambiance familiale…"
-                    maxLength={80}
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-zg-border bg-zg-surface/60 p-4">
+              <label className="dashboard-field-label">Image principale (hero)</label>
+              <FieldHint>La première photo vue par le client. Privilégiez du paysage, lumineux.</FieldHint>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
+                  <Upload className="h-4 w-4" />
+                  {coverImageUrl ? "Remplacer" : "Importer une photo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e, "cover")}
                   />
+                </label>
+                {coverImageUrl ? (
                   <Button
                     type="button"
                     variant="secondary"
-                    className="shrink-0"
+                    className="min-h-9"
                     onClick={() => {
-                      setHighlights((items) => items.filter((_, i) => i !== idx));
+                      setCoverImageUrl("");
                       markDirty();
                     }}
-                    aria-label="Supprimer ce point fort"
                   >
-                    Supprimer
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                    Retirer
                   </Button>
-                </div>
-              ))}
-              {highlights.length < MAX_HIGHLIGHTS ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    setHighlights((items) => [...items, ""]);
-                    markDirty();
-                  }}
-                >
-                  Ajouter un point fort
-                </Button>
-              ) : (
-                <p className="text-sm text-zg-muted">
-                  Vous pouvez ajouter jusqu&apos;à {MAX_HIGHLIGHTS} points forts.
-                </p>
-              )}
-            </div>
-          </div>
-        </SettingsAccordion>
-
-        <SettingsAccordion
-          title="Sections personnalisées"
-          description="Jusqu'à 4 blocs image + texte pour raconter votre histoire."
-        >
-          <div className="space-y-4">
-            {editorConfig.premium.editorialSections.map((section, idx) => (
-              <div key={section.id} className="space-y-3 rounded-xl border border-zg-border p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold text-zg-fg">Section {idx + 1}</span>
-                  <Toggle
-                    checked={section.enabled}
-                    onChange={(v) => {
-                      const editorialSections = [...editorConfig.premium.editorialSections];
-                      editorialSections[idx] = { ...section, enabled: v };
-                      setEditorConfig((c) =>
-                        parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
-                      );
-                      markDirty();
-                    }}
-                    label="Visible"
-                  />
-                </div>
-                <Input
-                  placeholder="Titre"
-                  value={section.title}
-                  onChange={(e) => {
-                    const editorialSections = [...editorConfig.premium.editorialSections];
-                    editorialSections[idx] = { ...section, title: e.target.value };
-                    setEditorConfig((c) =>
-                      parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
-                    );
-                    markDirty();
-                  }}
-                />
-                <Textarea
-                  className="min-h-24"
-                  placeholder="Texte"
-                  value={section.text}
-                  onChange={(e) => {
-                    const editorialSections = [...editorConfig.premium.editorialSections];
-                    editorialSections[idx] = { ...section, text: e.target.value };
-                    setEditorConfig((c) =>
-                      parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
-                    );
-                    markDirty();
-                  }}
-                />
-                <Input
-                  placeholder="Image URL"
-                  value={section.imageUrl}
-                  onChange={(e) => {
-                    const editorialSections = [...editorConfig.premium.editorialSections];
-                    editorialSections[idx] = { ...section, imageUrl: e.target.value };
-                    setEditorConfig((c) =>
-                      parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
-                    );
-                    markDirty();
-                  }}
-                />
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <select
-                    className="h-10 rounded-xl border border-zg-border bg-zg-surface px-2 text-sm"
-                    value={section.layout}
-                    onChange={(e) => {
-                      const editorialSections = [...editorConfig.premium.editorialSections];
-                      editorialSections[idx] = {
-                        ...section,
-                        layout: e.target.value as EditorialLayout,
-                      };
-                      setEditorConfig((c) =>
-                        parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
-                      );
-                      markDirty();
-                    }}
-                  >
-                    <option value="image-left">Image à gauche</option>
-                    <option value="image-right">Image à droite</option>
-                    <option value="full-bleed">Pleine largeur</option>
-                  </select>
-                  <Input
-                    placeholder="Libellé bouton (optionnel)"
-                    value={section.buttonLabel}
-                    onChange={(e) => {
-                      const editorialSections = [...editorConfig.premium.editorialSections];
-                      editorialSections[idx] = { ...section, buttonLabel: e.target.value };
-                      setEditorConfig((c) =>
-                        parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
-                      );
-                      markDirty();
-                    }}
-                  />
-                </div>
-                <Input
-                  placeholder="Lien bouton (optionnel)"
-                  value={section.buttonUrl}
-                  onChange={(e) => {
-                    const editorialSections = [...editorConfig.premium.editorialSections];
-                    editorialSections[idx] = { ...section, buttonUrl: e.target.value };
-                    setEditorConfig((c) =>
-                      parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
-                    );
-                    markDirty();
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full sm:w-auto"
-                  onClick={() => {
-                    const editorialSections = editorConfig.premium.editorialSections.filter(
-                      (_, i) => i !== idx,
-                    );
-                    setEditorConfig((c) =>
-                      parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
-                    );
-                    markDirty();
-                  }}
-                >
-                  Supprimer cette section
-                </Button>
-              </div>
-            ))}
-            {editorConfig.premium.editorialSections.length >= 4 ? (
-              <p className="text-sm text-zg-muted">Vous pouvez ajouter jusqu&apos;à 4 sections éditoriales.</p>
-            ) : (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: {
-                        ...c.premium,
-                        editorialSections: [...c.premium.editorialSections, newEditorialSection()],
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-              >
-                Ajouter une section éditoriale
-              </Button>
-            )}
-          </div>
-        </SettingsAccordion>
-
-        <SettingsAccordion
-          title="Crédibilité (avis & presse)"
-          description="Uniquement des informations réelles — aucune note inventée."
-        >
-          <div className="space-y-4">
-            <FieldHint>N&apos;affichez une note que si elle est réelle. Sinon, laissez vide — pas de fausses étoiles.</FieldHint>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="dashboard-field-label">Note Google (1–5)</label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={5}
-                  step={0.1}
-                  className="mt-2"
-                  value={editorConfig.premium.credibility.googleRating ?? ""}
-                  onChange={(e) => {
-                    const v = e.target.value ? Number(e.target.value) : null;
-                    setEditorConfig((c) =>
-                      parseEditorConfig({
-                        ...c,
-                        premium: {
-                          ...c.premium,
-                          credibility: { ...c.premium.credibility, googleRating: v },
-                        },
-                      }),
-                    );
-                    markDirty();
-                  }}
-                />
-              </div>
-              <div>
-                <label className="dashboard-field-label">Nombre d&apos;avis</label>
-                <Input
-                  type="number"
-                  min={1}
-                  className="mt-2"
-                  value={editorConfig.premium.credibility.reviewCount ?? ""}
-                  onChange={(e) => {
-                    const v = e.target.value ? Number(e.target.value) : null;
-                    setEditorConfig((c) =>
-                      parseEditorConfig({
-                        ...c,
-                        premium: {
-                          ...c.premium,
-                          credibility: { ...c.premium.credibility, reviewCount: v },
-                        },
-                      }),
-                    );
-                    markDirty();
-                  }}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="dashboard-field-label">Lien avis Google</label>
-              <Input
-                className="mt-2"
-                value={editorConfig.premium.credibility.googleReviewsUrl}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: {
-                        ...c.premium,
-                        credibility: { ...c.premium.credibility, googleReviewsUrl: e.target.value },
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-                placeholder="https://g.page/…"
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Lien TripAdvisor (optionnel)</label>
-              <Input
-                className="mt-2"
-                value={editorConfig.premium.credibility.tripAdvisorUrl}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: {
-                        ...c.premium,
-                        credibility: { ...c.premium.credibility, tripAdvisorUrl: e.target.value },
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-                placeholder="https://www.tripadvisor.fr/…"
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Auteur de la citation (optionnel)</label>
-              <Input
-                className="mt-2"
-                value={editorConfig.premium.credibility.quoteAuthor}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: {
-                        ...c.premium,
-                        credibility: { ...c.premium.credibility, quoteAuthor: e.target.value },
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Citation client (optionnel)</label>
-              <Textarea
-                className="mt-2 min-h-20"
-                value={editorConfig.premium.credibility.quote}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: {
-                        ...c.premium,
-                        credibility: { ...c.premium.credibility, quote: e.target.value },
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Presse / labels (séparés par des virgules)</label>
-              <Input
-                className="mt-2"
-                value={editorConfig.premium.credibility.pressMentions.join(", ")}
-                onChange={(e) => {
-                  const pressMentions = e.target.value.split(",").map((s) => s.trim()).filter(Boolean);
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: { ...c.premium, credibility: { ...c.premium.credibility, pressMentions } },
-                    }),
-                  );
-                  markDirty();
-                }}
-                placeholder="Le Temps, Michelin Guide…"
-              />
-            </div>
-          </div>
-        </SettingsAccordion>
-
-        <SettingsAccordion
-          title="Menu & offres"
-          description="Formules et plats mis en avant avant la réservation (2 à 6)."
-        >
-          <div className="space-y-4">
-            {editorConfig.premium.menuOffers.map((offer, idx) => (
-              <div key={offer.id} className="rounded-xl border border-zg-border p-4 space-y-2">
-                <Input
-                  placeholder="Titre"
-                  value={offer.title}
-                  onChange={(e) => {
-                    const menuOffers = [...editorConfig.premium.menuOffers];
-                    menuOffers[idx] = { ...offer, title: e.target.value };
-                    setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }));
-                    markDirty();
-                  }}
-                />
-                <Input
-                  placeholder="Description courte"
-                  value={offer.description}
-                  onChange={(e) => {
-                    const menuOffers = [...editorConfig.premium.menuOffers];
-                    menuOffers[idx] = { ...offer, description: e.target.value };
-                    setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }));
-                    markDirty();
-                  }}
-                />
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Input
-                    placeholder="Prix (ex. 45 CHF)"
-                    value={offer.price}
-                    onChange={(e) => {
-                      const menuOffers = [...editorConfig.premium.menuOffers];
-                      menuOffers[idx] = { ...offer, price: e.target.value };
-                      setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }));
-                      markDirty();
-                    }}
-                  />
-                  <Input
-                    placeholder="Image URL (optionnel)"
-                    value={offer.imageUrl}
-                    onChange={(e) => {
-                      const menuOffers = [...editorConfig.premium.menuOffers];
-                      menuOffers[idx] = { ...offer, imageUrl: e.target.value };
-                      setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }));
-                      markDirty();
-                    }}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full sm:w-auto"
-                  onClick={() => {
-                    const menuOffers = editorConfig.premium.menuOffers.filter((_, i) => i !== idx);
-                    setEditorConfig((c) =>
-                      parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }),
-                    );
-                    markDirty();
-                  }}
-                >
-                  Supprimer cette offre
-                </Button>
-              </div>
-            ))}
-            {editorConfig.premium.menuOffers.length >= 6 ? (
-              <p className="text-sm text-zg-muted">Vous pouvez ajouter jusqu&apos;à 6 offres.</p>
-            ) : (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: { ...c.premium, menuOffers: [...c.premium.menuOffers, newMenuOffer()] },
-                    }),
-                  );
-                  markDirty();
-                }}
-              >
-                Ajouter une offre
-              </Button>
-            )}
-            <div className="space-y-3 border-t border-zg-border/60 pt-4">
-              <label className="dashboard-field-label">Lien menu (PDF ou URL)</label>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className={cn(
-                    "rounded-xl border px-3 py-2 text-sm font-medium",
-                    menuMode === "url" ? "border-zg-accent bg-zg-accent-soft-bg" : "border-zg-border",
-                  )}
-                  onClick={() => { setMenuMode("url"); markDirty(); }}
-                >
-                  Lien externe
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "rounded-xl border px-3 py-2 text-sm font-medium",
-                    menuMode === "pdf" ? "border-zg-accent bg-zg-accent-soft-bg" : "border-zg-border",
-                  )}
-                  onClick={() => { setMenuMode("pdf"); markDirty(); }}
-                >
-                  PDF (documents)
-                </button>
-              </div>
-              {menuMode === "url" ? (
-                <Input
-                  className="mt-2"
-                  value={menuUrl}
-                  onChange={(e) => { setMenuUrl(e.target.value); markDirty(); }}
-                  placeholder="https://…"
-                />
-              ) : (
-                <p className="mt-2 text-sm text-zg-muted">
-                  Les PDF déjà ajoutés à votre restaurant s&apos;affichent automatiquement sur la page.
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="dashboard-field-label">Message spécial (optionnel)</label>
-              <Input
-                value={specialMessage}
-                onChange={(e) => { setSpecialMessage(e.target.value); markDirty(); }}
-                placeholder="Terrasse ouverte en été…"
-              />
-            </div>
-          </div>
-        </SettingsAccordion>
-
-        <SettingsAccordion
-          title="Infos pratiques"
-          description="Coordonnées affichées en bas de page et détails d'accès."
-        >
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Nom du restaurant</label>
-              <Input value={name} onChange={(e) => { setName(e.target.value); markDirty(); }} required />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Type de cuisine</label>
-              <Input
-                value={cuisineType}
-                onChange={(e) => { setCuisineType(e.target.value); markDirty(); }}
-                placeholder="Italienne, française…"
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Ville</label>
-              <Input value={city} onChange={(e) => { setCity(e.target.value); markDirty(); }} />
-            </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Adresse complète</label>
-              <Input value={address} onChange={(e) => { setAddress(e.target.value); markDirty(); }} />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Téléphone</label>
-              <Input value={phone} onChange={(e) => { setPhone(e.target.value); markDirty(); }} />
-            </div>
-            <div>
-              <label className="dashboard-field-label">E-mail de contact</label>
-              <Input type="email" value={email} onChange={(e) => { setEmail(e.target.value); markDirty(); }} />
-            </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Site web (optionnel)</label>
-              <Input value={websiteUrl} onChange={(e) => { setWebsiteUrl(e.target.value); markDirty(); }} placeholder="https://…" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Lien Google Maps (optionnel)</label>
-              <Input value={googleMapsUrl} onChange={(e) => { setGoogleMapsUrl(e.target.value); markDirty(); }} placeholder="https://maps.google.com/…" />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Instagram</label>
-              <Input value={instagramUrl} onChange={(e) => { setInstagramUrl(e.target.value); markDirty(); }} />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Facebook</label>
-              <Input value={facebookUrl} onChange={(e) => { setFacebookUrl(e.target.value); markDirty(); }} />
-            </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">TikTok (optionnel)</label>
-              <Input value={tiktokUrl} onChange={(e) => { setTiktokUrl(e.target.value); markDirty(); }} />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Parking</label>
-              <Input
-                className="mt-2"
-                value={editorConfig.premium.practical.parking}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: { ...c.premium, practical: { ...c.premium.practical, parking: e.target.value } },
-                    }),
-                  );
-                  markDirty();
-                }}
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Accessibilité</label>
-              <Input
-                className="mt-2"
-                value={editorConfig.premium.practical.accessibility}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: {
-                        ...c.premium,
-                        practical: { ...c.premium.practical, accessibility: e.target.value },
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-              />
-            </div>
-            <div className="md:col-span-2 rounded-xl border border-zg-border/70 bg-zg-surface/60 p-4">
-              <p className="text-sm font-semibold text-zg-fg">Horaires affichés</p>
-              <ul className="mt-2 space-y-1 text-sm text-zg-muted">
-                {formatOpeningHoursLines(initial.openingHours).map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-              <Link href="/dashboard/settings?section=availability" className="mt-3 inline-block text-sm font-semibold text-zg-accent hover:underline">
-                Modifier les horaires →
-              </Link>
-            </div>
-          </div>
-        </SettingsAccordion>
-
-        <SettingsAccordion
-          title="Hero & accroche"
-          description="Titre, visuel principal et premier bouton de réservation."
-        >
-          <div className="space-y-5">
-            <div>
-              <label className="dashboard-field-label">Titre principal</label>
-              <Input
-                className="mt-2"
-                value={heroTitle}
-                onChange={(e) => { setHeroTitle(e.target.value); markDirty(); }}
-                placeholder={defaultHeroTitle(displayName)}
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Sous-titre</label>
-              <Input
-                className="mt-2"
-                value={heroSubtitle}
-                onChange={(e) => { setHeroSubtitle(e.target.value); markDirty(); }}
-                placeholder={defaultHeroSubtitle(cuisineType, city, ambiance)}
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Badge (au-dessus du titre)</label>
-              <FieldHint>Ex. « Cuisine maison », « Réservation instantanée ».</FieldHint>
-              <Input
-                className="mt-2"
-                value={editorConfig.hero.badgeText}
-                onChange={(e) => {
-                  setEditorConfig((c) => parseEditorConfig({ ...c, hero: { ...c.hero, badgeText: e.target.value } }));
-                  markDirty();
-                }}
-              />
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="dashboard-field-label">Mise en page</label>
-                <select
-                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
-                  value={editorConfig.hero.layout}
-                  onChange={(e) => {
-                    setEditorConfig((c) =>
-                      parseEditorConfig({ ...c, hero: { ...c.hero, layout: e.target.value as PublicPageEditorConfig["hero"]["layout"] } }),
-                    );
-                    markDirty();
-                  }}
-                >
-                  <option value="center">Centré</option>
-                  <option value="left">Aligné à gauche</option>
-                  <option value="overlay">Overlay bas</option>
-                </select>
-              </div>
-              <div>
-                <label className="dashboard-field-label">Hauteur</label>
-                <select
-                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
-                  value={editorConfig.hero.height}
-                  onChange={(e) => {
-                    setEditorConfig((c) =>
-                      parseEditorConfig({ ...c, hero: { ...c.hero, height: e.target.value as PublicPageEditorConfig["hero"]["height"] } }),
-                    );
-                    markDirty();
-                  }}
-                >
-                  <option value="compact">Compact</option>
-                  <option value="normal">Normal</option>
-                  <option value="immersive">Immersif</option>
-                </select>
-              </div>
-              <div>
-                <label className="dashboard-field-label">Alignement texte</label>
-                <select
-                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
-                  value={editorConfig.hero.align}
-                  onChange={(e) => {
-                    setEditorConfig((c) =>
-                      parseEditorConfig({ ...c, hero: { ...c.hero, align: e.target.value as PublicPageEditorConfig["hero"]["align"] } }),
-                    );
-                    markDirty();
-                  }}
-                >
-                  <option value="left">Gauche</option>
-                  <option value="center">Centre</option>
-                  <option value="right">Droite</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="dashboard-field-label">Texte du bouton principal</label>
-              <Input value={ctaLabel} onChange={(e) => { setCtaLabel(e.target.value); markDirty(); }} placeholder="Réserver une table" />
-            </div>
-            <Toggle
-              checked={editorConfig.hero.secondaryCtaEnabled}
-              onChange={(v) => {
-                setEditorConfig((c) => parseEditorConfig({ ...c, hero: { ...c.hero, secondaryCtaEnabled: v } }));
-                markDirty();
-              }}
-              label="Afficher un second bouton (menu)"
-            />
-            {editorConfig.hero.secondaryCtaEnabled ? (
-              <Input
-                value={editorConfig.hero.secondaryCta}
-                onChange={(e) => {
-                  setEditorConfig((c) => parseEditorConfig({ ...c, hero: { ...c.hero, secondaryCta: e.target.value } }));
-                  markDirty();
-                }}
-                placeholder="Voir le menu"
-              />
-            ) : null}
-          </div>
-        </SettingsAccordion>
-
-        <SettingsAccordion title="Apparence" description="Couleurs, polices et style visuel de la page.">
-          <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="dashboard-field-label">Couleur principale</label>
-                <div className="mt-2 flex items-center gap-2">
-                  <Input type="color" className="h-11 w-14 shrink-0" value={primaryColor} onChange={(e) => { setPrimaryColor(e.target.value); markDirty(); }} />
-                  <Input value={primaryColor} onChange={(e) => { setPrimaryColor(e.target.value); markDirty(); }} />
-                </div>
-              </div>
-              <div>
-                <label className="dashboard-field-label">Couleur secondaire</label>
-                <div className="mt-2 flex items-center gap-2">
-                  <Input type="color" className="h-11 w-14 shrink-0" value={secondaryColor} onChange={(e) => { setSecondaryColor(e.target.value); markDirty(); }} />
-                  <Input value={secondaryColor} onChange={(e) => { setSecondaryColor(e.target.value); markDirty(); }} />
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="dashboard-field-label">Style de page</label>
-              <FieldHint>Choisissez un style qui correspond à l&apos;ambiance du restaurant.</FieldHint>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {PUBLIC_STYLE_PRESETS.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => applyPreset(p.id)}
-                    className={cn(
-                      "rounded-2xl border p-4 text-left transition-all",
-                      stylePreset === p.id
-                        ? "border-zg-border-focus bg-zg-accent-soft-bg ring-1 ring-zg-accent/25"
-                        : "border-zg-border bg-zg-surface hover:border-zg-border-hover",
-                    )}
-                  >
-                    <Palette className="mb-2 h-5 w-5 text-zg-accent" />
-                    <p className="text-sm font-semibold text-zg-fg">{p.label}</p>
-                    <p className="mt-1 text-xs text-zg-muted">{p.description}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="dashboard-field-label">Ambiance du restaurant</label>
-              <select
-                className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm text-zg-fg"
-                value={ambiance ?? ""}
-                onChange={(e) => {
-                  setAmbiance((e.target.value || null) as PublicAmbiance | null);
-                  markDirty();
-                }}
-              >
-                <option value="">— Choisir —</option>
-                {PUBLIC_AMBIANCE_OPTIONS.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              {(
-                [
-                  ["backgroundColor", "Fond principal"],
-                  ["surfaceColor", "Fond des sections"],
-                  ["headingColor", "Couleur des titres"],
-                  ["textColor", "Couleur du texte"],
-                  ["accentColor", "Couleur accent / CTA"],
-                  ["footerBgColor", "Fond pied de page"],
-                  ["footerTextColor", "Texte pied de page"],
-                ] as const
-              ).map(([key, label]) => (
-                <div key={key}>
-                  <label className="dashboard-field-label">{label}</label>
-                  <div className="mt-2 flex items-center gap-2">
-                    <Input
-                      type="color"
-                      className="h-11 w-14 shrink-0"
-                      value={editorConfig.appearance[key]}
-                      onChange={(e) => {
-                        setEditorConfig((c) =>
-                          parseEditorConfig({
-                            ...c,
-                            appearance: { ...c.appearance, [key]: e.target.value },
-                          }),
-                        );
-                        markDirty();
-                      }}
-                    />
-                    <Input
-                      value={editorConfig.appearance[key]}
-                      onChange={(e) => {
-                        setEditorConfig((c) =>
-                          parseEditorConfig({
-                            ...c,
-                            appearance: { ...c.appearance, [key]: e.target.value },
-                          }),
-                        );
-                        markDirty();
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="dashboard-field-label">Thème global</label>
-                <select
-                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
-                  value={editorConfig.appearance.themeMode}
-                  onChange={(e) => {
-                    setEditorConfig((c) =>
-                      parseEditorConfig({
-                        ...c,
-                        appearance: {
-                          ...c.appearance,
-                          themeMode: e.target.value as PublicPageEditorConfig["appearance"]["themeMode"],
-                        },
-                      }),
-                    );
-                    markDirty();
-                  }}
-                >
-                  <option value="light">Clair</option>
-                  <option value="dark">Sombre</option>
-                  <option value="auto">Automatique</option>
-                </select>
-              </div>
-              <div>
-                <label className="dashboard-field-label">Style des boutons</label>
-                <select
-                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
-                  value={editorConfig.appearance.buttonStyle}
-                  onChange={(e) => {
-                    setEditorConfig((c) =>
-                      parseEditorConfig({
-                        ...c,
-                        appearance: {
-                          ...c.appearance,
-                          buttonStyle: e.target.value as PublicPageEditorConfig["appearance"]["buttonStyle"],
-                        },
-                      }),
-                    );
-                    markDirty();
-                  }}
-                >
-                  <option value="filled">Plein</option>
-                  <option value="outlined">Contour</option>
-                  <option value="ghost">Léger</option>
-                </select>
-              </div>
-              <div>
-                <label className="dashboard-field-label">Style des cartes</label>
-                <select
-                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
-                  value={editorConfig.appearance.cardStyle}
-                  onChange={(e) => {
-                    setEditorConfig((c) =>
-                      parseEditorConfig({
-                        ...c,
-                        appearance: {
-                          ...c.appearance,
-                          cardStyle: e.target.value as PublicPageEditorConfig["appearance"]["cardStyle"],
-                        },
-                      }),
-                    );
-                    markDirty();
-                  }}
-                >
-                  <option value="flat">Plat</option>
-                  <option value="elevated">Ombre</option>
-                  <option value="bordered">Bordure</option>
-                </select>
-              </div>
-            </div>
-            <Button type="button" variant="secondary" className="min-h-11" onClick={resetStyle}>
-              Réinitialiser le style
-            </Button>
-          </div>
-        </SettingsAccordion>
-
-        <SettingsAccordion title="Photos" description="Logo, image hero et galerie (jusqu'à 6 photos).">
-          <div className="space-y-6">
-            <div>
-              <label className="dashboard-field-label">Logo</label>
-              <FieldHint>Apparaît sur votre page publique, en petit format.</FieldHint>
-              <div className="mt-2 flex flex-wrap gap-3">
-                <Input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, "logo")} className="max-w-xs" />
-                {isUploadingLogo ? <span className="text-xs text-zg-muted">Envoi…</span> : null}
-              </div>
-              {logoUrl ? (
-                <div className="relative mt-3 h-20 w-20 overflow-hidden rounded-xl border border-zg-border">
-                  <Image src={logoUrl} alt="" fill className="object-contain p-2" unoptimized sizes="80px" />
-                </div>
-              ) : null}
-            </div>
-            <div className="rounded-2xl border border-zg-accent/20 bg-zg-accent-soft-bg/40 p-4">
-              <label className="dashboard-field-label">Photo principale (hero)</label>
-              <FieldHint>Votre photo principale doit donner envie en moins de 3 secondes.</FieldHint>
-              <FieldHint>Cette photo sera la première chose que vos clients verront.</FieldHint>
-              <div className="mt-2 flex flex-wrap gap-3">
-                <Input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, "cover")} className="max-w-xs" />
-                <Input
-                  value={coverImageUrl}
-                  onChange={(e) => { setCoverImageUrl(e.target.value); markDirty(); }}
-                  placeholder="URL de l'image"
-                  className="min-w-[200px] flex-1"
-                />
+                ) : null}
                 {isUploadingCover ? <span className="text-xs text-zg-muted">Envoi…</span> : null}
               </div>
-              {coverImageUrl ? (
-                <div className="relative mt-4 aspect-[16/9] max-h-48 w-full overflow-hidden rounded-xl border border-zg-border">
-                  <Image src={coverImageUrl} alt="" fill className="object-cover" unoptimized sizes="400px" />
-                </div>
-              ) : (
-                <div className="mt-4 flex aspect-[16/9] max-h-40 items-center justify-center rounded-xl border border-dashed border-zg-border bg-zg-surface/80">
-                  <ImageIcon className="h-8 w-8 text-zg-muted" />
-                </div>
-              )}
-            </div>
-            <div>
-              <label className="dashboard-field-label">Galerie ({galleryUrls.length}/{MAX_GALLERY_PHOTOS})</label>
-              <FieldHint>3 à 6 photos — sélectionnez celle mise en avant pour le hero si besoin.</FieldHint>
-              <div className="mt-2 flex flex-wrap gap-3">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  disabled={galleryUrls.length >= MAX_GALLERY_PHOTOS}
-                  onChange={(e) => handleFileUpload(e, "gallery")}
-                  className="max-w-xs"
-                />
-                {isUploadingGallery ? <span className="text-xs text-zg-muted">Envoi…</span> : null}
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {galleryUrls.map((url, idx) => (
-                  <div key={url} className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-zg-border">
-                    <Image src={url} alt="" fill className="object-cover" unoptimized sizes="160px" />
-                    <div className="absolute inset-x-0 bottom-0 flex gap-1 bg-black/60 p-1.5">
-                      <button
-                        type="button"
-                        className={cn(
-                          "flex-1 rounded-lg px-2 py-1 text-[10px] font-semibold text-white",
-                          featuredGalleryIndex === idx ? "bg-zg-accent" : "bg-white/20",
-                        )}
-                        onClick={() => { setFeaturedGalleryIndex(idx); markDirty(); }}
-                      >
-                        {featuredGalleryIndex === idx ? "À la une" : "Mettre en avant"}
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded-lg bg-white/20 px-2 py-1 text-[10px] font-semibold text-white"
-                        onClick={() => {
-                          setGalleryUrls((g) => g.filter((_, i) => i !== idx));
-                          markDirty();
-                        }}
-                      >
-                        Suppr.
-                      </button>
-                    </div>
+              <div className="relative mt-3 aspect-[16/9] w-full overflow-hidden rounded-xl border border-zg-border bg-zg-surface">
+                {coverImageUrl ? (
+                  <Image
+                    src={coverImageUrl}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    sizes="400px"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <ImageIcon className="h-10 w-10 text-zg-muted" />
                   </div>
-                ))}
+                )}
               </div>
             </div>
-          </div>
-        </SettingsAccordion>
-        <SettingsAccordion
-          title="Réservation"
-          description="Formulaire en ligne, messages et options d'affichage."
-        >
-          <div className="space-y-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-zg-fg">Réservation en ligne</p>
-                <FieldHint>Le libellé du bouton se règle dans « Hero & accroche ».</FieldHint>
-              </div>
-              <Toggle checked={reservationEnabled} onChange={(v) => { setReservationEnabled(v); markDirty(); }} />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Message au-dessus du formulaire</label>
-              <Textarea
-                className="min-h-20"
-                value={preBookingMessage}
-                onChange={(e) => { setPreBookingMessage(e.target.value); markDirty(); }}
-                placeholder="Choisissez votre date, votre heure et le nombre de personnes."
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Message groupes / événements</label>
-              <Input
-                value={editorConfig.premium.reservation.groupMessage}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: {
-                        ...c.premium,
-                        reservation: { ...c.premium.reservation, groupMessage: e.target.value },
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Message si aucun créneau disponible</label>
-              <Input
-                value={noSlotsMessage}
-                onChange={(e) => { setNoSlotsMessage(e.target.value); markDirty(); }}
-                placeholder="Aucun créneau pour cette date. Essayez un autre jour."
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Délai minimum avant réservation (minutes)</label>
-              <Input
-                type="number"
-                min={0}
-                max={10080}
-                value={minBookingLeadMinutes}
-                onChange={(e) => { setMinBookingLeadMinutes(Number(e.target.value)); markDirty(); }}
-              />
-            </div>
-            <Toggle
-              checked={showHoursBeforeForm}
-              onChange={(v) => { setShowHoursBeforeForm(v); markDirty(); }}
-              label="Afficher les horaires avant le formulaire"
-            />
-            <Toggle
-              checked={showPhoneCta}
-              onChange={(v) => { setShowPhoneCta(v); markDirty(); }}
-              label="Afficher le téléphone si le client préfère appeler"
-            />
-            <p className="text-xs text-zg-muted">
-              Convives max. et délai max. à l&apos;avance : section « Disponibilités & réservations ».
-            </p>
-          </div>
-        </SettingsAccordion>
 
-        <SettingsAccordion
-          title="CTA final"
-          description="Encart d'appel à l'action affiché en fin de page."
-        >
-          <div className="space-y-4">
-            <Toggle
-              checked={editorConfig.blocks.final_cta?.enabled !== false}
+            <div className="rounded-2xl border border-zg-border bg-zg-surface/60 p-4">
+              <label className="dashboard-field-label">Logo</label>
+              <FieldHint>Optionnel. Apparaît dans la navigation et le pied de page.</FieldHint>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
+                  <Upload className="h-4 w-4" />
+                  {logoUrl ? "Remplacer" : "Importer un logo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e, "logo")}
+                  />
+                </label>
+                {logoUrl ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-9"
+                    onClick={() => {
+                      setLogoUrl("");
+                      markDirty();
+                    }}
+                  >
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                    Retirer
+                  </Button>
+                ) : null}
+                {isUploadingLogo ? <span className="text-xs text-zg-muted">Envoi…</span> : null}
+              </div>
+              <div className="mt-3 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border border-zg-border bg-zg-surface">
+                {logoUrl ? (
+                  <div className="relative h-full w-full">
+                    <Image
+                      src={logoUrl}
+                      alt=""
+                      fill
+                      className="object-contain p-2"
+                      unoptimized
+                      sizes="96px"
+                    />
+                  </div>
+                ) : (
+                  <ImageIcon className="h-7 w-7 text-zg-muted" />
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <ColorField
+              label="Couleur principale"
+              hint="Utilisée pour les titres et accents sur la page publique."
+              value={primaryColor}
               onChange={(v) => {
+                setPrimaryColor(v);
+                setHeroPrimaryColor(v);
                 setEditorConfig((c) =>
                   parseEditorConfig({
                     ...c,
-                    blocks: {
-                      ...c.blocks,
-                      final_cta: { ...c.blocks.final_cta, enabled: v },
-                    },
+                    appearance: { ...c.appearance, primaryColor: v },
                   }),
                 );
                 markDirty();
               }}
-              label="Afficher le CTA final"
             />
+            <ColorField
+              label="Couleur du bouton « Réserver »"
+              hint="Couleur du CTA principal — choisissez quelque chose de chaud et contrasté."
+              value={accentColor}
+              onChange={(v) => {
+                setAccentColor(v);
+                setSecondaryColor(v);
+                setEditorConfig((c) =>
+                  parseEditorConfig({
+                    ...c,
+                    appearance: { ...c.appearance, accentColor: v, secondaryColor: v },
+                  }),
+                );
+                markDirty();
+              }}
+            />
+          </div>
+        </StepCard>
+
+        {/* ============================================================
+            STEP 3 — SECTIONS DE LA PAGE
+            ============================================================ */}
+        <StepCard
+          step={3}
+          icon={<Layout className="h-5 w-5" />}
+          title="Sections de la page"
+          subtitle="Activez les sections que vous voulez afficher. Personnalisez le contenu de chacune juste en dessous."
+        >
+          <div className="space-y-3">
+            {PAGE_SECTIONS.map((section) => {
+              const enabled = editorConfig.blocks[section.id]?.enabled !== false;
+              return (
+                <div
+                  key={section.id}
+                  className={cn(
+                    "rounded-2xl border transition",
+                    enabled
+                      ? "border-zg-border bg-zg-surface"
+                      : "border-zg-border/60 bg-zg-surface/40",
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-3 p-4">
+                    <div>
+                      <p className="text-sm font-semibold text-zg-fg">{section.label}</p>
+                      <p className="mt-0.5 text-xs text-zg-muted">{section.description}</p>
+                    </div>
+                    <Toggle
+                      checked={enabled}
+                      onChange={(v) => {
+                        setEditorConfig((c) =>
+                          parseEditorConfig({
+                            ...c,
+                            blocks: {
+                              ...c.blocks,
+                              [section.id]: { ...c.blocks[section.id], enabled: v },
+                            },
+                          }),
+                        );
+                        markDirty();
+                      }}
+                    />
+                  </div>
+
+                  {enabled && section.id === "about" ? (
+                    <div className="space-y-3 border-t border-zg-border/60 p-4">
+                      <div>
+                        <label className="dashboard-field-label">Titre de la section</label>
+                        <Input
+                          className="mt-2"
+                          value={editorConfig.premium.concept.title}
+                          onChange={(e) => {
+                            setEditorConfig((c) =>
+                              parseEditorConfig({
+                                ...c,
+                                premium: {
+                                  ...c.premium,
+                                  concept: { ...c.premium.concept, title: e.target.value },
+                                },
+                              }),
+                            );
+                            markDirty();
+                          }}
+                          placeholder="Notre histoire"
+                        />
+                      </div>
+                      <div>
+                        <label className="dashboard-field-label">Image (optionnelle)</label>
+                        <FieldHint>Si vide, la 1ère photo de la galerie sera utilisée.</FieldHint>
+                        <Input
+                          className="mt-2"
+                          value={editorConfig.premium.concept.imageUrl}
+                          onChange={(e) => {
+                            setEditorConfig((c) =>
+                              parseEditorConfig({
+                                ...c,
+                                premium: {
+                                  ...c.premium,
+                                  concept: { ...c.premium.concept, imageUrl: e.target.value },
+                                },
+                              }),
+                            );
+                            markDirty();
+                          }}
+                          placeholder="https://…"
+                        />
+                      </div>
+                      <p className="text-xs text-zg-muted">
+                        Le texte affiché est la « Petite description » saisie à l&apos;étape 2.
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {enabled && section.id === "menu" ? (
+                    <div className="space-y-4 border-t border-zg-border/60 p-4">
+                      <div>
+                        <label className="dashboard-field-label">Lien menu (optionnel)</label>
+                        <FieldHint>URL externe vers votre carte (PDF ou page web).</FieldHint>
+                        <Input
+                          className="mt-2"
+                          value={menuUrl}
+                          onChange={(e) => {
+                            setMenuUrl(e.target.value);
+                            if (e.target.value) setMenuMode("url");
+                            markDirty();
+                          }}
+                          placeholder="https://…"
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="dashboard-field-label mb-0">
+                            Plats mis en avant ({editorConfig.premium.menuOffers.length}/3)
+                          </label>
+                          {editorConfig.premium.menuOffers.length < 3 ? (
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              className="min-h-9"
+                              onClick={() => {
+                                setEditorConfig((c) =>
+                                  parseEditorConfig({
+                                    ...c,
+                                    premium: {
+                                      ...c.premium,
+                                      menuOffers: [...c.premium.menuOffers, newMenuOffer()],
+                                    },
+                                  }),
+                                );
+                                markDirty();
+                              }}
+                            >
+                              <Plus className="mr-1 h-3.5 w-3.5" />
+                              Ajouter
+                            </Button>
+                          ) : null}
+                        </div>
+
+                        {editorConfig.premium.menuOffers.slice(0, 3).map((offer, idx) => (
+                          <div
+                            key={offer.id}
+                            className="space-y-2 rounded-xl border border-zg-border bg-zg-surface/60 p-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-zg-muted">
+                                Plat #{idx + 1}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                className="min-h-8 px-2 text-xs"
+                                onClick={() => {
+                                  const menuOffers = editorConfig.premium.menuOffers.filter(
+                                    (_, i) => i !== idx,
+                                  );
+                                  setEditorConfig((c) =>
+                                    parseEditorConfig({
+                                      ...c,
+                                      premium: { ...c.premium, menuOffers },
+                                    }),
+                                  );
+                                  markDirty();
+                                }}
+                                aria-label="Supprimer ce plat"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                            <Input
+                              placeholder="Nom du plat"
+                              value={offer.title}
+                              onChange={(e) => {
+                                const menuOffers = [...editorConfig.premium.menuOffers];
+                                menuOffers[idx] = { ...offer, title: e.target.value };
+                                setEditorConfig((c) =>
+                                  parseEditorConfig({
+                                    ...c,
+                                    premium: { ...c.premium, menuOffers },
+                                  }),
+                                );
+                                markDirty();
+                              }}
+                            />
+                            <Input
+                              placeholder="Description courte"
+                              value={offer.description}
+                              onChange={(e) => {
+                                const menuOffers = [...editorConfig.premium.menuOffers];
+                                menuOffers[idx] = { ...offer, description: e.target.value };
+                                setEditorConfig((c) =>
+                                  parseEditorConfig({
+                                    ...c,
+                                    premium: { ...c.premium, menuOffers },
+                                  }),
+                                );
+                                markDirty();
+                              }}
+                            />
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <Input
+                                placeholder="Prix (optionnel)"
+                                value={offer.price}
+                                onChange={(e) => {
+                                  const menuOffers = [...editorConfig.premium.menuOffers];
+                                  menuOffers[idx] = { ...offer, price: e.target.value };
+                                  setEditorConfig((c) =>
+                                    parseEditorConfig({
+                                      ...c,
+                                      premium: { ...c.premium, menuOffers },
+                                    }),
+                                  );
+                                  markDirty();
+                                }}
+                              />
+                              <Input
+                                placeholder="URL image (optionnel)"
+                                value={offer.imageUrl}
+                                onChange={(e) => {
+                                  const menuOffers = [...editorConfig.premium.menuOffers];
+                                  menuOffers[idx] = { ...offer, imageUrl: e.target.value };
+                                  setEditorConfig((c) =>
+                                    parseEditorConfig({
+                                      ...c,
+                                      premium: { ...c.premium, menuOffers },
+                                    }),
+                                  );
+                                  markDirty();
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+
+                        {editorConfig.premium.menuOffers.length === 0 ? (
+                          <p className="text-xs text-zg-muted">
+                            Aucun plat ajouté. La section affichera uniquement le lien menu si présent.
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {enabled && section.id === "gallery" ? (
+                    <div className="space-y-3 border-t border-zg-border/60 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <label className="dashboard-field-label mb-0">
+                          Photos ({galleryUrls.length}/{MAX_GALLERY_PHOTOS})
+                        </label>
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-xs font-medium hover:border-zg-accent/60">
+                          <Camera className="h-3.5 w-3.5" />
+                          Ajouter
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={galleryUrls.length >= MAX_GALLERY_PHOTOS}
+                            onChange={(e) => handleFileUpload(e, "gallery")}
+                          />
+                        </label>
+                      </div>
+                      {isUploadingGallery ? (
+                        <p className="text-xs text-zg-muted">Envoi…</p>
+                      ) : null}
+                      {galleryUrls.length > 0 ? (
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                          {galleryUrls.map((url, idx) => (
+                            <div
+                              key={url}
+                              className="group relative aspect-square overflow-hidden rounded-lg border border-zg-border"
+                            >
+                              <Image
+                                src={url}
+                                alt=""
+                                fill
+                                className="object-cover"
+                                unoptimized
+                                sizes="120px"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setGalleryUrls((g) => g.filter((_, i) => i !== idx));
+                                  markDirty();
+                                }}
+                                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-md bg-black/70 text-white opacity-0 transition group-hover:opacity-100"
+                                aria-label="Supprimer la photo"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-zg-muted">
+                          Ajoutez 3 à 8 photos pour une galerie qui donne vraiment envie.
+                        </p>
+                      )}
+                      <div>
+                        <label className="dashboard-field-label">Style de galerie</label>
+                        <select
+                          className="mt-2 h-10 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                          value={editorConfig.premium.gallery.style}
+                          onChange={(e) => {
+                            setEditorConfig((c) =>
+                              parseEditorConfig({
+                                ...c,
+                                premium: {
+                                  ...c.premium,
+                                  gallery: {
+                                    style: e.target.value as typeof c.premium.gallery.style,
+                                  },
+                                },
+                              }),
+                            );
+                            markDirty();
+                          }}
+                        >
+                          <option value="showcase">Showcase (grande image + vignettes)</option>
+                          <option value="grid">Grille (mosaïque)</option>
+                          <option value="instagram">Style Instagram</option>
+                        </select>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {enabled && section.id === "hours" ? (
+                    <div className="space-y-2 border-t border-zg-border/60 p-4">
+                      <div className="rounded-xl border border-zg-border bg-zg-surface/60 p-3">
+                        <ul className="space-y-1 text-sm text-zg-muted">
+                          {formatOpeningHoursLines(initial.openingHours).map((line) => (
+                            <li key={line}>{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Link
+                        href="/dashboard/settings?section=availability"
+                        className="inline-flex items-center text-sm font-semibold text-zg-accent hover:underline"
+                      >
+                        Modifier les horaires
+                        <ExternalLink className="ml-1 h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  ) : null}
+
+                  {enabled && section.id === "location" ? (
+                    <div className="space-y-3 border-t border-zg-border/60 p-4">
+                      <div>
+                        <label className="dashboard-field-label">Adresse complète</label>
+                        <Input
+                          className="mt-2"
+                          value={address}
+                          onChange={(e) => {
+                            setAddress(e.target.value);
+                            markDirty();
+                          }}
+                          placeholder="Rue, n°, ville"
+                        />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <label className="dashboard-field-label">Téléphone</label>
+                          <Input
+                            className="mt-2"
+                            value={phone}
+                            onChange={(e) => {
+                              setPhone(e.target.value);
+                              markDirty();
+                            }}
+                            placeholder="+41 …"
+                          />
+                        </div>
+                        <div>
+                          <label className="dashboard-field-label">E-mail (optionnel)</label>
+                          <Input
+                            type="email"
+                            className="mt-2"
+                            value={email}
+                            onChange={(e) => {
+                              setEmail(e.target.value);
+                              markDirty();
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="dashboard-field-label">
+                          Lien Google Maps (optionnel)
+                        </label>
+                        <Input
+                          className="mt-2"
+                          value={googleMapsUrl}
+                          onChange={(e) => {
+                            setGoogleMapsUrl(e.target.value);
+                            markDirty();
+                          }}
+                          placeholder="https://maps.google.com/…"
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {enabled && section.id === "final_cta" ? (
+                    <div className="space-y-3 border-t border-zg-border/60 p-4">
+                      <div>
+                        <label className="dashboard-field-label">Titre</label>
+                        <Input
+                          className="mt-2"
+                          value={editorConfig.blockContent.finalCta.title}
+                          onChange={(e) => {
+                            setEditorConfig((c) =>
+                              parseEditorConfig({
+                                ...c,
+                                blockContent: {
+                                  ...c.blockContent,
+                                  finalCta: {
+                                    ...c.blockContent.finalCta,
+                                    title: e.target.value,
+                                  },
+                                },
+                              }),
+                            );
+                            markDirty();
+                          }}
+                          placeholder="Prêt à réserver ?"
+                          maxLength={120}
+                        />
+                      </div>
+                      <div>
+                        <label className="dashboard-field-label">
+                          Sous-titre (optionnel)
+                        </label>
+                        <Textarea
+                          className="mt-2 min-h-16"
+                          value={editorConfig.blockContent.finalCta.subtitle}
+                          onChange={(e) => {
+                            setEditorConfig((c) =>
+                              parseEditorConfig({
+                                ...c,
+                                blockContent: {
+                                  ...c.blockContent,
+                                  finalCta: {
+                                    ...c.blockContent.finalCta,
+                                    subtitle: e.target.value,
+                                  },
+                                },
+                              }),
+                            );
+                            markDirty();
+                          }}
+                          placeholder="Réservez votre table en quelques secondes."
+                          maxLength={280}
+                        />
+                      </div>
+                      <div>
+                        <label className="dashboard-field-label">Texte du bouton</label>
+                        <Input
+                          className="mt-2"
+                          value={editorConfig.blockContent.finalCta.button}
+                          onChange={(e) => {
+                            setEditorConfig((c) =>
+                              parseEditorConfig({
+                                ...c,
+                                blockContent: {
+                                  ...c.blockContent,
+                                  finalCta: {
+                                    ...c.blockContent.finalCta,
+                                    button: e.target.value,
+                                  },
+                                },
+                              }),
+                            );
+                            markDirty();
+                          }}
+                          placeholder="Réserver une table"
+                          maxLength={60}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </StepCard>
+
+        {/* ============================================================
+            STEP 4 — RÉSERVATION
+            ============================================================ */}
+        <StepCard
+          step={4}
+          icon={<Utensils className="h-5 w-5" />}
+          title="Réservation"
+          subtitle="La réservation est le cœur de votre page. Gardez-la facile à trouver."
+        >
+          <div className="space-y-5">
             <div>
-              <label className="dashboard-field-label">Titre</label>
+              <label className="dashboard-field-label">Texte du bouton principal</label>
               <Input
                 className="mt-2"
-                value={editorConfig.blockContent.finalCta.title}
+                value={ctaLabel}
                 onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      blockContent: {
-                        ...c.blockContent,
-                        finalCta: { ...c.blockContent.finalCta, title: e.target.value },
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-                placeholder="Prêt à réserver ?"
-                maxLength={120}
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Sous-titre</label>
-              <Textarea
-                className="mt-2 min-h-20"
-                value={editorConfig.blockContent.finalCta.subtitle}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      blockContent: {
-                        ...c.blockContent,
-                        finalCta: { ...c.blockContent.finalCta, subtitle: e.target.value },
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-                placeholder="Réservez votre table en quelques clics."
-                maxLength={280}
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Texte du bouton</label>
-              <Input
-                className="mt-2"
-                value={editorConfig.blockContent.finalCta.button}
-                onChange={(e) => {
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      blockContent: {
-                        ...c.blockContent,
-                        finalCta: { ...c.blockContent.finalCta, button: e.target.value },
-                      },
-                    }),
-                  );
+                  setCtaLabel(e.target.value);
                   markDirty();
                 }}
                 placeholder="Réserver une table"
-                maxLength={60}
               />
             </div>
-          </div>
-        </SettingsAccordion>
 
-        <SettingsAccordion title="SEO & publication" description="URL publique, référencement et mise en ligne.">
-          <div className="space-y-5">
             <div>
-              <label className="dashboard-field-label">URL publique (slug)</label>
-              <FieldHint>Minuscules, tirets, sans caractères spéciaux.</FieldHint>
-              <Input
-                className="mt-2 font-mono text-sm"
-                value={slug}
+              <label className="dashboard-field-label">Position du bloc de réservation</label>
+              <FieldHint>Où le formulaire de réservation apparaît sur la page.</FieldHint>
+              <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                {(
+                  [
+                    { id: "top_only", label: "Tout en haut", hint: "Juste sous le hero" },
+                    { id: "top_middle", label: "Au milieu", hint: "Après le concept" },
+                    { id: "full", label: "Partout", hint: "Hero + milieu + sticky" },
+                  ] as const
+                ).map((opt) => {
+                  const active = editorConfig.conversion.ctaPlacement === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        setEditorConfig((c) =>
+                          parseEditorConfig({
+                            ...c,
+                            conversion: {
+                              ...c.conversion,
+                              ctaPlacement: opt.id,
+                              stickyMobile:
+                                opt.id === "full" ? true : c.conversion.stickyMobile,
+                            },
+                          }),
+                        );
+                        markDirty();
+                      }}
+                      className={cn(
+                        "rounded-xl border p-3 text-left transition",
+                        active
+                          ? "border-zg-accent bg-zg-accent/5 ring-1 ring-zg-accent"
+                          : "border-zg-border hover:border-zg-accent/40",
+                      )}
+                    >
+                      <p className="text-sm font-semibold text-zg-fg">{opt.label}</p>
+                      <p className="mt-0.5 text-xs text-zg-muted">{opt.hint}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Toggle
+              checked={editorConfig.conversion.stickyMobile}
+              onChange={(v) => {
+                setEditorConfig((c) =>
+                  parseEditorConfig({
+                    ...c,
+                    conversion: { ...c.conversion, stickyMobile: v },
+                  }),
+                );
+                markDirty();
+              }}
+              label="Bouton « Réserver » fixé en bas sur mobile"
+            />
+
+            <div>
+              <label className="dashboard-field-label">Message au-dessus du formulaire</label>
+              <FieldHint>Quelques mots pour rassurer ou guider avant la réservation.</FieldHint>
+              <Textarea
+                className="mt-2 min-h-20"
+                value={preBookingMessage}
                 onChange={(e) => {
-                  setSlug(sanitizePublicSlug(e.target.value));
+                  setPreBookingMessage(e.target.value);
                   markDirty();
                 }}
+                placeholder="Choisissez votre date, votre heure et le nombre de personnes."
               />
-              <p className="mt-2 break-all text-sm font-semibold text-zg-fg">{publicPath}</p>
             </div>
+
             <div>
-              <label className="dashboard-field-label">Meta title</label>
-              <Input
-                maxLength={70}
-                value={seoTitle}
-                onChange={(e) => { setSeoTitle(e.target.value); markDirty(); }}
-                placeholder={displayName}
+              <Toggle
+                checked={showPhoneCta}
+                onChange={(v) => {
+                  setShowPhoneCta(v);
+                  markDirty();
+                }}
+                label="Proposer aussi de réserver par téléphone"
               />
+              {showPhoneCta ? (
+                <div className="mt-3">
+                  <label className="dashboard-field-label">Numéro affiché</label>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-zg-muted" />
+                    <Input
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        markDirty();
+                      }}
+                      placeholder="+41 …"
+                    />
+                  </div>
+                  <FieldHint>
+                    Modifiable aussi via la section Contact &amp; localisation.
+                  </FieldHint>
+                </div>
+              ) : null}
             </div>
+          </div>
+        </StepCard>
+
+        {/* ============================================================
+            STEP 5 — APERÇU & PUBLICATION
+            ============================================================ */}
+        <StepCard
+          step={5}
+          icon={<Sparkles className="h-5 w-5" />}
+          title="Aperçu & publication"
+          subtitle="Vérifiez votre page puis publiez-la quand tout est prêt."
+        >
+          <div className="space-y-5">
             <div>
-              <label className="dashboard-field-label">Meta description</label>
-              <Textarea
-                className="min-h-20"
-                maxLength={160}
-                value={seoDescription}
-                onChange={(e) => { setSeoDescription(e.target.value); markDirty(); }}
-                placeholder={resolvedHeroSubtitle}
-              />
+              <label className="dashboard-field-label">
+                Adresse de votre page publique
+              </label>
+              <FieldHint>
+                Vous pouvez choisir un identifiant simple, sans caractères spéciaux.
+              </FieldHint>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs text-zg-muted">…/r/</span>
+                <Input
+                  className="font-mono text-sm"
+                  value={slug}
+                  onChange={(e) => {
+                    setSlug(sanitizePublicSlug(e.target.value));
+                    markDirty();
+                  }}
+                />
+              </div>
+              <p className="mt-2 break-all text-xs text-zg-muted">{publicPath}</p>
             </div>
+
+            <div className="rounded-2xl border border-zg-border bg-zg-surface/60 p-4">
+              <p className="text-sm font-semibold text-zg-fg">Checklist avant publication</p>
+              <ul className="mt-3 space-y-2">
+                {checklistItems.map((item) => (
+                  <li key={item.label} className="flex items-center gap-2 text-sm">
+                    <span
+                      className={cn(
+                        "flex h-5 w-5 items-center justify-center rounded-full text-[10px]",
+                        item.done ? "bg-zg-accent text-white" : "bg-zg-border text-zg-muted",
+                      )}
+                    >
+                      {item.done ? "✓" : ""}
+                    </span>
+                    <span className={item.done ? "text-zg-fg" : "text-zg-muted"}>
+                      {item.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -2348,54 +1879,27 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                   Ouvrir la page
                 </Button>
               </a>
-            </div>
-          </div>
-        </SettingsAccordion>
-
-        <SettingsAccordion title="Publication" description="Checklist, mise en ligne et lien public actif.">
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-zg-border bg-zg-surface p-5">
-              <p className="text-sm font-semibold text-zg-fg">Checklist avant publication</p>
-              <ul className="mt-3 space-y-2">
-                {checklistItems.map((item) => (
-                  <li key={item.label} className="flex items-center gap-2 text-sm">
-                    <span
-                      className={cn(
-                        "flex h-5 w-5 items-center justify-center rounded-full text-[10px]",
-                        item.done ? "bg-zg-accent text-white" : "bg-zg-border text-zg-muted",
-                      )}
-                    >
-                      {item.done ? "✓" : ""}
-                    </span>
-                    <span className={item.done ? "text-zg-fg" : "text-zg-muted"}>{item.label}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 className="min-h-11"
+                disabled={isPublishing}
                 onClick={async () => {
+                  setIsPublishing(true);
                   const result = await publishPage();
+                  setIsPublishing(false);
                   if (!result.ok) onMessage?.(result.error ?? "Échec de la publication.");
                 }}
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                Publier
+                {isPublishing
+                  ? "Publication…"
+                  : pageStatus === "published"
+                    ? "Republier"
+                    : "Publier"}
               </Button>
-              <a href={publicPath} target="_blank" rel="noreferrer">
-                <Button type="button" variant="secondary" className="min-h-11">
-                  Voir la page publique
-                </Button>
-              </a>
             </div>
-            <p className="text-xs text-zg-muted">
-              Utilisez « Enregistrer les modifications » en bas de page pour sauvegarder un brouillon. « Publier » rend la page visible immédiatement.
-            </p>
           </div>
-        </SettingsAccordion>
-        </div>
+        </StepCard>
       </div>
     );
 
