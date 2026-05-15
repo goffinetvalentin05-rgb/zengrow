@@ -9,8 +9,15 @@ import {
   normalizeConversionSettings,
   type ConversionSettings,
 } from "@/src/lib/public-page/conversion";
+import {
+  defaultPremiumContent,
+  normalizePremiumContent,
+  type PremiumPageContent,
+} from "@/src/lib/public-page/premium-content";
 
-export const EDITOR_CONFIG_VERSION = 4;
+export const EDITOR_CONFIG_VERSION = 5;
+
+export type { PremiumPageContent };
 
 export type { ConversionSettings };
 
@@ -112,26 +119,28 @@ export type PublicPageEditorConfig = {
     position: "default" | "after_hero" | "prominent";
   };
   conversion: ConversionSettings;
+  premium: PremiumPageContent;
 };
 
 export const DEFAULT_SECTION_ORDER: PageBlockId[] = [
-  "trust",
-  "reservation",
-  "gallery",
   "about",
-  "highlights",
+  "gallery",
   "menu",
+  "reservation",
+  "reviews",
   "hours",
   "location",
-  "reviews",
   "social",
   "final_cta",
 ];
 
 function defaultBlocks(): PublicPageEditorConfig["blocks"] {
-  return Object.fromEntries(
+  const blocks = Object.fromEntries(
     PAGE_BLOCK_IDS.map((id) => [id, { enabled: true, variant: "inherit" as SectionVariant, width: "contained" as SectionWidth }]),
   ) as PublicPageEditorConfig["blocks"];
+  blocks.trust = { enabled: false, variant: "inherit", width: "full" };
+  blocks.highlights = { enabled: false, variant: "inherit", width: "contained" };
+  return blocks;
 }
 
 export function defaultEditorConfig(): PublicPageEditorConfig {
@@ -140,17 +149,17 @@ export function defaultEditorConfig(): PublicPageEditorConfig {
     version: EDITOR_CONFIG_VERSION,
     hero: {
       enabled: true,
-      layout: "center",
-      height: "normal",
-      align: "center",
-      badgeText: "Réservation en ligne instantanée",
+      layout: "overlay",
+      height: "immersive",
+      align: "left",
+      badgeText: "",
       title: "",
       subtitle: "",
       primaryCta: "Réserver une table",
       secondaryCta: "Voir le menu",
       secondaryCtaEnabled: true,
       overlayEnabled: true,
-      overlayOpacity: 45,
+      overlayOpacity: 50,
     },
     appearance: {
       primaryColor: palette.primaryColor,
@@ -196,7 +205,12 @@ export function defaultEditorConfig(): PublicPageEditorConfig {
       minLeadMinutes: 0,
       position: "prominent",
     },
-    conversion: defaultConversionSettings(),
+    conversion: {
+      ...defaultConversionSettings(),
+      structureTemplate: "premium_experience",
+      persuasionStyle: "premium",
+    },
+    premium: defaultPremiumContent(),
   };
 }
 
@@ -269,8 +283,12 @@ export function parseEditorConfig(raw: unknown): PublicPageEditorConfig {
   let patch: Partial<PublicPageEditorConfig>;
   if (version === EDITOR_CONFIG_VERSION) {
     patch = o as Partial<PublicPageEditorConfig>;
-  } else if (version === 3) {
-    patch = { ...(o as Partial<PublicPageEditorConfig>), conversion: normalizeConversionSettings(o.conversion) };
+  } else if (version === 4 || version === 3) {
+    patch = {
+      ...(o as Partial<PublicPageEditorConfig>),
+      conversion: normalizeConversionSettings(o.conversion),
+      premium: normalizePremiumContent(o.premium),
+    };
   } else {
     patch = upgradeFromV2(o);
   }
@@ -312,6 +330,7 @@ function mergeEditorConfig(base: PublicPageEditorConfig, patch: Partial<PublicPa
     sectionOrder: order.length > 0 ? order : base.sectionOrder,
     reservation: { ...base.reservation, ...patch.reservation },
     conversion: normalizeConversionSettings(patch.conversion ?? base.conversion),
+    premium: normalizePremiumContent(patch.premium ?? base.premium),
   };
 }
 

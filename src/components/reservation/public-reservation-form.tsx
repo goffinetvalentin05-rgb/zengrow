@@ -28,18 +28,23 @@ import { resolvePublicPageTheme } from "@/src/lib/public-page/theme";
 import { PublicPageSection } from "@/src/components/reservation/public-page-section";
 import {
   ctaFlags,
-  experienceSectionTitle,
   reservationSectionTitle,
   resolveEffectiveSectionOrder,
 } from "@/src/lib/public-page/conversion";
+import { openStatusLabel } from "@/src/lib/public-page/opening-status";
+import { hasCredibilityContent } from "@/src/lib/public-page/premium-content";
 import {
-  ConversionMiddleCta,
-  HeroQuickFacts,
-  MenuActionSection,
-  openStatusLabel,
-  SocialProofSection,
+  ConceptSection,
+  CredibilitySection,
+  EditorialBlock,
+  MenuOffersSection,
+  PremiumFinalCta,
+  PremiumGallery,
+  PremiumHero,
+  PremiumPracticalInfo,
+  PublicPageNav,
   StickyReserveBar,
-} from "@/src/components/reservation/public-page-conversion-blocks";
+} from "@/src/components/reservation/public-page-premium";
 
 export type PublicReservationFormProps = {
   previewMode?: boolean;
@@ -907,21 +912,19 @@ export default function PublicReservationForm({
     return i >= 0 ? i : 50;
   };
   const conversionCta = ctaFlags(effectiveConfig.conversion);
-  const persuasion = effectiveConfig.conversion.persuasionStyle;
-  const trustFallbackLines =
-    persuasion === "premium"
-      ? ["Expérience haut de gamme", "Réservation confirmée rapidement", "Cuisine d'exception"]
-      : persuasion === "warm"
-        ? ["Ambiance conviviale", "Idéal en famille", "Cuisine faite maison"]
-        : persuasion === "fast"
-          ? ["Réservation en 2 minutes", "Créneaux disponibles aujourd'hui", "Service réactif"]
-          : ["Réservation confirmée rapidement", "Cuisine faite maison", "Terrasse disponible"];
+  const premium = effectiveConfig.premium;
   const openStatus = openStatusLabel(openingHours);
-  const shortAddress = restaurantAddress?.trim().split(",")[0]?.trim() || city?.trim() || null;
-  const showProofSection =
-    blockEnabled("trust") || blockEnabled("reviews") || blockEnabled("highlights");
-  const showReviewsBlock =
-    blockEnabled("reviews") && effectiveConfig.blockContent.reviews.showRating;
+  const credibilityData = premium.credibility;
+  const showCredibility =
+    blockEnabled("reviews") && hasCredibilityContent(credibilityData);
+  const conceptBody =
+    premium.concept.body.trim() ||
+    descriptionText ||
+    effectiveConfig.blockContent.about.body.trim();
+  const conceptTitle =
+    premium.concept.title.trim() || effectiveConfig.blockContent.about.title || "Notre expérience";
+  const conceptImage =
+    premium.concept.imageUrl.trim() || galleryImageUrls[0] || coverImageUrl || "";
 
   const reservationSortIndex = sectionOrder.indexOf("reservation");
   let nextSectionPos = reservationSortIndex + 1;
@@ -936,8 +939,9 @@ export default function PublicReservationForm({
       ? Math.floor((reservationSortIndex + nextSectionPos) / 2) + 1
       : reservationSortIndex + 2;
 
-  const heroBadge = heroBadgeText?.trim() || "Réservation en ligne";
-  const secondaryLabel = secondaryCtaLabel?.trim() || "Voir le menu";
+  const secondaryLabel =
+    secondaryCtaLabel?.trim() || effectiveConfig.hero.secondaryCta || "Voir le menu";
+  const menuOffers = premium.menuOffers.filter((o) => o.title.trim());
 
   const heroContentClass = cn(
     "relative z-[1] flex flex-1 flex-col px-5 pt-14 pb-14 sm:px-8 sm:pb-20 md:pt-20 md:pb-24",
@@ -962,144 +966,48 @@ export default function PublicReservationForm({
         fontFamily: "var(--body-font), system-ui, sans-serif",
       }}
     >
-      <section
-        className={cn(
-          "relative flex w-full flex-col overflow-hidden",
-          heroMinHeightClass(heroHeight),
-          "max-md:min-h-[min(44vh,480px)] max-md:max-h-[520px]",
-        )}
-      >
-        {coverImageUrl ? (
-          <Image
-            src={coverImageUrl}
-            alt=""
-            fill
-            priority
-            className="object-cover"
-            sizes="100vw"
-            unoptimized
-          />
-        ) : (
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(145deg, var(--hero-primary) 0%, color-mix(in srgb, var(--body-text) 12%, var(--hero-primary)) 100%)`,
-            }}
-            aria-hidden
-          />
-        )}
+      <PublicPageNav
+        restaurantName={restaurantName}
+        ctaLabel={ctaLabel}
+        onReserve={scrollToReservation}
+        visible={premium.navigationEnabled}
+      />
 
-        {heroOverlayEnabled ? (
-          <div
-            className="absolute inset-0 bg-black"
-            style={{ opacity: overlayOpacity }}
-            aria-hidden
-          />
-        ) : null}
+      <PremiumHero
+        coverImageUrl={coverImageUrl}
+        logoUrl={logoUrl}
+        headline={headlineText}
+        cuisineCityLine={cuisineCityLine || undefined}
+        tagline={taglineText || undefined}
+        openStatus={openStatus}
+        phone={restaurantPhone}
+        showPhone={showPhoneCta}
+        ctaLabel={ctaLabel}
+        secondaryLabel={secondaryLabel}
+        secondaryHref={menuHref}
+        showSecondary={Boolean(menuHref && effectiveConfig.hero.secondaryCtaEnabled)}
+        onReserve={scrollToReservation}
+        ctaStyle={ctaStyle}
+        overlayOpacity={heroOverlayEnabled ? overlayOpacity : 0}
+        heroAlign={heroAlign}
+      />
 
-        <div
-          className="absolute inset-0 bg-gradient-to-t from-[color:var(--page-bg)] via-transparent to-transparent opacity-90"
-          aria-hidden
+      {blockEnabled("about") && premium.concept.enabled ? (
+        <ConceptSection
+          title={conceptTitle}
+          body={conceptBody}
+          imageUrl={conceptImage || undefined}
+          pillars={premium.concept.pillars}
         />
-
-        <div className={heroContentClass}>
-          {logoUrl ? (
-            <div className="relative mb-6 h-20 w-20 shrink-0 overflow-hidden rounded-[var(--radius)] border border-white/25 bg-white/10 p-1 shadow-lg backdrop-blur-sm sm:mb-8 sm:h-24 sm:w-24">
-              <Image
-                src={logoUrl}
-                alt=""
-                fill
-                className="object-contain p-1"
-                sizes="96px"
-                unoptimized
-              />
-            </div>
-          ) : null}
-
-          <p
-            className="mb-3 text-[11px] font-medium uppercase tracking-[0.35em]"
-            style={{ fontFamily: "var(--body-font)", color: "var(--accent-color)" }}
-          >
-            {heroBadge}
-          </p>
-          <h1
-            className="max-w-4xl text-balance font-semibold leading-[1.08] tracking-tight"
-            style={{
-              fontFamily: "var(--heading-font), Georgia, serif",
-              color: headingTextColor,
-              fontSize: `clamp(1.75rem, 5vw, ${Math.min(72, Math.max(32, heroTitleSizePx))}px)`,
-            }}
-          >
-            {headlineText}
-          </h1>
-          {cuisineCityLine ? (
-            <p
-              className="mt-3 text-sm font-medium uppercase tracking-wide opacity-90"
-              style={{ color: "color-mix(in srgb, var(--heading-color) 75%, transparent)" }}
-            >
-              {cuisineCityLine}
-            </p>
-          ) : null}
-          {taglineText ? (
-            <p
-              className="mx-auto mt-3 max-w-2xl text-pretty text-base font-light leading-relaxed sm:mt-4 sm:text-lg"
-              style={{ color: "color-mix(in srgb, var(--heading-color) 88%, transparent)" }}
-            >
-              {taglineText}
-            </p>
-          ) : null}
-
-          <div className="mt-6 flex w-full max-w-md flex-col gap-2 sm:mt-8 sm:flex-row sm:justify-center">
-            {reservationEnabled ? (
-              <button
-                type="button"
-                onClick={scrollToReservation}
-                className={cn(ctaStyle.className, "min-h-[48px] w-full shrink-0 sm:w-auto sm:min-w-[200px]")}
-                style={ctaStyle.style}
-              >
-                {ctaLabel}
-              </button>
-            ) : null}
-            {menuHref && (secondaryCtaLabel || !editorConfig || editorConfig.hero.secondaryCtaEnabled) ? (
-              <a
-                href={menuHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[var(--radius)] border-2 px-5 text-sm font-semibold backdrop-blur-sm transition hover:opacity-90 sm:w-auto"
-                style={{
-                  borderColor: "color-mix(in srgb, var(--heading-color) 35%, transparent)",
-                  color: "var(--heading-color)",
-                  backgroundColor: "color-mix(in srgb, var(--page-bg) 55%, transparent)",
-                }}
-              >
-                <UtensilsCrossed className="h-4 w-4" aria-hidden />
-                {secondaryLabel}
-              </a>
-            ) : null}
-          </div>
-
-          <HeroQuickFacts
-            openStatus={openStatus}
-            shortAddress={shortAddress}
-            showPhone={showPhoneCta && Boolean(restaurantPhone?.trim())}
-            phone={restaurantPhone}
-          />
-        </div>
-      </section>
-
-      <div className="flex flex-col">
-      {showProofSection ? (
-        <div style={{ order: sectionOrderIndex("trust") }}>
-          <SocialProofSection
-            surface={pageTheme.section("trust")}
-            highlights={blockEnabled("highlights") || blockEnabled("trust") ? activeHighlights : []}
-            showReviews={showReviewsBlock}
-            trustLines={trustFallbackLines}
-          />
-        </div>
       ) : null}
 
-      <div className="mx-auto flex max-w-6xl flex-col gap-14 px-4 py-12 sm:px-6 md:px-10 lg:px-12 lg:py-16">
+      {premium.editorialSections.map((section) => (
+        <EditorialBlock key={section.id} section={section} />
+      ))}
+
+
+      <div className="flex flex-col">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-0 px-0 py-0 sm:px-0">
         {specialMessage?.trim() ? (
           <p
             className="rounded-2xl border px-4 py-3 text-center text-sm font-medium"
@@ -1852,91 +1760,54 @@ export default function PublicReservationForm({
 
         {conversionCta.showMiddle && reservationEnabled && blockEnabled("reservation") ? (
           <div style={{ order: middleCtaOrder }}>
-            <ConversionMiddleCta
+            <PremiumFinalCta
               title="Prêt à réserver votre table ?"
-              subtitle="Quelques clics suffisent — confirmation rapide."
+              subtitle="Choisissez votre créneau en quelques secondes."
               buttonLabel={ctaLabel}
-              onClick={scrollToReservation}
+              onReserve={scrollToReservation}
               ctaStyle={ctaStyle}
             />
           </div>
         ) : null}
 
-        {blockEnabled("menu") && menuHref ? (
+        {blockEnabled("menu") && (menuHref || menuOffers.length > 0) ? (
           <div style={{ order: sectionOrderIndex("menu") }}>
-            <MenuActionSection
-              surface={pageTheme.section("menu")}
+            <MenuOffersSection
+              offers={menuOffers}
               menuHref={menuHref}
-              menuLabel={secondaryLabel}
-              specialties={activeHighlights}
+              menuPdfLabel={sortedDocuments[0]?.label ?? secondaryLabel}
             />
+          </div>
+        ) : null}
+
+        {showCredibility ? (
+          <div style={{ order: sectionOrderIndex("reviews") }}>
+            <CredibilitySection data={credibilityData} />
           </div>
         ) : null}
 
         {blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
           <div style={{ order: sectionOrderIndex("gallery") }}>
-          <PublicPageSection surface={pageTheme.section("gallery")}>
-            <h2
-              className="mb-6 text-center text-2xl font-medium md:text-left md:text-3xl"
-              style={{ fontFamily: "var(--heading-font)", color: pageTheme.section("gallery").headingColor }}
-            >
-              {experienceSectionTitle(city ?? "", persuasion)}
-            </h2>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-              {galleryImageUrls.map((src) => (
-                <div
-                  key={src}
-                  className="group relative aspect-[4/3] overflow-hidden rounded-[var(--radius)]"
-                  style={{ backgroundColor: "color-mix(in srgb, var(--body-text) 8%, transparent)" }}
-                >
-                  <Image
-                    src={src}
-                    alt=""
-                    fill
-                    className="object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                    unoptimized
-                  />
-                </div>
-              ))}
-            </div>
-          </PublicPageSection>
-          </div>
-        ) : null}
-
-        {blockEnabled("about") && descriptionText ? (
-          <div style={{ order: sectionOrderIndex("about") }}>
-          <PublicPageSection surface={pageTheme.section("about")}>
-            <PublicDescription
-              text={descriptionText}
-              bodyColor={pageTheme.section("about").color}
-              accentColor={accentColor}
+            <PremiumGallery
+              images={galleryImageUrls}
+              style={premium.gallery.style}
+              instagramUrl={instagramUrl}
+              showInstagram={showInstagram}
             />
-          </PublicPageSection>
           </div>
         ) : null}
 
         {blockEnabled("final_cta") && reservationEnabled && conversionCta.showFinal ? (
           <div style={{ order: sectionOrderIndex("final_cta") }}>
-          <PublicPageSection surface={pageTheme.section("final_cta")}>
-            <div className="mx-auto max-w-2xl text-center">
-              <h2
-                className="text-2xl font-semibold md:text-3xl"
-                style={{ fontFamily: "var(--heading-font)", color: pageTheme.section("final_cta").headingColor }}
-              >
-                {effectiveConfig.blockContent.finalCta.title}
-              </h2>
-              <p className="mt-3 text-base opacity-90">{effectiveConfig.blockContent.finalCta.subtitle}</p>
-              <button
-                type="button"
-                onClick={scrollToReservation}
-                className={cn(ctaStyle.className, "mt-6 min-h-[52px] px-8")}
-                style={ctaStyle.style}
-              >
-                {effectiveConfig.blockContent.finalCta.button || ctaLabel}
-              </button>
-            </div>
-          </PublicPageSection>
+            <PremiumFinalCta
+              title={effectiveConfig.blockContent.finalCta.title}
+              subtitle={effectiveConfig.blockContent.finalCta.subtitle}
+              buttonLabel={effectiveConfig.blockContent.finalCta.button || ctaLabel}
+              phone={restaurantPhone}
+              showPhone={showPhoneCta && showPhoneRow}
+              onReserve={scrollToReservation}
+              ctaStyle={ctaStyle}
+            />
           </div>
         ) : null}
       </div>
@@ -1949,146 +1820,33 @@ export default function PublicReservationForm({
       />
 
       {blockEnabled("location") && hasFooterContent ? (
-        <PublicPageSection surface={pageTheme.section("location")} className="mt-4">
-          <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-6">
-              <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Contact</p>
-              <div className="space-y-4">
-                {showAddressRow ? (
-                  <div className="flex gap-3">
-                    <span className={iconRing}>
-                      <MapPin className="h-4 w-4" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-wide opacity-70">Adresse</p>
-                      <p className="mt-1 text-sm leading-snug break-words">{restaurantAddress}</p>
-                    </div>
-                  </div>
+        <>
+          <PremiumPracticalInfo
+            address={showAddressRow ? restaurantAddress : null}
+            phone={showPhoneRow ? restaurantPhone : null}
+            openingHoursLines={showHoursRow ? openingHoursLines : []}
+            googleMapsUrl={googleMapsUrl}
+            parking={premium.practical.parking}
+            accessibility={premium.practical.accessibility}
+            showMaps={showMapsRow}
+          />
+          {(showInstagram || showFacebook) && blockEnabled("social") ? (
+            <div className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] py-8">
+              <div className="mx-auto flex max-w-7xl justify-center gap-4 px-5">
+                {showInstagram ? (
+                  <a href={instagramUrl!} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="opacity-70 transition hover:opacity-100">
+                    <Instagram className="h-6 w-6" />
+                  </a>
                 ) : null}
-                {showPhoneRow ? (
-                  <div className="flex gap-3">
-                    <span className={iconRing}>
-                      <Phone className="h-4 w-4" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-wide opacity-70">Téléphone</p>
-                      <a
-                        href={`tel:${restaurantPhone!.replace(/\s/g, "")}`}
-                        className="mt-1 block text-sm font-medium underline-offset-2 hover:underline"
-                        style={{ color: "var(--accent-color)" }}
-                      >
-                        {restaurantPhone}
-                      </a>
-                    </div>
-                  </div>
-                ) : null}
-                {showEmailRow ? (
-                  <div className="flex gap-3">
-                    <span className={iconRing}>
-                      <Mail className="h-4 w-4" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-wide opacity-70">E-mail</p>
-                      <a
-                        href={`mailto:${restaurantEmail}`}
-                        className="mt-1 block break-all text-sm font-medium underline-offset-2 hover:underline"
-                        style={{ color: "var(--accent-color)" }}
-                      >
-                        {restaurantEmail}
-                      </a>
-                    </div>
-                  </div>
-                ) : null}
-                {showWebsiteRow ? (
-                  <div className="flex gap-3">
-                    <span className={iconRing}>
-                      <Globe className="h-4 w-4" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-wide opacity-70">Site web</p>
-                      <a
-                        href={websiteUrl!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-1 block truncate text-sm font-medium underline-offset-2 hover:underline"
-                        style={{ color: "var(--accent-color)" }}
-                      >
-                        {websiteUrl!.replace(/^https?:\/\//, "")}
-                      </a>
-                    </div>
-                  </div>
-                ) : null}
-                {showMapsRow ? (
-                  <div className="flex gap-3">
-                    <span className={iconRing}>
-                      <Map className="h-4 w-4" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-wide opacity-70">Google Maps</p>
-                      <a
-                        href={googleMapsUrl!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-1 block text-sm font-medium underline-offset-2 hover:underline"
-                        style={{ color: "var(--accent-color)" }}
-                      >
-                        Voir sur la carte
-                      </a>
-                    </div>
-                  </div>
+                {showFacebook ? (
+                  <a href={facebookUrl!} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="opacity-70 transition hover:opacity-100">
+                    <Facebook className="h-6 w-6" />
+                  </a>
                 ) : null}
               </div>
             </div>
-
-            {showHoursRow ? (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Horaires</p>
-                <div className="mt-4 flex gap-3">
-                  <span className={iconRing}>
-                    <Clock className="h-4 w-4" aria-hidden />
-                  </span>
-                  <ul className="space-y-1.5 text-sm leading-snug">
-                    {openingHoursLines.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ) : (
-              <div aria-hidden className="hidden lg:block" />
-            )}
-
-            {(showInstagram || showFacebook) ? (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Réseaux</p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  {showInstagram ? (
-                    <a
-                      href={instagramUrl!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--footer-text)_25%,transparent)] transition hover:bg-[color-mix(in_srgb,var(--footer-text)_12%,transparent)]"
-                      aria-label="Instagram"
-                    >
-                      <Instagram className="h-5 w-5" />
-                    </a>
-                  ) : null}
-                  {showFacebook ? (
-                    <a
-                      href={facebookUrl!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--footer-text)_25%,transparent)] transition hover:bg-[color-mix(in_srgb,var(--footer-text)_12%,transparent)]"
-                      aria-label="Facebook"
-                    >
-                      <Facebook className="h-5 w-5" />
-                    </a>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </PublicPageSection>
+          ) : null}
+        </>
       ) : null}
     </div>
   );

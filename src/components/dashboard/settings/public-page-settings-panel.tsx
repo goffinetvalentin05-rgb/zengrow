@@ -59,6 +59,7 @@ import {
   SECTION_DISABLE_WARNINGS,
   STRUCTURE_TEMPLATES,
 } from "@/src/lib/public-page/conversion";
+import { newMenuOffer } from "@/src/lib/public-page/premium-content";
 import {
   HIGHLIGHT_SUGGESTIONS,
   MAX_DESCRIPTION_CHARS,
@@ -519,9 +520,17 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         },
         blockContent: {
           ...c.blockContent,
-          about: { ...c.blockContent.about, body: shortDescription },
+          about: { ...c.blockContent.about, body: shortDescription, title: c.premium.concept.title },
           highlights: { items: highlights },
           menu: { mode: menuMode, url: menuUrl },
+        },
+        premium: {
+          ...c.premium,
+          concept: {
+            ...c.premium.concept,
+            title: c.premium.concept.title,
+            body: shortDescription || c.premium.concept.body,
+          },
         },
         reservation: {
           ...c.reservation,
@@ -914,6 +923,249 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               }}
               label="Bouton sticky mobile « Réserver »"
             />
+          </div>
+        </SettingsAccordion>
+
+        <SettingsAccordion title="Concept & expérience">
+          <div className="space-y-5">
+            <FieldHint>Racontez votre concept comme sur un vrai site restaurant — pas des badges génériques.</FieldHint>
+            <Toggle
+              checked={editorConfig.premium.navigationEnabled}
+              onChange={(v) => {
+                setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, navigationEnabled: v } }));
+                markDirty();
+              }}
+              label="Navigation type site (Accueil, Concept, Menu…)"
+            />
+            <div>
+              <label className="dashboard-field-label">Titre de la section concept</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.premium.concept.title}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: { ...c.premium, concept: { ...c.premium.concept, title: e.target.value } },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Image concept (URL)</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.premium.concept.imageUrl}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: { ...c.premium, concept: { ...c.premium.concept, imageUrl: e.target.value } },
+                    }),
+                  );
+                  markDirty();
+                }}
+                placeholder="Sinon, 1ère photo de la galerie"
+              />
+            </div>
+          </div>
+        </SettingsAccordion>
+
+        <SettingsAccordion title="Crédibilité (avis & presse)">
+          <div className="space-y-4">
+            <FieldHint>N&apos;affichez une note que si elle est réelle. Sinon, laissez vide — pas de fausses étoiles.</FieldHint>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="dashboard-field-label">Note Google (1–5)</label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={5}
+                  step={0.1}
+                  className="mt-2"
+                  value={editorConfig.premium.credibility.googleRating ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value ? Number(e.target.value) : null;
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        premium: {
+                          ...c.premium,
+                          credibility: { ...c.premium.credibility, googleRating: v },
+                        },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Nombre d&apos;avis</label>
+                <Input
+                  type="number"
+                  min={1}
+                  className="mt-2"
+                  value={editorConfig.premium.credibility.reviewCount ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value ? Number(e.target.value) : null;
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        premium: {
+                          ...c.premium,
+                          credibility: { ...c.premium.credibility, reviewCount: v },
+                        },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="dashboard-field-label">Citation client (optionnel)</label>
+              <Textarea
+                className="mt-2 min-h-20"
+                value={editorConfig.premium.credibility.quote}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: {
+                        ...c.premium,
+                        credibility: { ...c.premium.credibility, quote: e.target.value },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Presse / labels (séparés par des virgules)</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.premium.credibility.pressMentions.join(", ")}
+                onChange={(e) => {
+                  const pressMentions = e.target.value.split(",").map((s) => s.trim()).filter(Boolean);
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: { ...c.premium, credibility: { ...c.premium.credibility, pressMentions } },
+                    }),
+                  );
+                  markDirty();
+                }}
+                placeholder="Le Temps, Michelin Guide…"
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="dashboard-field-label">Parking</label>
+                <Input
+                  className="mt-2"
+                  value={editorConfig.premium.practical.parking}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        premium: { ...c.premium, practical: { ...c.premium.practical, parking: e.target.value } },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                />
+              </div>
+              <div>
+                <label className="dashboard-field-label">Accessibilité</label>
+                <Input
+                  className="mt-2"
+                  value={editorConfig.premium.practical.accessibility}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        premium: {
+                          ...c.premium,
+                          practical: { ...c.premium.practical, accessibility: e.target.value },
+                        },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </SettingsAccordion>
+
+        <SettingsAccordion title="Offres & formules">
+          <div className="space-y-4">
+            <FieldHint>Ajoutez 2 à 6 offres (menu du jour, formule, plat signature…) pour donner envie avant de réserver.</FieldHint>
+            {editorConfig.premium.menuOffers.map((offer, idx) => (
+              <div key={offer.id} className="rounded-xl border border-zg-border p-4 space-y-2">
+                <Input
+                  placeholder="Titre"
+                  value={offer.title}
+                  onChange={(e) => {
+                    const menuOffers = [...editorConfig.premium.menuOffers];
+                    menuOffers[idx] = { ...offer, title: e.target.value };
+                    setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }));
+                    markDirty();
+                  }}
+                />
+                <Input
+                  placeholder="Description courte"
+                  value={offer.description}
+                  onChange={(e) => {
+                    const menuOffers = [...editorConfig.premium.menuOffers];
+                    menuOffers[idx] = { ...offer, description: e.target.value };
+                    setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }));
+                    markDirty();
+                  }}
+                />
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    placeholder="Prix (ex. 45 CHF)"
+                    value={offer.price}
+                    onChange={(e) => {
+                      const menuOffers = [...editorConfig.premium.menuOffers];
+                      menuOffers[idx] = { ...offer, price: e.target.value };
+                      setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }));
+                      markDirty();
+                    }}
+                  />
+                  <Input
+                    placeholder="Image URL (optionnel)"
+                    value={offer.imageUrl}
+                    onChange={(e) => {
+                      const menuOffers = [...editorConfig.premium.menuOffers];
+                      menuOffers[idx] = { ...offer, imageUrl: e.target.value };
+                      setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }));
+                      markDirty();
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={editorConfig.premium.menuOffers.length >= 6}
+              onClick={() => {
+                setEditorConfig((c) =>
+                  parseEditorConfig({
+                    ...c,
+                    premium: { ...c.premium, menuOffers: [...c.premium.menuOffers, newMenuOffer()] },
+                  }),
+                );
+                markDirty();
+              }}
+            >
+              Ajouter une offre
+            </Button>
           </div>
         </SettingsAccordion>
 

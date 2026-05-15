@@ -4,6 +4,11 @@ import type { OpeningHours } from "@/src/lib/utils";
 export type PageGoal = "reservations" | "menu" | "ambiance" | "terrace_event" | "simple_direct";
 export type PersuasionStyle = "direct" | "premium" | "warm" | "fast";
 export type StructureTemplate =
+  | "premium_experience"
+  | "warm_restaurant"
+  | "modern_brasserie"
+  | "event_venue"
+  | "minimal_conversion"
   | "conversion_direct"
   | "premium"
   | "mobile_fast"
@@ -25,28 +30,34 @@ export const STRUCTURE_TEMPLATES: {
   order: PageBlockId[];
 }[] = [
   {
-    id: "conversion_direct",
-    label: "Conversion directe",
-    description: "Réservation en premier — idéal pour remplir vos tables.",
-    order: ["trust", "reservation", "highlights", "menu", "gallery", "about", "hours", "location", "reviews", "social", "final_cta"],
+    id: "premium_experience",
+    label: "Expérience premium",
+    description: "Storytelling, galerie immersive, menu, puis réservation.",
+    order: ["about", "gallery", "menu", "reservation", "reviews", "hours", "location", "social", "final_cta"],
   },
   {
-    id: "premium",
-    label: "Restaurant premium",
-    description: "Hero immersif, preuve sociale, puis réservation.",
-    order: ["trust", "reviews", "gallery", "about", "reservation", "menu", "highlights", "hours", "location", "social", "final_cta"],
+    id: "warm_restaurant",
+    label: "Restaurant chaleureux",
+    description: "Concept et photos avant la réservation.",
+    order: ["about", "gallery", "menu", "reservation", "reviews", "location", "hours", "final_cta", "social"],
   },
   {
-    id: "mobile_fast",
-    label: "Mobile rapide",
-    description: "Page courte, réservation accessible tout de suite.",
-    order: ["trust", "reservation", "hours", "menu", "highlights", "location", "gallery", "about", "reviews", "social", "final_cta"],
+    id: "modern_brasserie",
+    label: "Brasserie moderne",
+    description: "Menu et horaires en avant, réservation accessible.",
+    order: ["menu", "about", "reservation", "gallery", "hours", "location", "reviews", "final_cta", "social"],
   },
   {
-    id: "ambiance_experience",
-    label: "Ambiance & expérience",
-    description: "Vendre l'expérience avant la réservation.",
-    order: ["gallery", "trust", "highlights", "about", "menu", "reservation", "reviews", "hours", "location", "social", "final_cta"],
+    id: "event_venue",
+    label: "Événementiel & groupes",
+    description: "Offres spéciales et réservation mise en avant.",
+    order: ["about", "menu", "reservation", "gallery", "reviews", "location", "hours", "final_cta", "social"],
+  },
+  {
+    id: "minimal_conversion",
+    label: "Minimal conversion",
+    description: "Direct : hero, réservation, menu, infos.",
+    order: ["reservation", "menu", "hours", "location", "about", "final_cta"],
   },
 ];
 
@@ -88,11 +99,18 @@ export const SECTION_DISABLE_WARNINGS: Partial<Record<PageBlockId, string>> = {
   menu: "Ajoutez votre menu pour éviter que les visiteurs quittent la page.",
 };
 
+const LEGACY_TEMPLATE_MAP: Record<string, StructureTemplate> = {
+  conversion_direct: "minimal_conversion",
+  premium: "premium_experience",
+  mobile_fast: "minimal_conversion",
+  ambiance_experience: "premium_experience",
+};
+
 export function defaultConversionSettings(): ConversionSettings {
   return {
     pageGoal: "reservations",
-    persuasionStyle: "direct",
-    structureTemplate: "conversion_direct",
+    persuasionStyle: "premium",
+    structureTemplate: "premium_experience",
     ctaPlacement: "full",
     stickyMobile: true,
   };
@@ -117,7 +135,7 @@ export function normalizeConversionSettings(raw: unknown): ConversionSettings {
     structureTemplate:
       STRUCTURE_TEMPLATES.some((t) => t.id === o.structureTemplate)
         ? (o.structureTemplate as StructureTemplate)
-        : base.structureTemplate,
+        : LEGACY_TEMPLATE_MAP[o.structureTemplate as string] ?? base.structureTemplate,
     ctaPlacement:
       o.ctaPlacement === "top_only" || o.ctaPlacement === "top_middle" ? o.ctaPlacement : "full",
     stickyMobile: o.stickyMobile !== false,
