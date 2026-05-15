@@ -52,7 +52,6 @@ import {
 import { cn, formatOpeningHoursLines, type OpeningHours } from "@/src/lib/utils";
 import { sanitizePublicSlug } from "@/src/lib/public-page/slug";
 import {
-  applyStylePresetColors,
   DEFAULT_PRIMARY,
   DEFAULT_SECONDARY,
   normalizeHexColor,
@@ -460,6 +459,22 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           headingFont: initial.headingFont,
           bodyFont: initial.bodyFont,
           backgroundColor: initial.pageBackgroundColor,
+          // Important : les colonnes plates restent la source de vérité au premier
+          // chargement pour que les color pickers du Step 1 affichent les bonnes
+          // valeurs aussitôt après refresh / publication.
+          headingColor: initial.headingTextColor || base.appearance.headingColor,
+          textColor: initial.bodyTextColor || base.appearance.textColor,
+          footerBgColor: initial.footerBgColor || base.appearance.footerBgColor,
+          footerTextColor: initial.footerTextColor || base.appearance.footerTextColor,
+          buttonTextColor: initial.buttonTextColor || base.appearance.buttonTextColor,
+          buttonStyle: (initial.buttonStyle as typeof base.appearance.buttonStyle) || base.appearance.buttonStyle,
+          cardStyle: (initial.cardStyle as typeof base.appearance.cardStyle) || base.appearance.cardStyle,
+          borderRadius:
+            initial.borderRadius === "sharp"
+              ? "soft"
+              : initial.borderRadius === "pill"
+                ? "premium"
+                : "medium",
         },
         blockContent: {
           ...base.blockContent,
@@ -529,10 +544,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const [publishedAt, setPublishedAt] = useState<string | null>(initial.publishedAt);
     const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
 
-    const [heroPrimaryColor, setHeroPrimaryColor] = useState(initial.heroPrimaryColor);
     const [accentColor, setAccentColor] = useState(initial.accentColor);
-    const [pageBackgroundColor] = useState(initial.pageBackgroundColor);
-    const [buttonColor] = useState(initial.buttonColor);
     const [headingFont, setHeadingFont] = useState(initial.headingFont);
     const [bodyFont, setBodyFont] = useState(initial.bodyFont);
     const [heroHeight, setHeroHeight] = useState(initial.heroHeight);
@@ -621,7 +633,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           setPrimaryColor(next.appearance.primaryColor);
           setSecondaryColor(next.appearance.secondaryColor);
           setAccentColor(next.appearance.accentColor);
-          setHeroPrimaryColor(next.appearance.primaryColor);
           setHeadingFont(next.appearance.headingFont);
           setBodyFont(next.appearance.bodyFont);
           setHeroHeight(
@@ -844,9 +855,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     ]);
 
     const getRestaurantUpdate = useCallback(() => {
-      const presetColors = stylePreset
-        ? applyStylePresetColors(stylePreset, primaryColor, secondaryColor)
-        : null;
+      // `editorConfig.appearance` est la source unique de vérité pour les couleurs
+      // et la typographie : les colonnes plates sont synchronisées à partir
+      // de cette source pour rester cohérentes après refresh / publication.
+      const a = editorConfig.appearance;
       return {
         name: name.trim(),
         slug: effectiveSlug,
@@ -855,8 +867,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         phone: phone.trim() || null,
         email: email.trim() || null,
         address: address.trim() || null,
-        primary_color: normalizeHexColor(primaryColor),
-        public_secondary_color: normalizeHexColor(secondaryColor),
+        primary_color: normalizeHexColor(a.primaryColor),
+        public_secondary_color: normalizeHexColor(a.secondaryColor),
         public_style_preset: stylePreset,
         public_ambiance: ambiance,
         public_hero_title: heroTitle.trim() || null,
@@ -866,13 +878,20 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         public_cta_label: ctaLabel.trim().slice(0, 80) || null,
         logo_url: logoUrl.trim() || null,
         banner_url: coverImageUrl.trim() || null,
-        hero_primary_color: presetColors?.heroPrimary ?? normalizeHexColor(heroPrimaryColor),
-        public_accent_color: presetColors?.accent ?? normalizeHexColor(accentColor),
-        public_button_bg_color: presetColors?.buttonBg ?? normalizeHexColor(buttonColor || primaryColor),
-        page_background_color: presetColors?.pageBg ?? pageBackgroundColor,
-        public_heading_font: presetColors?.headingFont ?? headingFont,
-        public_body_font: presetColors?.bodyFont ?? bodyFont,
-        public_hero_height: presetColors?.heroHeight ?? heroHeight,
+        hero_primary_color: normalizeHexColor(a.primaryColor),
+        public_accent_color: normalizeHexColor(a.accentColor),
+        // Le bouton CTA prend toujours la couleur d'accent — c'est par
+        // construction la couleur d'action choisie par l'utilisateur.
+        public_button_bg_color: normalizeHexColor(a.accentColor),
+        public_button_text_color: normalizeHexColor(a.buttonTextColor),
+        public_heading_text_color: normalizeHexColor(a.headingColor),
+        public_body_text_color: normalizeHexColor(a.textColor),
+        public_footer_bg_color: normalizeHexColor(a.footerBgColor),
+        public_footer_text_color: normalizeHexColor(a.footerTextColor),
+        page_background_color: normalizeHexColor(a.backgroundColor),
+        public_heading_font: a.headingFont,
+        public_body_font: a.bodyFont,
+        public_hero_height: heroHeight,
         google_maps_url: googleMapsUrl.trim() || null,
         tiktok_url: tiktokUrl.trim() || null,
         public_seo_title: seoTitle.trim().slice(0, 70) || null,
@@ -882,6 +901,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         public_page_draft_updated_at: new Date().toISOString(),
       };
     }, [
+      editorConfig.appearance,
       name,
       effectiveSlug,
       city,
@@ -889,8 +909,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       phone,
       email,
       address,
-      primaryColor,
-      secondaryColor,
       stylePreset,
       ambiance,
       heroTitle,
@@ -899,12 +917,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       ctaLabel,
       logoUrl,
       coverImageUrl,
-      heroPrimaryColor,
-      accentColor,
-      buttonColor,
-      pageBackgroundColor,
-      headingFont,
-      bodyFont,
       heroHeight,
       googleMapsUrl,
       tiktokUrl,
@@ -917,32 +929,48 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const getSettingsUpdate = useCallback(
       () => {
         const mergedEditor = buildMergedConfig();
+        const a = editorConfig.appearance;
+        // Conversion preset radius -> legacy enum stocké en BDD.
+        const legacyRadius =
+          a.borderRadius === "soft"
+            ? "sharp"
+            : a.borderRadius === "premium"
+              ? "pill"
+              : "rounded";
         return {
-        logo_url: logoUrl.trim() || null,
-        cover_image_url: coverImageUrl.trim() || null,
-        gallery_image_urls: galleryUrls.filter(Boolean).slice(0, MAX_GALLERY_PHOTOS),
-        featured_gallery_index: Math.min(featuredGalleryIndex, Math.max(0, galleryUrls.length - 1)),
-        public_highlights: highlights.filter(Boolean).slice(0, MAX_HIGHLIGHTS),
-        special_message: specialMessage.trim() || null,
-        instagram_url: instagramUrl.trim() || null,
-        facebook_url: facebookUrl.trim() || null,
-        website_url: websiteUrl.trim() || null,
-        public_menu_mode: menuMode,
-        public_menu_url: menuMode === "url" ? menuUrl.trim() || null : null,
-        public_page_description: shortDescription.trim().slice(0, MAX_DESCRIPTION_CHARS) || null,
-        pre_booking_message: preBookingMessage.trim() || null,
-        public_reservation_enabled: reservationEnabled,
-        min_booking_lead_minutes: Math.max(0, Math.min(10080, minBookingLeadMinutes)),
-        no_slots_message: noSlotsMessage.trim() || null,
-        show_hours_before_form: showHoursBeforeForm,
-        show_phone_cta: showPhoneCta,
-        accent_color: normalizeHexColor(accentColor),
-        button_color: normalizeHexColor(buttonColor || primaryColor),
-        public_page_editor_config: mergedEditor,
-      };
+          logo_url: logoUrl.trim() || null,
+          cover_image_url: coverImageUrl.trim() || null,
+          gallery_image_urls: galleryUrls.filter(Boolean).slice(0, MAX_GALLERY_PHOTOS),
+          featured_gallery_index: Math.min(featuredGalleryIndex, Math.max(0, galleryUrls.length - 1)),
+          public_highlights: highlights.filter(Boolean).slice(0, MAX_HIGHLIGHTS),
+          special_message: specialMessage.trim() || null,
+          instagram_url: instagramUrl.trim() || null,
+          facebook_url: facebookUrl.trim() || null,
+          website_url: websiteUrl.trim() || null,
+          public_menu_mode: menuMode,
+          public_menu_url: menuMode === "url" ? menuUrl.trim() || null : null,
+          public_page_description: shortDescription.trim().slice(0, MAX_DESCRIPTION_CHARS) || null,
+          pre_booking_message: preBookingMessage.trim() || null,
+          public_reservation_enabled: reservationEnabled,
+          min_booking_lead_minutes: Math.max(0, Math.min(10080, minBookingLeadMinutes)),
+          no_slots_message: noSlotsMessage.trim() || null,
+          show_hours_before_form: showHoursBeforeForm,
+          show_phone_cta: showPhoneCta,
+          // Toutes les valeurs visuelles sont synchronisées depuis editorConfig.appearance.
+          accent_color: normalizeHexColor(a.accentColor),
+          button_color: normalizeHexColor(a.accentColor),
+          text_color: normalizeHexColor(a.textColor),
+          heading_font: a.headingFont,
+          body_font: a.bodyFont,
+          button_style: a.buttonStyle,
+          card_style: a.cardStyle,
+          border_radius: legacyRadius,
+          public_page_editor_config: mergedEditor,
+        };
       },
       [
         buildMergedConfig,
+        editorConfig.appearance,
         logoUrl,
         coverImageUrl,
         galleryUrls,
@@ -961,9 +989,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         noSlotsMessage,
         showHoursBeforeForm,
         showPhoneCta,
-        accentColor,
-        buttonColor,
-        primaryColor,
       ],
     );
 
@@ -1856,7 +1881,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               value={primaryColor}
               onChange={(v) => {
                 setPrimaryColor(v);
-                setHeroPrimaryColor(v);
                 setEditorConfig((c) =>
                   parseEditorConfig({
                     ...c,

@@ -420,39 +420,57 @@ export default function PublicReservationForm({
 
   const pageTheme = useMemo(() => resolvePublicPageTheme(effectiveConfig), [effectiveConfig]);
 
+  /**
+   * Source unique de vérité pour les variables visuelles :
+   * `effectiveConfig.appearance` est mis à jour en temps réel par le dashboard
+   * et reflète exactement ce que l'utilisateur a choisi.
+   * Les props anciens (`headingFont`, `buttonBgColor`, etc.) ne sont conservés
+   * que comme fallback pour les pages legacy sans editorConfig.
+   */
+  const appearance = effectiveConfig.appearance;
+  // CTA / accent = même couleur : c'est la couleur d'action choisie par l'utilisateur.
+  const effButtonBg = appearance.accentColor || buttonBgColor;
+  const effButtonText = appearance.buttonTextColor || buttonTextColor;
+  const effHeadingFont = appearance.headingFont || headingFont;
+  const effBodyFont = appearance.bodyFont || bodyFont;
+  const effHeroPrimary = appearance.primaryColor || heroPrimaryColor;
+  // Convertit le format "soft/medium/premium" -> radius en px.
+  const effRadius =
+    appearance.borderRadius === "soft"
+      ? "4px"
+      : appearance.borderRadius === "premium"
+        ? "20px"
+        : "12px";
+  const effButtonStyle = appearance.buttonStyle || buttonStyle;
+  const effCardStyle = appearance.cardStyle || cardStyle;
+
   const cssVars = useMemo(
     () =>
       ({
         ...pageTheme.cssVars,
         "--page-bg": pageTheme.pageBg,
-        "--hero-primary": heroPrimaryColor,
+        "--hero-primary": effHeroPrimary,
         "--accent-color": pageTheme.accentColor,
-        "--button-bg": buttonBgColor,
-        "--button-text": buttonTextColor,
+        "--button-bg": effButtonBg,
+        "--button-text": effButtonText,
         "--heading-color": pageTheme.headingColor,
         "--body-text": pageTheme.bodyColor,
         "--footer-bg": pageTheme.footerBg,
         "--footer-text": pageTheme.footerText,
-        "--heading-font": `"${headingFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
-        "--body-font": `"${bodyFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
-        "--radius": borderRadius === "sharp" ? "0px" : borderRadius === "pill" ? "999px" : "8px",
+        "--heading-font": `"${effHeadingFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
+        "--body-font": `"${effBodyFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
+        "--radius": effRadius,
         "--font-scale": fontSizeScale === "small" ? "0.92" : fontSizeScale === "large" ? "1.08" : "1",
       }) as React.CSSProperties,
     [
-      accentColor,
-      bodyFont,
-      bodyTextColor,
-      borderRadius,
-      buttonBgColor,
-      buttonTextColor,
-      fontSizeScale,
-      footerBgColor,
-      footerTextColor,
-      headingFont,
-      headingTextColor,
-      heroPrimaryColor,
-      pageBackgroundColor,
       pageTheme,
+      effHeroPrimary,
+      effButtonBg,
+      effButtonText,
+      effHeadingFont,
+      effBodyFont,
+      effRadius,
+      fontSizeScale,
     ],
   );
 
@@ -469,23 +487,23 @@ export default function PublicReservationForm({
     () =>
       cn(
         "rounded-[var(--radius)] border p-6 backdrop-blur-md md:p-10",
-        cardStyle === "elevated" && "shadow-[0_32px_100px_-48px_rgba(0,0,0,0.35)]",
-        cardStyle === "flat" && "shadow-none",
-        cardStyle === "bordered" && "shadow-none",
+        effCardStyle === "elevated" && "shadow-[0_32px_100px_-48px_rgba(0,0,0,0.35)]",
+        effCardStyle === "flat" && "shadow-none",
+        effCardStyle === "bordered" && "shadow-none",
       ),
-    [cardStyle],
+    [effCardStyle],
   );
 
   const ctaStyle = useMemo(() => {
     const base =
       "inline-flex min-h-[48px] w-auto min-w-[220px] max-w-md items-center justify-center rounded-[var(--radius)] px-8 text-sm font-semibold tracking-wide transition duration-300 active:scale-[0.98] sm:min-h-[52px]";
-    if (buttonStyle === "ghost") {
+    if (effButtonStyle === "ghost") {
       return {
         className: cn(base, "bg-transparent"),
         style: { color: "var(--button-bg)", border: "1px solid transparent" } as React.CSSProperties,
       };
     }
-    if (buttonStyle === "outlined") {
+    if (effButtonStyle === "outlined") {
       return {
         className: cn(base, "bg-transparent"),
         style: {
@@ -502,7 +520,7 @@ export default function PublicReservationForm({
         border: "1px solid transparent",
       } as React.CSSProperties,
     };
-  }, [buttonStyle]);
+  }, [effButtonStyle]);
 
   /* eslint-disable react-hooks/set-state-in-effect -- chargement asynchrone des créneaux et indicateurs associés */
   useEffect(() => {
@@ -1057,7 +1075,7 @@ export default function PublicReservationForm({
           <section
             className={cn(
               "rounded-[var(--radius)] border px-5 py-6 md:px-8",
-              cardStyle === "elevated" && "shadow-md",
+              effCardStyle === "elevated" && "shadow-md",
             )}
             style={{
               backgroundColor: "color-mix(in srgb, var(--body-text) 6%, var(--page-bg))",
@@ -1734,9 +1752,9 @@ export default function PublicReservationForm({
                     disabled={previewMode || isSubmitting || isDateInClosurePeriod}
                     className="order-1 min-h-[52px] w-full rounded-[var(--radius)] border border-transparent px-6 text-[15px] font-semibold shadow-lg transition hover:brightness-110 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 sm:order-2 sm:ml-auto sm:w-auto sm:min-w-[220px]"
                     style={{
-                      ...(buttonStyle === "ghost"
+                      ...(effButtonStyle === "ghost"
                         ? { backgroundColor: "transparent", color: "var(--button-bg)" }
-                        : buttonStyle === "outlined"
+                        : effButtonStyle === "outlined"
                           ? { backgroundColor: "transparent", color: "var(--button-bg)", borderColor: "var(--button-bg)" }
                           : { backgroundColor: "var(--button-bg)", color: "var(--button-text)" }),
                     }}
@@ -1854,7 +1872,7 @@ export default function PublicReservationForm({
             showMaps={showMapsRow}
           />
           {(showInstagram || showFacebook) && blockEnabled("social") ? (
-            <div className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] py-8">
+            <div className="py-10">
               <div className="mx-auto flex max-w-7xl justify-center gap-4 px-5">
                 {showInstagram ? (
                   <a href={instagramUrl!} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="opacity-70 transition hover:opacity-100">

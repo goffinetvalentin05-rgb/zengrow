@@ -655,7 +655,7 @@ export function ConceptSection({
   return (
     <section
       id="concept"
-      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]"
+      className="scroll-mt-24"
     >
       <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
         <div
@@ -866,8 +866,8 @@ export function EditorialBlock({
 
   const imageFirst = section.layout === "image-left";
   return (
-    <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-2 lg:gap-20 lg:px-12 lg:py-24">
+    <section>
+      <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 sm:px-8 lg:grid-cols-2 lg:gap-24 lg:px-12 lg:py-28">
         {hasImage ? (
           <div
             className={cn(
@@ -941,7 +941,7 @@ export function MenuOffersSection({
   return (
     <section
       id="menu"
-      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]"
+      className="scroll-mt-24"
       style={{
         backgroundColor: "var(--surface-muted, color-mix(in srgb, var(--body-text) 4%, var(--page-bg)))",
       }}
@@ -987,8 +987,9 @@ export function MenuOffersSection({
                     unoptimized
                   />
                   <span
-                    className="absolute left-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-xs font-medium tabular-nums shadow-sm"
+                    className="absolute left-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium tabular-nums shadow-sm backdrop-blur-md"
                     style={{
+                      backgroundColor: "color-mix(in srgb, var(--page-bg) 92%, transparent)",
                       color: "var(--heading-color)",
                       fontFamily: "var(--heading-font)",
                     }}
@@ -1134,8 +1135,8 @@ export function CredibilitySection({ data }: { data: CredibilityContent }) {
   if (!hasCredibilityContent(data)) return null;
 
   return (
-    <section className="border-y border-[color-mix(in_srgb,var(--body-text)_10%,transparent)]">
-      <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 lg:px-12">
+    <section>
+      <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-12">
         {data.googleRating && data.reviewCount ? (
           <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center sm:gap-8">
             <div className="flex items-center gap-2">
@@ -1235,7 +1236,7 @@ export function PremiumGallery({
   if (style === "showcase" && images.length >= 2) {
     const [hero, ...rest] = images;
     return (
-      <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
+      <section className="">
         <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
           <div className="mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -1313,7 +1314,7 @@ export function PremiumGallery({
   /* === STYLE INSTAGRAM : grille carrée régulière, style social === */
   if (style === "instagram") {
     return (
-      <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
+      <section className="">
         <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
           <div className="mb-12 text-center">
             <div className="flex items-center justify-center gap-3">
@@ -1381,7 +1382,7 @@ export function PremiumGallery({
 
   /* === STYLE GRID (par défaut) : masonry verticale === */
   return (
-    <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
+    <section className="">
       <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
         <div className="mb-12">
           <div className="flex items-center gap-3">
@@ -1453,7 +1454,7 @@ export function PremiumFinalCta({
   ctaStyle: CtaStyle;
 }) {
   return (
-    <section className="relative overflow-hidden border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
+    <section className="relative overflow-hidden">
       <div
         className="absolute inset-0"
         style={{
@@ -1562,7 +1563,7 @@ export function PremiumPracticalInfo({
   return (
     <section
       id="infos"
-      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]"
+      className="scroll-mt-24"
       style={{
         backgroundColor: "var(--surface-muted, color-mix(in srgb, var(--body-text) 4%, var(--page-bg)))",
       }}
@@ -1738,7 +1739,7 @@ export function PremiumReservationSection({
   return (
     <section
       id="reservation"
-      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]"
+      className="scroll-mt-24"
       style={{
         background:
           "linear-gradient(180deg, color-mix(in srgb, var(--accent-color) 6%, var(--page-bg)) 0%, var(--page-bg) 80%)",
@@ -1805,8 +1806,12 @@ export function HighlightsBand({ items }: { items: string[] }) {
   const visible = items.map((s) => s.trim()).filter(Boolean).slice(0, 6);
   if (visible.length === 0) return null;
   return (
-    <section className="border-y border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_3%,var(--page-bg))]">
-      <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-12 lg:py-14">
+    <section
+      style={{
+        backgroundColor: "var(--surface-muted, color-mix(in srgb, var(--body-text) 3%, var(--page-bg)))",
+      }}
+    >
+      <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 lg:px-12 lg:py-16">
         <ul
           className={cn(
             "grid gap-x-8 gap-y-5",
