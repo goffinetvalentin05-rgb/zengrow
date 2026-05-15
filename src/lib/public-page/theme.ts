@@ -59,7 +59,7 @@ function variantColors(
       };
     case "light":
       return {
-        backgroundColor: mode === "dark" ? mix(body, 8, pageBg) : "#ffffff",
+        backgroundColor: mode === "dark" ? mix(body, 8, pageBg) : mix(body, 3, "#ffffff"),
         color: mode === "dark" ? heading : body,
         headingColor: heading,
         borderColor: mix(body, 14, pageBg),
@@ -87,7 +87,7 @@ function variantColors(
       };
     case "elevated":
       return {
-        backgroundColor: mode === "dark" ? mix(heading, 4, pageBg) : "#ffffff",
+        backgroundColor: mode === "dark" ? mix(heading, 5, pageBg) : mix(body, 2.5, "#ffffff"),
         color: body,
         headingColor: heading,
         borderColor: mix(body, 12, pageBg),
@@ -147,7 +147,14 @@ export function resolvePublicPageTheme(config: PublicPageEditorConfig): PublicPa
     return {
       ...colors,
       width,
-      paddingY: blockId === "trust" ? "py-6" : blockId === "final_cta" ? "py-14" : blockId === "gift_vouchers" ? "py-16 sm:py-20" : "py-12",
+      paddingY:
+        blockId === "trust"
+          ? "py-7"
+          : blockId === "final_cta"
+            ? "py-16 sm:py-20"
+            : blockId === "gift_vouchers"
+              ? "py-20 sm:py-28"
+              : "py-14 sm:py-16",
     };
   };
 

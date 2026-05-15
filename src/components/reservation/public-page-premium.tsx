@@ -187,6 +187,7 @@ function premiumHeroMinHeight(heroHeight: "compact" | "normal" | "tall", preview
 }
 
 function HeroContentInner({
+  badgeText,
   logoUrl,
   headline,
   tagline,
@@ -202,6 +203,7 @@ function HeroContentInner({
   textTheme,
   align,
 }: {
+  badgeText?: string | null;
   logoUrl?: string | null;
   headline: string;
   tagline?: string;
@@ -226,6 +228,11 @@ function HeroContentInner({
       ? ("rgba(255,255,255,0.88)" as const)
       : ("var(--body-text)" as const);
 
+  const badgeTint =
+    textTheme === "onImage"
+      ? "border-white/25 bg-black/35 text-[11px] text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+      : "border-[color-mix(in_srgb,var(--body-text)_16%,transparent)] bg-[color-mix(in_srgb,var(--page-bg)_70%,transparent)] text-[11px] text-[color-mix(in_srgb,var(--heading-color)_88%,transparent)] shadow-sm backdrop-blur-sm";
+
   return (
     <div
       className={cn(
@@ -233,6 +240,17 @@ function HeroContentInner({
         isCenter && "items-center text-center",
       )}
     >
+      {badgeText?.trim() ? (
+        <p
+          className={cn(
+            "inline-flex max-w-[90vw] items-center rounded-full px-5 py-2 font-semibold uppercase tracking-[0.28em]",
+            badgeTint,
+            isCenter ? "justify-center text-center" : "",
+          )}
+        >
+          {badgeText.trim()}
+        </p>
+      ) : null}
       {logoUrl?.trim() ? (
         <>
           <h1 className="sr-only">{headline}</h1>
@@ -282,10 +300,19 @@ function HeroContentInner({
 
       {tagline ? (
         <p
-          className="max-w-xl text-pretty text-base font-light leading-[1.55] sm:text-lg sm:leading-[1.6]"
+          className={cn(
+            "max-w-2xl text-pretty leading-[1.58]",
+            (tagline?.length ?? 0) < 100
+              ? "text-[clamp(1.0625rem,2.75vw,1.45rem)] font-medium italic tracking-[0.02em] sm:text-[1.375rem]"
+              : "text-base font-light sm:text-lg",
+            isCenter ? "mx-auto text-center" : "",
+          )}
           style={{
             color: bodyColor,
-            fontFamily: "var(--body-font), system-ui, sans-serif",
+            fontFamily:
+              (tagline?.length ?? 0) < 100
+                ? "var(--heading-font), ui-serif, Georgia, 'Times New Roman', serif"
+                : "var(--body-font), system-ui, sans-serif",
           }}
         >
           {tagline}
@@ -381,6 +408,7 @@ function HeroContentInner({
 }
 
 export function PremiumHero({
+  badgeText,
   coverImageUrl,
   logoUrl,
   headline,
@@ -400,6 +428,7 @@ export function PremiumHero({
   heroHeight = "normal",
   previewMode = false,
 }: {
+  badgeText?: string | null;
   coverImageUrl?: string | null;
   logoUrl?: string | null;
   headline: string;
@@ -435,9 +464,10 @@ export function PremiumHero({
         style={{ backgroundColor: "var(--page-bg)" }}
       >
         <div className="grid h-full min-h-inherit grid-cols-1 lg:grid-cols-[1.05fr_1fr]">
-          <div className="relative flex items-center px-5 pb-12 pt-20 sm:px-10 lg:px-16 lg:pb-16 lg:pt-28">
+            <div className="relative flex items-center px-5 pb-12 pt-20 sm:px-10 lg:px-16 lg:pb-16 lg:pt-28">
             <div className="w-full max-w-xl">
               <HeroContentInner
+                badgeText={badgeText}
                 logoUrl={logoUrl}
                 headline={headline}
                 tagline={tagline}
@@ -461,7 +491,7 @@ export function PremiumHero({
               alt=""
               fill
               priority
-              className="object-cover"
+              className="object-cover zg-public-hero-media"
               sizes="(max-width:1024px) 100vw, 50vw"
               unoptimized
             />
@@ -487,15 +517,17 @@ export function PremiumHero({
         )}
       >
         {coverImageUrl ? (
-          <Image
-            src={coverImageUrl}
-            alt=""
-            fill
-            priority
-            className="object-cover"
-            sizes="100vw"
-            unoptimized
-          />
+          <div className="absolute inset-0 overflow-hidden">
+            <Image
+              src={coverImageUrl}
+              alt=""
+              fill
+              priority
+              className="object-cover zg-public-hero-media"
+              sizes="100vw"
+              unoptimized
+            />
+          </div>
         ) : (
           <div
             className="absolute inset-0"
@@ -505,10 +537,19 @@ export function PremiumHero({
             aria-hidden
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/55" aria-hidden />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/28 to-black/58" aria-hidden />
+        <div
+          className="absolute inset-0 mix-blend-soft-light opacity-40"
+          style={{
+            background:
+              "radial-gradient(ellipse 90% 55% at 50% 18%, color-mix(in srgb, var(--accent-color) 22%, transparent) 0%, transparent 58%)",
+          }}
+          aria-hidden
+        />
         <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} aria-hidden />
         <div className="relative z-[1] mx-auto flex w-full max-w-3xl flex-col justify-center px-5 pb-20 pt-24 text-center sm:px-8 sm:pb-24 sm:pt-28">
           <HeroContentInner
+            badgeText={badgeText}
             logoUrl={logoUrl}
             headline={headline}
             tagline={tagline}
@@ -539,15 +580,17 @@ export function PremiumHero({
       )}
     >
       {coverImageUrl ? (
-        <Image
-          src={coverImageUrl}
-          alt=""
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-          unoptimized
-        />
+        <div className="absolute inset-0 overflow-hidden">
+          <Image
+            src={coverImageUrl}
+            alt=""
+            fill
+            priority
+            className="object-cover zg-public-hero-media"
+            sizes="100vw"
+            unoptimized
+          />
+        </div>
       ) : (
         <div
           className="absolute inset-0"
@@ -557,13 +600,21 @@ export function PremiumHero({
           aria-hidden
         />
       )}
-      {/* Voile cinéma : gradient principal + vignette douce sur les bords */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/10" aria-hidden />
+      {/* Voile cinéma : gradient principal + vignette + chaleur accent discrète */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/42 to-black/15" aria-hidden />
+      <div
+        className="absolute inset-0 mix-blend-soft-light opacity-[0.38]"
+        style={{
+          background:
+            "radial-gradient(ellipse 95% 50% at 50% 12%, color-mix(in srgb, var(--accent-color) 18%, transparent) 0%, transparent 55%)",
+        }}
+        aria-hidden
+      />
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,0.35) 100%)",
+            "radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,0.38) 100%)",
         }}
         aria-hidden
       />
@@ -577,6 +628,7 @@ export function PremiumHero({
         )}
       >
         <HeroContentInner
+          badgeText={badgeText}
           logoUrl={logoUrl}
           headline={headline}
           tagline={tagline}
@@ -640,9 +692,9 @@ export function ConceptSection({
   return (
     <section
       id="concept"
-      className="scroll-mt-24"
+      className="scroll-mt-24 relative z-[2] mt-[-2.75rem] bg-[var(--page-bg)] px-5 pb-[4.75rem] pt-[3rem] shadow-[0_-42px_90px_-58px_rgba(0,0,0,0.42)] sm:mt-[-3.75rem] sm:rounded-t-[2rem] sm:px-8 sm:pb-24 sm:pt-12 lg:mt-[-4.75rem] lg:rounded-t-[2.75rem] lg:px-12 lg:pb-32 lg:pt-16"
     >
-      <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+      <div className="mx-auto max-w-7xl">
         <div
           className={cn(
             "grid items-center gap-12",
@@ -926,191 +978,238 @@ export function MenuOffersSection({
   return (
     <section
       id="menu"
-      className="scroll-mt-24"
+      className="scroll-mt-24 relative overflow-hidden"
       style={{
-        backgroundColor: "var(--surface-muted, color-mix(in srgb, var(--body-text) 4%, var(--page-bg)))",
+        background:
+          "linear-gradient(180deg, color-mix(in srgb, var(--accent-color) 5%, var(--page-bg)) 0%, var(--surface-muted, color-mix(in srgb, var(--body-text) 5%, var(--page-bg))) 42%, var(--page-bg) 100%)",
       }}
     >
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
-        {/* En-tête : eyebrow centré (vraiment éditorial) */}
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span
-            className="text-[10px] font-semibold uppercase tracking-[0.32em]"
-            style={{ color: "var(--accent-color)" }}
-          >
-            {eyebrow}
-          </span>
-          <h2
-            className="text-balance text-4xl font-medium leading-[1.05] sm:text-5xl"
-            style={{
-              fontFamily: "var(--heading-font)",
-              color: "var(--heading-color)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {title}
-          </h2>
-          <div
-            className="mt-2 h-px w-12"
-            style={{ backgroundColor: "var(--accent-color)" }}
-            aria-hidden
-          />
-        </div>
-
-        {hasOffers && allHaveImages ? (
-          /* Variante A : grille de cartes premium avec ratio portrait & ombre douce */
-          <div className="mt-16 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            {offers.map((o, idx) => (
-              <article key={o.id} className="group flex flex-col">
-                <div className="relative aspect-[4/5] overflow-hidden">
-                  <Image
-                    src={o.imageUrl!}
-                    alt=""
-                    fill
-                    className="object-cover transition duration-[1.2s] group-hover:scale-[1.04]"
-                    sizes="(max-width:768px) 100vw, 400px"
-                    unoptimized
-                  />
-                  <span
-                    className="absolute left-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium tabular-nums shadow-sm backdrop-blur-md"
-                    style={{
-                      backgroundColor: "color-mix(in srgb, var(--page-bg) 92%, transparent)",
-                      color: "var(--heading-color)",
-                      fontFamily: "var(--heading-font)",
-                    }}
-                  >
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                </div>
-                <div className="mt-5 flex items-baseline justify-between gap-4">
-                  <h3
-                    className="text-xl font-medium leading-tight"
-                    style={{
-                      fontFamily: "var(--heading-font)",
-                      color: "var(--heading-color)",
-                    }}
-                  >
-                    {o.title}
-                  </h3>
-                  {o.price ? (
-                    <span
-                      className="shrink-0 text-base font-medium tabular-nums"
-                      style={{
-                        color: "var(--accent-color)",
-                        fontFamily: "var(--heading-font)",
-                      }}
-                    >
-                      {o.price}
-                    </span>
-                  ) : null}
-                </div>
-                {o.description ? (
-                  <p
-                    className="mt-2 text-[15px] leading-relaxed opacity-85"
-                    style={{ color: "var(--body-text)" }}
-                  >
-                    {o.description}
-                  </p>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        ) : hasOffers ? (
-          /* Variante B : menu éditorial type "carte de restaurant" avec ligne pointillée nom-prix */
-          <div className="mx-auto mt-14 max-w-3xl space-y-9">
-            {offers.map((o, idx) => (
-              <article
-                key={o.id}
-                className={cn(
-                  "flex gap-5",
-                  o.imageUrl ? "items-start" : "items-baseline",
-                )}
+      <div
+        className="pointer-events-none absolute -right-[18%] top-[-10%] h-[420px] w-[520px] rounded-full blur-3xl opacity-[0.16]"
+        style={{
+          background: "radial-gradient(circle at center, color-mix(in srgb, var(--accent-color) 55%, transparent) 0%, transparent 70%)",
+        }}
+        aria-hidden
+      />
+      <div className="relative mx-auto max-w-7xl px-5 py-[4.75rem] sm:px-8 sm:py-28 lg:px-12 lg:py-36">
+        <div className="flex flex-col gap-14 lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-14 xl:gap-x-24">
+          <header className="flex flex-col items-center gap-4 text-center lg:sticky lg:top-28 lg:col-span-4 lg:items-start lg:self-start lg:text-left">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-center gap-3 lg:justify-start">
+                <span
+                  className="h-px w-10 lg:w-14"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--accent-color) 55%, transparent)",
+                  }}
+                  aria-hidden
+                />
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-[0.34em]"
+                  style={{ color: "var(--accent-color)" }}
+                >
+                  {eyebrow}
+                </span>
+              </div>
+              <h2
+                className="text-balance text-[clamp(2rem,5vw,3.5rem)] font-medium leading-[1.02]"
+                style={{
+                  fontFamily: "var(--heading-font)",
+                  color: "var(--heading-color)",
+                  letterSpacing: "-0.02em",
+                }}
               >
-                {o.imageUrl ? (
-                  <div className="relative h-24 w-24 shrink-0 overflow-hidden sm:h-28 sm:w-28">
-                    <Image
-                      src={o.imageUrl}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      sizes="120px"
-                      unoptimized
-                    />
-                  </div>
-                ) : (
-                  <span
-                    className="shrink-0 text-base font-medium tabular-nums opacity-50"
+                {title}
+              </h2>
+              <span
+                className="mx-auto mt-6 hidden h-20 w-px lg:mx-0 lg:block lg:bg-gradient-to-b"
+                style={{
+                  background: `linear-gradient(180deg, color-mix(in srgb, var(--accent-color) 70%, transparent) 0%, transparent 92%)`,
+                }}
+                aria-hidden
+              />
+            </div>
+          </header>
+
+          <div className="lg:col-span-8">
+            {hasOffers && allHaveImages ? (
+              <div className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:gap-y-16 xl:grid-cols-3">
+                {offers.map((o, idx) => (
+                  <article
+                    key={o.id}
+                    className="group flex flex-col border border-[color-mix(in_srgb,var(--body-text)_07%,transparent)] bg-[color-mix(in_srgb,var(--page-bg)_55%,transparent)] p-[2px] shadow-[0_40px_110px_-70px_rgba(0,0,0,0.55)] backdrop-blur-[2px]"
                     style={{
-                      color: "var(--heading-color)",
-                      fontFamily: "var(--heading-font)",
+                      borderRadius:
+                        "calc(var(--radius) + 10px)",
                     }}
                   >
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                )}
-                <div className="flex flex-1 flex-col">
-                  <div className="flex items-baseline gap-3">
-                    <h3
-                      className="text-xl font-medium leading-tight sm:text-2xl"
-                      style={{
-                        fontFamily: "var(--heading-font)",
-                        color: "var(--heading-color)",
-                      }}
+                    <div
+                      className="relative overflow-hidden"
+                      style={{ borderRadius: "calc(var(--radius) + 6px)" }}
                     >
-                      {o.title}
-                    </h3>
-                    {o.price ? (
-                      <>
-                        <span
-                          aria-hidden
-                          className="flex-1 translate-y-[-3px] border-b border-dotted"
-                          style={{
-                            borderColor:
-                              "color-mix(in srgb, var(--body-text) 35%, transparent)",
-                          }}
+                      <div className="relative aspect-[4/5] overflow-hidden">
+                        <Image
+                          src={o.imageUrl!}
+                          alt=""
+                          fill
+                          className="object-cover transition duration-[1.35s] group-hover:scale-[1.05]"
+                          sizes="(max-width:768px) 100vw, 400px"
+                          unoptimized
                         />
-                        <span
-                          className="shrink-0 text-lg font-medium tabular-nums sm:text-xl"
+                      </div>
+                      <span
+                        className="absolute left-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums backdrop-blur-md"
+                        style={{
+                          backgroundColor: "color-mix(in srgb, var(--page-bg) 82%, transparent)",
+                          color: "var(--heading-color)",
+                          border: "1px solid color-mix(in srgb, var(--accent-color) 45%, transparent)",
+                          fontFamily: "var(--heading-font)",
+                        }}
+                      >
+                        {String(idx + 1).padStart(2, "0")}
+                      </span>
+                      <div
+                        className="pointer-events-none absolute inset-0 opacity-0 transition duration-700 group-hover:opacity-100"
+                        style={{
+                          boxShadow:
+                            "inset 0 0 120px rgba(0,0,0,0.38), inset 0 -80px 100px rgba(0,0,0,0.42)",
+                        }}
+                        aria-hidden
+                      />
+                    </div>
+                    <div className="px-1 pb-5 pt-5 sm:pb-6 sm:pt-6">
+                      <div className="flex items-baseline justify-between gap-4">
+                        <h3
+                          className="text-[1.2rem] font-medium leading-snug sm:text-xl"
                           style={{
-                            color: "var(--accent-color)",
                             fontFamily: "var(--heading-font)",
+                            color: "var(--heading-color)",
                           }}
                         >
-                          {o.price}
-                        </span>
-                      </>
-                    ) : null}
-                  </div>
-                  {o.description ? (
-                    <p
-                      className="mt-2 text-[15px] leading-relaxed opacity-80"
-                      style={{ color: "var(--body-text)" }}
-                    >
-                      {o.description}
-                    </p>
-                  ) : null}
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : null}
+                          {o.title}
+                        </h3>
+                        {o.price ? (
+                          <span
+                            className="shrink-0 text-base font-medium tabular-nums"
+                            style={{
+                              color: "var(--accent-color)",
+                              fontFamily: "var(--heading-font)",
+                            }}
+                          >
+                            {o.price}
+                          </span>
+                        ) : null}
+                      </div>
+                      {o.description ? (
+                        <p
+                          className="mt-3 text-[15px] leading-relaxed opacity-[0.88]"
+                          style={{ color: "var(--body-text)" }}
+                        >
+                          {o.description}
+                        </p>
+                      ) : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : hasOffers ? (
+              <div className="space-y-0">
+                {offers.map((o, idx) => (
+                  <article
+                    key={o.id}
+                    className={cn(
+                      "flex gap-5 border-b border-[color-mix(in_srgb,var(--body-text)_10%,transparent)] py-10 first:pt-0 last:border-b-0 sm:gap-7 sm:py-11",
+                      o.imageUrl ? "items-start" : "items-baseline",
+                    )}
+                  >
+                    {o.imageUrl ? (
+                      <div className="relative mt-1 h-[5.75rem] w-[5.75rem] shrink-0 overflow-hidden sm:h-28 sm:w-28 ring-1 ring-[color-mix(in_srgb,var(--accent-color)_35%,transparent)]">
+                        <Image
+                          src={o.imageUrl}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="120px"
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <span
+                        className="shrink-0 pt-1 text-[13px] font-semibold uppercase tracking-[0.4em] opacity-55"
+                        style={{
+                          color: "var(--heading-color)",
+                          fontFamily: "var(--heading-font)",
+                        }}
+                      >
+                        {String(idx + 1).padStart(2, "0")}
+                      </span>
+                    )}
+                    <div className="flex flex-1 min-w-0 flex-col gap-2">
+                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <h3
+                          className="text-[clamp(1.125rem,2.5vw,1.5rem)] font-medium leading-tight sm:text-[1.65rem]"
+                          style={{
+                            fontFamily: "var(--heading-font)",
+                            color: "var(--heading-color)",
+                          }}
+                        >
+                          {o.title}
+                        </h3>
+                        {o.price ? (
+                          <>
+                            <span
+                              aria-hidden
+                              className="hidden flex-1 min-w-[32px] translate-y-[2px] border-b md:inline"
+                              style={{
+                                borderColor:
+                                  "color-mix(in srgb, var(--body-text) 22%, transparent)",
+                                borderBottomStyle: "dotted",
+                              }}
+                            />
+                            <span
+                              className="shrink-0 text-lg font-semibold tabular-nums sm:text-xl"
+                              style={{
+                                color: "var(--accent-color)",
+                                fontFamily: "var(--heading-font)",
+                              }}
+                            >
+                              {o.price}
+                            </span>
+                          </>
+                        ) : null}
+                      </div>
+                      {o.description ? (
+                        <p
+                          className="max-w-xl text-[15px] leading-relaxed opacity-[0.86]"
+                          style={{ color: "var(--body-text)" }}
+                        >
+                          {o.description}
+                        </p>
+                      ) : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
 
-        {menuHref ? (
-          <div className="mt-14 flex justify-center">
-            <a
-              href={menuHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] transition"
-              style={{ color: "var(--accent-color)" }}
-            >
-              <span className="border-b border-current pb-1">
-                {menuPdfLabel ?? "Voir la carte complète"}
-              </span>
-              <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
-            </a>
+            {menuHref ? (
+              <div className="mt-12 flex justify-center lg:justify-start">
+                <a
+                  href={menuHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2 rounded-full border px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.26em] transition hover:bg-[color-mix(in_srgb,var(--accent-color)_06%,transparent)]"
+                  style={{
+                    borderColor: "color-mix(in srgb, var(--accent-color) 45%, transparent)",
+                    color: "var(--accent-color)",
+                  }}
+                >
+                  {menuPdfLabel ?? "Voir la carte complète"}
+                  <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
+                </a>
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        </div>
       </div>
     </section>
   );
@@ -1724,64 +1823,102 @@ export function PremiumReservationSection({
   return (
     <section
       id="reservation"
-      className="scroll-mt-24"
+      className="scroll-mt-24 relative overflow-hidden"
       style={{
         background:
-          "linear-gradient(180deg, color-mix(in srgb, var(--accent-color) 6%, var(--page-bg)) 0%, var(--page-bg) 80%)",
+          "linear-gradient(180deg, color-mix(in srgb, var(--hero-primary) 6%, var(--page-bg)) 0%, color-mix(in srgb, var(--accent-color) 3%, var(--page-bg)) 38%, var(--page-bg) 100%)",
       }}
     >
-      <div className="mx-auto max-w-3xl px-5 py-20 sm:px-8 lg:py-28">
-        <header className="mb-10 text-center">
-          <p
-            className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
-            style={{ color: "var(--heading-color)" }}
-          >
-            {eyebrow}
-          </p>
-          <h2
-            className="mt-3 text-3xl font-medium md:text-4xl lg:text-[2.5rem]"
-            style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
-          >
-            {title}
-          </h2>
-          <div
-            className="mx-auto mt-4 h-px w-16"
-            style={{ backgroundColor: "var(--accent-color)" }}
-            aria-hidden
-          />
-          <p
-            className="mx-auto mt-5 max-w-xl text-base leading-relaxed opacity-90"
-            style={{ color: "var(--body-text)" }}
-          >
-            {intro}
-          </p>
-          {groupMessage?.trim() ? (
-            <p className="mx-auto mt-3 max-w-xl text-sm opacity-70" style={{ color: "var(--body-text)" }}>
-              {groupMessage}
-            </p>
-          ) : null}
-        </header>
-        <div
-          className="relative rounded-[calc(var(--radius)+8px)] border p-6 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.35)] sm:p-10"
-          style={{
-            borderColor: "color-mix(in srgb, var(--body-text) 10%, var(--page-bg))",
-            backgroundColor: "var(--page-bg)",
-          }}
-        >
-          {children}
+      <div
+        className="pointer-events-none absolute -left-[12%] top-[-18%] h-[460px] w-[560px] rounded-full blur-[100px] opacity-[0.14]"
+        style={{
+          background: "radial-gradient(circle at center, color-mix(in srgb, var(--accent-color) 52%, transparent) 0%, transparent 72%)",
+        }}
+        aria-hidden
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--accent-color)_35%,transparent)] to-transparent opacity-70" />
+
+      <div className="relative mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28 lg:px-12 lg:py-32">
+        <div className="flex flex-col gap-14 lg:gap-16 xl:grid xl:grid-cols-12 xl:items-start">
+          <header className="flex flex-col items-center gap-5 text-center xl:sticky xl:top-28 xl:col-span-5 xl:items-start xl:text-left">
+            <div className="flex w-full justify-center xl:justify-start">
+              <div className="flex items-center gap-3">
+                <span
+                  className="hidden h-px w-14 xl:inline-block xl:bg-gradient-to-r xl:from-transparent xl:to-current"
+                  style={{ color: "var(--accent-color)" }}
+                  aria-hidden
+                />
+                <p
+                  className="text-[11px] font-semibold uppercase tracking-[0.32em]"
+                  style={{ color: "var(--accent-color)" }}
+                >
+                  {eyebrow}
+                </p>
+              </div>
+            </div>
+            <div>
+              <h2
+                className="mt-2 text-balance text-[clamp(2rem,4vw,2.75rem)] font-medium leading-[1.05] xl:text-left"
+                style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+              >
+                {title}
+              </h2>
+              <p
+                className="mx-auto mt-6 max-w-md text-[17px] font-light leading-[1.7] opacity-[0.92] xl:mx-0 xl:max-w-lg"
+                style={{ color: "var(--body-text)", fontFamily: "var(--body-font), system-ui, sans-serif" }}
+              >
+                {intro}
+              </p>
+              {groupMessage?.trim() ? (
+                <p
+                  className="mx-auto mt-4 max-w-md text-sm leading-relaxed opacity-75 xl:mx-0"
+                  style={{ color: "var(--body-text)" }}
+                >
+                  {groupMessage}
+                </p>
+              ) : null}
+            </div>
+          </header>
+
+          <div className="xl:col-span-7 xl:justify-self-end xl:w-full xl:max-w-[640px]">
+            <div className="relative rounded-[calc(var(--radius)+14px)] bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-color)_28%,transparent)] via-[color-mix(in_srgb,var(--accent-color)_8%,transparent)] to-transparent p-[1px] shadow-[0_48px_130px_-72px_rgba(0,0,0,0.58)]">
+              <div
+                className="rounded-[calc(var(--radius)+13px)] p-[1px]"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--page-bg) 78%, transparent)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                }}
+              >
+                <div
+                  className="rounded-[calc(var(--radius)+12px)] p-6 sm:p-10"
+                  style={{
+                    backgroundColor:
+                      "color-mix(in srgb, var(--page-bg) 92%, transparent)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                    borderColor: "color-mix(in srgb, var(--body-text) 6%, var(--page-bg))",
+                  }}
+                >
+                  {children}
+                </div>
+              </div>
+            </div>
+
+            {showPhoneAlt && phone ? (
+              <p className="mt-10 text-center text-sm xl:text-left" style={{ color: "var(--body-text)" }}>
+                Vous préférez appeler ?{" "}
+                <a
+                  href={`tel:${phone.replace(/\s/g, "")}`}
+                  className="font-semibold underline-offset-4 hover:underline"
+                  style={{ color: "var(--accent-color)" }}
+                >
+                  {phone}
+                </a>
+              </p>
+            ) : null}
+          </div>
         </div>
-        {showPhoneAlt && phone ? (
-          <p className="mt-8 text-center text-sm" style={{ color: "var(--body-text)" }}>
-            Vous préférez appeler ?{" "}
-            <a
-              href={`tel:${phone.replace(/\s/g, "")}`}
-              className="font-semibold underline-offset-2 hover:underline"
-              style={{ color: "var(--accent-color)" }}
-            >
-              {phone}
-            </a>
-          </p>
-        ) : null}
       </div>
     </section>
   );
@@ -1927,49 +2064,84 @@ export function GiftVouchersSection({
 
   return (
     <>
-      <PublicPageSection surface={surface} id="bons-cadeaux" className="scroll-mt-24">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
-          <div
+      <PublicPageSection surface={surface} id="bons-cadeaux" className="relative scroll-mt-24 overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.09]"
+          aria-hidden
+          style={{
+            backgroundImage:
+              "radial-gradient(ellipse 110% 80% at 8% -10%, color-mix(in srgb, var(--accent-color) 40%, transparent) 0%, transparent 55%), radial-gradient(ellipse 90% 60% at 95% 100%, color-mix(in srgb, var(--accent-color) 32%, transparent) 0%, transparent 50%)",
+          }}
+        />
+        <div className="relative flex flex-col gap-14 lg:grid lg:grid-cols-12 lg:items-center lg:gap-x-14 xl:gap-x-20">
+          <figure
             className={cn(
-              "relative overflow-hidden rounded-2xl lg:rounded-none",
-              img ? "aspect-[4/3] min-h-[200px] lg:aspect-[5/4]" : "flex min-h-[200px] items-center justify-center lg:min-h-[280px]",
+              "relative order-2 w-full lg:order-1 lg:col-span-6",
+              img ? "-mx-4 sm:mx-0" : "",
             )}
           >
-            {img ? (
-              <Image
-                src={img}
-                alt=""
-                fill
-                className="object-cover"
-                sizes="(max-width:1024px) 100vw, 50vw"
-                unoptimized
-              />
-            ) : (
+            <div className="absolute -inset-[1px] rounded-[calc(var(--radius)+10px)] bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] via-transparent to-transparent p-px lg:rounded-[calc(var(--radius)+16px)]" />
+            <div
+              className={cn(
+                "relative mx-auto overflow-hidden shadow-[0_48px_120px_-74px_rgba(0,0,0,0.55)] ring-1 ring-[color-mix(in_srgb,var(--accent-color)_22%,transparent)]",
+                "rounded-[calc(var(--radius)+8px)] lg:rounded-[calc(var(--radius)+14px)] lg:-translate-y-5 lg:[transform-origin:center]",
+              )}
+              style={{ transform: "rotate(-0.2deg)" }}
+            >
               <div
-                className="flex h-full min-h-[280px] items-center justify-center"
+                className={cn(
+                  "relative w-full overflow-hidden",
+                  img ? "aspect-[16/11] min-h-[220px] lg:aspect-[5/6] xl:aspect-[6/7]" : "flex min-h-[260px] items-center justify-center lg:aspect-[6/7]",
+                )}
+              >
+                {img ? (
+                  <>
+                    <Image
+                      src={img}
+                      alt=""
+                      fill
+                      className="object-cover transition duration-[1.4s] hover:scale-[1.03]"
+                      sizes="(max-width:1024px) 100vw, 46vw"
+                      unoptimized
+                    />
+                    <div
+                      className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"
+                      aria-hidden
+                    />
+                  </>
+                ) : (
+                  <div
+                    className="flex h-full min-h-[280px] w-full items-center justify-center"
+                    style={{
+                      background: `linear-gradient(145deg, color-mix(in srgb, var(--accent-color) 18%, var(--page-bg)) 0%, var(--page-bg) 72%)`,
+                    }}
+                    aria-hidden
+                  >
+                    <Gift className="h-[4.25rem] w-[4.25rem] opacity-[0.22]" style={{ color: "var(--accent-color)" }} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </figure>
+
+          <div className="order-1 flex flex-col text-left lg:order-2 lg:col-span-6">
+            <div className="flex items-center gap-3">
+              <span
+                className="h-px w-10 sm:w-12"
                 style={{
-                  backgroundColor: "color-mix(in srgb, var(--accent-color) 12%, var(--page-bg))",
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
                 }}
                 aria-hidden
+              />
+              <p
+                className="text-[10px] font-semibold uppercase tracking-[0.34em]"
+                style={{ color: "var(--accent-color)" }}
               >
-                <Gift className="h-16 w-16 opacity-30" style={{ color: "var(--accent-color)" }} />
-              </div>
-            )}
-            <div
-              className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/25 to-transparent"
-              aria-hidden
-            />
-          </div>
-
-          <div className="text-left">
-            <p
-              className="text-[10px] font-semibold uppercase tracking-[0.32em]"
-              style={{ color: "var(--accent-color)" }}
-            >
-              Boutique
-            </p>
+                Bons cadeaux
+              </p>
+            </div>
             <h2
-              className="mt-4 text-balance text-3xl font-medium leading-[1.08] sm:text-4xl lg:text-[2.75rem]"
+              className="mt-6 text-balance text-[clamp(2rem,4.5vw,3.25rem)] font-medium leading-[1.04]"
               style={{
                 fontFamily: "var(--heading-font), Georgia, serif",
                 color: "var(--heading-color)",
@@ -1979,7 +2151,7 @@ export function GiftVouchersSection({
               {title}
             </h2>
             <p
-              className="mt-6 max-w-xl text-pretty text-base font-light leading-relaxed sm:text-[17px]"
+              className="mt-7 max-w-xl text-pretty text-[17px] font-light leading-[1.75] sm:text-[18px]"
               style={{
                 color: "var(--body-text)",
                 fontFamily: "var(--body-font), system-ui, sans-serif",
@@ -1987,21 +2159,23 @@ export function GiftVouchersSection({
             >
               {body}
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                setErr(null);
-                setOpen(true);
-              }}
-              className="mt-8 inline-flex min-h-[52px] items-center justify-center px-8 text-sm font-semibold uppercase tracking-[0.14em] transition hover:opacity-92"
-              style={{
-                borderRadius: "var(--radius)",
-                backgroundColor: "var(--button-bg)",
-                color: "var(--button-text)",
-              }}
-            >
-              {cta}
-            </button>
+            <div className="mt-10">
+              <button
+                type="button"
+                onClick={() => {
+                  setErr(null);
+                  setOpen(true);
+                }}
+                className="inline-flex min-h-[56px] min-w-[220px] items-center justify-center px-10 text-[12px] font-semibold uppercase tracking-[0.22em] shadow-[0_28px_90px_-48px_rgba(0,0,0,0.55)] transition hover:brightness-[1.05] active:scale-[0.99]"
+                style={{
+                  borderRadius: "calc(var(--radius) + 2px)",
+                  backgroundColor: "var(--button-bg)",
+                  color: "var(--button-text)",
+                }}
+              >
+                {cta}
+              </button>
+            </div>
           </div>
         </div>
       </PublicPageSection>

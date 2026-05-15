@@ -424,6 +424,14 @@ export default function PublicReservationForm({
 
   const pageTheme = useMemo(() => resolvePublicPageTheme(effectiveConfig), [effectiveConfig]);
 
+  const effectiveHeroHeight = useMemo<"compact" | "normal" | "tall">(() => {
+    const preset = effectiveConfig.hero.height;
+    if (preset === "immersive") return "tall";
+    if (preset === "compact") return "compact";
+    if (preset === "normal") return "normal";
+    return heroHeight;
+  }, [effectiveConfig.hero.height, heroHeight]);
+
   /**
    * Source unique de vérité pour les variables visuelles :
    * `effectiveConfig.appearance` est mis à jour en temps réel par le dashboard
@@ -998,6 +1006,7 @@ export default function PublicReservationForm({
       />
 
       <PremiumHero
+        badgeText={effectiveConfig.hero.badgeText?.trim() || heroBadgeText?.trim() || undefined}
         coverImageUrl={coverImageUrl}
         logoUrl={logoUrl}
         headline={headlineText}
@@ -1014,7 +1023,7 @@ export default function PublicReservationForm({
         overlayOpacity={heroOverlayEnabled ? overlayOpacity : 0}
         heroAlign={heroLayout === "left" ? "left" : heroAlign}
         heroLayout={heroLayout}
-        heroHeight={heroHeight}
+        heroHeight={effectiveHeroHeight}
         previewMode={previewMode}
       />
 
@@ -1075,39 +1084,70 @@ export default function PublicReservationForm({
 
         {blockEnabled("menu") && sortedDocuments.length > 0 && !menuHref ? (
           <section
-            className={cn(
-              "rounded-[var(--radius)] border px-5 py-6 md:px-8",
-              effCardStyle === "elevated" && "shadow-md",
-            )}
+            className="relative scroll-mt-24 overflow-hidden"
             style={{
-              backgroundColor: "color-mix(in srgb, var(--body-text) 6%, var(--page-bg))",
-              borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))",
               order: sectionOrderIndex("menu"),
+              background:
+                "linear-gradient(180deg, var(--page-bg) 0%, color-mix(in srgb, var(--body-text) 3.5%, var(--page-bg)) 100%)",
             }}
           >
-            <h2
-              className="text-center text-lg font-semibold md:text-left"
-              style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
-            >
-              Cartes & menus
-            </h2>
-            <div className="mt-4 flex flex-wrap justify-center gap-3 md:justify-start">
-              {sortedDocuments.map((doc) => (
-                <a
-                  key={doc.id}
-                  href={doc.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] items-center justify-center rounded-[var(--radius)] border-2 px-5 py-2 text-sm font-semibold transition hover:opacity-90"
-                  style={{
-                    borderColor: "var(--accent-color)",
-                    color: "var(--accent-color)",
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  {doc.label}
-                </a>
-              ))}
+            <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-[4.5rem] lg:px-12">
+              <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+                <div className="max-w-xl text-center lg:text-left">
+                  <div className="flex items-center justify-center gap-3 lg:justify-start">
+                    <span
+                      className="h-px w-10"
+                      style={{
+                        backgroundColor: "color-mix(in srgb, var(--accent-color) 55%, transparent)",
+                      }}
+                      aria-hidden
+                    />
+                    <p
+                      className="text-[10px] font-semibold uppercase tracking-[0.34em]"
+                      style={{ color: "var(--accent-color)" }}
+                    >
+                      Documents
+                    </p>
+                  </div>
+                  <h2
+                    className="mt-5 text-[clamp(1.75rem,3.5vw,2.75rem)] font-medium leading-[1.05]"
+                    style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)", letterSpacing: "-0.018em" }}
+                  >
+                    Cartes & menus
+                  </h2>
+                </div>
+              </div>
+              <ul className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
+                {sortedDocuments.map((doc) => (
+                  <li key={doc.id} className="min-w-0 flex-1 sm:flex-none">
+                    <a
+                      href={doc.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex min-h-[56px] flex-col justify-center rounded-[calc(var(--radius)+4px)] border border-[color-mix(in_srgb,var(--body-text)_09%,transparent)] bg-[color-mix(in_srgb,var(--page-bg)_55%,transparent)] px-6 py-4 text-left shadow-[0_34px_110px_-74px_rgba(0,0,0,0.45)] backdrop-blur-[2px] transition hover:border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] sm:min-h-0 sm:inline-flex sm:flex-row sm:items-center sm:gap-3 sm:py-3.5"
+                    >
+                      <span
+                        className="text-[11px] font-semibold uppercase tracking-[0.26em] opacity-60"
+                        style={{ color: "var(--accent-color)" }}
+                      >
+                        Voir
+                      </span>
+                      <span
+                        className="mt-1 text-base font-medium leading-snug sm:mt-0 sm:text-[1.05rem]"
+                        style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+                      >
+                        {doc.label}
+                      </span>
+                      <span
+                        className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-0 transition group-hover:opacity-100 sm:ml-auto sm:mt-0 sm:pl-4"
+                        style={{ color: "var(--accent-color)" }}
+                      >
+                        Ouvrir →
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
           </section>
         ) : null}
