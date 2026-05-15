@@ -605,6 +605,7 @@ export default function SettingsForm({
       return;
     }
 
+    setMessage("Modifications enregistrées.");
     setSaveButtonSuccess(true);
     window.setTimeout(() => setSaveButtonSuccess(false), 2000);
     setIsSaving(false);

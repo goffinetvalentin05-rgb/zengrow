@@ -124,7 +124,6 @@ function normalizeEditorial(raw: unknown): EditorialSectionContent[] {
         layout,
       } satisfies EditorialSectionContent;
     })
-    .filter((s) => s.title.trim() || s.text.trim() || s.imageUrl.trim())
     .slice(0, 4);
 }
 
@@ -142,8 +141,24 @@ function normalizeOffers(raw: unknown): MenuOfferItem[] {
         imageUrl: typeof o.imageUrl === "string" ? o.imageUrl : "",
       };
     })
-    .filter((o) => o.title.trim())
     .slice(0, 6);
+}
+
+export function isEditorialSectionVisible(section: EditorialSectionContent): boolean {
+  if (!section.enabled) return false;
+  return Boolean(section.title.trim() || section.text.trim() || section.imageUrl.trim());
+}
+
+export function visibleEditorialSections(sections: EditorialSectionContent[]): EditorialSectionContent[] {
+  return sections.filter(isEditorialSectionVisible);
+}
+
+export function isMenuOfferVisible(offer: MenuOfferItem): boolean {
+  return Boolean(offer.title.trim());
+}
+
+export function visibleMenuOffers(offers: MenuOfferItem[]): MenuOfferItem[] {
+  return offers.filter(isMenuOfferVisible);
 }
 
 function normalizeCredibility(raw: unknown, fallback: CredibilityContent): CredibilityContent {

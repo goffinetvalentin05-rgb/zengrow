@@ -32,7 +32,11 @@ import {
   resolveEffectiveSectionOrder,
 } from "@/src/lib/public-page/conversion";
 import { openStatusLabel } from "@/src/lib/public-page/opening-status";
-import { hasCredibilityContent } from "@/src/lib/public-page/premium-content";
+import {
+  hasCredibilityContent,
+  visibleEditorialSections,
+  visibleMenuOffers,
+} from "@/src/lib/public-page/premium-content";
 import {
   ConceptSection,
   CredibilitySection,
@@ -942,7 +946,7 @@ export default function PublicReservationForm({
 
   const secondaryLabel =
     secondaryCtaLabel?.trim() || effectiveConfig.hero.secondaryCta || "Voir le menu";
-  const menuOffers = premium.menuOffers.filter((o) => o.title.trim());
+  const menuOffers = visibleMenuOffers(premium.menuOffers);
 
   const heroContentClass = cn(
     "relative z-[1] flex flex-1 flex-col px-5 pt-14 pb-14 sm:px-8 sm:pb-20 md:pt-20 md:pb-24",
@@ -1002,7 +1006,7 @@ export default function PublicReservationForm({
         />
       ) : null}
 
-      {premium.editorialSections.map((section) => (
+      {visibleEditorialSections(premium.editorialSections).map((section) => (
         <EditorialBlock key={section.id} section={section} />
       ))}
 

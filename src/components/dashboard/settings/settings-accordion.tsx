@@ -7,14 +7,24 @@ import { cn } from "@/src/lib/utils";
 
 type SettingsAccordionProps = {
   title: string;
+  /** Courte phrase d’aide sous le titre. */
+  description?: string;
   children: React.ReactNode;
   /** Bordure rouge subtile (zone sensible). */
   danger?: boolean;
   className?: string;
+  defaultOpen?: boolean;
 };
 
-export function SettingsAccordion({ title, children, danger, className }: SettingsAccordionProps) {
-  const [open, setOpen] = useState(false);
+export function SettingsAccordion({
+  title,
+  description,
+  children,
+  danger,
+  className,
+  defaultOpen = false,
+}: SettingsAccordionProps) {
+  const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
 
   return (
@@ -35,7 +45,12 @@ export function SettingsAccordion({ title, children, danger, className }: Settin
           "hover:bg-[#1F1A15]",
         )}
       >
-        <span className="text-base font-medium text-zg-fg">{title}</span>
+        <span className="min-w-0">
+          <span className="block text-base font-medium text-zg-fg">{title}</span>
+          {description ? (
+            <span className="mt-0.5 block text-xs font-normal leading-relaxed text-zg-text-muted">{description}</span>
+          ) : null}
+        </span>
         <ChevronDown
           className={cn("h-5 w-5 shrink-0 text-zg-text-muted transition-transform duration-200 ease-out", open && "rotate-180")}
           aria-hidden

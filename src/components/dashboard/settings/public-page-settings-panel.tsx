@@ -11,7 +11,6 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Check,
   Copy,
   ExternalLink,
   ImageIcon,
@@ -32,7 +31,6 @@ import {
   editorConfigToPreviewDraft,
   applyConversionTemplate,
   type EditorContext,
-  PAGE_BLOCK_IDS,
   legacyHeroHeight,
 } from "@/src/lib/public-page/editor-config";
 import { cn, formatOpeningHoursLines, type OpeningHours } from "@/src/lib/utils";
@@ -55,38 +53,46 @@ import {
   CTA_PLACEMENT_OPTIONS,
   PAGE_GOAL_OPTIONS,
   PERSUASION_OPTIONS,
-  RECOMMENDED_BLOCKS,
-  SECTION_DISABLE_WARNINGS,
   STRUCTURE_TEMPLATES,
 } from "@/src/lib/public-page/conversion";
 import { newEditorialSection, newMenuOffer } from "@/src/lib/public-page/premium-content";
 import type { EditorialLayout } from "@/src/lib/public-page/premium-content";
 import {
-  HIGHLIGHT_SUGGESTIONS,
   MAX_DESCRIPTION_CHARS,
   MAX_GALLERY_PHOTOS,
   MAX_HIGHLIGHTS,
   PUBLIC_AMBIANCE_OPTIONS,
   PUBLIC_STYLE_PRESETS,
-  SECTION_VARIANT_OPTIONS,
   type PublicAmbiance,
   type PublicStylePreset,
 } from "@/src/lib/public-page/constants";
-import type { PageBlockId, SectionVariant } from "@/src/lib/public-page/editor-config";
+import type { PageBlockId } from "@/src/lib/public-page/editor-config";
 
-const BLOCK_LABELS: Record<string, string> = {
+const BLOCK_LABELS: Record<PageBlockId, string> = {
   trust: "Confiance (points forts)",
   reservation: "Réservation",
   gallery: "Galerie photos",
-  about: "À propos",
+  about: "Concept / à propos",
   highlights: "Points forts",
   menu: "Menu",
   hours: "Horaires",
-  reviews: "Avis / note",
-  location: "Localisation",
+  reviews: "Avis & crédibilité",
+  location: "Infos pratiques (pied de page)",
   social: "Réseaux sociaux",
   final_cta: "CTA final",
 };
+
+/** Blocs dont le toggle a un effet réel sur /r/[slug]. */
+const PUBLIC_PAGE_BLOCK_TOGGLES: PageBlockId[] = [
+  "about",
+  "reservation",
+  "gallery",
+  "menu",
+  "reviews",
+  "location",
+  "social",
+  "final_cta",
+];
 
 export type PublicPageSettingsInitial = {
   restaurantId: string;
@@ -771,15 +777,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const statusTone =
       pageStatus === "published" && !hasUnpublishedChanges ? ("success" as const) : ("sand" as const);
 
-    function toggleHighlight(item: string) {
-      markDirty();
-      setHighlights((prev) => {
-        if (prev.includes(item)) return prev.filter((h) => h !== item);
-        if (prev.length >= MAX_HIGHLIGHTS) return prev;
-        return [...prev, item];
-      });
-    }
-
     const editor = (
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -798,23 +795,20 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               />
             </div>
             {conversionRecs.length > 0 ? (
-              <ul className="mt-3 max-w-2xl space-y-1.5 text-sm text-zg-muted">
-                {conversionRecs.map((r) => (
-                  <li key={r.id} className={r.priority === "high" ? "text-zg-fg" : undefined}>
-                    → {r.message}
-                  </li>
-                ))}
-              </ul>
+              <p className="mt-2 max-w-2xl text-sm text-zg-muted">
+                Prochaine étape : {conversionRecs.find((r) => r.priority === "high")?.message ?? conversionRecs[0]?.message}
+              </p>
             ) : null}
           </div>
         </div>
 
         <div className="space-y-3">
-        <SettingsAccordion title="Conversion & structure">
+        <SettingsAccordion
+          title="Conversion & structure"
+          description="Modèle de page, objectif et sections visibles sur votre page publique."
+          defaultOpen
+        >
           <div className="space-y-5">
-            <FieldHint>
-              Choisissez un modèle orienté réservations, puis ajustez l&apos;ordre des sections.
-            </FieldHint>
             <div className="grid gap-3 sm:grid-cols-2">
               {STRUCTURE_TEMPLATES.map((t) => (
                 <button
@@ -924,10 +918,38 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               }}
               label="Bouton sticky mobile « Réserver »"
             />
+            <div className="space-y-3 border-t border-zg-border/60 pt-4">
+              <label className="dashboard-field-label">Sections affichées</label>
+              <FieldHint>Désactivez une section pour la masquer sur la page et dans l&apos;aperçu.</FieldHint>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {PUBLIC_PAGE_BLOCK_TOGGLES.map((id) => (
+                  <Toggle
+                    key={id}
+                    checked={editorConfig.blocks[id]?.enabled !== false}
+                    onChange={(v) => {
+                      setEditorConfig((c) =>
+                        parseEditorConfig({
+                          ...c,
+                          blocks: {
+                            ...c.blocks,
+                            [id]: { ...c.blocks[id], enabled: v },
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                    label={BLOCK_LABELS[id]}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="Concept & expérience">
+        <SettingsAccordion
+          title="Concept & expérience"
+          description="Votre histoire, vos piliers et le style de la galerie."
+        >
           <div className="space-y-5">
             <FieldHint>Racontez votre concept comme sur un vrai site restaurant — pas des badges génériques.</FieldHint>
             <Toggle
@@ -953,6 +975,30 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                   markDirty();
                 }}
               />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Présentation courte</label>
+              <Textarea
+                className="mt-2 min-h-28"
+                maxLength={MAX_DESCRIPTION_CHARS}
+                value={shortDescription}
+                onChange={(e) => {
+                  setShortDescription(e.target.value);
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: {
+                        ...c.premium,
+                        concept: { ...c.premium.concept, body: e.target.value },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+              <p className="mt-1 text-xs text-zg-text-muted">
+                {shortDescription.length}/{MAX_DESCRIPTION_CHARS}
+              </p>
             </div>
             <div>
               <label className="dashboard-field-label">Image concept (URL)</label>
@@ -1034,11 +1080,11 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="Sections éditoriales">
+        <SettingsAccordion
+          title="Sections personnalisées"
+          description="Jusqu'à 4 blocs image + texte pour raconter votre histoire."
+        >
           <div className="space-y-4">
-            <FieldHint>
-              Racontez votre histoire en 1 à 4 blocs image + texte (comme un vrai site restaurant).
-            </FieldHint>
             {editorConfig.premium.editorialSections.map((section, idx) => (
               <div key={section.id} className="space-y-3 rounded-xl border border-zg-border p-4">
                 <div className="flex items-center justify-between gap-2">
@@ -1156,29 +1202,35 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                 </Button>
               </div>
             ))}
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={editorConfig.premium.editorialSections.length >= 4}
-              onClick={() => {
-                setEditorConfig((c) =>
-                  parseEditorConfig({
-                    ...c,
-                    premium: {
-                      ...c.premium,
-                      editorialSections: [...c.premium.editorialSections, newEditorialSection()],
-                    },
-                  }),
-                );
-                markDirty();
-              }}
-            >
-              Ajouter une section éditoriale
-            </Button>
+            {editorConfig.premium.editorialSections.length >= 4 ? (
+              <p className="text-sm text-zg-muted">Vous pouvez ajouter jusqu&apos;à 4 sections éditoriales.</p>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: {
+                        ...c.premium,
+                        editorialSections: [...c.premium.editorialSections, newEditorialSection()],
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+              >
+                Ajouter une section éditoriale
+              </Button>
+            )}
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="Crédibilité (avis & presse)">
+        <SettingsAccordion
+          title="Crédibilité (avis & presse)"
+          description="Uniquement des informations réelles — aucune note inventée."
+        >
           <div className="space-y-4">
             <FieldHint>N&apos;affichez une note que si elle est réelle. Sinon, laissez vide — pas de fausses étoiles.</FieldHint>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -1270,6 +1322,25 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               />
             </div>
             <div>
+              <label className="dashboard-field-label">Auteur de la citation (optionnel)</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.premium.credibility.quoteAuthor}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: {
+                        ...c.premium,
+                        credibility: { ...c.premium.credibility, quoteAuthor: e.target.value },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+            </div>
+            <div>
               <label className="dashboard-field-label">Citation client (optionnel)</label>
               <Textarea
                 className="mt-2 min-h-20"
@@ -1306,49 +1377,14 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                 placeholder="Le Temps, Michelin Guide…"
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="dashboard-field-label">Parking</label>
-                <Input
-                  className="mt-2"
-                  value={editorConfig.premium.practical.parking}
-                  onChange={(e) => {
-                    setEditorConfig((c) =>
-                      parseEditorConfig({
-                        ...c,
-                        premium: { ...c.premium, practical: { ...c.premium.practical, parking: e.target.value } },
-                      }),
-                    );
-                    markDirty();
-                  }}
-                />
-              </div>
-              <div>
-                <label className="dashboard-field-label">Accessibilité</label>
-                <Input
-                  className="mt-2"
-                  value={editorConfig.premium.practical.accessibility}
-                  onChange={(e) => {
-                    setEditorConfig((c) =>
-                      parseEditorConfig({
-                        ...c,
-                        premium: {
-                          ...c.premium,
-                          practical: { ...c.premium.practical, accessibility: e.target.value },
-                        },
-                      }),
-                    );
-                    markDirty();
-                  }}
-                />
-              </div>
-            </div>
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="Offres & formules">
+        <SettingsAccordion
+          title="Menu & offres"
+          description="Formules et plats mis en avant avant la réservation (2 à 6)."
+        >
           <div className="space-y-4">
-            <FieldHint>Ajoutez 2 à 6 offres (menu du jour, formule, plat signature…) pour donner envie avant de réserver.</FieldHint>
             {editorConfig.premium.menuOffers.map((offer, idx) => (
               <div key={offer.id} className="rounded-xl border border-zg-border p-4 space-y-2">
                 <Input
@@ -1393,28 +1429,93 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                     }}
                   />
                 </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full sm:w-auto"
+                  onClick={() => {
+                    const menuOffers = editorConfig.premium.menuOffers.filter((_, i) => i !== idx);
+                    setEditorConfig((c) =>
+                      parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }),
+                    );
+                    markDirty();
+                  }}
+                >
+                  Supprimer cette offre
+                </Button>
               </div>
             ))}
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={editorConfig.premium.menuOffers.length >= 6}
-              onClick={() => {
-                setEditorConfig((c) =>
-                  parseEditorConfig({
-                    ...c,
-                    premium: { ...c.premium, menuOffers: [...c.premium.menuOffers, newMenuOffer()] },
-                  }),
-                );
-                markDirty();
-              }}
-            >
-              Ajouter une offre
-            </Button>
+            {editorConfig.premium.menuOffers.length >= 6 ? (
+              <p className="text-sm text-zg-muted">Vous pouvez ajouter jusqu&apos;à 6 offres.</p>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: { ...c.premium, menuOffers: [...c.premium.menuOffers, newMenuOffer()] },
+                    }),
+                  );
+                  markDirty();
+                }}
+              >
+                Ajouter une offre
+              </Button>
+            )}
+            <div className="space-y-3 border-t border-zg-border/60 pt-4">
+              <label className="dashboard-field-label">Lien menu (PDF ou URL)</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={cn(
+                    "rounded-xl border px-3 py-2 text-sm font-medium",
+                    menuMode === "url" ? "border-zg-accent bg-zg-accent-soft-bg" : "border-zg-border",
+                  )}
+                  onClick={() => { setMenuMode("url"); markDirty(); }}
+                >
+                  Lien externe
+                </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "rounded-xl border px-3 py-2 text-sm font-medium",
+                    menuMode === "pdf" ? "border-zg-accent bg-zg-accent-soft-bg" : "border-zg-border",
+                  )}
+                  onClick={() => { setMenuMode("pdf"); markDirty(); }}
+                >
+                  PDF (documents)
+                </button>
+              </div>
+              {menuMode === "url" ? (
+                <Input
+                  className="mt-2"
+                  value={menuUrl}
+                  onChange={(e) => { setMenuUrl(e.target.value); markDirty(); }}
+                  placeholder="https://…"
+                />
+              ) : (
+                <p className="mt-2 text-sm text-zg-muted">
+                  Les PDF déjà ajoutés à votre restaurant s&apos;affichent automatiquement sur la page.
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="dashboard-field-label">Message spécial (optionnel)</label>
+              <Input
+                value={specialMessage}
+                onChange={(e) => { setSpecialMessage(e.target.value); markDirty(); }}
+                placeholder="Terrasse ouverte en été…"
+              />
+            </div>
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="Identité & contact">
+        <SettingsAccordion
+          title="Infos pratiques"
+          description="Coordonnées affichées en bas de page et détails d'accès."
+        >
           <div className="grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
               <label className="dashboard-field-label">Nom du restaurant</label>
@@ -1464,15 +1565,81 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               <label className="dashboard-field-label">TikTok (optionnel)</label>
               <Input value={tiktokUrl} onChange={(e) => { setTiktokUrl(e.target.value); markDirty(); }} />
             </div>
+            <div>
+              <label className="dashboard-field-label">Parking</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.premium.practical.parking}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: { ...c.premium, practical: { ...c.premium.practical, parking: e.target.value } },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Accessibilité</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.premium.practical.accessibility}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: {
+                        ...c.premium,
+                        practical: { ...c.premium.practical, accessibility: e.target.value },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+            </div>
+            <div className="md:col-span-2 rounded-xl border border-zg-border/70 bg-zg-surface/60 p-4">
+              <p className="text-sm font-semibold text-zg-fg">Horaires affichés</p>
+              <ul className="mt-2 space-y-1 text-sm text-zg-muted">
+                {formatOpeningHoursLines(initial.openingHours).map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+              <Link href="/dashboard/settings?section=availability" className="mt-3 inline-block text-sm font-semibold text-zg-accent hover:underline">
+                Modifier les horaires →
+              </Link>
+            </div>
           </div>
         </SettingsAccordion>
 
-        
-        <SettingsAccordion title="Hero & accroche">
+        <SettingsAccordion
+          title="Hero & accroche"
+          description="Titre, visuel principal et premier bouton de réservation."
+        >
           <div className="space-y-5">
             <div>
+              <label className="dashboard-field-label">Titre principal</label>
+              <Input
+                className="mt-2"
+                value={heroTitle}
+                onChange={(e) => { setHeroTitle(e.target.value); markDirty(); }}
+                placeholder={defaultHeroTitle(displayName)}
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Sous-titre</label>
+              <Input
+                className="mt-2"
+                value={heroSubtitle}
+                onChange={(e) => { setHeroSubtitle(e.target.value); markDirty(); }}
+                placeholder={defaultHeroSubtitle(cuisineType, city, ambiance)}
+              />
+            </div>
+            <div>
               <label className="dashboard-field-label">Badge (au-dessus du titre)</label>
-              <FieldHint>Ex. « Cuisine maison », « Réservation instantanée » — rassure en 1 seconde.</FieldHint>
+              <FieldHint>Ex. « Cuisine maison », « Réservation instantanée ».</FieldHint>
               <Input
                 className="mt-2"
                 value={editorConfig.hero.badgeText}
@@ -1498,7 +1665,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                   <option value="center">Centré</option>
                   <option value="left">Aligné à gauche</option>
                   <option value="overlay">Overlay bas</option>
-                  <option value="split">Hero + réservation visible</option>
                 </select>
               </div>
               <div>
@@ -1561,7 +1727,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="Apparence">
+        <SettingsAccordion title="Apparence" description="Couleurs, polices et style visuel de la page.">
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
@@ -1742,7 +1908,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="Photos">
+        <SettingsAccordion title="Photos" description="Logo, image hero et galerie (jusqu'à 6 photos).">
           <div className="space-y-6">
             <div>
               <label className="dashboard-field-label">Logo</label>
@@ -1826,201 +1992,17 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             </div>
           </div>
         </SettingsAccordion>
-
-        
-        <SettingsAccordion title="Sections & blocs">
-          <div className="space-y-4">
-            <FieldHint>Activez les blocs visibles sur votre page publique.</FieldHint>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {PAGE_BLOCK_IDS.map((id) => (
-                <div key={id} className="space-y-1">
-                  <Toggle
-                    checked={editorConfig.blocks[id]?.enabled !== false}
-                    onChange={(v) => {
-                      setEditorConfig((c) =>
-                        parseEditorConfig({
-                          ...c,
-                          blocks: {
-                            ...c.blocks,
-                            [id]: { ...c.blocks[id], enabled: v },
-                          },
-                        }),
-                      );
-                      markDirty();
-                    }}
-                    label={BLOCK_LABELS[id] ?? id}
-                  />
-                  {!editorConfig.blocks[id]?.enabled &&
-                  RECOMMENDED_BLOCKS.includes(id) &&
-                  SECTION_DISABLE_WARNINGS[id] ? (
-                    <p className="text-xs text-amber-700/90">{SECTION_DISABLE_WARNINGS[id]}</p>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-            <div className="space-y-3 border-t border-zg-border/60 pt-4">
-              <FieldHint>Personnalisez le rendu de chaque section (fond, largeur).</FieldHint>
-              {PAGE_BLOCK_IDS.map((id) => (
-                <div key={`${id}-style`} className="grid gap-2 sm:grid-cols-[1fr_140px] sm:items-center">
-                  <span className="text-sm text-zg-fg">{BLOCK_LABELS[id] ?? id}</span>
-                  <select
-                    className="h-10 rounded-xl border border-zg-border bg-zg-surface px-2 text-sm"
-                    value={editorConfig.blocks[id]?.variant ?? "inherit"}
-                    onChange={(e) => {
-                      const variant = e.target.value as SectionVariant;
-                      setEditorConfig((c) =>
-                        parseEditorConfig({
-                          ...c,
-                          blocks: {
-                            ...c.blocks,
-                            [id]: { ...c.blocks[id], variant },
-                          },
-                        }),
-                      );
-                      markDirty();
-                    }}
-                  >
-                    {SECTION_VARIANT_OPTIONS.map((o) => (
-                      <option key={o.id} value={o.id}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-          </div>
-        </SettingsAccordion>
-
-        <SettingsAccordion title="Contenu">
-          <div className="space-y-5">
-            <div>
-              <label className="dashboard-field-label">Titre principal</label>
-              <FieldHint>
-                Gardez votre titre court et direct. Ex. : « {defaultHeroTitle(displayName)} »
-              </FieldHint>
-              <Input
-                className="mt-2"
-                value={heroTitle}
-                onChange={(e) => { setHeroTitle(e.target.value); markDirty(); }}
-                placeholder={defaultHeroTitle(displayName)}
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Sous-titre court</label>
-              <Input
-                className="mt-2"
-                value={heroSubtitle}
-                onChange={(e) => { setHeroSubtitle(e.target.value); markDirty(); }}
-                placeholder={defaultHeroSubtitle(cuisineType, city, ambiance)}
-              />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Présentation courte</label>
-              <FieldHint>Gardez ce texte court : l'objectif est de donner envie de réserver.</FieldHint>
-              <Textarea
-                className="mt-2 min-h-28"
-                maxLength={MAX_DESCRIPTION_CHARS}
-                value={shortDescription}
-                onChange={(e) => { setShortDescription(e.target.value); markDirty(); }}
-              />
-              <p className="mt-1 text-xs text-zg-text-muted">
-                {shortDescription.length}/{MAX_DESCRIPTION_CHARS}
-              </p>
-            </div>
-            <div>
-              <label className="dashboard-field-label">Points forts (max. {MAX_HIGHLIGHTS})</label>
-              <FieldHint>Les points forts rassurent les visiteurs avant de réserver.</FieldHint>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {HIGHLIGHT_SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => toggleHighlight(s)}
-                    className={cn(
-                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                      highlights.includes(s)
-                        ? "border-zg-accent bg-zg-accent-soft-bg text-zg-accent"
-                        : "border-zg-border text-zg-muted hover:border-zg-border-hover",
-                    )}
-                  >
-                    {highlights.includes(s) ? <Check className="mr-1 inline h-3 w-3" /> : null}
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="dashboard-field-label">Menu</label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className={cn(
-                    "rounded-xl border px-3 py-2 text-sm font-medium",
-                    menuMode === "url" ? "border-zg-accent bg-zg-accent-soft-bg" : "border-zg-border",
-                  )}
-                  onClick={() => { setMenuMode("url"); markDirty(); }}
-                >
-                  Lien externe
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "rounded-xl border px-3 py-2 text-sm font-medium",
-                    menuMode === "pdf" ? "border-zg-accent bg-zg-accent-soft-bg" : "border-zg-border",
-                  )}
-                  onClick={() => { setMenuMode("pdf"); markDirty(); }}
-                >
-                  PDF (documents)
-                </button>
-              </div>
-              {menuMode === "url" ? (
-                <Input
-                  className="mt-2"
-                  value={menuUrl}
-                  onChange={(e) => { setMenuUrl(e.target.value); markDirty(); }}
-                  placeholder="https://…"
-                />
-              ) : (
-                <p className="mt-2 text-sm text-zg-muted">
-                  Ajoutez vos PDF dans les documents du restaurant (section existante). Ils s&apos;affichent sur la page publique.
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="dashboard-field-label">Message spécial (optionnel)</label>
-              <Input
-                value={specialMessage}
-                onChange={(e) => { setSpecialMessage(e.target.value); markDirty(); }}
-                placeholder="Terrasse ouverte en été…"
-              />
-            </div>
-            <div className="rounded-xl border border-zg-border/70 bg-zg-surface/60 p-4">
-              <p className="text-sm font-semibold text-zg-fg">Horaires affichés</p>
-              <ul className="mt-2 space-y-1 text-sm text-zg-muted">
-                {formatOpeningHoursLines(initial.openingHours).map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-              <Link href="/dashboard/settings?section=availability" className="mt-3 inline-block text-sm font-semibold text-zg-accent hover:underline">
-                Modifier les horaires →
-              </Link>
-            </div>
-          </div>
-        </SettingsAccordion>
-
-        <SettingsAccordion title="Réservation">
+        <SettingsAccordion
+          title="Réservation"
+          description="Formulaire en ligne, messages et options d'affichage."
+        >
           <div className="space-y-5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-medium text-zg-fg">Bouton de réservation</p>
-                <FieldHint>Votre bouton de réservation doit rester clair et visible.</FieldHint>
+                <p className="text-sm font-medium text-zg-fg">Réservation en ligne</p>
+                <FieldHint>Le libellé du bouton se règle dans « Hero & accroche ».</FieldHint>
               </div>
               <Toggle checked={reservationEnabled} onChange={(v) => { setReservationEnabled(v); markDirty(); }} />
-            </div>
-            <div>
-              <label className="dashboard-field-label">Texte du bouton principal</label>
-              <Input value={ctaLabel} onChange={(e) => { setCtaLabel(e.target.value); markDirty(); }} placeholder="Réserver une table" />
             </div>
             <div>
               <label className="dashboard-field-label">Message au-dessus du formulaire</label>
@@ -2083,7 +2065,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="SEO & lien public">
+        <SettingsAccordion title="SEO & publication" description="URL publique, référencement et mise en ligne.">
           <div className="space-y-5">
             <div>
               <label className="dashboard-field-label">URL publique (slug)</label>
@@ -2144,7 +2126,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="Publication">
+        <SettingsAccordion title="Publication" description="Checklist, mise en ligne et lien public actif.">
           <div className="space-y-6">
             <div className="rounded-2xl border border-zg-border bg-zg-surface p-5">
               <p className="text-sm font-semibold text-zg-fg">Checklist avant publication</p>
