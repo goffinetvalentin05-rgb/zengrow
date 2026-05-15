@@ -3,8 +3,16 @@ import { DEFAULT_PRIMARY, DEFAULT_SECONDARY, normalizeHexColor } from "@/src/lib
 import { applyStylePresetPalette } from "@/src/lib/public-page/preset-palettes";
 import type { PublicPagePreviewDraft } from "@/src/components/dashboard/public-page-live-preview";
 import type { OpeningHours } from "@/src/lib/utils";
+import {
+  applyStructureTemplate,
+  defaultConversionSettings,
+  normalizeConversionSettings,
+  type ConversionSettings,
+} from "@/src/lib/public-page/conversion";
 
-export const EDITOR_CONFIG_VERSION = 3;
+export const EDITOR_CONFIG_VERSION = 4;
+
+export type { ConversionSettings };
 
 export const PAGE_BLOCK_IDS = [
   "trust",
@@ -103,6 +111,7 @@ export type PublicPageEditorConfig = {
     minLeadMinutes: number;
     position: "default" | "after_hero" | "prominent";
   };
+  conversion: ConversionSettings;
 };
 
 export const DEFAULT_SECTION_ORDER: PageBlockId[] = [
@@ -134,7 +143,7 @@ export function defaultEditorConfig(): PublicPageEditorConfig {
       layout: "center",
       height: "normal",
       align: "center",
-      badgeText: "Réservation en ligne",
+      badgeText: "Réservation en ligne instantanée",
       title: "",
       subtitle: "",
       primaryCta: "Réserver une table",
@@ -185,8 +194,9 @@ export function defaultEditorConfig(): PublicPageEditorConfig {
       showHoursBeforeForm: true,
       noSlotsMessage: "Aucun créneau disponible pour cette date. Essayez un autre jour.",
       minLeadMinutes: 0,
-      position: "default",
+      position: "prominent",
     },
+    conversion: defaultConversionSettings(),
   };
 }
 
@@ -256,8 +266,14 @@ export function parseEditorConfig(raw: unknown): PublicPageEditorConfig {
   if (!raw || typeof raw !== "object") return base;
   const o = raw as Record<string, unknown>;
   const version = o.version as number | undefined;
-  const patch =
-    version === 2 ? upgradeFromV2(o) : version === EDITOR_CONFIG_VERSION ? (o as Partial<PublicPageEditorConfig>) : upgradeFromV2(o);
+  let patch: Partial<PublicPageEditorConfig>;
+  if (version === EDITOR_CONFIG_VERSION) {
+    patch = o as Partial<PublicPageEditorConfig>;
+  } else if (version === 3) {
+    patch = { ...(o as Partial<PublicPageEditorConfig>), conversion: normalizeConversionSettings(o.conversion) };
+  } else {
+    patch = upgradeFromV2(o);
+  }
   return mergeEditorConfig(base, patch);
 }
 
@@ -295,7 +311,19 @@ function mergeEditorConfig(base: PublicPageEditorConfig, patch: Partial<PublicPa
     },
     sectionOrder: order.length > 0 ? order : base.sectionOrder,
     reservation: { ...base.reservation, ...patch.reservation },
+    conversion: normalizeConversionSettings(patch.conversion ?? base.conversion),
   };
+}
+
+export function applyConversionTemplate(
+  config: PublicPageEditorConfig,
+  template: ConversionSettings["structureTemplate"],
+): PublicPageEditorConfig {
+  return parseEditorConfig({
+    ...config,
+    conversion: { ...config.conversion, structureTemplate: template },
+    sectionOrder: applyStructureTemplate(template),
+  });
 }
 
 export function borderRadiusToLegacy(p: BorderRadiusPreset): "sharp" | "rounded" | "pill" {

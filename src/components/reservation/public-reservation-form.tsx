@@ -26,6 +26,20 @@ import {
 } from "@/src/lib/public-page/editor-config";
 import { resolvePublicPageTheme } from "@/src/lib/public-page/theme";
 import { PublicPageSection } from "@/src/components/reservation/public-page-section";
+import {
+  ctaFlags,
+  experienceSectionTitle,
+  reservationSectionTitle,
+  resolveEffectiveSectionOrder,
+} from "@/src/lib/public-page/conversion";
+import {
+  ConversionMiddleCta,
+  HeroQuickFacts,
+  MenuActionSection,
+  openStatusLabel,
+  SocialProofSection,
+  StickyReserveBar,
+} from "@/src/components/reservation/public-page-conversion-blocks";
 
 export type PublicReservationFormProps = {
   previewMode?: boolean;
@@ -853,7 +867,7 @@ export default function PublicReservationForm({
   const menuHref =
     menuUrl?.trim() ||
     (sortedDocuments[0]?.fileUrl ?? null);
-  const activeHighlights = highlights.filter(Boolean).slice(0, 3);
+  const activeHighlights = highlights.filter(Boolean).slice(0, 6);
 
   const openingHoursLines = formatOpeningHoursLines(openingHours);
 
@@ -887,6 +901,41 @@ export default function PublicReservationForm({
   const blockEnabled = (id: PageBlockId) =>
     effectiveConfig.blocks[id]?.enabled !== false;
 
+  const sectionOrder = resolveEffectiveSectionOrder(effectiveConfig);
+  const sectionOrderIndex = (id: PageBlockId) => {
+    const i = sectionOrder.indexOf(id);
+    return i >= 0 ? i : 50;
+  };
+  const conversionCta = ctaFlags(effectiveConfig.conversion);
+  const persuasion = effectiveConfig.conversion.persuasionStyle;
+  const trustFallbackLines =
+    persuasion === "premium"
+      ? ["Expérience haut de gamme", "Réservation confirmée rapidement", "Cuisine d'exception"]
+      : persuasion === "warm"
+        ? ["Ambiance conviviale", "Idéal en famille", "Cuisine faite maison"]
+        : persuasion === "fast"
+          ? ["Réservation en 2 minutes", "Créneaux disponibles aujourd'hui", "Service réactif"]
+          : ["Réservation confirmée rapidement", "Cuisine faite maison", "Terrasse disponible"];
+  const openStatus = openStatusLabel(openingHours);
+  const shortAddress = restaurantAddress?.trim().split(",")[0]?.trim() || city?.trim() || null;
+  const showProofSection =
+    blockEnabled("trust") || blockEnabled("reviews") || blockEnabled("highlights");
+  const showReviewsBlock =
+    blockEnabled("reviews") && effectiveConfig.blockContent.reviews.showRating;
+
+  const reservationSortIndex = sectionOrder.indexOf("reservation");
+  let nextSectionPos = reservationSortIndex + 1;
+  while (
+    nextSectionPos < sectionOrder.length &&
+    !blockEnabled(sectionOrder[nextSectionPos]!)
+  ) {
+    nextSectionPos += 1;
+  }
+  const middleCtaOrder =
+    nextSectionPos < sectionOrder.length
+      ? Math.floor((reservationSortIndex + nextSectionPos) / 2) + 1
+      : reservationSortIndex + 2;
+
   const heroBadge = heroBadgeText?.trim() || "Réservation en ligne";
   const secondaryLabel = secondaryCtaLabel?.trim() || "Voir le menu";
 
@@ -902,7 +951,10 @@ export default function PublicReservationForm({
 
   return (
     <div
-      className="min-h-screen [font-size:calc(16px*var(--font-scale))]"
+      className={cn(
+        "min-h-screen [font-size:calc(16px*var(--font-scale))]",
+        conversionCta.showSticky && reservationEnabled && "pb-24 md:pb-0",
+      )}
       style={{
         ...cssVars,
         backgroundColor: "var(--page-bg)",
@@ -1025,31 +1077,29 @@ export default function PublicReservationForm({
               </a>
             ) : null}
           </div>
+
+          <HeroQuickFacts
+            openStatus={openStatus}
+            shortAddress={shortAddress}
+            showPhone={showPhoneCta && Boolean(restaurantPhone?.trim())}
+            phone={restaurantPhone}
+          />
         </div>
       </section>
 
-      {blockEnabled("trust") && activeHighlights.length > 0 ? (
-        <PublicPageSection surface={pageTheme.section("trust")}>
-          <ul className="flex flex-wrap justify-center gap-2">
-            {activeHighlights.map((h) => (
-              <li
-                key={h}
-                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold sm:text-sm"
-                style={{
-                  borderColor: "color-mix(in srgb, var(--accent-color) 35%, transparent)",
-                  color: pageTheme.section("trust").headingColor,
-                  backgroundColor: "color-mix(in srgb, var(--accent-color) 10%, transparent)",
-                }}
-              >
-                <Check className="h-3.5 w-3.5 text-[var(--accent-color)]" aria-hidden />
-                {h}
-              </li>
-            ))}
-          </ul>
-        </PublicPageSection>
+      <div className="flex flex-col">
+      {showProofSection ? (
+        <div style={{ order: sectionOrderIndex("trust") }}>
+          <SocialProofSection
+            surface={pageTheme.section("trust")}
+            highlights={blockEnabled("highlights") || blockEnabled("trust") ? activeHighlights : []}
+            showReviews={showReviewsBlock}
+            trustLines={trustFallbackLines}
+          />
+        </div>
       ) : null}
 
-      <div className="mx-auto max-w-6xl space-y-14 px-4 py-12 sm:px-6 md:px-10 lg:px-12 lg:py-16">
+      <div className="mx-auto flex max-w-6xl flex-col gap-14 px-4 py-12 sm:px-6 md:px-10 lg:px-12 lg:py-16">
         {specialMessage?.trim() ? (
           <p
             className="rounded-2xl border px-4 py-3 text-center text-sm font-medium"
@@ -1102,7 +1152,7 @@ export default function PublicReservationForm({
         ) : null}
 
         {blockEnabled("reservation") && reservationEnabled ? (
-        <section id="reservation" className="scroll-mt-24">
+        <section id="reservation" className="scroll-mt-24" style={{ order: sectionOrderIndex("reservation") }}>
           <div
             className={cardShell}
             style={{
@@ -1115,8 +1165,11 @@ export default function PublicReservationForm({
                 className="text-2xl font-medium md:text-3xl"
                 style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
               >
-                Réserver une table
+                {reservationSectionTitle()}
               </h2>
+              <p className="mt-2 text-sm leading-relaxed opacity-90" style={{ color: "var(--body-text)" }}>
+                {effectiveConfig.reservation.intro}
+              </p>
             </div>
 
             {showHoursBeforeForm && showHoursRow ? (
@@ -1797,13 +1850,37 @@ export default function PublicReservationForm({
         </section>
         ) : null}
 
+        {conversionCta.showMiddle && reservationEnabled && blockEnabled("reservation") ? (
+          <div style={{ order: middleCtaOrder }}>
+            <ConversionMiddleCta
+              title="Prêt à réserver votre table ?"
+              subtitle="Quelques clics suffisent — confirmation rapide."
+              buttonLabel={ctaLabel}
+              onClick={scrollToReservation}
+              ctaStyle={ctaStyle}
+            />
+          </div>
+        ) : null}
+
+        {blockEnabled("menu") && menuHref ? (
+          <div style={{ order: sectionOrderIndex("menu") }}>
+            <MenuActionSection
+              surface={pageTheme.section("menu")}
+              menuHref={menuHref}
+              menuLabel={secondaryLabel}
+              specialties={activeHighlights}
+            />
+          </div>
+        ) : null}
+
         {blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
+          <div style={{ order: sectionOrderIndex("gallery") }}>
           <PublicPageSection surface={pageTheme.section("gallery")}>
             <h2
               className="mb-6 text-center text-2xl font-medium md:text-left md:text-3xl"
               style={{ fontFamily: "var(--heading-font)", color: pageTheme.section("gallery").headingColor }}
             >
-              Galerie
+              {experienceSectionTitle(city ?? "", persuasion)}
             </h2>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
               {galleryImageUrls.map((src) => (
@@ -1824,9 +1901,11 @@ export default function PublicReservationForm({
               ))}
             </div>
           </PublicPageSection>
+          </div>
         ) : null}
 
         {blockEnabled("about") && descriptionText ? (
+          <div style={{ order: sectionOrderIndex("about") }}>
           <PublicPageSection surface={pageTheme.section("about")}>
             <PublicDescription
               text={descriptionText}
@@ -1834,9 +1913,11 @@ export default function PublicReservationForm({
               accentColor={accentColor}
             />
           </PublicPageSection>
+          </div>
         ) : null}
 
-        {blockEnabled("final_cta") && reservationEnabled ? (
+        {blockEnabled("final_cta") && reservationEnabled && conversionCta.showFinal ? (
+          <div style={{ order: sectionOrderIndex("final_cta") }}>
           <PublicPageSection surface={pageTheme.section("final_cta")}>
             <div className="mx-auto max-w-2xl text-center">
               <h2
@@ -1856,17 +1937,16 @@ export default function PublicReservationForm({
               </button>
             </div>
           </PublicPageSection>
+          </div>
         ) : null}
       </div>
+      </div>
 
-
-      {!previewMode && reservationEnabled ? (
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-[color-mix(in_srgb,var(--body-text)_12%,var(--page-bg))] bg-[color-mix(in_srgb,var(--page-bg)_92%,transparent)] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
-          <button type="button" onClick={scrollToReservation} className="flex min-h-[48px] w-full items-center justify-center rounded-[var(--radius)] text-sm font-semibold shadow-lg" style={{ backgroundColor: "var(--button-bg)", color: "var(--button-text)" }}>
-            Réserver
-          </button>
-        </div>
-      ) : null}
+      <StickyReserveBar
+        label={ctaLabel}
+        onClick={scrollToReservation}
+        visible={conversionCta.showSticky && reservationEnabled && blockEnabled("reservation")}
+      />
 
       {blockEnabled("location") && hasFooterContent ? (
         <PublicPageSection surface={pageTheme.section("location")} className="mt-4">

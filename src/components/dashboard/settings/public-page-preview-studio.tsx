@@ -23,6 +23,8 @@ type PublicPagePreviewStudioProps = {
   publicPath: string;
   onPublish?: () => void;
   isPublishing?: boolean;
+  conversionScore?: number;
+  pageStatusLabel?: string;
 };
 
 export default function PublicPagePreviewStudio({
@@ -30,6 +32,8 @@ export default function PublicPagePreviewStudio({
   publicPath,
   onPublish,
   isPublishing,
+  conversionScore,
+  pageStatusLabel,
 }: PublicPagePreviewStudioProps) {
   const [viewport, setViewport] = useState<"desktop" | "mobile">("desktop");
   const [fullscreen, setFullscreen] = useState(false);
@@ -150,10 +154,21 @@ export default function PublicPagePreviewStudio({
       <section className="mt-10 space-y-5 rounded-2xl border border-zg-border bg-gradient-to-b from-zg-surface to-zg-surface-elevated/40 p-5 md:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h3 className="text-xl font-semibold tracking-tight text-zg-fg">Aperçu en direct</h3>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-xl font-semibold tracking-tight text-zg-fg">Aperçu en direct</h3>
+              {pageStatusLabel ? (
+                <span className="rounded-full bg-zg-border/60 px-2.5 py-0.5 text-xs font-semibold text-zg-fg">
+                  {pageStatusLabel}
+                </span>
+              ) : null}
+              {typeof conversionScore === "number" ? (
+                <span className="rounded-full bg-zg-accent/15 px-2.5 py-0.5 text-xs font-semibold text-zg-accent">
+                  Conversion {conversionScore}%
+                </span>
+              ) : null}
+            </div>
             <p className="mt-1 max-w-xl text-sm leading-relaxed text-zg-muted">
-              Les modifications s&apos;affichent ici avant publication. Basculez entre mobile et desktop pour
-              visualiser le rendu réel.
+              Vérifiez le hero, le CTA, la réservation et le bouton sticky en mode mobile avant de publier.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">

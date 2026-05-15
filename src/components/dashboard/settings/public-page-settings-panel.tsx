@@ -30,6 +30,7 @@ import {
   type PublicPageEditorConfig,
   parseEditorConfig,
   editorConfigToPreviewDraft,
+  applyConversionTemplate,
   type EditorContext,
   PAGE_BLOCK_IDS,
   legacyHeroHeight,
@@ -48,6 +49,16 @@ import {
   defaultHeroTitle,
   publicationChecklist,
 } from "@/src/lib/public-page/defaults";
+import {
+  computeConversionScore,
+  conversionRecommendations,
+  CTA_PLACEMENT_OPTIONS,
+  PAGE_GOAL_OPTIONS,
+  PERSUASION_OPTIONS,
+  RECOMMENDED_BLOCKS,
+  SECTION_DISABLE_WARNINGS,
+  STRUCTURE_TEMPLATES,
+} from "@/src/lib/public-page/conversion";
 import {
   HIGHLIGHT_SUGGESTIONS,
   MAX_DESCRIPTION_CHARS,
@@ -304,6 +315,49 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
     const completionPercent = computeCompletionPercent(checklist);
     const checklistItems = publicationChecklist(checklist);
+
+    const conversionScoreInput = useMemo(
+      () => ({
+        name: name.trim(),
+        address: address.trim(),
+        coverImageUrl: coverImageUrl.trim(),
+        heroTitle: heroTitle.trim() || resolvedHeroTitle,
+        shortDescription: shortDescription.trim(),
+        highlights: highlights.filter(Boolean),
+        galleryCount: galleryUrls.filter(Boolean).length,
+        menuUrl: menuMode === "url" ? menuUrl.trim() || null : null,
+        menuMode,
+        menuDocumentsCount: initial.menuDocuments.length,
+        reservationEnabled,
+        ctaLabel: ctaLabel.trim(),
+        openingHours: initial.openingHours,
+      }),
+      [
+        name,
+        address,
+        coverImageUrl,
+        heroTitle,
+        resolvedHeroTitle,
+        shortDescription,
+        highlights,
+        galleryUrls,
+        menuMode,
+        menuUrl,
+        initial.menuDocuments.length,
+        reservationEnabled,
+        ctaLabel,
+        initial.openingHours,
+      ],
+    );
+
+    const conversionScore = useMemo(
+      () => computeConversionScore(conversionScoreInput),
+      [conversionScoreInput],
+    );
+    const conversionRecs = useMemo(
+      () => conversionRecommendations(conversionScoreInput, editorConfig.conversion),
+      [conversionScoreInput, editorConfig.conversion],
+    );
 
     const markDirty = useCallback(() => {
       if (pageStatus === "published") setHasUnpublishedChanges(true);
@@ -722,18 +776,147 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={statusTone}>{statusLabel}</Badge>
-              <span className="text-sm text-zg-muted">Page complétée à {completionPercent}%</span>
+              <span className="text-sm font-semibold text-zg-fg">
+                Potentiel de conversion : {conversionScore}%
+              </span>
+              <span className="text-sm text-zg-muted">· Publication {completionPercent}%</span>
             </div>
-            <div className="mt-2 h-2 w-full max-w-xs overflow-hidden rounded-full bg-zg-border/60">
+            <div className="mt-2 h-2 w-full max-w-md overflow-hidden rounded-full bg-zg-border/60">
               <div
                 className="h-full rounded-full bg-zg-accent transition-all"
-                style={{ width: `${completionPercent}%` }}
+                style={{ width: `${conversionScore}%` }}
               />
             </div>
+            {conversionRecs.length > 0 ? (
+              <ul className="mt-3 max-w-2xl space-y-1.5 text-sm text-zg-muted">
+                {conversionRecs.map((r) => (
+                  <li key={r.id} className={r.priority === "high" ? "text-zg-fg" : undefined}>
+                    → {r.message}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         </div>
 
         <div className="space-y-3">
+        <SettingsAccordion title="Conversion & structure">
+          <div className="space-y-5">
+            <FieldHint>
+              Choisissez un modèle orienté réservations, puis ajustez l&apos;ordre des sections.
+            </FieldHint>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {STRUCTURE_TEMPLATES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={cn(
+                    "rounded-xl border p-4 text-left transition",
+                    editorConfig.conversion.structureTemplate === t.id
+                      ? "border-zg-accent bg-zg-accent/5 ring-1 ring-zg-accent"
+                      : "border-zg-border hover:border-zg-accent/40",
+                  )}
+                  onClick={() => {
+                    setEditorConfig((c) => applyConversionTemplate(c, t.id));
+                    markDirty();
+                  }}
+                >
+                  <p className="font-semibold text-zg-fg">{t.label}</p>
+                  <p className="mt-1 text-xs text-zg-muted">{t.description}</p>
+                </button>
+              ))}
+            </div>
+            <div>
+              <label className="dashboard-field-label">Objectif principal</label>
+              <select
+                className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                value={editorConfig.conversion.pageGoal}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      conversion: { ...c.conversion, pageGoal: e.target.value as typeof c.conversion.pageGoal },
+                    }),
+                  );
+                  markDirty();
+                }}
+              >
+                {PAGE_GOAL_OPTIONS.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="dashboard-field-label">Style de persuasion</label>
+              <select
+                className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                value={editorConfig.conversion.persuasionStyle}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      conversion: {
+                        ...c.conversion,
+                        persuasionStyle: e.target.value as typeof c.conversion.persuasionStyle,
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+              >
+                {PERSUASION_OPTIONS.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="dashboard-field-label">Répétition du CTA</label>
+              <FieldHint>Un bon bouton de réservation doit être visible avant même de scroller.</FieldHint>
+              <select
+                className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                value={editorConfig.conversion.ctaPlacement}
+                onChange={(e) => {
+                  const ctaPlacement = e.target.value as typeof editorConfig.conversion.ctaPlacement;
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      conversion: {
+                        ...c.conversion,
+                        ctaPlacement,
+                        stickyMobile: ctaPlacement === "full",
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+              >
+                {CTA_PLACEMENT_OPTIONS.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Toggle
+              checked={editorConfig.conversion.stickyMobile}
+              onChange={(v) => {
+                setEditorConfig((c) =>
+                  parseEditorConfig({
+                    ...c,
+                    conversion: { ...c.conversion, stickyMobile: v },
+                  }),
+                );
+                markDirty();
+              }}
+              label="Bouton sticky mobile « Réserver »"
+            />
+          </div>
+        </SettingsAccordion>
+
         <SettingsAccordion title="Identité & contact">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
@@ -792,6 +975,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           <div className="space-y-5">
             <div>
               <label className="dashboard-field-label">Badge (au-dessus du titre)</label>
+              <FieldHint>Ex. « Cuisine maison », « Réservation instantanée » — rassure en 1 seconde.</FieldHint>
               <Input
                 className="mt-2"
                 value={editorConfig.hero.badgeText}
@@ -1078,6 +1262,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             </div>
             <div className="rounded-2xl border border-zg-accent/20 bg-zg-accent-soft-bg/40 p-4">
               <label className="dashboard-field-label">Photo principale (hero)</label>
+              <FieldHint>Votre photo principale doit donner envie en moins de 3 secondes.</FieldHint>
               <FieldHint>Cette photo sera la première chose que vos clients verront.</FieldHint>
               <div className="mt-2 flex flex-wrap gap-3">
                 <Input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, "cover")} className="max-w-xs" />
@@ -1151,23 +1336,29 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             <FieldHint>Activez les blocs visibles sur votre page publique.</FieldHint>
             <div className="grid gap-2 sm:grid-cols-2">
               {PAGE_BLOCK_IDS.map((id) => (
-                <Toggle
-                  key={id}
-                  checked={editorConfig.blocks[id]?.enabled !== false}
-                  onChange={(v) => {
-                    setEditorConfig((c) =>
-                      parseEditorConfig({
-                        ...c,
-                        blocks: {
-                          ...c.blocks,
-                          [id]: { ...c.blocks[id], enabled: v },
-                        },
-                      }),
-                    );
-                    markDirty();
-                  }}
-                  label={BLOCK_LABELS[id] ?? id}
-                />
+                <div key={id} className="space-y-1">
+                  <Toggle
+                    checked={editorConfig.blocks[id]?.enabled !== false}
+                    onChange={(v) => {
+                      setEditorConfig((c) =>
+                        parseEditorConfig({
+                          ...c,
+                          blocks: {
+                            ...c.blocks,
+                            [id]: { ...c.blocks[id], enabled: v },
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                    label={BLOCK_LABELS[id] ?? id}
+                  />
+                  {!editorConfig.blocks[id]?.enabled &&
+                  RECOMMENDED_BLOCKS.includes(id) &&
+                  SECTION_DISABLE_WARNINGS[id] ? (
+                    <p className="text-xs text-amber-700/90">{SECTION_DISABLE_WARNINGS[id]}</p>
+                  ) : null}
+                </div>
               ))}
             </div>
             <div className="space-y-3 border-t border-zg-border/60 pt-4">
@@ -1209,7 +1400,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             <div>
               <label className="dashboard-field-label">Titre principal</label>
               <FieldHint>
-                Ex. automatique : « {defaultHeroTitle(displayName)} »
+                Gardez votre titre court et direct. Ex. : « {defaultHeroTitle(displayName)} »
               </FieldHint>
               <Input
                 className="mt-2"
@@ -1242,6 +1433,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             </div>
             <div>
               <label className="dashboard-field-label">Points forts (max. {MAX_HIGHLIGHTS})</label>
+              <FieldHint>Les points forts rassurent les visiteurs avant de réserver.</FieldHint>
               <div className="mt-2 flex flex-wrap gap-2">
                 {HIGHLIGHT_SUGGESTIONS.map((s) => (
                   <button
@@ -1490,6 +1682,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         <PublicPagePreviewStudio
           draft={previewDraft}
           publicPath={publicPath}
+          conversionScore={conversionScore}
+          pageStatusLabel={statusLabel}
           onPublish={async () => {
             setIsPublishing(true);
             const result = await publishPage();
