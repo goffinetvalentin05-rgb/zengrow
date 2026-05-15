@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   LogOut,
+  Globe2,
   Megaphone,
   PanelLeftClose,
   PanelLeftOpen,
@@ -48,6 +49,7 @@ const navItems = [
   { href: "/dashboard/customers", label: "Clients", icon: Users },
   { href: "/dashboard/feedbacks", label: "Feedbacks", icon: MessageSquare },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
+  { href: "/dashboard/public-page", label: "Page publique", icon: Globe2 },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];
 

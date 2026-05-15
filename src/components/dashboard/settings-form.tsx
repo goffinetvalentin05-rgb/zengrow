@@ -8,7 +8,6 @@ import {
   Bell,
   CalendarCheck2,
   CreditCard,
-  Globe2,
   Star,
   Store,
   UserRound,
@@ -24,10 +23,6 @@ import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-
 import { SettingsCategoryCard } from "@/src/components/dashboard/settings/settings-category-card";
 import { cn, formatOpeningHoursLines, type OpeningHours } from "@/src/lib/utils";
 import AvailabilityEditor from "@/src/components/dashboard/availability-editor";
-import PublicPageSettingsPanel, {
-  type PublicPageSettingsHandle,
-  type PublicPageSettingsInitial,
-} from "@/src/components/dashboard/settings/public-page-settings-panel";
 import BillingPlans from "@/src/components/dashboard/billing-plans";
 import ReviewAutomationPanel from "@/src/components/dashboard/review-automation-panel";
 import {
@@ -145,7 +140,6 @@ type SettingsFormProps = {
   restaurant: RestaurantData;
   settings: SettingsData;
   confirmationMode: "manual" | "automatic";
-  publicLink: string;
   subscriptionStatus: "trial" | "active" | "expired";
   subscriptionPlan: "starter" | "pro" | null;
   trialEndDate: string | null;
@@ -156,7 +150,6 @@ type SettingsFormProps = {
     reservation_slot_interval: number;
     reservation_duration: number;
   };
-  publicPageInitial: PublicPageSettingsInitial;
 };
 
 function ReservationField({
@@ -189,19 +182,16 @@ export default function SettingsForm({
   restaurant,
   settings,
   confirmationMode,
-  publicLink,
   subscriptionPlan,
   subscriptionStatus,
   trialEndDate,
   isOwnerDev,
   availabilitySettings,
-  publicPageInitial,
 }: SettingsFormProps) {
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
   const availabilityAnchorRef = useRef<HTMLDivElement | null>(null);
-  const publicPageRef = useRef<PublicPageSettingsHandle | null>(null);
   const [name, setName] = useState(restaurant.name);
   const [phone, setPhone] = useState(restaurant.phone ?? "");
   const [email, setEmail] = useState(restaurant.email ?? "");
@@ -535,13 +525,14 @@ export default function SettingsForm({
 
     setIsSaving(true);
 
-    const publicRestaurantPatch = publicPageRef.current?.getRestaurantUpdate() ?? {};
-    const publicSettingsPatch = publicPageRef.current?.getSettingsUpdate() ?? {};
-
     const { error: restaurantError } = await supabase
       .from("restaurants")
       .update({
-        ...publicRestaurantPatch,
+        name: name.trim(),
+        slug: slug.trim(),
+        phone: phone.trim() || null,
+        email: email.trim() || null,
+        address: address.trim() || null,
         description: description || null,
         reservation_confirmation_mode: reservationConfirmationMode,
         reservation_confirmation_email_subject: reservationConfirmationEmailSubject.trim() || null,
@@ -558,8 +549,8 @@ export default function SettingsForm({
     const { error: settingsError } = await supabase
       .from("restaurant_settings")
       .upsert({
-        ...publicSettingsPatch,
         restaurant_id: restaurant.id,
+        website_url: websiteUrl.trim() || null,
         restaurant_capacity: Math.max(lunchMaxCovers, dinnerMaxCovers),
         max_covers_per_slot: Math.max(lunchMaxCovers, dinnerMaxCovers),
         reservation_duration: Math.max(
@@ -610,11 +601,6 @@ export default function SettingsForm({
     window.setTimeout(() => setSaveButtonSuccess(false), 2000);
     setIsSaving(false);
   }
-
-  const effectivePublicLink = useMemo(
-    () => publicLink.replace(restaurant.slug, publicPageRef.current?.getSlug() ?? slug),
-    [publicLink, restaurant.slug, slug],
-  );
 
   return (
     <>
@@ -671,7 +657,10 @@ export default function SettingsForm({
               </div>
               <div className="md:col-span-2 rounded-xl border border-zg-border/70 bg-zg-surface/60 p-4">
                 <p className="text-sm text-zg-muted">
-                  Identité, coordonnées et réseaux : configurez tout dans la section « Page publique » ci-dessous.
+                  Photos, hero, sections et publication :{" "}
+                  <Link href="/dashboard/public-page" className="font-semibold text-zg-accent hover:underline">
+                    Gérer la page publique →
+                  </Link>
                 </p>
               </div>
               <div className="md:col-span-2">
@@ -898,21 +887,6 @@ export default function SettingsForm({
             </SettingsAccordion>
           </SettingsCategoryCard>
         </div>
-
-        <SettingsCategoryCard
-          icon={Globe2}
-          iconWrapClassName="bg-[#EC4899]/15 text-[#EC4899]"
-          iconClassName="text-[#EC4899]"
-          title="Page publique"
-          subtitle="Personnalisez votre page de réservation : identité, photos, contenu et publication."
-        >
-          <PublicPageSettingsPanel
-            ref={publicPageRef}
-            initial={publicPageInitial}
-            publicLinkBase={publicLink}
-            onMessage={setMessage}
-          />
-        </SettingsCategoryCard>
 
         <SettingsCategoryCard
           icon={Bell}

@@ -1,4 +1,4 @@
-import type { PublicPageSettingsInitial } from "@/src/components/dashboard/settings/public-page-settings-panel";
+import type { PublicPageSettingsInitial } from "@/src/components/dashboard/public-page/public-page-settings-panel";
 import type { PublicAmbiance, PublicStylePreset } from "@/src/lib/public-page/constants";
 import { DEFAULT_PRIMARY, DEFAULT_SECONDARY } from "@/src/lib/public-page/colors";
 import type { OpeningHours } from "@/src/lib/utils";

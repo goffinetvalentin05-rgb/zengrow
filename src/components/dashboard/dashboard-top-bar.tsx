@@ -160,9 +160,7 @@ export default function DashboardTopBar({
         </div>
 
         <Link
-          href={publicLink}
-          target="_blank"
-          rel="noreferrer"
+          href="/dashboard/public-page"
           className={buttonClassName({
             variant: "secondary",
             size: "sm",
