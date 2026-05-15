@@ -831,6 +831,75 @@ export function PremiumPracticalInfo({
   );
 }
 
+export function PremiumReservationSection({
+  title,
+  intro,
+  groupMessage,
+  showPhoneAlt,
+  phone,
+  children,
+}: {
+  title: string;
+  intro: string;
+  groupMessage?: string;
+  showPhoneAlt?: boolean;
+  phone?: string | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      id="reservation"
+      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_3%,var(--page-bg))]"
+    >
+      <div className="mx-auto max-w-3xl px-5 py-14 sm:px-8 lg:py-20">
+        <header className="mb-8 text-center md:text-left">
+          <p
+            className="text-[11px] font-medium uppercase tracking-[0.28em] opacity-60"
+            style={{ color: "var(--heading-color)" }}
+          >
+            Réservation
+          </p>
+          <h2
+            className="mt-2 text-3xl font-medium md:text-4xl"
+            style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+          >
+            {title}
+          </h2>
+          <p className="mt-3 text-base leading-relaxed opacity-90" style={{ color: "var(--body-text)" }}>
+            {intro}
+          </p>
+          {groupMessage?.trim() ? (
+            <p className="mt-2 text-sm opacity-75" style={{ color: "var(--body-text)" }}>
+              {groupMessage}
+            </p>
+          ) : null}
+        </header>
+        <div
+          className="border p-5 sm:p-8"
+          style={{
+            borderColor: "color-mix(in srgb, var(--body-text) 12%, var(--page-bg))",
+            backgroundColor: "var(--page-bg)",
+          }}
+        >
+          {children}
+        </div>
+        {showPhoneAlt && phone ? (
+          <p className="mt-6 text-center text-sm md:text-left" style={{ color: "var(--body-text)" }}>
+            Vous préférez appeler ?{" "}
+            <a
+              href={`tel:${phone.replace(/\s/g, "")}`}
+              className="font-semibold underline-offset-2 hover:underline"
+              style={{ color: "var(--accent-color)" }}
+            >
+              {phone}
+            </a>
+          </p>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 export function StickyReserveBar({
   label,
   onClick,

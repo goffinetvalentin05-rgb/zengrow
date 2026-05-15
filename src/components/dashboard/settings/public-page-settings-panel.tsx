@@ -59,7 +59,8 @@ import {
   SECTION_DISABLE_WARNINGS,
   STRUCTURE_TEMPLATES,
 } from "@/src/lib/public-page/conversion";
-import { newMenuOffer } from "@/src/lib/public-page/premium-content";
+import { newEditorialSection, newMenuOffer } from "@/src/lib/public-page/premium-content";
+import type { EditorialLayout } from "@/src/lib/public-page/premium-content";
 import {
   HIGHLIGHT_SUGGESTIONS,
   MAX_DESCRIPTION_CHARS,
@@ -970,6 +971,210 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                 placeholder="Sinon, 1ère photo de la galerie"
               />
             </div>
+            <div>
+              <label className="dashboard-field-label">Style galerie</label>
+              <select
+                className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                value={editorConfig.premium.gallery.style}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: {
+                        ...c.premium,
+                        gallery: { style: e.target.value as typeof c.premium.gallery.style },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+              >
+                <option value="showcase">Showcase (grande image + vignettes)</option>
+                <option value="grid">Grille masonry</option>
+                <option value="instagram">Style Instagram</option>
+              </select>
+            </div>
+            <div className="space-y-3">
+              <label className="dashboard-field-label">Piliers du concept (3 accroches)</label>
+              {editorConfig.premium.concept.pillars.map((pillar, idx) => (
+                <div key={idx} className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    placeholder="Titre"
+                    value={pillar.title}
+                    onChange={(e) => {
+                      const pillars = [...editorConfig.premium.concept.pillars];
+                      pillars[idx] = { ...pillar, title: e.target.value };
+                      setEditorConfig((c) =>
+                        parseEditorConfig({
+                          ...c,
+                          premium: { ...c.premium, concept: { ...c.premium.concept, pillars } },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                  <Input
+                    placeholder="Description courte"
+                    value={pillar.text}
+                    onChange={(e) => {
+                      const pillars = [...editorConfig.premium.concept.pillars];
+                      pillars[idx] = { ...pillar, text: e.target.value };
+                      setEditorConfig((c) =>
+                        parseEditorConfig({
+                          ...c,
+                          premium: { ...c.premium, concept: { ...c.premium.concept, pillars } },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </SettingsAccordion>
+
+        <SettingsAccordion title="Sections éditoriales">
+          <div className="space-y-4">
+            <FieldHint>
+              Racontez votre histoire en 1 à 4 blocs image + texte (comme un vrai site restaurant).
+            </FieldHint>
+            {editorConfig.premium.editorialSections.map((section, idx) => (
+              <div key={section.id} className="space-y-3 rounded-xl border border-zg-border p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-zg-fg">Section {idx + 1}</span>
+                  <Toggle
+                    checked={section.enabled}
+                    onChange={(v) => {
+                      const editorialSections = [...editorConfig.premium.editorialSections];
+                      editorialSections[idx] = { ...section, enabled: v };
+                      setEditorConfig((c) =>
+                        parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
+                      );
+                      markDirty();
+                    }}
+                    label="Visible"
+                  />
+                </div>
+                <Input
+                  placeholder="Titre"
+                  value={section.title}
+                  onChange={(e) => {
+                    const editorialSections = [...editorConfig.premium.editorialSections];
+                    editorialSections[idx] = { ...section, title: e.target.value };
+                    setEditorConfig((c) =>
+                      parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
+                    );
+                    markDirty();
+                  }}
+                />
+                <Textarea
+                  className="min-h-24"
+                  placeholder="Texte"
+                  value={section.text}
+                  onChange={(e) => {
+                    const editorialSections = [...editorConfig.premium.editorialSections];
+                    editorialSections[idx] = { ...section, text: e.target.value };
+                    setEditorConfig((c) =>
+                      parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
+                    );
+                    markDirty();
+                  }}
+                />
+                <Input
+                  placeholder="Image URL"
+                  value={section.imageUrl}
+                  onChange={(e) => {
+                    const editorialSections = [...editorConfig.premium.editorialSections];
+                    editorialSections[idx] = { ...section, imageUrl: e.target.value };
+                    setEditorConfig((c) =>
+                      parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
+                    );
+                    markDirty();
+                  }}
+                />
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <select
+                    className="h-10 rounded-xl border border-zg-border bg-zg-surface px-2 text-sm"
+                    value={section.layout}
+                    onChange={(e) => {
+                      const editorialSections = [...editorConfig.premium.editorialSections];
+                      editorialSections[idx] = {
+                        ...section,
+                        layout: e.target.value as EditorialLayout,
+                      };
+                      setEditorConfig((c) =>
+                        parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
+                      );
+                      markDirty();
+                    }}
+                  >
+                    <option value="image-left">Image à gauche</option>
+                    <option value="image-right">Image à droite</option>
+                    <option value="full-bleed">Pleine largeur</option>
+                  </select>
+                  <Input
+                    placeholder="Libellé bouton (optionnel)"
+                    value={section.buttonLabel}
+                    onChange={(e) => {
+                      const editorialSections = [...editorConfig.premium.editorialSections];
+                      editorialSections[idx] = { ...section, buttonLabel: e.target.value };
+                      setEditorConfig((c) =>
+                        parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <Input
+                  placeholder="Lien bouton (optionnel)"
+                  value={section.buttonUrl}
+                  onChange={(e) => {
+                    const editorialSections = [...editorConfig.premium.editorialSections];
+                    editorialSections[idx] = { ...section, buttonUrl: e.target.value };
+                    setEditorConfig((c) =>
+                      parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
+                    );
+                    markDirty();
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full sm:w-auto"
+                  onClick={() => {
+                    const editorialSections = editorConfig.premium.editorialSections.filter(
+                      (_, i) => i !== idx,
+                    );
+                    setEditorConfig((c) =>
+                      parseEditorConfig({ ...c, premium: { ...c.premium, editorialSections } }),
+                    );
+                    markDirty();
+                  }}
+                >
+                  Supprimer cette section
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={editorConfig.premium.editorialSections.length >= 4}
+              onClick={() => {
+                setEditorConfig((c) =>
+                  parseEditorConfig({
+                    ...c,
+                    premium: {
+                      ...c.premium,
+                      editorialSections: [...c.premium.editorialSections, newEditorialSection()],
+                    },
+                  }),
+                );
+                markDirty();
+              }}
+            >
+              Ajouter une section éditoriale
+            </Button>
           </div>
         </SettingsAccordion>
 
@@ -1023,6 +1228,46 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                   }}
                 />
               </div>
+            </div>
+            <div>
+              <label className="dashboard-field-label">Lien avis Google</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.premium.credibility.googleReviewsUrl}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: {
+                        ...c.premium,
+                        credibility: { ...c.premium.credibility, googleReviewsUrl: e.target.value },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+                placeholder="https://g.page/…"
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Lien TripAdvisor (optionnel)</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.premium.credibility.tripAdvisorUrl}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: {
+                        ...c.premium,
+                        credibility: { ...c.premium.credibility, tripAdvisorUrl: e.target.value },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+                placeholder="https://www.tripadvisor.fr/…"
+              />
             </div>
             <div>
               <label className="dashboard-field-label">Citation client (optionnel)</label>
@@ -1784,6 +2029,24 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                 value={preBookingMessage}
                 onChange={(e) => { setPreBookingMessage(e.target.value); markDirty(); }}
                 placeholder="Choisissez votre date, votre heure et le nombre de personnes."
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Message groupes / événements</label>
+              <Input
+                value={editorConfig.premium.reservation.groupMessage}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      premium: {
+                        ...c.premium,
+                        reservation: { ...c.premium.reservation, groupMessage: e.target.value },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
               />
             </div>
             <div>

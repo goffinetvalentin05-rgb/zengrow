@@ -42,6 +42,7 @@ import {
   PremiumGallery,
   PremiumHero,
   PremiumPracticalInfo,
+  PremiumReservationSection,
   PublicPageNav,
   StickyReserveBar,
 } from "@/src/components/reservation/public-page-premium";
@@ -1060,26 +1061,14 @@ export default function PublicReservationForm({
         ) : null}
 
         {blockEnabled("reservation") && reservationEnabled ? (
-        <section id="reservation" className="scroll-mt-24" style={{ order: sectionOrderIndex("reservation") }}>
-          <div
-            className={cardShell}
-            style={{
-              backgroundColor: "color-mix(in srgb, var(--body-text) 7%, var(--page-bg))",
-              borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))",
-            }}
-          >
-            <div className="mb-6 text-center md:text-left">
-              <h2
-                className="text-2xl font-medium md:text-3xl"
-                style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
-              >
-                {reservationSectionTitle()}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed opacity-90" style={{ color: "var(--body-text)" }}>
-                {effectiveConfig.reservation.intro}
-              </p>
-            </div>
-
+        <div style={{ order: sectionOrderIndex("reservation") }}>
+        <PremiumReservationSection
+          title={reservationSectionTitle()}
+          intro={effectiveConfig.reservation.intro}
+          groupMessage={premium.reservation.groupMessage}
+          showPhoneAlt={showPhoneCta && showPhoneRow}
+          phone={restaurantPhone}
+        >
             {showHoursBeforeForm && showHoursRow ? (
               <div
                 className="mb-5 rounded-xl border px-4 py-3 text-sm"
@@ -1731,21 +1720,13 @@ export default function PublicReservationForm({
                 {error}
               </p>
             ) : null}
-
-            {showPhoneCta && showPhoneRow && !previewMode ? (
-              <p className="mt-4 text-center text-sm">
-                Vous préférez appeler ?{" "}
-                <a href={`tel:${restaurantPhone!.replace(/\s/g, "")}`} className="font-semibold underline-offset-2 hover:underline" style={{ color: "var(--accent-color)" }}>{restaurantPhone}</a>
-              </p>
-            ) : null}
-
-            {message ? (
+{message ? (
               <p className="mt-6 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-900">
                 {message}
               </p>
             ) : null}
-          </div>
-        </section>
+        </PremiumReservationSection>
+        </div>
         ) : showPhoneCta && showPhoneRow ? (
         <section id="reservation" className="scroll-mt-24">
           <div className={cardShell} style={{ backgroundColor: "color-mix(in srgb, var(--body-text) 7%, var(--page-bg))", borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))" }}>
@@ -1756,18 +1737,6 @@ export default function PublicReservationForm({
             </a>
           </div>
         </section>
-        ) : null}
-
-        {conversionCta.showMiddle && reservationEnabled && blockEnabled("reservation") ? (
-          <div style={{ order: middleCtaOrder }}>
-            <PremiumFinalCta
-              title="Prêt à réserver votre table ?"
-              subtitle="Choisissez votre créneau en quelques secondes."
-              buttonLabel={ctaLabel}
-              onReserve={scrollToReservation}
-              ctaStyle={ctaStyle}
-            />
-          </div>
         ) : null}
 
         {blockEnabled("menu") && (menuHref || menuOffers.length > 0) ? (

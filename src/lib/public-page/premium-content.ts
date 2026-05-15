@@ -52,6 +52,9 @@ export type PremiumPageContent = {
     parking: string;
     accessibility: string;
   };
+  reservation: {
+    groupMessage: string;
+  };
 };
 
 export function defaultPremiumContent(): PremiumPageContent {
@@ -81,6 +84,9 @@ export function defaultPremiumContent(): PremiumPageContent {
     },
     gallery: { style: "showcase" },
     practical: { parking: "", accessibility: "" },
+    reservation: {
+      groupMessage: "Pour les groupes ou événements, contactez-nous par téléphone.",
+    },
   };
 }
 
@@ -168,6 +174,7 @@ export function normalizePremiumContent(raw: unknown): PremiumPageContent {
   const conceptRaw = o.concept as Partial<PremiumPageContent["concept"]> | undefined;
   const galleryRaw = o.gallery as Partial<PremiumPageContent["gallery"]> | undefined;
   const practicalRaw = o.practical as Partial<PremiumPageContent["practical"]> | undefined;
+  const reservationRaw = o.reservation as Partial<PremiumPageContent["reservation"]> | undefined;
   const style =
     galleryRaw?.style === "grid" || galleryRaw?.style === "instagram" ? galleryRaw.style : "showcase";
 
@@ -190,6 +197,12 @@ export function normalizePremiumContent(raw: unknown): PremiumPageContent {
       parking: typeof practicalRaw?.parking === "string" ? practicalRaw.parking.slice(0, 200) : "",
       accessibility:
         typeof practicalRaw?.accessibility === "string" ? practicalRaw.accessibility.slice(0, 200) : "",
+    },
+    reservation: {
+      groupMessage:
+        typeof reservationRaw?.groupMessage === "string"
+          ? reservationRaw.groupMessage.slice(0, 280)
+          : base.reservation.groupMessage,
     },
   };
 }
