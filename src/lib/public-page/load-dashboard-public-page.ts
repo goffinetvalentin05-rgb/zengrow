@@ -71,6 +71,8 @@ export async function loadDashboardPublicPage(
         "show_public_instagram",
         "show_public_facebook",
         "show_public_google_maps",
+        "theme_id",
+        "theme_overrides",
       ].join(", "),
     )
     .eq("id", restaurantId)
@@ -170,6 +172,8 @@ export async function loadDashboardPublicPage(
       show_public_instagram: (rc?.show_public_instagram as boolean | null) ?? null,
       show_public_facebook: (rc?.show_public_facebook as boolean | null) ?? null,
       show_public_google_maps: (rc?.show_public_google_maps as boolean | null) ?? null,
+      theme_id: (rc?.theme_id as string | null) ?? null,
+      theme_overrides: (rc?.theme_overrides as unknown) ?? null,
     },
     safeSettings,
     openingHours,

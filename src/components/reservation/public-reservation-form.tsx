@@ -52,9 +52,23 @@ import {
   PublicPageNav,
   StickyReserveBar,
 } from "@/src/components/reservation/public-page-premium";
+import type { ThemeId } from "@/src/lib/themes/types";
+import GrainOverlay from "@/src/lib/themes/shared/grain-overlay";
+import {
+  PremiumDarkHero,
+  PremiumDarkMenuOffersSection,
+  PremiumDarkMasonryGallery,
+  PremiumDarkNav,
+} from "@/src/lib/themes/premium-dark/components";
 
 export type PublicReservationFormProps = {
   previewMode?: boolean;
+  /** Thème visuel page publique (`default` = rendu historique inchangé côté structure). */
+  visualThemeId?: ThemeId;
+  /** Variables CSS fusionnées depuis `resolvePublicTheme` (premium uniquement). */
+  themeCssVarOverrides?: Record<string, string>;
+  /** Grain SVG (thèmes premium avec `effects.grain`). */
+  showGrainOverlay?: boolean;
   restaurantId: string;
   /** Slug URL publique `/r/[slug]` — requis pour les demandes de bons cadeaux. */
   restaurantSlug: string;
@@ -275,6 +289,9 @@ export default function PublicReservationForm({
   publicFloorPlanSelectionMode = "automatic",
   subscriptionPlan = "starter",
   subscriptionStatus = "active",
+  visualThemeId = "default",
+  themeCssVarOverrides,
+  showGrainOverlay = false,
 }: PublicReservationFormProps) {
   const todayDate = useMemo(() => localYmd(new Date()), []);
   const maxDateStr = useMemo(() => {
@@ -283,6 +300,7 @@ export default function PublicReservationForm({
     d.setDate(d.getDate() + daysInAdvance);
     return localYmd(d);
   }, [daysInAdvance]);
+  const usePremiumChrome = visualThemeId !== "default";
   const canUseProFeatures = subscriptionStatus === "trial" || subscriptionPlan === "pro";
   const effectiveReservationMode: "simple" | "floor_plan" =
     canUseProFeatures && reservationMode === "floor_plan" ? "floor_plan" : "simple";
@@ -456,35 +474,42 @@ export default function PublicReservationForm({
   const effButtonStyle = appearance.buttonStyle || buttonStyle;
   const effCardStyle = appearance.cardStyle || cardStyle;
 
-  const cssVars = useMemo(
-    () =>
-      ({
-        ...pageTheme.cssVars,
-        "--page-bg": pageTheme.pageBg,
-        "--hero-primary": effHeroPrimary,
-        "--accent-color": pageTheme.accentColor,
-        "--button-bg": effButtonBg,
-        "--button-text": effButtonText,
-        "--heading-color": pageTheme.headingColor,
-        "--body-text": pageTheme.bodyColor,
-        "--footer-bg": pageTheme.footerBg,
-        "--footer-text": pageTheme.footerText,
-        "--heading-font": `"${effHeadingFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
-        "--body-font": `"${effBodyFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
-        "--radius": effRadius,
-        "--font-scale": fontSizeScale === "small" ? "0.92" : fontSizeScale === "large" ? "1.08" : "1",
-      }) as React.CSSProperties,
-    [
-      pageTheme,
-      effHeroPrimary,
-      effButtonBg,
-      effButtonText,
-      effHeadingFont,
-      effBodyFont,
-      effRadius,
-      fontSizeScale,
-    ],
-  );
+  const cssVars = useMemo(() => {
+    const base = {
+      ...pageTheme.cssVars,
+      "--page-bg": pageTheme.pageBg,
+      "--hero-primary": effHeroPrimary,
+      "--accent-color": pageTheme.accentColor,
+      "--button-bg": effButtonBg,
+      "--button-text": effButtonText,
+      "--heading-color": pageTheme.headingColor,
+      "--body-text": pageTheme.bodyColor,
+      "--footer-bg": pageTheme.footerBg,
+      "--footer-text": pageTheme.footerText,
+      "--heading-font": `"${effHeadingFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
+      "--body-font": `"${effBodyFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
+      "--radius": effRadius,
+      "--font-scale": fontSizeScale === "small" ? "0.92" : fontSizeScale === "large" ? "1.08" : "1",
+    } as Record<string, string | number>;
+
+    if (themeCssVarOverrides) {
+      for (const [k, v] of Object.entries(themeCssVarOverrides)) {
+        base[k] = v;
+      }
+    }
+
+    return base as React.CSSProperties;
+  }, [
+    pageTheme,
+    effHeroPrimary,
+    effButtonBg,
+    effButtonText,
+    effHeadingFont,
+    effBodyFont,
+    effRadius,
+    fontSizeScale,
+    themeCssVarOverrides,
+  ]);
 
   const fieldStyle = useMemo(
     () => ({
@@ -927,8 +952,13 @@ export default function PublicReservationForm({
   const labelClass = "block text-xs font-semibold uppercase tracking-[0.18em]";
   const iconRing =
     "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius)] border border-[color-mix(in_srgb,var(--footer-text)_22%,transparent)] bg-[color-mix(in_srgb,var(--footer-text)_10%,transparent)] text-[var(--footer-text)]";
-  const inputClass =
-    "min-h-[48px] w-full rounded-[var(--radius)] border px-4 py-3 text-sm outline-none transition focus:border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--page-bg)]";
+  const inputClass = useMemo(
+    () =>
+      usePremiumChrome
+        ? "min-h-[48px] w-full border-0 border-b-2 border-[color-mix(in_srgb,var(--body-text)_20%,transparent)] bg-transparent px-0 py-3 text-sm outline-none transition focus:border-[color-mix(in_srgb,var(--accent-color)_55%,transparent)] focus-visible:ring-0"
+        : "min-h-[48px] w-full rounded-[var(--radius)] border px-4 py-3 text-sm outline-none transition focus:border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--page-bg)]",
+    [usePremiumChrome],
+  );
 
   const overlayOpacity = Math.min(80, Math.max(0, heroOverlayOpacity)) / 100;
 
@@ -972,18 +1002,11 @@ export default function PublicReservationForm({
     secondaryCtaLabel?.trim() || effectiveConfig.hero.secondaryCta || "Voir le menu";
   const menuOffers = visibleMenuOffers(premium.menuOffers);
 
-  const heroContentClass = cn(
-    "relative z-[1] flex flex-1 flex-col px-5 pt-14 pb-14 sm:px-8 sm:pb-20 md:pt-20 md:pb-24",
-    heroLayout === "overlay" ? "justify-end" : "justify-center",
-    heroAlign === "left" || heroLayout === "left"
-      ? "items-start text-left"
-      : heroAlign === "right"
-        ? "items-end text-right"
-        : "items-center text-center",
-  );
+  const dateBtnRadius = usePremiumChrome ? "rounded-full" : "rounded-[var(--radius)]";
 
   return (
     <div
+      data-zg-theme={visualThemeId}
       className={cn(
         previewMode ? "relative min-h-0 w-full" : "min-h-screen",
         "[font-size:calc(16px*var(--font-scale))]",
@@ -996,36 +1019,69 @@ export default function PublicReservationForm({
         fontFamily: "var(--body-font), system-ui, sans-serif",
       }}
     >
-      <PublicPageNav
-        restaurantName={restaurantName}
-        ctaLabel={ctaLabel}
-        onReserve={scrollToReservation}
-        visible={premium.navigationEnabled}
-        previewMode={previewMode}
-        showGiftVouchers={blockEnabled("gift_vouchers")}
-      />
+      {showGrainOverlay ? <GrainOverlay /> : null}
 
-      <PremiumHero
-        badgeText={effectiveConfig.hero.badgeText?.trim() || heroBadgeText?.trim() || undefined}
-        coverImageUrl={coverImageUrl}
-        logoUrl={logoUrl}
-        headline={headlineText}
-        tagline={taglineText || undefined}
-        openStatus={openStatus}
-        phone={restaurantPhone}
-        showPhone={showPhoneCta}
-        ctaLabel={ctaLabel}
-        secondaryLabel={secondaryLabel}
-        secondaryHref={menuHref}
-        showSecondary={Boolean(menuHref && effectiveConfig.hero.secondaryCtaEnabled)}
-        onReserve={scrollToReservation}
-        ctaStyle={ctaStyle}
-        overlayOpacity={heroOverlayEnabled ? overlayOpacity : 0}
-        heroAlign={heroLayout === "left" ? "left" : heroAlign}
-        heroLayout={heroLayout}
-        heroHeight={effectiveHeroHeight}
-        previewMode={previewMode}
-      />
+      {usePremiumChrome ? (
+        <>
+          <PremiumDarkNav
+            restaurantName={restaurantName}
+            ctaLabel={ctaLabel}
+            onReserve={scrollToReservation}
+            visible={premium.navigationEnabled}
+            previewMode={previewMode}
+            showGiftVouchers={blockEnabled("gift_vouchers")}
+          />
+          <PremiumDarkHero
+            badgeText={effectiveConfig.hero.badgeText?.trim() || heroBadgeText?.trim() || undefined}
+            coverImageUrl={coverImageUrl}
+            headline={headlineText}
+            tagline={taglineText || undefined}
+            openStatus={openStatus}
+            phone={restaurantPhone}
+            showPhone={showPhoneCta}
+            ctaLabel={ctaLabel}
+            secondaryLabel={secondaryLabel}
+            secondaryHref={menuHref}
+            showSecondary={Boolean(menuHref && effectiveConfig.hero.secondaryCtaEnabled)}
+            onReserve={scrollToReservation}
+            ctaStyle={ctaStyle}
+            previewMode={previewMode}
+          />
+        </>
+      ) : (
+        <>
+          <PublicPageNav
+            restaurantName={restaurantName}
+            ctaLabel={ctaLabel}
+            onReserve={scrollToReservation}
+            visible={premium.navigationEnabled}
+            previewMode={previewMode}
+            showGiftVouchers={blockEnabled("gift_vouchers")}
+          />
+
+          <PremiumHero
+            badgeText={effectiveConfig.hero.badgeText?.trim() || heroBadgeText?.trim() || undefined}
+            coverImageUrl={coverImageUrl}
+            logoUrl={logoUrl}
+            headline={headlineText}
+            tagline={taglineText || undefined}
+            openStatus={openStatus}
+            phone={restaurantPhone}
+            showPhone={showPhoneCta}
+            ctaLabel={ctaLabel}
+            secondaryLabel={secondaryLabel}
+            secondaryHref={menuHref}
+            showSecondary={Boolean(menuHref && effectiveConfig.hero.secondaryCtaEnabled)}
+            onReserve={scrollToReservation}
+            ctaStyle={ctaStyle}
+            overlayOpacity={heroOverlayEnabled ? overlayOpacity : 0}
+            heroAlign={heroLayout === "left" ? "left" : heroAlign}
+            heroLayout={heroLayout}
+            heroHeight={effectiveHeroHeight}
+            previewMode={previewMode}
+          />
+        </>
+      )}
 
       {specialMessage?.trim() ? (
         <div
@@ -1244,7 +1300,8 @@ export default function PublicReservationForm({
                           disabled={previewMode || !todaySelectable}
                           onClick={() => setReservationDate(todayDate)}
                           className={cn(
-                            "min-h-[48px] flex-1 rounded-[var(--radius)] border-2 px-2 py-3 text-xs font-semibold tracking-wide transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40 sm:text-sm",
+                            "min-h-[48px] flex-1 border-2 px-2 py-3 text-xs font-semibold tracking-wide transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40 sm:text-sm",
+                            dateBtnRadius,
                             reservationDate === todayDate ? "border-transparent shadow-sm" : "bg-transparent",
                           )}
                           style={
@@ -1263,7 +1320,8 @@ export default function PublicReservationForm({
                           disabled={previewMode || !tomorrowSelectable}
                           onClick={() => setReservationDate(tomorrowDate)}
                           className={cn(
-                            "min-h-[48px] flex-1 rounded-[var(--radius)] border-2 px-2 py-3 text-xs font-semibold tracking-wide transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40 sm:text-sm",
+                            "min-h-[48px] flex-1 border-2 px-2 py-3 text-xs font-semibold tracking-wide transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40 sm:text-sm",
+                            dateBtnRadius,
                             reservationDate === tomorrowDate ? "border-transparent shadow-sm" : "bg-transparent",
                           )}
                           style={
@@ -1282,7 +1340,8 @@ export default function PublicReservationForm({
                           disabled={previewMode}
                           onClick={() => datePickerRef.current?.showPicker?.() ?? datePickerRef.current?.click()}
                           className={cn(
-                            "flex min-h-[48px] min-w-[48px] shrink-0 items-center justify-center rounded-[var(--radius)] border-2 transition active:scale-[0.99] disabled:opacity-40",
+                            "flex min-h-[48px] min-w-[48px] shrink-0 items-center justify-center border-2 transition active:scale-[0.99] disabled:opacity-40",
+                            dateBtnRadius,
                             reservationDate &&
                               reservationDate !== todayDate &&
                               reservationDate !== tomorrowDate
@@ -1393,7 +1452,8 @@ export default function PublicReservationForm({
                             disabled={previewMode}
                             onClick={() => setGuests(n)}
                             className={cn(
-                              "min-h-[48px] rounded-[var(--radius)] border-2 text-base font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40",
+                              "min-h-[48px] border-2 text-base font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40",
+                              dateBtnRadius,
                               guests === n ? "border-transparent shadow-sm" : "bg-transparent",
                             )}
                             style={
@@ -1453,7 +1513,8 @@ export default function PublicReservationForm({
                             disabled={previewMode || isDateInClosurePeriod}
                             onClick={() => setReservationTime(t)}
                             className={cn(
-                              "min-h-[48px] rounded-[var(--radius)] border-2 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-40",
+                              "min-h-[48px] border-2 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-40",
+                              dateBtnRadius,
                               reservationTime === t ? "border-transparent shadow-sm" : "bg-transparent",
                             )}
                             style={
@@ -1833,6 +1894,27 @@ export default function PublicReservationForm({
 
         {blockEnabled("menu") && (menuHref || menuOffers.length > 0) ? (
           <div style={{ order: sectionOrderIndex("menu") }}>
+            {usePremiumChrome ? (
+              <PremiumDarkMenuOffersSection
+                offers={menuOffers}
+                menuHref={menuHref}
+                menuPdfLabel={sortedDocuments[0]?.label ?? secondaryLabel}
+                eyebrow={
+                  effectiveConfig.conversion.structureTemplate === "event_venue"
+                    ? "Formules & menus"
+                    : effectiveConfig.conversion.structureTemplate === "modern_brasserie"
+                      ? "À la carte"
+                      : "Carte & offres"
+                }
+                title={
+                  effectiveConfig.conversion.structureTemplate === "event_venue"
+                    ? "Nos formules"
+                    : effectiveConfig.conversion.structureTemplate === "minimal_conversion"
+                      ? "Le menu"
+                      : "Notre menu"
+                }
+              />
+            ) : (
             <MenuOffersSection
               offers={menuOffers}
               menuHref={menuHref}
@@ -1852,6 +1934,7 @@ export default function PublicReservationForm({
                     : "Notre menu"
               }
             />
+            )}
           </div>
         ) : null}
 
@@ -1863,6 +1946,23 @@ export default function PublicReservationForm({
 
         {blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
           <div style={{ order: sectionOrderIndex("gallery") }}>
+            {usePremiumChrome ? (
+              <PremiumDarkMasonryGallery
+                images={galleryImageUrls}
+                eyebrow={
+                  effectiveConfig.conversion.structureTemplate === "premium_experience"
+                    ? "Galerie"
+                    : effectiveConfig.conversion.structureTemplate === "warm_restaurant"
+                      ? "Ambiance"
+                      : effectiveConfig.conversion.structureTemplate === "event_venue"
+                        ? "Nos espaces"
+                        : "En images"
+                }
+                title="L’expérience"
+                instagramUrl={instagramUrl}
+                showInstagram={showInstagram}
+              />
+            ) : (
             <PremiumGallery
               images={galleryImageUrls}
               style={premium.gallery.style}
@@ -1878,6 +1978,7 @@ export default function PublicReservationForm({
                       : "En images"
               }
             />
+            )}
           </div>
         ) : null}
 

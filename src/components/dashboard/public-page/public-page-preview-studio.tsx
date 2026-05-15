@@ -9,6 +9,8 @@ import type { PublicPageEditorConfig } from "@/src/lib/public-page/editor-config
 import Button from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 
+import type { ThemeId } from "@/src/lib/themes/types";
+
 export type ExtendedPreviewDraft = PublicPagePreviewDraft & {
   editorConfig?: PublicPageEditorConfig;
   heroBadgeText?: string;
@@ -16,6 +18,9 @@ export type ExtendedPreviewDraft = PublicPagePreviewDraft & {
   heroAlign?: "left" | "center" | "right";
   secondaryCtaLabel?: string;
   themeMode?: "light" | "dark" | "auto";
+  visualThemeId?: ThemeId;
+  themeCssVarOverrides?: Record<string, string>;
+  showGrainOverlay?: boolean;
 };
 
 type PublicPagePreviewStudioProps = {
@@ -151,6 +156,9 @@ export default function PublicPagePreviewStudio({
       closureEndDate={null}
       closureMessage={null}
       terraceEnabled={draft.terraceEnabled ?? false}
+      visualThemeId={draft.visualThemeId ?? "default"}
+      themeCssVarOverrides={draft.themeCssVarOverrides}
+      showGrainOverlay={draft.showGrainOverlay ?? false}
     />
   );
 

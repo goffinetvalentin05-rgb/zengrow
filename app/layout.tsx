@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Instrument_Serif } from "next/font/google";
+import { Cormorant_Garamond, Dancing_Script, Geist, Geist_Mono, Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,6 +26,18 @@ const instrumentSerif = Instrument_Serif({
   display: "swap",
 });
 
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+
+const dancingScript = Dancing_Script({
+  subsets: ["latin"],
+  variable: "--font-dancing",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: {
     default: "ZenGrow",
@@ -44,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${instrumentSerif.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${instrumentSerif.variable} ${cormorant.variable} ${dancingScript.variable} antialiased`}
       >
         {children}
       </body>

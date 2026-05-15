@@ -39,6 +39,10 @@ import {
   validateRestaurantImageFile,
   validateRestaurantPdfFile,
 } from "@/src/lib/restaurant-storage-upload";
+import type { ThemeColorOverrides, ThemeId } from "@/src/lib/themes/types";
+import { resolvePublicTheme } from "@/src/lib/themes/resolve";
+import { normalizeThemeId } from "@/src/lib/themes/registry";
+import PublicPageThemeSection from "@/src/components/dashboard/public-page/public-page-theme-section";
 import Button, { buttonClassName } from "@/src/components/ui/button";
 import Badge from "@/src/components/ui/badge";
 import Input from "@/src/components/ui/input";
@@ -402,6 +406,8 @@ export type PublicPageSettingsInitial = {
   cardStyle: "flat" | "elevated" | "bordered";
   terraceEnabled: boolean;
   editorConfigRaw?: unknown;
+  themeId: ThemeId;
+  themeOverrides: ThemeColorOverrides;
 };
 
 export type PublicPageSettingsHandle = {
@@ -558,6 +564,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const [headingFont, setHeadingFont] = useState(initial.headingFont);
     const [bodyFont, setBodyFont] = useState(initial.bodyFont);
     const [heroHeight, setHeroHeight] = useState(initial.heroHeight);
+
+    const [themeId, setThemeId] = useState<ThemeId>(() => normalizeThemeId(initial.themeId));
+    const [themeOverrides, setThemeOverrides] = useState<ThemeColorOverrides>(() => initial.themeOverrides ?? {});
 
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
@@ -1020,6 +1029,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const previewDraft = useMemo((): ExtendedPreviewDraft => {
       const merged = buildMergedConfig();
       const draft = editorConfigToPreviewDraft(merged, editorCtx);
+      const resolvedTheme = resolvePublicTheme(themeId, themeOverrides);
       return {
         ...draft,
         specialMessage: specialMessage.trim() || null,
@@ -1034,6 +1044,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         cardStyle: initial.cardStyle,
         fontSizeScale: initial.fontSizeScale,
         terraceEnabled: initial.terraceEnabled,
+        visualThemeId: resolvedTheme.id,
+        themeCssVarOverrides: resolvedTheme.cssVarOverrides,
+        showGrainOverlay: resolvedTheme.showGrain,
       };
     }, [
       buildMergedConfig,
@@ -1044,6 +1057,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       initial.cardStyle,
       initial.fontSizeScale,
       initial.terraceEnabled,
+      themeId,
+      themeOverrides,
     ]);
 
     const getRestaurantUpdate = useCallback(() => {
@@ -1091,6 +1106,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         public_page_status: pageStatus,
         public_page_published_at: publishedAt,
         public_page_draft_updated_at: new Date().toISOString(),
+        theme_id: themeId,
+        theme_overrides: themeOverrides,
       };
     }, [
       editorConfig.appearance,
@@ -1116,6 +1133,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       seoDescription,
       pageStatus,
       publishedAt,
+      themeId,
+      themeOverrides,
     ]);
 
     const getSettingsUpdate = useCallback(
@@ -1266,6 +1285,16 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             </div>
           </div>
         ) : null}
+
+        <div className="rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
+          <PublicPageThemeSection
+            publicUrl={publicLinkBase}
+            selectedId={themeId}
+            onSelect={setThemeId}
+            overrides={themeOverrides}
+            onOverridesChange={setThemeOverrides}
+          />
+        </div>
 
         {/* ============================================================
             STEP 1 — DIRECTION VISUELLE

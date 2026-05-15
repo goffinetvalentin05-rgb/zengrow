@@ -7,6 +7,8 @@ import type { PublicAmbiance } from "@/src/lib/public-page/constants";
 import { googleFontsHref, normalizePublicPageFont } from "@/src/lib/public-page-fonts";
 import { getDefaultOpeningHours, OpeningHours } from "@/src/lib/utils";
 import { parseEditorConfig } from "@/src/lib/public-page/editor-config";
+import { resolvePublicTheme } from "@/src/lib/themes/resolve";
+import type { ThemeId } from "@/src/lib/themes/types";
 
 type PublicReservationPageProps = {
   params: Promise<{ slug: string }>;
@@ -57,6 +59,8 @@ type PublicRestaurantRow = {
   show_public_instagram: boolean | null;
   show_public_facebook: boolean | null;
   show_public_google_maps: boolean | null;
+  theme_id?: string | null;
+  theme_overrides?: unknown;
 };
 
 type PublicSettingsRow = {
@@ -154,6 +158,8 @@ const RESTAURANT_SELECT = [
   "show_public_instagram",
   "show_public_facebook",
   "show_public_google_maps",
+  "theme_id",
+  "theme_overrides",
 ].join(", ");
 
 const SETTINGS_SELECT = [
@@ -397,6 +403,8 @@ export default async function PublicReservationPage({ params }: PublicReservatio
 
   const editorConfig = parseEditorConfig(safeSettings.public_page_editor_config);
 
+  const resolvedVisualTheme = resolvePublicTheme(restaurant.theme_id, restaurant.theme_overrides);
+
   return (
     <>
       {fontsHref ? (
@@ -408,6 +416,9 @@ export default async function PublicReservationPage({ params }: PublicReservatio
       ) : null}
       <main className="min-h-screen">
         <PublicReservationForm
+          visualThemeId={resolvedVisualTheme.id as ThemeId}
+          themeCssVarOverrides={resolvedVisualTheme.cssVarOverrides}
+          showGrainOverlay={resolvedVisualTheme.showGrain}
           restaurantId={restaurant.id}
           restaurantSlug={restaurant.slug}
           restaurantName={displayName}

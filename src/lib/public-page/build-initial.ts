@@ -3,6 +3,8 @@ import type { PublicAmbiance, PublicStylePreset } from "@/src/lib/public-page/co
 import { DEFAULT_PRIMARY, DEFAULT_SECONDARY } from "@/src/lib/public-page/colors";
 import { MAX_HIGHLIGHTS } from "@/src/lib/public-page/constants";
 import type { OpeningHours } from "@/src/lib/utils";
+import { normalizeThemeId } from "@/src/lib/themes/registry";
+import { parseThemeOverrides } from "@/src/lib/themes/resolve";
 
 type RestaurantRow = {
   id: string;
@@ -48,6 +50,8 @@ type RestaurantRow = {
   show_public_instagram?: boolean | null;
   show_public_facebook?: boolean | null;
   show_public_google_maps?: boolean | null;
+  theme_id?: string | null;
+  theme_overrides?: unknown;
 };
 
 type SettingsRow = {
@@ -201,5 +205,7 @@ export function buildPublicPageSettingsInitial(
     cardStyle: (settings.card_style as "flat" | "elevated" | "bordered") ?? "elevated",
     terraceEnabled: settings.terrace_enabled === true,
     editorConfigRaw: settings.public_page_editor_config ?? {},
+    themeId: normalizeThemeId(restaurant.theme_id),
+    themeOverrides: parseThemeOverrides(restaurant.theme_overrides),
   };
 }
