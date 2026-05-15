@@ -66,7 +66,7 @@ export type PublicPagePreviewDraft = {
   maxPartySize?: number;
   secondaryCtaLabel?: string;
   heroBadgeText?: string;
-  heroLayout?: "left" | "center" | "overlay";
+  heroLayout?: "left" | "center" | "overlay" | "split";
   heroAlign?: "left" | "center" | "right";
   themeMode?: "light" | "dark" | "auto";
   sectionOrder?: string[];

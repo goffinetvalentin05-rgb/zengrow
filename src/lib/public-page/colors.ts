@@ -25,8 +25,11 @@ export function contrastingTextColor(bgHex: string): string {
   return luminance(normalizeHexColor(bgHex)) > 0.55 ? "#0f172a" : "#ffffff";
 }
 
+import type { PublicStylePreset } from "@/src/lib/public-page/constants";
+import { applyStylePresetPalette } from "@/src/lib/public-page/preset-palettes";
+
 export function applyStylePresetColors(
-  preset: "elegant" | "modern" | "warm" | null,
+  preset: PublicStylePreset | null,
   primary: string,
   secondary: string,
 ): {
@@ -37,52 +40,30 @@ export function applyStylePresetColors(
   headingFont: string;
   bodyFont: string;
   heroHeight: "compact" | "normal" | "tall";
+  headingColor: string;
+  bodyColor: string;
+  surfaceColor: string;
+  footerBg: string;
+  footerText: string;
+  buttonText: string;
+  themeMode: "light" | "dark" | "auto";
 } {
-  const p = normalizeHexColor(primary);
-  const s = normalizeHexColor(secondary, p);
-
-  if (preset === "elegant") {
-    return {
-      heroPrimary: p,
-      accent: s,
-      buttonBg: p,
-      pageBg: "#faf9f7",
-      headingFont: "Playfair Display",
-      bodyFont: "Inter",
-      heroHeight: "normal",
-    };
-  }
-  if (preset === "warm") {
-    return {
-      heroPrimary: p,
-      accent: s,
-      buttonBg: s,
-      pageBg: "#fffaf5",
-      headingFont: "DM Serif Display",
-      bodyFont: "Source Sans 3",
-      heroHeight: "compact",
-    };
-  }
-  if (preset === "modern") {
-    return {
-      heroPrimary: p,
-      accent: s,
-      buttonBg: p,
-      pageBg: "#f8fafc",
-      headingFont: "Inter",
-      bodyFont: "Inter",
-      heroHeight: "compact",
-    };
-  }
-
+  const palette = applyStylePresetPalette(preset, primary, secondary);
   return {
-    heroPrimary: p,
-    accent: s,
-    buttonBg: p,
-    pageBg: "#f8fafc",
-    headingFont: "Playfair Display",
-    bodyFont: "Inter",
-    heroHeight: "normal",
+    heroPrimary: palette.primaryColor,
+    accent: palette.accentColor,
+    buttonBg: palette.accentColor,
+    pageBg: palette.backgroundColor,
+    headingFont: palette.headingFont,
+    bodyFont: palette.bodyFont,
+    heroHeight: palette.heroHeight,
+    headingColor: palette.headingColor,
+    bodyColor: palette.textColor,
+    surfaceColor: palette.surfaceColor,
+    footerBg: palette.footerBgColor,
+    footerText: palette.footerTextColor,
+    buttonText: palette.buttonTextColor,
+    themeMode: palette.themeMode,
   };
 }
 

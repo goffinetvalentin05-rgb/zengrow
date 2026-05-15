@@ -18,7 +18,14 @@ import {
 import Input from "@/src/components/ui/input";
 import type { AvailabilitySlot } from "@/src/lib/reservation/schemas";
 import { cn, formatOpeningHoursLines, OpeningHours } from "@/src/lib/utils";
-import type { PublicPageEditorConfig, PageBlockId } from "@/src/lib/public-page/editor-config";
+import {
+  type PublicPageEditorConfig,
+  type PageBlockId,
+  parseEditorConfig,
+  defaultEditorConfig,
+} from "@/src/lib/public-page/editor-config";
+import { resolvePublicPageTheme } from "@/src/lib/public-page/theme";
+import { PublicPageSection } from "@/src/components/reservation/public-page-section";
 
 export type PublicReservationFormProps = {
   previewMode?: boolean;
@@ -66,7 +73,7 @@ export type PublicReservationFormProps = {
   ctaLabel: string;
   secondaryCtaLabel?: string;
   heroBadgeText?: string;
-  heroLayout?: "left" | "center" | "overlay";
+  heroLayout?: "left" | "center" | "overlay" | "split";
   heroAlign?: "left" | "center" | "right";
   editorConfig?: PublicPageEditorConfig;
   fontSizeScale: "small" | "medium" | "large";
@@ -342,18 +349,71 @@ export default function PublicReservationForm({
     [availabilitySlots],
   );
 
+  const effectiveConfig = useMemo((): PublicPageEditorConfig => {
+    if (editorConfig) return editorConfig;
+    return parseEditorConfig({
+      ...defaultEditorConfig(),
+      hero: {
+        ...defaultEditorConfig().hero,
+        layout: heroLayout,
+        align: heroAlign,
+        badgeText: heroBadgeText ?? defaultEditorConfig().hero.badgeText,
+        primaryCta: ctaLabel,
+        secondaryCta: secondaryCtaLabel ?? "Voir le menu",
+        secondaryCtaEnabled: Boolean(secondaryCtaLabel),
+      },
+      appearance: {
+        ...defaultEditorConfig().appearance,
+        primaryColor: heroPrimaryColor,
+        accentColor,
+        backgroundColor: pageBackgroundColor,
+        textColor: bodyTextColor,
+        headingColor: headingTextColor,
+        footerBgColor,
+        footerTextColor,
+        buttonTextColor,
+        headingFont,
+        bodyFont,
+        buttonStyle,
+        cardStyle,
+      },
+    });
+  }, [
+    editorConfig,
+    heroLayout,
+    heroAlign,
+    heroBadgeText,
+    ctaLabel,
+    secondaryCtaLabel,
+    heroPrimaryColor,
+    accentColor,
+    pageBackgroundColor,
+    bodyTextColor,
+    headingTextColor,
+    footerBgColor,
+    footerTextColor,
+    buttonTextColor,
+    headingFont,
+    bodyFont,
+    buttonStyle,
+    cardStyle,
+  ]);
+
+  const pageTheme = useMemo(() => resolvePublicPageTheme(effectiveConfig), [effectiveConfig]);
+
   const cssVars = useMemo(
     () =>
       ({
-        "--page-bg": pageBackgroundColor,
+        ...pageTheme.cssVars,
+        "--page-bg": pageTheme.pageBg,
         "--hero-primary": heroPrimaryColor,
-        "--accent-color": accentColor,
+        "--accent-color": pageTheme.accentColor,
         "--button-bg": buttonBgColor,
         "--button-text": buttonTextColor,
-        "--heading-color": headingTextColor,
-        "--body-text": bodyTextColor,
-        "--footer-bg": footerBgColor,
-        "--footer-text": footerTextColor,
+        "--heading-color": pageTheme.headingColor,
+        "--body-text": pageTheme.bodyColor,
+        "--footer-bg": pageTheme.footerBg,
+        "--footer-text": pageTheme.footerText,
         "--heading-font": `"${headingFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
         "--body-font": `"${bodyFont}", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
         "--radius": borderRadius === "sharp" ? "0px" : borderRadius === "pill" ? "999px" : "8px",
@@ -373,6 +433,7 @@ export default function PublicReservationForm({
       headingTextColor,
       heroPrimaryColor,
       pageBackgroundColor,
+      pageTheme,
     ],
   );
 
@@ -824,7 +885,7 @@ export default function PublicReservationForm({
   const overlayOpacity = Math.min(80, Math.max(0, heroOverlayOpacity)) / 100;
 
   const blockEnabled = (id: PageBlockId) =>
-    !editorConfig || editorConfig.blocks[id]?.enabled !== false;
+    effectiveConfig.blocks[id]?.enabled !== false;
 
   const heroBadge = heroBadgeText?.trim() || "Réservation en ligne";
   const secondaryLabel = secondaryCtaLabel?.trim() || "Voir le menu";
@@ -968,16 +1029,16 @@ export default function PublicReservationForm({
       </section>
 
       {blockEnabled("trust") && activeHighlights.length > 0 ? (
-        <section className="border-b border-[color-mix(in_srgb,var(--body-text)_10%,var(--page-bg))] bg-[color-mix(in_srgb,var(--body-text)_4%,var(--page-bg))] px-4 py-6">
-          <ul className="mx-auto flex max-w-3xl flex-wrap justify-center gap-2">
+        <PublicPageSection surface={pageTheme.section("trust")}>
+          <ul className="flex flex-wrap justify-center gap-2">
             {activeHighlights.map((h) => (
               <li
                 key={h}
                 className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold sm:text-sm"
                 style={{
                   borderColor: "color-mix(in srgb, var(--accent-color) 35%, transparent)",
-                  color: "var(--heading-color)",
-                  backgroundColor: "color-mix(in srgb, var(--accent-color) 8%, var(--page-bg))",
+                  color: pageTheme.section("trust").headingColor,
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 10%, transparent)",
                 }}
               >
                 <Check className="h-3.5 w-3.5 text-[var(--accent-color)]" aria-hidden />
@@ -985,7 +1046,7 @@ export default function PublicReservationForm({
               </li>
             ))}
           </ul>
-        </section>
+        </PublicPageSection>
       ) : null}
 
       <div className="mx-auto max-w-6xl space-y-14 px-4 py-12 sm:px-6 md:px-10 lg:px-12 lg:py-16">
@@ -1737,10 +1798,10 @@ export default function PublicReservationForm({
         ) : null}
 
         {blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
-          <div>
+          <PublicPageSection surface={pageTheme.section("gallery")}>
             <h2
               className="mb-6 text-center text-2xl font-medium md:text-left md:text-3xl"
-              style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+              style={{ fontFamily: "var(--heading-font)", color: pageTheme.section("gallery").headingColor }}
             >
               Galerie
             </h2>
@@ -1749,7 +1810,7 @@ export default function PublicReservationForm({
                 <div
                   key={src}
                   className="group relative aspect-[4/3] overflow-hidden rounded-[var(--radius)]"
-                  style={{ backgroundColor: "color-mix(in srgb, var(--body-text) 7%, var(--page-bg))" }}
+                  style={{ backgroundColor: "color-mix(in srgb, var(--body-text) 8%, transparent)" }}
                 >
                   <Image
                     src={src}
@@ -1762,19 +1823,39 @@ export default function PublicReservationForm({
                 </div>
               ))}
             </div>
-          </div>
+          </PublicPageSection>
         ) : null}
 
         {blockEnabled("about") && descriptionText ? (
-          <PublicDescription text={descriptionText} bodyColor={bodyTextColor} accentColor={accentColor} />
+          <PublicPageSection surface={pageTheme.section("about")}>
+            <PublicDescription
+              text={descriptionText}
+              bodyColor={pageTheme.section("about").color}
+              accentColor={accentColor}
+            />
+          </PublicPageSection>
         ) : null}
 
-        {reservationEnabled ? (
-          <section className="pb-2 text-center">
-            <button type="button" onClick={scrollToReservation} className={cn(ctaStyle.className, "min-h-[52px] px-8")} style={ctaStyle.style}>
-              {ctaLabel}
-            </button>
-          </section>
+        {blockEnabled("final_cta") && reservationEnabled ? (
+          <PublicPageSection surface={pageTheme.section("final_cta")}>
+            <div className="mx-auto max-w-2xl text-center">
+              <h2
+                className="text-2xl font-semibold md:text-3xl"
+                style={{ fontFamily: "var(--heading-font)", color: pageTheme.section("final_cta").headingColor }}
+              >
+                {effectiveConfig.blockContent.finalCta.title}
+              </h2>
+              <p className="mt-3 text-base opacity-90">{effectiveConfig.blockContent.finalCta.subtitle}</p>
+              <button
+                type="button"
+                onClick={scrollToReservation}
+                className={cn(ctaStyle.className, "mt-6 min-h-[52px] px-8")}
+                style={ctaStyle.style}
+              >
+                {effectiveConfig.blockContent.finalCta.button || ctaLabel}
+              </button>
+            </div>
+          </PublicPageSection>
         ) : null}
       </div>
 
@@ -1787,15 +1868,8 @@ export default function PublicReservationForm({
         </div>
       ) : null}
 
-      {hasFooterContent ? (
-        <footer
-          className="mt-4 border-t px-4 py-12 sm:px-8"
-          style={{
-            backgroundColor: "var(--footer-bg)",
-            color: "var(--footer-text)",
-            borderColor: "color-mix(in srgb, var(--footer-text) 15%, transparent)",
-          }}
-        >
+      {blockEnabled("location") && hasFooterContent ? (
+        <PublicPageSection surface={pageTheme.section("location")} className="mt-4">
           <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-6">
               <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Contact</p>
@@ -1934,7 +2008,7 @@ export default function PublicReservationForm({
               </div>
             ) : null}
           </div>
-        </footer>
+        </PublicPageSection>
       ) : null}
     </div>
   );

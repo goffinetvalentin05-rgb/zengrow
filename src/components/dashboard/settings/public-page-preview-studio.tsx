@@ -12,7 +12,7 @@ import { cn } from "@/src/lib/utils";
 export type ExtendedPreviewDraft = PublicPagePreviewDraft & {
   editorConfig?: PublicPageEditorConfig;
   heroBadgeText?: string;
-  heroLayout?: "left" | "center" | "overlay";
+  heroLayout?: "left" | "center" | "overlay" | "split";
   heroAlign?: "left" | "center" | "right";
   secondaryCtaLabel?: string;
   themeMode?: "light" | "dark" | "auto";

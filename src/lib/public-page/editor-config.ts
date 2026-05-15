@@ -1,9 +1,10 @@
 import type { PublicAmbiance, PublicStylePreset } from "@/src/lib/public-page/constants";
 import { DEFAULT_PRIMARY, DEFAULT_SECONDARY, normalizeHexColor } from "@/src/lib/public-page/colors";
+import { applyStylePresetPalette } from "@/src/lib/public-page/preset-palettes";
 import type { PublicPagePreviewDraft } from "@/src/components/dashboard/public-page-live-preview";
 import type { OpeningHours } from "@/src/lib/utils";
 
-export const EDITOR_CONFIG_VERSION = 2;
+export const EDITOR_CONFIG_VERSION = 3;
 
 export const PAGE_BLOCK_IDS = [
   "trust",
@@ -21,12 +22,30 @@ export const PAGE_BLOCK_IDS = [
 
 export type PageBlockId = (typeof PAGE_BLOCK_IDS)[number];
 
-export type HeroLayout = "left" | "center" | "overlay";
+export type HeroLayout = "left" | "center" | "overlay" | "split";
 export type HeroHeightPreset = "compact" | "normal" | "immersive";
 export type HeroAlign = "left" | "center" | "right";
 export type BorderRadiusPreset = "soft" | "medium" | "premium";
 export type ShadowPreset = "none" | "soft" | "medium";
 export type ThemeMode = "light" | "dark" | "auto";
+export type SectionVariant =
+  | "inherit"
+  | "light"
+  | "dark"
+  | "muted"
+  | "accent"
+  | "transparent"
+  | "elevated"
+  | "primary";
+export type SectionWidth = "full" | "contained";
+export type ButtonStylePreset = "filled" | "outlined" | "ghost";
+export type CardStylePreset = "flat" | "elevated" | "bordered";
+
+export type BlockConfig = {
+  enabled: boolean;
+  variant: SectionVariant;
+  width: SectionWidth;
+};
 
 export type PublicPageEditorConfig = {
   version: typeof EDITOR_CONFIG_VERSION;
@@ -49,7 +68,9 @@ export type PublicPageEditorConfig = {
     secondaryColor: string;
     accentColor: string;
     textColor: string;
+    headingColor: string;
     backgroundColor: string;
+    surfaceColor: string;
     footerBgColor: string;
     footerTextColor: string;
     stylePreset: PublicStylePreset | null;
@@ -60,13 +81,10 @@ export type PublicPageEditorConfig = {
     headingFont: string;
     bodyFont: string;
     buttonTextColor: string;
+    buttonStyle: ButtonStylePreset;
+    cardStyle: CardStylePreset;
   };
-  blocks: Record<
-    PageBlockId,
-    {
-      enabled: boolean;
-    }
-  >;
+  blocks: Record<PageBlockId, BlockConfig>;
   blockContent: {
     about: { title: string; body: string };
     highlights: { items: string[] };
@@ -83,6 +101,7 @@ export type PublicPageEditorConfig = {
     showHoursBeforeForm: boolean;
     noSlotsMessage: string;
     minLeadMinutes: number;
+    position: "default" | "after_hero" | "prominent";
   };
 };
 
@@ -100,7 +119,14 @@ export const DEFAULT_SECTION_ORDER: PageBlockId[] = [
   "final_cta",
 ];
 
+function defaultBlocks(): PublicPageEditorConfig["blocks"] {
+  return Object.fromEntries(
+    PAGE_BLOCK_IDS.map((id) => [id, { enabled: true, variant: "inherit" as SectionVariant, width: "contained" as SectionWidth }]),
+  ) as PublicPageEditorConfig["blocks"];
+}
+
 export function defaultEditorConfig(): PublicPageEditorConfig {
+  const palette = applyStylePresetPalette(null, DEFAULT_PRIMARY, DEFAULT_SECONDARY);
   return {
     version: EDITOR_CONFIG_VERSION,
     hero: {
@@ -118,23 +144,27 @@ export function defaultEditorConfig(): PublicPageEditorConfig {
       overlayOpacity: 45,
     },
     appearance: {
-      primaryColor: DEFAULT_PRIMARY,
-      secondaryColor: DEFAULT_SECONDARY,
-      accentColor: DEFAULT_PRIMARY,
-      textColor: "#0f172a",
-      backgroundColor: "#f8fafc",
-      footerBgColor: "#0f172a",
-      footerTextColor: "#e2e8f0",
+      primaryColor: palette.primaryColor,
+      secondaryColor: palette.secondaryColor,
+      accentColor: palette.accentColor,
+      textColor: palette.textColor,
+      headingColor: palette.headingColor,
+      backgroundColor: palette.backgroundColor,
+      surfaceColor: palette.surfaceColor,
+      footerBgColor: palette.footerBgColor,
+      footerTextColor: palette.footerTextColor,
       stylePreset: null,
       ambiance: null,
       borderRadius: "medium",
       shadow: "soft",
       themeMode: "light",
-      headingFont: "Playfair Display",
-      bodyFont: "Inter",
-      buttonTextColor: "#ffffff",
+      headingFont: palette.headingFont,
+      bodyFont: palette.bodyFont,
+      buttonTextColor: palette.buttonTextColor,
+      buttonStyle: "filled",
+      cardStyle: "elevated",
     },
-    blocks: Object.fromEntries(PAGE_BLOCK_IDS.map((id) => [id, { enabled: true }])) as PublicPageEditorConfig["blocks"],
+    blocks: defaultBlocks(),
     blockContent: {
       about: { title: "Notre restaurant", body: "" },
       highlights: { items: [] },
@@ -155,35 +185,101 @@ export function defaultEditorConfig(): PublicPageEditorConfig {
       showHoursBeforeForm: true,
       noSlotsMessage: "Aucun créneau disponible pour cette date. Essayez un autre jour.",
       minLeadMinutes: 0,
+      position: "default",
     },
+  };
+}
+
+function normalizeBlockConfig(raw: unknown, fallback: BlockConfig): BlockConfig {
+  if (!raw || typeof raw !== "object") return fallback;
+  const o = raw as Partial<BlockConfig>;
+  const variant =
+    o.variant === "light" ||
+    o.variant === "dark" ||
+    o.variant === "muted" ||
+    o.variant === "accent" ||
+    o.variant === "transparent" ||
+    o.variant === "elevated" ||
+    o.variant === "primary" ||
+    o.variant === "inherit"
+      ? o.variant
+      : fallback.variant;
+  return {
+    enabled: o.enabled !== false,
+    variant,
+    width: o.width === "full" ? "full" : "contained",
+  };
+}
+
+function upgradeFromV2(raw: Record<string, unknown>): Partial<PublicPageEditorConfig> {
+  const blocks: Partial<PublicPageEditorConfig["blocks"]> = {};
+  const rawBlocks = raw.blocks as Record<string, { enabled?: boolean }> | undefined;
+  if (rawBlocks) {
+    for (const id of PAGE_BLOCK_IDS) {
+      const b = rawBlocks[id];
+      blocks[id] = {
+        enabled: b?.enabled !== false,
+        variant: "inherit",
+        width: id === "trust" || id === "final_cta" ? "full" : "contained",
+      };
+    }
+  }
+  const appearance = raw.appearance as Record<string, unknown> | undefined;
+  return {
+    ...raw,
+    version: EDITOR_CONFIG_VERSION,
+    blocks: blocks as PublicPageEditorConfig["blocks"],
+    appearance: appearance
+      ? ({
+          ...(appearance as PublicPageEditorConfig["appearance"]),
+          headingColor:
+            (appearance.headingColor as string) ||
+            (appearance.textColor as string) ||
+            defaultEditorConfig().appearance.headingColor,
+          surfaceColor:
+            (appearance.surfaceColor as string) || defaultEditorConfig().appearance.surfaceColor,
+          buttonStyle: (appearance.buttonStyle as ButtonStylePreset) || "filled",
+          cardStyle: (appearance.cardStyle as CardStylePreset) || "elevated",
+        } satisfies Partial<PublicPageEditorConfig["appearance"]>)
+      : undefined,
+    reservation: raw.reservation
+      ? {
+          ...(raw.reservation as PublicPageEditorConfig["reservation"]),
+          position: "default",
+        }
+      : undefined,
   };
 }
 
 export function parseEditorConfig(raw: unknown): PublicPageEditorConfig {
   const base = defaultEditorConfig();
   if (!raw || typeof raw !== "object") return base;
-  const o = raw as Partial<PublicPageEditorConfig>;
-  if (o.version !== EDITOR_CONFIG_VERSION) return mergeEditorConfig(base, o);
-
-  return mergeEditorConfig(base, o);
+  const o = raw as Record<string, unknown>;
+  const version = o.version as number | undefined;
+  const patch =
+    version === 2 ? upgradeFromV2(o) : version === EDITOR_CONFIG_VERSION ? (o as Partial<PublicPageEditorConfig>) : upgradeFromV2(o);
+  return mergeEditorConfig(base, patch);
 }
 
 function mergeEditorConfig(base: PublicPageEditorConfig, patch: Partial<PublicPageEditorConfig>): PublicPageEditorConfig {
   const blocks = { ...base.blocks };
   if (patch.blocks) {
     for (const id of PAGE_BLOCK_IDS) {
-      if (patch.blocks[id]) blocks[id] = { ...blocks[id], ...patch.blocks[id] };
+      if (patch.blocks[id]) blocks[id] = normalizeBlockConfig(patch.blocks[id], blocks[id]);
     }
   }
   const order = Array.isArray(patch.sectionOrder)
     ? patch.sectionOrder.filter((id): id is PageBlockId => PAGE_BLOCK_IDS.includes(id as PageBlockId))
     : base.sectionOrder;
 
+  const appearance = { ...base.appearance, ...patch.appearance };
+
   return {
     ...base,
     ...patch,
+    version: EDITOR_CONFIG_VERSION,
     hero: { ...base.hero, ...patch.hero },
-    appearance: { ...base.appearance, ...patch.appearance },
+    appearance,
     blocks,
     blockContent: {
       about: { ...base.blockContent.about, ...patch.blockContent?.about },
@@ -283,7 +379,7 @@ export function editorConfigToPreviewDraft(
     heroPrimaryColor: normalizeHexColor(a.primaryColor),
     buttonBgColor: normalizeHexColor(a.accentColor),
     buttonTextColor: normalizeHexColor(a.buttonTextColor),
-    headingTextColor: normalizeHexColor(a.textColor),
+    headingTextColor: normalizeHexColor(a.headingColor),
     bodyTextColor: normalizeHexColor(a.textColor),
     accentColor: normalizeHexColor(a.accentColor),
     footerBgColor: normalizeHexColor(a.footerBgColor),
@@ -300,8 +396,8 @@ export function editorConfigToPreviewDraft(
     heroLayout: config.hero.layout,
     heroAlign: config.hero.align,
     borderRadius: borderRadiusToLegacy(a.borderRadius),
-    buttonStyle: "filled",
-    cardStyle: a.shadow === "none" ? "flat" : "elevated",
+    buttonStyle: a.buttonStyle,
+    cardStyle: a.cardStyle,
     fontSizeScale: "medium",
     phone: ctx.phone,
     address: ctx.address,

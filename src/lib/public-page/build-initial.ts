@@ -93,7 +93,14 @@ function parseHighlights(raw: unknown): string[] {
 }
 
 function asStylePreset(v: string | null | undefined): PublicStylePreset | null {
-  if (v === "elegant" || v === "modern" || v === "warm") return v;
+  if (
+    v === "elegant" ||
+    v === "modern" ||
+    v === "warm" ||
+    v === "minimal" ||
+    v === "premium_dark"
+  )
+    return v;
   return null;
 }
 

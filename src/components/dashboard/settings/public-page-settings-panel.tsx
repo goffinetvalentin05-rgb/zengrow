@@ -55,9 +55,11 @@ import {
   MAX_HIGHLIGHTS,
   PUBLIC_AMBIANCE_OPTIONS,
   PUBLIC_STYLE_PRESETS,
+  SECTION_VARIANT_OPTIONS,
   type PublicAmbiance,
   type PublicStylePreset,
 } from "@/src/lib/public-page/constants";
+import type { PageBlockId, SectionVariant } from "@/src/lib/public-page/editor-config";
 
 const BLOCK_LABELS: Record<string, string> = {
   trust: "Confiance (points forts)",
@@ -311,11 +313,35 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       (preset: PublicStylePreset) => {
         const applied = applyStylePresetColors(preset, primaryColor, secondaryColor);
         setStylePreset(preset);
+        setPrimaryColor(applied.heroPrimary);
+        setSecondaryColor(applied.accent);
         setHeroPrimaryColor(applied.heroPrimary);
         setAccentColor(applied.accent);
         setHeadingFont(applied.headingFont);
         setBodyFont(applied.bodyFont);
         setHeroHeight(applied.heroHeight);
+        setEditorConfig((c) =>
+          parseEditorConfig({
+            ...c,
+            appearance: {
+              ...c.appearance,
+              stylePreset: preset,
+              primaryColor: applied.heroPrimary,
+              secondaryColor: applied.accent,
+              accentColor: applied.accent,
+              backgroundColor: applied.pageBg,
+              surfaceColor: applied.surfaceColor,
+              textColor: applied.bodyColor,
+              headingColor: applied.headingColor,
+              footerBgColor: applied.footerBg,
+              footerTextColor: applied.footerText,
+              buttonTextColor: applied.buttonText,
+              headingFont: applied.headingFont,
+              bodyFont: applied.bodyFont,
+              themeMode: applied.themeMode,
+            },
+          }),
+        );
         markDirty();
       },
       [primaryColor, secondaryColor, markDirty],
@@ -791,6 +817,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                   <option value="center">Centré</option>
                   <option value="left">Aligné à gauche</option>
                   <option value="overlay">Overlay bas</option>
+                  <option value="split">Hero + réservation visible</option>
                 </select>
               </div>
               <div>
@@ -873,8 +900,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             </div>
             <div>
               <label className="dashboard-field-label">Style de page</label>
-              <FieldHint>3 styles maximum — choisissez l'ambiance générale de votre page.</FieldHint>
-              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <FieldHint>Choisissez un style qui correspond à l&apos;ambiance du restaurant.</FieldHint>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {PUBLIC_STYLE_PRESETS.map((p) => (
                   <button
                     key={p.id}
@@ -911,6 +938,122 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {(
+                [
+                  ["backgroundColor", "Fond principal"],
+                  ["surfaceColor", "Fond des sections"],
+                  ["headingColor", "Couleur des titres"],
+                  ["textColor", "Couleur du texte"],
+                  ["accentColor", "Couleur accent / CTA"],
+                  ["footerBgColor", "Fond pied de page"],
+                  ["footerTextColor", "Texte pied de page"],
+                ] as const
+              ).map(([key, label]) => (
+                <div key={key}>
+                  <label className="dashboard-field-label">{label}</label>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Input
+                      type="color"
+                      className="h-11 w-14 shrink-0"
+                      value={editorConfig.appearance[key]}
+                      onChange={(e) => {
+                        setEditorConfig((c) =>
+                          parseEditorConfig({
+                            ...c,
+                            appearance: { ...c.appearance, [key]: e.target.value },
+                          }),
+                        );
+                        markDirty();
+                      }}
+                    />
+                    <Input
+                      value={editorConfig.appearance[key]}
+                      onChange={(e) => {
+                        setEditorConfig((c) =>
+                          parseEditorConfig({
+                            ...c,
+                            appearance: { ...c.appearance, [key]: e.target.value },
+                          }),
+                        );
+                        markDirty();
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <label className="dashboard-field-label">Thème global</label>
+                <select
+                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                  value={editorConfig.appearance.themeMode}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        appearance: {
+                          ...c.appearance,
+                          themeMode: e.target.value as PublicPageEditorConfig["appearance"]["themeMode"],
+                        },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                >
+                  <option value="light">Clair</option>
+                  <option value="dark">Sombre</option>
+                  <option value="auto">Automatique</option>
+                </select>
+              </div>
+              <div>
+                <label className="dashboard-field-label">Style des boutons</label>
+                <select
+                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                  value={editorConfig.appearance.buttonStyle}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        appearance: {
+                          ...c.appearance,
+                          buttonStyle: e.target.value as PublicPageEditorConfig["appearance"]["buttonStyle"],
+                        },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                >
+                  <option value="filled">Plein</option>
+                  <option value="outlined">Contour</option>
+                  <option value="ghost">Léger</option>
+                </select>
+              </div>
+              <div>
+                <label className="dashboard-field-label">Style des cartes</label>
+                <select
+                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                  value={editorConfig.appearance.cardStyle}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        appearance: {
+                          ...c.appearance,
+                          cardStyle: e.target.value as PublicPageEditorConfig["appearance"]["cardStyle"],
+                        },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                >
+                  <option value="flat">Plat</option>
+                  <option value="elevated">Ombre</option>
+                  <option value="bordered">Bordure</option>
+                </select>
+              </div>
             </div>
             <Button type="button" variant="secondary" className="min-h-11" onClick={resetStyle}>
               Réinitialiser le style
@@ -1015,13 +1158,47 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                     setEditorConfig((c) =>
                       parseEditorConfig({
                         ...c,
-                        blocks: { ...c.blocks, [id]: { enabled: v } },
+                        blocks: {
+                          ...c.blocks,
+                          [id]: { ...c.blocks[id], enabled: v },
+                        },
                       }),
                     );
                     markDirty();
                   }}
                   label={BLOCK_LABELS[id] ?? id}
                 />
+              ))}
+            </div>
+            <div className="space-y-3 border-t border-zg-border/60 pt-4">
+              <FieldHint>Personnalisez le rendu de chaque section (fond, largeur).</FieldHint>
+              {PAGE_BLOCK_IDS.map((id) => (
+                <div key={`${id}-style`} className="grid gap-2 sm:grid-cols-[1fr_140px] sm:items-center">
+                  <span className="text-sm text-zg-fg">{BLOCK_LABELS[id] ?? id}</span>
+                  <select
+                    className="h-10 rounded-xl border border-zg-border bg-zg-surface px-2 text-sm"
+                    value={editorConfig.blocks[id]?.variant ?? "inherit"}
+                    onChange={(e) => {
+                      const variant = e.target.value as SectionVariant;
+                      setEditorConfig((c) =>
+                        parseEditorConfig({
+                          ...c,
+                          blocks: {
+                            ...c.blocks,
+                            [id]: { ...c.blocks[id], variant },
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  >
+                    {SECTION_VARIANT_OPTIONS.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               ))}
             </div>
           </div>
