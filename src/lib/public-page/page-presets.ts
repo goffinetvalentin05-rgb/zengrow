@@ -4,6 +4,8 @@ import type {
   HeroHeightPreset,
   HeroAlign,
   PageBlockId,
+  SectionVariant,
+  BlockConfig,
 } from "@/src/lib/public-page/editor-config";
 import { parseEditorConfig } from "@/src/lib/public-page/editor-config";
 import type {
@@ -53,6 +55,8 @@ export type PagePresetBlueprint = {
   };
   /** Bloc -> activé/désactivé par défaut. Seuls les blocs explicitement listés sont touchés. */
   blocks: Partial<Record<PageBlockId, boolean>>;
+  /** Variantes de fond appliquées à certains blocs pour donner une vraie signature au preset. */
+  blockVariants?: Partial<Record<PageBlockId, SectionVariant>>;
   /** Ordre des sections (utilisé pour positionner about, gallery, menu, reservation, reviews, final_cta, etc.). */
   sectionOrder: PageBlockId[];
   /** Style galerie par défaut. */
@@ -63,8 +67,9 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
   {
     id: "premium_experience",
     label: "Expérience premium",
-    description: "Immersive et éditoriale — storytelling avant la réservation.",
-    stylePreset: "elegant",
+    description:
+      "Immersive et éditoriale — hero plein écran, storytelling, transitions sombres / chic.",
+    stylePreset: "premium_dark",
     pageGoal: "ambiance",
     persuasionStyle: "premium",
     ctaPlacement: "full",
@@ -75,12 +80,12 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
       align: "left",
       secondaryCtaEnabled: true,
       overlayEnabled: true,
-      overlayOpacity: 45,
+      overlayOpacity: 55,
     },
     reservationPosition: "default",
     defaultPrimaryCta: "Réserver une table",
     defaultSecondaryCta: "Découvrir la carte",
-    defaultConceptTitle: "Notre expérience",
+    defaultConceptTitle: "Une expérience à part",
     defaultFinalCta: {
       title: "Vivez l'expérience",
       subtitle: "Réservez votre table pour découvrir notre cuisine et notre ambiance.",
@@ -99,6 +104,15 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
       highlights: false,
       trust: false,
     },
+    blockVariants: {
+      about: "inherit",
+      gallery: "dark",
+      menu: "muted",
+      reservation: "elevated",
+      reviews: "elevated",
+      location: "dark",
+      final_cta: "accent",
+    },
     sectionOrder: [
       "about",
       "gallery",
@@ -115,7 +129,8 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
   {
     id: "warm_restaurant",
     label: "Restaurant chaleureux",
-    description: "Convivial et accueillant — photos et points forts en avant.",
+    description:
+      "Ambiance conviviale — couleurs chaudes, photos en avant, points forts dès le hero.",
     stylePreset: "warm",
     pageGoal: "reservations",
     persuasionStyle: "warm",
@@ -127,7 +142,7 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
       align: "center",
       secondaryCtaEnabled: true,
       overlayEnabled: true,
-      overlayOpacity: 40,
+      overlayOpacity: 35,
     },
     reservationPosition: "default",
     defaultPrimaryCta: "Réserver une table",
@@ -151,6 +166,16 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
       highlights: true,
       trust: false,
     },
+    blockVariants: {
+      highlights: "accent",
+      about: "muted",
+      gallery: "inherit",
+      menu: "elevated",
+      reservation: "elevated",
+      reviews: "muted",
+      location: "muted",
+      final_cta: "accent",
+    },
     sectionOrder: [
       "highlights",
       "about",
@@ -168,7 +193,7 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
   {
     id: "modern_brasserie",
     label: "Brasserie moderne",
-    description: "Direct et efficace — menu, horaires et réservation accessibles.",
+    description: "Direct et efficace — hero centré épuré, menu et horaires accessibles.",
     stylePreset: "modern",
     pageGoal: "reservations",
     persuasionStyle: "direct",
@@ -204,6 +229,16 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
       highlights: false,
       trust: false,
     },
+    blockVariants: {
+      reservation: "elevated",
+      menu: "inherit",
+      hours: "muted",
+      gallery: "muted",
+      about: "inherit",
+      reviews: "elevated",
+      location: "muted",
+      final_cta: "primary",
+    },
     sectionOrder: [
       "reservation",
       "menu",
@@ -220,7 +255,8 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
   {
     id: "event_venue",
     label: "Événementiel & groupes",
-    description: "Mise en avant des offres et formules pour groupes et événements.",
+    description:
+      "Hero en split (image + texte côte à côte), mise en avant des formules et de la prise de contact.",
     stylePreset: "elegant",
     pageGoal: "terrace_event",
     persuasionStyle: "premium",
@@ -228,11 +264,11 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
     stickyMobile: true,
     hero: {
       height: "normal",
-      layout: "overlay",
+      layout: "split",
       align: "left",
       secondaryCtaEnabled: true,
       overlayEnabled: true,
-      overlayOpacity: 45,
+      overlayOpacity: 35,
     },
     reservationPosition: "default",
     defaultPrimaryCta: "Demander un devis",
@@ -257,6 +293,16 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
       highlights: true,
       trust: false,
     },
+    blockVariants: {
+      highlights: "muted",
+      menu: "elevated",
+      about: "inherit",
+      gallery: "muted",
+      reservation: "elevated",
+      reviews: "inherit",
+      location: "dark",
+      final_cta: "accent",
+    },
     sectionOrder: [
       "menu",
       "about",
@@ -273,7 +319,8 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
   {
     id: "minimal_conversion",
     label: "Minimal conversion",
-    description: "Page courte et directe pour réserver vite.",
+    description:
+      "Page courte, ultra directe — hero compact centré, presque pas de scroll avant le bouton.",
     stylePreset: "minimal",
     pageGoal: "simple_direct",
     persuasionStyle: "fast",
@@ -308,6 +355,13 @@ export const PAGE_PRESETS: PagePresetBlueprint[] = [
       hours: true,
       highlights: false,
       trust: false,
+    },
+    blockVariants: {
+      reservation: "elevated",
+      menu: "inherit",
+      hours: "muted",
+      location: "muted",
+      final_cta: "primary",
     },
     sectionOrder: [
       "reservation",
@@ -347,13 +401,22 @@ export function applyPagePreset(
     current.appearance.secondaryColor,
   );
 
-  // On copie les blocs existants, puis on applique les overrides du preset.
-  const nextBlocks = { ...current.blocks };
+  // On copie les blocs existants, puis on applique les overrides du preset
+  // (activation/désactivation ET variante de fond pour donner sa signature au preset).
+  const nextBlocks = { ...current.blocks } as Record<PageBlockId, BlockConfig>;
   for (const [blockId, enabled] of Object.entries(preset.blocks) as [PageBlockId, boolean][]) {
     nextBlocks[blockId] = {
       ...(current.blocks[blockId] ?? { variant: "inherit", width: "contained" }),
       enabled,
     };
+  }
+  if (preset.blockVariants) {
+    for (const [blockId, variant] of Object.entries(preset.blockVariants) as [PageBlockId, SectionVariant][]) {
+      nextBlocks[blockId] = {
+        ...(nextBlocks[blockId] ?? { enabled: true, variant: "inherit", width: "contained" }),
+        variant,
+      };
+    }
   }
 
   // Préservation des textes existants

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronRight, Check, MapPin, Menu, Phone, Star, X } from "lucide-react";
+import { ChevronRight, Check, Clock, MapPin, Menu, Phone, Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/src/lib/utils";
 import type {
@@ -27,6 +27,8 @@ const NAV_ITEMS = [
 function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
+export type HeroLayoutVariant = "overlay" | "left" | "center" | "split";
 
 export function PublicPageNav({
   restaurantName,
@@ -58,16 +60,18 @@ export function PublicPageNav({
     <>
       <header
         className={cn(
-          "z-40 border-b border-white/10 bg-[color-mix(in_srgb,var(--page-bg)_82%,transparent)] backdrop-blur-md",
-          previewMode ? "sticky top-0 w-full" : "fixed inset-x-0 top-0",
+          "z-40 w-full border-b border-white/10",
+          // Reste transparent au-dessus du hero pour un rendu éditorial ; les couleurs sont définies par les CSS vars
+          "bg-gradient-to-b from-black/35 via-black/15 to-transparent backdrop-blur-[2px]",
+          previewMode ? "sticky top-0 left-0 right-0" : "fixed inset-x-0 top-0",
         )}
       >
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6 lg:px-10">
           <button
             type="button"
             onClick={() => scrollToId("accueil")}
-            className="truncate text-sm font-semibold tracking-wide sm:text-base"
-            style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+            className="truncate text-sm font-semibold tracking-wide text-white sm:text-base"
+            style={{ fontFamily: "var(--heading-font)" }}
           >
             {restaurantName}
           </button>
@@ -77,8 +81,7 @@ export function PublicPageNav({
                 key={item.id}
                 type="button"
                 onClick={() => scrollToId(item.id)}
-                className="text-xs font-medium uppercase tracking-[0.14em] opacity-75 transition hover:opacity-100"
-                style={{ color: "var(--heading-color)" }}
+                className="text-xs font-medium uppercase tracking-[0.16em] text-white/85 transition hover:text-white"
               >
                 {item.label}
               </button>
@@ -87,23 +90,18 @@ export function PublicPageNav({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="hidden min-h-10 items-center rounded-sm border px-4 text-xs font-semibold uppercase tracking-wider transition hover:opacity-90 md:inline-flex"
-              style={{
-                borderColor: "color-mix(in srgb, var(--heading-color) 35%, transparent)",
-                color: "var(--heading-color)",
-              }}
+              className="hidden min-h-10 items-center rounded-full border border-white/40 bg-white/5 px-4 text-xs font-semibold uppercase tracking-wider text-white transition hover:bg-white/15 md:inline-flex"
               onClick={onReserve}
             >
               {ctaLabel}
             </button>
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-sm border md:hidden"
-              style={{ borderColor: "color-mix(in srgb, var(--heading-color) 25%, transparent)" }}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/5 text-white md:hidden"
               aria-label="Menu"
               onClick={() => setOpen(true)}
             >
-              <Menu className="h-5 w-5" style={{ color: "var(--heading-color)" }} />
+              <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -160,15 +158,196 @@ export function PublicPageNav({
   );
 }
 
+/**
+ * Hauteur minimale du hero.
+ * Le hero ne doit JAMAIS imposer de max-h : c'est ce qui causait le bug "haut coupé"
+ * dans l'aperçu (le contenu débordait et `overflow-hidden` + `justify-end` rognaient le haut).
+ */
 function premiumHeroMinHeight(heroHeight: "compact" | "normal" | "tall", previewMode: boolean) {
   if (previewMode) {
-    if (heroHeight === "compact") return "min-h-[200px] max-h-[260px]";
-    if (heroHeight === "tall") return "min-h-[280px] max-h-[360px]";
-    return "min-h-[240px] max-h-[320px]";
+    if (heroHeight === "compact") return "min-h-[440px]";
+    if (heroHeight === "tall") return "min-h-[640px]";
+    return "min-h-[540px]";
   }
-  if (heroHeight === "compact") return "min-h-[38vh] max-h-[440px]";
-  if (heroHeight === "tall") return "min-h-[min(72vh,820px)]";
-  return "min-h-[min(88vh,920px)]";
+  if (heroHeight === "compact") return "min-h-[min(62vh,560px)]";
+  if (heroHeight === "tall") return "min-h-[min(88vh,920px)]";
+  return "min-h-[min(78vh,780px)]";
+}
+
+function HeroContentInner({
+  logoUrl,
+  cuisineCityLine,
+  badge,
+  headline,
+  tagline,
+  openStatus,
+  phone,
+  showPhone,
+  ctaLabel,
+  secondaryLabel,
+  secondaryHref,
+  showSecondary,
+  onReserve,
+  ctaStyle,
+  textTheme,
+  align,
+}: {
+  logoUrl?: string | null;
+  cuisineCityLine?: string;
+  badge?: string;
+  headline: string;
+  tagline?: string;
+  openStatus: string;
+  phone?: string | null;
+  showPhone?: boolean;
+  ctaLabel: string;
+  secondaryLabel: string;
+  secondaryHref?: string | null;
+  showSecondary: boolean;
+  onReserve: () => void;
+  ctaStyle: CtaStyle;
+  textTheme: "onImage" | "onSurface";
+  align: "left" | "center";
+}) {
+  const isCenter = align === "center";
+  const muted = textTheme === "onImage" ? "text-white/80" : "opacity-75";
+  const subtle = textTheme === "onImage" ? "text-white/65" : "opacity-60";
+  const headingColor =
+    textTheme === "onImage" ? ("#ffffff" as const) : ("var(--heading-color)" as const);
+  const bodyColor =
+    textTheme === "onImage"
+      ? ("rgba(255,255,255,0.88)" as const)
+      : ("var(--body-text)" as const);
+
+  return (
+    <div className={cn("flex w-full flex-col gap-6", isCenter && "items-center text-center")}>
+      {logoUrl ? (
+        <div
+          className={cn(
+            "relative h-16 w-16 overflow-hidden rounded-full border p-1 sm:h-20 sm:w-20",
+            textTheme === "onImage"
+              ? "border-white/25 bg-white/10 backdrop-blur-sm"
+              : "border-[color-mix(in_srgb,var(--heading-color)_18%,transparent)] bg-[color-mix(in_srgb,var(--heading-color)_6%,transparent)]",
+          )}
+        >
+          <Image src={logoUrl} alt="" fill className="object-contain p-1" sizes="80px" unoptimized />
+        </div>
+      ) : null}
+
+      {badge ? (
+        <span
+          className={cn(
+            "inline-flex items-center gap-2 self-start rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]",
+            textTheme === "onImage"
+              ? "border border-white/30 bg-white/10 text-white"
+              : "border border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] bg-[color-mix(in_srgb,var(--accent-color)_12%,transparent)]",
+          )}
+          style={textTheme === "onSurface" ? { color: "var(--accent-color)" } : undefined}
+        >
+          {badge}
+        </span>
+      ) : null}
+
+      {cuisineCityLine ? (
+        <p
+          className={cn(
+            "text-[11px] font-medium uppercase tracking-[0.3em]",
+            muted,
+          )}
+          style={textTheme === "onSurface" ? { color: "var(--body-text)" } : undefined}
+        >
+          {cuisineCityLine}
+        </p>
+      ) : null}
+
+      <h1
+        className={cn("max-w-3xl text-balance font-medium leading-[1.04] tracking-tight")}
+        style={{
+          fontFamily: "var(--heading-font), Georgia, serif",
+          fontSize: "clamp(2.25rem, 5.5vw, 4.5rem)",
+          color: headingColor,
+        }}
+      >
+        {headline}
+      </h1>
+
+      {tagline ? (
+        <p
+          className={cn("max-w-xl text-pretty text-base leading-relaxed sm:text-lg")}
+          style={{ color: bodyColor }}
+        >
+          {tagline}
+        </p>
+      ) : null}
+
+      <p
+        className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 text-sm", subtle)}
+        style={textTheme === "onSurface" ? { color: "var(--body-text)" } : undefined}
+      >
+        <span className="inline-flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5" aria-hidden />
+          {openStatus}
+        </span>
+        {showPhone && phone ? (
+          <a
+            href={`tel:${phone.replace(/\s/g, "")}`}
+            className="inline-flex items-center gap-1.5 underline-offset-2 hover:underline"
+          >
+            <Phone className="h-3.5 w-3.5" aria-hidden />
+            {phone}
+          </a>
+        ) : null}
+      </p>
+
+      <div
+        className={cn(
+          "flex flex-col gap-3 sm:flex-row sm:items-center",
+          isCenter ? "sm:justify-center" : "sm:justify-start",
+        )}
+      >
+        <button
+          type="button"
+          onClick={onReserve}
+          className={cn(ctaStyle.className, "min-h-[52px] px-8 text-sm uppercase tracking-[0.16em]")}
+          style={ctaStyle.style}
+        >
+          {ctaLabel}
+        </button>
+        {showSecondary && secondaryHref ? (
+          <a
+            href={secondaryHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[var(--radius)] px-8 text-sm font-semibold uppercase tracking-[0.16em] transition",
+              textTheme === "onImage"
+                ? "border border-white/40 text-white hover:bg-white/10"
+                : "border border-[color-mix(in_srgb,var(--heading-color)_25%,transparent)] hover:bg-[color-mix(in_srgb,var(--heading-color)_6%,transparent)]",
+            )}
+            style={textTheme === "onSurface" ? { color: "var(--heading-color)" } : undefined}
+          >
+            {secondaryLabel}
+            <ChevronRight className="h-4 w-4" aria-hidden />
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={() => scrollToId("concept")}
+            className={cn(
+              "inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[var(--radius)] px-8 text-sm font-semibold uppercase tracking-[0.16em] transition",
+              textTheme === "onImage"
+                ? "border border-white/40 text-white hover:bg-white/10"
+                : "border border-[color-mix(in_srgb,var(--heading-color)_25%,transparent)] hover:bg-[color-mix(in_srgb,var(--heading-color)_6%,transparent)]",
+            )}
+            style={textTheme === "onSurface" ? { color: "var(--heading-color)" } : undefined}
+          >
+            Découvrir le concept
+            <ChevronRight className="h-4 w-4" aria-hidden />
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function PremiumHero({
@@ -176,6 +355,7 @@ export function PremiumHero({
   logoUrl,
   headline,
   cuisineCityLine,
+  badge,
   tagline,
   openStatus,
   phone,
@@ -188,6 +368,7 @@ export function PremiumHero({
   ctaStyle,
   overlayOpacity,
   heroAlign,
+  heroLayout = "overlay",
   heroHeight = "normal",
   previewMode = false,
 }: {
@@ -195,6 +376,7 @@ export function PremiumHero({
   logoUrl?: string | null;
   headline: string;
   cuisineCityLine?: string;
+  badge?: string;
   tagline?: string;
   openStatus: string;
   phone?: string | null;
@@ -207,20 +389,143 @@ export function PremiumHero({
   ctaStyle: CtaStyle;
   overlayOpacity: number;
   heroAlign: "left" | "center" | "right";
+  heroLayout?: HeroLayoutVariant;
   heroHeight?: "compact" | "normal" | "tall";
   previewMode?: boolean;
 }) {
-  const alignLeft = heroAlign === "left";
+  const minH = premiumHeroMinHeight(heroHeight, previewMode);
+  const isCenter = heroAlign === "center" || heroLayout === "center";
+  const align: "left" | "center" = isCenter ? "center" : "left";
+
+  /* === LAYOUT 1 : SPLIT — image à droite, contenu sur fond clair à gauche === */
+  if (heroLayout === "split" && coverImageUrl) {
+    return (
+      <section
+        id="accueil"
+        className={cn(
+          "relative w-full scroll-mt-20 overflow-hidden",
+          minH,
+        )}
+        style={{ backgroundColor: "var(--page-bg)" }}
+      >
+        <div className="grid h-full min-h-inherit grid-cols-1 lg:grid-cols-[1.05fr_1fr]">
+          <div className="relative flex items-center px-5 pb-12 pt-24 sm:px-10 lg:px-16 lg:pb-16 lg:pt-32">
+            <div className="w-full max-w-xl">
+              <HeroContentInner
+                logoUrl={logoUrl}
+                cuisineCityLine={cuisineCityLine}
+                badge={badge}
+                headline={headline}
+                tagline={tagline}
+                openStatus={openStatus}
+                phone={phone}
+                showPhone={showPhone}
+                ctaLabel={ctaLabel}
+                secondaryLabel={secondaryLabel}
+                secondaryHref={secondaryHref}
+                showSecondary={showSecondary}
+                onReserve={onReserve}
+                ctaStyle={ctaStyle}
+                textTheme="onSurface"
+                align="left"
+              />
+            </div>
+          </div>
+          <div className="relative min-h-[260px] overflow-hidden lg:min-h-full">
+            <Image
+              src={coverImageUrl}
+              alt=""
+              fill
+              priority
+              className="object-cover"
+              sizes="(max-width:1024px) 100vw, 50vw"
+              unoptimized
+            />
+            <div
+              className="absolute inset-0 bg-black"
+              style={{ opacity: overlayOpacity * 0.45 }}
+              aria-hidden
+            />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* === LAYOUT 2 : CENTER — image en fond, contenu centré (style minimal/brasserie) === */
+  if (heroLayout === "center") {
+    return (
+      <section
+        id="accueil"
+        className={cn(
+          "relative flex w-full scroll-mt-20 flex-col items-center justify-center overflow-hidden",
+          minH,
+        )}
+      >
+        {coverImageUrl ? (
+          <Image
+            src={coverImageUrl}
+            alt=""
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
+            unoptimized
+          />
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, var(--hero-primary) 0%, color-mix(in srgb, var(--accent-color) 25%, var(--hero-primary)) 100%)`,
+            }}
+            aria-hidden
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/55" aria-hidden />
+        <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} aria-hidden />
+        <div className="relative z-[1] mx-auto w-full max-w-3xl px-5 pb-20 pt-28 text-center sm:px-8 sm:pb-28 sm:pt-32">
+          <HeroContentInner
+            logoUrl={logoUrl}
+            cuisineCityLine={cuisineCityLine}
+            badge={badge}
+            headline={headline}
+            tagline={tagline}
+            openStatus={openStatus}
+            phone={phone}
+            showPhone={showPhone}
+            ctaLabel={ctaLabel}
+            secondaryLabel={secondaryLabel}
+            secondaryHref={secondaryHref}
+            showSecondary={showSecondary}
+            onReserve={onReserve}
+            ctaStyle={ctaStyle}
+            textTheme="onImage"
+            align="center"
+          />
+        </div>
+      </section>
+    );
+  }
+
+  /* === LAYOUT 3 (DEFAULT) : OVERLAY immersif ou LEFT — image plein cadre, contenu en bas/gauche === */
   return (
     <section
       id="accueil"
       className={cn(
-        "relative flex w-full scroll-mt-20 flex-col justify-end overflow-hidden pt-14 sm:pt-16",
-        premiumHeroMinHeight(heroHeight, previewMode),
+        "relative flex w-full scroll-mt-20 flex-col overflow-hidden",
+        minH,
       )}
     >
       {coverImageUrl ? (
-        <Image src={coverImageUrl} alt="" fill priority className="object-cover" sizes="100vw" unoptimized />
+        <Image
+          src={coverImageUrl}
+          alt=""
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+          unoptimized
+        />
       ) : (
         <div
           className="absolute inset-0"
@@ -230,100 +535,34 @@ export function PremiumHero({
           aria-hidden
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/15" aria-hidden />
-      <div
-        className="absolute inset-0 bg-black"
-        style={{ opacity: overlayOpacity }}
-        aria-hidden
-      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/15" aria-hidden />
+      <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} aria-hidden />
 
+      {/* Contenu : positionné dans le tiers inférieur pour un rendu cinéma */}
       <div
         className={cn(
-          "relative z-[1] mx-auto w-full max-w-7xl px-5 pb-16 pt-24 sm:px-8 sm:pb-24 lg:px-12 lg:pb-28",
-          alignLeft ? "text-left" : heroAlign === "right" ? "text-right" : "text-center",
+          "relative z-[1] mx-auto mt-auto flex w-full max-w-7xl flex-col px-5 pb-14 pt-28 sm:px-8 sm:pb-20 sm:pt-32 lg:px-12 lg:pb-24",
+          align === "center" ? "items-center text-center" : "items-start text-left",
         )}
       >
-        {logoUrl ? (
-          <div className="relative mb-8 h-16 w-16 overflow-hidden rounded-sm border border-white/20 bg-white/5 p-1 sm:h-20 sm:w-20">
-            <Image src={logoUrl} alt="" fill className="object-contain p-1" sizes="80px" unoptimized />
-          </div>
-        ) : null}
-
-        {cuisineCityLine ? (
-          <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-white/75">{cuisineCityLine}</p>
-        ) : null}
-
-        <h1
-          className={cn(
-            "mt-3 max-w-3xl text-balance font-medium leading-[1.05] tracking-tight text-white",
-            !alignLeft && "mx-auto",
-          )}
-          style={{
-            fontFamily: "var(--heading-font), Georgia, serif",
-            fontSize: "clamp(2.25rem, 6vw, 4.25rem)",
-          }}
-        >
-          {headline}
-        </h1>
-
-        {tagline ? (
-          <p
-            className={cn(
-              "mt-5 max-w-xl text-pretty text-base leading-relaxed text-white/88 sm:text-lg",
-              !alignLeft && "mx-auto",
-            )}
-          >
-            {tagline}
-          </p>
-        ) : null}
-
-        <p className={cn("mt-4 text-sm text-white/65", !alignLeft && "mx-auto max-w-xl")}>
-          {openStatus}
-          {showPhone && phone ? (
-            <>
-              {" · "}
-              <a href={`tel:${phone.replace(/\s/g, "")}`} className="underline-offset-2 hover:underline">
-                {phone}
-              </a>
-            </>
-          ) : null}
-        </p>
-
-        <div
-          className={cn(
-            "mt-8 flex flex-col gap-3 sm:flex-row sm:items-center",
-            alignLeft ? "sm:justify-start" : "sm:justify-center",
-          )}
-        >
-          <button
-            type="button"
-            onClick={onReserve}
-            className={cn(ctaStyle.className, "min-h-[52px] px-8 text-sm uppercase tracking-wider")}
-            style={ctaStyle.style}
-          >
-            {ctaLabel}
-          </button>
-          {showSecondary && secondaryHref ? (
-            <a
-              href={secondaryHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-[52px] items-center justify-center gap-2 border border-white/40 px-8 text-sm font-semibold uppercase tracking-wider text-white transition hover:bg-white/10"
-            >
-              {secondaryLabel}
-              <ChevronRight className="h-4 w-4" aria-hidden />
-            </a>
-          ) : (
-            <button
-              type="button"
-              onClick={() => scrollToId("concept")}
-              className="inline-flex min-h-[52px] items-center justify-center gap-2 border border-white/40 px-8 text-sm font-semibold uppercase tracking-wider text-white transition hover:bg-white/10"
-            >
-              Découvrir le concept
-              <ChevronRight className="h-4 w-4" aria-hidden />
-            </button>
-          )}
-        </div>
+        <HeroContentInner
+          logoUrl={logoUrl}
+          cuisineCityLine={cuisineCityLine}
+          badge={badge}
+          headline={headline}
+          tagline={tagline}
+          openStatus={openStatus}
+          phone={phone}
+          showPhone={showPhone}
+          ctaLabel={ctaLabel}
+          secondaryLabel={secondaryLabel}
+          secondaryHref={secondaryHref}
+          showSecondary={showSecondary}
+          onReserve={onReserve}
+          ctaStyle={ctaStyle}
+          textTheme="onImage"
+          align={align}
+        />
       </div>
     </section>
   );
@@ -334,35 +573,82 @@ export function ConceptSection({
   body,
   imageUrl,
   pillars,
+  eyebrow = "Le concept",
+  layout = "image-right",
 }: {
   title: string;
   body: string;
   imageUrl?: string;
   pillars: ConceptPillar[];
+  eyebrow?: string;
+  layout?: "image-right" | "image-left" | "stacked";
 }) {
   if (!body.trim() && !imageUrl && pillars.every((p) => !p.title.trim())) return null;
 
+  const stacked = layout === "stacked" || !imageUrl;
+  const imageOnRight = layout === "image-right";
+
   return (
-    <section id="concept" className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
-      <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
-          {imageUrl ? (
-            <div className="relative aspect-[4/5] overflow-hidden sm:aspect-[5/6] lg:order-2">
-              <Image src={imageUrl} alt="" fill className="object-cover" sizes="(max-width:1024px) 100vw, 50vw" unoptimized />
+    <section
+      id="concept"
+      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]"
+    >
+      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+        <div
+          className={cn(
+            "grid items-center gap-12",
+            stacked ? "grid-cols-1 max-w-3xl mx-auto text-center" : "lg:grid-cols-2 lg:gap-20",
+          )}
+        >
+          {imageUrl && !stacked ? (
+            <div
+              className={cn(
+                "relative aspect-[4/5] overflow-hidden sm:aspect-[5/6]",
+                imageOnRight ? "lg:order-2" : "lg:order-1",
+              )}
+            >
+              <Image
+                src={imageUrl}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width:1024px) 100vw, 50vw"
+                unoptimized
+              />
+              <div
+                className="pointer-events-none absolute inset-x-6 bottom-6 hidden h-px lg:block"
+                style={{ backgroundColor: "color-mix(in srgb, var(--accent-color) 45%, transparent)" }}
+                aria-hidden
+              />
             </div>
           ) : null}
-          <div className={imageUrl ? "lg:order-1" : "lg:col-span-2"}>
-            <p className="text-[11px] font-medium uppercase tracking-[0.28em] opacity-60" style={{ color: "var(--heading-color)" }}>
-              Concept
+
+          <div className={cn(!stacked && (imageOnRight ? "lg:order-1" : "lg:order-2"))}>
+            <p
+              className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
+              style={{ color: "var(--heading-color)" }}
+            >
+              {eyebrow}
             </p>
             <h2
-              className="mt-3 text-3xl font-medium leading-tight sm:text-4xl"
+              className="mt-4 text-3xl font-medium leading-[1.1] sm:text-4xl lg:text-[2.75rem]"
               style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
             >
               {title}
             </h2>
+            <div
+              className={cn("mt-5 h-px w-16", stacked && "mx-auto")}
+              style={{ backgroundColor: "var(--accent-color)" }}
+              aria-hidden
+            />
             {body.trim() ? (
-              <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed opacity-90" style={{ color: "var(--body-text)" }}>
+              <p
+                className={cn(
+                  "mt-6 text-pretty text-base leading-relaxed opacity-90 sm:text-lg",
+                  stacked ? "mx-auto max-w-xl" : "max-w-xl",
+                )}
+                style={{ color: "var(--body-text)" }}
+              >
                 {body}
               </p>
             ) : null}
@@ -370,19 +656,40 @@ export function ConceptSection({
         </div>
 
         {pillars.length > 0 ? (
-          <div className="mt-14 grid gap-6 sm:grid-cols-3">
-            {pillars.map((p) => (
-              <article
-                key={p.title}
-                className="border-t-2 pt-5"
-                style={{ borderColor: "var(--accent-color)" }}
-              >
-                <h3 className="text-lg font-medium" style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}>
-                  {p.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed opacity-85" style={{ color: "var(--body-text)" }}>
-                  {p.text}
-                </p>
+          <div
+            className={cn(
+              "mt-16 grid gap-8",
+              pillars.length >= 3 ? "sm:grid-cols-3" : "sm:grid-cols-2",
+            )}
+          >
+            {pillars.map((p, i) => (
+              <article key={`${p.title}-${i}`} className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+                    style={{
+                      backgroundColor: "color-mix(in srgb, var(--accent-color) 16%, transparent)",
+                      color: "var(--accent-color)",
+                      fontFamily: "var(--heading-font)",
+                    }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <h3
+                    className="text-lg font-medium leading-tight"
+                    style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+                  >
+                    {p.title}
+                  </h3>
+                </div>
+                {p.text ? (
+                  <p
+                    className="text-sm leading-relaxed opacity-85"
+                    style={{ color: "var(--body-text)" }}
+                  >
+                    {p.text}
+                  </p>
+                ) : null}
               </article>
             ))}
           </div>
@@ -395,9 +702,11 @@ export function ConceptSection({
 export function EditorialBlock({
   section,
   previewMode = false,
+  eyebrow,
 }: {
   section: EditorialSectionContent;
   previewMode?: boolean;
+  eyebrow?: string;
 }) {
   if (!section.enabled) return null;
   const hasImage = Boolean(section.imageUrl.trim());
@@ -408,26 +717,35 @@ export function EditorialBlock({
       <section
         className={cn(
           "relative overflow-hidden",
-          previewMode ? "min-h-[180px]" : "min-h-[min(56vh,520px)]",
+          previewMode ? "min-h-[360px]" : "min-h-[min(60vh,560px)]",
         )}
       >
         <Image src={section.imageUrl} alt="" fill className="object-cover" sizes="100vw" unoptimized />
-        <div className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div
           className={cn(
-            "relative flex items-end px-5 py-14 sm:px-8 lg:px-12",
-            previewMode ? "min-h-[180px]" : "min-h-[min(56vh,520px)]",
+            "relative flex h-full items-end px-5 py-16 sm:px-8 lg:px-12",
+            previewMode ? "min-h-[360px]" : "min-h-[min(60vh,560px)]",
           )}
         >
           <div className="max-w-2xl text-white">
-            <h2 className="text-3xl font-medium sm:text-4xl" style={{ fontFamily: "var(--heading-font)" }}>
+            {eyebrow ? (
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/75">
+                {eyebrow}
+              </p>
+            ) : null}
+            <h2 className="text-3xl font-medium leading-tight sm:text-4xl" style={{ fontFamily: "var(--heading-font)" }}>
               {section.title}
             </h2>
-            {section.text ? <p className="mt-4 text-base leading-relaxed text-white/90">{section.text}</p> : null}
+            {section.text ? (
+              <p className="mt-5 text-base leading-relaxed text-white/90">{section.text}</p>
+            ) : null}
             {section.buttonLabel && section.buttonUrl ? (
               <a
                 href={section.buttonUrl}
-                className="mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider underline-offset-4 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-7 inline-flex items-center gap-2 border-b border-white/70 pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-white"
               >
                 {section.buttonLabel}
                 <ChevronRight className="h-4 w-4" />
@@ -442,11 +760,11 @@ export function EditorialBlock({
   const imageFirst = section.layout === "image-left";
   return (
     <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-14 sm:px-8 lg:grid-cols-2 lg:gap-16 lg:px-12 lg:py-20">
+      <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-2 lg:gap-20 lg:px-12 lg:py-24">
         {hasImage ? (
           <div
             className={cn(
-              "relative aspect-[4/3] overflow-hidden",
+              "relative aspect-[4/5] overflow-hidden sm:aspect-[5/6]",
               !imageFirst && "lg:order-2",
             )}
           >
@@ -454,14 +772,25 @@ export function EditorialBlock({
           </div>
         ) : null}
         <div className={cn(!imageFirst && hasImage && "lg:order-1")}>
+          {eyebrow ? (
+            <p
+              className="mb-3 text-[11px] font-semibold uppercase tracking-[0.28em] opacity-60"
+              style={{ color: "var(--heading-color)" }}
+            >
+              {eyebrow}
+            </p>
+          ) : null}
           <h2
-            className="text-2xl font-medium sm:text-3xl"
+            className="text-2xl font-medium leading-tight sm:text-3xl lg:text-4xl"
             style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
           >
             {section.title}
           </h2>
           {section.text ? (
-            <p className="mt-4 text-pretty text-base leading-relaxed opacity-90" style={{ color: "var(--body-text)" }}>
+            <p
+              className="mt-5 text-pretty text-base leading-relaxed opacity-90"
+              style={{ color: "var(--body-text)" }}
+            >
               {section.text}
             </p>
           ) : null}
@@ -470,8 +799,8 @@ export function EditorialBlock({
               href={section.buttonUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider"
-              style={{ color: "var(--accent-color)" }}
+              className="mt-7 inline-flex items-center gap-2 border-b-2 pb-1 text-sm font-semibold uppercase tracking-[0.18em]"
+              style={{ borderColor: "var(--accent-color)", color: "var(--accent-color)" }}
             >
               {section.buttonLabel}
               <ChevronRight className="h-4 w-4" />
@@ -487,35 +816,46 @@ export function MenuOffersSection({
   offers,
   menuHref,
   menuPdfLabel,
+  eyebrow = "Carte & offres",
+  title = "Notre menu",
 }: {
   offers: MenuOfferItem[];
   menuHref?: string | null;
   menuPdfLabel?: string;
+  eyebrow?: string;
+  title?: string;
 }) {
   const hasOffers = offers.length > 0;
   if (!hasOffers && !menuHref) return null;
 
   return (
-    <section id="menu" className="scroll-mt-24 bg-[color-mix(in_srgb,var(--body-text)_4%,var(--page-bg))]">
-      <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <section
+      id="menu"
+      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_4%,var(--page-bg))]"
+    >
+      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.28em] opacity-60" style={{ color: "var(--heading-color)" }}>
-              Carte & offres
+            <p
+              className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
+              style={{ color: "var(--heading-color)" }}
+            >
+              {eyebrow}
             </p>
             <h2
-              className="mt-2 text-3xl font-medium sm:text-4xl"
+              className="mt-3 text-3xl font-medium sm:text-4xl"
               style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
             >
-              Notre menu
+              {title}
             </h2>
+            <div className="mt-4 h-px w-16" style={{ backgroundColor: "var(--accent-color)" }} aria-hidden />
           </div>
           {menuHref ? (
             <a
               href={menuHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center gap-2 border-b-2 pb-1 text-sm font-semibold uppercase tracking-wider"
+              className="inline-flex min-h-11 items-center gap-2 border-b-2 pb-1 text-sm font-semibold uppercase tracking-[0.18em]"
               style={{ borderColor: "var(--accent-color)", color: "var(--accent-color)" }}
             >
               {menuPdfLabel ?? "Voir la carte complète"}
@@ -525,11 +865,11 @@ export function MenuOffersSection({
         </div>
 
         {hasOffers ? (
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             {offers.map((o) => (
               <article
                 key={o.id}
-                className="group flex flex-col overflow-hidden border border-[color-mix(in_srgb,var(--body-text)_12%,transparent)] bg-[var(--page-bg)]"
+                className="group flex flex-col overflow-hidden bg-[var(--page-bg)] shadow-[0_24px_80px_-48px_rgba(15,23,42,0.25)] transition duration-500 hover:shadow-[0_32px_100px_-48px_rgba(15,23,42,0.35)]"
               >
                 {o.imageUrl ? (
                   <div className="relative aspect-[16/10] overflow-hidden">
@@ -537,25 +877,43 @@ export function MenuOffersSection({
                       src={o.imageUrl}
                       alt=""
                       fill
-                      className="object-cover transition duration-700 group-hover:scale-[1.03]"
+                      className="object-cover transition duration-700 group-hover:scale-[1.04]"
                       sizes="400px"
                       unoptimized
                     />
                   </div>
-                ) : null}
-                <div className="flex flex-1 flex-col p-5">
+                ) : (
+                  <div
+                    className="aspect-[16/10] w-full"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, color-mix(in srgb, var(--accent-color) 16%, var(--page-bg)) 0%, var(--page-bg) 100%)",
+                    }}
+                    aria-hidden
+                  />
+                )}
+                <div className="flex flex-1 flex-col p-6">
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-lg font-medium" style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}>
+                    <h3
+                      className="text-lg font-medium leading-tight"
+                      style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+                    >
                       {o.title}
                     </h3>
                     {o.price ? (
-                      <span className="shrink-0 text-sm font-semibold" style={{ color: "var(--accent-color)" }}>
+                      <span
+                        className="shrink-0 text-base font-semibold"
+                        style={{ color: "var(--accent-color)", fontFamily: "var(--heading-font)" }}
+                      >
                         {o.price}
                       </span>
                     ) : null}
                   </div>
                   {o.description ? (
-                    <p className="mt-2 flex-1 text-sm leading-relaxed opacity-85" style={{ color: "var(--body-text)" }}>
+                    <p
+                      className="mt-3 flex-1 text-sm leading-relaxed opacity-85"
+                      style={{ color: "var(--body-text)" }}
+                    >
                       {o.description}
                     </p>
                   ) : null}
@@ -659,45 +1017,73 @@ export function PremiumGallery({
   style,
   instagramUrl,
   showInstagram,
+  eyebrow = "Galerie",
 }: {
   images: string[];
   style: GalleryStyle;
   instagramUrl?: string | null;
   showInstagram?: boolean;
+  eyebrow?: string;
 }) {
   if (images.length === 0) return null;
+  const title = showInstagram && instagramUrl ? "L'ambiance en images" : "Le lieu en images";
 
-  const title = showInstagram && instagramUrl ? "L'ambiance en images" : "Galerie";
-
+  /* === STYLE SHOWCASE : 1 grande photo + mosaïque secondaire (premium) === */
   if (style === "showcase" && images.length >= 2) {
     const [hero, ...rest] = images;
     return (
       <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
-        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
-          <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <h2 className="text-3xl font-medium sm:text-4xl" style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}>
-              {title}
-            </h2>
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+          <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
+                style={{ color: "var(--heading-color)" }}
+              >
+                {eyebrow}
+              </p>
+              <h2
+                className="mt-3 text-3xl font-medium sm:text-4xl"
+                style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+              >
+                {title}
+              </h2>
+            </div>
             {showInstagram && instagramUrl ? (
               <a
                 href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-semibold uppercase tracking-wider"
+                className="text-sm font-semibold uppercase tracking-[0.2em] underline-offset-4 hover:underline"
                 style={{ color: "var(--accent-color)" }}
               >
-                @ Instagram
+                Voir sur Instagram →
               </a>
             ) : null}
           </div>
           <div className="grid gap-3 lg:grid-cols-12 lg:gap-4">
-            <div className="relative aspect-[16/10] overflow-hidden lg:col-span-8 lg:aspect-auto lg:min-h-[420px]">
-              <Image src={hero} alt="" fill className="object-cover" sizes="(max-width:1024px) 100vw, 66vw" unoptimized priority />
+            <div className="relative aspect-[16/10] overflow-hidden lg:col-span-8 lg:aspect-auto lg:min-h-[480px]">
+              <Image
+                src={hero}
+                alt=""
+                fill
+                className="object-cover transition duration-700 hover:scale-[1.02]"
+                sizes="(max-width:1024px) 100vw, 66vw"
+                unoptimized
+                priority
+              />
             </div>
             <div className="grid grid-cols-2 gap-3 lg:col-span-4 lg:grid-cols-1">
               {rest.slice(0, 4).map((src) => (
                 <div key={src} className="relative aspect-[4/3] overflow-hidden lg:aspect-[16/10]">
-                  <Image src={src} alt="" fill className="object-cover transition duration-700 hover:scale-[1.04]" sizes="300px" unoptimized />
+                  <Image
+                    src={src}
+                    alt=""
+                    fill
+                    className="object-cover transition duration-700 hover:scale-[1.05]"
+                    sizes="300px"
+                    unoptimized
+                  />
                 </div>
               ))}
             </div>
@@ -707,16 +1093,90 @@ export function PremiumGallery({
     );
   }
 
+  /* === STYLE INSTAGRAM : grille carrée régulière, style social === */
+  if (style === "instagram") {
+    return (
+      <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+          <div className="mb-8 text-center">
+            <p
+              className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
+              style={{ color: "var(--heading-color)" }}
+            >
+              {eyebrow}
+            </p>
+            <h2
+              className="mt-3 text-3xl font-medium sm:text-4xl"
+              style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+            >
+              {title}
+            </h2>
+            {showInstagram && instagramUrl ? (
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-block text-sm font-semibold uppercase tracking-[0.2em]"
+                style={{ color: "var(--accent-color)" }}
+              >
+                @ Instagram
+              </a>
+            ) : null}
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {images.slice(0, 8).map((src) => (
+              <div key={src} className="relative aspect-square overflow-hidden">
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  className="object-cover transition duration-500 hover:scale-[1.06]"
+                  sizes="(max-width:768px) 50vw, 25vw"
+                  unoptimized
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* === STYLE GRID (par défaut) : masonry verticale === */
   return (
     <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
-      <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
-        <h2 className="mb-8 text-3xl font-medium sm:text-4xl" style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}>
-          {title}
-        </h2>
+      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+        <div className="mb-10">
+          <p
+            className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
+            style={{ color: "var(--heading-color)" }}
+          >
+            {eyebrow}
+          </p>
+          <h2
+            className="mt-3 text-3xl font-medium sm:text-4xl"
+            style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+          >
+            {title}
+          </h2>
+        </div>
         <div className="columns-2 gap-3 md:columns-3 md:gap-4">
-          {images.map((src) => (
-            <div key={src} className="relative mb-3 aspect-[3/4] break-inside-avoid overflow-hidden md:mb-4">
-              <Image src={src} alt="" fill className="object-cover" sizes="(max-width:768px) 50vw, 33vw" unoptimized />
+          {images.map((src, i) => (
+            <div
+              key={src}
+              className={cn(
+                "relative mb-3 break-inside-avoid overflow-hidden md:mb-4",
+                i % 3 === 0 ? "aspect-[3/4]" : i % 3 === 1 ? "aspect-[4/3]" : "aspect-square",
+              )}
+            >
+              <Image
+                src={src}
+                alt=""
+                fill
+                className="object-cover transition duration-500 hover:scale-[1.04]"
+                sizes="(max-width:768px) 50vw, 33vw"
+                unoptimized
+              />
             </div>
           ))}
         </div>
@@ -743,29 +1203,38 @@ export function PremiumFinalCta({
   ctaStyle: CtaStyle;
 }) {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
       <div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(135deg, color-mix(in srgb, var(--accent-color) 18%, var(--page-bg)) 0%, var(--page-bg) 50%)`,
+          background: `radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--accent-color) 22%, transparent) 0%, transparent 55%), linear-gradient(180deg, var(--page-bg) 0%, color-mix(in srgb, var(--accent-color) 8%, var(--page-bg)) 100%)`,
         }}
         aria-hidden
       />
-      <div className="relative mx-auto max-w-3xl px-5 py-20 text-center sm:px-8 lg:py-28">
+      <div className="relative mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 lg:py-32">
+        <p
+          className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
+          style={{ color: "var(--heading-color)" }}
+        >
+          Prêt·e à venir
+        </p>
         <h2
-          className="text-3xl font-medium sm:text-4xl"
+          className="mt-3 text-3xl font-medium leading-tight sm:text-4xl lg:text-5xl"
           style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
         >
           {title}
         </h2>
-        <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed opacity-90" style={{ color: "var(--body-text)" }}>
+        <p
+          className="mx-auto mt-5 max-w-lg text-base leading-relaxed opacity-90 sm:text-lg"
+          style={{ color: "var(--body-text)" }}
+        >
           {subtitle}
         </p>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <button
             type="button"
             onClick={onReserve}
-            className={cn(ctaStyle.className, "min-h-[52px] px-10 uppercase tracking-wider")}
+            className={cn(ctaStyle.className, "min-h-[56px] px-10 uppercase tracking-[0.16em]")}
             style={ctaStyle.style}
           >
             {buttonLabel}
@@ -773,7 +1242,7 @@ export function PremiumFinalCta({
           {showPhone && phone ? (
             <a
               href={`tel:${phone.replace(/\s/g, "")}`}
-              className="inline-flex min-h-[52px] items-center gap-2 px-6 text-sm font-semibold uppercase tracking-wider"
+              className="inline-flex min-h-[56px] items-center gap-2 px-6 text-sm font-semibold uppercase tracking-[0.16em]"
               style={{ color: "var(--accent-color)" }}
             >
               <Phone className="h-4 w-4" />
@@ -804,17 +1273,47 @@ export function PremiumPracticalInfo({
   showMaps?: boolean;
 }) {
   return (
-    <section id="infos" className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
-      <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-12 lg:py-20">
-        <p className="text-[11px] font-medium uppercase tracking-[0.28em] opacity-60" style={{ color: "var(--heading-color)" }}>
-          Infos pratiques
-        </p>
-        <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+    <section
+      id="infos"
+      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_4%,var(--page-bg))]"
+    >
+      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-24">
+        <div className="max-w-2xl">
+          <p
+            className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
+            style={{ color: "var(--heading-color)" }}
+          >
+            Venir nous voir
+          </p>
+          <h2
+            className="mt-3 text-3xl font-medium sm:text-4xl"
+            style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+          >
+            Infos pratiques
+          </h2>
+        </div>
+        <div className="mt-10 grid gap-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-12">
           {address ? (
-            <div id="contact">
-              <MapPin className="h-5 w-5 opacity-60" style={{ color: "var(--accent-color)" }} />
-              <p className="mt-3 text-sm font-semibold uppercase tracking-wider opacity-60">Adresse</p>
-              <p className="mt-2 text-base leading-relaxed" style={{ color: "var(--heading-color)" }}>
+            <div id="contact" className="flex flex-col gap-3">
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 12%, transparent)",
+                  color: "var(--accent-color)",
+                }}
+              >
+                <MapPin className="h-5 w-5" />
+              </span>
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
+                style={{ color: "var(--heading-color)" }}
+              >
+                Adresse
+              </p>
+              <p
+                className="text-base leading-relaxed"
+                style={{ color: "var(--heading-color)", fontFamily: "var(--heading-font)" }}
+              >
                 {address}
               </p>
               {showMaps && googleMapsUrl ? (
@@ -822,7 +1321,7 @@ export function PremiumPracticalInfo({
                   href={googleMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1 text-sm font-semibold uppercase tracking-wider"
+                  className="inline-flex items-center gap-1 text-sm font-semibold uppercase tracking-[0.18em] underline-offset-4 hover:underline"
                   style={{ color: "var(--accent-color)" }}
                 >
                   Itinéraire
@@ -832,18 +1331,52 @@ export function PremiumPracticalInfo({
             </div>
           ) : null}
           {phone ? (
-            <div>
-              <Phone className="h-5 w-5 opacity-60" style={{ color: "var(--accent-color)" }} />
-              <p className="mt-3 text-sm font-semibold uppercase tracking-wider opacity-60">Téléphone</p>
-              <a href={`tel:${phone.replace(/\s/g, "")}`} className="mt-2 block text-base font-medium" style={{ color: "var(--heading-color)" }}>
+            <div className="flex flex-col gap-3">
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 12%, transparent)",
+                  color: "var(--accent-color)",
+                }}
+              >
+                <Phone className="h-5 w-5" />
+              </span>
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
+                style={{ color: "var(--heading-color)" }}
+              >
+                Téléphone
+              </p>
+              <a
+                href={`tel:${phone.replace(/\s/g, "")}`}
+                className="text-base font-medium"
+                style={{ color: "var(--heading-color)", fontFamily: "var(--heading-font)" }}
+              >
                 {phone}
               </a>
             </div>
           ) : null}
           {openingHoursLines.length > 0 ? (
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wider opacity-60">Horaires</p>
-              <ul className="mt-3 space-y-1 text-sm leading-relaxed" style={{ color: "var(--body-text)" }}>
+            <div className="flex flex-col gap-3">
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 12%, transparent)",
+                  color: "var(--accent-color)",
+                }}
+              >
+                <Clock className="h-5 w-5" />
+              </span>
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
+                style={{ color: "var(--heading-color)" }}
+              >
+                Horaires
+              </p>
+              <ul
+                className="space-y-1 text-sm leading-relaxed"
+                style={{ color: "var(--body-text)" }}
+              >
                 {openingHoursLines.map((line) => (
                   <li key={line}>{line}</li>
                 ))}
@@ -851,17 +1384,27 @@ export function PremiumPracticalInfo({
             </div>
           ) : null}
           {parking?.trim() ? (
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wider opacity-60">Parking</p>
-              <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--body-text)" }}>
+            <div className="flex flex-col gap-3">
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
+                style={{ color: "var(--heading-color)" }}
+              >
+                Parking
+              </p>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--body-text)" }}>
                 {parking}
               </p>
             </div>
           ) : null}
           {accessibility?.trim() ? (
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wider opacity-60">Accessibilité</p>
-              <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--body-text)" }}>
+            <div className="flex flex-col gap-3">
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
+                style={{ color: "var(--heading-color)" }}
+              >
+                Accessibilité
+              </p>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--body-text)" }}>
                 {accessibility}
               </p>
             </div>
@@ -879,6 +1422,7 @@ export function PremiumReservationSection({
   showPhoneAlt,
   phone,
   children,
+  eyebrow = "Réservation",
 }: {
   title: string;
   intro: string;
@@ -886,46 +1430,59 @@ export function PremiumReservationSection({
   showPhoneAlt?: boolean;
   phone?: string | null;
   children: React.ReactNode;
+  eyebrow?: string;
 }) {
   return (
     <section
       id="reservation"
-      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_3%,var(--page-bg))]"
+      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]"
+      style={{
+        background:
+          "linear-gradient(180deg, color-mix(in srgb, var(--accent-color) 6%, var(--page-bg)) 0%, var(--page-bg) 80%)",
+      }}
     >
-      <div className="mx-auto max-w-3xl px-5 py-14 sm:px-8 lg:py-20">
-        <header className="mb-8 text-center md:text-left">
+      <div className="mx-auto max-w-3xl px-5 py-20 sm:px-8 lg:py-28">
+        <header className="mb-10 text-center">
           <p
-            className="text-[11px] font-medium uppercase tracking-[0.28em] opacity-60"
+            className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
             style={{ color: "var(--heading-color)" }}
           >
-            Réservation
+            {eyebrow}
           </p>
           <h2
-            className="mt-2 text-3xl font-medium md:text-4xl"
+            className="mt-3 text-3xl font-medium md:text-4xl lg:text-[2.5rem]"
             style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
           >
             {title}
           </h2>
-          <p className="mt-3 text-base leading-relaxed opacity-90" style={{ color: "var(--body-text)" }}>
+          <div
+            className="mx-auto mt-4 h-px w-16"
+            style={{ backgroundColor: "var(--accent-color)" }}
+            aria-hidden
+          />
+          <p
+            className="mx-auto mt-5 max-w-xl text-base leading-relaxed opacity-90"
+            style={{ color: "var(--body-text)" }}
+          >
             {intro}
           </p>
           {groupMessage?.trim() ? (
-            <p className="mt-2 text-sm opacity-75" style={{ color: "var(--body-text)" }}>
+            <p className="mx-auto mt-3 max-w-xl text-sm opacity-70" style={{ color: "var(--body-text)" }}>
               {groupMessage}
             </p>
           ) : null}
         </header>
         <div
-          className="border p-5 sm:p-8"
+          className="relative rounded-[calc(var(--radius)+8px)] border p-6 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.35)] sm:p-10"
           style={{
-            borderColor: "color-mix(in srgb, var(--body-text) 12%, var(--page-bg))",
+            borderColor: "color-mix(in srgb, var(--body-text) 10%, var(--page-bg))",
             backgroundColor: "var(--page-bg)",
           }}
         >
           {children}
         </div>
         {showPhoneAlt && phone ? (
-          <p className="mt-6 text-center text-sm md:text-left" style={{ color: "var(--body-text)" }}>
+          <p className="mt-8 text-center text-sm" style={{ color: "var(--body-text)" }}>
             Vous préférez appeler ?{" "}
             <a
               href={`tel:${phone.replace(/\s/g, "")}`}
@@ -945,17 +1502,28 @@ export function HighlightsBand({ items }: { items: string[] }) {
   const visible = items.map((s) => s.trim()).filter(Boolean).slice(0, 6);
   if (visible.length === 0) return null;
   return (
-    <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_3%,var(--page-bg))]">
-      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-12">
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {visible.map((item) => (
+    <section className="border-y border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_3%,var(--page-bg))]">
+      <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-12 lg:py-14">
+        <ul
+          className={cn(
+            "grid gap-x-8 gap-y-5",
+            visible.length === 1
+              ? "place-items-center"
+              : visible.length === 2
+                ? "sm:grid-cols-2"
+                : visible.length === 4
+                  ? "sm:grid-cols-2 lg:grid-cols-4"
+                  : "sm:grid-cols-2 lg:grid-cols-3",
+          )}
+        >
+          {visible.map((item, i) => (
             <li
-              key={item}
+              key={`${item}-${i}`}
               className="flex items-start gap-3"
               style={{ color: "var(--body-text)" }}
             >
               <span
-                className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+                className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
                 style={{
                   backgroundColor: "color-mix(in srgb, var(--accent-color) 14%, var(--page-bg))",
                   color: "var(--accent-color)",
@@ -964,7 +1532,10 @@ export function HighlightsBand({ items }: { items: string[] }) {
               >
                 <Check className="h-4 w-4" />
               </span>
-              <span className="text-base font-medium leading-snug" style={{ color: "var(--heading-color)" }}>
+              <span
+                className="text-[15px] font-medium leading-snug"
+                style={{ color: "var(--heading-color)", fontFamily: "var(--heading-font)" }}
+              >
                 {item}
               </span>
             </li>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import PublicReservationForm from "@/src/components/reservation/public-reservation-form";
 import { googleFontsHref } from "@/src/lib/public-page-fonts";
 import { cn, getDefaultOpeningHours, type OpeningHours } from "@/src/lib/utils";
@@ -84,6 +84,7 @@ type PublicPageLivePreviewProps = {
 
 export default function PublicPageLivePreview({ draft, publicPath }: PublicPageLivePreviewProps) {
   const [viewport, setViewport] = useState<"desktop" | "mobile">("desktop");
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   const fontsHref = useMemo(
     () => googleFontsHref([draft.headingFont, draft.bodyFont]),
     [draft.headingFont, draft.bodyFont],
@@ -101,6 +102,10 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
     }
     link.href = fontsHref;
   }, [fontsHref]);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [viewport, draft.heroLayout, draft.heroHeight, draft.coverImageUrl]);
 
   return (
     <div className="rounded-2xl border border-zg-border bg-zg-surface p-4 transition-all duration-200 ease-out">
@@ -142,8 +147,11 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
           viewport === "mobile" ? "mx-auto max-w-[390px]" : "w-full",
         )}
       >
-        <div className="relative isolate h-[min(70vh,600px)] overflow-hidden">
-          <div className="h-full overflow-x-hidden overflow-y-auto overscroll-contain [transform:translateZ(0)]">
+        <div className="relative isolate h-[min(78vh,720px)] overflow-hidden">
+          <div
+            ref={scrollRef}
+            className="h-full overflow-x-hidden overflow-y-auto overscroll-contain"
+          >
           <PublicReservationForm
             previewMode
             restaurantId={draft.restaurantId}
@@ -188,6 +196,10 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
             heroOverlayEnabled={draft.heroOverlayEnabled}
             heroOverlayOpacity={draft.heroOverlayOpacity}
             ctaLabel={draft.ctaLabel.trim() || "Réserver une table"}
+            secondaryCtaLabel={draft.secondaryCtaLabel}
+            heroBadgeText={draft.heroBadgeText}
+            heroLayout={draft.heroLayout}
+            heroAlign={draft.heroAlign}
             fontSizeScale={draft.fontSizeScale}
             borderRadius={draft.borderRadius}
             buttonStyle={draft.buttonStyle}

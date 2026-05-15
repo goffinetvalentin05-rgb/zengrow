@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink, Maximize2, Monitor, Smartphone } from "lucide-react";
 import PublicReservationForm from "@/src/components/reservation/public-reservation-form";
 import type { PublicPagePreviewDraft } from "@/src/components/dashboard/public-page-live-preview";
@@ -37,6 +37,8 @@ export default function PublicPagePreviewStudio({
 }: PublicPagePreviewStudioProps) {
   const [viewport, setViewport] = useState<"desktop" | "mobile">("desktop");
   const [fullscreen, setFullscreen] = useState(false);
+  const inlineScrollRef = useRef<HTMLDivElement | null>(null);
+  const fullscreenScrollRef = useRef<HTMLDivElement | null>(null);
 
   const fontsHref = useMemo(
     () => googleFontsHref([draft.headingFont, draft.bodyFont]),
@@ -56,13 +58,26 @@ export default function PublicPagePreviewStudio({
     link.href = fontsHref;
   }, [fontsHref]);
 
+  // Reset scroll position des aperçus quand on ouvre le plein écran, change de viewport
+  // ou modifie la maquette — évite un viewer "déjà scrollé" qui cachait le haut du hero.
+  useEffect(() => {
+    if (fullscreenScrollRef.current) fullscreenScrollRef.current.scrollTop = 0;
+    if (inlineScrollRef.current) inlineScrollRef.current.scrollTop = 0;
+  }, [fullscreen, viewport, draft.heroLayout, draft.heroHeight, draft.coverImageUrl]);
+
   useEffect(() => {
     if (!fullscreen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setFullscreen(false);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // Verrouille le scroll du body en plein écran pour éviter les sauts visuels
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
   }, [fullscreen]);
 
   const previewForm = (
@@ -139,11 +154,14 @@ export default function PublicPagePreviewStudio({
   );
 
   const previewViewportHeight =
-    viewport === "desktop" ? "h-[min(70vh,600px)]" : "h-[min(75vh,680px)]";
+    viewport === "desktop" ? "h-[min(78vh,760px)]" : "h-[min(78vh,720px)]";
 
   const previewChrome = (
     <div className={cn("relative isolate overflow-hidden", previewViewportHeight)}>
-      <div className="h-full overflow-x-hidden overflow-y-auto overscroll-contain [transform:translateZ(0)]">
+      <div
+        ref={inlineScrollRef}
+        className="h-full overflow-x-hidden overflow-y-auto overscroll-contain"
+      >
         {previewForm}
       </div>
     </div>
@@ -232,21 +250,52 @@ export default function PublicPagePreviewStudio({
       </section>
 
       {fullscreen ? (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-[#0a0a0a]/95 backdrop-blur-sm">
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 text-white">
-            <p className="font-semibold">Aperçu plein écran — {viewport === "desktop" ? "Desktop" : "Mobile"}</p>
-            <Button type="button" variant="secondary" onClick={() => setFullscreen(false)}>
-              Fermer (Échap)
-            </Button>
+        <div className="fixed inset-0 z-[100] flex flex-col bg-[#0a0a0a]/96 backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 text-white">
+            <p className="truncate font-semibold">
+              Aperçu plein écran — {viewport === "desktop" ? "Desktop" : "Mobile"}
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="hidden rounded-xl border border-white/15 bg-white/5 p-1 text-xs font-semibold md:flex">
+                <button
+                  type="button"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-colors",
+                    viewport === "mobile" ? "bg-white/15 text-white" : "text-white/60 hover:bg-white/10",
+                  )}
+                  onClick={() => setViewport("mobile")}
+                >
+                  <Smartphone className="h-3.5 w-3.5" /> Mobile
+                </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-colors",
+                    viewport === "desktop" ? "bg-white/15 text-white" : "text-white/60 hover:bg-white/10",
+                  )}
+                  onClick={() => setViewport("desktop")}
+                >
+                  <Monitor className="h-3.5 w-3.5" /> Desktop
+                </button>
+              </div>
+              <Button type="button" variant="secondary" onClick={() => setFullscreen(false)}>
+                Fermer (Échap)
+              </Button>
+            </div>
           </div>
-          <div className="flex flex-1 items-start justify-center overflow-auto p-4 md:p-8">
+          <div className="flex flex-1 justify-center overflow-hidden p-4 md:p-6">
             <div
               className={cn(
-                "relative isolate h-[calc(100vh-8rem)] w-full overflow-hidden rounded-xl border border-zg-border shadow-2xl",
-                viewport === "mobile" ? "max-w-[400px]" : "max-w-6xl",
+                "relative flex h-full w-full overflow-hidden rounded-xl border border-white/10 bg-zg-surface-elevated shadow-2xl",
+                viewport === "mobile" ? "max-w-[420px]" : "max-w-[1400px]",
               )}
             >
-              <div className="h-full overflow-y-auto overscroll-contain [transform:translateZ(0)]">{previewForm}</div>
+              <div
+                ref={fullscreenScrollRef}
+                className="h-full w-full overflow-x-hidden overflow-y-auto overscroll-contain"
+              >
+                {previewForm}
+              </div>
             </div>
           </div>
         </div>

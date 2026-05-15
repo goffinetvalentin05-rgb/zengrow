@@ -149,12 +149,6 @@ function formatDateDdMmYyyy(iso: string): string {
   return `${da}.${mo}.${y}`;
 }
 
-function heroMinHeightClass(h: "compact" | "normal" | "tall") {
-  if (h === "compact") return "min-h-[38vh] max-h-[440px]";
-  if (h === "tall") return "min-h-[min(72vh,820px)]";
-  return "min-h-[min(56vh,620px)]";
-}
-
 function PublicDescription({
   text,
   bodyColor,
@@ -986,6 +980,7 @@ export default function PublicReservationForm({
         logoUrl={logoUrl}
         headline={headlineText}
         cuisineCityLine={cuisineCityLine || undefined}
+        badge={heroBadgeText?.trim() || undefined}
         tagline={taglineText || undefined}
         openStatus={openStatus}
         phone={restaurantPhone}
@@ -997,26 +992,26 @@ export default function PublicReservationForm({
         onReserve={scrollToReservation}
         ctaStyle={ctaStyle}
         overlayOpacity={heroOverlayEnabled ? overlayOpacity : 0}
-        heroAlign={heroAlign}
+        heroAlign={heroLayout === "left" ? "left" : heroAlign}
+        heroLayout={heroLayout}
         heroHeight={heroHeight}
         previewMode={previewMode}
       />
 
-      <div className="flex flex-col">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-0 px-0 py-0 sm:px-0">
-        {specialMessage?.trim() ? (
-          <p
-            className="rounded-2xl border px-4 py-3 text-center text-sm font-medium"
-            style={{
-              borderColor: "color-mix(in srgb, var(--accent-color) 30%, transparent)",
-              backgroundColor: "color-mix(in srgb, var(--accent-color) 10%, var(--page-bg))",
-              color: "var(--heading-color)",
-              order: -1,
-            }}
-          >
-            {specialMessage.trim()}
-          </p>
-        ) : null}
+      {specialMessage?.trim() ? (
+        <div
+          className="mx-auto mt-6 max-w-3xl rounded-2xl border px-5 py-3 text-center text-sm font-medium"
+          style={{
+            borderColor: "color-mix(in srgb, var(--accent-color) 30%, transparent)",
+            backgroundColor: "color-mix(in srgb, var(--accent-color) 10%, var(--page-bg))",
+            color: "var(--heading-color)",
+          }}
+        >
+          {specialMessage.trim()}
+        </div>
+      ) : null}
+
+      <div className="flex w-full flex-col">
 
         {blockEnabled("highlights") && activeHighlights.length > 0 ? (
           <div style={{ order: sectionOrderIndex("highlights") }}>
@@ -1031,9 +1026,29 @@ export default function PublicReservationForm({
               body={conceptBody}
               imageUrl={conceptImage || undefined}
               pillars={premium.concept.pillars}
+              eyebrow={effectiveConfig.conversion.structureTemplate === "event_venue" ? "Notre maison" : "Le concept"}
+              layout={
+                effectiveConfig.conversion.structureTemplate === "modern_brasserie" ||
+                effectiveConfig.conversion.structureTemplate === "minimal_conversion"
+                  ? "stacked"
+                  : effectiveConfig.conversion.structureTemplate === "warm_restaurant"
+                    ? "image-left"
+                    : "image-right"
+              }
             />
-            {visibleEditorialSections(premium.editorialSections).map((section) => (
-              <EditorialBlock key={section.id} section={section} previewMode={previewMode} />
+            {visibleEditorialSections(premium.editorialSections).map((section, idx) => (
+              <EditorialBlock
+                key={section.id}
+                section={section}
+                previewMode={previewMode}
+                eyebrow={
+                  idx === 0
+                    ? "Notre histoire"
+                    : idx === 1
+                      ? "Notre cuisine"
+                      : "L'expérience"
+                }
+              />
             ))}
           </div>
         ) : null}
@@ -1762,6 +1777,20 @@ export default function PublicReservationForm({
               offers={menuOffers}
               menuHref={menuHref}
               menuPdfLabel={sortedDocuments[0]?.label ?? secondaryLabel}
+              eyebrow={
+                effectiveConfig.conversion.structureTemplate === "event_venue"
+                  ? "Formules & menus"
+                  : effectiveConfig.conversion.structureTemplate === "modern_brasserie"
+                    ? "À la carte"
+                    : "Carte & offres"
+              }
+              title={
+                effectiveConfig.conversion.structureTemplate === "event_venue"
+                  ? "Nos formules"
+                  : effectiveConfig.conversion.structureTemplate === "minimal_conversion"
+                    ? "Le menu"
+                    : "Notre menu"
+              }
             />
           </div>
         ) : null}
@@ -1779,6 +1808,15 @@ export default function PublicReservationForm({
               style={premium.gallery.style}
               instagramUrl={instagramUrl}
               showInstagram={showInstagram}
+              eyebrow={
+                effectiveConfig.conversion.structureTemplate === "premium_experience"
+                  ? "Galerie"
+                  : effectiveConfig.conversion.structureTemplate === "warm_restaurant"
+                    ? "Ambiance"
+                    : effectiveConfig.conversion.structureTemplate === "event_venue"
+                      ? "Nos espaces"
+                      : "En images"
+              }
             />
           </div>
         ) : null}
@@ -1796,7 +1834,6 @@ export default function PublicReservationForm({
             />
           </div>
         ) : null}
-      </div>
       </div>
 
       <StickyReserveBar
