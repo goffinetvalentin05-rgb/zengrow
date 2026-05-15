@@ -4,6 +4,7 @@ import { FormEvent, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useSt
 import Image from "next/image";
 import {
   Calendar,
+  Check,
   Clock,
   Facebook,
   Globe,
@@ -12,6 +13,7 @@ import {
   Map,
   MapPin,
   Phone,
+  UtensilsCrossed,
 } from "lucide-react";
 import Input from "@/src/components/ui/input";
 import type { AvailabilitySlot } from "@/src/lib/reservation/schemas";
@@ -21,7 +23,17 @@ export type PublicReservationFormProps = {
   previewMode?: boolean;
   restaurantId: string;
   restaurantName: string;
+  heroTitle?: string | null;
   restaurantTagline?: string | null;
+  cuisineType?: string | null;
+  city?: string | null;
+  highlights?: string[];
+  specialMessage?: string | null;
+  menuUrl?: string | null;
+  reservationEnabled?: boolean;
+  showHoursBeforeForm?: boolean;
+  showPhoneCta?: boolean;
+  noSlotsMessage?: string | null;
   publicPageDescription?: string | null;
   galleryImageUrls?: string[];
   documents?: { id: string; label: string; fileUrl: string; position: number }[];
@@ -157,7 +169,17 @@ export default function PublicReservationForm({
   previewMode = false,
   restaurantId,
   restaurantName,
+  heroTitle,
   restaurantTagline,
+  cuisineType,
+  city,
+  highlights = [],
+  specialMessage,
+  menuUrl,
+  reservationEnabled = true,
+  showHoursBeforeForm = true,
+  showPhoneCta = true,
+  noSlotsMessage,
   publicPageDescription,
   galleryImageUrls = [],
   documents = [],
@@ -752,8 +774,14 @@ export default function PublicReservationForm({
       ? `Le restaurant est fermé du ${closureStartDate} au ${closureEndDate}. Les réservations restent disponibles après cette période.`
       : null;
 
+  const headlineText = heroTitle?.trim() || restaurantName;
   const taglineText = restaurantTagline?.trim();
+  const cuisineCityLine = [cuisineType?.trim(), city?.trim()].filter(Boolean).join(" · ");
   const descriptionText = publicPageDescription?.trim() ?? "";
+  const menuHref =
+    menuUrl?.trim() ||
+    (sortedDocuments[0]?.fileUrl ?? null);
+  const activeHighlights = highlights.filter(Boolean).slice(0, 3);
 
   const openingHoursLines = formatOpeningHoursLines(openingHours);
 
@@ -794,7 +822,13 @@ export default function PublicReservationForm({
         fontFamily: "var(--body-font), system-ui, sans-serif",
       }}
     >
-      <section className={cn("relative flex w-full flex-col overflow-hidden", heroMinHeightClass(heroHeight))}>
+      <section
+        className={cn(
+          "relative flex w-full flex-col overflow-hidden",
+          heroMinHeightClass(heroHeight),
+          "max-md:min-h-[min(44vh,480px)] max-md:max-h-[520px]",
+        )}
+      >
         {coverImageUrl ? (
           <Image
             src={coverImageUrl}
@@ -828,7 +862,7 @@ export default function PublicReservationForm({
           aria-hidden
         />
 
-        <div className="relative z-[1] flex flex-1 flex-col items-center justify-center px-5 pt-16 pb-20 text-center sm:px-8 sm:pb-24 md:pt-20 md:pb-28">
+        <div className="relative z-[1] flex flex-1 flex-col items-center justify-center px-5 pt-14 pb-14 text-center sm:px-8 sm:pb-20 md:pt-20 md:pb-24">
           {logoUrl ? (
             <div className="relative mb-6 h-20 w-20 shrink-0 overflow-hidden rounded-[var(--radius)] border border-white/25 bg-white/10 p-1 shadow-lg backdrop-blur-sm sm:mb-8 sm:h-24 sm:w-24">
               <Image
@@ -856,30 +890,92 @@ export default function PublicReservationForm({
               fontSize: `clamp(1.75rem, 5vw, ${Math.min(72, Math.max(32, heroTitleSizePx))}px)`,
             }}
           >
-            {restaurantName}
+            {headlineText}
           </h1>
+          {cuisineCityLine ? (
+            <p
+              className="mt-3 text-sm font-medium uppercase tracking-wide opacity-90"
+              style={{ color: "color-mix(in srgb, var(--heading-color) 75%, transparent)" }}
+            >
+              {cuisineCityLine}
+            </p>
+          ) : null}
           {taglineText ? (
             <p
-              className="mx-auto mt-4 max-w-2xl text-pretty text-base font-light leading-relaxed sm:mt-5 sm:text-lg"
+              className="mx-auto mt-3 max-w-2xl text-pretty text-base font-light leading-relaxed sm:mt-4 sm:text-lg"
               style={{ color: "color-mix(in srgb, var(--heading-color) 88%, transparent)" }}
             >
               {taglineText}
             </p>
           ) : null}
 
-          <button
-            type="button"
-            onClick={scrollToReservation}
-            className={cn(ctaStyle.className, "mt-10 shrink-0 sm:mt-12")}
-            style={ctaStyle.style}
-          >
-            {ctaLabel}
-          </button>
+          <div className="mt-6 flex w-full max-w-md flex-col gap-2 sm:mt-8 sm:flex-row sm:justify-center">
+            {reservationEnabled ? (
+              <button
+                type="button"
+                onClick={scrollToReservation}
+                className={cn(ctaStyle.className, "min-h-[48px] w-full shrink-0 sm:w-auto sm:min-w-[200px]")}
+                style={ctaStyle.style}
+              >
+                {ctaLabel}
+              </button>
+            ) : null}
+            {menuHref ? (
+              <a
+                href={menuHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[var(--radius)] border-2 px-5 text-sm font-semibold backdrop-blur-sm transition hover:opacity-90 sm:w-auto"
+                style={{
+                  borderColor: "color-mix(in srgb, var(--heading-color) 35%, transparent)",
+                  color: "var(--heading-color)",
+                  backgroundColor: "color-mix(in srgb, var(--page-bg) 55%, transparent)",
+                }}
+              >
+                <UtensilsCrossed className="h-4 w-4" aria-hidden />
+                Voir le menu
+              </a>
+            ) : null}
+          </div>
         </div>
       </section>
 
+      {activeHighlights.length > 0 ? (
+        <section className="border-b border-[color-mix(in_srgb,var(--body-text)_10%,var(--page-bg))] bg-[color-mix(in_srgb,var(--body-text)_4%,var(--page-bg))] px-4 py-6">
+          <ul className="mx-auto flex max-w-3xl flex-wrap justify-center gap-2">
+            {activeHighlights.map((h) => (
+              <li
+                key={h}
+                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold sm:text-sm"
+                style={{
+                  borderColor: "color-mix(in srgb, var(--accent-color) 35%, transparent)",
+                  color: "var(--heading-color)",
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 8%, var(--page-bg))",
+                }}
+              >
+                <Check className="h-3.5 w-3.5 text-[var(--accent-color)]" aria-hidden />
+                {h}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <div className="mx-auto max-w-6xl space-y-14 px-4 py-12 sm:px-6 md:px-10 lg:px-12 lg:py-16">
-        {sortedDocuments.length > 0 ? (
+        {specialMessage?.trim() ? (
+          <p
+            className="rounded-2xl border px-4 py-3 text-center text-sm font-medium"
+            style={{
+              borderColor: "color-mix(in srgb, var(--accent-color) 30%, transparent)",
+              backgroundColor: "color-mix(in srgb, var(--accent-color) 10%, var(--page-bg))",
+              color: "var(--heading-color)",
+            }}
+          >
+            {specialMessage.trim()}
+          </p>
+        ) : null}
+
+        {sortedDocuments.length > 0 && !menuHref ? (
           <section
             className={cn(
               "rounded-[var(--radius)] border px-5 py-6 md:px-8",
@@ -917,10 +1013,7 @@ export default function PublicReservationForm({
           </section>
         ) : null}
 
-        {descriptionText ? (
-          <PublicDescription text={descriptionText} bodyColor={bodyTextColor} accentColor={accentColor} />
-        ) : null}
-
+        {reservationEnabled ? (
         <section id="reservation" className="scroll-mt-24">
           <div
             className={cardShell}
@@ -937,6 +1030,23 @@ export default function PublicReservationForm({
                 Réserver une table
               </h2>
             </div>
+
+            {showHoursBeforeForm && showHoursRow ? (
+              <div
+                className="mb-5 rounded-xl border px-4 py-3 text-sm"
+                style={{
+                  borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))",
+                  backgroundColor: "color-mix(in srgb, var(--body-text) 4%, var(--page-bg))",
+                }}
+              >
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide opacity-70">Horaires</p>
+                <ul className="space-y-0.5 text-sm">
+                  {openingHoursLines.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             <form className="flex min-h-0 flex-col gap-5" onSubmit={handleSubmit}>
               {closureNotice ? (
@@ -1193,7 +1303,7 @@ export default function PublicReservationForm({
                           className="text-center text-sm"
                           style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
                         >
-                          Aucun créneau disponible pour cette date.
+                          {noSlotsMessage?.trim() || "Aucun créneau disponible pour cette date."}
                         </p>
                         <button
                           type="button"
@@ -1572,6 +1682,14 @@ export default function PublicReservationForm({
                 {error}
               </p>
             ) : null}
+
+            {showPhoneCta && showPhoneRow && !previewMode ? (
+              <p className="mt-4 text-center text-sm">
+                Vous préférez appeler ?{" "}
+                <a href={`tel:${restaurantPhone!.replace(/\s/g, "")}`} className="font-semibold underline-offset-2 hover:underline" style={{ color: "var(--accent-color)" }}>{restaurantPhone}</a>
+              </p>
+            ) : null}
+
             {message ? (
               <p className="mt-6 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-900">
                 {message}
@@ -1579,6 +1697,17 @@ export default function PublicReservationForm({
             ) : null}
           </div>
         </section>
+        ) : showPhoneCta && showPhoneRow ? (
+        <section id="reservation" className="scroll-mt-24">
+          <div className={cardShell} style={{ backgroundColor: "color-mix(in srgb, var(--body-text) 7%, var(--page-bg))", borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))" }}>
+            <h2 className="text-2xl font-medium" style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}>Réserver</h2>
+            <p className="mt-3 text-sm" style={{ color: "var(--body-text)" }}>Les réservations en ligne sont désactivées. Appelez-nous pour réserver.</p>
+            <a href={`tel:${restaurantPhone!.replace(/\s/g, "")}`} className="mt-6 inline-flex min-h-[48px] items-center justify-center rounded-[var(--radius)] px-6 text-sm font-semibold" style={{ backgroundColor: "var(--button-bg)", color: "var(--button-text)" }}>
+              <Phone className="mr-2 h-4 w-4" /> {restaurantPhone}
+            </a>
+          </div>
+        </section>
+        ) : null}
 
         {galleryImageUrls.length > 0 ? (
           <div>
@@ -1608,7 +1737,28 @@ export default function PublicReservationForm({
             </div>
           </div>
         ) : null}
+
+        {descriptionText ? (
+          <PublicDescription text={descriptionText} bodyColor={bodyTextColor} accentColor={accentColor} />
+        ) : null}
+
+        {reservationEnabled ? (
+          <section className="pb-2 text-center">
+            <button type="button" onClick={scrollToReservation} className={cn(ctaStyle.className, "min-h-[52px] px-8")} style={ctaStyle.style}>
+              {ctaLabel}
+            </button>
+          </section>
+        ) : null}
       </div>
+
+
+      {!previewMode && reservationEnabled ? (
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-[color-mix(in_srgb,var(--body-text)_12%,var(--page-bg))] bg-[color-mix(in_srgb,var(--page-bg)_92%,transparent)] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
+          <button type="button" onClick={scrollToReservation} className="flex min-h-[48px] w-full items-center justify-center rounded-[var(--radius)] text-sm font-semibold shadow-lg" style={{ backgroundColor: "var(--button-bg)", color: "var(--button-text)" }}>
+            Réserver
+          </button>
+        </div>
+      ) : null}
 
       {hasFooterContent ? (
         <footer

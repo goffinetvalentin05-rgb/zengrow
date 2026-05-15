@@ -3,13 +3,24 @@
 import { useEffect, useMemo, useState } from "react";
 import PublicReservationForm from "@/src/components/reservation/public-reservation-form";
 import { googleFontsHref } from "@/src/lib/public-page-fonts";
-import { cn, getDefaultOpeningHours } from "@/src/lib/utils";
+import { cn, getDefaultOpeningHours, type OpeningHours } from "@/src/lib/utils";
 
 export type PublicPagePreviewDraft = {
   restaurantId: string;
   slug: string;
   displayName: string;
+  heroTitle?: string;
   tagline: string;
+  cuisineType?: string | null;
+  city?: string | null;
+  highlights?: string[];
+  specialMessage?: string | null;
+  menuUrl?: string | null;
+  reservationEnabled?: boolean;
+  preBookingMessage?: string | null;
+  showHoursBeforeForm?: boolean;
+  showPhoneCta?: boolean;
+  openingHours?: OpeningHours;
   publicDescription: string;
   logoUrl: string;
   coverImageUrl: string;
@@ -125,7 +136,17 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
             previewMode
             restaurantId={draft.restaurantId}
             restaurantName={draft.displayName.trim() || "Restaurant"}
+            heroTitle={draft.heroTitle?.trim() || null}
             restaurantTagline={draft.tagline.trim() || null}
+            cuisineType={draft.cuisineType ?? null}
+            city={draft.city ?? null}
+            highlights={draft.highlights ?? []}
+            specialMessage={draft.specialMessage ?? null}
+            menuUrl={draft.menuUrl ?? null}
+            reservationEnabled={draft.reservationEnabled !== false}
+            preBookingMessage={draft.preBookingMessage ?? null}
+            showHoursBeforeForm={draft.showHoursBeforeForm !== false}
+            showPhoneCta={draft.showPhoneCta !== false}
             publicPageDescription={draft.publicDescription.trim() || null}
             galleryImageUrls={draft.galleryImageUrls}
             documents={draft.documents}
@@ -135,7 +156,7 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
             allowPhone
             allowEmail
             maxPartySize={Math.max(1, draft.maxPartySize ?? 8)}
-            openingHours={getDefaultOpeningHours()}
+            openingHours={draft.openingHours ?? getDefaultOpeningHours()}
             daysInAdvance={60}
             logoUrl={draft.logoUrl.trim() || null}
             coverImageUrl={draft.coverImageUrl.trim() || null}
@@ -171,7 +192,6 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
             facebookUrl={draft.facebookUrl.trim() || null}
             websiteUrl={draft.websiteUrl.trim() || null}
             googleMapsUrl={draft.googleMapsUrl.trim() || null}
-            preBookingMessage={null}
             closureStartDate={null}
             closureEndDate={null}
             closureMessage={null}

@@ -24,10 +24,12 @@ import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-
 import { SettingsCategoryCard } from "@/src/components/dashboard/settings/settings-category-card";
 import { cn, formatOpeningHoursLines, type OpeningHours } from "@/src/lib/utils";
 import AvailabilityEditor from "@/src/components/dashboard/availability-editor";
-import PublicPageLivePreview, { type PublicPagePreviewDraft } from "@/src/components/dashboard/public-page-live-preview";
+import PublicPageSettingsPanel, {
+  type PublicPageSettingsHandle,
+  type PublicPageSettingsInitial,
+} from "@/src/components/dashboard/settings/public-page-settings-panel";
 import BillingPlans from "@/src/components/dashboard/billing-plans";
 import ReviewAutomationPanel from "@/src/components/dashboard/review-automation-panel";
-import { PUBLIC_PAGE_FONT_OPTIONS } from "@/src/lib/public-page-fonts";
 import {
   buildReservationConfirmationVariableValues,
   effectiveReservationConfirmationBody,
@@ -154,6 +156,7 @@ type SettingsFormProps = {
     reservation_slot_interval: number;
     reservation_duration: number;
   };
+  publicPageInitial: PublicPageSettingsInitial;
 };
 
 function ReservationField({
@@ -192,11 +195,13 @@ export default function SettingsForm({
   trialEndDate,
   isOwnerDev,
   availabilitySettings,
+  publicPageInitial,
 }: SettingsFormProps) {
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
   const availabilityAnchorRef = useRef<HTMLDivElement | null>(null);
+  const publicPageRef = useRef<PublicPageSettingsHandle | null>(null);
   const [name, setName] = useState(restaurant.name);
   const [phone, setPhone] = useState(restaurant.phone ?? "");
   const [email, setEmail] = useState(restaurant.email ?? "");
@@ -460,103 +465,6 @@ export default function SettingsForm({
 
   // Documents (PDF) : UI retirée de la refonte, donc pas de chargement ici.
 
-  const previewDraft = useMemo(
-    (): PublicPagePreviewDraft => ({
-      restaurantId: restaurant.id,
-      slug: restaurant.slug,
-      displayName: publicDisplayName,
-      tagline: publicTagline,
-      publicDescription: publicPageDescription,
-      logoUrl,
-      coverImageUrl,
-      pageBackgroundColor,
-      heroPrimaryColor,
-      buttonBgColor: buttonColor,
-      buttonTextColor,
-      headingTextColor,
-      bodyTextColor,
-      accentColor,
-      footerBgColor,
-      footerTextColor,
-      headingFont,
-      bodyFont,
-      heroTitleSizePx: Math.min(72, Math.max(32, heroTitleSizePx)),
-      heroHeight,
-      heroOverlayEnabled,
-      heroOverlayOpacity,
-      ctaLabel,
-      borderRadius,
-      buttonStyle,
-      cardStyle,
-      fontSizeScale,
-      phone,
-      address,
-      email,
-      websiteUrl,
-      instagramUrl,
-      facebookUrl,
-      googleMapsUrl,
-      showPublicAddress,
-      showPublicPhone,
-      showPublicEmail,
-      showPublicWebsite,
-      showPublicOpeningHours,
-      showPublicInstagram,
-      showPublicFacebook,
-      showPublicGoogleMaps,
-      documents: [],
-      galleryImageUrls: galleryUrls,
-      terraceEnabled,
-      maxPartySize: Math.max(1, maxPartySize),
-    }),
-    [
-      accentColor,
-      address,
-      bodyFont,
-      bodyTextColor,
-      borderRadius,
-      buttonColor,
-      buttonStyle,
-      buttonTextColor,
-      cardStyle,
-      coverImageUrl,
-      ctaLabel,
-      email,
-      facebookUrl,
-      fontSizeScale,
-      footerBgColor,
-      footerTextColor,
-      galleryUrls,
-      googleMapsUrl,
-      headingFont,
-      headingTextColor,
-      heroHeight,
-      heroOverlayEnabled,
-      heroOverlayOpacity,
-      heroPrimaryColor,
-      heroTitleSizePx,
-      instagramUrl,
-      logoUrl,
-      pageBackgroundColor,
-      phone,
-      publicDisplayName,
-      publicPageDescription,
-      publicTagline,
-      restaurant.id,
-      restaurant.slug,
-      showPublicAddress,
-      showPublicEmail,
-      showPublicFacebook,
-      showPublicGoogleMaps,
-      showPublicInstagram,
-      showPublicOpeningHours,
-      showPublicPhone,
-      showPublicWebsite,
-      terraceEnabled,
-      maxPartySize,
-      websiteUrl,
-    ],
-  );
 
   const openingSummaryLines = useMemo(
     () => formatOpeningHoursLines(availabilitySettings.opening_hours),
@@ -627,44 +535,14 @@ export default function SettingsForm({
 
     setIsSaving(true);
 
-    const descTrim = publicPageDescription.trim().slice(0, 500);
-    const tagTrim = publicTagline.trim().slice(0, 100);
+    const publicRestaurantPatch = publicPageRef.current?.getRestaurantUpdate() ?? {};
+    const publicSettingsPatch = publicPageRef.current?.getSettingsUpdate() ?? {};
 
     const { error: restaurantError } = await supabase
       .from("restaurants")
       .update({
-        name,
-        slug,
-        phone: phone || null,
-        email: email || null,
-        address: address || null,
+        ...publicRestaurantPatch,
         description: description || null,
-        primary_color: heroPrimaryColor || null,
-        logo_url: logoUrl || null,
-        banner_url: coverImageUrl || null,
-        page_background_color: pageBackgroundColor || null,
-        hero_primary_color: heroPrimaryColor || null,
-        public_button_bg_color: buttonColor || null,
-        public_button_text_color: buttonTextColor || null,
-        public_heading_text_color: headingTextColor || null,
-        public_body_text_color: bodyTextColor || null,
-        public_accent_color: accentColor || null,
-        public_footer_bg_color: footerBgColor || null,
-        public_footer_text_color: footerTextColor || null,
-        public_heading_font: headingFont || null,
-        public_body_font: bodyFont || null,
-        public_hero_title_size_px: Math.min(72, Math.max(32, heroTitleSizePx)),
-        public_display_name: publicDisplayName.trim() || null,
-        public_tagline: tagTrim || null,
-        public_description: descTrim || null,
-        public_cta_label: ctaLabel.trim().slice(0, 80) || null,
-        public_hero_height: heroHeight,
-        public_hero_overlay_enabled: heroOverlayEnabled,
-        public_hero_overlay_opacity: Math.min(80, Math.max(0, heroOverlayOpacity)),
-        google_maps_url: googleMapsUrl.trim() || null,
-        show_public_instagram: showPublicInstagram,
-        show_public_facebook: showPublicFacebook,
-        show_public_google_maps: showPublicGoogleMaps,
         reservation_confirmation_mode: reservationConfirmationMode,
         reservation_confirmation_email_subject: reservationConfirmationEmailSubject.trim() || null,
         reservation_confirmation_email_body: reservationConfirmationEmailBody.trim() || null,
@@ -680,6 +558,7 @@ export default function SettingsForm({
     const { error: settingsError } = await supabase
       .from("restaurant_settings")
       .upsert({
+        ...publicSettingsPatch,
         restaurant_id: restaurant.id,
         restaurant_capacity: Math.max(lunchMaxCovers, dinnerMaxCovers),
         max_covers_per_slot: Math.max(lunchMaxCovers, dinnerMaxCovers),
@@ -715,31 +594,9 @@ export default function SettingsForm({
         days_in_advance: daysInAdvance,
         reservation_slot_interval: 15,
         max_party_size: maxPartySize,
-        accent_color: accentColor || null,
-        button_color: buttonColor || null,
-        text_color: bodyTextColor || null,
-        heading_font: headingFont || null,
-        body_font: bodyFont || null,
-        font_size_scale: fontSizeScale,
-        border_radius: borderRadius,
-        button_style: buttonStyle,
-        card_style: cardStyle,
-        logo_url: logoUrl || null,
-        cover_image_url: coverImageUrl || null,
-        instagram_url: instagramUrl || null,
-        facebook_url: facebookUrl || null,
-        website_url: websiteUrl || null,
-        pre_booking_message: preBookingMessage || null,
         closure_start_date: closureStartDate || null,
         closure_end_date: closureEndDate || null,
         closure_message: closureMessage || null,
-        public_page_description: descTrim || null,
-        gallery_image_urls: galleryUrls.filter(Boolean),
-        public_page_show_address: showPublicAddress,
-        public_page_show_phone: showPublicPhone,
-        public_page_show_email: showPublicEmail,
-        public_page_show_website: showPublicWebsite,
-        public_page_show_opening_hours: showPublicOpeningHours,
       }, { onConflict: "restaurant_id" });
 
     if (settingsError) {
@@ -753,7 +610,10 @@ export default function SettingsForm({
     setIsSaving(false);
   }
 
-  const effectivePublicLink = useMemo(() => publicLink.replace(restaurant.slug, slug), [publicLink, restaurant.slug, slug]);
+  const effectivePublicLink = useMemo(
+    () => publicLink.replace(restaurant.slug, publicPageRef.current?.getSlug() ?? slug),
+    [publicLink, restaurant.slug, slug],
+  );
 
   return (
     <>
@@ -808,12 +668,10 @@ export default function SettingsForm({
                 <label className="dashboard-field-label">Nom du restaurant</label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} required />
               </div>
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Type de cuisine</label>
-                <Input disabled placeholder="À venir" value="" readOnly />
-                <div className="mt-2 flex items-center gap-2">
-                  <SoonBadge />
-                </div>
+              <div className="md:col-span-2 rounded-xl border border-zg-border/70 bg-zg-surface/60 p-4">
+                <p className="text-sm text-zg-muted">
+                  Identité, coordonnées et réseaux : configurez tout dans la section « Page publique » ci-dessous.
+                </p>
               </div>
               <div className="md:col-span-2">
                 <label className="dashboard-field-label">Description courte</label>
@@ -1045,163 +903,14 @@ export default function SettingsForm({
           iconWrapClassName="bg-[#EC4899]/15 text-[#EC4899]"
           iconClassName="text-[#EC4899]"
           title="Page publique"
-          subtitle="Personnalise l'apparence de ta page restaurant visible par tes clients."
+          subtitle="Personnalisez votre page de réservation : identité, photos, contenu et publication."
         >
-          <SettingsAccordion title="Identité visuelle">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Logo</label>
-                <div className="mt-2 grid gap-3 md:grid-cols-[1fr_220px] md:items-start">
-                  <div className="space-y-2">
-                    <Input type="file" accept="image/*" onChange={handleLogoUpload} />
-                    {isUploadingLogo ? <p className="text-xs text-zg-muted">Envoi du logo…</p> : null}
-                    <Input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="URL du logo" />
-                  </div>
-                  <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                    {logoUrl ? (
-                      <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-zg-border/70 bg-zg-surface-elevated">
-                        <Image src={logoUrl} alt="" fill className="object-contain p-2" unoptimized sizes="80px" />
-                      </div>
-                    ) : (
-                      <p className="text-sm text-zg-muted">Aucun logo.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="dashboard-field-label">Couleur d'accent</label>
-                <div className="mt-2 flex items-center gap-2">
-                  <Input type="color" className="h-11 w-14 shrink-0" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
-                  <Input value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
-                </div>
-              </div>
-              <div>
-                <label className="dashboard-field-label">Couleur hero</label>
-                <div className="mt-2 flex items-center gap-2">
-                  <Input type="color" className="h-11 w-14 shrink-0" value={heroPrimaryColor} onChange={(e) => setHeroPrimaryColor(e.target.value)} />
-                  <Input value={heroPrimaryColor} onChange={(e) => setHeroPrimaryColor(e.target.value)} />
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Image hero (URL bannière)</label>
-                <Input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." />
-              </div>
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Typographie & aperçu</label>
-                <div className="mt-2 grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="dashboard-field-label">Police des titres</label>
-                    <select
-                      className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm text-zg-fg"
-                      value={headingFont}
-                      onChange={(e) => setHeadingFont(e.target.value)}
-                    >
-                      {PUBLIC_PAGE_FONT_OPTIONS.map((f) => (
-                        <option key={f} value={f}>
-                          {f}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="dashboard-field-label">Police du texte</label>
-                    <select
-                      className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm text-zg-fg"
-                      value={bodyFont}
-                      onChange={(e) => setBodyFont(e.target.value)}
-                    >
-                      {PUBLIC_PAGE_FONT_OPTIONS.map((f) => (
-                        <option key={f} value={f}>
-                          {f}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <PublicPageLivePreview draft={previewDraft} publicPath={publicLink} />
-                </div>
-              </div>
-            </div>
-          </SettingsAccordion>
-          <SettingsAccordion title="Contenu">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Menu (lien ou PDF)</label>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <Input readOnly value="" placeholder="https://…" className="flex-1 min-w-[200px]" />
-                  <SoonBadge />
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Ambiance / description</label>
-                <Textarea className="min-h-28" value={publicPageDescription} maxLength={500} onChange={(e) => setPublicPageDescription(e.target.value)} />
-                <p className="mt-1 text-xs text-zg-text-muted">{publicPageDescription.length}/500</p>
-              </div>
-              <div className="md:col-span-2">
-                <label className="dashboard-field-label">Sous-titre / accroche</label>
-                <Input readOnly value={publicTagline} placeholder="—" />
-              </div>
-              <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <label className="dashboard-field-label">Ton de voix</label>
-                  <p className="mt-1 text-sm text-zg-muted">Personnalisation du ton éditorial.</p>
-                </div>
-                <SoonBadge />
-              </div>
-              <div className="md:col-span-2 rounded-xl border border-zg-border/70 bg-zg-surface/60 p-4">
-                <p className="text-sm font-semibold text-zg-fg">Marketing</p>
-                <p className="mt-1 text-sm text-zg-muted">Campagnes e-mail et relances : module dédié.</p>
-                <Link href="/dashboard/marketing" className="mt-3 inline-flex">
-                  <Button type="button" variant="secondary" className="min-h-11">
-                    Ouvrir Marketing
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </SettingsAccordion>
-          <SettingsAccordion title="URL personnalisée">
-            <div className="grid gap-4">
-              <div>
-                <label className="dashboard-field-label">Slug</label>
-                <Input id="settings-slug-field" value={slug} onChange={(e) => setSlug(e.target.value)} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">Lien public</p>
-                <p className="mt-2 break-all text-sm font-semibold text-zg-fg">{effectivePublicLink}</p>
-              </div>
-              <div className="flex flex-wrap justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-11"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(effectivePublicLink);
-                      setMessage("Lien copié.");
-                    } catch {
-                      setMessage("Impossible de copier le lien.");
-                    }
-                  }}
-                >
-                  Copier
-                </Button>
-                <a href={effectivePublicLink} target="_blank" rel="noreferrer">
-                  <Button type="button" variant="secondary" className="min-h-11">
-                    Voir la page
-                  </Button>
-                </a>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-11"
-                  onClick={() => document.getElementById("settings-slug-field")?.focus()}
-                >
-                  Modifier
-                </Button>
-              </div>
-            </div>
-          </SettingsAccordion>
+          <PublicPageSettingsPanel
+            ref={publicPageRef}
+            initial={publicPageInitial}
+            publicLinkBase={publicLink}
+            onMessage={setMessage}
+          />
         </SettingsCategoryCard>
 
         <SettingsCategoryCard
