@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronRight, MapPin, Menu, Phone, Star, X } from "lucide-react";
+import { ChevronRight, Check, MapPin, Menu, Phone, Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/src/lib/utils";
 import type {
@@ -936,6 +936,40 @@ export function PremiumReservationSection({
             </a>
           </p>
         ) : null}
+      </div>
+    </section>
+  );
+}
+
+export function HighlightsBand({ items }: { items: string[] }) {
+  const visible = items.map((s) => s.trim()).filter(Boolean).slice(0, 6);
+  if (visible.length === 0) return null;
+  return (
+    <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_3%,var(--page-bg))]">
+      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-12">
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {visible.map((item) => (
+            <li
+              key={item}
+              className="flex items-start gap-3"
+              style={{ color: "var(--body-text)" }}
+            >
+              <span
+                className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 14%, var(--page-bg))",
+                  color: "var(--accent-color)",
+                }}
+                aria-hidden
+              >
+                <Check className="h-4 w-4" />
+              </span>
+              <span className="text-base font-medium leading-snug" style={{ color: "var(--heading-color)" }}>
+                {item}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

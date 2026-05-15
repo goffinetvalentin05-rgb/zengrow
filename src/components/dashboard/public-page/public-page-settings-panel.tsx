@@ -29,10 +29,15 @@ import {
   type PublicPageEditorConfig,
   parseEditorConfig,
   editorConfigToPreviewDraft,
-  applyConversionTemplate,
   type EditorContext,
   legacyHeroHeight,
 } from "@/src/lib/public-page/editor-config";
+import {
+  PAGE_PRESETS,
+  applyPagePreset,
+  pagePresetHasMeaningfulImpact,
+  type PagePresetId,
+} from "@/src/lib/public-page/page-presets";
 import { cn, formatOpeningHoursLines, type OpeningHours } from "@/src/lib/utils";
 import { sanitizePublicSlug } from "@/src/lib/public-page/slug";
 import {
@@ -53,7 +58,6 @@ import {
   CTA_PLACEMENT_OPTIONS,
   PAGE_GOAL_OPTIONS,
   PERSUASION_OPTIONS,
-  STRUCTURE_TEMPLATES,
 } from "@/src/lib/public-page/conversion";
 import { newEditorialSection, newMenuOffer } from "@/src/lib/public-page/premium-content";
 import type { EditorialLayout } from "@/src/lib/public-page/premium-content";
@@ -415,6 +419,57 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       },
       [primaryColor, secondaryColor, markDirty],
     );
+
+    // Confirmation avant d'appliquer un preset complet de page.
+    const [pendingPresetId, setPendingPresetId] = useState<PagePresetId | null>(null);
+
+    const applyFullPagePreset = useCallback(
+      (presetId: PagePresetId) => {
+        setEditorConfig((current) => {
+          const next = applyPagePreset(current, presetId);
+
+          // Synchronise les états locaux qui reflètent l'apparence (colonne dashboard).
+          setStylePreset(next.appearance.stylePreset);
+          setPrimaryColor(next.appearance.primaryColor);
+          setSecondaryColor(next.appearance.secondaryColor);
+          setAccentColor(next.appearance.accentColor);
+          setHeroPrimaryColor(next.appearance.primaryColor);
+          setHeadingFont(next.appearance.headingFont);
+          setBodyFont(next.appearance.bodyFont);
+          setHeroHeight(
+            next.hero.height === "immersive"
+              ? "tall"
+              : next.hero.height === "compact"
+                ? "compact"
+                : "normal",
+          );
+
+          // Synchronise le libellé du CTA si l'utilisateur n'avait rien personnalisé,
+          // pour qu'il reflète immédiatement le preset choisi dans le hero / aperçu.
+          if (!ctaLabel.trim()) setCtaLabel(next.hero.primaryCta);
+
+          return next;
+        });
+        markDirty();
+      },
+      [ctaLabel, markDirty],
+    );
+
+    const handlePresetClick = useCallback(
+      (presetId: PagePresetId) => {
+        if (pagePresetHasMeaningfulImpact(editorConfig, presetId)) {
+          setPendingPresetId(presetId);
+          return;
+        }
+        applyFullPagePreset(presetId);
+      },
+      [editorConfig, applyFullPagePreset],
+    );
+
+    const confirmPendingPreset = useCallback(() => {
+      if (pendingPresetId) applyFullPagePreset(pendingPresetId);
+      setPendingPresetId(null);
+    }, [pendingPresetId, applyFullPagePreset]);
 
     const resetStyle = useCallback(() => {
       setPrimaryColor(DEFAULT_PRIMARY);
@@ -818,21 +873,23 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           defaultOpen
         >
           <div className="space-y-5">
+            <FieldHint>
+              Chaque modèle applique une structure, un style visuel et une posture de
+              persuasion adaptés. Vos textes déjà saisis sont conservés.
+            </FieldHint>
             <div className="grid gap-3 sm:grid-cols-2">
-              {STRUCTURE_TEMPLATES.map((t) => (
+              {PAGE_PRESETS.map((t) => (
                 <button
                   key={t.id}
                   type="button"
+                  aria-pressed={editorConfig.conversion.structureTemplate === t.id}
                   className={cn(
                     "rounded-xl border p-4 text-left transition",
                     editorConfig.conversion.structureTemplate === t.id
                       ? "border-zg-accent bg-zg-accent/5 ring-1 ring-zg-accent"
                       : "border-zg-border hover:border-zg-accent/40",
                   )}
-                  onClick={() => {
-                    setEditorConfig((c) => applyConversionTemplate(c, t.id));
-                    markDirty();
-                  }}
+                  onClick={() => handlePresetClick(t.id)}
                 >
                   <p className="font-semibold text-zg-fg">{t.label}</p>
                   <p className="mt-1 text-xs text-zg-muted">{t.description}</p>
@@ -1085,6 +1142,79 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                   />
                 </div>
               ))}
+            </div>
+          </div>
+        </SettingsAccordion>
+
+        <SettingsAccordion
+          title="Points forts"
+          description="3 à 6 points forts visibles en haut de la page (selon le modèle choisi)."
+        >
+          <div className="space-y-3">
+            <FieldHint>
+              Apparaissent dans le bandeau « Points forts » de la page si le bloc est activé
+              (ex. modèle « Restaurant chaleureux »).
+            </FieldHint>
+            <Toggle
+              checked={editorConfig.blocks.highlights?.enabled === true}
+              onChange={(v) => {
+                setEditorConfig((c) =>
+                  parseEditorConfig({
+                    ...c,
+                    blocks: {
+                      ...c.blocks,
+                      highlights: { ...c.blocks.highlights, enabled: v },
+                    },
+                  }),
+                );
+                markDirty();
+              }}
+              label="Afficher la section « Points forts » sur la page"
+            />
+            <div className="space-y-2">
+              {highlights.map((value, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <Input
+                    value={value}
+                    onChange={(e) => {
+                      const next = [...highlights];
+                      next[idx] = e.target.value;
+                      setHighlights(next);
+                      markDirty();
+                    }}
+                    placeholder="Ex. Produits frais, terrasse, ambiance familiale…"
+                    maxLength={80}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="shrink-0"
+                    onClick={() => {
+                      setHighlights((items) => items.filter((_, i) => i !== idx));
+                      markDirty();
+                    }}
+                    aria-label="Supprimer ce point fort"
+                  >
+                    Supprimer
+                  </Button>
+                </div>
+              ))}
+              {highlights.length < MAX_HIGHLIGHTS ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setHighlights((items) => [...items, ""]);
+                    markDirty();
+                  }}
+                >
+                  Ajouter un point fort
+                </Button>
+              ) : (
+                <p className="text-sm text-zg-muted">
+                  Vous pouvez ajouter jusqu&apos;à {MAX_HIGHLIGHTS} points forts.
+                </p>
+              )}
             </div>
           </div>
         </SettingsAccordion>
@@ -2074,6 +2204,93 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           </div>
         </SettingsAccordion>
 
+        <SettingsAccordion
+          title="CTA final"
+          description="Encart d'appel à l'action affiché en fin de page."
+        >
+          <div className="space-y-4">
+            <Toggle
+              checked={editorConfig.blocks.final_cta?.enabled !== false}
+              onChange={(v) => {
+                setEditorConfig((c) =>
+                  parseEditorConfig({
+                    ...c,
+                    blocks: {
+                      ...c.blocks,
+                      final_cta: { ...c.blocks.final_cta, enabled: v },
+                    },
+                  }),
+                );
+                markDirty();
+              }}
+              label="Afficher le CTA final"
+            />
+            <div>
+              <label className="dashboard-field-label">Titre</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.blockContent.finalCta.title}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      blockContent: {
+                        ...c.blockContent,
+                        finalCta: { ...c.blockContent.finalCta, title: e.target.value },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+                placeholder="Prêt à réserver ?"
+                maxLength={120}
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Sous-titre</label>
+              <Textarea
+                className="mt-2 min-h-20"
+                value={editorConfig.blockContent.finalCta.subtitle}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      blockContent: {
+                        ...c.blockContent,
+                        finalCta: { ...c.blockContent.finalCta, subtitle: e.target.value },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+                placeholder="Réservez votre table en quelques clics."
+                maxLength={280}
+              />
+            </div>
+            <div>
+              <label className="dashboard-field-label">Texte du bouton</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.blockContent.finalCta.button}
+                onChange={(e) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      blockContent: {
+                        ...c.blockContent,
+                        finalCta: { ...c.blockContent.finalCta, button: e.target.value },
+                      },
+                    }),
+                  );
+                  markDirty();
+                }}
+                placeholder="Réserver une table"
+                maxLength={60}
+              />
+            </div>
+          </div>
+        </SettingsAccordion>
+
         <SettingsAccordion title="SEO & publication" description="URL publique, référencement et mise en ligne.">
           <div className="space-y-5">
             <div>
@@ -2182,6 +2399,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       </div>
     );
 
+    const pendingPreset = pendingPresetId
+      ? PAGE_PRESETS.find((p) => p.id === pendingPresetId) ?? null
+      : null;
+
     return (
       <div className="space-y-2">
         {editor}
@@ -2202,6 +2423,43 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           }
           isPublishing={hidePreviewPublish ? undefined : isPublishing}
         />
+
+        {pendingPreset ? (
+          <div
+            className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="apply-preset-title"
+          >
+            <div className="w-full max-w-md rounded-2xl border border-zg-border bg-zg-surface p-6 shadow-2xl">
+              <h2 id="apply-preset-title" className="text-lg font-semibold text-zg-fg">
+                Appliquer le modèle « {pendingPreset.label} » ?
+              </h2>
+              <p className="mt-2 text-sm text-zg-muted">
+                Appliquer ce modèle va modifier la structure et certains réglages visuels de
+                votre page (style, ordre des sections, hero, CTA). Vos textes déjà remplis
+                seront conservés autant que possible.
+              </p>
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row-reverse">
+                <Button
+                  type="button"
+                  className="min-h-11 sm:w-auto"
+                  onClick={confirmPendingPreset}
+                >
+                  Appliquer le modèle
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-11 sm:w-auto"
+                  onClick={() => setPendingPresetId(null)}
+                >
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   },

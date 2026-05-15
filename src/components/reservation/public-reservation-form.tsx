@@ -41,6 +41,7 @@ import {
   ConceptSection,
   CredibilitySection,
   EditorialBlock,
+  HighlightsBand,
   MenuOffersSection,
   PremiumFinalCta,
   PremiumGallery,
@@ -1001,20 +1002,6 @@ export default function PublicReservationForm({
         previewMode={previewMode}
       />
 
-      {blockEnabled("about") && premium.concept.enabled ? (
-        <ConceptSection
-          title={conceptTitle}
-          body={conceptBody}
-          imageUrl={conceptImage || undefined}
-          pillars={premium.concept.pillars}
-        />
-      ) : null}
-
-      {visibleEditorialSections(premium.editorialSections).map((section) => (
-        <EditorialBlock key={section.id} section={section} previewMode={previewMode} />
-      ))}
-
-
       <div className="flex flex-col">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-0 px-0 py-0 sm:px-0">
         {specialMessage?.trim() ? (
@@ -1024,13 +1011,34 @@ export default function PublicReservationForm({
               borderColor: "color-mix(in srgb, var(--accent-color) 30%, transparent)",
               backgroundColor: "color-mix(in srgb, var(--accent-color) 10%, var(--page-bg))",
               color: "var(--heading-color)",
+              order: -1,
             }}
           >
             {specialMessage.trim()}
           </p>
         ) : null}
 
-        {sortedDocuments.length > 0 && !menuHref ? (
+        {blockEnabled("highlights") && activeHighlights.length > 0 ? (
+          <div style={{ order: sectionOrderIndex("highlights") }}>
+            <HighlightsBand items={activeHighlights} />
+          </div>
+        ) : null}
+
+        {blockEnabled("about") && premium.concept.enabled ? (
+          <div style={{ order: sectionOrderIndex("about") }}>
+            <ConceptSection
+              title={conceptTitle}
+              body={conceptBody}
+              imageUrl={conceptImage || undefined}
+              pillars={premium.concept.pillars}
+            />
+            {visibleEditorialSections(premium.editorialSections).map((section) => (
+              <EditorialBlock key={section.id} section={section} previewMode={previewMode} />
+            ))}
+          </div>
+        ) : null}
+
+        {blockEnabled("menu") && sortedDocuments.length > 0 && !menuHref ? (
           <section
             className={cn(
               "rounded-[var(--radius)] border px-5 py-6 md:px-8",
@@ -1039,6 +1047,7 @@ export default function PublicReservationForm({
             style={{
               backgroundColor: "color-mix(in srgb, var(--body-text) 6%, var(--page-bg))",
               borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))",
+              order: sectionOrderIndex("menu"),
             }}
           >
             <h2

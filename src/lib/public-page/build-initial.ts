@@ -1,6 +1,7 @@
 import type { PublicPageSettingsInitial } from "@/src/components/dashboard/public-page/public-page-settings-panel";
 import type { PublicAmbiance, PublicStylePreset } from "@/src/lib/public-page/constants";
 import { DEFAULT_PRIMARY, DEFAULT_SECONDARY } from "@/src/lib/public-page/colors";
+import { MAX_HIGHLIGHTS } from "@/src/lib/public-page/constants";
 import type { OpeningHours } from "@/src/lib/utils";
 
 type RestaurantRow = {
@@ -89,7 +90,7 @@ type SettingsRow = {
 
 function parseHighlights(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
-  return raw.filter((x): x is string => typeof x === "string").slice(0, 3);
+  return raw.filter((x): x is string => typeof x === "string").slice(0, MAX_HIGHLIGHTS);
 }
 
 function asStylePreset(v: string | null | undefined): PublicStylePreset | null {
