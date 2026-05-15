@@ -391,7 +391,9 @@ export default async function PublicReservationPage({ params }: PublicReservatio
   const overlayOp = Math.min(80, Math.max(0, restaurant.public_hero_overlay_opacity ?? 45));
 
   const menuUrl =
-    safeSettings.public_menu_mode === "url" ? safeSettings.public_menu_url?.trim() || null : null;
+    safeSettings.public_menu_mode === "url" || safeSettings.public_menu_mode === "pdf"
+      ? safeSettings.public_menu_url?.trim() || null
+      : null;
 
   const editorConfig = parseEditorConfig(safeSettings.public_page_editor_config);
 

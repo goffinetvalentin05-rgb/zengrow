@@ -28,9 +28,18 @@ import {
   Type as TypeIcon,
   Upload,
   Utensils,
+  FileText,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
-import Button from "@/src/components/ui/button";
+import {
+  displayFileNameFromUrl,
+  imageExtensionForUpload,
+  tryRemoveRestaurantPublicObject,
+  uploadRestaurantPublicAsset,
+  validateRestaurantImageFile,
+  validateRestaurantPdfFile,
+} from "@/src/lib/restaurant-storage-upload";
+import Button, { buttonClassName } from "@/src/components/ui/button";
 import Badge from "@/src/components/ui/badge";
 import Input from "@/src/components/ui/input";
 import Textarea from "@/src/components/ui/textarea";
@@ -552,6 +561,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
     const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+    const [isUploadingConceptImage, setIsUploadingConceptImage] = useState(false);
+    const [uploadingOfferIndex, setUploadingOfferIndex] = useState<number | null>(null);
+    const [isUploadingMenuPdf, setIsUploadingMenuPdf] = useState(false);
 
     const displayName = name.trim() || "Restaurant";
     const effectiveSlug = sanitizePublicSlug(slug || name);
@@ -582,7 +594,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         shortDescription: shortDescription.trim(),
         highlights: highlights.filter(Boolean),
         galleryCount: galleryUrls.filter(Boolean).length,
-        menuUrl: menuMode === "url" ? menuUrl.trim() || null : null,
+        menuUrl:
+          menuMode === "url" || menuMode === "pdf" ? menuUrl.trim() || null : null,
         menuMode,
         menuDocumentsCount: initial.menuDocuments.length,
         reservationEnabled,
@@ -670,36 +683,170 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       setPendingPresetId(null);
     }, [pendingPresetId, applyFullPagePreset]);
 
-    async function uploadAsset(file: File, type: "logo" | "cover" | "gallery") {
-      const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-      const filePath = `${initial.restaurantId}/${type}-${Date.now()}.${extension}`;
-      const { error } = await supabase.storage.from("restaurants").upload(filePath, file, { upsert: true });
-      if (error) throw new Error(error.message);
-      const { data } = supabase.storage.from("restaurants").getPublicUrl(filePath);
-      return data.publicUrl;
-    }
-
     async function handleFileUpload(
       event: ChangeEvent<HTMLInputElement>,
       kind: "logo" | "cover" | "gallery",
     ) {
       const file = event.target.files?.[0];
       if (!file) return;
+      const err = validateRestaurantImageFile(file);
+      if (err) {
+        onMessage?.(err);
+        event.target.value = "";
+        return;
+      }
       onMessage?.(null);
       const setLoading =
         kind === "logo" ? setIsUploadingLogo : kind === "cover" ? setIsUploadingCover : setIsUploadingGallery;
       setLoading(true);
+      const previousUrl =
+        kind === "logo" ? logoUrl : kind === "cover" ? coverImageUrl : "";
       try {
-        const url = await uploadAsset(file, kind);
-        if (kind === "logo") setLogoUrl(url);
-        else if (kind === "cover") setCoverImageUrl(url);
-        else if (galleryUrls.length < MAX_GALLERY_PHOTOS) setGalleryUrls((g) => [...g, url]);
+        const ext = imageExtensionForUpload(file);
+        const { publicUrl } = await uploadRestaurantPublicAsset(
+          supabase,
+          initial.restaurantId,
+          kind === "logo" ? "logo" : kind === "cover" ? "hero" : "gallery",
+          file,
+          { extension: ext },
+        );
+        if (kind === "logo") setLogoUrl(publicUrl);
+        else if (kind === "cover") setCoverImageUrl(publicUrl);
+        else if (galleryUrls.length < MAX_GALLERY_PHOTOS) setGalleryUrls((g) => [...g, publicUrl]);
+        if (previousUrl && previousUrl !== publicUrl) {
+          void tryRemoveRestaurantPublicObject(supabase, previousUrl);
+        }
+        markDirty();
+        onMessage?.("Fichier enregistré.");
+      } catch (e) {
+        onMessage?.(e instanceof Error ? e.message : "Échec du chargement.");
+      } finally {
+        setLoading(false);
+        event.target.value = "";
+      }
+    }
+
+    async function handleConceptImageUpload(event: ChangeEvent<HTMLInputElement>) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const err = validateRestaurantImageFile(file);
+      if (err) {
+        onMessage?.(err);
+        event.target.value = "";
+        return;
+      }
+      onMessage?.(null);
+      const previous = editorConfig.premium.concept.imageUrl.trim();
+      setIsUploadingConceptImage(true);
+      try {
+        const ext = imageExtensionForUpload(file);
+        const { publicUrl } = await uploadRestaurantPublicAsset(
+          supabase,
+          initial.restaurantId,
+          "sections",
+          file,
+          { extension: ext },
+        );
+        setEditorConfig((c) =>
+          parseEditorConfig({
+            ...c,
+            premium: {
+              ...c.premium,
+              concept: { ...c.premium.concept, imageUrl: publicUrl },
+            },
+          }),
+        );
+        if (previous && previous !== publicUrl) {
+          void tryRemoveRestaurantPublicObject(supabase, previous);
+        }
+        markDirty();
+        onMessage?.("Image enregistrée.");
+      } catch (e) {
+        onMessage?.(e instanceof Error ? e.message : "Échec du chargement.");
+      } finally {
+        setIsUploadingConceptImage(false);
+        event.target.value = "";
+      }
+    }
+
+    async function handleOfferImageUpload(idx: number, event: ChangeEvent<HTMLInputElement>) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const err = validateRestaurantImageFile(file);
+      if (err) {
+        onMessage?.(err);
+        event.target.value = "";
+        return;
+      }
+      onMessage?.(null);
+      const offer = editorConfig.premium.menuOffers[idx];
+      const previous = offer?.imageUrl?.trim() ?? "";
+      setUploadingOfferIndex(idx);
+      try {
+        const ext = imageExtensionForUpload(file);
+        const { publicUrl } = await uploadRestaurantPublicAsset(
+          supabase,
+          initial.restaurantId,
+          "offers",
+          file,
+          { extension: ext },
+        );
+        const menuOffers = [...editorConfig.premium.menuOffers];
+        menuOffers[idx] = { ...menuOffers[idx], imageUrl: publicUrl };
+        setEditorConfig((c) => parseEditorConfig({ ...c, premium: { ...c.premium, menuOffers } }));
+        if (previous && previous !== publicUrl) {
+          void tryRemoveRestaurantPublicObject(supabase, previous);
+        }
         markDirty();
         onMessage?.("Photo enregistrée.");
       } catch (e) {
         onMessage?.(e instanceof Error ? e.message : "Échec du chargement.");
       } finally {
-        setLoading(false);
+        setUploadingOfferIndex(null);
+        event.target.value = "";
+      }
+    }
+
+    async function handleMenuPdfUpload(event: ChangeEvent<HTMLInputElement>) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const err = validateRestaurantPdfFile(file);
+      if (err) {
+        onMessage?.(err);
+        event.target.value = "";
+        return;
+      }
+      onMessage?.(null);
+      const previous = menuUrl.trim();
+      setIsUploadingMenuPdf(true);
+      try {
+        const { publicUrl } = await uploadRestaurantPublicAsset(
+          supabase,
+          initial.restaurantId,
+          "menus",
+          file,
+          { extension: "pdf" },
+        );
+        setMenuUrl(publicUrl);
+        setMenuMode("pdf");
+        setEditorConfig((c) =>
+          parseEditorConfig({
+            ...c,
+            blockContent: {
+              ...c.blockContent,
+              menu: { ...c.blockContent.menu, mode: "pdf", url: publicUrl },
+            },
+          }),
+        );
+        if (previous && previous !== publicUrl) {
+          void tryRemoveRestaurantPublicObject(supabase, previous);
+        }
+        markDirty();
+        onMessage?.("Menu enregistré.");
+      } catch (e) {
+        onMessage?.(e instanceof Error ? e.message : "Échec du chargement.");
+      } finally {
+        setIsUploadingMenuPdf(false);
         event.target.value = "";
       }
     }
@@ -948,7 +1095,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           facebook_url: facebookUrl.trim() || null,
           website_url: websiteUrl.trim() || null,
           public_menu_mode: menuMode,
-          public_menu_url: menuMode === "url" ? menuUrl.trim() || null : null,
+          public_menu_url:
+            menuMode === "url" || menuMode === "pdf" ? menuUrl.trim() || null : null,
           public_page_description: shortDescription.trim().slice(0, MAX_DESCRIPTION_CHARS) || null,
           pre_booking_message: preBookingMessage.trim() || null,
           public_reservation_enabled: reservationEnabled,
@@ -1779,14 +1927,16 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-zg-border bg-zg-surface/60 p-4">
               <label className="dashboard-field-label">Image principale (hero)</label>
-              <FieldHint>La première photo vue par le client. Privilégiez du paysage, lumineux.</FieldHint>
+              <FieldHint>
+                Utilisez une photo nette et lumineuse pour donner envie de réserver.
+              </FieldHint>
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
                   <Upload className="h-4 w-4" />
                   {coverImageUrl ? "Remplacer" : "Importer une photo"}
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                     className="hidden"
                     onChange={(e) => handleFileUpload(e, "cover")}
                   />
@@ -1797,6 +1947,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                     variant="secondary"
                     className="min-h-9"
                     onClick={() => {
+                      void tryRemoveRestaurantPublicObject(supabase, coverImageUrl);
                       setCoverImageUrl("");
                       markDirty();
                     }}
@@ -1827,14 +1978,16 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
             <div className="rounded-2xl border border-zg-border bg-zg-surface/60 p-4">
               <label className="dashboard-field-label">Logo</label>
-              <FieldHint>Optionnel. Apparaît dans la navigation et le pied de page.</FieldHint>
+              <FieldHint>
+                Utilisez une photo nette pour votre logo. Format carré ou horizontal recommandé.
+              </FieldHint>
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
                   <Upload className="h-4 w-4" />
                   {logoUrl ? "Remplacer" : "Importer un logo"}
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                     className="hidden"
                     onChange={(e) => handleFileUpload(e, "logo")}
                   />
@@ -1845,6 +1998,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                     variant="secondary"
                     className="min-h-9"
                     onClick={() => {
+                      void tryRemoveRestaurantPublicObject(supabase, logoUrl);
                       setLogoUrl("");
                       markDirty();
                     }}
@@ -1976,25 +2130,68 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                         />
                       </div>
                       <div>
-                        <label className="dashboard-field-label">Image (optionnelle)</label>
-                        <FieldHint>Si vide, la 1ère photo de la galerie sera utilisée.</FieldHint>
-                        <Input
-                          className="mt-2"
-                          value={editorConfig.premium.concept.imageUrl}
-                          onChange={(e) => {
-                            setEditorConfig((c) =>
-                              parseEditorConfig({
-                                ...c,
-                                premium: {
-                                  ...c.premium,
-                                  concept: { ...c.premium.concept, imageUrl: e.target.value },
-                                },
-                              }),
-                            );
-                            markDirty();
-                          }}
-                          placeholder="https://…"
-                        />
+                        <label className="dashboard-field-label">Photo du concept (optionnel)</label>
+                        <FieldHint>
+                          Utilisez une photo nette et lumineuse pour donner envie de réserver. Si vide, la
+                          1<sup>re</sup> photo de la galerie peut être utilisée sur la page publique.
+                        </FieldHint>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
+                            <Upload className="h-4 w-4" />
+                            {editorConfig.premium.concept.imageUrl.trim()
+                              ? "Remplacer l’image"
+                              : "Importer une image"}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                              className="hidden"
+                              onChange={handleConceptImageUpload}
+                            />
+                          </label>
+                          {editorConfig.premium.concept.imageUrl.trim() ? (
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              className="min-h-9"
+                              onClick={() => {
+                                const prev = editorConfig.premium.concept.imageUrl.trim();
+                                void tryRemoveRestaurantPublicObject(supabase, prev);
+                                setEditorConfig((c) =>
+                                  parseEditorConfig({
+                                    ...c,
+                                    premium: {
+                                      ...c.premium,
+                                      concept: { ...c.premium.concept, imageUrl: "" },
+                                    },
+                                  }),
+                                );
+                                markDirty();
+                              }}
+                            >
+                              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                              Supprimer
+                            </Button>
+                          ) : null}
+                          {isUploadingConceptImage ? (
+                            <span className="text-xs text-zg-muted">Envoi…</span>
+                          ) : null}
+                        </div>
+                        <div className="relative mt-3 aspect-[4/3] w-full max-w-md overflow-hidden rounded-xl border border-zg-border bg-zg-surface">
+                          {editorConfig.premium.concept.imageUrl.trim() ? (
+                            <Image
+                              src={editorConfig.premium.concept.imageUrl.trim()}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              unoptimized
+                              sizes="400px"
+                            />
+                          ) : (
+                            <div className="flex h-full min-h-[140px] items-center justify-center">
+                              <ImageIcon className="h-8 w-8 text-zg-muted" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <p className="text-xs text-zg-muted">
                         Le texte affiché est la « Petite description » saisie à l&apos;étape 2.
@@ -2004,19 +2201,93 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
                   {enabled && section.id === "menu" ? (
                     <div className="space-y-4 border-t border-zg-border/60 p-4">
-                      <div>
-                        <label className="dashboard-field-label">Lien menu (optionnel)</label>
-                        <FieldHint>URL externe vers votre carte (PDF ou page web).</FieldHint>
-                        <Input
-                          className="mt-2"
-                          value={menuUrl}
-                          onChange={(e) => {
-                            setMenuUrl(e.target.value);
-                            if (e.target.value) setMenuMode("url");
-                            markDirty();
-                          }}
-                          placeholder="https://…"
-                        />
+                      <div className="rounded-2xl border border-zg-border bg-zg-surface/60 p-4">
+                        <label className="dashboard-field-label">Carte / menu (PDF)</label>
+                        <FieldHint>
+                          Importez votre carte au format PDF. Les visiteurs ouvriront le fichier dans un nouvel
+                          onglet — aucun lien à copier.
+                        </FieldHint>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          {menuUrl.trim() ? (
+                            <>
+                              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2">
+                                <FileText className="h-5 w-5 shrink-0 text-zg-accent" aria-hidden />
+                                <span className="truncate text-sm font-medium text-zg-fg">
+                                  {displayFileNameFromUrl(menuUrl.trim())}
+                                </span>
+                              </div>
+                              <a
+                                href={menuUrl.trim()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={buttonClassName({
+                                  variant: "secondary",
+                                  size: "sm",
+                                  className: "min-h-9 shrink-0",
+                                })}
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                Voir le PDF
+                              </a>
+                              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
+                                <Upload className="h-4 w-4" />
+                                Remplacer
+                                <input
+                                  type="file"
+                                  accept="application/pdf,.pdf"
+                                  className="hidden"
+                                  onChange={handleMenuPdfUpload}
+                                  disabled={isUploadingMenuPdf}
+                                />
+                              </label>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                className="min-h-9"
+                                onClick={() => {
+                                  const prev = menuUrl.trim();
+                                  void tryRemoveRestaurantPublicObject(supabase, prev);
+                                  setMenuUrl("");
+                                  setMenuMode(null);
+                                  setEditorConfig((c) =>
+                                    parseEditorConfig({
+                                      ...c,
+                                      blockContent: {
+                                        ...c.blockContent,
+                                        menu: { mode: null, url: "" },
+                                      },
+                                    }),
+                                  );
+                                  markDirty();
+                                }}
+                              >
+                                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                                Supprimer
+                              </Button>
+                            </>
+                          ) : (
+                            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
+                              <Upload className="h-4 w-4" />
+                              Importer un PDF
+                              <input
+                                type="file"
+                                accept="application/pdf,.pdf"
+                                className="hidden"
+                                onChange={handleMenuPdfUpload}
+                                disabled={isUploadingMenuPdf}
+                              />
+                            </label>
+                          )}
+                          {isUploadingMenuPdf ? (
+                            <span className="text-xs text-zg-muted">Envoi…</span>
+                          ) : null}
+                        </div>
+                        {menuMode === "url" && menuUrl.trim() ? (
+                          <p className="mt-2 text-xs text-zg-muted">
+                            Un ancien lien externe est encore utilisé. Importez un PDF ci-dessus pour héberger la
+                            carte sur ZenGrow.
+                          </p>
+                        ) : null}
                       </div>
 
                       <div className="space-y-3">
@@ -2124,28 +2395,66 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                                   markDirty();
                                 }}
                               />
-                              <Input
-                                placeholder="URL image (optionnel)"
-                                value={offer.imageUrl}
-                                onChange={(e) => {
-                                  const menuOffers = [...editorConfig.premium.menuOffers];
-                                  menuOffers[idx] = { ...offer, imageUrl: e.target.value };
-                                  setEditorConfig((c) =>
-                                    parseEditorConfig({
-                                      ...c,
-                                      premium: { ...c.premium, menuOffers },
-                                    }),
-                                  );
-                                  markDirty();
-                                }}
-                              />
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium text-zg-muted">Photo du plat (optionnel)</label>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-zg-border bg-zg-surface px-2.5 py-1.5 text-xs font-medium hover:border-zg-accent/60">
+                                    <Upload className="h-3.5 w-3.5" />
+                                    {offer.imageUrl.trim() ? "Remplacer" : "Importer"}
+                                    <input
+                                      type="file"
+                                      accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                                      className="hidden"
+                                      disabled={uploadingOfferIndex !== null}
+                                      onChange={(e) => handleOfferImageUpload(idx, e)}
+                                    />
+                                  </label>
+                                  {offer.imageUrl.trim() ? (
+                                    <Button
+                                      type="button"
+                                      variant="secondary"
+                                      className="min-h-8 px-2 text-xs"
+                                      onClick={() => {
+                                        const prev = offer.imageUrl.trim();
+                                        void tryRemoveRestaurantPublicObject(supabase, prev);
+                                        const menuOffers = [...editorConfig.premium.menuOffers];
+                                        menuOffers[idx] = { ...offer, imageUrl: "" };
+                                        setEditorConfig((c) =>
+                                          parseEditorConfig({
+                                            ...c,
+                                            premium: { ...c.premium, menuOffers },
+                                          }),
+                                        );
+                                        markDirty();
+                                      }}
+                                    >
+                                      Supprimer photo
+                                    </Button>
+                                  ) : null}
+                                  {uploadingOfferIndex === idx ? (
+                                    <span className="text-xs text-zg-muted">Envoi…</span>
+                                  ) : null}
+                                </div>
+                                {offer.imageUrl.trim() ? (
+                                  <div className="relative h-20 w-full max-w-[200px] overflow-hidden rounded-lg border border-zg-border bg-zg-surface">
+                                    <Image
+                                      src={offer.imageUrl.trim()}
+                                      alt=""
+                                      fill
+                                      className="object-cover"
+                                      unoptimized
+                                      sizes="200px"
+                                    />
+                                  </div>
+                                ) : null}
+                              </div>
                             </div>
                           </div>
                         ))}
 
                         {editorConfig.premium.menuOffers.length === 0 ? (
                           <p className="text-xs text-zg-muted">
-                            Aucun plat ajouté. La section affichera uniquement le lien menu si présent.
+                            Aucun plat ajouté. La section affichera la carte PDF si vous en avez importé une.
                           </p>
                         ) : null}
                       </div>
@@ -2163,7 +2472,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                           Ajouter
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                             className="hidden"
                             disabled={galleryUrls.length >= MAX_GALLERY_PHOTOS}
                             onChange={(e) => handleFileUpload(e, "gallery")}
@@ -2191,6 +2500,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                               <button
                                 type="button"
                                 onClick={() => {
+                                  const u = galleryUrls[idx];
+                                  void tryRemoveRestaurantPublicObject(supabase, u);
                                   setGalleryUrls((g) => g.filter((_, i) => i !== idx));
                                   markDirty();
                                 }}
@@ -2204,7 +2515,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                         </div>
                       ) : (
                         <p className="text-xs text-zg-muted">
-                          Ajoutez 3 à 8 photos pour une galerie qui donne vraiment envie.
+                          Utilisez des photos nettes et lumineuses pour donner envie de réserver. Ajoutez 3 à 8
+                          visuels pour une belle galerie.
                         </p>
                       )}
                       <div>
