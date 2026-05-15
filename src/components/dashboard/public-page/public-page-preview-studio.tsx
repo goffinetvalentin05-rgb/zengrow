@@ -84,6 +84,7 @@ export default function PublicPagePreviewStudio({
     <PublicReservationForm
       previewMode
       restaurantId={draft.restaurantId}
+      restaurantSlug={draft.slug}
       restaurantName={draft.displayName.trim() || "Restaurant"}
       heroTitle={draft.heroTitle?.trim() || null}
       restaurantTagline={draft.tagline.trim() || null}

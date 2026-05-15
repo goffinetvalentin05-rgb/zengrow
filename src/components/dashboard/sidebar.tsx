@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import {
   Calendar,
   Copy,
+  Gift,
   LayoutDashboard,
   LayoutGrid,
   LogOut,
@@ -50,6 +51,7 @@ const navItems = [
   { href: "/dashboard/feedbacks", label: "Feedbacks", icon: MessageSquare },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
   { href: "/dashboard/public-page", label: "Page publique", icon: Globe2 },
+  { href: "/dashboard/gift-vouchers", label: "Bons cadeaux", icon: Gift },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];
 

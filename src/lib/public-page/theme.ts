@@ -121,6 +121,7 @@ const DEFAULT_BLOCK_VARIANT: Partial<Record<PageBlockId, SectionVariant>> = {
   location: "dark",
   reviews: "elevated",
   social: "muted",
+  gift_vouchers: "elevated",
   final_cta: "accent",
 };
 
@@ -146,7 +147,7 @@ export function resolvePublicPageTheme(config: PublicPageEditorConfig): PublicPa
     return {
       ...colors,
       width,
-      paddingY: blockId === "trust" ? "py-6" : blockId === "final_cta" ? "py-14" : "py-12",
+      paddingY: blockId === "trust" ? "py-6" : blockId === "final_cta" ? "py-14" : blockId === "gift_vouchers" ? "py-16 sm:py-20" : "py-12",
     };
   };
 

@@ -409,6 +409,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
       <main className="min-h-screen">
         <PublicReservationForm
           restaurantId={restaurant.id}
+          restaurantSlug={restaurant.slug}
           restaurantName={displayName}
           heroTitle={effectiveHeroTitle(restaurant.public_hero_title ?? "", displayName)}
           restaurantTagline={tagline}

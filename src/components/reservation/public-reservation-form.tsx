@@ -43,6 +43,7 @@ import {
   EditorialBlock,
   HighlightsBand,
   MenuOffersSection,
+  GiftVouchersSection,
   PremiumFinalCta,
   PremiumGallery,
   PremiumHero,
@@ -55,6 +56,8 @@ import {
 export type PublicReservationFormProps = {
   previewMode?: boolean;
   restaurantId: string;
+  /** Slug URL publique `/r/[slug]` — requis pour les demandes de bons cadeaux. */
+  restaurantSlug: string;
   restaurantName: string;
   heroTitle?: string | null;
   restaurantTagline?: string | null;
@@ -200,6 +203,7 @@ function PublicDescription({
 export default function PublicReservationForm({
   previewMode = false,
   restaurantId,
+  restaurantSlug = "",
   restaurantName,
   heroTitle,
   restaurantTagline,
@@ -990,6 +994,7 @@ export default function PublicReservationForm({
         onReserve={scrollToReservation}
         visible={premium.navigationEnabled}
         previewMode={previewMode}
+        showGiftVouchers={blockEnabled("gift_vouchers")}
       />
 
       <PremiumHero
@@ -1832,6 +1837,17 @@ export default function PublicReservationForm({
                       ? "Nos espaces"
                       : "En images"
               }
+            />
+          </div>
+        ) : null}
+
+        {blockEnabled("gift_vouchers") ? (
+          <div style={{ order: sectionOrderIndex("gift_vouchers") }}>
+            <GiftVouchersSection
+              content={premium.giftVouchers}
+              restaurantSlug={restaurantSlug}
+              previewMode={previewMode}
+              surface={pageTheme.section("gift_vouchers")}
             />
           </div>
         ) : null}

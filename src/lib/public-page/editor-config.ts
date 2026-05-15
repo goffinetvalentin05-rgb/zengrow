@@ -32,6 +32,7 @@ export const PAGE_BLOCK_IDS = [
   "reviews",
   "location",
   "social",
+  "gift_vouchers",
   "final_cta",
 ] as const;
 
@@ -130,8 +131,9 @@ export const DEFAULT_SECTION_ORDER: PageBlockId[] = [
   "reviews",
   "hours",
   "location",
-  "social",
+  "gift_vouchers",
   "final_cta",
+  "social",
 ];
 
 function defaultBlocks(): PublicPageEditorConfig["blocks"] {
@@ -140,6 +142,7 @@ function defaultBlocks(): PublicPageEditorConfig["blocks"] {
   ) as PublicPageEditorConfig["blocks"];
   blocks.trust = { enabled: false, variant: "inherit", width: "full" };
   blocks.highlights = { enabled: false, variant: "inherit", width: "contained" };
+  blocks.gift_vouchers = { enabled: false, variant: "inherit", width: "contained" };
   return blocks;
 }
 
@@ -239,10 +242,11 @@ function upgradeFromV2(raw: Record<string, unknown>): Partial<PublicPageEditorCo
   const blocks: Partial<PublicPageEditorConfig["blocks"]> = {};
   const rawBlocks = raw.blocks as Record<string, { enabled?: boolean }> | undefined;
   if (rawBlocks) {
+    const fallbacks = defaultBlocks();
     for (const id of PAGE_BLOCK_IDS) {
       const b = rawBlocks[id];
       blocks[id] = {
-        enabled: b?.enabled !== false,
+        enabled: b !== undefined ? b.enabled !== false : fallbacks[id].enabled,
         variant: "inherit",
         width: id === "trust" || id === "final_cta" ? "full" : "contained",
       };

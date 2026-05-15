@@ -35,6 +35,13 @@ export type CredibilityContent = {
   pressMentions: string[];
 };
 
+export type GiftVouchersSectionContent = {
+  title: string;
+  body: string;
+  imageUrl: string;
+  ctaLabel: string;
+};
+
 export type PremiumPageContent = {
   navigationEnabled: boolean;
   concept: {
@@ -55,6 +62,7 @@ export type PremiumPageContent = {
   reservation: {
     groupMessage: string;
   };
+  giftVouchers: GiftVouchersSectionContent;
 };
 
 export function defaultPremiumContent(): PremiumPageContent {
@@ -86,6 +94,12 @@ export function defaultPremiumContent(): PremiumPageContent {
     practical: { parking: "", accessibility: "" },
     reservation: {
       groupMessage: "Pour les groupes ou événements, contactez-nous par téléphone.",
+    },
+    giftVouchers: {
+      title: "Offrir un bon cadeau",
+      body: "Faites plaisir avec une expérience gastronomique. Nous préparons un bon personnalisé sur demande.",
+      imageUrl: "",
+      ctaLabel: "Demander un bon cadeau",
     },
   };
 }
@@ -190,6 +204,7 @@ export function normalizePremiumContent(raw: unknown): PremiumPageContent {
   const galleryRaw = o.gallery as Partial<PremiumPageContent["gallery"]> | undefined;
   const practicalRaw = o.practical as Partial<PremiumPageContent["practical"]> | undefined;
   const reservationRaw = o.reservation as Partial<PremiumPageContent["reservation"]> | undefined;
+  const giftRaw = o.giftVouchers as Partial<GiftVouchersSectionContent> | undefined;
   const style =
     galleryRaw?.style === "grid" || galleryRaw?.style === "instagram" ? galleryRaw.style : "showcase";
 
@@ -218,6 +233,16 @@ export function normalizePremiumContent(raw: unknown): PremiumPageContent {
         typeof reservationRaw?.groupMessage === "string"
           ? reservationRaw.groupMessage.slice(0, 280)
           : base.reservation.groupMessage,
+    },
+    giftVouchers: {
+      title:
+        typeof giftRaw?.title === "string" ? giftRaw.title.slice(0, 120) : base.giftVouchers.title,
+      body: typeof giftRaw?.body === "string" ? giftRaw.body.slice(0, 1200) : base.giftVouchers.body,
+      imageUrl: typeof giftRaw?.imageUrl === "string" ? giftRaw.imageUrl : "",
+      ctaLabel:
+        typeof giftRaw?.ctaLabel === "string"
+          ? giftRaw.ctaLabel.slice(0, 80)
+          : base.giftVouchers.ctaLabel,
     },
   };
 }

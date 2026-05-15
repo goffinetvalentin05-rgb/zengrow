@@ -134,6 +134,7 @@ const PAGE_SECTIONS: { id: PageBlockId; label: string; description: string }[] =
   { id: "reservation", label: "Réservation", description: "Formulaire intégré (paramétré à l'étape suivante)." },
   { id: "hours", label: "Horaires", description: "Affichés dans le formulaire et le pied de page." },
   { id: "location", label: "Contact & localisation", description: "Adresse, téléphone, itinéraire." },
+  { id: "gift_vouchers", label: "Bons cadeaux", description: "Formulaire de demande de bon cadeau (traitement par vous)." },
   { id: "final_cta", label: "Rappel final", description: "Bandeau de fin de page qui ramène à la réservation." },
 ];
 
@@ -562,6 +563,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const [isUploadingCover, setIsUploadingCover] = useState(false);
     const [isUploadingGallery, setIsUploadingGallery] = useState(false);
     const [isUploadingConceptImage, setIsUploadingConceptImage] = useState(false);
+    const [isUploadingGiftVoucherImage, setIsUploadingGiftVoucherImage] = useState(false);
     const [uploadingOfferIndex, setUploadingOfferIndex] = useState<number | null>(null);
     const [isUploadingMenuPdf, setIsUploadingMenuPdf] = useState(false);
 
@@ -765,6 +767,49 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         onMessage?.(e instanceof Error ? e.message : "Échec du chargement.");
       } finally {
         setIsUploadingConceptImage(false);
+        event.target.value = "";
+      }
+    }
+
+    async function handleGiftVoucherImageUpload(event: ChangeEvent<HTMLInputElement>) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const err = validateRestaurantImageFile(file);
+      if (err) {
+        onMessage?.(err);
+        event.target.value = "";
+        return;
+      }
+      onMessage?.(null);
+      const previous = editorConfig.premium.giftVouchers.imageUrl.trim();
+      setIsUploadingGiftVoucherImage(true);
+      try {
+        const ext = imageExtensionForUpload(file);
+        const { publicUrl } = await uploadRestaurantPublicAsset(
+          supabase,
+          initial.restaurantId,
+          "sections",
+          file,
+          { extension: ext },
+        );
+        setEditorConfig((c) =>
+          parseEditorConfig({
+            ...c,
+            premium: {
+              ...c.premium,
+              giftVouchers: { ...c.premium.giftVouchers, imageUrl: publicUrl },
+            },
+          }),
+        );
+        if (previous && previous !== publicUrl) {
+          void tryRemoveRestaurantPublicObject(supabase, previous);
+        }
+        markDirty();
+        onMessage?.("Image enregistrée.");
+      } catch (e) {
+        onMessage?.(e instanceof Error ? e.message : "Échec du chargement.");
+      } finally {
+        setIsUploadingGiftVoucherImage(false);
         event.target.value = "";
       }
     }
@@ -2623,6 +2668,140 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                     </div>
                   ) : null}
 
+                  {enabled && section.id === "gift_vouchers" ? (
+                    <div className="space-y-4 border-t border-zg-border/60 p-4">
+                      <p className="text-xs text-zg-muted">
+                        Les demandes arrivent dans le tableau de bord, menu « Bons cadeaux ». Vous préparez et
+                        envoyez le bon vous-même au client.
+                      </p>
+                      <div>
+                        <label className="dashboard-field-label">Titre</label>
+                        <Input
+                          className="mt-2"
+                          value={editorConfig.premium.giftVouchers.title}
+                          onChange={(e) => {
+                            setEditorConfig((c) =>
+                              parseEditorConfig({
+                                ...c,
+                                premium: {
+                                  ...c.premium,
+                                  giftVouchers: { ...c.premium.giftVouchers, title: e.target.value },
+                                },
+                              }),
+                            );
+                            markDirty();
+                          }}
+                          placeholder="Offrir un bon cadeau"
+                          maxLength={120}
+                        />
+                      </div>
+                      <div>
+                        <label className="dashboard-field-label">Texte de présentation</label>
+                        <Textarea
+                          className="mt-2 min-h-20"
+                          value={editorConfig.premium.giftVouchers.body}
+                          onChange={(e) => {
+                            setEditorConfig((c) =>
+                              parseEditorConfig({
+                                ...c,
+                                premium: {
+                                  ...c.premium,
+                                  giftVouchers: { ...c.premium.giftVouchers, body: e.target.value },
+                                },
+                              }),
+                            );
+                            markDirty();
+                          }}
+                          placeholder="Présentez votre offre en quelques phrases."
+                          maxLength={1200}
+                        />
+                      </div>
+                      <div>
+                        <label className="dashboard-field-label">Texte du bouton</label>
+                        <Input
+                          className="mt-2"
+                          value={editorConfig.premium.giftVouchers.ctaLabel}
+                          onChange={(e) => {
+                            setEditorConfig((c) =>
+                              parseEditorConfig({
+                                ...c,
+                                premium: {
+                                  ...c.premium,
+                                  giftVouchers: { ...c.premium.giftVouchers, ctaLabel: e.target.value },
+                                },
+                              }),
+                            );
+                            markDirty();
+                          }}
+                          placeholder="Demander un bon cadeau"
+                          maxLength={80}
+                        />
+                      </div>
+                      <div>
+                        <label className="dashboard-field-label">Image (optionnel)</label>
+                        <FieldHint>Visuel fort type carte cadeau ou ambiance du restaurant.</FieldHint>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
+                            <Upload className="h-4 w-4" />
+                            {editorConfig.premium.giftVouchers.imageUrl.trim()
+                              ? "Remplacer"
+                              : "Importer une image"}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                              className="hidden"
+                              onChange={handleGiftVoucherImageUpload}
+                              disabled={isUploadingGiftVoucherImage}
+                            />
+                          </label>
+                          {editorConfig.premium.giftVouchers.imageUrl.trim() ? (
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              className="min-h-9"
+                              onClick={() => {
+                                const prev = editorConfig.premium.giftVouchers.imageUrl.trim();
+                                void tryRemoveRestaurantPublicObject(supabase, prev);
+                                setEditorConfig((c) =>
+                                  parseEditorConfig({
+                                    ...c,
+                                    premium: {
+                                      ...c.premium,
+                                      giftVouchers: { ...c.premium.giftVouchers, imageUrl: "" },
+                                    },
+                                  }),
+                                );
+                                markDirty();
+                              }}
+                            >
+                              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                              Supprimer
+                            </Button>
+                          ) : null}
+                          {isUploadingGiftVoucherImage ? (
+                            <span className="text-xs text-zg-muted">Envoi…</span>
+                          ) : null}
+                        </div>
+                        <div className="relative mt-3 aspect-[4/3] w-full max-w-md overflow-hidden rounded-xl border border-zg-border bg-zg-surface">
+                          {editorConfig.premium.giftVouchers.imageUrl.trim() ? (
+                            <Image
+                              src={editorConfig.premium.giftVouchers.imageUrl.trim()}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              unoptimized
+                              sizes="400px"
+                            />
+                          ) : (
+                            <div className="flex h-full min-h-[120px] items-center justify-center">
+                              <ImageIcon className="h-8 w-8 text-zg-muted" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
                   {enabled && section.id === "final_cta" ? (
                     <div className="space-y-3 border-t border-zg-border/60 p-4">
                       <div>
@@ -2836,10 +3015,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         </StepCard>
 
         {/* ============================================================
-            STEP 5 — APERÇU & PUBLICATION
+            STEP 6 — APERÇU & PUBLICATION
             ============================================================ */}
         <StepCard
-          step={5}
+          step={6}
           icon={<Sparkles className="h-5 w-5" />}
           title="Aperçu & publication"
           subtitle="Vérifiez votre page puis publiez-la quand tout est prêt."

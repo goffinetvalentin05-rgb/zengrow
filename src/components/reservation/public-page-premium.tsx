@@ -1,14 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronRight, Check, Clock, MapPin, Menu, Phone, Star, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronRight, Check, Clock, Gift, MapPin, Menu, Phone, Star, X } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { cn } from "@/src/lib/utils";
+import type { SectionSurface } from "@/src/lib/public-page/theme";
+import { PublicPageSection } from "@/src/components/reservation/public-page-section";
 import type {
   ConceptPillar,
   CredibilityContent,
   EditorialSectionContent,
   GalleryStyle,
+  GiftVouchersSectionContent,
   MenuOfferItem,
 } from "@/src/lib/public-page/premium-content";
 import { hasCredibilityContent } from "@/src/lib/public-page/premium-content";
@@ -36,14 +39,21 @@ export function PublicPageNav({
   onReserve,
   visible,
   previewMode = false,
+  showGiftVouchers = false,
 }: {
   restaurantName: string;
   ctaLabel: string;
   onReserve: () => void;
   visible: boolean;
   previewMode?: boolean;
+  showGiftVouchers?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+
+  const navLinks = useMemo(() => {
+    const gift = showGiftVouchers ? ([{ id: "bons-cadeaux", label: "Cadeaux" }] as const) : [];
+    return [...NAV_ITEMS.slice(0, 4), ...gift, ...NAV_ITEMS.slice(4)] as { id: string; label: string }[];
+  }, [showGiftVouchers]);
 
   useEffect(() => {
     if (!open) return;
@@ -66,7 +76,8 @@ export function PublicPageNav({
           previewMode ? "sticky top-0 left-0 right-0" : "fixed inset-x-0 top-0",
         )}
       >
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6 lg:px-10">
+        <div className="mx-auto flex max-w-5xl justify-center px-3 pt-3 sm:px-5 sm:pt-4">
+          <div className="flex h-[3.25rem] w-full max-w-4xl items-center justify-between gap-3 rounded-full border border-white/15 bg-black/40 px-4 shadow-[0_8px_40px_rgba(0,0,0,0.35)] backdrop-blur-md sm:gap-4 sm:px-5 md:h-14">
           <button
             type="button"
             onClick={() => scrollToId("accueil")}
@@ -75,13 +86,13 @@ export function PublicPageNav({
           >
             {restaurantName}
           </button>
-          <nav className="hidden items-center gap-6 md:flex" aria-label="Navigation principale">
-            {NAV_ITEMS.map((item) => (
+          <nav className="hidden max-w-[52%] items-center gap-3 lg:flex lg:gap-4 xl:max-w-none" aria-label="Navigation principale">
+            {navLinks.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => scrollToId(item.id)}
-                className="text-xs font-medium uppercase tracking-[0.16em] text-white/85 transition hover:text-white"
+                className="shrink-0 text-[10px] font-medium uppercase tracking-[0.12em] text-white/85 transition hover:text-white xl:text-[11px] xl:tracking-[0.16em]"
               >
                 {item.label}
               </button>
@@ -105,6 +116,7 @@ export function PublicPageNav({
             </button>
           </div>
         </div>
+        </div>
       </header>
 
       {open ? (
@@ -125,7 +137,7 @@ export function PublicPageNav({
               </button>
             </div>
             <nav className="mt-8 flex flex-col gap-4">
-              {NAV_ITEMS.map((item) => (
+              {navLinks.map((item) => (
                 <button
                   key={item.id}
                   type="button"
@@ -1824,6 +1836,368 @@ export function HighlightsBand({ items }: { items: string[] }) {
         </ul>
       </div>
     </section>
+  );
+}
+
+export function GiftVouchersSection({
+  content,
+  restaurantSlug,
+  previewMode = false,
+  surface,
+}: {
+  content: GiftVouchersSectionContent;
+  restaurantSlug: string;
+  previewMode?: boolean;
+  surface: SectionSurface;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [amount, setAmount] = useState("");
+  const [beneficiary, setBeneficiary] = useState("");
+  const [occasion, setOccasion] = useState("");
+  const [message, setMessage] = useState("");
+
+  const title = content.title.trim() || "Offrir un bon cadeau";
+  const body =
+    content.body.trim() ||
+    "Faites plaisir avec une expérience gourmande. Indiquez vos souhaits : nous vous recontactons pour finaliser le bon.";
+  const cta = content.ctaLabel.trim() || "Demander un bon cadeau";
+  const img = content.imageUrl.trim();
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    if (previewMode) {
+      setErr("L’envoi est désactivé dans l’aperçu du tableau de bord.");
+      return;
+    }
+    if (!restaurantSlug.trim()) {
+      setErr("Impossible d’envoyer la demande pour le moment.");
+      return;
+    }
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+      setErr("Merci de remplir au minimum prénom, nom et e-mail.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/public/gift-voucher", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug: restaurantSlug.trim(),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
+          phone: phone.trim() || undefined,
+          amount: amount.trim() || undefined,
+          beneficiary: beneficiary.trim() || undefined,
+          occasion: occasion.trim() || undefined,
+          message: message.trim() || undefined,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean };
+      if (!res.ok || !data.ok) {
+        setErr(data.error ?? "Envoi impossible. Réessayez plus tard.");
+        setBusy(false);
+        return;
+      }
+      setDone(true);
+      setOpen(false);
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPhone("");
+      setAmount("");
+      setBeneficiary("");
+      setOccasion("");
+      setMessage("");
+    } catch {
+      setErr("Erreur réseau. Réessayez plus tard.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <PublicPageSection surface={surface} id="bons-cadeaux" className="scroll-mt-24">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
+          <div
+            className={cn(
+              "relative overflow-hidden rounded-2xl lg:rounded-none",
+              img ? "aspect-[4/3] min-h-[200px] lg:aspect-[5/4]" : "flex min-h-[200px] items-center justify-center lg:min-h-[280px]",
+            )}
+          >
+            {img ? (
+              <Image
+                src={img}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width:1024px) 100vw, 50vw"
+                unoptimized
+              />
+            ) : (
+              <div
+                className="flex h-full min-h-[280px] items-center justify-center"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 12%, var(--page-bg))",
+                }}
+                aria-hidden
+              >
+                <Gift className="h-16 w-16 opacity-30" style={{ color: "var(--accent-color)" }} />
+              </div>
+            )}
+            <div
+              className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/25 to-transparent"
+              aria-hidden
+            />
+          </div>
+
+          <div className="text-left">
+            <p
+              className="text-[10px] font-semibold uppercase tracking-[0.32em]"
+              style={{ color: "var(--accent-color)" }}
+            >
+              Boutique
+            </p>
+            <h2
+              className="mt-4 text-balance text-3xl font-medium leading-[1.08] sm:text-4xl lg:text-[2.75rem]"
+              style={{
+                fontFamily: "var(--heading-font), Georgia, serif",
+                color: "var(--heading-color)",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {title}
+            </h2>
+            <p
+              className="mt-6 max-w-xl text-pretty text-base font-light leading-relaxed sm:text-[17px]"
+              style={{
+                color: "var(--body-text)",
+                fontFamily: "var(--body-font), system-ui, sans-serif",
+              }}
+            >
+              {body}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setErr(null);
+                setOpen(true);
+              }}
+              className="mt-8 inline-flex min-h-[52px] items-center justify-center px-8 text-sm font-semibold uppercase tracking-[0.14em] transition hover:opacity-92"
+              style={{
+                borderRadius: "var(--radius)",
+                backgroundColor: "var(--button-bg)",
+                color: "var(--button-text)",
+              }}
+            >
+              {cta}
+            </button>
+          </div>
+        </div>
+      </PublicPageSection>
+
+      {done ? (
+        <div
+          className="mx-auto mb-6 max-w-lg rounded-2xl border px-5 py-4 text-center text-sm"
+          style={{
+            borderColor: "color-mix(in srgb, var(--accent-color) 35%, transparent)",
+            backgroundColor: "color-mix(in srgb, var(--accent-color) 8%, var(--page-bg))",
+            color: "var(--heading-color)",
+          }}
+          role="status"
+        >
+          <p className="font-medium">Demande envoyée.</p>
+          <p className="mt-1 opacity-90">Le restaurant vous contactera pour finaliser le bon cadeau.</p>
+        </div>
+      ) : null}
+
+      {open ? (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center" role="dialog">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
+            aria-label="Fermer"
+            onClick={() => !busy && setOpen(false)}
+          />
+          <div
+            className="relative z-[1] w-full max-w-lg rounded-t-3xl border border-white/10 p-6 shadow-2xl sm:rounded-3xl sm:p-8"
+            style={{ backgroundColor: "var(--page-bg)", color: "var(--body-text)" }}
+          >
+            <div className="mb-6 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[color-mix(in_srgb,var(--body-text)_55%,transparent)]">
+                  Bon cadeau
+                </p>
+                <h3
+                  className="mt-2 text-xl font-medium"
+                  style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+                >
+                  Votre demande
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="rounded-full p-2 opacity-70 hover:opacity-100"
+                onClick={() => !busy && setOpen(false)}
+                aria-label="Fermer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-xs font-semibold uppercase tracking-wide opacity-80">Prénom</span>
+                  <input
+                    required
+                    className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
+                    style={{
+                      borderColor: "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                      backgroundColor: "color-mix(in srgb, var(--body-text) 4%, var(--page-bg))",
+                      color: "var(--heading-color)",
+                    }}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    autoComplete="given-name"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-semibold uppercase tracking-wide opacity-80">Nom</span>
+                  <input
+                    required
+                    className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
+                    style={{
+                      borderColor: "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                      backgroundColor: "color-mix(in srgb, var(--body-text) 4%, var(--page-bg))",
+                      color: "var(--heading-color)",
+                    }}
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    autoComplete="family-name"
+                  />
+                </label>
+              </div>
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide opacity-80">E-mail</span>
+                <input
+                  type="email"
+                  required
+                  className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
+                  style={{
+                    borderColor: "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                    backgroundColor: "color-mix(in srgb, var(--body-text) 4%, var(--page-bg))",
+                    color: "var(--heading-color)",
+                  }}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide opacity-80">Téléphone (optionnel)</span>
+                <input
+                  type="tel"
+                  className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
+                  style={{
+                    borderColor: "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                    backgroundColor: "color-mix(in srgb, var(--body-text) 4%, var(--page-bg))",
+                    color: "var(--heading-color)",
+                  }}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  autoComplete="tel"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
+                  Montant souhaité (ex. 80€)
+                </span>
+                <input
+                  className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
+                  style={{
+                    borderColor: "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                    backgroundColor: "color-mix(in srgb, var(--body-text) 4%, var(--page-bg))",
+                    color: "var(--heading-color)",
+                  }}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
+                  Nom du bénéficiaire (optionnel)
+                </span>
+                <input
+                  className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
+                  style={{
+                    borderColor: "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                    backgroundColor: "color-mix(in srgb, var(--body-text) 4%, var(--page-bg))",
+                    color: "var(--heading-color)",
+                  }}
+                  value={beneficiary}
+                  onChange={(e) => setBeneficiary(e.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
+                  Occasion (optionnel)
+                </span>
+                <input
+                  className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
+                  placeholder="Anniversaire, Noël…"
+                  style={{
+                    borderColor: "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                    backgroundColor: "color-mix(in srgb, var(--body-text) 4%, var(--page-bg))",
+                    color: "var(--heading-color)",
+                  }}
+                  value={occasion}
+                  onChange={(e) => setOccasion(e.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide opacity-80">Message (optionnel)</span>
+                <textarea
+                  className="mt-1.5 min-h-[88px] w-full resize-none rounded-xl border px-3 py-2 text-sm outline-none"
+                  style={{
+                    borderColor: "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                    backgroundColor: "color-mix(in srgb, var(--body-text) 4%, var(--page-bg))",
+                    color: "var(--heading-color)",
+                  }}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+              </label>
+
+              {err ? <p className="text-sm text-red-600">{err}</p> : null}
+
+              <button
+                type="submit"
+                disabled={busy}
+                className="flex min-h-[52px] w-full items-center justify-center text-sm font-semibold uppercase tracking-[0.12em] disabled:opacity-60"
+                style={{
+                  borderRadius: "var(--radius)",
+                  backgroundColor: "var(--button-bg)",
+                  color: "var(--button-text)",
+                }}
+              >
+                {busy ? "Envoi…" : "Envoyer la demande"}
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 
