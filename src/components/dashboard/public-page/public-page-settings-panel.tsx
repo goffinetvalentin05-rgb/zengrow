@@ -48,6 +48,7 @@ import Toggle from "@/src/components/ui/toggle";
 import PublicPagePreviewStudio, { type ExtendedPreviewDraft } from "@/src/components/dashboard/public-page/public-page-preview-studio";
 import {
   type PublicPageEditorConfig,
+  type PageBlockId,
   parseEditorConfig,
   editorConfigToPreviewDraft,
   type EditorContext,
@@ -75,7 +76,7 @@ import {
   resolvePublicPageSectionContent,
 } from "@/src/lib/public-page/resolve-public-page-copy";
 import { newMenuOffer } from "@/src/lib/public-page/premium-content";
-import { syncRestaurantPageSections } from "@/src/lib/public-page/page-sections";
+import { mergePageSectionContent, syncRestaurantPageSections, type PageSectionContentV1 } from "@/src/lib/public-page/page-sections";
 import { PUBLIC_PAGE_FONT_LIBRARY, googleFontsHref } from "@/src/lib/public-page-fonts";
 import {
   MAX_DESCRIPTION_CHARS,
@@ -84,9 +85,6 @@ import {
   type PublicAmbiance,
   type PublicStylePreset,
 } from "@/src/lib/public-page/constants";
-import type { PageBlockId } from "@/src/lib/public-page/editor-config";
-import type { PageSectionContentV1 } from "@/src/lib/public-page/page-sections";
-
 /** Sections personnalisables (ordre d’édition : étapes contenu → …). */
 const PAGE_SECTIONS: { id: PageBlockId; label: string; description: string }[] = [
   { id: "about", label: "Concept", description: "Présentez votre restaurant en quelques mots." },
@@ -98,6 +96,16 @@ const PAGE_SECTIONS: { id: PageBlockId; label: string; description: string }[] =
   { id: "gift_vouchers", label: "Bons cadeaux", description: "Formulaire de demande de bon cadeau (traitement par vous)." },
   { id: "final_cta", label: "Rappel final", description: "Bandeau de fin de page qui ramène à la réservation." },
 ];
+
+function applyPageSectionPatch(
+  c: PublicPageEditorConfig,
+  partial: PageSectionContentV1,
+): PublicPageEditorConfig {
+  return parseEditorConfig({
+    ...c,
+    pageSections: mergePageSectionContent(c.pageSections ?? {}, partial),
+  });
+}
 
 /** Petite carte d'étape réutilisée pour structurer le panneau. */
 function StepCard({
@@ -1343,10 +1351,590 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         </StepCard>
 
         {/* ============================================================
-            ÉTAPE 2 — SECTIONS DE LA PAGE
+            ÉTAPE 2 — TEXTES DES SECTIONS
             ============================================================ */}
         <StepCard
           step={2}
+          icon={<FileText className="h-5 w-5" />}
+          title="Textes des sections"
+          subtitle="Titres, surtitres et libellés affichés sur votre page. Seules les personnalisations sont stockées en base ; le reste suit le thème."
+        >
+          <p className="text-sm text-zg-muted">
+            Laissez un champ vide pour garder le texte suggéré par le thème et le gabarit de conversion.
+          </p>
+
+          <div className="mt-6 space-y-8">
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Navigation</p>
+              <div className="mt-3">
+                <label className="dashboard-field-label">Libellé du lien « bons cadeaux »</label>
+                <Input
+                  className="mt-2"
+                  value={editorConfig.pageSections?.navigation?.giftNavLabel ?? ""}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      applyPageSectionPatch(c, {
+                        navigation: {
+                          ...c.pageSections?.navigation,
+                          items: c.pageSections?.navigation?.items ?? [],
+                          giftNavLabel: e.target.value,
+                        },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                  placeholder="Cadeaux"
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Hero</p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label">Invitation à découvrir le concept</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.hero?.discoverConceptLabel ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          hero: { ...c.pageSections?.hero, discoverConceptLabel: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Indication de défilement</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.hero?.scrollHintLabel ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          hero: { ...c.pageSections?.hero, scrollHintLabel: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="dashboard-field-label">Sous-texte script (thème sombre)</label>
+                  <FieldHint>Remplace le statut d’ouverture au centre du hero si besoin.</FieldHint>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.hero?.scriptLineFallback ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          hero: { ...c.pageSections?.hero, scriptLineFallback: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Concept</p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label">Surtitre (eyebrow)</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.concept?.eyebrow ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          concept: { ...c.pageSections?.concept, eyebrow: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Cachet sur l’image</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.concept?.imageStampLabel ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          concept: { ...c.pageSections?.concept, imageStampLabel: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Points forts (bandeau)</p>
+              <div className="mt-3">
+                <label className="dashboard-field-label">Surtitre</label>
+                <Input
+                  className="mt-2"
+                  value={editorConfig.pageSections?.highlights?.eyebrow ?? ""}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      applyPageSectionPatch(c, {
+                        highlights: { ...c.pageSections?.highlights, eyebrow: e.target.value },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Menu / offres</p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label">Surtitre</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.menu_offers?.eyebrow ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          menu_offers: { ...c.pageSections?.menu_offers, eyebrow: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Titre de section</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.menu_offers?.title ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          menu_offers: { ...c.pageSections?.menu_offers, title: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="dashboard-field-label">Libellé du bouton PDF / carte</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.menu_offers?.pdfButtonLabel ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          menu_offers: {
+                            ...c.pageSections?.menu_offers,
+                            pdfButtonLabel: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Galerie</p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label">Surtitre</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.gallery?.eyebrow ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          gallery: { ...c.pageSections?.gallery, eyebrow: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Titre (mosaïque premium)</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.gallery?.title ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          gallery: { ...c.pageSections?.gallery, title: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Titre si Instagram affiché</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.gallery?.titleIfInstagram ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          gallery: {
+                            ...c.pageSections?.gallery,
+                            titleIfInstagram: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Titre sans Instagram</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.gallery?.titleIfNoInstagram ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          gallery: {
+                            ...c.pageSections?.gallery,
+                            titleIfNoInstagram: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="dashboard-field-label">Libellé du lien Instagram</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.gallery?.instagramLinkLabel ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          gallery: {
+                            ...c.pageSections?.gallery,
+                            instagramLinkLabel: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Avis & presse</p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label">Suffixe « avis Google »</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.reviews?.googleReviewsSuffix ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          reviews: {
+                            ...c.pageSections?.reviews,
+                            googleReviewsSuffix: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Bouton Google</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.reviews?.googleCtaLabel ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          reviews: { ...c.pageSections?.reviews, googleCtaLabel: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Titre bloc presse</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.reviews?.pressHeading ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          reviews: { ...c.pageSections?.reviews, pressHeading: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Libellé TripAdvisor</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.reviews?.tripAdvisorLabel ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          reviews: {
+                            ...c.pageSections?.reviews,
+                            tripAdvisorLabel: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Bons cadeaux</p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label">Surtitre (carte)</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.gift_vouchers?.surfaceEyebrow ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          gift_vouchers: {
+                            ...c.pageSections?.gift_vouchers,
+                            surfaceEyebrow: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Surtitre (fenêtre)</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.gift_vouchers?.modalEyebrow ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          gift_vouchers: {
+                            ...c.pageSections?.gift_vouchers,
+                            modalEyebrow: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="dashboard-field-label">Titre du formulaire</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.gift_vouchers?.modalTitle ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          gift_vouchers: {
+                            ...c.pageSections?.gift_vouchers,
+                            modalTitle: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="dashboard-field-label">Libellé du bouton d’envoi</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.gift_vouchers?.submitLabel ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          gift_vouchers: {
+                            ...c.pageSections?.gift_vouchers,
+                            submitLabel: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Rappel final</p>
+              <div className="mt-3">
+                <label className="dashboard-field-label">Surtitre</label>
+                <Input
+                  className="mt-2"
+                  value={editorConfig.pageSections?.final_cta?.eyebrow ?? ""}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      applyPageSectionPatch(c, {
+                        final_cta: { ...c.pageSections?.final_cta, eyebrow: e.target.value },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Infos pratiques</p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label">Surtitre</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.practical?.eyebrow ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          practical: { ...c.pageSections?.practical, eyebrow: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Titre</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.practical?.title ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          practical: { ...c.pageSections?.practical, title: e.target.value },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Bloc réservation</p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label">Surtitre</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.reservation_shell?.eyebrow ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          reservation_shell: {
+                            ...c.pageSections?.reservation_shell,
+                            eyebrow: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Libellé « préférez le téléphone »</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.reservation_shell?.phonePreferLabel ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          reservation_shell: {
+                            ...c.pageSections?.reservation_shell,
+                            phonePreferLabel: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-zg-fg">Documents (PDF)</p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label">Surtitre</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.menu_documents?.eyebrow ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          menu_documents: {
+                            ...c.pageSections?.menu_documents,
+                            eyebrow: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Titre</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.menu_documents?.title ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          menu_documents: {
+                            ...c.pageSections?.menu_documents,
+                            title: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </StepCard>
+
+        {/* ============================================================
+            ÉTAPE 3 — SECTIONS DE LA PAGE
+            ============================================================ */}
+        <StepCard
+          step={3}
           icon={<Layout className="h-5 w-5" />}
           title="Sections de la page"
           subtitle="Activez les sections que vous voulez afficher. Personnalisez le contenu de chacune juste en dessous."
@@ -2121,10 +2709,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         </StepCard>
 
         {/* ============================================================
-            ÉTAPE 3 — RÉSERVATION
+            ÉTAPE 4 — RÉSERVATION
             ============================================================ */}
         <StepCard
-          step={3}
+          step={4}
           icon={<Utensils className="h-5 w-5" />}
           title="Réservation"
           subtitle="La réservation est le cœur de votre page. Gardez-la facile à trouver."
@@ -2249,10 +2837,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         </StepCard>
 
         {/* ============================================================
-            ÉTAPE 4 — APERÇU & PUBLICATION
+            ÉTAPE 5 — APERÇU & PUBLICATION
             ============================================================ */}
         <StepCard
-          step={4}
+          step={5}
           icon={<Sparkles className="h-5 w-5" />}
           title="Aperçu & publication"
           subtitle="Vérifiez votre page puis publiez-la quand tout est prêt."

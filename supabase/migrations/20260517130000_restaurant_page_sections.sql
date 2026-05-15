@@ -37,6 +37,13 @@ comment on table public.restaurant_page_sections is
 
 alter table public.restaurant_page_sections enable row level security;
 
+-- Idempotent : rejouer le script après une exécution partielle (ex. SQL Editor).
+drop policy if exists "restaurant_page_sections_owner_select" on public.restaurant_page_sections;
+drop policy if exists "restaurant_page_sections_owner_insert" on public.restaurant_page_sections;
+drop policy if exists "restaurant_page_sections_owner_update" on public.restaurant_page_sections;
+drop policy if exists "restaurant_page_sections_owner_delete" on public.restaurant_page_sections;
+drop policy if exists "restaurant_page_sections_public_select" on public.restaurant_page_sections;
+
 create policy "restaurant_page_sections_owner_select"
 on public.restaurant_page_sections for select
 using (
