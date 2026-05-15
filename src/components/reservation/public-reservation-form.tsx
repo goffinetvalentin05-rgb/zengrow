@@ -961,8 +961,9 @@ export default function PublicReservationForm({
   return (
     <div
       className={cn(
-        "min-h-screen [font-size:calc(16px*var(--font-scale))]",
-        conversionCta.showSticky && reservationEnabled && "pb-24 md:pb-0",
+        previewMode ? "min-h-0" : "min-h-screen",
+        "[font-size:calc(16px*var(--font-scale))]",
+        !previewMode && conversionCta.showSticky && reservationEnabled && "pb-24 md:pb-0",
       )}
       style={{
         ...cssVars,
@@ -1789,7 +1790,7 @@ export default function PublicReservationForm({
       <StickyReserveBar
         label={ctaLabel}
         onClick={scrollToReservation}
-        visible={conversionCta.showSticky && reservationEnabled && blockEnabled("reservation")}
+        visible={!previewMode && conversionCta.showSticky && reservationEnabled && blockEnabled("reservation")}
       />
 
       {blockEnabled("location") && hasFooterContent ? (

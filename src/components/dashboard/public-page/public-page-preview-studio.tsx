@@ -139,19 +139,19 @@ export default function PublicPagePreviewStudio({
   );
 
   const previewChrome = (
-    <div className={cn(
-      "overflow-x-hidden overflow-y-auto bg-white",
-      viewport === "desktop"
-        ? "min-h-[720px] max-h-[min(92vh,960px)]"
-        : "min-h-[640px] max-h-[min(88vh,860px)]",
-    )}>
+    <div
+      className={cn(
+        "overflow-x-hidden overflow-y-auto bg-[var(--page-bg,#f8fafc)]",
+        viewport === "desktop" ? "max-h-[min(68vh,640px)]" : "max-h-[min(72vh,720px)]",
+      )}
+    >
       {previewForm}
     </div>
   );
 
   return (
     <>
-      <section className="mt-10 space-y-5 rounded-2xl border border-zg-border bg-gradient-to-b from-zg-surface to-zg-surface-elevated/40 p-5 md:p-8">
+      <section className="mt-8 space-y-5 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -206,11 +206,6 @@ export default function PublicPagePreviewStudio({
                 Ouvrir la page
               </Button>
             </a>
-            {onPublish ? (
-              <Button type="button" className="min-h-11" onClick={onPublish} disabled={isPublishing}>
-                {isPublishing ? "Publication…" : "Publier"}
-              </Button>
-            ) : null}
           </div>
         </div>
 
@@ -247,11 +242,11 @@ export default function PublicPagePreviewStudio({
           <div className="flex flex-1 items-start justify-center overflow-auto p-4 md:p-8">
             <div
               className={cn(
-                "w-full overflow-hidden rounded-xl bg-white shadow-2xl",
+                "w-full overflow-hidden rounded-xl border border-zg-border bg-[var(--page-bg,#f8fafc)] shadow-2xl",
                 viewport === "mobile" ? "max-w-[400px]" : "max-w-6xl",
               )}
             >
-              <div className="min-h-[calc(100vh-8rem)] overflow-y-auto">{previewForm}</div>
+              <div className="max-h-[calc(100vh-8rem)] overflow-y-auto">{previewForm}</div>
             </div>
           </div>
         </div>

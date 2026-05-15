@@ -93,8 +93,8 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
   }, [initial.slug, publicLink]);
 
   return (
-    <DashboardContent>
-      <div className="mx-auto max-w-5xl space-y-8 pb-28">
+    <DashboardContent className="pb-8">
+      <div className="space-y-8">
         <PageHeader
           title="Page publique"
           subtitle="Personnalisez votre page restaurant, optimisez vos réservations et publiez vos changements."
@@ -129,19 +129,21 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
           publicLinkBase={publicPath}
           onMessage={setMessage}
           showSummaryBar
+          hidePreviewPublish
         />
-      </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-4 pt-10">
-        <div className="pointer-events-auto flex w-full max-w-5xl items-center justify-between gap-4 rounded-2xl border border-zg-border bg-zg-surface/95 px-4 py-3 shadow-lg backdrop-blur-md">
-          <p className="min-w-0 truncate text-sm text-zg-text-muted">
+        <div
+          className="sticky bottom-4 z-20 flex flex-col gap-3 rounded-2xl border border-zg-border bg-zg-surface px-4 py-3 shadow-lg sm:flex-row sm:items-center sm:justify-between"
+          role="status"
+        >
+          <p className="min-w-0 text-sm text-zg-text-muted">
             {message ? (
               <span className="text-zg-fg">{message}</span>
             ) : (
               <span>Enregistrez pour sauvegarder un brouillon avant de publier.</span>
             )}
           </p>
-          <Button type="button" className="min-h-11 shrink-0 px-6" disabled={isSaving} onClick={handleSave}>
+          <Button type="button" className="min-h-11 w-full shrink-0 px-6 sm:w-auto" disabled={isSaving} onClick={handleSave}>
             {saveSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer les modifications"}
           </Button>
         </div>

@@ -182,6 +182,8 @@ type PublicPageSettingsPanelProps = {
   onMessage?: (msg: string | null) => void;
   /** Affiche la barre statut / conversion en tête du panneau (désactivé si le header page est externe). */
   showSummaryBar?: boolean;
+  /** Masque le bouton Publier dans l’aperçu (publication via le header de la page dédiée). */
+  hidePreviewPublish?: boolean;
 };
 
 function FieldHint({ children }: { children: React.ReactNode }) {
@@ -189,7 +191,10 @@ function FieldHint({ children }: { children: React.ReactNode }) {
 }
 
 const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageSettingsPanelProps>(
-  function PublicPageSettingsPanel({ initial, publicLinkBase, onMessage, showSummaryBar = true }, ref) {
+  function PublicPageSettingsPanel(
+    { initial, publicLinkBase, onMessage, showSummaryBar = true, hidePreviewPublish = false },
+    ref,
+  ) {
     const supabase = createClient();
 
     const [editorConfig, setEditorConfig] = useState<PublicPageEditorConfig>(() => {
@@ -2185,13 +2190,17 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           publicPath={publicPath}
           conversionScore={conversionScore}
           pageStatusLabel={statusLabel}
-          onPublish={async () => {
-            setIsPublishing(true);
-            const result = await publishPage();
-            setIsPublishing(false);
-            if (!result.ok) onMessage?.(result.error ?? "Échec de la publication.");
-          }}
-          isPublishing={isPublishing}
+          onPublish={
+            hidePreviewPublish
+              ? undefined
+              : async () => {
+                  setIsPublishing(true);
+                  const result = await publishPage();
+                  setIsPublishing(false);
+                  if (!result.ok) onMessage?.(result.error ?? "Échec de la publication.");
+                }
+          }
+          isPublishing={hidePreviewPublish ? undefined : isPublishing}
         />
       </div>
     );
