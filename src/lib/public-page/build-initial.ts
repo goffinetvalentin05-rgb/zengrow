@@ -84,6 +84,7 @@ type SettingsRow = {
   public_page_show_opening_hours?: boolean | null;
   max_party_size?: number | null;
   terrace_enabled?: boolean | null;
+  public_page_editor_config?: unknown;
 };
 
 function parseHighlights(raw: unknown): string[] {
@@ -191,5 +192,6 @@ export function buildPublicPageSettingsInitial(
     buttonStyle: (settings.button_style as "filled" | "outlined" | "ghost") ?? "filled",
     cardStyle: (settings.card_style as "flat" | "elevated" | "bordered") ?? "elevated",
     terraceEnabled: settings.terrace_enabled === true,
+    editorConfigRaw: settings.public_page_editor_config ?? {},
   };
 }

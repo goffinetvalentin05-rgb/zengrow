@@ -6,6 +6,7 @@ import { effectiveHeroSubtitle, effectiveHeroTitle } from "@/src/lib/public-page
 import type { PublicAmbiance } from "@/src/lib/public-page/constants";
 import { googleFontsHref, normalizePublicPageFont } from "@/src/lib/public-page-fonts";
 import { getDefaultOpeningHours, OpeningHours } from "@/src/lib/utils";
+import { parseEditorConfig } from "@/src/lib/public-page/editor-config";
 
 type PublicReservationPageProps = {
   params: Promise<{ slug: string }>;
@@ -105,6 +106,7 @@ type PublicSettingsRow = {
   floor_plan_public_selection_mode: string;
   public_table_selection_mode: string;
   floor_plan_clients_choose_table: boolean;
+  public_page_editor_config?: unknown;
 };
 
 const RESTAURANT_SELECT = [
@@ -201,6 +203,7 @@ const SETTINGS_SELECT = [
   "floor_plan_public_selection_mode",
   "public_table_selection_mode",
   "floor_plan_clients_choose_table",
+  "public_page_editor_config",
 ].join(", ");
 
 async function loadRestaurant(slug: string) {
@@ -390,6 +393,8 @@ export default async function PublicReservationPage({ params }: PublicReservatio
   const menuUrl =
     safeSettings.public_menu_mode === "url" ? safeSettings.public_menu_url?.trim() || null : null;
 
+  const editorConfig = parseEditorConfig(safeSettings.public_page_editor_config);
+
   return (
     <>
       {fontsHref ? (
@@ -447,7 +452,12 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           heroHeight={heroHeight}
           heroOverlayEnabled={overlayOn}
           heroOverlayOpacity={overlayOp}
-          ctaLabel={restaurant.public_cta_label?.trim() || "Réserver une table"}
+          ctaLabel={editorConfig.hero.primaryCta.trim() || restaurant.public_cta_label?.trim() || "Réserver une table"}
+          secondaryCtaLabel={editorConfig.hero.secondaryCtaEnabled ? editorConfig.hero.secondaryCta : undefined}
+          heroBadgeText={editorConfig.hero.badgeText}
+          heroLayout={editorConfig.hero.layout}
+          heroAlign={editorConfig.hero.align}
+          editorConfig={editorConfig}
           fontSizeScale={(safeSettings.font_size_scale ?? "medium") as "small" | "medium" | "large"}
           borderRadius={(safeSettings.border_radius ?? "rounded") as "sharp" | "rounded" | "pill"}
           buttonStyle={(safeSettings.button_style ?? "filled") as "filled" | "outlined" | "ghost"}

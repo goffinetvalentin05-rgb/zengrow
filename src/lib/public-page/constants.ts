@@ -29,6 +29,6 @@ export const HIGHLIGHT_SUGGESTIONS = [
   "Ambiance romantique",
 ] as const;
 
-export const MAX_GALLERY_PHOTOS = 6;
-export const MAX_HIGHLIGHTS = 3;
+export const MAX_GALLERY_PHOTOS = 8;
+export const MAX_HIGHLIGHTS = 6;
 export const MAX_DESCRIPTION_CHARS = 400;

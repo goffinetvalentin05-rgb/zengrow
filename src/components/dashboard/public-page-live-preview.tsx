@@ -64,6 +64,17 @@ export type PublicPagePreviewDraft = {
   terraceEnabled?: boolean;
   /** Nombre max de convives (paramètre restaurant). */
   maxPartySize?: number;
+  secondaryCtaLabel?: string;
+  heroBadgeText?: string;
+  heroLayout?: "left" | "center" | "overlay";
+  heroAlign?: "left" | "center" | "right";
+  themeMode?: "light" | "dark" | "auto";
+  sectionOrder?: string[];
+  blocksEnabled?: Record<string, { enabled: boolean }>;
+  aboutTitle?: string;
+  finalCtaTitle?: string;
+  finalCtaSubtitle?: string;
+  finalCtaButton?: string;
 };
 
 type PublicPageLivePreviewProps = {

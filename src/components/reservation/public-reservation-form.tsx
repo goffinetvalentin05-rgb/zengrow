@@ -18,6 +18,7 @@ import {
 import Input from "@/src/components/ui/input";
 import type { AvailabilitySlot } from "@/src/lib/reservation/schemas";
 import { cn, formatOpeningHoursLines, OpeningHours } from "@/src/lib/utils";
+import type { PublicPageEditorConfig, PageBlockId } from "@/src/lib/public-page/editor-config";
 
 export type PublicReservationFormProps = {
   previewMode?: boolean;
@@ -63,6 +64,11 @@ export type PublicReservationFormProps = {
   heroOverlayEnabled: boolean;
   heroOverlayOpacity: number;
   ctaLabel: string;
+  secondaryCtaLabel?: string;
+  heroBadgeText?: string;
+  heroLayout?: "left" | "center" | "overlay";
+  heroAlign?: "left" | "center" | "right";
+  editorConfig?: PublicPageEditorConfig;
   fontSizeScale: "small" | "medium" | "large";
   borderRadius: "sharp" | "rounded" | "pill";
   buttonStyle: "filled" | "outlined" | "ghost";
@@ -209,6 +215,11 @@ export default function PublicReservationForm({
   heroOverlayEnabled,
   heroOverlayOpacity,
   ctaLabel,
+  secondaryCtaLabel,
+  heroBadgeText,
+  heroLayout = "center",
+  heroAlign = "center",
+  editorConfig,
   fontSizeScale,
   borderRadius,
   buttonStyle,
@@ -812,6 +823,22 @@ export default function PublicReservationForm({
 
   const overlayOpacity = Math.min(80, Math.max(0, heroOverlayOpacity)) / 100;
 
+  const blockEnabled = (id: PageBlockId) =>
+    !editorConfig || editorConfig.blocks[id]?.enabled !== false;
+
+  const heroBadge = heroBadgeText?.trim() || "Réservation en ligne";
+  const secondaryLabel = secondaryCtaLabel?.trim() || "Voir le menu";
+
+  const heroContentClass = cn(
+    "relative z-[1] flex flex-1 flex-col px-5 pt-14 pb-14 sm:px-8 sm:pb-20 md:pt-20 md:pb-24",
+    heroLayout === "overlay" ? "justify-end" : "justify-center",
+    heroAlign === "left" || heroLayout === "left"
+      ? "items-start text-left"
+      : heroAlign === "right"
+        ? "items-end text-right"
+        : "items-center text-center",
+  );
+
   return (
     <div
       className="min-h-screen [font-size:calc(16px*var(--font-scale))]"
@@ -862,7 +889,7 @@ export default function PublicReservationForm({
           aria-hidden
         />
 
-        <div className="relative z-[1] flex flex-1 flex-col items-center justify-center px-5 pt-14 pb-14 text-center sm:px-8 sm:pb-20 md:pt-20 md:pb-24">
+        <div className={heroContentClass}>
           {logoUrl ? (
             <div className="relative mb-6 h-20 w-20 shrink-0 overflow-hidden rounded-[var(--radius)] border border-white/25 bg-white/10 p-1 shadow-lg backdrop-blur-sm sm:mb-8 sm:h-24 sm:w-24">
               <Image
@@ -880,7 +907,7 @@ export default function PublicReservationForm({
             className="mb-3 text-[11px] font-medium uppercase tracking-[0.35em]"
             style={{ fontFamily: "var(--body-font)", color: "var(--accent-color)" }}
           >
-            Réservation en ligne
+            {heroBadge}
           </p>
           <h1
             className="max-w-4xl text-balance font-semibold leading-[1.08] tracking-tight"
@@ -920,7 +947,7 @@ export default function PublicReservationForm({
                 {ctaLabel}
               </button>
             ) : null}
-            {menuHref ? (
+            {menuHref && (secondaryCtaLabel || !editorConfig || editorConfig.hero.secondaryCtaEnabled) ? (
               <a
                 href={menuHref}
                 target="_blank"
@@ -933,14 +960,14 @@ export default function PublicReservationForm({
                 }}
               >
                 <UtensilsCrossed className="h-4 w-4" aria-hidden />
-                Voir le menu
+                {secondaryLabel}
               </a>
             ) : null}
           </div>
         </div>
       </section>
 
-      {activeHighlights.length > 0 ? (
+      {blockEnabled("trust") && activeHighlights.length > 0 ? (
         <section className="border-b border-[color-mix(in_srgb,var(--body-text)_10%,var(--page-bg))] bg-[color-mix(in_srgb,var(--body-text)_4%,var(--page-bg))] px-4 py-6">
           <ul className="mx-auto flex max-w-3xl flex-wrap justify-center gap-2">
             {activeHighlights.map((h) => (
@@ -1013,7 +1040,7 @@ export default function PublicReservationForm({
           </section>
         ) : null}
 
-        {reservationEnabled ? (
+        {blockEnabled("reservation") && reservationEnabled ? (
         <section id="reservation" className="scroll-mt-24">
           <div
             className={cardShell}
@@ -1709,7 +1736,7 @@ export default function PublicReservationForm({
         </section>
         ) : null}
 
-        {galleryImageUrls.length > 0 ? (
+        {blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
           <div>
             <h2
               className="mb-6 text-center text-2xl font-medium md:text-left md:text-3xl"
@@ -1738,7 +1765,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {descriptionText ? (
+        {blockEnabled("about") && descriptionText ? (
           <PublicDescription text={descriptionText} bodyColor={bodyTextColor} accentColor={accentColor} />
         ) : null}
 

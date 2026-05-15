@@ -24,7 +24,16 @@ import Badge from "@/src/components/ui/badge";
 import Input from "@/src/components/ui/input";
 import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
-import PublicPageLivePreview, { type PublicPagePreviewDraft } from "@/src/components/dashboard/public-page-live-preview";
+import PublicPagePreviewStudio, { type ExtendedPreviewDraft } from "@/src/components/dashboard/settings/public-page-preview-studio";
+import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-accordion";
+import {
+  type PublicPageEditorConfig,
+  parseEditorConfig,
+  editorConfigToPreviewDraft,
+  type EditorContext,
+  PAGE_BLOCK_IDS,
+  legacyHeroHeight,
+} from "@/src/lib/public-page/editor-config";
 import { cn, formatOpeningHoursLines, type OpeningHours } from "@/src/lib/utils";
 import { sanitizePublicSlug } from "@/src/lib/public-page/slug";
 import {
@@ -50,17 +59,19 @@ import {
   type PublicStylePreset,
 } from "@/src/lib/public-page/constants";
 
-const TABS = [
-  { id: "identity", label: "Identité" },
-  { id: "appearance", label: "Apparence" },
-  { id: "photos", label: "Photos" },
-  { id: "content", label: "Contenu" },
-  { id: "reservation", label: "Réservation" },
-  { id: "seo", label: "SEO & partage" },
-  { id: "publish", label: "Publication" },
-] as const;
-
-type TabId = (typeof TABS)[number]["id"];
+const BLOCK_LABELS: Record<string, string> = {
+  trust: "Confiance (points forts)",
+  reservation: "Réservation",
+  gallery: "Galerie photos",
+  about: "À propos",
+  highlights: "Points forts",
+  menu: "Menu",
+  hours: "Horaires",
+  reviews: "Avis / note",
+  location: "Localisation",
+  social: "Réseaux sociaux",
+  final_cta: "CTA final",
+};
 
 export type PublicPageSettingsInitial = {
   restaurantId: string;
@@ -134,6 +145,7 @@ export type PublicPageSettingsInitial = {
   buttonStyle: "filled" | "outlined" | "ghost";
   cardStyle: "flat" | "elevated" | "bordered";
   terraceEnabled: boolean;
+  editorConfigRaw?: unknown;
 };
 
 export type PublicPageSettingsHandle = {
@@ -153,37 +165,52 @@ function FieldHint({ children }: { children: React.ReactNode }) {
   return <p className="mt-1 text-xs leading-relaxed text-zg-text-muted">{children}</p>;
 }
 
-function TabButton({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "shrink-0 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-        active
-          ? "bg-zg-accent text-white shadow-sm"
-          : "text-zg-muted hover:bg-zg-card-hover hover:text-zg-fg",
-      )}
-    >
-      {label}
-    </button>
-  );
-}
-
 const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageSettingsPanelProps>(
   function PublicPageSettingsPanel({ initial, publicLinkBase, onMessage }, ref) {
     const supabase = createClient();
 
-    const [activeTab, setActiveTab] = useState<TabId>("identity");
-    const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+    const [editorConfig, setEditorConfig] = useState<PublicPageEditorConfig>(() => {
+      const base = parseEditorConfig(initial.editorConfigRaw);
+      return parseEditorConfig({
+        ...base,
+        hero: {
+          ...base.hero,
+          title: initial.heroTitle,
+          subtitle: initial.heroSubtitle,
+          primaryCta: initial.ctaLabel,
+          height: legacyHeroHeight(initial.heroHeight),
+          overlayEnabled: initial.heroOverlayEnabled,
+          overlayOpacity: initial.heroOverlayOpacity,
+        },
+        appearance: {
+          ...base.appearance,
+          primaryColor: initial.primaryColor || DEFAULT_PRIMARY,
+          secondaryColor: initial.secondaryColor || DEFAULT_SECONDARY,
+          accentColor: initial.accentColor,
+          stylePreset: initial.stylePreset,
+          ambiance: initial.ambiance,
+          headingFont: initial.headingFont,
+          bodyFont: initial.bodyFont,
+          backgroundColor: initial.pageBackgroundColor,
+        },
+        blockContent: {
+          ...base.blockContent,
+          about: { ...base.blockContent.about, body: initial.shortDescription },
+          highlights: { items: initial.highlights },
+          menu: { mode: initial.menuMode, url: initial.menuUrl },
+        },
+        reservation: {
+          ...base.reservation,
+          enabled: initial.reservationEnabled,
+          intro: initial.preBookingMessage,
+          showPhoneCta: initial.showPhoneCta,
+          showHoursBeforeForm: initial.showHoursBeforeForm,
+          noSlotsMessage: initial.noSlotsMessage,
+          minLeadMinutes: initial.minBookingLeadMinutes,
+        },
+      });
+    });
+    const [isPublishing, setIsPublishing] = useState(false);
 
     const [name, setName] = useState(initial.name);
     const [slug, setSlug] = useState(initial.slug);
@@ -337,114 +364,146 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       }
     }
 
-    const previewDraft = useMemo((): PublicPagePreviewDraft => {
-      const heroCover =
-        coverImageUrl.trim() ||
-        (galleryUrls[featuredGalleryIndex] ?? galleryUrls[0] ?? "");
-      return {
+    const editorCtx: EditorContext = useMemo(
+      () => ({
         restaurantId: initial.restaurantId,
         slug: effectiveSlug,
-        displayName,
-        tagline: resolvedHeroSubtitle,
-        heroTitle: resolvedHeroTitle,
-        cuisineType: cuisineType.trim() || null,
-        city: city.trim() || null,
-        highlights: highlights.filter(Boolean),
-        specialMessage: specialMessage.trim() || null,
-        publicDescription: shortDescription.trim(),
-        logoUrl,
-        coverImageUrl: heroCover,
-        pageBackgroundColor,
-        heroPrimaryColor,
-        buttonBgColor: buttonColor || normalizeHexColor(primaryColor),
-        buttonTextColor,
-        headingTextColor,
-        bodyTextColor,
-        accentColor,
-        footerBgColor,
-        footerTextColor,
-        headingFont,
-        bodyFont,
-        heroTitleSizePx,
-        heroHeight,
-        heroOverlayEnabled,
-        heroOverlayOpacity,
-        ctaLabel: ctaLabel.trim() || "Réserver une table",
-        borderRadius: initial.borderRadius,
-        buttonStyle: initial.buttonStyle,
-        cardStyle: initial.cardStyle,
-        fontSizeScale: initial.fontSizeScale,
-        phone,
+        name,
+        city,
+        cuisineType,
         address,
+        phone,
         email,
         websiteUrl,
+        googleMapsUrl,
         instagramUrl,
         facebookUrl,
-        googleMapsUrl,
+        tiktokUrl,
+        logoUrl,
+        coverImageUrl:
+          coverImageUrl.trim() || (galleryUrls[featuredGalleryIndex] ?? galleryUrls[0] ?? ""),
+        galleryUrls: galleryUrls.filter(Boolean),
+        openingHours: initial.openingHours,
+        menuDocuments: initial.menuDocuments,
+        maxPartySize: initial.maxPartySize,
+        seoTitle,
+        seoDescription,
+        pageStatus,
+        showPublicInstagram: initial.showPublicInstagram,
+        showPublicFacebook: initial.showPublicFacebook,
+        showPublicGoogleMaps: initial.showPublicGoogleMaps,
         showPublicAddress: initial.showPublicAddress,
         showPublicPhone: initial.showPublicPhone,
         showPublicEmail: initial.showPublicEmail,
         showPublicWebsite: initial.showPublicWebsite,
         showPublicOpeningHours: initial.showPublicOpeningHours,
-        showPublicInstagram: initial.showPublicInstagram,
-        showPublicFacebook: initial.showPublicFacebook,
-        showPublicGoogleMaps: initial.showPublicGoogleMaps,
-        documents: initial.menuDocuments,
-        galleryImageUrls: galleryUrls,
-        menuUrl: menuMode === "url" ? menuUrl.trim() || null : null,
-        reservationEnabled,
-        preBookingMessage: preBookingMessage.trim() || null,
-        showHoursBeforeForm,
-        showPhoneCta,
-        terraceEnabled: initial.terraceEnabled,
-        maxPartySize: initial.maxPartySize,
-        openingHours: initial.openingHours,
-      };
+      }),
+      [
+        initial,
+        effectiveSlug,
+        name,
+        city,
+        cuisineType,
+        address,
+        phone,
+        email,
+        websiteUrl,
+        googleMapsUrl,
+        instagramUrl,
+        facebookUrl,
+        tiktokUrl,
+        logoUrl,
+        coverImageUrl,
+        galleryUrls,
+        featuredGalleryIndex,
+        seoTitle,
+        seoDescription,
+        pageStatus,
+      ],
+    );
+
+    const buildMergedConfig = useCallback((): PublicPageEditorConfig => {
+      const c = editorConfig;
+      return parseEditorConfig({
+        ...c,
+        hero: { ...c.hero, title: heroTitle, subtitle: heroSubtitle, primaryCta: ctaLabel },
+        appearance: {
+          ...c.appearance,
+          primaryColor,
+          secondaryColor,
+          accentColor,
+          stylePreset,
+          ambiance,
+          headingFont,
+          bodyFont,
+        },
+        blockContent: {
+          ...c.blockContent,
+          about: { ...c.blockContent.about, body: shortDescription },
+          highlights: { items: highlights },
+          menu: { mode: menuMode, url: menuUrl },
+        },
+        reservation: {
+          ...c.reservation,
+          enabled: reservationEnabled,
+          intro: preBookingMessage,
+          showPhoneCta,
+          showHoursBeforeForm,
+          noSlotsMessage,
+          minLeadMinutes: minBookingLeadMinutes,
+        },
+      });
     }, [
-      initial,
-      effectiveSlug,
-      displayName,
-      resolvedHeroSubtitle,
-      resolvedHeroTitle,
-      cuisineType,
-      city,
-      highlights,
-      specialMessage,
-      shortDescription,
-      logoUrl,
-      coverImageUrl,
-      galleryUrls,
-      featuredGalleryIndex,
-      pageBackgroundColor,
-      heroPrimaryColor,
-      buttonColor,
+      editorConfig,
+      heroTitle,
+      heroSubtitle,
+      ctaLabel,
       primaryColor,
-      buttonTextColor,
-      headingTextColor,
-      bodyTextColor,
+      secondaryColor,
       accentColor,
-      footerBgColor,
-      footerTextColor,
+      stylePreset,
+      ambiance,
       headingFont,
       bodyFont,
-      heroTitleSizePx,
-      heroHeight,
-      heroOverlayEnabled,
-      heroOverlayOpacity,
-      ctaLabel,
-      phone,
-      address,
-      email,
-      websiteUrl,
-      instagramUrl,
-      facebookUrl,
-      googleMapsUrl,
+      shortDescription,
+      highlights,
       menuMode,
       menuUrl,
       reservationEnabled,
       preBookingMessage,
-      showHoursBeforeForm,
       showPhoneCta,
+      showHoursBeforeForm,
+      noSlotsMessage,
+      minBookingLeadMinutes,
+    ]);
+
+    const previewDraft = useMemo((): ExtendedPreviewDraft => {
+      const merged = buildMergedConfig();
+      const draft = editorConfigToPreviewDraft(merged, editorCtx);
+      return {
+        ...draft,
+        specialMessage: specialMessage.trim() || null,
+        editorConfig: merged,
+        heroBadgeText: merged.hero.badgeText,
+        heroLayout: merged.hero.layout,
+        heroAlign: merged.hero.align,
+        secondaryCtaLabel: merged.hero.secondaryCtaEnabled ? merged.hero.secondaryCta : undefined,
+        themeMode: merged.appearance.themeMode,
+        borderRadius: initial.borderRadius,
+        buttonStyle: initial.buttonStyle,
+        cardStyle: initial.cardStyle,
+        fontSizeScale: initial.fontSizeScale,
+        terraceEnabled: initial.terraceEnabled,
+      };
+    }, [
+      buildMergedConfig,
+      editorCtx,
+      specialMessage,
+      initial.borderRadius,
+      initial.buttonStyle,
+      initial.cardStyle,
+      initial.fontSizeScale,
+      initial.terraceEnabled,
     ]);
 
     const getRestaurantUpdate = useCallback(() => {
@@ -519,7 +578,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     ]);
 
     const getSettingsUpdate = useCallback(
-      () => ({
+      () => {
+        const mergedEditor = buildMergedConfig();
+        return {
         logo_url: logoUrl.trim() || null,
         cover_image_url: coverImageUrl.trim() || null,
         gallery_image_urls: galleryUrls.filter(Boolean).slice(0, MAX_GALLERY_PHOTOS),
@@ -540,8 +601,11 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         show_phone_cta: showPhoneCta,
         accent_color: normalizeHexColor(accentColor),
         button_color: normalizeHexColor(buttonColor || primaryColor),
-      }),
+        public_page_editor_config: mergedEditor,
+      };
+      },
       [
+        buildMergedConfig,
         logoUrl,
         coverImageUrl,
         galleryUrls,
@@ -641,28 +705,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               />
             </div>
           </div>
-          <Button
-            type="button"
-            variant="secondary"
-            className="min-h-11 lg:hidden"
-            onClick={() => setMobilePreviewOpen((v) => !v)}
-          >
-            {mobilePreviewOpen ? "Masquer l'aperçu" : "Voir l'aperçu"}
-          </Button>
         </div>
 
-        <div className="-mx-1 flex gap-1 overflow-x-auto pb-1">
-          {TABS.map((tab) => (
-            <TabButton
-              key={tab.id}
-              active={activeTab === tab.id}
-              label={tab.label}
-              onClick={() => setActiveTab(tab.id)}
-            />
-          ))}
-        </div>
-
-        {activeTab === "identity" ? (
+        <div className="space-y-3">
+        <SettingsAccordion title="Identité & contact">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
               <label className="dashboard-field-label">Nom du restaurant</label>
@@ -713,9 +759,101 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               <Input value={tiktokUrl} onChange={(e) => { setTiktokUrl(e.target.value); markDirty(); }} />
             </div>
           </div>
-        ) : null}
+        </SettingsAccordion>
 
-        {activeTab === "appearance" ? (
+        
+        <SettingsAccordion title="Hero & accroche">
+          <div className="space-y-5">
+            <div>
+              <label className="dashboard-field-label">Badge (au-dessus du titre)</label>
+              <Input
+                className="mt-2"
+                value={editorConfig.hero.badgeText}
+                onChange={(e) => {
+                  setEditorConfig((c) => parseEditorConfig({ ...c, hero: { ...c.hero, badgeText: e.target.value } }));
+                  markDirty();
+                }}
+              />
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <label className="dashboard-field-label">Mise en page</label>
+                <select
+                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                  value={editorConfig.hero.layout}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({ ...c, hero: { ...c.hero, layout: e.target.value as PublicPageEditorConfig["hero"]["layout"] } }),
+                    );
+                    markDirty();
+                  }}
+                >
+                  <option value="center">Centré</option>
+                  <option value="left">Aligné à gauche</option>
+                  <option value="overlay">Overlay bas</option>
+                </select>
+              </div>
+              <div>
+                <label className="dashboard-field-label">Hauteur</label>
+                <select
+                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                  value={editorConfig.hero.height}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({ ...c, hero: { ...c.hero, height: e.target.value as PublicPageEditorConfig["hero"]["height"] } }),
+                    );
+                    markDirty();
+                  }}
+                >
+                  <option value="compact">Compact</option>
+                  <option value="normal">Normal</option>
+                  <option value="immersive">Immersif</option>
+                </select>
+              </div>
+              <div>
+                <label className="dashboard-field-label">Alignement texte</label>
+                <select
+                  className="mt-2 h-11 w-full rounded-xl border border-zg-border bg-zg-surface px-3 text-sm"
+                  value={editorConfig.hero.align}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({ ...c, hero: { ...c.hero, align: e.target.value as PublicPageEditorConfig["hero"]["align"] } }),
+                    );
+                    markDirty();
+                  }}
+                >
+                  <option value="left">Gauche</option>
+                  <option value="center">Centre</option>
+                  <option value="right">Droite</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="dashboard-field-label">Texte du bouton principal</label>
+              <Input value={ctaLabel} onChange={(e) => { setCtaLabel(e.target.value); markDirty(); }} placeholder="Réserver une table" />
+            </div>
+            <Toggle
+              checked={editorConfig.hero.secondaryCtaEnabled}
+              onChange={(v) => {
+                setEditorConfig((c) => parseEditorConfig({ ...c, hero: { ...c.hero, secondaryCtaEnabled: v } }));
+                markDirty();
+              }}
+              label="Afficher un second bouton (menu)"
+            />
+            {editorConfig.hero.secondaryCtaEnabled ? (
+              <Input
+                value={editorConfig.hero.secondaryCta}
+                onChange={(e) => {
+                  setEditorConfig((c) => parseEditorConfig({ ...c, hero: { ...c.hero, secondaryCta: e.target.value } }));
+                  markDirty();
+                }}
+                placeholder="Voir le menu"
+              />
+            ) : null}
+          </div>
+        </SettingsAccordion>
+
+        <SettingsAccordion title="Apparence">
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
@@ -778,9 +916,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               Réinitialiser le style
             </Button>
           </div>
-        ) : null}
+        </SettingsAccordion>
 
-        {activeTab === "photos" ? (
+        <SettingsAccordion title="Photos">
           <div className="space-y-6">
             <div>
               <label className="dashboard-field-label">Logo</label>
@@ -862,9 +1000,34 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               </div>
             </div>
           </div>
-        ) : null}
+        </SettingsAccordion>
 
-        {activeTab === "content" ? (
+        
+        <SettingsAccordion title="Sections & blocs">
+          <div className="space-y-4">
+            <FieldHint>Activez les blocs visibles sur votre page publique.</FieldHint>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {PAGE_BLOCK_IDS.map((id) => (
+                <Toggle
+                  key={id}
+                  checked={editorConfig.blocks[id]?.enabled !== false}
+                  onChange={(v) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        blocks: { ...c.blocks, [id]: { enabled: v } },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                  label={BLOCK_LABELS[id] ?? id}
+                />
+              ))}
+            </div>
+          </div>
+        </SettingsAccordion>
+
+        <SettingsAccordion title="Contenu">
           <div className="space-y-5">
             <div>
               <label className="dashboard-field-label">Titre principal</label>
@@ -978,9 +1141,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               </Link>
             </div>
           </div>
-        ) : null}
+        </SettingsAccordion>
 
-        {activeTab === "reservation" ? (
+        <SettingsAccordion title="Réservation">
           <div className="space-y-5">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -1034,9 +1197,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               Convives max. et délai max. à l&apos;avance : section « Disponibilités & réservations ».
             </p>
           </div>
-        ) : null}
+        </SettingsAccordion>
 
-        {activeTab === "seo" ? (
+        <SettingsAccordion title="SEO & lien public">
           <div className="space-y-5">
             <div>
               <label className="dashboard-field-label">URL publique (slug)</label>
@@ -1095,9 +1258,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               </a>
             </div>
           </div>
-        ) : null}
+        </SettingsAccordion>
 
-        {activeTab === "publish" ? (
+        <SettingsAccordion title="Publication">
           <div className="space-y-6">
             <div className="rounded-2xl border border-zg-border bg-zg-surface p-5">
               <p className="text-sm font-semibold text-zg-fg">Checklist avant publication</p>
@@ -1139,21 +1302,25 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               Utilisez « Enregistrer les modifications » en bas de page pour sauvegarder un brouillon. « Publier » rend la page visible immédiatement.
             </p>
           </div>
-        ) : null}
+        </SettingsAccordion>
+        </div>
       </div>
     );
 
     return (
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] lg:items-start">
-        <div>{editor}</div>
-        <div
-          className={cn(
-            "lg:sticky lg:top-24",
-            mobilePreviewOpen ? "block" : "hidden lg:block",
-          )}
-        >
-          <PublicPageLivePreview draft={previewDraft} publicPath={publicPath} />
-        </div>
+      <div className="space-y-2">
+        {editor}
+        <PublicPagePreviewStudio
+          draft={previewDraft}
+          publicPath={publicPath}
+          onPublish={async () => {
+            setIsPublishing(true);
+            const result = await publishPage();
+            setIsPublishing(false);
+            if (!result.ok) onMessage?.(result.error ?? "Échec de la publication.");
+          }}
+          isPublishing={isPublishing}
+        />
       </div>
     );
   },
