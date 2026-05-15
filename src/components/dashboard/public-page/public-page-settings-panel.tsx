@@ -3,6 +3,7 @@
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useState,
@@ -18,11 +19,13 @@ import {
   ExternalLink,
   ImageIcon,
   Layout,
+  Palette,
   Phone,
   Plus,
   Settings2,
   Sparkles,
   Trash2,
+  Type as TypeIcon,
   Upload,
   Utensils,
 } from "lucide-react";
@@ -65,6 +68,11 @@ import {
   conversionRecommendations,
 } from "@/src/lib/public-page/conversion";
 import { newMenuOffer } from "@/src/lib/public-page/premium-content";
+import {
+  FONT_PAIRINGS,
+  PUBLIC_PAGE_FONT_LIBRARY,
+  googleFontsHref,
+} from "@/src/lib/public-page-fonts";
 import {
   MAX_DESCRIPTION_CHARS,
   MAX_GALLERY_PHOTOS,
@@ -189,6 +197,129 @@ function ColorField({
   );
 }
 
+/** Sous-titre de groupe de contrôles (utilisé dans la Direction visuelle). */
+function ControlGroupTitle({
+  icon,
+  title,
+  hint,
+}: {
+  icon?: ReactNode;
+  title: string;
+  hint?: string;
+}) {
+  return (
+    <div className="mb-3 flex items-start gap-2">
+      {icon ? (
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-zg-accent/10 text-zg-accent">
+          {icon}
+        </span>
+      ) : null}
+      <div>
+        <p className="text-sm font-semibold text-zg-fg">{title}</p>
+        {hint ? <p className="mt-0.5 text-xs text-zg-muted">{hint}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+/** Bouton-chip visuel pour des options exclusives (button style, hero, cards…). */
+type OptionChip = {
+  id: string;
+  label: string;
+  hint?: string;
+  preview?: ReactNode;
+};
+
+function OptionChipGroup<T extends string>({
+  options,
+  value,
+  onChange,
+  columns = 3,
+}: {
+  options: (OptionChip & { id: T })[];
+  value: T;
+  onChange: (v: T) => void;
+  columns?: 2 | 3 | 4;
+}) {
+  const colsClass =
+    columns === 2 ? "sm:grid-cols-2" : columns === 4 ? "sm:grid-cols-4" : "sm:grid-cols-3";
+  return (
+    <div className={cn("grid gap-2", colsClass)}>
+      {options.map((opt) => {
+        const active = value === opt.id;
+        return (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => onChange(opt.id)}
+            aria-pressed={active}
+            className={cn(
+              "group flex flex-col gap-1.5 rounded-xl border p-3 text-left transition",
+              active
+                ? "border-zg-accent bg-zg-accent/5 ring-1 ring-zg-accent"
+                : "border-zg-border hover:border-zg-accent/40",
+            )}
+          >
+            {opt.preview ? (
+              <div className="flex h-10 items-center justify-center rounded-lg bg-zg-surface/60">
+                {opt.preview}
+              </div>
+            ) : null}
+            <p className="text-sm font-semibold text-zg-fg">{opt.label}</p>
+            {opt.hint ? <p className="text-xs text-zg-muted">{opt.hint}</p> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Aperçu rapide d'une famille de police (utilisé dans le sélecteur Typographie). */
+function FontPreviewCard({
+  family,
+  active,
+  onSelect,
+  size = "lg",
+}: {
+  family: string;
+  active: boolean;
+  onSelect: () => void;
+  size?: "sm" | "lg";
+}) {
+  const descriptor = PUBLIC_PAGE_FONT_LIBRARY.find((f) => f.family === family);
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={active}
+      className={cn(
+        "flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition",
+        active
+          ? "border-zg-accent bg-zg-accent/5 ring-1 ring-zg-accent"
+          : "border-zg-border hover:border-zg-accent/40",
+      )}
+    >
+      <span
+        className={cn(
+          "block",
+          size === "lg" ? "text-2xl leading-none" : "text-base leading-none",
+        )}
+        style={{
+          fontFamily: `"${family}", ${descriptor?.fallback ?? "system-ui, sans-serif"}`,
+        }}
+      >
+        Aa
+      </span>
+      <span className="text-xs font-semibold text-zg-fg">{family}</span>
+      {descriptor ? (
+        <span className="text-[10px] uppercase tracking-[0.15em] text-zg-muted">
+          {descriptor.category}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
 export type PublicPageSettingsInitial = {
   restaurantId: string;
   name: string;
@@ -291,6 +422,20 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     ref,
   ) {
     const supabase = createClient();
+
+    // Charge toutes les polices premium dans le document du dashboard pour que
+    // les chips de typographie s'affichent réellement dans la bonne police.
+    useEffect(() => {
+      const href = googleFontsHref(PUBLIC_PAGE_FONT_LIBRARY.map((f) => f.family));
+      if (!href || typeof document === "undefined") return;
+      const id = "zg-public-page-font-library";
+      if (document.getElementById(id)) return;
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = href;
+      document.head.appendChild(link);
+    }, []);
 
     const [editorConfig, setEditorConfig] = useState<PublicPageEditorConfig>(() => {
       const base = parseEditorConfig(initial.editorConfigRaw);
@@ -905,67 +1050,617 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         ) : null}
 
         {/* ============================================================
-            STEP 1 — STYLE DE PAGE
+            STEP 1 — DIRECTION VISUELLE
             ============================================================ */}
         <StepCard
           step={1}
-          icon={<Layout className="h-5 w-5" />}
-          title="Style de page"
-          subtitle="Choisissez une direction visuelle. Le hero, les couleurs, la structure et l'ambiance sont appliqués d'un coup. Vous pouvez ensuite tout personnaliser."
+          icon={<Palette className="h-5 w-5" />}
+          title="Direction visuelle"
+          subtitle="Composez l'identité de votre page : typographie, couleurs, hero et style des éléments. Les inspirations en haut sont des points de départ — tout reste modifiable."
         >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {PAGE_PRESETS.map((preset) => {
-              const visuals = PRESET_VISUALS[preset.id] ?? {
-                gradient: "linear-gradient(135deg,#f5f5f4,#e7e5e4)",
-                foreground: "#0f172a",
-                accent: "#0f172a",
-                tagline: preset.description,
-              };
-              const selected = editorConfig.conversion.structureTemplate === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => handlePresetClick(preset.id)}
-                  className={cn(
-                    "group relative overflow-hidden rounded-2xl border text-left transition-all",
-                    selected
-                      ? "border-zg-accent shadow-lg ring-2 ring-zg-accent"
-                      : "border-zg-border hover:border-zg-accent/60 hover:shadow-md",
-                  )}
-                >
-                  <div
-                    className="relative h-32 w-full overflow-hidden"
-                    style={{ background: visuals.gradient }}
+          {/* — Inspirations / starting points — */}
+          <div>
+            <ControlGroupTitle
+              icon={<Sparkles className="h-3.5 w-3.5" />}
+              title="Points de départ"
+              hint="Cliquez sur une inspiration pour pré-remplir polices, couleurs et structure. Vous ajusterez chaque détail ensuite."
+            />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {PAGE_PRESETS.map((preset) => {
+                const visuals = PRESET_VISUALS[preset.id] ?? {
+                  gradient: "linear-gradient(135deg,#f5f5f4,#e7e5e4)",
+                  foreground: "#0f172a",
+                  accent: "#0f172a",
+                  tagline: preset.description,
+                };
+                const selected = editorConfig.conversion.structureTemplate === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => handlePresetClick(preset.id)}
+                    className={cn(
+                      "group relative overflow-hidden rounded-2xl border text-left transition-all",
+                      selected
+                        ? "border-zg-accent shadow-md ring-2 ring-zg-accent"
+                        : "border-zg-border hover:border-zg-accent/60 hover:shadow-sm",
+                    )}
                   >
-                    <div className="absolute inset-x-4 bottom-3 flex items-end justify-between gap-2">
-                      <span
-                        className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]"
-                        style={{
-                          backgroundColor: visuals.accent,
-                          color: visuals.foreground,
-                        }}
-                      >
-                        Aa Aperçu
-                      </span>
+                    <div
+                      className="relative h-20 w-full overflow-hidden"
+                      style={{ background: visuals.gradient }}
+                    >
                       {selected ? (
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-zg-accent shadow-sm">
-                          <Check className="h-4 w-4" />
+                        <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white text-zg-accent shadow-sm">
+                          <Check className="h-3.5 w-3.5" />
                         </span>
                       ) : null}
                     </div>
+                    <div className="px-3 py-2">
+                      <p className="text-xs font-semibold text-zg-fg">{preset.label}</p>
+                      <p className="mt-0.5 text-[11px] leading-snug text-zg-muted line-clamp-2">
+                        {visuals.tagline}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* — Typographie — */}
+          <div className="mt-8 border-t border-zg-border/60 pt-6">
+            <ControlGroupTitle
+              icon={<TypeIcon className="h-3.5 w-3.5" />}
+              title="Typographie"
+              hint="Choisissez une paire toute prête ou personnalisez police titre et texte indépendamment."
+            />
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                Paires recommandées
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {FONT_PAIRINGS.map((pair) => {
+                  const active =
+                    editorConfig.appearance.headingFont === pair.headingFont &&
+                    editorConfig.appearance.bodyFont === pair.bodyFont;
+                  return (
+                    <button
+                      key={pair.id}
+                      type="button"
+                      onClick={() => {
+                        setHeadingFont(pair.headingFont);
+                        setBodyFont(pair.bodyFont);
+                        setEditorConfig((c) =>
+                          parseEditorConfig({
+                            ...c,
+                            appearance: {
+                              ...c.appearance,
+                              headingFont: pair.headingFont,
+                              bodyFont: pair.bodyFont,
+                            },
+                          }),
+                        );
+                        markDirty();
+                      }}
+                      aria-pressed={active}
+                      className={cn(
+                        "rounded-xl border p-3 text-left transition",
+                        active
+                          ? "border-zg-accent bg-zg-accent/5 ring-1 ring-zg-accent"
+                          : "border-zg-border hover:border-zg-accent/40",
+                      )}
+                    >
+                      <p
+                        className="text-lg leading-tight"
+                        style={{
+                          fontFamily: `"${pair.headingFont}", Georgia, serif`,
+                        }}
+                      >
+                        {pair.label}
+                      </p>
+                      <p
+                        className="mt-1 text-xs text-zg-muted"
+                        style={{ fontFamily: `"${pair.bodyFont}", system-ui, sans-serif` }}
+                      >
+                        {pair.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                  Police des titres
+                </p>
+                <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {PUBLIC_PAGE_FONT_LIBRARY.map((font) => (
+                    <FontPreviewCard
+                      key={font.family}
+                      family={font.family}
+                      active={editorConfig.appearance.headingFont === font.family}
+                      onSelect={() => {
+                        setHeadingFont(font.family);
+                        setEditorConfig((c) =>
+                          parseEditorConfig({
+                            ...c,
+                            appearance: { ...c.appearance, headingFont: font.family },
+                          }),
+                        );
+                        markDirty();
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                  Police du texte
+                </p>
+                <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {PUBLIC_PAGE_FONT_LIBRARY.map((font) => (
+                    <FontPreviewCard
+                      key={font.family}
+                      family={font.family}
+                      active={editorConfig.appearance.bodyFont === font.family}
+                      onSelect={() => {
+                        setBodyFont(font.family);
+                        setEditorConfig((c) =>
+                          parseEditorConfig({
+                            ...c,
+                            appearance: { ...c.appearance, bodyFont: font.family },
+                          }),
+                        );
+                        markDirty();
+                      }}
+                      size="sm"
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* — Couleurs avancées — */}
+          <div className="mt-8 border-t border-zg-border/60 pt-6">
+            <ControlGroupTitle
+              icon={<Palette className="h-3.5 w-3.5" />}
+              title="Palette"
+              hint="Définissez les couleurs principales. Plus haut dans Step 2 vous trouverez aussi des raccourcis CTA & accent."
+            />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <ColorField
+                label="Fond de page"
+                value={editorConfig.appearance.backgroundColor}
+                onChange={(v) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      appearance: { ...c.appearance, backgroundColor: v },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+              <ColorField
+                label="Fond des sections"
+                value={editorConfig.appearance.surfaceColor}
+                onChange={(v) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      appearance: { ...c.appearance, surfaceColor: v },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+              <ColorField
+                label="Titres"
+                value={editorConfig.appearance.headingColor}
+                onChange={(v) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      appearance: { ...c.appearance, headingColor: v },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+              <ColorField
+                label="Texte courant"
+                value={editorConfig.appearance.textColor}
+                onChange={(v) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      appearance: { ...c.appearance, textColor: v },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+              <ColorField
+                label="Fond pied de page"
+                value={editorConfig.appearance.footerBgColor}
+                onChange={(v) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      appearance: { ...c.appearance, footerBgColor: v },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+              <ColorField
+                label="Texte pied de page"
+                value={editorConfig.appearance.footerTextColor}
+                onChange={(v) => {
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      appearance: { ...c.appearance, footerTextColor: v },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+            </div>
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                Thème global
+              </p>
+              <div className="mt-2">
+                <OptionChipGroup<"light" | "dark" | "auto">
+                  value={editorConfig.appearance.themeMode}
+                  onChange={(v) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        appearance: { ...c.appearance, themeMode: v },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                  options={[
+                    { id: "light", label: "Clair", hint: "Fond clair, hero classique" },
+                    { id: "dark", label: "Sombre", hint: "Fond profond, ambiance lounge" },
+                    { id: "auto", label: "Automatique", hint: "Suit la préférence visiteur" },
+                  ]}
+                  columns={3}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* — Hero — */}
+          <div className="mt-8 border-t border-zg-border/60 pt-6">
+            <ControlGroupTitle
+              icon={<Layout className="h-3.5 w-3.5" />}
+              title="Mise en page du hero"
+              hint="La première impression. Choisissez la composition, la hauteur, l'alignement."
+            />
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                  Composition
+                </p>
+                <div className="mt-2">
+                  <OptionChipGroup<"left" | "center" | "overlay" | "split">
+                    value={editorConfig.hero.layout}
+                    onChange={(v) => {
+                      setEditorConfig((c) =>
+                        parseEditorConfig({
+                          ...c,
+                          hero: { ...c.hero, layout: v },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                    options={[
+                      {
+                        id: "overlay",
+                        label: "Overlay",
+                        hint: "Texte sur l'image plein écran",
+                        preview: <div className="h-6 w-12 rounded bg-zg-fg/70" />,
+                      },
+                      {
+                        id: "split",
+                        label: "Split",
+                        hint: "Image à droite, texte à gauche",
+                        preview: (
+                          <div className="flex h-6 w-12 gap-0.5">
+                            <div className="flex-1 rounded-sm bg-zg-fg/30" />
+                            <div className="flex-1 rounded-sm bg-zg-fg/70" />
+                          </div>
+                        ),
+                      },
+                      {
+                        id: "center",
+                        label: "Centré",
+                        hint: "Symétrique, gastronomique",
+                        preview: (
+                          <div className="flex h-6 w-12 flex-col items-center justify-center gap-0.5">
+                            <div className="h-1 w-8 rounded bg-zg-fg/70" />
+                            <div className="h-1 w-5 rounded bg-zg-fg/40" />
+                          </div>
+                        ),
+                      },
+                      {
+                        id: "left",
+                        label: "Gauche",
+                        hint: "Texte ancré à gauche",
+                        preview: (
+                          <div className="flex h-6 w-12 flex-col justify-center gap-0.5">
+                            <div className="h-1 w-6 rounded bg-zg-fg/70" />
+                            <div className="h-1 w-3 rounded bg-zg-fg/40" />
+                          </div>
+                        ),
+                      },
+                    ]}
+                    columns={4}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                    Hauteur
+                  </p>
+                  <div className="mt-2">
+                    <OptionChipGroup<"compact" | "normal" | "immersive">
+                      value={editorConfig.hero.height}
+                      onChange={(v) => {
+                        setEditorConfig((c) =>
+                          parseEditorConfig({
+                            ...c,
+                            hero: { ...c.hero, height: v },
+                          }),
+                        );
+                        setHeroHeight(
+                          v === "immersive" ? "tall" : v === "compact" ? "compact" : "normal",
+                        );
+                        markDirty();
+                      }}
+                      options={[
+                        { id: "compact", label: "Compact" },
+                        { id: "normal", label: "Standard" },
+                        { id: "immersive", label: "Immersif" },
+                      ]}
+                      columns={3}
+                    />
                   </div>
-                  <div className="px-4 py-3">
-                    <p className="text-sm font-semibold text-zg-fg">{preset.label}</p>
-                    <p className="mt-1 text-xs text-zg-muted">{visuals.tagline}</p>
-                    <p className="mt-2 text-xs leading-relaxed text-zg-muted/80 line-clamp-2">
-                      {preset.description}
-                    </p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                    Alignement du texte
+                  </p>
+                  <div className="mt-2">
+                    <OptionChipGroup<"left" | "center" | "right">
+                      value={editorConfig.hero.align}
+                      onChange={(v) => {
+                        setEditorConfig((c) =>
+                          parseEditorConfig({
+                            ...c,
+                            hero: { ...c.hero, align: v },
+                          }),
+                        );
+                        markDirty();
+                      }}
+                      options={[
+                        { id: "left", label: "Gauche" },
+                        { id: "center", label: "Centre" },
+                        { id: "right", label: "Droite" },
+                      ]}
+                      columns={3}
+                    />
                   </div>
-                </button>
-              );
-            })}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                  Badge (au-dessus du titre)
+                </p>
+                <Input
+                  className="mt-2"
+                  value={editorConfig.hero.badgeText}
+                  onChange={(e) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({ ...c, hero: { ...c.hero, badgeText: e.target.value } }),
+                    );
+                    markDirty();
+                  }}
+                  placeholder="Ex. Cuisine maison · Genève"
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <Toggle
+                  checked={editorConfig.hero.overlayEnabled}
+                  onChange={(v) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        hero: { ...c.hero, overlayEnabled: v },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                  label="Voile sombre sur l'image hero"
+                />
+                <Toggle
+                  checked={editorConfig.hero.secondaryCtaEnabled}
+                  onChange={(v) => {
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        hero: { ...c.hero, secondaryCtaEnabled: v },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                  label="Afficher un second bouton (voir le menu)"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* — Style des éléments — */}
+          <div className="mt-8 border-t border-zg-border/60 pt-6">
+            <ControlGroupTitle
+              icon={<Settings2 className="h-3.5 w-3.5" />}
+              title="Style des éléments"
+              hint="Boutons, cartes, coins arrondis : ajustez le caractère général de la page."
+            />
+            <div className="space-y-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                  Boutons
+                </p>
+                <div className="mt-2">
+                  <OptionChipGroup<"filled" | "outlined" | "ghost">
+                    value={editorConfig.appearance.buttonStyle}
+                    onChange={(v) => {
+                      setEditorConfig((c) =>
+                        parseEditorConfig({
+                          ...c,
+                          appearance: { ...c.appearance, buttonStyle: v },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                    options={[
+                      {
+                        id: "filled",
+                        label: "Plein",
+                        hint: "Couleur d'accent, fort impact",
+                        preview: (
+                          <div className="rounded-md bg-zg-accent px-3 py-1 text-[10px] font-semibold text-white">
+                            Réserver
+                          </div>
+                        ),
+                      },
+                      {
+                        id: "outlined",
+                        label: "Contour",
+                        hint: "Élégant, plus discret",
+                        preview: (
+                          <div className="rounded-md border-2 border-zg-accent px-3 py-1 text-[10px] font-semibold text-zg-accent">
+                            Réserver
+                          </div>
+                        ),
+                      },
+                      {
+                        id: "ghost",
+                        label: "Lien",
+                        hint: "Texte souligné, ultra-fin",
+                        preview: (
+                          <div className="text-[10px] font-semibold text-zg-accent underline underline-offset-4">
+                            Réserver
+                          </div>
+                        ),
+                      },
+                    ]}
+                    columns={3}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                  Cartes
+                </p>
+                <div className="mt-2">
+                  <OptionChipGroup<"flat" | "elevated" | "bordered">
+                    value={editorConfig.appearance.cardStyle}
+                    onChange={(v) => {
+                      setEditorConfig((c) =>
+                        parseEditorConfig({
+                          ...c,
+                          appearance: { ...c.appearance, cardStyle: v },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                    options={[
+                      {
+                        id: "flat",
+                        label: "Plat",
+                        hint: "Sans ombre, ultra-minimal",
+                        preview: <div className="h-6 w-10 rounded-md bg-zg-surface" />,
+                      },
+                      {
+                        id: "elevated",
+                        label: "Ombré",
+                        hint: "Douces ombres premium",
+                        preview: (
+                          <div className="h-6 w-10 rounded-md bg-zg-surface shadow-md" />
+                        ),
+                      },
+                      {
+                        id: "bordered",
+                        label: "Tracé",
+                        hint: "Bordure fine, éditorial",
+                        preview: (
+                          <div className="h-6 w-10 rounded-md border border-zg-border bg-zg-surface" />
+                        ),
+                      },
+                    ]}
+                    columns={3}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zg-muted">
+                  Coins arrondis
+                </p>
+                <div className="mt-2">
+                  <OptionChipGroup<"soft" | "medium" | "premium">
+                    value={editorConfig.appearance.borderRadius}
+                    onChange={(v) => {
+                      setEditorConfig((c) =>
+                        parseEditorConfig({
+                          ...c,
+                          appearance: { ...c.appearance, borderRadius: v },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                    options={[
+                      {
+                        id: "soft",
+                        label: "Doux",
+                        hint: "Légèrement arrondis",
+                        preview: <div className="h-5 w-10 rounded-sm border border-zg-border" />,
+                      },
+                      {
+                        id: "medium",
+                        label: "Standard",
+                        hint: "Équilibré",
+                        preview: <div className="h-5 w-10 rounded-md border border-zg-border" />,
+                      },
+                      {
+                        id: "premium",
+                        label: "Très arrondi",
+                        hint: "Style pill, luxueux",
+                        preview: <div className="h-5 w-10 rounded-full border border-zg-border" />,
+                      },
+                    ]}
+                    columns={3}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </StepCard>
 

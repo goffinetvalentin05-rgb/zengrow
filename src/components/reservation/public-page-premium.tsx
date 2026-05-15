@@ -210,7 +210,6 @@ function HeroContentInner({
   align: "left" | "center";
 }) {
   const isCenter = align === "center";
-  const muted = textTheme === "onImage" ? "text-white/80" : "opacity-75";
   const subtle = textTheme === "onImage" ? "text-white/65" : "opacity-60";
   const headingColor =
     textTheme === "onImage" ? ("#ffffff" as const) : ("var(--heading-color)" as const);
@@ -219,8 +218,17 @@ function HeroContentInner({
       ? ("rgba(255,255,255,0.88)" as const)
       : ("var(--body-text)" as const);
 
+  // Couleur de la ligne d'eyebrow (decorative hairline) selon le contexte.
+  const hairlineColor =
+    textTheme === "onImage" ? "rgba(255,255,255,0.55)" : "color-mix(in srgb, var(--accent-color) 70%, transparent)";
+
   return (
-    <div className={cn("flex w-full flex-col gap-6", isCenter && "items-center text-center")}>
+    <div
+      className={cn(
+        "flex w-full flex-col gap-7 sm:gap-8",
+        isCenter && "items-center text-center",
+      )}
+    >
       {logoUrl ? (
         <div
           className={cn(
@@ -234,38 +242,46 @@ function HeroContentInner({
         </div>
       ) : null}
 
-      {badge ? (
-        <span
+      {/* — Eyebrow line + label (ligne fine + texte d'introduction) — */}
+      {badge || cuisineCityLine ? (
+        <div
           className={cn(
-            "inline-flex items-center gap-2 self-start rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]",
-            textTheme === "onImage"
-              ? "border border-white/30 bg-white/10 text-white"
-              : "border border-[color-mix(in_srgb,var(--accent-color)_45%,transparent)] bg-[color-mix(in_srgb,var(--accent-color)_12%,transparent)]",
+            "flex items-center gap-3",
+            isCenter && "justify-center",
           )}
-          style={textTheme === "onSurface" ? { color: "var(--accent-color)" } : undefined}
         >
-          {badge}
-        </span>
-      ) : null}
-
-      {cuisineCityLine ? (
-        <p
-          className={cn(
-            "text-[11px] font-medium uppercase tracking-[0.3em]",
-            muted,
-          )}
-          style={textTheme === "onSurface" ? { color: "var(--body-text)" } : undefined}
-        >
-          {cuisineCityLine}
-        </p>
+          <span
+            className="h-px w-10"
+            style={{ backgroundColor: hairlineColor }}
+            aria-hidden
+          />
+          <span
+            className="text-[10px] font-semibold uppercase tracking-[0.32em]"
+            style={{
+              color:
+                textTheme === "onImage" ? "rgba(255,255,255,0.92)" : "var(--accent-color)",
+            }}
+          >
+            {badge || cuisineCityLine}
+          </span>
+          <span
+            className="h-px w-10"
+            style={{ backgroundColor: hairlineColor }}
+            aria-hidden
+          />
+        </div>
       ) : null}
 
       <h1
-        className={cn("max-w-3xl text-balance font-medium leading-[1.04] tracking-tight")}
+        className={cn(
+          "max-w-3xl text-balance font-medium leading-[0.98] tracking-tight",
+        )}
         style={{
           fontFamily: "var(--heading-font), Georgia, serif",
-          fontSize: "clamp(2.25rem, 5.5vw, 4.5rem)",
+          fontSize: "clamp(2.5rem, 6vw, 5rem)",
           color: headingColor,
+          letterSpacing: "-0.015em",
+          fontWeight: 500,
         }}
       >
         {headline}
@@ -273,15 +289,23 @@ function HeroContentInner({
 
       {tagline ? (
         <p
-          className={cn("max-w-xl text-pretty text-base leading-relaxed sm:text-lg")}
-          style={{ color: bodyColor }}
+          className="max-w-xl text-pretty text-base font-light leading-[1.55] sm:text-lg sm:leading-[1.6]"
+          style={{
+            color: bodyColor,
+            fontFamily: "var(--body-font), system-ui, sans-serif",
+          }}
         >
           {tagline}
         </p>
       ) : null}
 
-      <p
-        className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 text-sm", subtle)}
+      {/* — Infos secondaires (horaires / téléphone) sur une ligne discrète — */}
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[13px] font-medium",
+          subtle,
+          isCenter && "justify-center",
+        )}
         style={textTheme === "onSurface" ? { color: "var(--body-text)" } : undefined}
       >
         <span className="inline-flex items-center gap-1.5">
@@ -289,26 +313,37 @@ function HeroContentInner({
           {openStatus}
         </span>
         {showPhone && phone ? (
-          <a
-            href={`tel:${phone.replace(/\s/g, "")}`}
-            className="inline-flex items-center gap-1.5 underline-offset-2 hover:underline"
-          >
-            <Phone className="h-3.5 w-3.5" aria-hidden />
-            {phone}
-          </a>
+          <>
+            <span
+              className="hidden h-3 w-px sm:inline-block"
+              style={{ backgroundColor: hairlineColor }}
+              aria-hidden
+            />
+            <a
+              href={`tel:${phone.replace(/\s/g, "")}`}
+              className="inline-flex items-center gap-1.5 underline-offset-2 hover:underline"
+            >
+              <Phone className="h-3.5 w-3.5" aria-hidden />
+              {phone}
+            </a>
+          </>
         ) : null}
-      </p>
+      </div>
 
+      {/* — Boutons — primary en couleur d'accent, secondary en lien fin — */}
       <div
         className={cn(
-          "flex flex-col gap-3 sm:flex-row sm:items-center",
+          "mt-2 flex flex-col gap-3 sm:flex-row sm:items-center",
           isCenter ? "sm:justify-center" : "sm:justify-start",
         )}
       >
         <button
           type="button"
           onClick={onReserve}
-          className={cn(ctaStyle.className, "min-h-[52px] px-8 text-sm uppercase tracking-[0.16em]")}
+          className={cn(
+            ctaStyle.className,
+            "min-h-[56px] px-9 text-sm uppercase tracking-[0.18em]",
+          )}
           style={ctaStyle.style}
         >
           {ctaLabel}
@@ -319,30 +354,30 @@ function HeroContentInner({
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              "inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[var(--radius)] px-8 text-sm font-semibold uppercase tracking-[0.16em] transition",
+              "group inline-flex min-h-[56px] items-center gap-2 px-2 text-sm font-semibold uppercase tracking-[0.18em] transition",
               textTheme === "onImage"
-                ? "border border-white/40 text-white hover:bg-white/10"
-                : "border border-[color-mix(in_srgb,var(--heading-color)_25%,transparent)] hover:bg-[color-mix(in_srgb,var(--heading-color)_6%,transparent)]",
+                ? "text-white/85 hover:text-white"
+                : "hover:opacity-80",
             )}
             style={textTheme === "onSurface" ? { color: "var(--heading-color)" } : undefined}
           >
-            {secondaryLabel}
-            <ChevronRight className="h-4 w-4" aria-hidden />
+            <span className="border-b border-current pb-1">{secondaryLabel}</span>
+            <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
           </a>
         ) : (
           <button
             type="button"
             onClick={() => scrollToId("concept")}
             className={cn(
-              "inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[var(--radius)] px-8 text-sm font-semibold uppercase tracking-[0.16em] transition",
+              "group inline-flex min-h-[56px] items-center gap-2 px-2 text-sm font-semibold uppercase tracking-[0.18em] transition",
               textTheme === "onImage"
-                ? "border border-white/40 text-white hover:bg-white/10"
-                : "border border-[color-mix(in_srgb,var(--heading-color)_25%,transparent)] hover:bg-[color-mix(in_srgb,var(--heading-color)_6%,transparent)]",
+                ? "text-white/85 hover:text-white"
+                : "hover:opacity-80",
             )}
             style={textTheme === "onSurface" ? { color: "var(--heading-color)" } : undefined}
           >
-            Découvrir le concept
-            <ChevronRight className="h-4 w-4" aria-hidden />
+            <span className="border-b border-current pb-1">Découvrir le concept</span>
+            <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
           </button>
         )}
       </div>
@@ -535,7 +570,16 @@ export function PremiumHero({
           aria-hidden
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/15" aria-hidden />
+      {/* Voile cinéma : gradient principal + vignette douce sur les bords */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/10" aria-hidden />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,0.35) 100%)",
+        }}
+        aria-hidden
+      />
       <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} aria-hidden />
 
       {/* Contenu : positionné dans le tiers inférieur pour un rendu cinéma */}
@@ -564,6 +608,21 @@ export function PremiumHero({
           align={align}
         />
       </div>
+
+      {/* Scroll hint discret, visible uniquement sur les heros immersifs et hors preview */}
+      {heroHeight === "tall" && !previewMode ? (
+        <button
+          type="button"
+          onClick={() => scrollToId("concept")}
+          aria-label="Faire défiler vers le contenu"
+          className="absolute bottom-6 left-1/2 z-[2] -translate-x-1/2 text-white/70 transition hover:text-white"
+        >
+          <span className="flex flex-col items-center gap-1.5">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.32em]">Scroll</span>
+            <span className="block h-8 w-px bg-current" aria-hidden />
+          </span>
+        </button>
+      ) : null}
     </section>
   );
 }
@@ -588,16 +647,21 @@ export function ConceptSection({
   const stacked = layout === "stacked" || !imageUrl;
   const imageOnRight = layout === "image-right";
 
+  // Si le texte fait plus de 60 caractères, on active la drop-cap (capitale lettrine éditoriale).
+  const enableDropCap = body.trim().length > 80 && !stacked;
+  const dropCapChar = enableDropCap ? body.trim().charAt(0) : null;
+  const restOfBody = enableDropCap ? body.trim().slice(1) : body;
+
   return (
     <section
       id="concept"
       className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]"
     >
-      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+      <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
         <div
           className={cn(
             "grid items-center gap-12",
-            stacked ? "grid-cols-1 max-w-3xl mx-auto text-center" : "lg:grid-cols-2 lg:gap-20",
+            stacked ? "grid-cols-1 max-w-3xl mx-auto text-center" : "lg:grid-cols-[5fr_6fr] lg:gap-24",
           )}
         >
           {imageUrl && !stacked ? (
@@ -611,45 +675,88 @@ export function ConceptSection({
                 src={imageUrl}
                 alt=""
                 fill
-                className="object-cover"
+                className="object-cover transition duration-[1.2s] hover:scale-[1.02]"
                 sizes="(max-width:1024px) 100vw, 50vw"
                 unoptimized
               />
+              {/* Cachet d'or signature en bas d'image */}
               <div
-                className="pointer-events-none absolute inset-x-6 bottom-6 hidden h-px lg:block"
-                style={{ backgroundColor: "color-mix(in srgb, var(--accent-color) 45%, transparent)" }}
+                className="pointer-events-none absolute inset-x-6 bottom-6 hidden items-center gap-3 lg:flex"
                 aria-hidden
-              />
+              >
+                <span
+                  className="h-px flex-1"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+                  }}
+                />
+                <span
+                  className="text-[10px] font-medium uppercase tracking-[0.32em] text-white/85"
+                >
+                  Maison
+                </span>
+                <span
+                  className="h-px flex-1"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+                  }}
+                />
+              </div>
             </div>
           ) : null}
 
           <div className={cn(!stacked && (imageOnRight ? "lg:order-1" : "lg:order-2"))}>
-            <p
-              className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
-              style={{ color: "var(--heading-color)" }}
+            <div
+              className={cn("flex items-center gap-3", stacked && "justify-center")}
             >
-              {eyebrow}
-            </p>
+              <span
+                className="h-px w-10"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+                }}
+                aria-hidden
+              />
+              <p
+                className="text-[10px] font-semibold uppercase tracking-[0.32em]"
+                style={{ color: "var(--accent-color)" }}
+              >
+                {eyebrow}
+              </p>
+            </div>
             <h2
-              className="mt-4 text-3xl font-medium leading-[1.1] sm:text-4xl lg:text-[2.75rem]"
-              style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+              className="mt-5 text-4xl font-medium leading-[1.05] sm:text-5xl lg:text-[3.25rem]"
+              style={{
+                fontFamily: "var(--heading-font)",
+                color: "var(--heading-color)",
+                letterSpacing: "-0.015em",
+              }}
             >
               {title}
             </h2>
-            <div
-              className={cn("mt-5 h-px w-16", stacked && "mx-auto")}
-              style={{ backgroundColor: "var(--accent-color)" }}
-              aria-hidden
-            />
             {body.trim() ? (
               <p
                 className={cn(
-                  "mt-6 text-pretty text-base leading-relaxed opacity-90 sm:text-lg",
+                  "mt-7 text-pretty text-[17px] font-light leading-[1.7] sm:text-[19px]",
                   stacked ? "mx-auto max-w-xl" : "max-w-xl",
                 )}
-                style={{ color: "var(--body-text)" }}
+                style={{
+                  color: "var(--body-text)",
+                  fontFamily: "var(--body-font), system-ui, sans-serif",
+                }}
               >
-                {body}
+                {dropCapChar ? (
+                  <span
+                    className="float-left mr-3 mt-1 text-6xl font-medium leading-[0.85] sm:text-7xl"
+                    style={{
+                      fontFamily: "var(--heading-font), Georgia, serif",
+                      color: "var(--accent-color)",
+                    }}
+                    aria-hidden
+                  >
+                    {dropCapChar}
+                  </span>
+                ) : null}
+                {restOfBody}
               </p>
             ) : null}
           </div>
@@ -828,90 +935,169 @@ export function MenuOffersSection({
   const hasOffers = offers.length > 0;
   if (!hasOffers && !menuHref) return null;
 
+  // Si toutes les offres ont une image → grille de cartes premium. Sinon → menu éditorial avec ligne pointillée.
+  const allHaveImages = hasOffers && offers.every((o) => Boolean(o.imageUrl));
+
   return (
     <section
       id="menu"
-      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_4%,var(--page-bg))]"
+      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]"
+      style={{
+        backgroundColor: "var(--surface-muted, color-mix(in srgb, var(--body-text) 4%, var(--page-bg)))",
+      }}
     >
-      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p
-              className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
-              style={{ color: "var(--heading-color)" }}
-            >
-              {eyebrow}
-            </p>
-            <h2
-              className="mt-3 text-3xl font-medium sm:text-4xl"
-              style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
-            >
-              {title}
-            </h2>
-            <div className="mt-4 h-px w-16" style={{ backgroundColor: "var(--accent-color)" }} aria-hidden />
-          </div>
-          {menuHref ? (
-            <a
-              href={menuHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center gap-2 border-b-2 pb-1 text-sm font-semibold uppercase tracking-[0.18em]"
-              style={{ borderColor: "var(--accent-color)", color: "var(--accent-color)" }}
-            >
-              {menuPdfLabel ?? "Voir la carte complète"}
-              <ChevronRight className="h-4 w-4" />
-            </a>
-          ) : null}
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+        {/* En-tête : eyebrow centré (vraiment éditorial) */}
+        <div className="flex flex-col items-center gap-3 text-center">
+          <span
+            className="text-[10px] font-semibold uppercase tracking-[0.32em]"
+            style={{ color: "var(--accent-color)" }}
+          >
+            {eyebrow}
+          </span>
+          <h2
+            className="text-balance text-4xl font-medium leading-[1.05] sm:text-5xl"
+            style={{
+              fontFamily: "var(--heading-font)",
+              color: "var(--heading-color)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {title}
+          </h2>
+          <div
+            className="mt-2 h-px w-12"
+            style={{ backgroundColor: "var(--accent-color)" }}
+            aria-hidden
+          />
         </div>
 
-        {hasOffers ? (
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-            {offers.map((o) => (
+        {hasOffers && allHaveImages ? (
+          /* Variante A : grille de cartes premium avec ratio portrait & ombre douce */
+          <div className="mt-16 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {offers.map((o, idx) => (
+              <article key={o.id} className="group flex flex-col">
+                <div className="relative aspect-[4/5] overflow-hidden">
+                  <Image
+                    src={o.imageUrl!}
+                    alt=""
+                    fill
+                    className="object-cover transition duration-[1.2s] group-hover:scale-[1.04]"
+                    sizes="(max-width:768px) 100vw, 400px"
+                    unoptimized
+                  />
+                  <span
+                    className="absolute left-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-xs font-medium tabular-nums shadow-sm"
+                    style={{
+                      color: "var(--heading-color)",
+                      fontFamily: "var(--heading-font)",
+                    }}
+                  >
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                </div>
+                <div className="mt-5 flex items-baseline justify-between gap-4">
+                  <h3
+                    className="text-xl font-medium leading-tight"
+                    style={{
+                      fontFamily: "var(--heading-font)",
+                      color: "var(--heading-color)",
+                    }}
+                  >
+                    {o.title}
+                  </h3>
+                  {o.price ? (
+                    <span
+                      className="shrink-0 text-base font-medium tabular-nums"
+                      style={{
+                        color: "var(--accent-color)",
+                        fontFamily: "var(--heading-font)",
+                      }}
+                    >
+                      {o.price}
+                    </span>
+                  ) : null}
+                </div>
+                {o.description ? (
+                  <p
+                    className="mt-2 text-[15px] leading-relaxed opacity-85"
+                    style={{ color: "var(--body-text)" }}
+                  >
+                    {o.description}
+                  </p>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        ) : hasOffers ? (
+          /* Variante B : menu éditorial type "carte de restaurant" avec ligne pointillée nom-prix */
+          <div className="mx-auto mt-14 max-w-3xl space-y-9">
+            {offers.map((o, idx) => (
               <article
                 key={o.id}
-                className="group flex flex-col overflow-hidden bg-[var(--page-bg)] shadow-[0_24px_80px_-48px_rgba(15,23,42,0.25)] transition duration-500 hover:shadow-[0_32px_100px_-48px_rgba(15,23,42,0.35)]"
+                className={cn(
+                  "flex gap-5",
+                  o.imageUrl ? "items-start" : "items-baseline",
+                )}
               >
                 {o.imageUrl ? (
-                  <div className="relative aspect-[16/10] overflow-hidden">
+                  <div className="relative h-24 w-24 shrink-0 overflow-hidden sm:h-28 sm:w-28">
                     <Image
                       src={o.imageUrl}
                       alt=""
                       fill
-                      className="object-cover transition duration-700 group-hover:scale-[1.04]"
-                      sizes="400px"
+                      className="object-cover"
+                      sizes="120px"
                       unoptimized
                     />
                   </div>
                 ) : (
-                  <div
-                    className="aspect-[16/10] w-full"
+                  <span
+                    className="shrink-0 text-base font-medium tabular-nums opacity-50"
                     style={{
-                      background:
-                        "linear-gradient(135deg, color-mix(in srgb, var(--accent-color) 16%, var(--page-bg)) 0%, var(--page-bg) 100%)",
+                      color: "var(--heading-color)",
+                      fontFamily: "var(--heading-font)",
                     }}
-                    aria-hidden
-                  />
+                  >
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
                 )}
-                <div className="flex flex-1 flex-col p-6">
-                  <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-1 flex-col">
+                  <div className="flex items-baseline gap-3">
                     <h3
-                      className="text-lg font-medium leading-tight"
-                      style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+                      className="text-xl font-medium leading-tight sm:text-2xl"
+                      style={{
+                        fontFamily: "var(--heading-font)",
+                        color: "var(--heading-color)",
+                      }}
                     >
                       {o.title}
                     </h3>
                     {o.price ? (
-                      <span
-                        className="shrink-0 text-base font-semibold"
-                        style={{ color: "var(--accent-color)", fontFamily: "var(--heading-font)" }}
-                      >
-                        {o.price}
-                      </span>
+                      <>
+                        <span
+                          aria-hidden
+                          className="flex-1 translate-y-[-3px] border-b border-dotted"
+                          style={{
+                            borderColor:
+                              "color-mix(in srgb, var(--body-text) 35%, transparent)",
+                          }}
+                        />
+                        <span
+                          className="shrink-0 text-lg font-medium tabular-nums sm:text-xl"
+                          style={{
+                            color: "var(--accent-color)",
+                            fontFamily: "var(--heading-font)",
+                          }}
+                        >
+                          {o.price}
+                        </span>
+                      </>
                     ) : null}
                   </div>
                   {o.description ? (
                     <p
-                      className="mt-3 flex-1 text-sm leading-relaxed opacity-85"
+                      className="mt-2 text-[15px] leading-relaxed opacity-80"
                       style={{ color: "var(--body-text)" }}
                     >
                       {o.description}
@@ -920,6 +1106,23 @@ export function MenuOffersSection({
                 </div>
               </article>
             ))}
+          </div>
+        ) : null}
+
+        {menuHref ? (
+          <div className="mt-14 flex justify-center">
+            <a
+              href={menuHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] transition"
+              style={{ color: "var(--accent-color)" }}
+            >
+              <span className="border-b border-current pb-1">
+                {menuPdfLabel ?? "Voir la carte complète"}
+              </span>
+              <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
+            </a>
           </div>
         ) : null}
       </div>
@@ -1033,18 +1236,31 @@ export function PremiumGallery({
     const [hero, ...rest] = images;
     return (
       <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
-        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-          <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+          <div className="mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p
-                className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
-                style={{ color: "var(--heading-color)" }}
-              >
-                {eyebrow}
-              </p>
+              <div className="flex items-center gap-3">
+                <span
+                  className="h-px w-10"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+                  }}
+                  aria-hidden
+                />
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-[0.32em]"
+                  style={{ color: "var(--accent-color)" }}
+                >
+                  {eyebrow}
+                </p>
+              </div>
               <h2
-                className="mt-3 text-3xl font-medium sm:text-4xl"
-                style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+                className="mt-5 text-4xl font-medium leading-[1.05] sm:text-5xl"
+                style={{
+                  fontFamily: "var(--heading-font)",
+                  color: "var(--heading-color)",
+                  letterSpacing: "-0.015em",
+                }}
               >
                 {title}
               </h2>
@@ -1054,10 +1270,11 @@ export function PremiumGallery({
                 href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-semibold uppercase tracking-[0.2em] underline-offset-4 hover:underline"
+                className="group inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] transition"
                 style={{ color: "var(--accent-color)" }}
               >
-                Voir sur Instagram →
+                <span className="border-b border-current pb-1">Suivre sur Instagram</span>
+                <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
               </a>
             ) : null}
           </div>
@@ -1097,17 +1314,37 @@ export function PremiumGallery({
   if (style === "instagram") {
     return (
       <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
-        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-          <div className="mb-8 text-center">
-            <p
-              className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
-              style={{ color: "var(--heading-color)" }}
-            >
-              {eyebrow}
-            </p>
+        <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+          <div className="mb-12 text-center">
+            <div className="flex items-center justify-center gap-3">
+              <span
+                className="h-px w-10"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+                }}
+                aria-hidden
+              />
+              <p
+                className="text-[10px] font-semibold uppercase tracking-[0.32em]"
+                style={{ color: "var(--accent-color)" }}
+              >
+                {eyebrow}
+              </p>
+              <span
+                className="h-px w-10"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+                }}
+                aria-hidden
+              />
+            </div>
             <h2
-              className="mt-3 text-3xl font-medium sm:text-4xl"
-              style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+              className="mt-5 text-4xl font-medium leading-[1.05] sm:text-5xl"
+              style={{
+                fontFamily: "var(--heading-font)",
+                color: "var(--heading-color)",
+                letterSpacing: "-0.015em",
+              }}
             >
               {title}
             </h2>
@@ -1145,17 +1382,30 @@ export function PremiumGallery({
   /* === STYLE GRID (par défaut) : masonry verticale === */
   return (
     <section className="border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]">
-      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-        <div className="mb-10">
-          <p
-            className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
-            style={{ color: "var(--heading-color)" }}
-          >
-            {eyebrow}
-          </p>
+      <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+        <div className="mb-12">
+          <div className="flex items-center gap-3">
+            <span
+              className="h-px w-10"
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+              }}
+              aria-hidden
+            />
+            <p
+              className="text-[10px] font-semibold uppercase tracking-[0.32em]"
+              style={{ color: "var(--accent-color)" }}
+            >
+              {eyebrow}
+            </p>
+          </div>
           <h2
-            className="mt-3 text-3xl font-medium sm:text-4xl"
-            style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+            className="mt-5 text-4xl font-medium leading-[1.05] sm:text-5xl"
+            style={{
+              fontFamily: "var(--heading-font)",
+              color: "var(--heading-color)",
+              letterSpacing: "-0.015em",
+            }}
           >
             {title}
           </h2>
@@ -1207,34 +1457,71 @@ export function PremiumFinalCta({
       <div
         className="absolute inset-0"
         style={{
-          background: `radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--accent-color) 22%, transparent) 0%, transparent 55%), linear-gradient(180deg, var(--page-bg) 0%, color-mix(in srgb, var(--accent-color) 8%, var(--page-bg)) 100%)`,
+          background: `radial-gradient(120% 80% at 50% 10%, color-mix(in srgb, var(--accent-color) 18%, transparent) 0%, transparent 60%), linear-gradient(180deg, var(--page-bg) 0%, color-mix(in srgb, var(--accent-color) 10%, var(--page-bg)) 100%)`,
         }}
         aria-hidden
       />
-      <div className="relative mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 lg:py-32">
-        <p
-          className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
-          style={{ color: "var(--heading-color)" }}
-        >
-          Prêt·e à venir
-        </p>
+      {/* Subtle grain (svg noise) — apporte vraiment du luxe */}
+      <div
+        className="absolute inset-0 opacity-[0.06] mix-blend-overlay"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.6'/></svg>\")",
+        }}
+        aria-hidden
+      />
+      <div className="relative mx-auto max-w-3xl px-5 py-28 text-center sm:px-8 lg:py-36">
+        {/* Eyebrow line + label centré */}
+        <div className="flex items-center justify-center gap-3">
+          <span
+            className="h-px w-10"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+            }}
+            aria-hidden
+          />
+          <p
+            className="text-[10px] font-semibold uppercase tracking-[0.32em]"
+            style={{ color: "var(--accent-color)" }}
+          >
+            Réservation
+          </p>
+          <span
+            className="h-px w-10"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+            }}
+            aria-hidden
+          />
+        </div>
+
         <h2
-          className="mt-3 text-3xl font-medium leading-tight sm:text-4xl lg:text-5xl"
-          style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+          className="mt-6 text-balance text-4xl font-medium italic leading-[1.02] sm:text-5xl lg:text-6xl"
+          style={{
+            fontFamily: "var(--heading-font)",
+            color: "var(--heading-color)",
+            letterSpacing: "-0.015em",
+          }}
         >
           {title}
         </h2>
         <p
-          className="mx-auto mt-5 max-w-lg text-base leading-relaxed opacity-90 sm:text-lg"
-          style={{ color: "var(--body-text)" }}
+          className="mx-auto mt-7 max-w-lg text-[17px] font-light leading-[1.7] sm:text-[19px]"
+          style={{
+            color: "var(--body-text)",
+            fontFamily: "var(--body-font), system-ui, sans-serif",
+          }}
         >
           {subtitle}
         </p>
-        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
           <button
             type="button"
             onClick={onReserve}
-            className={cn(ctaStyle.className, "min-h-[56px] px-10 uppercase tracking-[0.16em]")}
+            className={cn(
+              ctaStyle.className,
+              "min-h-[60px] px-12 text-sm uppercase tracking-[0.2em]",
+            )}
             style={ctaStyle.style}
           >
             {buttonLabel}
@@ -1242,11 +1529,11 @@ export function PremiumFinalCta({
           {showPhone && phone ? (
             <a
               href={`tel:${phone.replace(/\s/g, "")}`}
-              className="inline-flex min-h-[56px] items-center gap-2 px-6 text-sm font-semibold uppercase tracking-[0.16em]"
+              className="group inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] transition"
               style={{ color: "var(--accent-color)" }}
             >
               <Phone className="h-4 w-4" />
-              {phone}
+              <span className="border-b border-current pb-1">{phone}</span>
             </a>
           ) : null}
         </div>
@@ -1275,19 +1562,35 @@ export function PremiumPracticalInfo({
   return (
     <section
       id="infos"
-      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_4%,var(--page-bg))]"
+      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]"
+      style={{
+        backgroundColor: "var(--surface-muted, color-mix(in srgb, var(--body-text) 4%, var(--page-bg)))",
+      }}
     >
-      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-24">
+      <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-28">
         <div className="max-w-2xl">
-          <p
-            className="text-[11px] font-semibold uppercase tracking-[0.32em] opacity-60"
-            style={{ color: "var(--heading-color)" }}
-          >
-            Venir nous voir
-          </p>
+          <div className="flex items-center gap-3">
+            <span
+              className="h-px w-10"
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+              }}
+              aria-hidden
+            />
+            <p
+              className="text-[10px] font-semibold uppercase tracking-[0.32em]"
+              style={{ color: "var(--accent-color)" }}
+            >
+              Venir nous voir
+            </p>
+          </div>
           <h2
-            className="mt-3 text-3xl font-medium sm:text-4xl"
-            style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+            className="mt-5 text-4xl font-medium leading-[1.05] sm:text-5xl"
+            style={{
+              fontFamily: "var(--heading-font)",
+              color: "var(--heading-color)",
+              letterSpacing: "-0.015em",
+            }}
           >
             Infos pratiques
           </h2>
