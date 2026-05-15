@@ -885,7 +885,6 @@ export default function PublicReservationForm({
 
   const headlineText = heroTitle?.trim() || restaurantName;
   const taglineText = restaurantTagline?.trim();
-  const cuisineCityLine = [cuisineType?.trim(), city?.trim()].filter(Boolean).join(" · ");
   const descriptionText = publicPageDescription?.trim() ?? "";
   const menuHref =
     menuUrl?.trim() ||
@@ -997,8 +996,6 @@ export default function PublicReservationForm({
         coverImageUrl={coverImageUrl}
         logoUrl={logoUrl}
         headline={headlineText}
-        cuisineCityLine={cuisineCityLine || undefined}
-        badge={heroBadgeText?.trim() || undefined}
         tagline={taglineText || undefined}
         openStatus={openStatus}
         phone={restaurantPhone}

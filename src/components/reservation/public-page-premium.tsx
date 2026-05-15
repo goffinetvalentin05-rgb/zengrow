@@ -176,8 +176,6 @@ function premiumHeroMinHeight(heroHeight: "compact" | "normal" | "tall", preview
 
 function HeroContentInner({
   logoUrl,
-  cuisineCityLine,
-  badge,
   headline,
   tagline,
   openStatus,
@@ -193,8 +191,6 @@ function HeroContentInner({
   align,
 }: {
   logoUrl?: string | null;
-  cuisineCityLine?: string;
-  badge?: string;
   headline: string;
   tagline?: string;
   openStatus: string;
@@ -218,74 +214,59 @@ function HeroContentInner({
       ? ("rgba(255,255,255,0.88)" as const)
       : ("var(--body-text)" as const);
 
-  // Couleur de la ligne d'eyebrow (decorative hairline) selon le contexte.
-  const hairlineColor =
-    textTheme === "onImage" ? "rgba(255,255,255,0.55)" : "color-mix(in srgb, var(--accent-color) 70%, transparent)";
-
   return (
     <div
       className={cn(
-        "flex w-full flex-col gap-7 sm:gap-8",
+        "flex w-full flex-col gap-5 sm:gap-6",
         isCenter && "items-center text-center",
       )}
     >
-      {logoUrl ? (
-        <div
-          className={cn(
-            "relative h-16 w-16 overflow-hidden rounded-full border p-1 sm:h-20 sm:w-20",
-            textTheme === "onImage"
-              ? "border-white/25 bg-white/10 backdrop-blur-sm"
-              : "border-[color-mix(in_srgb,var(--heading-color)_18%,transparent)] bg-[color-mix(in_srgb,var(--heading-color)_6%,transparent)]",
-          )}
-        >
-          <Image src={logoUrl} alt="" fill className="object-contain p-1" sizes="80px" unoptimized />
-        </div>
-      ) : null}
-
-      {/* — Eyebrow line + label (ligne fine + texte d'introduction) — */}
-      {badge || cuisineCityLine ? (
-        <div
-          className={cn(
-            "flex items-center gap-3",
-            isCenter && "justify-center",
-          )}
-        >
-          <span
-            className="h-px w-10"
-            style={{ backgroundColor: hairlineColor }}
-            aria-hidden
-          />
-          <span
-            className="text-[10px] font-semibold uppercase tracking-[0.32em]"
-            style={{
-              color:
-                textTheme === "onImage" ? "rgba(255,255,255,0.92)" : "var(--accent-color)",
-            }}
+      {logoUrl?.trim() ? (
+        <>
+          <h1 className="sr-only">{headline}</h1>
+          <div
+            className={cn(
+              "relative w-full max-w-[min(340px,88vw)]",
+              isCenter ? "mx-auto" : "",
+            )}
+            style={{ height: "clamp(4.5rem, 14vw, 8.75rem)" }}
           >
-            {badge || cuisineCityLine}
-          </span>
-          <span
-            className="h-px w-10"
-            style={{ backgroundColor: hairlineColor }}
-            aria-hidden
-          />
-        </div>
-      ) : null}
-
-      <h1
-        className={cn(
-          "max-w-3xl text-balance font-medium leading-[0.98] tracking-tight",
-        )}
-        style={{
-          fontFamily: "var(--heading-font), Georgia, serif",
-          fontSize: "clamp(2.5rem, 6vw, 5rem)",
-          color: headingColor,
-          letterSpacing: "-0.015em",
-          fontWeight: 500,
-        }}
-      >
-        {headline}
-      </h1>
+            <Image
+              src={logoUrl.trim()}
+              alt={headline}
+              fill
+              className={cn(
+                "object-contain",
+                isCenter ? "object-center" : "object-left",
+              )}
+              style={
+                textTheme === "onImage"
+                  ? { filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.35))" }
+                  : undefined
+              }
+              sizes="(max-width:768px) 85vw, 340px"
+              priority
+              unoptimized
+            />
+          </div>
+        </>
+      ) : (
+        <h1
+          className={cn(
+            "max-w-3xl text-balance font-medium leading-[0.98] tracking-tight",
+            isCenter && "mx-auto",
+          )}
+          style={{
+            fontFamily: "var(--heading-font), Georgia, serif",
+            fontSize: "clamp(2.25rem, 5.5vw, 4.25rem)",
+            color: headingColor,
+            letterSpacing: "-0.015em",
+            fontWeight: 500,
+          }}
+        >
+          {headline}
+        </h1>
+      )}
 
       {tagline ? (
         <p
@@ -315,8 +296,10 @@ function HeroContentInner({
         {showPhone && phone ? (
           <>
             <span
-              className="hidden h-3 w-px sm:inline-block"
-              style={{ backgroundColor: hairlineColor }}
+              className={cn(
+                "hidden h-3 w-px sm:inline-block",
+                textTheme === "onImage" ? "bg-white/35" : "bg-current opacity-25",
+              )}
               aria-hidden
             />
             <a
@@ -389,8 +372,6 @@ export function PremiumHero({
   coverImageUrl,
   logoUrl,
   headline,
-  cuisineCityLine,
-  badge,
   tagline,
   openStatus,
   phone,
@@ -410,8 +391,6 @@ export function PremiumHero({
   coverImageUrl?: string | null;
   logoUrl?: string | null;
   headline: string;
-  cuisineCityLine?: string;
-  badge?: string;
   tagline?: string;
   openStatus: string;
   phone?: string | null;
@@ -444,12 +423,10 @@ export function PremiumHero({
         style={{ backgroundColor: "var(--page-bg)" }}
       >
         <div className="grid h-full min-h-inherit grid-cols-1 lg:grid-cols-[1.05fr_1fr]">
-          <div className="relative flex items-center px-5 pb-12 pt-24 sm:px-10 lg:px-16 lg:pb-16 lg:pt-32">
+          <div className="relative flex items-center px-5 pb-12 pt-20 sm:px-10 lg:px-16 lg:pb-16 lg:pt-28">
             <div className="w-full max-w-xl">
               <HeroContentInner
                 logoUrl={logoUrl}
-                cuisineCityLine={cuisineCityLine}
-                badge={badge}
                 headline={headline}
                 tagline={tagline}
                 openStatus={openStatus}
@@ -518,11 +495,9 @@ export function PremiumHero({
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/55" aria-hidden />
         <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} aria-hidden />
-        <div className="relative z-[1] mx-auto w-full max-w-3xl px-5 pb-20 pt-28 text-center sm:px-8 sm:pb-28 sm:pt-32">
+        <div className="relative z-[1] mx-auto flex w-full max-w-3xl flex-col justify-center px-5 pb-20 pt-24 text-center sm:px-8 sm:pb-24 sm:pt-28">
           <HeroContentInner
             logoUrl={logoUrl}
-            cuisineCityLine={cuisineCityLine}
-            badge={badge}
             headline={headline}
             tagline={tagline}
             openStatus={openStatus}
@@ -585,14 +560,12 @@ export function PremiumHero({
       {/* Contenu : positionné dans le tiers inférieur pour un rendu cinéma */}
       <div
         className={cn(
-          "relative z-[1] mx-auto mt-auto flex w-full max-w-7xl flex-col px-5 pb-14 pt-28 sm:px-8 sm:pb-20 sm:pt-32 lg:px-12 lg:pb-24",
+          "relative z-[1] mx-auto mt-auto flex w-full max-w-7xl flex-col px-5 pb-14 pt-24 sm:px-8 sm:pb-20 sm:pt-28 lg:px-12 lg:pb-24",
           align === "center" ? "items-center text-center" : "items-start text-left",
         )}
       >
         <HeroContentInner
           logoUrl={logoUrl}
-          cuisineCityLine={cuisineCityLine}
-          badge={badge}
           headline={headline}
           tagline={tagline}
           openStatus={openStatus}
