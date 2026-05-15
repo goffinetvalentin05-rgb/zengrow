@@ -961,7 +961,7 @@ export default function PublicReservationForm({
   return (
     <div
       className={cn(
-        previewMode ? "min-h-0" : "min-h-screen",
+        previewMode ? "relative min-h-0 w-full" : "min-h-screen",
         "[font-size:calc(16px*var(--font-scale))]",
         !previewMode && conversionCta.showSticky && reservationEnabled && "pb-24 md:pb-0",
       )}
@@ -977,6 +977,7 @@ export default function PublicReservationForm({
         ctaLabel={ctaLabel}
         onReserve={scrollToReservation}
         visible={premium.navigationEnabled}
+        previewMode={previewMode}
       />
 
       <PremiumHero
@@ -996,6 +997,8 @@ export default function PublicReservationForm({
         ctaStyle={ctaStyle}
         overlayOpacity={heroOverlayEnabled ? overlayOpacity : 0}
         heroAlign={heroAlign}
+        heroHeight={heroHeight}
+        previewMode={previewMode}
       />
 
       {blockEnabled("about") && premium.concept.enabled ? (
@@ -1008,7 +1011,7 @@ export default function PublicReservationForm({
       ) : null}
 
       {visibleEditorialSections(premium.editorialSections).map((section) => (
-        <EditorialBlock key={section.id} section={section} />
+        <EditorialBlock key={section.id} section={section} previewMode={previewMode} />
       ))}
 
 

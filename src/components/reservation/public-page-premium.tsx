@@ -33,11 +33,13 @@ export function PublicPageNav({
   ctaLabel,
   onReserve,
   visible,
+  previewMode = false,
 }: {
   restaurantName: string;
   ctaLabel: string;
   onReserve: () => void;
   visible: boolean;
+  previewMode?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -54,7 +56,12 @@ export function PublicPageNav({
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[color-mix(in_srgb,var(--page-bg)_82%,transparent)] backdrop-blur-md">
+      <header
+        className={cn(
+          "z-40 border-b border-white/10 bg-[color-mix(in_srgb,var(--page-bg)_82%,transparent)] backdrop-blur-md",
+          previewMode ? "sticky top-0 w-full" : "fixed inset-x-0 top-0",
+        )}
+      >
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6 lg:px-10">
           <button
             type="button"
@@ -103,7 +110,7 @@ export function PublicPageNav({
       </header>
 
       {open ? (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className={cn(previewMode ? "absolute inset-0 z-50" : "fixed inset-0 z-50", "md:hidden")}>
           <button
             type="button"
             className="absolute inset-0 bg-black/50"
@@ -153,6 +160,17 @@ export function PublicPageNav({
   );
 }
 
+function premiumHeroMinHeight(heroHeight: "compact" | "normal" | "tall", previewMode: boolean) {
+  if (previewMode) {
+    if (heroHeight === "compact") return "min-h-[200px] max-h-[260px]";
+    if (heroHeight === "tall") return "min-h-[280px] max-h-[360px]";
+    return "min-h-[240px] max-h-[320px]";
+  }
+  if (heroHeight === "compact") return "min-h-[38vh] max-h-[440px]";
+  if (heroHeight === "tall") return "min-h-[min(72vh,820px)]";
+  return "min-h-[min(88vh,920px)]";
+}
+
 export function PremiumHero({
   coverImageUrl,
   logoUrl,
@@ -170,6 +188,8 @@ export function PremiumHero({
   ctaStyle,
   overlayOpacity,
   heroAlign,
+  heroHeight = "normal",
+  previewMode = false,
 }: {
   coverImageUrl?: string | null;
   logoUrl?: string | null;
@@ -187,12 +207,17 @@ export function PremiumHero({
   ctaStyle: CtaStyle;
   overlayOpacity: number;
   heroAlign: "left" | "center" | "right";
+  heroHeight?: "compact" | "normal" | "tall";
+  previewMode?: boolean;
 }) {
   const alignLeft = heroAlign === "left";
   return (
     <section
       id="accueil"
-      className="relative flex min-h-[min(88vh,920px)] w-full scroll-mt-20 flex-col justify-end overflow-hidden pt-14 sm:pt-16"
+      className={cn(
+        "relative flex w-full scroll-mt-20 flex-col justify-end overflow-hidden pt-14 sm:pt-16",
+        premiumHeroMinHeight(heroHeight, previewMode),
+      )}
     >
       {coverImageUrl ? (
         <Image src={coverImageUrl} alt="" fill priority className="object-cover" sizes="100vw" unoptimized />
@@ -367,17 +392,33 @@ export function ConceptSection({
   );
 }
 
-export function EditorialBlock({ section }: { section: EditorialSectionContent }) {
+export function EditorialBlock({
+  section,
+  previewMode = false,
+}: {
+  section: EditorialSectionContent;
+  previewMode?: boolean;
+}) {
   if (!section.enabled) return null;
   const hasImage = Boolean(section.imageUrl.trim());
   const isFull = section.layout === "full-bleed" && hasImage;
 
   if (isFull) {
     return (
-      <section className="relative min-h-[min(56vh,520px)] overflow-hidden">
+      <section
+        className={cn(
+          "relative overflow-hidden",
+          previewMode ? "min-h-[180px]" : "min-h-[min(56vh,520px)]",
+        )}
+      >
         <Image src={section.imageUrl} alt="" fill className="object-cover" sizes="100vw" unoptimized />
         <div className="absolute inset-0 bg-black/45" />
-        <div className="relative flex min-h-[min(56vh,520px)] items-end px-5 py-14 sm:px-8 lg:px-12">
+        <div
+          className={cn(
+            "relative flex items-end px-5 py-14 sm:px-8 lg:px-12",
+            previewMode ? "min-h-[180px]" : "min-h-[min(56vh,520px)]",
+          )}
+        >
           <div className="max-w-2xl text-white">
             <h2 className="text-3xl font-medium sm:text-4xl" style={{ fontFamily: "var(--heading-font)" }}>
               {section.title}

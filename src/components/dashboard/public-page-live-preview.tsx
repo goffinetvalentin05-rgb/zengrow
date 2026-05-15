@@ -142,7 +142,8 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
           viewport === "mobile" ? "mx-auto max-w-[390px]" : "w-full",
         )}
       >
-        <div className="max-h-[min(85vh,820px)] overflow-y-auto overflow-x-hidden">
+        <div className="relative isolate h-[min(70vh,600px)] overflow-hidden">
+          <div className="h-full overflow-x-hidden overflow-y-auto overscroll-contain [transform:translateZ(0)]">
           <PublicReservationForm
             previewMode
             restaurantId={draft.restaurantId}
@@ -208,6 +209,7 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
             closureMessage={null}
             terraceEnabled={draft.terraceEnabled ?? false}
           />
+          </div>
         </div>
       </div>
     </div>

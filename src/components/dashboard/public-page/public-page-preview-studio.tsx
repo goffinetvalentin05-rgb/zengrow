@@ -138,14 +138,14 @@ export default function PublicPagePreviewStudio({
     />
   );
 
+  const previewViewportHeight =
+    viewport === "desktop" ? "h-[min(70vh,600px)]" : "h-[min(75vh,680px)]";
+
   const previewChrome = (
-    <div
-      className={cn(
-        "overflow-x-hidden overflow-y-auto bg-[var(--page-bg,#f8fafc)]",
-        viewport === "desktop" ? "max-h-[min(68vh,640px)]" : "max-h-[min(72vh,720px)]",
-      )}
-    >
-      {previewForm}
+    <div className={cn("relative isolate overflow-hidden", previewViewportHeight)}>
+      <div className="h-full overflow-x-hidden overflow-y-auto overscroll-contain [transform:translateZ(0)]">
+        {previewForm}
+      </div>
     </div>
   );
 
@@ -242,11 +242,11 @@ export default function PublicPagePreviewStudio({
           <div className="flex flex-1 items-start justify-center overflow-auto p-4 md:p-8">
             <div
               className={cn(
-                "w-full overflow-hidden rounded-xl border border-zg-border bg-[var(--page-bg,#f8fafc)] shadow-2xl",
+                "relative isolate h-[calc(100vh-8rem)] w-full overflow-hidden rounded-xl border border-zg-border shadow-2xl",
                 viewport === "mobile" ? "max-w-[400px]" : "max-w-6xl",
               )}
             >
-              <div className="max-h-[calc(100vh-8rem)] overflow-y-auto">{previewForm}</div>
+              <div className="h-full overflow-y-auto overscroll-contain [transform:translateZ(0)]">{previewForm}</div>
             </div>
           </div>
         </div>
