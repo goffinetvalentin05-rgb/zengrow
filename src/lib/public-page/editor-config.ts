@@ -14,6 +14,10 @@ import {
   normalizePremiumContent,
   type PremiumPageContent,
 } from "@/src/lib/public-page/premium-content";
+import {
+  mergePageSectionContent,
+  type PageSectionContentV1,
+} from "@/src/lib/public-page/page-sections";
 
 export const EDITOR_CONFIG_VERSION = 5;
 
@@ -121,6 +125,11 @@ export type PublicPageEditorConfig = {
   };
   conversion: ConversionSettings;
   premium: PremiumPageContent;
+  /**
+   * Textes de section (persisté via `restaurant_page_sections`, pas dans ce JSON à l’enregistrement).
+   * Présent en mémoire dans l’éditeur et sur l’aperçu.
+   */
+  pageSections?: PageSectionContentV1;
 };
 
 export const DEFAULT_SECTION_ORDER: PageBlockId[] = [
@@ -214,6 +223,7 @@ export function defaultEditorConfig(): PublicPageEditorConfig {
       persuasionStyle: "premium",
     },
     premium: defaultPremiumContent(),
+    pageSections: undefined,
   };
 }
 
@@ -335,6 +345,10 @@ function mergeEditorConfig(base: PublicPageEditorConfig, patch: Partial<PublicPa
     reservation: { ...base.reservation, ...patch.reservation },
     conversion: normalizeConversionSettings(patch.conversion ?? base.conversion),
     premium: normalizePremiumContent(patch.premium ?? base.premium),
+    pageSections:
+      base.pageSections ?? patch.pageSections
+        ? mergePageSectionContent(base.pageSections ?? {}, patch.pageSections ?? {})
+        : undefined,
   };
 }
 

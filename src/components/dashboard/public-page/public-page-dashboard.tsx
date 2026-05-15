@@ -67,6 +67,13 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
       return;
     }
 
+    const sectionsResult = await panel.syncPageSectionsToDatabase();
+    if (!sectionsResult.ok) {
+      setMessage(sectionsResult.error ?? "Échec de la synchronisation des textes de section.");
+      setIsSaving(false);
+      return;
+    }
+
     setPublicPath(publicLink.replace(initial.slug, slug));
     setMessage("Modifications enregistrées.");
     setSaveSuccess(true);

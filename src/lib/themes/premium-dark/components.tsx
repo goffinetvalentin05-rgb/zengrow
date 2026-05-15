@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import { ChevronRight, Menu, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/src/lib/utils";
 import ImageWithVignette from "@/src/lib/themes/shared/image-with-vignette";
 import type { MenuOfferItem } from "@/src/lib/public-page/premium-content";
+import type { NavLinkContent } from "@/src/lib/public-page/page-sections";
 
 type CtaStyle = { className: string; style?: React.CSSProperties };
 
@@ -13,37 +14,23 @@ function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-const NAV_IDS = [
-  { id: "accueil", label: "Accueil" },
-  { id: "concept", label: "Concept" },
-  { id: "menu", label: "Menu" },
-  { id: "reservation", label: "Réserver" },
-  { id: "infos", label: "Infos" },
-  { id: "contact", label: "Contact" },
-] as const;
-
 export function PremiumDarkNav({
   restaurantName,
   ctaLabel,
   onReserve,
   visible,
   previewMode = false,
-  showGiftVouchers = false,
+  navLinks,
 }: {
   restaurantName: string;
   ctaLabel: string;
   onReserve: () => void;
   visible: boolean;
   previewMode?: boolean;
-  showGiftVouchers?: boolean;
+  navLinks: NavLinkContent[];
 }) {
   const [open, setOpen] = useState(false);
   const [compact, setCompact] = useState(false);
-
-  const navLinks = useMemo(() => {
-    const gift = showGiftVouchers ? ([{ id: "bons-cadeaux", label: "Cadeaux" }] as const) : [];
-    return [...NAV_IDS.slice(0, 4), ...gift, ...NAV_IDS.slice(4)] as { id: string; label: string }[];
-  }, [showGiftVouchers]);
 
   const onScroll = useCallback(() => {
     setCompact(window.scrollY > 48);
@@ -93,9 +80,9 @@ export function PremiumDarkNav({
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Navigation principale">
             {navLinks.map((item) => (
               <button
-                key={item.id}
+                key={item.anchorId}
                 type="button"
-                onClick={() => scrollToId(item.id)}
+                onClick={() => scrollToId(item.anchorId)}
                 className="text-[11px] font-medium uppercase tracking-[0.05em] transition hover:opacity-90"
                 style={{ color: "var(--zg-text-muted, var(--body-text))" }}
               >
@@ -144,13 +131,13 @@ export function PremiumDarkNav({
             <nav className="mt-8 flex flex-col gap-4">
               {navLinks.map((item) => (
                 <button
-                  key={item.id}
+                  key={item.anchorId}
                   type="button"
                   className="text-left text-lg font-medium"
                   style={{ color: "var(--heading-color)", fontFamily: "var(--heading-font)" }}
                   onClick={() => {
                     setOpen(false);
-                    scrollToId(item.id);
+                    scrollToId(item.anchorId);
                   }}
                 >
                   {item.label}
@@ -190,6 +177,8 @@ export function PremiumDarkHero({
   phone: _phone,
   showPhone: _showPhone,
   previewMode = false,
+  scriptLineFallback,
+  scrollHintLabel,
 }: {
   badgeText?: string | null;
   coverImageUrl?: string | null;
@@ -205,8 +194,10 @@ export function PremiumDarkHero({
   phone?: string | null;
   showPhone?: boolean;
   previewMode?: boolean;
+  scriptLineFallback: string;
+  scrollHintLabel: string;
 }) {
-  const scriptLine = badgeText?.trim() || tagline?.trim()?.split(/[.!?]/)[0]?.trim() || "Une expérience";
+  const scriptLine = badgeText?.trim() || tagline?.trim()?.split(/[.!?]/)[0]?.trim() || scriptLineFallback;
 
   return (
     <section
@@ -313,7 +304,7 @@ export function PremiumDarkHero({
         >
           <span className="h-8 w-px animate-pulse bg-[color-mix(in_srgb,var(--accent-color)_55%,transparent)]" />
           <span className="text-[10px] uppercase tracking-[0.3em] text-[color-mix(in_srgb,var(--heading-color)_45%,transparent)]">
-            scroll
+            {scrollHintLabel}
           </span>
         </div>
       </div>
@@ -325,14 +316,14 @@ export function PremiumDarkMenuOffersSection({
   offers,
   menuHref,
   menuPdfLabel,
-  eyebrow = "Carte & offres",
-  title = "Notre menu",
+  eyebrow,
+  title,
 }: {
   offers: MenuOfferItem[];
   menuHref?: string | null;
   menuPdfLabel?: string;
-  eyebrow?: string;
-  title?: string;
+  eyebrow: string;
+  title: string;
 }) {
   const hasOffers = offers.length > 0;
   if (!hasOffers && !menuHref) return null;
@@ -448,7 +439,7 @@ export function PremiumDarkMenuOffersSection({
                 color: "var(--button-text)",
               }}
             >
-              {menuPdfLabel ?? "Voir la carte complète"}
+              {menuPdfLabel ?? ""}
             </a>
           </div>
         ) : null}
@@ -459,16 +450,18 @@ export function PremiumDarkMenuOffersSection({
 
 export function PremiumDarkMasonryGallery({
   images,
-  eyebrow = "Galerie",
-  title = "L’expérience",
+  eyebrow,
+  title,
   instagramUrl,
   showInstagram = false,
+  instagramLinkLabel,
 }: {
   images: string[];
-  eyebrow?: string;
-  title?: string;
+  eyebrow: string;
+  title: string;
   instagramUrl?: string | null;
   showInstagram?: boolean;
+  instagramLinkLabel: string;
 }) {
   if (images.length === 0) return null;
 
@@ -496,7 +489,7 @@ export function PremiumDarkMasonryGallery({
               className="mt-6 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]"
               style={{ color: "var(--accent-color)" }}
             >
-              Instagram
+              {instagramLinkLabel}
               <ChevronRight className="h-4 w-4" />
             </a>
           ) : null}

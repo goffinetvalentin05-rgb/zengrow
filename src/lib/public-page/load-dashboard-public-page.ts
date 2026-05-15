@@ -1,6 +1,7 @@
 import { createClient } from "@/src/lib/supabase/server";
 import { getDefaultOpeningHours, type OpeningHours } from "@/src/lib/utils";
 import { buildPublicPageSettingsInitial } from "@/src/lib/public-page/build-initial";
+import { rowsToPageSectionBundle } from "@/src/lib/public-page/page-sections";
 import type { PublicPageSettingsInitial } from "@/src/components/dashboard/public-page/public-page-settings-panel";
 
 export type DashboardPublicPageData = {
@@ -127,6 +128,13 @@ export async function loadDashboardPublicPage(
     public_page_editor_config: null,
   };
 
+  const { data: sectionRows } = await supabase
+    .from("restaurant_page_sections")
+    .select("section_type, enabled, data")
+    .eq("restaurant_id", restaurantId);
+
+  const pageSectionsFromDb = rowsToPageSectionBundle(sectionRows ?? []);
+
   const initial = buildPublicPageSettingsInitial(
     {
       id: restaurant.id,
@@ -183,6 +191,7 @@ export async function loadDashboardPublicPage(
       fileUrl: d.file_url,
       position: d.position ?? 0,
     })),
+    pageSectionsFromDb,
   );
 
   return { publicLink, initial };

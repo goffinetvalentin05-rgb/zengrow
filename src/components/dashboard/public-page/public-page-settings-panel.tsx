@@ -70,7 +70,12 @@ import {
   computeConversionScore,
   conversionRecommendations,
 } from "@/src/lib/public-page/conversion";
+import {
+  pageSectionsOverlayForPersistence,
+  resolvePublicPageSectionContent,
+} from "@/src/lib/public-page/resolve-public-page-copy";
 import { newMenuOffer } from "@/src/lib/public-page/premium-content";
+import { syncRestaurantPageSections } from "@/src/lib/public-page/page-sections";
 import { PUBLIC_PAGE_FONT_LIBRARY, googleFontsHref } from "@/src/lib/public-page-fonts";
 import {
   MAX_DESCRIPTION_CHARS,
@@ -80,6 +85,7 @@ import {
   type PublicStylePreset,
 } from "@/src/lib/public-page/constants";
 import type { PageBlockId } from "@/src/lib/public-page/editor-config";
+import type { PageSectionContentV1 } from "@/src/lib/public-page/page-sections";
 
 /** Sections personnalisables (ordre d’édition : étapes contenu → …). */
 const PAGE_SECTIONS: { id: PageBlockId; label: string; description: string }[] = [
@@ -236,12 +242,16 @@ export type PublicPageSettingsInitial = {
   editorConfigRaw?: unknown;
   themeId: ThemeId;
   themeOverrides: ThemeColorOverrides;
+  /** Données brutes `restaurant_page_sections` (calque restaurant sur les défauts thème + gabarit). */
+  pageSectionsFromDb: PageSectionContentV1;
 };
 
 export type PublicPageSettingsHandle = {
   getRestaurantUpdate: () => Record<string, unknown>;
   getSettingsUpdate: () => Record<string, unknown>;
   getSlug: () => string;
+  /** Upsert minimal dans `restaurant_page_sections` (diff vs défauts thème + gabarit). */
+  syncPageSectionsToDatabase: () => Promise<{ ok: boolean; error?: string }>;
   publishPage: () => Promise<{ ok: boolean; error?: string }>;
 };
 
@@ -334,6 +344,11 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           noSlotsMessage: initial.noSlotsMessage,
           minLeadMinutes: initial.minBookingLeadMinutes,
         },
+        pageSections: resolvePublicPageSectionContent(
+          normalizeThemeId(initial.themeId),
+          base.conversion.structureTemplate,
+          initial.pageSectionsFromDb,
+        ),
       });
     });
     const [isPublishing, setIsPublishing] = useState(false);
@@ -394,6 +409,19 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
     const [themeId, setThemeId] = useState<ThemeId>(() => normalizeThemeId(initial.themeId));
     const [themeOverrides, setThemeOverrides] = useState<ThemeColorOverrides>(() => initial.themeOverrides ?? {});
+
+    useEffect(() => {
+      setEditorConfig((c) =>
+        parseEditorConfig({
+          ...c,
+          pageSections: resolvePublicPageSectionContent(
+            themeId,
+            c.conversion.structureTemplate,
+            initial.pageSectionsFromDb,
+          ),
+        }),
+      );
+    }, [themeId, initial.pageSectionsFromDb, editorConfig.conversion.structureTemplate]);
 
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
@@ -801,6 +829,18 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       minBookingLeadMinutes,
     ]);
 
+    const syncPageSectionsToDatabase = useCallback(async () => {
+      const merged = buildMergedConfig();
+      const overlay = pageSectionsOverlayForPersistence(
+        merged.pageSections ?? {},
+        themeId,
+        merged.conversion.structureTemplate,
+      );
+      const { error } = await syncRestaurantPageSections(supabase, initial.restaurantId, overlay);
+      if (error) return { ok: false as const, error };
+      return { ok: true as const };
+    }, [buildMergedConfig, themeId, supabase, initial.restaurantId]);
+
     const previewDraft = useMemo((): ExtendedPreviewDraft => {
       const merged = buildMergedConfig();
       const draft = editorConfigToPreviewDraft(merged, editorCtx);
@@ -914,6 +954,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const getSettingsUpdate = useCallback(
       () => {
         const mergedEditor = buildMergedConfig();
+        const { pageSections: _omitPageSections, ...editorForJson } = mergedEditor;
         const a = editorConfig.appearance;
         // Conversion preset radius -> legacy enum stocké en BDD.
         const legacyRadius =
@@ -951,7 +992,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           button_style: a.buttonStyle,
           card_style: a.cardStyle,
           border_radius: legacyRadius,
-          public_page_editor_config: mergedEditor,
+          public_page_editor_config: editorForJson,
         };
       },
       [
@@ -1001,12 +1042,15 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
       if (settingsError) return { ok: false, error: settingsError.message };
 
+      const sectionsSync = await syncPageSectionsToDatabase();
+      if (!sectionsSync.ok) return { ok: false, error: sectionsSync.error };
+
       setPageStatus("published");
       setPublishedAt(now);
       setHasUnpublishedChanges(false);
       onMessage?.("Page publiée.");
       return { ok: true };
-    }, [supabase, getRestaurantUpdate, getSettingsUpdate, initial.restaurantId, onMessage]);
+    }, [supabase, getRestaurantUpdate, getSettingsUpdate, initial.restaurantId, onMessage, syncPageSectionsToDatabase]);
 
     useImperativeHandle(
       ref,
@@ -1014,9 +1058,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         getRestaurantUpdate,
         getSettingsUpdate,
         getSlug: () => effectiveSlug,
+        syncPageSectionsToDatabase,
         publishPage,
       }),
-      [getRestaurantUpdate, getSettingsUpdate, effectiveSlug, publishPage],
+      [getRestaurantUpdate, getSettingsUpdate, effectiveSlug, syncPageSectionsToDatabase, publishPage],
     );
 
     const statusLabel =

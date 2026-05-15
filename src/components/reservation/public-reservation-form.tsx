@@ -33,10 +33,11 @@ import {
 } from "@/src/lib/public-page/conversion";
 import { openStatusLabel } from "@/src/lib/public-page/opening-status";
 import {
-  hasCredibilityContent,
-  visibleEditorialSections,
-  visibleMenuOffers,
-} from "@/src/lib/public-page/premium-content";
+  buildPublicNavLinks,
+  type PageSectionContentV1,
+} from "@/src/lib/public-page/page-sections";
+import { resolvePublicPageSectionContent } from "@/src/lib/public-page/resolve-public-page-copy";
+import { hasCredibilityContent, visibleEditorialSections, visibleMenuOffers } from "@/src/lib/public-page/premium-content";
 import {
   ConceptSection,
   CredibilitySection,
@@ -117,6 +118,8 @@ export type PublicReservationFormProps = {
   heroBadgeText?: string;
   heroLayout?: "left" | "center" | "overlay" | "split";
   heroAlign?: "left" | "center" | "right";
+  /** Contenu éditorial des sections (résolu serveur ou issu de l’éditeur). */
+  sectionContent?: PageSectionContentV1;
   editorConfig?: PublicPageEditorConfig;
   fontSizeScale: "small" | "medium" | "large";
   borderRadius: "sharp" | "rounded" | "pill";
@@ -292,6 +295,7 @@ export default function PublicReservationForm({
   visualThemeId = "default",
   themeCssVarOverrides,
   showGrainOverlay = false,
+  sectionContent,
 }: PublicReservationFormProps) {
   const todayDate = useMemo(() => localYmd(new Date()), []);
   const maxDateStr = useMemo(() => {
@@ -965,6 +969,18 @@ export default function PublicReservationForm({
   const blockEnabled = (id: PageBlockId) =>
     effectiveConfig.blocks[id]?.enabled !== false;
 
+  const resolvedSectionContent = useMemo(
+    () =>
+      sectionContent ??
+      resolvePublicPageSectionContent(visualThemeId, effectiveConfig.conversion.structureTemplate, {}),
+    [sectionContent, visualThemeId, effectiveConfig.conversion.structureTemplate],
+  );
+
+  const navLinksPublic = useMemo(
+    () => buildPublicNavLinks(resolvedSectionContent.navigation, blockEnabled("gift_vouchers")),
+    [resolvedSectionContent.navigation, effectiveConfig.blocks.gift_vouchers?.enabled],
+  );
+
   const sectionOrder = resolveEffectiveSectionOrder(effectiveConfig);
   const sectionOrderIndex = (id: PageBlockId) => {
     const i = sectionOrder.indexOf(id);
@@ -1002,6 +1018,18 @@ export default function PublicReservationForm({
     secondaryCtaLabel?.trim() || effectiveConfig.hero.secondaryCta || "Voir le menu";
   const menuOffers = visibleMenuOffers(premium.menuOffers);
 
+  const menuPdfLinkLabel = useMemo(() => {
+    const docLabel = sortedDocuments[0]?.label?.trim();
+    if (docLabel) return docLabel;
+    const secondary = secondaryLabel?.trim();
+    if (secondary) return secondary;
+    return resolvedSectionContent.menu_offers?.pdfButtonLabel?.trim() ?? "";
+  }, [
+    sortedDocuments,
+    secondaryLabel,
+    resolvedSectionContent.menu_offers?.pdfButtonLabel,
+  ]);
+
   const dateBtnRadius = usePremiumChrome ? "rounded-full" : "rounded-[var(--radius)]";
 
   return (
@@ -1029,7 +1057,7 @@ export default function PublicReservationForm({
             onReserve={scrollToReservation}
             visible={premium.navigationEnabled}
             previewMode={previewMode}
-            showGiftVouchers={blockEnabled("gift_vouchers")}
+            navLinks={navLinksPublic}
           />
           <PremiumDarkHero
             badgeText={effectiveConfig.hero.badgeText?.trim() || heroBadgeText?.trim() || undefined}
@@ -1046,6 +1074,8 @@ export default function PublicReservationForm({
             onReserve={scrollToReservation}
             ctaStyle={ctaStyle}
             previewMode={previewMode}
+            scriptLineFallback={resolvedSectionContent.hero?.scriptLineFallback ?? ""}
+            scrollHintLabel={resolvedSectionContent.hero?.scrollHintLabel ?? ""}
           />
         </>
       ) : (
@@ -1056,7 +1086,7 @@ export default function PublicReservationForm({
             onReserve={scrollToReservation}
             visible={premium.navigationEnabled}
             previewMode={previewMode}
-            showGiftVouchers={blockEnabled("gift_vouchers")}
+            navLinks={navLinksPublic}
           />
 
           <PremiumHero
@@ -1079,6 +1109,8 @@ export default function PublicReservationForm({
             heroLayout={heroLayout}
             heroHeight={effectiveHeroHeight}
             previewMode={previewMode}
+            discoverConceptLabel={resolvedSectionContent.hero?.discoverConceptLabel ?? ""}
+            scrollHintLabel={resolvedSectionContent.hero?.scrollHintLabel ?? ""}
           />
         </>
       )}
@@ -1100,7 +1132,10 @@ export default function PublicReservationForm({
 
         {blockEnabled("highlights") && activeHighlights.length > 0 ? (
           <div style={{ order: sectionOrderIndex("highlights") }}>
-            <HighlightsBand items={activeHighlights} />
+            <HighlightsBand
+              items={activeHighlights}
+              eyebrow={resolvedSectionContent.highlights?.eyebrow}
+            />
           </div>
         ) : null}
 
@@ -1111,7 +1146,8 @@ export default function PublicReservationForm({
               body={conceptBody}
               imageUrl={conceptImage || undefined}
               pillars={premium.concept.pillars}
-              eyebrow={effectiveConfig.conversion.structureTemplate === "event_venue" ? "Notre maison" : "Le concept"}
+              eyebrow={resolvedSectionContent.concept?.eyebrow ?? ""}
+              imageStampLabel={resolvedSectionContent.concept?.imageStampLabel ?? ""}
               layout={
                 effectiveConfig.conversion.structureTemplate === "modern_brasserie" ||
                 effectiveConfig.conversion.structureTemplate === "minimal_conversion"
@@ -1121,19 +1157,8 @@ export default function PublicReservationForm({
                     : "image-right"
               }
             />
-            {visibleEditorialSections(premium.editorialSections).map((section, idx) => (
-              <EditorialBlock
-                key={section.id}
-                section={section}
-                previewMode={previewMode}
-                eyebrow={
-                  idx === 0
-                    ? "Notre histoire"
-                    : idx === 1
-                      ? "Notre cuisine"
-                      : "L'expérience"
-                }
-              />
+            {visibleEditorialSections(premium.editorialSections).map((section) => (
+              <EditorialBlock key={section.id} section={section} previewMode={previewMode} />
             ))}
           </div>
         ) : null}
@@ -1162,14 +1187,14 @@ export default function PublicReservationForm({
                       className="text-[10px] font-semibold uppercase tracking-[0.34em]"
                       style={{ color: "var(--accent-color)" }}
                     >
-                      Documents
+                      {resolvedSectionContent.menu_documents?.eyebrow ?? ""}
                     </p>
                   </div>
                   <h2
                     className="mt-5 text-[clamp(1.75rem,3.5vw,2.75rem)] font-medium leading-[1.05]"
                     style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)", letterSpacing: "-0.018em" }}
                   >
-                    Cartes & menus
+                    {resolvedSectionContent.menu_documents?.title ?? ""}
                   </h2>
                 </div>
               </div>
@@ -1186,7 +1211,7 @@ export default function PublicReservationForm({
                         className="text-[11px] font-semibold uppercase tracking-[0.26em] opacity-60"
                         style={{ color: "var(--accent-color)" }}
                       >
-                        Voir
+                        {resolvedSectionContent.menu_documents?.linkPrefix ?? ""}
                       </span>
                       <span
                         className="mt-1 text-base font-medium leading-snug sm:mt-0 sm:text-[1.05rem]"
@@ -1198,7 +1223,7 @@ export default function PublicReservationForm({
                         className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-0 transition group-hover:opacity-100 sm:ml-auto sm:mt-0 sm:pl-4"
                         style={{ color: "var(--accent-color)" }}
                       >
-                        Ouvrir →
+                        {resolvedSectionContent.menu_documents?.linkOpen ?? ""}
                       </span>
                     </a>
                   </li>
@@ -1216,6 +1241,8 @@ export default function PublicReservationForm({
           groupMessage={premium.reservation.groupMessage}
           showPhoneAlt={showPhoneCta && showPhoneRow}
           phone={restaurantPhone}
+          eyebrow={resolvedSectionContent.reservation_shell?.eyebrow ?? ""}
+          phonePreferLabel={resolvedSectionContent.reservation_shell?.phonePreferLabel ?? ""}
         >
             {showHoursBeforeForm && showHoursRow ? (
               <div
@@ -1898,41 +1925,17 @@ export default function PublicReservationForm({
               <PremiumDarkMenuOffersSection
                 offers={menuOffers}
                 menuHref={menuHref}
-                menuPdfLabel={sortedDocuments[0]?.label ?? secondaryLabel}
-                eyebrow={
-                  effectiveConfig.conversion.structureTemplate === "event_venue"
-                    ? "Formules & menus"
-                    : effectiveConfig.conversion.structureTemplate === "modern_brasserie"
-                      ? "À la carte"
-                      : "Carte & offres"
-                }
-                title={
-                  effectiveConfig.conversion.structureTemplate === "event_venue"
-                    ? "Nos formules"
-                    : effectiveConfig.conversion.structureTemplate === "minimal_conversion"
-                      ? "Le menu"
-                      : "Notre menu"
-                }
+                menuPdfLabel={menuPdfLinkLabel}
+                eyebrow={resolvedSectionContent.menu_offers?.eyebrow ?? ""}
+                title={resolvedSectionContent.menu_offers?.title ?? ""}
               />
             ) : (
             <MenuOffersSection
               offers={menuOffers}
               menuHref={menuHref}
-              menuPdfLabel={sortedDocuments[0]?.label ?? secondaryLabel}
-              eyebrow={
-                effectiveConfig.conversion.structureTemplate === "event_venue"
-                  ? "Formules & menus"
-                  : effectiveConfig.conversion.structureTemplate === "modern_brasserie"
-                    ? "À la carte"
-                    : "Carte & offres"
-              }
-              title={
-                effectiveConfig.conversion.structureTemplate === "event_venue"
-                  ? "Nos formules"
-                  : effectiveConfig.conversion.structureTemplate === "minimal_conversion"
-                    ? "Le menu"
-                    : "Notre menu"
-              }
+              menuPdfLabel={menuPdfLinkLabel}
+              eyebrow={resolvedSectionContent.menu_offers?.eyebrow ?? ""}
+              title={resolvedSectionContent.menu_offers?.title ?? ""}
             />
             )}
           </div>
@@ -1940,7 +1943,15 @@ export default function PublicReservationForm({
 
         {showCredibility ? (
           <div style={{ order: sectionOrderIndex("reviews") }}>
-            <CredibilitySection data={credibilityData} />
+            <CredibilitySection
+              data={credibilityData}
+              copy={{
+                googleReviewsSuffix: resolvedSectionContent.reviews?.googleReviewsSuffix ?? "",
+                googleCtaLabel: resolvedSectionContent.reviews?.googleCtaLabel ?? "",
+                pressHeading: resolvedSectionContent.reviews?.pressHeading ?? "",
+                tripAdvisorLabel: resolvedSectionContent.reviews?.tripAdvisorLabel ?? "",
+              }}
+            />
           </div>
         ) : null}
 
@@ -1949,18 +1960,11 @@ export default function PublicReservationForm({
             {usePremiumChrome ? (
               <PremiumDarkMasonryGallery
                 images={galleryImageUrls}
-                eyebrow={
-                  effectiveConfig.conversion.structureTemplate === "premium_experience"
-                    ? "Galerie"
-                    : effectiveConfig.conversion.structureTemplate === "warm_restaurant"
-                      ? "Ambiance"
-                      : effectiveConfig.conversion.structureTemplate === "event_venue"
-                        ? "Nos espaces"
-                        : "En images"
-                }
-                title="L’expérience"
+                eyebrow={resolvedSectionContent.gallery?.eyebrow ?? ""}
+                title={resolvedSectionContent.gallery?.title ?? ""}
                 instagramUrl={instagramUrl}
                 showInstagram={showInstagram}
+                instagramLinkLabel={resolvedSectionContent.gallery?.instagramLinkLabel ?? ""}
               />
             ) : (
             <PremiumGallery
@@ -1968,15 +1972,13 @@ export default function PublicReservationForm({
               style={premium.gallery.style}
               instagramUrl={instagramUrl}
               showInstagram={showInstagram}
-              eyebrow={
-                effectiveConfig.conversion.structureTemplate === "premium_experience"
-                  ? "Galerie"
-                  : effectiveConfig.conversion.structureTemplate === "warm_restaurant"
-                    ? "Ambiance"
-                    : effectiveConfig.conversion.structureTemplate === "event_venue"
-                      ? "Nos espaces"
-                      : "En images"
+              eyebrow={resolvedSectionContent.gallery?.eyebrow ?? ""}
+              title={
+                showInstagram
+                  ? (resolvedSectionContent.gallery?.titleIfInstagram ?? "")
+                  : (resolvedSectionContent.gallery?.titleIfNoInstagram ?? "")
               }
+              instagramLinkLabel={resolvedSectionContent.gallery?.instagramLinkLabel ?? ""}
             />
             )}
           </div>
@@ -1986,6 +1988,18 @@ export default function PublicReservationForm({
           <div style={{ order: sectionOrderIndex("gift_vouchers") }}>
             <GiftVouchersSection
               content={premium.giftVouchers}
+              surfaceCopy={{
+                surfaceEyebrow: resolvedSectionContent.gift_vouchers?.surfaceEyebrow ?? "",
+                modalEyebrow: resolvedSectionContent.gift_vouchers?.modalEyebrow ?? "",
+                modalTitle: resolvedSectionContent.gift_vouchers?.modalTitle ?? "",
+                submitLabel: resolvedSectionContent.gift_vouchers?.submitLabel ?? "",
+                submittingLabel: resolvedSectionContent.gift_vouchers?.submittingLabel ?? "",
+                successTitle: resolvedSectionContent.gift_vouchers?.successTitle ?? "",
+                successBody: resolvedSectionContent.gift_vouchers?.successBody ?? "",
+                fallbackTitle: resolvedSectionContent.gift_vouchers?.fallbackTitle ?? "",
+                fallbackBody: resolvedSectionContent.gift_vouchers?.fallbackBody ?? "",
+                fallbackCta: resolvedSectionContent.gift_vouchers?.fallbackCta ?? "",
+              }}
               restaurantSlug={restaurantSlug}
               previewMode={previewMode}
               surface={pageTheme.section("gift_vouchers")}
@@ -1996,6 +2010,7 @@ export default function PublicReservationForm({
         {blockEnabled("final_cta") && reservationEnabled && conversionCta.showFinal ? (
           <div style={{ order: sectionOrderIndex("final_cta") }}>
             <PremiumFinalCta
+              eyebrow={resolvedSectionContent.final_cta?.eyebrow ?? ""}
               title={effectiveConfig.blockContent.finalCta.title}
               subtitle={effectiveConfig.blockContent.finalCta.subtitle}
               buttonLabel={effectiveConfig.blockContent.finalCta.button || ctaLabel}
@@ -2024,6 +2039,16 @@ export default function PublicReservationForm({
             parking={premium.practical.parking}
             accessibility={premium.practical.accessibility}
             showMaps={showMapsRow}
+            copy={{
+              eyebrow: resolvedSectionContent.practical?.eyebrow ?? "",
+              title: resolvedSectionContent.practical?.title ?? "",
+              labelAddress: resolvedSectionContent.practical?.labelAddress ?? "",
+              labelPhone: resolvedSectionContent.practical?.labelPhone ?? "",
+              labelHours: resolvedSectionContent.practical?.labelHours ?? "",
+              labelParking: resolvedSectionContent.practical?.labelParking ?? "",
+              labelAccessibility: resolvedSectionContent.practical?.labelAccessibility ?? "",
+              directionsLabel: resolvedSectionContent.practical?.directionsLabel ?? "",
+            }}
           />
           {(showInstagram || showFacebook) && blockEnabled("social") ? (
             <div className="py-10">

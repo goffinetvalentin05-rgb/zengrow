@@ -159,6 +159,7 @@ export default function PublicPagePreviewStudio({
       visualThemeId={draft.visualThemeId ?? "default"}
       themeCssVarOverrides={draft.themeCssVarOverrides}
       showGrainOverlay={draft.showGrainOverlay ?? false}
+      sectionContent={draft.editorConfig?.pageSections}
     />
   );
 

@@ -2,6 +2,7 @@ export type EditorialLayout = "image-left" | "image-right" | "full-bleed";
 export type GalleryStyle = "grid" | "showcase" | "instagram";
 
 export type ConceptPillar = {
+  id: string;
   title: string;
   text: string;
 };
@@ -9,6 +10,8 @@ export type ConceptPillar = {
 export type EditorialSectionContent = {
   id: string;
   enabled: boolean;
+  /** Surcouche éditoriale ; si vide, aucune ligne « eyebrow » n’est affichée. */
+  eyebrow: string;
   title: string;
   text: string;
   imageUrl: string;
@@ -74,9 +77,21 @@ export function defaultPremiumContent(): PremiumPageContent {
       body: "",
       imageUrl: "",
       pillars: [
-        { title: "Une cuisine maison", text: "Des produits sélectionnés et une carte qui évolue au fil des saisons." },
-        { title: "Une ambiance conviviale", text: "Un lieu pensé pour vos dîners en famille, entre amis ou en affaires." },
-        { title: "Une réservation simple", text: "Réservez votre table en ligne en quelques secondes." },
+        {
+          id: "pillar-1",
+          title: "Une cuisine maison",
+          text: "Des produits sélectionnés et une carte qui évolue au fil des saisons.",
+        },
+        {
+          id: "pillar-2",
+          title: "Une ambiance conviviale",
+          text: "Un lieu pensé pour vos dîners en famille, entre amis ou en affaires.",
+        },
+        {
+          id: "pillar-3",
+          title: "Une réservation simple",
+          text: "Réservez votre table en ligne en quelques secondes.",
+        },
       ],
     },
     editorialSections: [],
@@ -108,15 +123,23 @@ function normalizePillars(raw: unknown): ConceptPillar[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((x) => x && typeof x === "object")
-    .map((x) => {
+    .map((x, i) => {
       const o = x as Partial<ConceptPillar>;
-      return {
-        title: typeof o.title === "string" ? o.title.slice(0, 80) : "",
-        text: typeof o.text === "string" ? o.text.slice(0, 280) : "",
-      };
+      const title = typeof o.title === "string" ? o.title.slice(0, 80) : "";
+      const text =
+        typeof o.text === "string"
+          ? o.text.slice(0, 280)
+          : typeof (o as { description?: string }).description === "string"
+            ? (o as { description: string }).description.slice(0, 280)
+            : "";
+      const id =
+        typeof o.id === "string" && o.id.trim()
+          ? o.id.trim().slice(0, 64)
+          : `pillar-${i + 1}`;
+      return { id, title, text };
     })
     .filter((p) => p.title.trim() || p.text.trim())
-    .slice(0, 4);
+    .slice(0, 6);
 }
 
 function normalizeEditorial(raw: unknown): EditorialSectionContent[] {
@@ -130,6 +153,7 @@ function normalizeEditorial(raw: unknown): EditorialSectionContent[] {
       return {
         id: typeof o.id === "string" ? o.id : `ed-${i}`,
         enabled: o.enabled !== false,
+        eyebrow: typeof o.eyebrow === "string" ? o.eyebrow.slice(0, 80) : "",
         title: typeof o.title === "string" ? o.title.slice(0, 120) : "",
         text: typeof o.text === "string" ? o.text.slice(0, 1200) : "",
         imageUrl: typeof o.imageUrl === "string" ? o.imageUrl : "",
@@ -215,9 +239,10 @@ export function normalizePremiumContent(raw: unknown): PremiumPageContent {
       title: typeof conceptRaw?.title === "string" ? conceptRaw.title.slice(0, 120) : base.concept.title,
       body: typeof conceptRaw?.body === "string" ? conceptRaw.body.slice(0, 2000) : "",
       imageUrl: typeof conceptRaw?.imageUrl === "string" ? conceptRaw.imageUrl : "",
-      pillars: normalizePillars(conceptRaw?.pillars).length
-        ? normalizePillars(conceptRaw?.pillars)
-        : base.concept.pillars,
+      pillars: (() => {
+        const pillars = normalizePillars(conceptRaw?.pillars);
+        return pillars.length ? pillars : base.concept.pillars;
+      })(),
     },
     editorialSections: normalizeEditorial(o.editorialSections),
     menuOffers: normalizeOffers(o.menuOffers),
@@ -258,6 +283,7 @@ export function newEditorialSection(): EditorialSectionContent {
   return {
     id: `ed-${Date.now()}`,
     enabled: true,
+    eyebrow: "",
     title: "",
     text: "",
     imageUrl: "",

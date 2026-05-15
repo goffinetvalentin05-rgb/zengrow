@@ -15,17 +15,14 @@ import type {
   MenuOfferItem,
 } from "@/src/lib/public-page/premium-content";
 import { hasCredibilityContent } from "@/src/lib/public-page/premium-content";
+import type {
+  GiftVouchersSectionCopy,
+  NavLinkContent,
+  PracticalSectionCopy,
+  ReviewsSectionCopy,
+} from "@/src/lib/public-page/page-sections";
 
 type CtaStyle = { className: string; style?: React.CSSProperties };
-
-const NAV_ITEMS = [
-  { id: "accueil", label: "Accueil" },
-  { id: "concept", label: "Concept" },
-  { id: "menu", label: "Menu" },
-  { id: "reservation", label: "Réserver" },
-  { id: "infos", label: "Infos pratiques" },
-  { id: "contact", label: "Contact" },
-] as const;
 
 function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -39,21 +36,16 @@ export function PublicPageNav({
   onReserve,
   visible,
   previewMode = false,
-  showGiftVouchers = false,
+  navLinks,
 }: {
   restaurantName: string;
   ctaLabel: string;
   onReserve: () => void;
   visible: boolean;
   previewMode?: boolean;
-  showGiftVouchers?: boolean;
+  navLinks: NavLinkContent[];
 }) {
   const [open, setOpen] = useState(false);
-
-  const navLinks = useMemo(() => {
-    const gift = showGiftVouchers ? ([{ id: "bons-cadeaux", label: "Cadeaux" }] as const) : [];
-    return [...NAV_ITEMS.slice(0, 4), ...gift, ...NAV_ITEMS.slice(4)] as { id: string; label: string }[];
-  }, [showGiftVouchers]);
 
   useEffect(() => {
     if (!open) return;
@@ -89,9 +81,9 @@ export function PublicPageNav({
           <nav className="hidden max-w-[52%] items-center gap-3 lg:flex lg:gap-4 xl:max-w-none" aria-label="Navigation principale">
             {navLinks.map((item) => (
               <button
-                key={item.id}
+                key={item.anchorId}
                 type="button"
-                onClick={() => scrollToId(item.id)}
+                onClick={() => scrollToId(item.anchorId)}
                 className="shrink-0 text-[10px] font-medium uppercase tracking-[0.12em] text-white/85 transition hover:text-white xl:text-[11px] xl:tracking-[0.16em]"
               >
                 {item.label}
@@ -139,13 +131,13 @@ export function PublicPageNav({
             <nav className="mt-8 flex flex-col gap-4">
               {navLinks.map((item) => (
                 <button
-                  key={item.id}
+                  key={item.anchorId}
                   type="button"
                   className="text-left text-lg font-medium"
                   style={{ color: "var(--heading-color)", fontFamily: "var(--heading-font)" }}
                   onClick={() => {
                     setOpen(false);
-                    scrollToId(item.id);
+                    scrollToId(item.anchorId);
                   }}
                 >
                   {item.label}
@@ -202,6 +194,7 @@ function HeroContentInner({
   ctaStyle,
   textTheme,
   align,
+  discoverConceptLabel,
 }: {
   badgeText?: string | null;
   logoUrl?: string | null;
@@ -218,6 +211,7 @@ function HeroContentInner({
   ctaStyle: CtaStyle;
   textTheme: "onImage" | "onSurface";
   align: "left" | "center";
+  discoverConceptLabel: string;
 }) {
   const isCenter = align === "center";
   const subtle = textTheme === "onImage" ? "text-white/65" : "opacity-60";
@@ -398,7 +392,7 @@ function HeroContentInner({
             )}
             style={textTheme === "onSurface" ? { color: "var(--heading-color)" } : undefined}
           >
-            <span className="border-b border-current pb-1">Découvrir le concept</span>
+            <span className="border-b border-current pb-1">{discoverConceptLabel}</span>
             <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
           </button>
         )}
@@ -427,6 +421,8 @@ export function PremiumHero({
   heroLayout = "overlay",
   heroHeight = "normal",
   previewMode = false,
+  discoverConceptLabel,
+  scrollHintLabel,
 }: {
   badgeText?: string | null;
   coverImageUrl?: string | null;
@@ -447,6 +443,8 @@ export function PremiumHero({
   heroLayout?: HeroLayoutVariant;
   heroHeight?: "compact" | "normal" | "tall";
   previewMode?: boolean;
+  discoverConceptLabel: string;
+  scrollHintLabel: string;
 }) {
   const minH = premiumHeroMinHeight(heroHeight, previewMode);
   const isCenter = heroAlign === "center" || heroLayout === "center";
@@ -482,6 +480,7 @@ export function PremiumHero({
                 ctaStyle={ctaStyle}
                 textTheme="onSurface"
                 align="left"
+                discoverConceptLabel={discoverConceptLabel}
               />
             </div>
           </div>
@@ -564,6 +563,7 @@ export function PremiumHero({
             ctaStyle={ctaStyle}
             textTheme="onImage"
             align="center"
+            discoverConceptLabel={discoverConceptLabel}
           />
         </div>
       </section>
@@ -643,6 +643,7 @@ export function PremiumHero({
           ctaStyle={ctaStyle}
           textTheme="onImage"
           align={align}
+          discoverConceptLabel={discoverConceptLabel}
         />
       </div>
 
@@ -655,7 +656,7 @@ export function PremiumHero({
           className="absolute bottom-6 left-1/2 z-[2] -translate-x-1/2 text-white/70 transition hover:text-white"
         >
           <span className="flex flex-col items-center gap-1.5">
-            <span className="text-[9px] font-semibold uppercase tracking-[0.32em]">Scroll</span>
+            <span className="text-[9px] font-semibold uppercase tracking-[0.32em]">{scrollHintLabel}</span>
             <span className="block h-8 w-px bg-current" aria-hidden />
           </span>
         </button>
@@ -669,14 +670,17 @@ export function ConceptSection({
   body,
   imageUrl,
   pillars,
-  eyebrow = "Le concept",
+  eyebrow,
+  imageStampLabel,
   layout = "image-right",
 }: {
   title: string;
   body: string;
   imageUrl?: string;
   pillars: ConceptPillar[];
-  eyebrow?: string;
+  eyebrow: string;
+  /** Vide = ne pas afficher le cachet sous l’image. */
+  imageStampLabel: string;
   layout?: "image-right" | "image-left" | "stacked";
 }) {
   if (!body.trim() && !imageUrl && pillars.every((p) => !p.title.trim())) return null;
@@ -716,7 +720,7 @@ export function ConceptSection({
                 sizes="(max-width:1024px) 100vw, 50vw"
                 unoptimized
               />
-              {/* Cachet d'or signature en bas d'image */}
+              {imageStampLabel.trim() ? (
               <div
                 className="pointer-events-none absolute inset-x-6 bottom-6 hidden items-center gap-3 lg:flex"
                 aria-hidden
@@ -727,10 +731,8 @@ export function ConceptSection({
                     backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
                   }}
                 />
-                <span
-                  className="text-[10px] font-medium uppercase tracking-[0.32em] text-white/85"
-                >
-                  Maison
+                <span className="text-[10px] font-medium uppercase tracking-[0.32em] text-white/85">
+                  {imageStampLabel.trim()}
                 </span>
                 <span
                   className="h-px flex-1"
@@ -739,10 +741,12 @@ export function ConceptSection({
                   }}
                 />
               </div>
+              ) : null}
             </div>
           ) : null}
 
           <div className={cn(!stacked && (imageOnRight ? "lg:order-1" : "lg:order-2"))}>
+            {eyebrow.trim() ? (
             <div
               className={cn("flex items-center gap-3", stacked && "justify-center")}
             >
@@ -760,8 +764,12 @@ export function ConceptSection({
                 {eyebrow}
               </p>
             </div>
+            ) : null}
             <h2
-              className="mt-5 text-4xl font-medium leading-[1.05] sm:text-5xl lg:text-[3.25rem]"
+              className={cn(
+                "text-4xl font-medium leading-[1.05] sm:text-5xl lg:text-[3.25rem]",
+                eyebrow.trim() ? "mt-5" : "mt-0",
+              )}
               style={{
                 fontFamily: "var(--heading-font)",
                 color: "var(--heading-color)",
@@ -807,7 +815,7 @@ export function ConceptSection({
             )}
           >
             {pillars.map((p, i) => (
-              <article key={`${p.title}-${i}`} className="flex flex-col gap-3">
+              <article key={p.id} className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <span
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
@@ -846,13 +854,12 @@ export function ConceptSection({
 export function EditorialBlock({
   section,
   previewMode = false,
-  eyebrow,
 }: {
   section: EditorialSectionContent;
   previewMode?: boolean;
-  eyebrow?: string;
 }) {
   if (!section.enabled) return null;
+  const eyebrow = section.eyebrow.trim();
   const hasImage = Boolean(section.imageUrl.trim());
   const isFull = section.layout === "full-bleed" && hasImage;
 
@@ -960,14 +967,14 @@ export function MenuOffersSection({
   offers,
   menuHref,
   menuPdfLabel,
-  eyebrow = "Carte & offres",
-  title = "Notre menu",
+  eyebrow,
+  title,
 }: {
   offers: MenuOfferItem[];
   menuHref?: string | null;
   menuPdfLabel?: string;
-  eyebrow?: string;
-  title?: string;
+  eyebrow: string;
+  title: string;
 }) {
   const hasOffers = offers.length > 0;
   if (!hasOffers && !menuHref) return null;
@@ -1203,7 +1210,7 @@ export function MenuOffersSection({
                     color: "var(--accent-color)",
                   }}
                 >
-                  {menuPdfLabel ?? "Voir la carte complète"}
+                  {menuPdfLabel ?? ""}
                   <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
                 </a>
               </div>
@@ -1215,7 +1222,13 @@ export function MenuOffersSection({
   );
 }
 
-export function CredibilitySection({ data }: { data: CredibilityContent }) {
+export function CredibilitySection({
+  data,
+  copy,
+}: {
+  data: CredibilityContent;
+  copy: ReviewsSectionCopy;
+}) {
   if (!hasCredibilityContent(data)) return null;
 
   return (
@@ -1240,7 +1253,7 @@ export function CredibilitySection({ data }: { data: CredibilityContent }) {
               </div>
             </div>
             <p className="text-sm opacity-80" style={{ color: "var(--body-text)" }}>
-              {data.reviewCount} avis Google
+              {data.reviewCount} {copy.googleReviewsSuffix}
             </p>
             {data.googleReviewsUrl ? (
               <a
@@ -1250,7 +1263,7 @@ export function CredibilitySection({ data }: { data: CredibilityContent }) {
                 className="text-sm font-semibold underline-offset-4 hover:underline"
                 style={{ color: "var(--accent-color)" }}
               >
-                Voir les avis
+                {copy.googleCtaLabel}
               </a>
             ) : null}
           </div>
@@ -1271,7 +1284,7 @@ export function CredibilitySection({ data }: { data: CredibilityContent }) {
 
         {data.pressMentions.length > 0 ? (
           <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-            <span className="text-[10px] font-medium uppercase tracking-[0.25em] opacity-50">On parle de nous</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.25em] opacity-50">{copy.pressHeading}</span>
             {data.pressMentions.map((m) => (
               <span key={m} className="text-sm font-semibold uppercase tracking-wider opacity-80" style={{ color: "var(--heading-color)" }}>
                 {m}
@@ -1290,7 +1303,7 @@ export function CredibilitySection({ data }: { data: CredibilityContent }) {
                 className="text-xs font-semibold uppercase tracking-wider underline-offset-4 hover:underline"
                 style={{ color: "var(--accent-color)" }}
               >
-                TripAdvisor
+                {copy.tripAdvisorLabel}
               </a>
             ) : null}
           </div>
@@ -1305,16 +1318,19 @@ export function PremiumGallery({
   style,
   instagramUrl,
   showInstagram,
-  eyebrow = "Galerie",
+  eyebrow,
+  title,
+  instagramLinkLabel,
 }: {
   images: string[];
   style: GalleryStyle;
   instagramUrl?: string | null;
   showInstagram?: boolean;
-  eyebrow?: string;
+  eyebrow: string;
+  title: string;
+  instagramLinkLabel: string;
 }) {
   if (images.length === 0) return null;
-  const title = showInstagram && instagramUrl ? "L'ambiance en images" : "Le lieu en images";
 
   /* === STYLE SHOWCASE : 1 grande photo + mosaïque secondaire (premium) === */
   if (style === "showcase" && images.length >= 2) {
@@ -1358,7 +1374,7 @@ export function PremiumGallery({
                 className="group inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] transition"
                 style={{ color: "var(--accent-color)" }}
               >
-                <span className="border-b border-current pb-1">Suivre sur Instagram</span>
+                <span className="border-b border-current pb-1">{instagramLinkLabel}</span>
                 <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
               </a>
             ) : null}
@@ -1441,7 +1457,7 @@ export function PremiumGallery({
                 className="mt-3 inline-block text-sm font-semibold uppercase tracking-[0.2em]"
                 style={{ color: "var(--accent-color)" }}
               >
-                @ Instagram
+                {instagramLinkLabel}
               </a>
             ) : null}
           </div>
@@ -1521,6 +1537,7 @@ export function PremiumGallery({
 }
 
 export function PremiumFinalCta({
+  eyebrow,
   title,
   subtitle,
   buttonLabel,
@@ -1529,6 +1546,7 @@ export function PremiumFinalCta({
   onReserve,
   ctaStyle,
 }: {
+  eyebrow: string;
   title: string;
   subtitle: string;
   buttonLabel: string;
@@ -1569,7 +1587,7 @@ export function PremiumFinalCta({
             className="text-[10px] font-semibold uppercase tracking-[0.32em]"
             style={{ color: "var(--accent-color)" }}
           >
-            Réservation
+            {eyebrow}
           </p>
           <span
             className="h-px w-10"
@@ -1635,6 +1653,7 @@ export function PremiumPracticalInfo({
   parking,
   accessibility,
   showMaps,
+  copy,
 }: {
   address?: string | null;
   phone?: string | null;
@@ -1643,6 +1662,7 @@ export function PremiumPracticalInfo({
   parking?: string;
   accessibility?: string;
   showMaps?: boolean;
+  copy: PracticalSectionCopy;
 }) {
   return (
     <section
@@ -1666,7 +1686,7 @@ export function PremiumPracticalInfo({
               className="text-[10px] font-semibold uppercase tracking-[0.32em]"
               style={{ color: "var(--accent-color)" }}
             >
-              Venir nous voir
+              {copy.eyebrow}
             </p>
           </div>
           <h2
@@ -1677,7 +1697,7 @@ export function PremiumPracticalInfo({
               letterSpacing: "-0.015em",
             }}
           >
-            Infos pratiques
+            {copy.title}
           </h2>
         </div>
         <div className="mt-10 grid gap-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-12">
@@ -1696,7 +1716,7 @@ export function PremiumPracticalInfo({
                 className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
                 style={{ color: "var(--heading-color)" }}
               >
-                Adresse
+                {copy.labelAddress}
               </p>
               <p
                 className="text-base leading-relaxed"
@@ -1712,7 +1732,7 @@ export function PremiumPracticalInfo({
                   className="inline-flex items-center gap-1 text-sm font-semibold uppercase tracking-[0.18em] underline-offset-4 hover:underline"
                   style={{ color: "var(--accent-color)" }}
                 >
-                  Itinéraire
+                  {copy.directionsLabel}
                   <ChevronRight className="h-4 w-4" />
                 </a>
               ) : null}
@@ -1733,7 +1753,7 @@ export function PremiumPracticalInfo({
                 className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
                 style={{ color: "var(--heading-color)" }}
               >
-                Téléphone
+                {copy.labelPhone}
               </p>
               <a
                 href={`tel:${phone.replace(/\s/g, "")}`}
@@ -1759,7 +1779,7 @@ export function PremiumPracticalInfo({
                 className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
                 style={{ color: "var(--heading-color)" }}
               >
-                Horaires
+                {copy.labelHours}
               </p>
               <ul
                 className="space-y-1 text-sm leading-relaxed"
@@ -1777,7 +1797,7 @@ export function PremiumPracticalInfo({
                 className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
                 style={{ color: "var(--heading-color)" }}
               >
-                Parking
+                {copy.labelParking}
               </p>
               <p className="text-sm leading-relaxed" style={{ color: "var(--body-text)" }}>
                 {parking}
@@ -1790,7 +1810,7 @@ export function PremiumPracticalInfo({
                 className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
                 style={{ color: "var(--heading-color)" }}
               >
-                Accessibilité
+                {copy.labelAccessibility}
               </p>
               <p className="text-sm leading-relaxed" style={{ color: "var(--body-text)" }}>
                 {accessibility}
@@ -1810,7 +1830,8 @@ export function PremiumReservationSection({
   showPhoneAlt,
   phone,
   children,
-  eyebrow = "Réservation",
+  eyebrow,
+  phonePreferLabel,
 }: {
   title: string;
   intro: string;
@@ -1818,7 +1839,8 @@ export function PremiumReservationSection({
   showPhoneAlt?: boolean;
   phone?: string | null;
   children: React.ReactNode;
-  eyebrow?: string;
+  eyebrow: string;
+  phonePreferLabel: string;
 }) {
   return (
     <section
@@ -1907,7 +1929,7 @@ export function PremiumReservationSection({
 
             {showPhoneAlt && phone ? (
               <p className="mt-10 text-center text-sm xl:text-left" style={{ color: "var(--body-text)" }}>
-                Vous préférez appeler ?{" "}
+                {phonePreferLabel}{" "}
                 <a
                   href={`tel:${phone.replace(/\s/g, "")}`}
                   className="font-semibold underline-offset-4 hover:underline"
@@ -1924,9 +1946,10 @@ export function PremiumReservationSection({
   );
 }
 
-export function HighlightsBand({ items }: { items: string[] }) {
+export function HighlightsBand({ items, eyebrow }: { items: string[]; eyebrow?: string }) {
   const visible = items.map((s) => s.trim()).filter(Boolean).slice(0, 6);
   if (visible.length === 0) return null;
+  const showEyebrow = Boolean(eyebrow?.trim());
   return (
     <section
       style={{
@@ -1934,6 +1957,14 @@ export function HighlightsBand({ items }: { items: string[] }) {
       }}
     >
       <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 lg:px-12 lg:py-16">
+        {showEyebrow ? (
+          <p
+            className="mb-8 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-[color-mix(in_srgb,var(--heading-color)_55%,transparent)]"
+            style={{ color: "var(--accent-color)" }}
+          >
+            {eyebrow!.trim()}
+          </p>
+        ) : null}
         <ul
           className={cn(
             "grid gap-x-8 gap-y-5",
@@ -1978,11 +2009,13 @@ export function HighlightsBand({ items }: { items: string[] }) {
 
 export function GiftVouchersSection({
   content,
+  surfaceCopy,
   restaurantSlug,
   previewMode = false,
   surface,
 }: {
   content: GiftVouchersSectionContent;
+  surfaceCopy: GiftVouchersSectionCopy;
   restaurantSlug: string;
   previewMode?: boolean;
   surface: SectionSurface;
@@ -2000,11 +2033,9 @@ export function GiftVouchersSection({
   const [occasion, setOccasion] = useState("");
   const [message, setMessage] = useState("");
 
-  const title = content.title.trim() || "Offrir un bon cadeau";
-  const body =
-    content.body.trim() ||
-    "Faites plaisir avec une expérience gourmande. Indiquez vos souhaits : nous vous recontactons pour finaliser le bon.";
-  const cta = content.ctaLabel.trim() || "Demander un bon cadeau";
+  const title = content.title.trim() || (surfaceCopy.fallbackTitle ?? "").trim();
+  const body = content.body.trim() || (surfaceCopy.fallbackBody ?? "").trim();
+  const cta = content.ctaLabel.trim() || (surfaceCopy.fallbackCta ?? "").trim();
   const img = content.imageUrl.trim();
 
   async function handleSubmit(e: FormEvent) {
@@ -2137,7 +2168,7 @@ export function GiftVouchersSection({
                 className="text-[10px] font-semibold uppercase tracking-[0.34em]"
                 style={{ color: "var(--accent-color)" }}
               >
-                Bons cadeaux
+                {surfaceCopy.surfaceEyebrow}
               </p>
             </div>
             <h2
@@ -2190,8 +2221,8 @@ export function GiftVouchersSection({
           }}
           role="status"
         >
-          <p className="font-medium">Demande envoyée.</p>
-          <p className="mt-1 opacity-90">Le restaurant vous contactera pour finaliser le bon cadeau.</p>
+          <p className="font-medium">{surfaceCopy.successTitle}</p>
+          <p className="mt-1 opacity-90">{surfaceCopy.successBody}</p>
         </div>
       ) : null}
 
@@ -2210,13 +2241,13 @@ export function GiftVouchersSection({
             <div className="mb-6 flex items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[color-mix(in_srgb,var(--body-text)_55%,transparent)]">
-                  Bon cadeau
+                  {surfaceCopy.modalEyebrow}
                 </p>
                 <h3
                   className="mt-2 text-xl font-medium"
                   style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
                 >
-                  Votre demande
+                  {surfaceCopy.modalTitle}
                 </h3>
               </div>
               <button
@@ -2365,7 +2396,7 @@ export function GiftVouchersSection({
                   color: "var(--button-text)",
                 }}
               >
-                {busy ? "Envoi…" : "Envoyer la demande"}
+                {busy ? surfaceCopy.submittingLabel : surfaceCopy.submitLabel}
               </button>
             </form>
           </div>

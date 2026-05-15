@@ -7,6 +7,8 @@ import type { PublicAmbiance } from "@/src/lib/public-page/constants";
 import { googleFontsHref, normalizePublicPageFont } from "@/src/lib/public-page-fonts";
 import { getDefaultOpeningHours, OpeningHours } from "@/src/lib/utils";
 import { parseEditorConfig } from "@/src/lib/public-page/editor-config";
+import { rowsToPageSectionBundle } from "@/src/lib/public-page/page-sections";
+import { resolvePublicPageSectionContent } from "@/src/lib/public-page/resolve-public-page-copy";
 import { resolvePublicTheme } from "@/src/lib/themes/resolve";
 import type { ThemeId } from "@/src/lib/themes/types";
 
@@ -240,10 +242,16 @@ async function loadRestaurant(slug: string) {
     .order("position", { ascending: true })
     .order("created_at", { ascending: true });
 
+  const { data: pageSectionRows } = await supabase
+    .from("restaurant_page_sections")
+    .select("section_type, enabled, data")
+    .eq("restaurant_id", restaurant.id);
+
   return {
     restaurant,
     settings: (settings ?? null) as PublicSettingsRow | null,
     documents: documents ?? [],
+    pageSectionRows: pageSectionRows ?? [],
   };
 }
 
@@ -294,7 +302,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     notFound();
   }
 
-  const { restaurant, settings, documents } = loaded;
+  const { restaurant, settings, documents, pageSectionRows } = loaded;
 
   const safeSettings: PublicSettingsRow = (settings as PublicSettingsRow | null) ?? {
     opening_hours: getDefaultOpeningHours(),
@@ -405,6 +413,12 @@ export default async function PublicReservationPage({ params }: PublicReservatio
 
   const resolvedVisualTheme = resolvePublicTheme(restaurant.theme_id, restaurant.theme_overrides);
 
+  const sectionContent = resolvePublicPageSectionContent(
+    resolvedVisualTheme.id as ThemeId,
+    editorConfig.conversion.structureTemplate,
+    rowsToPageSectionBundle(pageSectionRows ?? []),
+  );
+
   return (
     <>
       {fontsHref ? (
@@ -504,6 +518,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           }
           subscriptionPlan={(restaurant.subscription_plan as string | null) ?? "starter"}
           subscriptionStatus={(restaurant.subscription_status as string | null) ?? "active"}
+          sectionContent={sectionContent}
         />
       </main>
     </>
