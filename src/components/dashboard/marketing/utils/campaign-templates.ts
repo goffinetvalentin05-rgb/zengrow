@@ -1,3 +1,6 @@
+import type { LucideIcon } from "lucide-react";
+import { Cake, PartyPopper, Sparkles } from "lucide-react";
+
 export type CampaignAudienceFilter =
   | "all_customers"
   | "visited_last_30_days"
@@ -8,7 +11,7 @@ export type CampaignTemplateId = "special-evening" | "birthday" | "reactivation"
 
 export type CampaignTemplate = {
   id: CampaignTemplateId;
-  emoji: string;
+  icon: LucideIcon;
   title: string;
   description: string;
   draft: {
@@ -22,7 +25,7 @@ export type CampaignTemplate = {
 export const CAMPAIGN_TEMPLATES: readonly CampaignTemplate[] = [
   {
     id: "special-evening",
-    emoji: "🎉",
+    icon: PartyPopper,
     title: "Soirée spéciale",
     description: "Invitez vos clients à un événement",
     draft: {
@@ -40,7 +43,7 @@ Réservez votre table dès maintenant pour ne pas manquer cet événement.
   },
   {
     id: "birthday",
-    emoji: "💌",
+    icon: Cake,
     title: "Rappel anniversaire",
     description: "Souhaitez les anniversaires de vos habitués",
     draft: {
@@ -58,7 +61,7 @@ Joyeux anniversaire,`,
   },
   {
     id: "reactivation",
-    emoji: "🌟",
+    icon: Sparkles,
     title: "Réactivation",
     description: "Faites revenir vos clients inactifs",
     draft: {

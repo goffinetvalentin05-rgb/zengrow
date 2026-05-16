@@ -26,6 +26,8 @@ import {
   Upload,
   Utensils,
   FileText,
+  Layers,
+  Palette,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import { isGiftCardsEnabled } from "@/src/lib/config/features";
@@ -1283,7 +1285,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
         <CustomizationZone
           id="zone-theme"
-          icon="🎨"
+          icon={Palette}
           title="Thème"
           description="Choisissez le style visuel global de votre page."
         >
@@ -1307,7 +1309,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
         <CustomizationZone
           id="zone-identite"
-          icon="✨"
+          icon={Sparkles}
           title="Identité"
           description="Personnalisez les couleurs, polices et logo."
         >
@@ -1343,7 +1345,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
         <CustomizationZone
           id="zone-sections"
-          icon="🧱"
+          icon={Layers}
           title="Sections"
           description="Organisez les blocs de votre page publique."
         >
@@ -1356,7 +1358,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
         <CustomizationZone
           id="zone-contenu"
-          icon="✏️"
+          icon={FileText}
           title="Contenu"
           description="Modifiez le texte, les images et les données de chaque section."
           className="space-y-8 !p-0 !border-0 !bg-transparent shadow-none"

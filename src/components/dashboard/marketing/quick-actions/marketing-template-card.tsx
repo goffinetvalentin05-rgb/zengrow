@@ -11,6 +11,8 @@ type MarketingTemplateCardProps = {
 };
 
 export default function MarketingTemplateCard({ template, onCreate, className }: MarketingTemplateCardProps) {
+  const Icon = template.icon;
+
   return (
     <article
       className={cn(
@@ -19,9 +21,12 @@ export default function MarketingTemplateCard({ template, onCreate, className }:
         className,
       )}
     >
-      <p className="text-3xl leading-none" aria-hidden>
-        {template.emoji}
-      </p>
+      <span
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zg-border bg-zg-surface-elevated/60 text-zg-text-muted transition-colors group-hover:border-zg-accent/30 group-hover:text-zg-accent"
+        aria-hidden
+      >
+        <Icon className="h-5 w-5" strokeWidth={2} />
+      </span>
       <h3 className="mt-4 text-base font-semibold text-zg-fg">{template.title}</h3>
       <p className="mt-1.5 flex-1 text-sm leading-relaxed text-zg-text-muted">{template.description}</p>
       <Button

@@ -80,7 +80,11 @@ export default function PublicPageSectionNav({ className }: PublicPageSectionNav
                 aria-current={isActive ? "true" : undefined}
                 onClick={() => scrollTo(section.id)}
               >
-                <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                <Icon
+                  className={cn("h-5 w-5 shrink-0", isActive ? "text-zg-accent" : "text-zg-text-muted")}
+                  strokeWidth={2}
+                  aria-hidden
+                />
                 {section.label}
               </button>
             );
@@ -143,7 +147,11 @@ function MobileSectionNav({
                 )}
                 onClick={() => scrollTo(section.id)}
               >
-                <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                <Icon
+                  className={cn("h-5 w-5 shrink-0", isActive ? "text-zg-accent" : "text-zg-text-muted")}
+                  strokeWidth={2}
+                  aria-hidden
+                />
                 {section.label}
               </button>
             );
