@@ -176,6 +176,26 @@ export function ReservationsProvider({
     return true;
   }
 
+  function openEditReservation(reservation: ReservationRow) {
+    setManualGuestName(reservation.guest_name);
+    setManualGuestPhone(reservation.guest_phone ?? "");
+    setManualGuestEmail(reservation.guest_email ?? "");
+    setManualReservationDate(reservation.reservation_date);
+    setManualReservationTime(reservation.reservation_time.trim().slice(0, 5));
+    setManualGuests(reservation.guests);
+    setManualZone(seatingZoneFromRow(reservation));
+    setManualNote(reservation.internal_note ?? "");
+    setManualWalkInMode(reservation.reservation_type === "walkin");
+    setShowWalkInContactFields(
+      reservation.reservation_type !== "walkin" &&
+        Boolean(reservation.guest_phone?.trim() || reservation.guest_email?.trim()),
+    );
+    setManualForceOverbook(false);
+    setManualOverbookWarning(null);
+    setShowManualForm(true);
+    setSelectedReservationId(null);
+  }
+
   async function saveNote(id: string) {
     setMessage(null);
     setSavingId(id);
@@ -306,6 +326,7 @@ export function ReservationsProvider({
     seatingZoneFromRow,
     updateStatus,
     saveNote,
+    openEditReservation,
     createManualReservation,
     manualGuestName,
     setManualGuestName,

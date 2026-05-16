@@ -51,6 +51,7 @@ export type ReservationsContextValue = {
     options?: { successMessage?: string },
   ) => Promise<boolean>;
   saveNote: (id: string) => Promise<void>;
+  openEditReservation: (reservation: ReservationRow) => void;
   createManualReservation: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   manualGuestName: string;
   setManualGuestName: (value: string) => void;

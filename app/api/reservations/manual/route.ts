@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
       capacity_override: forceOverbook,
     })
     .select(
-      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone, reservation_type",
+      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, source, customer_id, zone, reservation_type",
     )
     .single();
 

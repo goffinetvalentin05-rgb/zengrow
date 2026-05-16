@@ -36,7 +36,7 @@ export const DAY_STATUS_OPTIONS: { value: DayStatusFilter; label: string }[] = [
 ];
 
 export const RESERVATION_SELECT_COLUMNS =
-  "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone, reservation_type" as const;
+  "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, source, customer_id, zone, reservation_type" as const;
 
 export function historyStatusDisplayLabel(
   reservation: ReservationRow,

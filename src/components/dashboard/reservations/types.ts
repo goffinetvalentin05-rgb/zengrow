@@ -19,6 +19,8 @@ export type ReservationRow = {
   status: ReservationStatus;
   internal_note: string | null;
   created_at: string;
+  source?: string | null;
+  customer_id?: string | null;
   zone?: "interior" | "terrace" | string | null;
   reservation_type?: "standard" | "walkin";
 };
