@@ -149,7 +149,7 @@ export default function ReservationDetailModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/50 p-0 sm:items-center sm:p-4"
       role="presentation"
       onClick={close}
     >
@@ -159,7 +159,7 @@ export default function ReservationDetailModal() {
         aria-modal="true"
         aria-labelledby="reservation-detail-title"
         tabIndex={-1}
-        className="flex max-h-[100dvh] w-full max-w-[600px] flex-col overflow-hidden rounded-t-2xl border border-zg-border bg-zg-surface shadow-xl transition-all duration-200 sm:max-h-[min(92dvh,800px)] sm:rounded-2xl"
+        className="flex h-[100dvh] w-full max-w-[600px] flex-col overflow-hidden border border-zg-border bg-zg-surface shadow-xl transition-all duration-200 sm:h-auto sm:max-h-[min(92dvh,800px)] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-zg-border px-5 py-4">
@@ -176,7 +176,7 @@ export default function ReservationDetailModal() {
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 pb-8">
           <div className="flex items-center gap-4">
             <ReservationsGuestAvatar name={reservation.guest_name} size="lg" variant="solid" />
             <div className="min-w-0 flex-1">
@@ -318,7 +318,7 @@ export default function ReservationDetailModal() {
           </DetailSection>
         </div>
 
-        <div className="flex shrink-0 flex-col gap-2 border-t border-zg-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-zg-border px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-center sm:justify-between sm:pb-4">
           <Button
             type="button"
             variant="ghost"

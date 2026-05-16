@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import ReservationListServiceSection from "@/src/components/dashboard/reservations/views/list/reservation-list-service-section";
 import type { ReservationListRowActionHandlers } from "@/src/components/dashboard/reservations/list-row/reservation-list-row-actions";
 import type { ReservationRow } from "@/src/components/dashboard/reservations/types";
@@ -41,7 +41,10 @@ export default function ReservationListDayCollapsible({
 }: ReservationListDayCollapsibleProps) {
   const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
-  const sections = buildListServiceSections(rows, date, openingHours);
+  const sections = useMemo(
+    () => (open ? buildListServiceSections(rows, date, openingHours) : []),
+    [open, rows, date, openingHours],
+  );
 
   const reservationWord = reservationCount === 1 ? "résa" : "résas";
   const coverWord = coverCount === 1 ? "couvert" : "couverts";

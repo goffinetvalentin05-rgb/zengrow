@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import ReservationListRowActions, {
   type ReservationListRowActionHandlers,
 } from "@/src/components/dashboard/reservations/list-row/reservation-list-row-actions";
@@ -21,7 +22,7 @@ type ReservationListRowProps = {
   onOpenDetail: () => void;
 };
 
-export default function ReservationListRow({
+function ReservationListRow({
   reservation,
   zone,
   terraceLabel,
@@ -38,6 +39,7 @@ export default function ReservationListRow({
     <article
       className={cn(
         "group relative rounded-xl border border-zg-border bg-zg-surface transition-colors duration-150",
+        "[content-visibility:auto] [contain-intrinsic-size:auto_5.5rem]",
         "hover:border-zg-border-hover hover:bg-zg-accent/[0.05] md:hover:bg-zg-card-hover",
         "focus-within:border-zg-border-hover focus-within:bg-zg-card-hover",
         isCancelled && "opacity-70",
@@ -102,3 +104,5 @@ export default function ReservationListRow({
     </article>
   );
 }
+
+export default memo(ReservationListRow);

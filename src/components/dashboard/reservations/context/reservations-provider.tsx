@@ -28,6 +28,7 @@ import {
   filterUpcomingReservations,
   seatingZoneFromRow,
 } from "@/src/components/dashboard/reservations/utils/reservation-filters";
+import { excludeDayFromUpcomingRows } from "@/src/components/dashboard/reservations/utils/reservation-list-filters";
 import { sortReservations } from "@/src/components/dashboard/reservations/utils/reservation-sort";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import { calendarYmdInBusinessTz } from "@/src/lib/date/business-calendar";
@@ -136,8 +137,9 @@ export function ReservationsProvider({
     const today = calendarYmdInBusinessTz();
     const start = addCalendarDaysYmd(today, 1);
     const end = addCalendarDaysYmd(today, upcomingDaysRange);
-    return filterUpcomingReservations(reservations, start, end).filter(
-      (row) => row.reservation_date !== daySectionDate,
+    return excludeDayFromUpcomingRows(
+      filterUpcomingReservations(reservations, start, end),
+      daySectionDate,
     );
   }, [reservations, upcomingDaysRange, daySectionDate]);
 
