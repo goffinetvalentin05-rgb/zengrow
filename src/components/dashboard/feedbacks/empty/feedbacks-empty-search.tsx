@@ -1,29 +1,16 @@
 "use client";
 
+import FeedbacksEmptyPanel from "@/src/components/dashboard/feedbacks/empty/feedbacks-empty-panel";
 import { useFeedbacks } from "@/src/components/dashboard/feedbacks/context/use-feedbacks";
 import Button from "@/src/components/ui/button";
-import { cn } from "@/src/lib/utils";
 import { Search } from "lucide-react";
-
-function FeedbacksEmptyPanel({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div
-      className={cn(
-        "rounded-2xl border border-zg-border bg-zg-surface px-6 py-10 sm:py-14",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
 
 export default function FeedbacksEmptySearch() {
   const { filters, resetFilters } = useFeedbacks();
   const q = filters.query.trim();
 
   return (
-    <FeedbacksEmptyPanel>
+    <FeedbacksEmptyPanel className="min-h-[240px] sm:min-h-[280px]">
       <div className="mx-auto flex max-w-md flex-col items-center text-center">
         <div
           className="flex h-16 w-16 items-center justify-center rounded-2xl bg-zg-info-soft-bg"

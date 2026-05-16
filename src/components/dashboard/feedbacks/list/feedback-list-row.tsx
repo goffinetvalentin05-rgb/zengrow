@@ -69,16 +69,16 @@ function FeedbackListRow({ feedback }: FeedbackListRowProps) {
           <ReservationsGuestAvatar name={customerName} size="md" variant="solid" />
 
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-x-2">
               {customerHref ? (
                 <Link
                   href={customerHref}
-                  className="min-w-0 flex-1 truncate text-base font-semibold leading-snug text-zg-fg underline-offset-2 hover:text-zg-accent hover:underline"
+                  className="min-w-0 truncate text-base font-semibold leading-snug text-zg-fg underline-offset-2 hover:text-zg-accent hover:underline"
                 >
                   {customerName}
                 </Link>
               ) : (
-                <span className="min-w-0 flex-1 truncate text-base font-semibold leading-snug text-zg-fg">
+                <span className="min-w-0 truncate text-base font-semibold leading-snug text-zg-fg">
                   {customerName}
                 </span>
               )}

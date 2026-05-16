@@ -130,7 +130,7 @@ export default function FeedbackDetailModal() {
             <FeedbackDetailInternalNote feedbackId={selectedFeedback.id} />
           </div>
 
-          <footer className="flex shrink-0 flex-col gap-2 border-t border-zg-border px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <footer className="flex shrink-0 flex-col gap-2 border-t border-zg-border px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-5">
             <Button
               type="button"
               variant="secondary"

@@ -16,13 +16,20 @@ function FeedbacksPageContent() {
   const hasFeedbacks = feedbacks.length > 0;
 
   return (
-    <section className="w-full min-w-0 space-y-8 md:space-y-12">
+    <section className="w-full min-w-0 space-y-6 pb-[max(1rem,env(safe-area-inset-bottom))] md:space-y-10 lg:space-y-12">
       <FeedbacksHeader />
-      <FeedbacksKpiCards />
-      {hasFeedbacks ? <FeedbacksTrendChart /> : null}
-      {hasFeedbacks ? <FeedbacksToolbar /> : null}
-      {hasFeedbacks ? <FeedbacksListShell /> : null}
-      {!hasFeedbacks ? <FeedbacksEmptyState /> : null}
+
+      {hasFeedbacks ? (
+        <div className="space-y-6 md:space-y-8 lg:space-y-10">
+          <FeedbacksKpiCards />
+          <FeedbacksTrendChart />
+          <FeedbacksToolbar />
+          <FeedbacksListShell />
+        </div>
+      ) : (
+        <FeedbacksEmptyState />
+      )}
+
       <FeedbackDetailModal />
     </section>
   );

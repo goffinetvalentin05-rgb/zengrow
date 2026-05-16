@@ -75,7 +75,7 @@ export default function FeedbacksTrendChart() {
 
   return (
     <div className="rounded-2xl border border-zg-border bg-zg-surface p-4 transition-all duration-200 ease-out sm:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div>
           <h2 className="text-sm font-semibold text-zg-fg">Tendance de satisfaction</h2>
           <p className="mt-0.5 text-xs text-zg-text-muted">
@@ -134,7 +134,7 @@ export default function FeedbacksTrendChart() {
         </div>
       </div>
 
-      <div className="mt-4 min-w-0">
+      <div className="mt-4 min-w-0 overflow-x-auto">
         {empty ? (
           <div
             className="flex h-[140px] items-center justify-center text-center text-sm text-zg-text-muted"
@@ -143,7 +143,7 @@ export default function FeedbacksTrendChart() {
             Aucune note sur cette période.
           </div>
         ) : (
-          <div className="h-[140px] w-full min-w-0">
+          <div className="h-[140px] w-full min-w-[280px] sm:min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 6" stroke="var(--zg-border)" vertical={false} opacity={0.6} />

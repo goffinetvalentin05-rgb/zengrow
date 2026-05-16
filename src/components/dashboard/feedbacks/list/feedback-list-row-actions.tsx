@@ -33,7 +33,7 @@ export default function FeedbackListRowActions({ feedback, className }: Feedback
   return (
     <div
       className={cn(
-        "flex shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2",
+        "flex w-full shrink-0 flex-wrap items-center justify-end gap-1 sm:w-auto sm:gap-2",
         "opacity-100 sm:opacity-0 sm:transition-opacity sm:duration-150 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100",
         className,
       )}

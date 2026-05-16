@@ -56,7 +56,7 @@ export default function ReservationsKpiCard({
   return (
     <article
       className={cn(
-        "flex h-full min-w-0 flex-col rounded-2xl border border-zg-border bg-zg-surface p-6 transition-all duration-200 ease-out",
+        "flex h-full min-w-0 flex-col rounded-2xl border border-zg-border bg-zg-surface p-5 transition-all duration-200 ease-out sm:p-6",
         "hover:border-zg-border-hover hover:bg-zg-card-hover",
         className,
       )}
