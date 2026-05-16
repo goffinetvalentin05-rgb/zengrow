@@ -1,19 +1,14 @@
-import MarketingPanel from "@/src/components/dashboard/marketing-panel";
 import Link from "next/link";
+import MarketingPage from "@/src/components/dashboard/marketing/marketing-page";
+import { mapCampaignRows } from "@/src/components/dashboard/marketing/utils/map-campaign-row";
+import { computeMarketingKpis } from "@/src/components/dashboard/marketing/utils/marketing-kpis";
 import { requireRestaurantSession } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 import { buttonClassName } from "@/src/components/ui/button";
 
-type CampaignListItem = {
-  id: string;
-  name: string;
-  subject: string;
-  created_at: string;
-  sent_at: string | null;
-  recipients_count: number;
-};
+export const dynamic = "force-dynamic";
 
 export default async function DashboardMarketingPage() {
   const supabase = await createClient();
@@ -25,8 +20,8 @@ export default async function DashboardMarketingPage() {
       <DashboardContent>
         <section className="relative space-y-6">
           <PageHeader
-            title="Campagnes marketing"
-            subtitle="Envoyez des messages groupés à vos clients."
+            title="Marketing"
+            subtitle="Restez en contact avec vos clients et faites-les revenir"
           />
 
           <div className="relative min-h-[min(70vh,560px)] overflow-hidden rounded-2xl border border-zg-border bg-zg-surface transition-all duration-200 ease-out">
@@ -59,37 +54,33 @@ export default async function DashboardMarketingPage() {
 
   const { data: campaignsData } = await supabase
     .from("email_campaigns")
-    .select("id, name, subject, created_at, sent_at")
+    .select("id, name, subject, content, image_url, created_at, sent_at")
     .eq("restaurant_id", restaurant.id)
     .order("created_at", { ascending: false });
 
   const campaignIds = (campaignsData ?? []).map((campaign) => campaign.id);
-  let recipientsByCampaign = new Map<string, number>();
+  let recipientsData: { campaign_id: string; email: string; opened_at: string | null }[] = [];
 
   if (campaignIds.length > 0) {
-    const { data: recipientsData } = await supabase
+    const { data } = await supabase
       .from("email_campaign_recipients")
-      .select("campaign_id")
+      .select("campaign_id, email, opened_at")
       .in("campaign_id", campaignIds);
 
-    recipientsByCampaign = (recipientsData ?? []).reduce((acc, row) => {
-      acc.set(row.campaign_id, (acc.get(row.campaign_id) ?? 0) + 1);
-      return acc;
-    }, new Map<string, number>());
+    recipientsData = data ?? [];
   }
 
-  const campaigns: CampaignListItem[] = (campaignsData ?? []).map((campaign) => ({
-    id: campaign.id,
-    name: campaign.name,
-    subject: campaign.subject,
-    created_at: campaign.created_at,
-    sent_at: campaign.sent_at,
-    recipients_count: recipientsByCampaign.get(campaign.id) ?? 0,
+  const campaigns = mapCampaignRows(campaignsData ?? [], recipientsData);
+  const recipientSnapshots = recipientsData.map((row) => ({
+    campaignId: row.campaign_id,
+    email: row.email,
+    openedAt: row.opened_at,
   }));
+  const kpis = computeMarketingKpis(campaigns, recipientSnapshots);
 
   return (
     <DashboardContent>
-      <MarketingPanel campaigns={campaigns} />
+      <MarketingPage campaigns={campaigns} kpis={kpis} />
     </DashboardContent>
   );
 }

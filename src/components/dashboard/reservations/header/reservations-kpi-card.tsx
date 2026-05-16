@@ -30,6 +30,7 @@ export type ReservationsKpiCardProps = {
   progressPercent?: number;
   progressTone?: "accent" | "warning" | "danger";
   sublineClassName?: string;
+  valueClassName?: string;
   className?: string;
 };
 
@@ -44,6 +45,7 @@ export default function ReservationsKpiCard({
   progressPercent,
   progressTone = "accent",
   sublineClassName,
+  valueClassName,
   className,
 }: ReservationsKpiCardProps) {
   const progressBarClass =
@@ -74,6 +76,7 @@ export default function ReservationsKpiCard({
         className={cn(
           "zg-stat-value mt-1 text-4xl leading-none tracking-tight text-zg-fg tabular-nums sm:text-5xl",
           typeof value === "string" && value.length > 8 && "text-3xl sm:text-4xl",
+          valueClassName,
         )}
       >
         {value}
