@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
@@ -31,6 +32,7 @@ import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-pr
 import { useIsMdUp } from "@/src/hooks/use-is-md-up";
 
 const STORAGE_KEY = "zengrow_dashboard_sidebar_collapsed";
+const ZENGROW_LOGO_SRC = "/zengrow-logo-blanc.png";
 const WIDTH_EXPANDED = 260;
 const WIDTH_COLLAPSED = 72;
 
@@ -199,7 +201,14 @@ export default function DashboardSidebar({
                 className="flex min-w-0 flex-1 items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg rounded-lg"
                 aria-label="ZenGrow — tableau de bord"
               >
-                <span className="font-landing-serif text-2xl italic leading-none text-zg-on-dark">ZenGrow</span>
+                <Image
+                  src={ZENGROW_LOGO_SRC}
+                  alt="ZenGrow"
+                  width={160}
+                  height={44}
+                  className="h-7 w-auto max-w-[140px] object-contain object-left"
+                  priority
+                />
                 <span className="relative flex h-2 w-2 shrink-0">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-zg-accent opacity-40" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-zg-accent" />
@@ -227,14 +236,17 @@ export default function DashboardSidebar({
               <Link
                 href="/dashboard"
                 onClick={onNavigate}
-                className="flex h-9 w-9 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
+                className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
                 aria-label="ZenGrow — tableau de bord"
                 {...bindHoverTip("ZenGrow")}
               >
-                <span className="relative flex h-2.5 w-2.5 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-zg-accent opacity-40" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-zg-accent" />
-                </span>
+                <Image
+                  src={ZENGROW_LOGO_SRC}
+                  alt=""
+                  width={72}
+                  height={28}
+                  className="h-6 w-auto max-w-[64px] object-contain"
+                />
               </Link>
             </>
           )}
