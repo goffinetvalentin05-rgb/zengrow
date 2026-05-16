@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { CustomerRecord } from "@/src/components/dashboard/customers/types";
-import { useIsMdUp } from "@/src/hooks/use-is-md-up";
 import { cn } from "@/src/lib/utils";
 import { Mail, MoreHorizontal, Pencil, Phone } from "lucide-react";
 
@@ -150,21 +149,25 @@ export default function CustomerListRowActions({
   handlers,
   className,
 }: CustomerListRowActionsProps) {
-  const isMdUp = useIsMdUp();
   const items = buildActions(customer, handlers);
 
   return (
     <div
-      className={cn(
-        "flex shrink-0 items-center",
-        isMdUp &&
-          "opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
-        className,
-      )}
+      className={cn("flex shrink-0 items-center", className)}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
-      {isMdUp ? <ActionButtons items={items} /> : <MobileActionsMenu items={items} />}
+      <div
+        className={cn(
+          "hidden items-center sm:flex",
+          "opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
+        )}
+      >
+        <ActionButtons items={items} />
+      </div>
+      <div className="flex items-center sm:hidden">
+        <MobileActionsMenu items={items} />
+      </div>
     </div>
   );
 }

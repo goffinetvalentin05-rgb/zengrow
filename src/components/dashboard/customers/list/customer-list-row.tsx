@@ -43,11 +43,16 @@ function CustomerListRow({ customer }: CustomerListRowProps) {
     openCustomerDetail(customer.id);
   }, [customer.id, openCustomerDetail]);
 
+  const actionHandlers = useMemo(
+    () => ({ onEmail, onCall, onEdit }),
+    [onEmail, onCall, onEdit],
+  );
+
   return (
     <article
       className={cn(
-        "group relative isolate w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-zg-border bg-zg-surface transition-colors duration-150",
-        "active:bg-zg-card-hover md:hover:border-zg-border-hover md:hover:bg-zg-card-hover",
+        "group relative rounded-xl border border-zg-border bg-zg-surface transition-colors duration-150",
+        "hover:border-zg-border-hover hover:bg-zg-accent/[0.05] md:hover:bg-zg-card-hover",
         "focus-within:border-zg-border-hover focus-within:bg-zg-card-hover",
       )}
     >
@@ -55,51 +60,29 @@ function CustomerListRow({ customer }: CustomerListRowProps) {
         type="button"
         onClick={onOpenDetail}
         aria-label={`Ouvrir la fiche de ${customer.name}`}
-        className={cn(
-          "flex w-full min-w-0 items-center gap-3 px-4 py-3.5 text-left",
-          "sm:grid sm:w-full sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center sm:gap-4 sm:px-5",
-        )}
+        className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 text-left sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:gap-4 sm:px-5"
       >
         <ReservationsGuestAvatar name={customer.name} size="md" variant="solid" />
 
-        <span className="min-w-0 flex-1">
-          <span className="flex min-w-0 items-start gap-2 sm:items-center">
-            <span className="customer-row-name min-w-0 flex-1 truncate text-base font-semibold leading-snug text-zg-fg">
+        <span className="min-w-0">
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="min-w-0 flex-1 truncate text-base font-semibold leading-snug text-zg-fg">
               {customer.name}
             </span>
-            <CustomerSegmentBadge customer={customer} className="mt-0.5 shrink-0 sm:mt-0" />
+            <CustomerSegmentBadge customer={customer} className="shrink-0" />
           </span>
-          <span className="mt-1 hidden truncate text-sm text-zg-text-muted sm:block">
-            {contactLine}
-          </span>
-          <span className="mt-0.5 block truncate text-xs text-zg-text-muted sm:text-sm">
-            {metadataLine}
-          </span>
+          <span className="mt-1 block truncate text-sm text-zg-text-muted">{contactLine}</span>
+          <span className="mt-0.5 block truncate text-sm text-zg-text-muted">{metadataLine}</span>
         </span>
 
-        <CustomerListRowActions
-          customer={customer}
-          handlers={{ onEmail, onCall, onEdit }}
-          className="hidden shrink-0 sm:flex"
-        />
+        <CustomerListRowActions customer={customer} handlers={actionHandlers} />
 
         <ChevronRight
-          className="h-5 w-5 shrink-0 text-zg-text-muted"
+          className="hidden h-5 w-5 shrink-0 text-zg-text-muted sm:block"
           strokeWidth={2}
           aria-hidden
         />
       </button>
-
-      <div
-        className="flex items-center justify-end gap-1 border-t border-zg-border/60 px-3 py-2 sm:hidden"
-        role="toolbar"
-        aria-label={`Actions rapides pour ${customer.name}`}
-      >
-        <CustomerListRowActions
-          customer={customer}
-          handlers={{ onEmail, onCall, onEdit }}
-        />
-      </div>
     </article>
   );
 }
