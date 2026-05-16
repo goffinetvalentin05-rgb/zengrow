@@ -511,6 +511,10 @@ export default function PublicReservationForm({
       }
     }
 
+    const resolvedPageBg = String(base["--page-bg"]);
+    base["--footer-bg"] = resolvedPageBg;
+    base["--footer-text"] = String(base["--body-text"]);
+
     return base as React.CSSProperties;
   }, [
     pageTheme,
@@ -865,7 +869,7 @@ export default function PublicReservationForm({
 
   const labelClass = "block text-xs font-semibold uppercase tracking-[0.18em]";
   const iconRing =
-    "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius)] border border-[color-mix(in_srgb,var(--footer-text)_22%,transparent)] bg-[color-mix(in_srgb,var(--footer-text)_10%,transparent)] text-[var(--footer-text)]";
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius)] border border-[color-mix(in_srgb,var(--body-text)_22%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_10%,transparent)] text-[var(--body-text)]";
   const inputClass = useMemo(
     () =>
       usePremiumChrome

@@ -100,9 +100,9 @@ export function PremiumPracticalInfo({
   return (
     <section
       id="infos"
-      className="scroll-mt-24"
+      className="scroll-mt-24 border-t border-[color-mix(in_srgb,var(--body-text)_12%,transparent)]"
       style={{
-        backgroundColor: "var(--surface-muted, color-mix(in srgb, var(--body-text) 4%, var(--page-bg)))",
+        backgroundColor: "var(--page-bg)",
       }}
     >
       <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-28">

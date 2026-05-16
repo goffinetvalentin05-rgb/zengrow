@@ -406,8 +406,8 @@ export default async function PublicReservationPage({ params }: PublicReservatio
   const headingColor = restaurant.public_heading_text_color?.trim() || "#0f172a";
   const bodyColor = restaurant.public_body_text_color?.trim() || safeSettings.text_color || "#334155";
   const accent = restaurant.public_accent_color?.trim() || safeSettings.accent_color || "#1F7A6C";
-  const footerBg = restaurant.public_footer_bg_color?.trim() || "#0f172a";
-  const footerText = restaurant.public_footer_text_color?.trim() || "#e2e8f0";
+  const footerBg = pageBg;
+  const footerText = bodyColor;
 
   const heroTitleSize = Math.min(72, Math.max(32, restaurant.public_hero_title_size_px ?? 44));
   const heroHeight = (restaurant.public_hero_height as "compact" | "normal" | "tall") || "compact";

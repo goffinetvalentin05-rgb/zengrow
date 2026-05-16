@@ -9,7 +9,7 @@ export function designTokensToCssVars(tokens: DesignTokens): Record<string, stri
   const { colors, fonts, spacing, radius, effects } = tokens;
   return {
     "--page-bg": colors.bg,
-    "--surface-muted": colors.surface,
+    "--surface-muted": `color-mix(in srgb, ${colors.text} 4%, ${colors.bg})`,
     "--hero-primary": colors.bgElevated,
     "--accent-color": colors.accent,
     "--button-bg": colors.accent,

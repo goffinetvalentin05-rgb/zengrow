@@ -133,8 +133,9 @@ export function resolvePublicPageTheme(config: PublicPageEditorConfig): PublicPa
   const body = normalizeHexColor(a.textColor);
   const accent = normalizeHexColor(a.accentColor);
   const surface = normalizeHexColor(a.surfaceColor || (mode === "dark" ? mix(heading, 6, pageBg) : mix(body, 4, pageBg)));
-  const footerBg = normalizeHexColor(a.footerBgColor);
-  const footerText = normalizeHexColor(a.footerTextColor);
+  // Pied de page = même fond que la page (Identité / thème) ; texte = corps pour le contraste.
+  const footerBg = pageBg;
+  const footerText = body;
 
   const section = (blockId: PageBlockId): SectionSurface => {
     const block = config.blocks[blockId];
