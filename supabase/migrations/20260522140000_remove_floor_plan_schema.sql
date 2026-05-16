@@ -3,6 +3,9 @@
 
 drop function if exists public.replace_restaurant_tables(uuid, jsonb);
 
+-- Le trigger référence table_id dans sa clause UPDATE OF : le retirer avant DROP COLUMN.
+drop trigger if exists zengrow_check_reservation_capacity_trigger on public.reservations;
+
 alter table public.reservations drop column if exists table_id;
 alter table public.reservations drop column if exists floor_plan_id;
 
@@ -22,3 +25,10 @@ drop table if exists public.floor_plan_elements cascade;
 drop table if exists public.restaurant_tables cascade;
 drop table if exists public.floor_plans cascade;
 drop table if exists public.restaurant_zones cascade;
+
+-- Recréer le trigger (sans table_id ; fonction = version 20260522130000)
+create trigger zengrow_check_reservation_capacity_trigger
+before insert or update of reservation_date, reservation_time, guests, status, restaurant_id, zone, capacity_override
+on public.reservations
+for each row
+execute function public.zengrow_check_reservation_capacity();
