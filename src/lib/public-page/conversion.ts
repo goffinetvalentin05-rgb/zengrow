@@ -1,3 +1,4 @@
+import { isGiftCardsEnabled, isGiftVouchersBlockId } from "@/src/lib/config/features";
 import type { PageBlockId, PublicPageEditorConfig } from "@/src/lib/public-page/editor-config";
 import type { OpeningHours } from "@/src/lib/utils";
 
@@ -199,14 +200,25 @@ export function normalizeConversionSettings(raw: unknown): ConversionSettings {
 }
 
 export function applyStructureTemplate(template: StructureTemplate): PageBlockId[] {
-  return STRUCTURE_TEMPLATES.find((t) => t.id === template)?.order ?? STRUCTURE_TEMPLATES[0].order;
+  const order =
+    STRUCTURE_TEMPLATES.find((t) => t.id === template)?.order ?? STRUCTURE_TEMPLATES[0].order;
+  // GIFT_CARDS feature flag — réactivable
+  if (!isGiftCardsEnabled()) {
+    return order.filter((id) => !isGiftVouchersBlockId(id));
+  }
+  return order;
 }
 
 export function resolveEffectiveSectionOrder(config: PublicPageEditorConfig): PageBlockId[] {
   const templateOrder = applyStructureTemplate(config.conversion.structureTemplate);
   const custom = config.sectionOrder.filter((id) => templateOrder.includes(id));
   const missing = templateOrder.filter((id) => !custom.includes(id));
-  return [...custom, ...missing];
+  const merged = [...custom, ...missing];
+  // GIFT_CARDS feature flag — réactivable
+  if (!isGiftCardsEnabled()) {
+    return merged.filter((id) => !isGiftVouchersBlockId(id));
+  }
+  return merged;
 }
 
 export function ctaFlags(conversion: ConversionSettings): {

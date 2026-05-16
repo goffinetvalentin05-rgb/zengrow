@@ -1,3 +1,4 @@
+import { isGiftCardsEnabled, isGiftVouchersBlockId } from "@/src/lib/config/features";
 import type {
   PublicPageEditorConfig,
   HeroLayout,
@@ -424,6 +425,11 @@ export function applyPagePreset(
     }
   }
 
+  // GIFT_CARDS feature flag — réactivable
+  if (!isGiftCardsEnabled() && nextBlocks.gift_vouchers) {
+    nextBlocks.gift_vouchers = { ...nextBlocks.gift_vouchers, enabled: false };
+  }
+
   // Préservation des textes existants
   const heroTitle = current.hero.title;
   const heroSubtitle = current.hero.subtitle;
@@ -485,7 +491,9 @@ export function applyPagePreset(
         button: finalCtaButton,
       },
     },
-    sectionOrder: preset.sectionOrder,
+    sectionOrder: isGiftCardsEnabled()
+      ? preset.sectionOrder
+      : preset.sectionOrder.filter((id) => !isGiftVouchersBlockId(id)),
     reservation: {
       ...current.reservation,
       position: preset.reservationPosition,

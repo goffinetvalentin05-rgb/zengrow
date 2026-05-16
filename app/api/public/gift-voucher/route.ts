@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isGiftCardsEnabled } from "@/src/lib/config/features";
 import { createClient } from "@/src/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
+  // GIFT_CARDS feature flag — réactivable
+  if (!isGiftCardsEnabled()) {
+    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  }
+
   const body = (await request.json()) as {
     slug?: string;
     firstName?: string;

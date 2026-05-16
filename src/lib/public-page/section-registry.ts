@@ -1,3 +1,4 @@
+import { isGiftCardsEnabled, isGiftVouchersBlockId, isGiftVouchersSectionType } from "@/src/lib/config/features";
 import type { PageSectionType } from "@/src/lib/public-page/page-sections";
 import type { PageBlockId, PublicPageEditorConfig } from "@/src/lib/public-page/editor-config";
 import type { PageSectionLayoutItem } from "@/src/lib/public-page/page-section-structure";
@@ -177,16 +178,21 @@ export function getSectionMeta(type: PageSectionType): SectionRegistryEntry {
   return SECTION_REGISTRY[type];
 }
 
+function isGiftSectionExposed(type: PageSectionType): boolean {
+  // GIFT_CARDS feature flag — réactivable
+  return isGiftCardsEnabled() || !isGiftVouchersSectionType(type);
+}
+
 export function listSortableSectionTypes(): PageSectionType[] {
   return (Object.values(SECTION_REGISTRY) as SectionRegistryEntry[])
-    .filter((e) => e.sortable)
+    .filter((e) => e.sortable && isGiftSectionExposed(e.type))
     .map((e) => e.type);
 }
 
 export function listAddableSectionTypes(activeTypes: PageSectionType[]): PageSectionType[] {
   const active = new Set(activeTypes);
   return (Object.values(SECTION_REGISTRY) as SectionRegistryEntry[])
-    .filter((e) => e.optional && e.sortable && !active.has(e.type))
+    .filter((e) => e.optional && e.sortable && !active.has(e.type) && isGiftSectionExposed(e.type))
     .map((e) => e.type);
 }
 
@@ -196,6 +202,9 @@ export function isBlockEnabledInStructure(
   blockId: PageBlockId,
   fallbackConfig: PublicPageEditorConfig,
 ): boolean {
+  // GIFT_CARDS feature flag — réactivable
+  if (isGiftVouchersBlockId(blockId) && !isGiftCardsEnabled()) return false;
+
   const type = blockIdToSectionType(blockId);
   if (type) {
     const item = structure.find((i) => i.sectionType === type);

@@ -16,6 +16,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import Input from "@/src/components/ui/input";
+import { isGiftCardsEnabled, isGiftVouchersBlockId } from "@/src/lib/config/features";
 import type { AvailabilitySlot } from "@/src/lib/reservation/schemas";
 import { cn, formatOpeningHoursLines, OpeningHours } from "@/src/lib/utils";
 import {
@@ -971,8 +972,11 @@ export default function PublicReservationForm({
 
   const overlayOpacity = Math.min(80, Math.max(0, heroOverlayOpacity)) / 100;
 
-  const blockEnabled = (id: PageBlockId) =>
-    effectiveConfig.blocks[id]?.enabled !== false;
+  const blockEnabled = (id: PageBlockId) => {
+    // GIFT_CARDS feature flag — réactivable
+    if (isGiftVouchersBlockId(id) && !isGiftCardsEnabled()) return false;
+    return effectiveConfig.blocks[id]?.enabled !== false;
+  };
 
   const resolvedSectionContent = useMemo(
     () =>
@@ -2002,6 +2006,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
+        {/* GIFT_CARDS feature flag — réactivable */}
         {blockEnabled("gift_vouchers") ? (
           <div style={{ order: sectionOrderIndex("gift_vouchers") }}>
             <GiftVouchersSection

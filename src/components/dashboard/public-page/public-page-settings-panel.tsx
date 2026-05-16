@@ -28,6 +28,7 @@ import {
   FileText,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
+import { isGiftCardsEnabled } from "@/src/lib/config/features";
 import {
   displayFileNameFromUrl,
   imageExtensionForUpload,
@@ -109,6 +110,11 @@ const PAGE_SECTIONS: { id: PageBlockId; label: string; description: string }[] =
   { id: "gift_vouchers", label: "Bons cadeaux", description: "Formulaire de demande de bon cadeau (traitement par vous)." },
   { id: "final_cta", label: "Rappel final", description: "Bandeau de fin de page qui ramène à la réservation." },
 ];
+
+/** Sections affichées dans l’éditeur (hors feature flag bons cadeaux). */
+const VISIBLE_PAGE_SECTIONS = PAGE_SECTIONS.filter(
+  (section) => isGiftCardsEnabled() || section.id !== "gift_vouchers",
+);
 
 function applyPageSectionPatch(
   c: PublicPageEditorConfig,
@@ -1499,26 +1505,29 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           <div className="mt-6 space-y-8">
             <div>
               <p className="text-sm font-semibold text-zg-fg">Navigation</p>
-              <div className="mt-3">
-                <label className="dashboard-field-label">Libellé du lien « bons cadeaux »</label>
-                <Input
-                  className="mt-2"
-                  value={editorConfig.pageSections?.navigation?.giftNavLabel ?? ""}
-                  onChange={(e) => {
-                    setEditorConfig((c) =>
-                      applyPageSectionPatch(c, {
-                        navigation: {
-                          ...c.pageSections?.navigation,
-                          items: c.pageSections?.navigation?.items ?? [],
-                          giftNavLabel: e.target.value,
-                        },
-                      }),
-                    );
-                    markDirty();
-                  }}
-                  placeholder="Cadeaux"
-                />
-              </div>
+              {/* GIFT_CARDS feature flag — réactivable */}
+              {isGiftCardsEnabled() ? (
+                <div className="mt-3">
+                  <label className="dashboard-field-label">Libellé du lien « bons cadeaux »</label>
+                  <Input
+                    className="mt-2"
+                    value={editorConfig.pageSections?.navigation?.giftNavLabel ?? ""}
+                    onChange={(e) => {
+                      setEditorConfig((c) =>
+                        applyPageSectionPatch(c, {
+                          navigation: {
+                            ...c.pageSections?.navigation,
+                            items: c.pageSections?.navigation?.items ?? [],
+                            giftNavLabel: e.target.value,
+                          },
+                        }),
+                      );
+                      markDirty();
+                    }}
+                    placeholder="Cadeaux"
+                  />
+                </div>
+              ) : null}
             </div>
 
             <div>
@@ -1844,6 +1853,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               </div>
             </div>
 
+            {/* GIFT_CARDS feature flag — réactivable */}
+            {isGiftCardsEnabled() ? (
             <div>
               <p className="text-sm font-semibold text-zg-fg">Bons cadeaux</p>
               <div className="mt-3 grid gap-4 md:grid-cols-2">
@@ -1921,6 +1932,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                 </div>
               </div>
             </div>
+            ) : null}
 
             <div>
               <p className="text-sm font-semibold text-zg-fg">Rappel final</p>
@@ -2080,7 +2092,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             .
           </p>
           <div className="space-y-3">
-            {PAGE_SECTIONS.map((section) => {
+            {VISIBLE_PAGE_SECTIONS.map((section) => {
               const enabled =
                 section.id === "reservation" ||
                 isBlockEnabledInStructure(pageSectionStructure, section.id, editorConfig);

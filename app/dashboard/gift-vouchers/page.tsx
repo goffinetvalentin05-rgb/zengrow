@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import PageHeader from "@/src/components/dashboard/page-header";
+import { isGiftCardsEnabled } from "@/src/lib/config/features";
 import GiftVouchersDashboard, {
   type GiftVoucherRow,
 } from "@/src/components/dashboard/gift-vouchers-dashboard";
@@ -9,6 +11,11 @@ import { createClient } from "@/src/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardGiftVouchersPage() {
+  // GIFT_CARDS feature flag — réactivable
+  if (!isGiftCardsEnabled()) {
+    redirect("/dashboard");
+  }
+
   const supabase = await createClient();
   const restaurant = await requireRestaurant();
 

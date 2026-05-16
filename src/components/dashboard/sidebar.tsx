@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
+import { isGiftCardsEnabled } from "@/src/lib/config/features";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -51,7 +52,10 @@ const navItems = [
   { href: "/dashboard/feedbacks", label: "Feedbacks", icon: MessageSquare },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
   { href: "/dashboard/public-page", label: "Page publique", icon: Globe2 },
-  { href: "/dashboard/gift-vouchers", label: "Bons cadeaux", icon: Gift },
+  // GIFT_CARDS feature flag — réactivable
+  ...(isGiftCardsEnabled()
+    ? [{ href: "/dashboard/gift-vouchers" as const, label: "Bons cadeaux", icon: Gift }]
+    : []),
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];
 

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isGiftCardsEnabled } from "@/src/lib/config/features";
 
 /** Clés persistées dans `restaurant_page_sections.section_type`. */
 export const PAGE_SECTION_TYPES = [
@@ -312,7 +313,10 @@ export function buildPublicNavLinks(
 ): NavLinkContent[] {
   const items = nav?.items ?? [];
   const giftLabel = nav?.giftNavLabel?.trim() || "Cadeaux";
-  if (!showGiftVouchers) return [...items];
+  // GIFT_CARDS feature flag — réactivable
+  if (!isGiftCardsEnabled() || !showGiftVouchers) {
+    return items.filter((item) => item.anchorId !== "bons-cadeaux");
+  }
   const gift: NavLinkContent = { anchorId: "bons-cadeaux", label: giftLabel };
   if (items.length <= 4) return [...items, gift];
   return [...items.slice(0, 4), gift, ...items.slice(4)];

@@ -1,4 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  isGiftCardsEnabled,
+  isGiftVouchersBlockId,
+  isGiftVouchersSectionType,
+} from "@/src/lib/config/features";
 import { applyStructureTemplate } from "@/src/lib/public-page/conversion";
 import type { PageBlockId, PublicPageEditorConfig } from "@/src/lib/public-page/editor-config";
 import {
@@ -76,12 +81,14 @@ function buildFromEditorConfig(config: PublicPageEditorConfig): PageSectionLayou
   const typeOrder = templateToSectionOrder(config.conversion.structureTemplate);
   const blockEnabled = (id: PageBlockId) => config.blocks[id]?.enabled !== false;
 
-  return PAGE_SECTION_TYPES.map((type) => {
+  const items = PAGE_SECTION_TYPES.map((type) => {
     const meta = getSectionMeta(type);
     const blockId = sectionTypeToBlockId(type);
     let enabled = meta.defaultEnabled;
     if (meta.required) enabled = true;
     else if (blockId) enabled = blockEnabled(blockId);
+    // GIFT_CARDS feature flag — réactivable
+    if (isGiftVouchersSectionType(type) && !isGiftCardsEnabled()) enabled = false;
 
     return {
       sectionType: type,
@@ -90,6 +97,11 @@ function buildFromEditorConfig(config: PublicPageEditorConfig): PageSectionLayou
       layoutVariant: null,
     };
   }).sort((a, b) => a.sortIndex - b.sortIndex);
+
+  if (!isGiftCardsEnabled()) {
+    return items.filter((i) => !isGiftVouchersSectionType(i.sectionType));
+  }
+  return items;
 }
 
 function buildFromDbRows(rows: PageSectionDbRow[], fallback: PageSectionLayoutItem[]): PageSectionLayoutItem[] {
@@ -109,6 +121,16 @@ function buildFromDbRows(rows: PageSectionDbRow[], fallback: PageSectionLayoutIt
   }).sort((a, b) => a.sortIndex - b.sortIndex);
 }
 
+function applyGiftCardsFeatureToStructure(
+  structure: PageSectionLayoutItem[],
+): PageSectionLayoutItem[] {
+  if (isGiftCardsEnabled()) return structure;
+  // GIFT_CARDS feature flag — réactivable (données DB conservées, section ignorée)
+  return structure.map((item) =>
+    isGiftVouchersSectionType(item.sectionType) ? { ...item, enabled: false } : item,
+  );
+}
+
 /** Résout la structure : DB prioritaire si au moins une ligne structurelle existe. */
 export function resolvePageSectionStructure(
   dbRows: PageSectionDbRow[],
@@ -120,7 +142,7 @@ export function resolvePageSectionStructure(
   const hasStructure = dbRows.some((r) => PAGE_SECTION_TYPES.includes(r.section_type as PageSectionType));
   if (!hasStructure) return fromEditor;
 
-  return buildFromDbRows(dbRows, fromEditor);
+  return applyGiftCardsFeatureToStructure(buildFromDbRows(dbRows, fromEditor));
 }
 
 /** Sections visibles dans l’éditeur drag & drop (hors navigation fixe). */
@@ -192,7 +214,17 @@ export function structureToEditorCompat(
     if (blocks.location) blocks.location = { ...blocks.location, enabled: true };
   }
 
-  return { sectionOrder, blocks };
+  // GIFT_CARDS feature flag — réactivable
+  if (!isGiftCardsEnabled() && blocks.gift_vouchers) {
+    blocks.gift_vouchers = { ...blocks.gift_vouchers, enabled: false };
+  }
+
+  return {
+    sectionOrder: isGiftCardsEnabled()
+      ? sectionOrder
+      : sectionOrder.filter((id) => !isGiftVouchersBlockId(id)),
+    blocks,
+  };
 }
 
 export function applyStructureToEditorConfig(
@@ -250,6 +282,8 @@ export function sectionLayoutVariantsMap(
   const out: SectionLayoutVariantsMap = {};
   for (const item of structure) {
     if (!item.enabled) continue;
+    // GIFT_CARDS feature flag — réactivable
+    if (isGiftVouchersSectionType(item.sectionType) && !isGiftCardsEnabled()) continue;
     const resolved = resolveSectionLayoutVariant(themeId, item.sectionType, item.layoutVariant);
     if (resolved) out[item.sectionType] = resolved;
   }
