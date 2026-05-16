@@ -5,6 +5,8 @@ import { useFeedbacks } from "@/src/components/dashboard/feedbacks/context/use-f
 import FeedbacksEmptyState from "@/src/components/dashboard/feedbacks/empty/feedbacks-empty-state";
 import FeedbacksHeader from "@/src/components/dashboard/feedbacks/header/feedbacks-header";
 import FeedbacksKpiCards from "@/src/components/dashboard/feedbacks/header/feedbacks-kpi-cards";
+import FeedbacksTrendChart from "@/src/components/dashboard/feedbacks/chart/feedbacks-trend-chart";
+import FeedbacksToolbar from "@/src/components/dashboard/feedbacks/toolbar/feedbacks-toolbar";
 import type { FeedbacksPageProps } from "@/src/components/dashboard/feedbacks/types";
 
 function FeedbacksPageContent() {
@@ -15,6 +17,8 @@ function FeedbacksPageContent() {
     <section className="w-full min-w-0 space-y-8 md:space-y-12">
       <FeedbacksHeader />
       <FeedbacksKpiCards />
+      {hasFeedbacks ? <FeedbacksTrendChart /> : null}
+      {hasFeedbacks ? <FeedbacksToolbar /> : null}
       {!hasFeedbacks ? <FeedbacksEmptyState /> : null}
     </section>
   );

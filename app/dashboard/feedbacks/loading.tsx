@@ -10,6 +10,8 @@ export default function FeedbacksLoading() {
           <div className="h-5 w-80 max-w-full animate-pulse rounded-lg bg-zg-surface" />
         </div>
         <FeedbacksKpiSkeleton />
+        <div className="h-[140px] w-full animate-pulse rounded-2xl bg-zg-surface" />
+        <div className="h-11 w-full max-w-xl animate-pulse rounded-xl bg-zg-surface" />
       </section>
     </DashboardContent>
   );
