@@ -29,6 +29,7 @@ export type ReservationsKpiCardProps = {
   dataTone?: StatDataTone;
   progressPercent?: number;
   progressTone?: "accent" | "warning" | "danger";
+  sublineClassName?: string;
   className?: string;
 };
 
@@ -42,6 +43,7 @@ export default function ReservationsKpiCard({
   dataTone = "accent",
   progressPercent,
   progressTone = "accent",
+  sublineClassName,
   className,
 }: ReservationsKpiCardProps) {
   const progressBarClass =
@@ -76,7 +78,9 @@ export default function ReservationsKpiCard({
       >
         {value}
       </p>
-      {subline ? <p className="mt-2 text-sm leading-snug text-zg-text-muted">{subline}</p> : null}
+      {subline ? (
+        <p className={cn("mt-2 text-sm leading-snug text-zg-text-muted", sublineClassName)}>{subline}</p>
+      ) : null}
       {trend ? (
         <p className={cn("mt-1 text-xs font-medium leading-snug", trendTextClass[trendTone])}>{trend}</p>
       ) : null}

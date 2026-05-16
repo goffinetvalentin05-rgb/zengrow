@@ -1,7 +1,14 @@
-import PageHeader from "@/src/components/dashboard/page-header";
-import FeedbacksDashboard, { type FeedbackDashboardRow } from "@/src/components/dashboard/feedbacks-dashboard";
+import { subMonths } from "date-fns";
+import FeedbacksPage from "@/src/components/dashboard/feedbacks/feedbacks-page";
+import type { FeedbackRecord } from "@/src/components/dashboard/feedbacks/types";
+import { computeFeedbackKpis } from "@/src/components/dashboard/feedbacks/utils/feedback-kpis";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 import { requireRestaurant } from "@/src/lib/auth";
+import {
+  endOfBusinessYmdAsUtcIso,
+  monthBoundsInBusinessTz,
+  startOfBusinessYmdAsUtcIso,
+} from "@/src/lib/date/business-calendar";
 import { createClient } from "@/src/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -10,25 +17,45 @@ export default async function DashboardFeedbacksPage() {
   const supabase = await createClient();
   const restaurant = await requireRestaurant();
 
-  const { data } = await supabase
-    .from("feedbacks")
-    .select("id, created_at, customer_name, customer_email, rating, message, responded_at")
-    .eq("restaurant_id", restaurant.id)
-    .not("responded_at", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(500);
+  const now = new Date();
+  const currentMonth = monthBoundsInBusinessTz(now);
+  const previousMonth = monthBoundsInBusinessTz(subMonths(now, 1));
+  const currentMonthStart = startOfBusinessYmdAsUtcIso(currentMonth.startYmd);
+  const currentMonthEnd = endOfBusinessYmdAsUtcIso(currentMonth.endYmd);
+  const previousMonthStart = startOfBusinessYmdAsUtcIso(previousMonth.startYmd);
+  const previousMonthEnd = endOfBusinessYmdAsUtcIso(previousMonth.endYmd);
 
-  const rows = (data ?? []) as FeedbackDashboardRow[];
+  const [{ data: feedbackRows }, { count: servedReservationsThisMonth }] = await Promise.all([
+    supabase
+      .from("feedbacks")
+      .select("id, created_at, customer_name, customer_email, rating, message, responded_at, read_at")
+      .eq("restaurant_id", restaurant.id)
+      .not("responded_at", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(500),
+    supabase
+      .from("reservations")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", restaurant.id)
+      .eq("status", "completed")
+      .neq("reservation_type", "walkin")
+      .gte("reservation_date", currentMonth.startYmd)
+      .lte("reservation_date", currentMonth.endYmd),
+  ]);
+
+  const feedbacks = (feedbackRows ?? []) as FeedbackRecord[];
+  const kpis = computeFeedbackKpis(
+    feedbacks,
+    servedReservationsThisMonth ?? 0,
+    currentMonthStart,
+    currentMonthEnd,
+    previousMonthStart,
+    previousMonthEnd,
+  );
 
   return (
     <DashboardContent>
-      <div className="space-y-10">
-        <PageHeader
-          title="Feedbacks"
-          subtitle="Retours privés laissés par tes clients après leur visite (hors avis publics Google)."
-        />
-        <FeedbacksDashboard initialRows={rows} />
-      </div>
+      <FeedbacksPage feedbacks={feedbacks} kpis={kpis} />
     </DashboardContent>
   );
 }

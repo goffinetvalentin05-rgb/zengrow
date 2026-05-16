@@ -190,6 +190,7 @@ export default function SettingsForm({
   const router = useRouter();
   const searchParams = useSearchParams();
   const availabilityAnchorRef = useRef<HTMLDivElement | null>(null);
+  const googleReviewsAnchorRef = useRef<HTMLDivElement | null>(null);
   const [name, setName] = useState(restaurant.name);
   const [phone, setPhone] = useState(restaurant.phone ?? "");
   const [email, setEmail] = useState(restaurant.email ?? "");
@@ -373,9 +374,15 @@ export default function SettingsForm({
 
   useEffect(() => {
     const section = searchParams.get("section");
-    if (section !== "availability") return;
+    const anchor =
+      section === "availability"
+        ? availabilityAnchorRef
+        : section === "google-reviews"
+          ? googleReviewsAnchorRef
+          : null;
+    if (!anchor) return;
     const id = window.requestAnimationFrame(() => {
-      availabilityAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      anchor.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     return () => window.cancelAnimationFrame(id);
   }, [searchParams]);
@@ -812,6 +819,7 @@ export default function SettingsForm({
           </SettingsAccordion>
         </SettingsCategoryCard>
 
+        <div ref={googleReviewsAnchorRef} id="settings-google-reviews">
         <SettingsCategoryCard
           icon={Star}
           iconWrapClassName="bg-zg-warning-soft-bg text-zg-warning"
@@ -835,6 +843,7 @@ export default function SettingsForm({
             />
           )}
         </SettingsCategoryCard>
+        </div>
 
         <SettingsCategoryCard
           icon={UserRound}
