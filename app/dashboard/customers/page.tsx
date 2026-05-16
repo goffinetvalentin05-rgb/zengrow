@@ -52,6 +52,22 @@ export default async function DashboardCustomersPage() {
     .neq("reservation_type", "walkin")
     .not("customer_id", "is", null);
 
+  const { data: reservationDates } = await supabase
+    .from("reservations")
+    .select("customer_id, reservation_date")
+    .eq("restaurant_id", restaurant.id)
+    .not("customer_id", "is", null);
+
+  const firstVisitByCustomer = new Map<string, string>();
+  for (const row of reservationDates ?? []) {
+    const id = row.customer_id as string;
+    const ymd = row.reservation_date.trim().slice(0, 10);
+    const current = firstVisitByCustomer.get(id);
+    if (!current || ymd < current) {
+      firstVisitByCustomer.set(id, ymd);
+    }
+  }
+
   const avgByCustomer = new Map<string, { sum: number; count: number }>();
   for (const row of completedReservations ?? []) {
     const id = row.customer_id as string;
@@ -97,6 +113,8 @@ export default async function DashboardCustomersPage() {
       email: customer.email,
       reservationCount: customer.reservation_count ?? 0,
       lastVisitAt: customer.last_visit_at,
+      firstVisitAt:
+        firstVisitByCustomer.get(customer.id) ?? customer.created_at.slice(0, 10),
       totalVisits: customer.total_visits ?? 0,
       avgCovers,
     };

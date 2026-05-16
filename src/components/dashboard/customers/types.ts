@@ -9,6 +9,8 @@ export type CustomerRecord = {
   email: string | null;
   reservationCount: number;
   lastVisitAt: string | null;
+  /** YYYY-MM-DD — première réservation ou date de création. */
+  firstVisitAt: string | null;
   totalVisits: number;
   avgCovers: number | null;
 };
