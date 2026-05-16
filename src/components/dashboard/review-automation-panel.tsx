@@ -14,7 +14,6 @@ import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
 import PanelToggle from "@/src/components/ui/panel-toggle";
 import ToastInline from "@/src/components/ui/toast-inline";
-import Toggle from "@/src/components/ui/toggle";
 import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-accordion";
 import { createClient } from "@/src/lib/supabase/client";
 import { cn } from "@/src/lib/utils";
@@ -65,14 +64,6 @@ const channelOptions = [
     disabled: true,
   },
 ];
-
-function SoonBadge() {
-  return (
-    <Badge tone="sand" className="shrink-0 text-[10px] font-semibold uppercase tracking-wide">
-      Bientôt disponible
-    </Badge>
-  );
-}
 
 export default function ReviewAutomationPanel({
   restaurantId,
@@ -345,17 +336,6 @@ export default function ReviewAutomationPanel({
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="Filtrage intelligent">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm text-zg-fg">
-                Ne demander un avis Google qu&apos;aux clients ayant laissé un feedback privé positif.
-              </p>
-              <SoonBadge />
-            </div>
-            <Toggle checked={false} onChange={() => {}} label="Filtrage actif (bientôt)" disabled />
-          </div>
-        </SettingsAccordion>
 
         <div className="flex flex-wrap justify-end gap-2 border-t border-zg-border/60 pt-4">
           <ActionMenu

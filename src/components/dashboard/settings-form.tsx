@@ -1,7 +1,6 @@
 "use client";
 
 import { ChangeEvent, FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -14,14 +13,13 @@ import {
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
-import Badge from "@/src/components/ui/badge";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
 import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-accordion";
 import { SettingsCategoryCard } from "@/src/components/dashboard/settings/settings-category-card";
-import { cn, formatOpeningHoursLines, type OpeningHours } from "@/src/lib/utils";
+import { cn, type OpeningHours } from "@/src/lib/utils";
 import AvailabilityEditor from "@/src/components/dashboard/availability-editor";
 import BillingPlans from "@/src/components/dashboard/billing-plans";
 import ReviewAutomationPanel from "@/src/components/dashboard/review-automation-panel";
@@ -167,14 +165,6 @@ function ReservationField({
       <p className="text-sm leading-relaxed text-zg-muted">{description}</p>
       <div>{children}</div>
     </div>
-  );
-}
-
-function SoonBadge() {
-  return (
-    <Badge tone="sand" className="shrink-0 text-[10px] font-semibold uppercase tracking-wide">
-      Bientôt disponible
-    </Badge>
   );
 }
 
@@ -456,11 +446,6 @@ export default function SettingsForm({
   // Documents (PDF) : UI retirée de la refonte, donc pas de chargement ici.
 
 
-  const openingSummaryLines = useMemo(
-    () => formatOpeningHoursLines(availabilitySettings.opening_hours),
-    [availabilitySettings.opening_hours],
-  );
-
   const confirmationEmailPreviewValues = useMemo(
     () =>
       buildReservationConfirmationVariableValues(
@@ -610,7 +595,7 @@ export default function SettingsForm({
           iconWrapClassName="bg-[#A855F7]/15 text-[#A855F7]"
           iconClassName="text-[#A855F7]"
           title="Facturation"
-          subtitle="Gère ton abonnement, ton plan et tes factures."
+          subtitle="Gère ton abonnement et ton plan."
         >
           <SettingsAccordion title="Plan actuel et abonnement">
             <BillingPlans
@@ -620,26 +605,7 @@ export default function SettingsForm({
               isOwnerDev={isOwnerDev}
             />
           </SettingsAccordion>
-          <SettingsAccordion title="Méthode de paiement">
-            <div className="flex flex-col gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">Carte enregistrée</p>
-                <p className="mt-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm text-zg-fg">•••• •••• •••• 4242</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button type="button" variant="secondary" className="min-h-11" disabled>
-                  Mettre à jour
-                </Button>
-                <SoonBadge />
-              </div>
-            </div>
-          </SettingsAccordion>
-          <SettingsAccordion title="Historique des factures">
-            <div className="flex flex-col gap-3">
-              <p className="text-sm text-zg-text-muted">Aucune facture à afficher pour le moment.</p>
-              <SoonBadge />
-            </div>
-          </SettingsAccordion>
+
         </SettingsCategoryCard>
 
         <SettingsCategoryCard
@@ -689,18 +655,6 @@ export default function SettingsForm({
               </div>
             </div>
           </SettingsAccordion>
-          <SettingsAccordion title="Horaires d'ouverture">
-            <ul className="space-y-2 text-sm text-zg-fg">
-              {openingSummaryLines.map((line) => (
-                <li key={line} className="rounded-lg border border-zg-border/70 bg-zg-surface/60 px-3 py-2">
-                  {line}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-xs text-zg-text-muted">
-              Ces horaires reflètent tes disponibilités de réservation. Pour les modifier, ouvre la section « Disponibilités & réservations ».
-            </p>
-          </SettingsAccordion>
         </SettingsCategoryCard>
 
         <div ref={availabilityAnchorRef} id="settings-availability">
@@ -718,13 +672,6 @@ export default function SettingsForm({
               <div className="flex flex-col gap-6">
                 <AvailabilityEditor embedded embeddedPart="params" restaurantId={restaurant.id} settings={availabilitySettings} />
                 <div className="grid gap-4 border-t border-zg-border/60 pt-4 md:grid-cols-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <label className="dashboard-field-label">Délai minimum avant réservation</label>
-                      <SoonBadge />
-                    </div>
-                    <Input className="mt-2" disabled placeholder="—" />
-                  </div>
                   <div>
                     <label className="dashboard-field-label">Délai max. de réservation à l'avance (jours)</label>
                     <Input
@@ -904,14 +851,7 @@ export default function SettingsForm({
                   onChange={(v) => setReservationConfirmationMode(v ? "automatic" : "manual")}
                 />
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-3 opacity-70">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-zg-fg">E-mail de rappel J-1</span>
-                  <SoonBadge />
-                </div>
-                <Toggle checked={false} onChange={() => {}} disabled />
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-3 opacity-90">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <span className="text-sm font-medium text-zg-fg">Demande d&apos;avis après la visite</span>
                   <p className="mt-1 text-xs text-zg-text-muted">
@@ -919,21 +859,6 @@ export default function SettingsForm({
                   </p>
                 </div>
               </div>
-            </div>
-          </SettingsAccordion>
-          <SettingsAccordion title="Tes notifications (ce que tu reçois)">
-            <div className="flex flex-col gap-4">
-              {["Nouvelle réservation par e-mail", "Nouvelle réservation par SMS", "Digest quotidien des réservations", "Alerte annulation"].map(
-                (label) => (
-                  <div key={label} className="flex flex-wrap items-center justify-between gap-3 opacity-70">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-zg-fg">{label}</span>
-                      <SoonBadge />
-                    </div>
-                    <Toggle checked={false} onChange={() => {}} disabled />
-                  </div>
-                ),
-              )}
             </div>
           </SettingsAccordion>
         </SettingsCategoryCard>
@@ -970,22 +895,12 @@ export default function SettingsForm({
           subtitle="Tes infos personnelles et préférences."
         >
           <SettingsAccordion title="Profil">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-4">
               <div>
-                <label className="dashboard-field-label">Prénom</label>
-                <Input disabled placeholder="—" />
-                <SoonBadge />
-              </div>
-              <div>
-                <label className="dashboard-field-label">Nom</label>
-                <Input disabled placeholder="—" />
-                <SoonBadge />
-              </div>
-              <div className="md:col-span-2">
                 <label className="dashboard-field-label">E-mail de connexion</label>
                 <Input readOnly value={authEmail ?? ""} />
               </div>
-              <div className="md:col-span-2 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
                   variant="secondary"
@@ -1000,27 +915,10 @@ export default function SettingsForm({
               </div>
             </div>
           </SettingsAccordion>
-          <SettingsAccordion title="Sécurité">
-            <p className="text-sm text-zg-muted">La gestion du mot de passe dépend de ta méthode de connexion.</p>
-            <div className="mt-3 flex items-center gap-2">
-              <Button type="button" variant="secondary" className="min-h-11" disabled>
-                Changer le mot de passe
-              </Button>
-              <SoonBadge />
-            </div>
-          </SettingsAccordion>
           <SettingsAccordion title="Préférences">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="dashboard-field-label">Langue</label>
-                <Input readOnly value="Français" />
-                <SoonBadge />
-              </div>
-              <div>
-                <label className="dashboard-field-label">Fuseau horaire</label>
-                <Input readOnly value="Europe/Zurich" />
-                <SoonBadge />
-              </div>
+            <div>
+              <label className="dashboard-field-label">Langue</label>
+              <Input readOnly value="Français" className="mt-2 max-w-sm" />
             </div>
           </SettingsAccordion>
           <SettingsAccordion title="Zone de danger" danger>
