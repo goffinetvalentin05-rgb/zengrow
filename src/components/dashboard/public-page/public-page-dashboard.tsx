@@ -1,15 +1,24 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import { Copy, ExternalLink, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Copy, Eye, Sparkles } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
-import Button from "@/src/components/ui/button";
 import PublicPageSettingsPanel, {
   type PublicPageSettingsHandle,
   type PublicPageSettingsInitial,
 } from "@/src/components/dashboard/public-page/public-page-settings-panel";
+import PublicPageSectionNav from "@/src/components/dashboard/public-page/public-page-section-nav";
+import PublicPageStatusLine from "@/src/components/dashboard/public-page/public-page-status-line";
+import PublicPageSaveIndicator, {
+  type PublicPageSaveStatus,
+} from "@/src/components/dashboard/public-page/public-page-save-indicator";
+import type { PublicPagePublishState } from "@/src/components/dashboard/public-page/public-page-types";
+import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
+import { CheckCircle2 } from "lucide-react";
+
+const AUTOSAVE_MS = 500;
 
 type PublicPageDashboardProps = {
   initial: PublicPageSettingsInitial;
@@ -18,12 +27,18 @@ type PublicPageDashboardProps = {
 
 export default function PublicPageDashboard({ initial, publicLink }: PublicPageDashboardProps) {
   const supabase = createClient();
+  const showToast = useDashboardToast();
   const panelRef = useRef<PublicPageSettingsHandle | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [publicPath, setPublicPath] = useState(publicLink);
+  const [publishState, setPublishState] = useState<PublicPagePublishState>({
+    pageStatus: initial.pageStatus,
+    publishedAt: initial.publishedAt,
+    hasUnpublishedChanges: false,
+  });
+  const [saveStatus, setSaveStatus] = useState<PublicPageSaveStatus>("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [autosaveTick, setAutosaveTick] = useState(0);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const effectivePublicPath = useMemo(() => {
     const slug = panelRef.current?.getSlug() ?? initial.slug;
@@ -31,13 +46,11 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
   }, [publicLink, initial.slug, publicPath]);
 
   const handleSave = useCallback(async () => {
-    setMessage(null);
-    setIsSaving(true);
     const panel = panelRef.current;
-    if (!panel) {
-      setIsSaving(false);
-      return;
-    }
+    if (!panel) return { ok: false as const };
+
+    setSaveStatus("saving");
+    setSaveError(null);
 
     const restaurantPatch = panel.getRestaurantUpdate();
     const settingsPatch = panel.getSettingsUpdate();
@@ -49,9 +62,9 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
       .eq("id", initial.restaurantId);
 
     if (restaurantError) {
-      setMessage(restaurantError.message);
-      setIsSaving(false);
-      return;
+      setSaveError(restaurantError.message);
+      setSaveStatus("error");
+      return { ok: false as const, error: restaurantError.message };
     }
 
     const { error: settingsError } = await supabase
@@ -62,99 +75,137 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
       );
 
     if (settingsError) {
-      setMessage(settingsError.message);
-      setIsSaving(false);
-      return;
+      setSaveError(settingsError.message);
+      setSaveStatus("error");
+      return { ok: false as const, error: settingsError.message };
     }
 
     const sectionsResult = await panel.syncPageSectionsToDatabase();
     if (!sectionsResult.ok) {
-      setMessage(sectionsResult.error ?? "Échec de la synchronisation des textes de section.");
-      setIsSaving(false);
+      const err = sectionsResult.error ?? "Échec de la synchronisation des sections.";
+      setSaveError(err);
+      setSaveStatus("error");
+      return { ok: false as const, error: err };
+    }
+
+    panel.acknowledgeSave();
+    setPublishState(panel.getPublishState());
+    setPublicPath(publicLink.replace(initial.slug, slug));
+    setSaveStatus("saved");
+    window.setTimeout(() => setSaveStatus("idle"), 2000);
+    return { ok: true as const };
+  }, [supabase, initial.restaurantId, initial.slug, publicLink]);
+
+  const handleDirtyChange = useCallback(() => {
+    setSaveStatus("pending");
+    setAutosaveTick((n) => n + 1);
+  }, []);
+
+  useEffect(() => {
+    if (autosaveTick === 0) return;
+    const panel = panelRef.current;
+    if (!panel?.hasPendingChanges()) {
+      setSaveStatus("idle");
       return;
     }
 
-    setPublicPath(publicLink.replace(initial.slug, slug));
-    setMessage("Modifications enregistrées.");
-    setSaveSuccess(true);
-    window.setTimeout(() => setSaveSuccess(false), 2000);
-    setIsSaving(false);
-  }, [supabase, initial.restaurantId, initial.slug, publicLink]);
+    const timer = window.setTimeout(() => {
+      void handleSave();
+    }, AUTOSAVE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [autosaveTick, handleSave]);
 
   const handlePublish = useCallback(async () => {
-    setMessage(null);
-    setIsPublishing(true);
     const panel = panelRef.current;
-    if (!panel) {
-      setIsPublishing(false);
-      return;
+    if (!panel) return;
+
+    setIsPublishing(true);
+
+    if (panel.hasPendingChanges()) {
+      const saveResult = await handleSave();
+      if (!saveResult.ok) {
+        setIsPublishing(false);
+        return;
+      }
     }
 
     const result = await panel.publishPage();
-    if (!result.ok) {
-      setMessage(result.error ?? "Échec de la publication.");
-    } else {
-      setPublicPath(publicLink.replace(initial.slug, panel.getSlug()));
-    }
     setIsPublishing(false);
-  }, [initial.slug, publicLink]);
+
+    if (result.noop) {
+      showToast({ message: "Aucun changement à publier.", icon: CheckCircle2 });
+      return;
+    }
+
+    if (!result.ok) {
+      showToast({ message: result.error ?? "Échec de la publication." });
+      return;
+    }
+
+    setPublicPath(publicLink.replace(initial.slug, panel.getSlug()));
+    showToast({ message: "Page publiée.", icon: CheckCircle2 });
+  }, [handleSave, initial.slug, publicLink, showToast]);
+
+  const publishLabel = useMemo(() => {
+    if (isPublishing) return "Publication…";
+    const pending = publishState.hasUnpublishedChanges;
+    if (publishState.pageStatus === "published") {
+      return pending ? "Publier les changements" : "Publier";
+    }
+    return "Publier";
+  }, [isPublishing, publishState]);
 
   return (
-    <DashboardContent className="pb-8">
-      <div className="space-y-8">
+    <DashboardContent className="pb-16">
+      <div className="space-y-4">
         <PageHeader
           title="Page publique"
-          subtitle="Personnalisez votre page restaurant, optimisez vos réservations et publiez vos changements."
-          titleClassName="text-3xl font-bold tracking-tight"
-          subtitleClassName="text-sm text-zg-text-muted"
+          subtitle="Personnalisez votre page restaurant"
           secondaryActions={[
+            {
+              kind: "external",
+              href: effectivePublicPath,
+              label: "Aperçu",
+              icon: <Eye className="h-4 w-4" strokeWidth={2} aria-hidden />,
+            },
             {
               kind: "copy",
               label: "Copier le lien",
               value: effectivePublicPath,
-              icon: <Copy className="mr-2 h-4 w-4" />,
-            },
-            {
-              kind: "external",
-              href: effectivePublicPath,
-              label: "Ouvrir la page",
-              icon: <ExternalLink className="mr-2 h-4 w-4" />,
+              icon: <Copy className="h-4 w-4" strokeWidth={2} aria-hidden />,
             },
           ]}
           primaryAction={{
             kind: "button",
-            label: isPublishing ? "Publication…" : "Publier",
-            icon: <Sparkles className="mr-2 h-4 w-4" />,
+            label: publishLabel,
+            icon: <Sparkles className="h-4 w-4" strokeWidth={2} aria-hidden />,
             onClick: handlePublish,
             disabled: isPublishing,
           }}
         />
 
-        <PublicPageSettingsPanel
-          ref={panelRef}
-          initial={initial}
-          publicLinkBase={publicPath}
-          onMessage={setMessage}
-          showSummaryBar
-          hidePreviewPublish
-        />
+        <PublicPageStatusLine publicPath={effectivePublicPath} publishState={publishState} />
 
-        <div
-          className="sticky bottom-4 z-20 flex flex-col gap-3 rounded-2xl border border-zg-border bg-zg-surface px-4 py-3 shadow-lg sm:flex-row sm:items-center sm:justify-between"
-          role="status"
-        >
-          <p className="min-w-0 text-sm text-zg-text-muted">
-            {message ? (
-              <span className="text-zg-fg">{message}</span>
-            ) : (
-              <span>Enregistrez pour sauvegarder un brouillon avant de publier.</span>
-            )}
-          </p>
-          <Button type="button" className="min-h-11 w-full shrink-0 px-6 sm:w-auto" disabled={isSaving} onClick={handleSave}>
-            {saveSuccess ? "Enregistré ✓" : isSaving ? "Enregistrement…" : "Enregistrer les modifications"}
-          </Button>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <PublicPageSectionNav />
+          <div className="min-w-0 flex-1 space-y-8">
+            <PublicPageSettingsPanel
+              ref={panelRef}
+              initial={initial}
+              publicLinkBase={publicPath}
+              showSummaryBar={false}
+              hidePreviewPublish
+              hideZoneNav
+              hideLivePreview
+              onDirtyChange={handleDirtyChange}
+              onPublishStateChange={setPublishState}
+            />
+          </div>
         </div>
       </div>
+
+      <PublicPageSaveIndicator status={saveStatus} errorMessage={saveError} />
     </DashboardContent>
   );
 }

@@ -38,8 +38,10 @@ export default function ThemeCard({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        "flex flex-col overflow-hidden rounded-2xl border text-left transition-all",
-        selected ? "border-zg-accent shadow-md ring-2 ring-zg-accent" : "border-zg-border hover:border-zg-accent/50",
+        "group flex flex-col overflow-hidden rounded-2xl border-2 text-left transition-all duration-200",
+        selected
+          ? "border-zg-accent shadow-lg ring-2 ring-zg-accent/30"
+          : "border-zg-border hover:border-zg-accent/50 hover:shadow-md",
       )}
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-zg-border/30">
@@ -50,14 +52,21 @@ export default function ThemeCard({
             src={previewImage}
             alt={`Aperçu du thème ${name}`}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
             onError={() => setImageFailed(true)}
           />
         )}
       </div>
       <div className="space-y-1 p-4">
-        <p className="font-semibold text-zg-fg">{name}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-semibold text-zg-fg">{name}</p>
+          {selected ? (
+            <span className="shrink-0 rounded-full bg-zg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+              Sélectionné
+            </span>
+          ) : null}
+        </div>
         <p className="text-xs leading-relaxed text-zg-text-muted">{description}</p>
       </div>
     </button>

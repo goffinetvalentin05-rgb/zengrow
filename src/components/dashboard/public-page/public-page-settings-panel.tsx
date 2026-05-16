@@ -90,6 +90,8 @@ import {
   type PageSectionLayoutItem,
 } from "@/src/lib/public-page/page-section-structure";
 import PageSectionsEditor from "@/src/components/dashboard/public-page/page-sections-editor";
+import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
+import { CheckCircle2 } from "lucide-react";
 import { isBlockEnabledInStructure } from "@/src/lib/public-page/section-registry";
 import { PUBLIC_PAGE_FONT_LIBRARY, googleFontsHref } from "@/src/lib/public-page-fonts";
 import {
@@ -274,13 +276,18 @@ export type PublicPageSettingsInitial = {
   pageSectionRows: PageSectionDbRow[];
 };
 
+export type { PublicPagePublishState } from "@/src/components/dashboard/public-page/public-page-types";
+
 export type PublicPageSettingsHandle = {
   getRestaurantUpdate: () => Record<string, unknown>;
   getSettingsUpdate: () => Record<string, unknown>;
   getSlug: () => string;
   /** Upsert minimal dans `restaurant_page_sections` (diff vs défauts thème + gabarit). */
   syncPageSectionsToDatabase: () => Promise<{ ok: boolean; error?: string }>;
-  publishPage: () => Promise<{ ok: boolean; error?: string }>;
+  publishPage: () => Promise<{ ok: boolean; error?: string; noop?: boolean }>;
+  getPublishState: () => import("@/src/components/dashboard/public-page/public-page-types").PublicPagePublishState;
+  hasPendingChanges: () => boolean;
+  acknowledgeSave: () => void;
 };
 
 type PublicPageSettingsPanelProps = {
@@ -291,6 +298,12 @@ type PublicPageSettingsPanelProps = {
   showSummaryBar?: boolean;
   /** Masque le bouton Publier dans l’aperçu (publication via le header de la page dédiée). */
   hidePreviewPublish?: boolean;
+  hideZoneNav?: boolean;
+  hideLivePreview?: boolean;
+  onDirtyChange?: () => void;
+  onPublishStateChange?: (
+    state: import("@/src/components/dashboard/public-page/public-page-types").PublicPagePublishState,
+  ) => void;
 };
 
 function FieldHint({ children }: { children: React.ReactNode }) {
@@ -309,8 +322,7 @@ function PageSectionsStructureCard({
   return (
     <>
       <p className="max-w-2xl text-sm text-zg-text-muted">
-        Réordonnez les sections, choisissez une variante de mise en page (thèmes premium) et activez les blocs affichés.
-        Les changements apparaissent dans l’aperçu après enregistrement.
+        Glissez pour réordonner. Hero et Réservation sont obligatoires.
       </p>
       <div className="mt-4">
         <PageSectionsEditor
@@ -325,10 +337,21 @@ function PageSectionsStructureCard({
 
 const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageSettingsPanelProps>(
   function PublicPageSettingsPanel(
-    { initial, publicLinkBase, onMessage, showSummaryBar = true, hidePreviewPublish = false },
+    {
+      initial,
+      publicLinkBase,
+      onMessage,
+      showSummaryBar = true,
+      hidePreviewPublish = false,
+      hideZoneNav = false,
+      hideLivePreview = false,
+      onDirtyChange,
+      onPublishStateChange,
+    },
     ref,
   ) {
     const supabase = createClient();
+    const showToast = useDashboardToast();
 
     // Charge toutes les polices premium dans le document du dashboard pour que
     // les chips de typographie s'affichent réellement dans la bonne police.
@@ -455,6 +478,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const [pageStatus, setPageStatus] = useState<"draft" | "published">(initial.pageStatus);
     const [publishedAt, setPublishedAt] = useState<string | null>(initial.publishedAt);
     const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
+    const [hasLocalChanges, setHasLocalChanges] = useState(false);
 
     const [accentColor, setAccentColor] = useState(initial.accentColor);
     const [headingFont, setHeadingFont] = useState(initial.headingFont);
@@ -552,17 +576,37 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       [conversionScoreInput, editorConfig.conversion],
     );
 
+    const publishState = useMemo(
+      () => ({
+        pageStatus,
+        publishedAt,
+        hasUnpublishedChanges: hasUnpublishedChanges || hasLocalChanges,
+      }),
+      [pageStatus, publishedAt, hasUnpublishedChanges, hasLocalChanges],
+    );
+
+    useEffect(() => {
+      onPublishStateChange?.(publishState);
+    }, [publishState, onPublishStateChange]);
+
     const markDirty = useCallback(() => {
+      setHasLocalChanges(true);
       if (pageStatus === "published") setHasUnpublishedChanges(true);
-    }, [pageStatus]);
+      onDirtyChange?.();
+    }, [pageStatus, onDirtyChange]);
+
+    const acknowledgeSave = useCallback(() => {
+      setHasLocalChanges(false);
+    }, []);
 
     const handleSectionStructureChange = useCallback(
       (next: PageSectionLayoutItem[]) => {
         setPageSectionStructure(next);
         setEditorConfig((c) => applyStructureToEditorConfig(c, next));
         markDirty();
+        showToast({ message: "Ordre des sections mis à jour.", icon: CheckCircle2 });
       },
-      [markDirty],
+      [markDirty, showToast],
     );
 
     async function handleFileUpload(
@@ -1102,6 +1146,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     );
 
     const publishPage = useCallback(async () => {
+      if (!hasLocalChanges && !hasUnpublishedChanges && pageStatus === "published") {
+        return { ok: true, noop: true };
+      }
+
       const now = new Date().toISOString();
       const { error } = await supabase
         .from("restaurants")
@@ -1130,9 +1178,20 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       setPageStatus("published");
       setPublishedAt(now);
       setHasUnpublishedChanges(false);
+      setHasLocalChanges(false);
       onMessage?.("Page publiée.");
       return { ok: true };
-    }, [supabase, getRestaurantUpdate, getSettingsUpdate, initial.restaurantId, onMessage, syncPageSectionsToDatabase]);
+    }, [
+      supabase,
+      getRestaurantUpdate,
+      getSettingsUpdate,
+      initial.restaurantId,
+      onMessage,
+      syncPageSectionsToDatabase,
+      hasLocalChanges,
+      hasUnpublishedChanges,
+      pageStatus,
+    ]);
 
     useImperativeHandle(
       ref,
@@ -1142,8 +1201,21 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         getSlug: () => effectiveSlug,
         syncPageSectionsToDatabase,
         publishPage,
+        getPublishState: () => publishState,
+        hasPendingChanges: () => hasLocalChanges || hasUnpublishedChanges,
+        acknowledgeSave,
       }),
-      [getRestaurantUpdate, getSettingsUpdate, effectiveSlug, syncPageSectionsToDatabase, publishPage],
+      [
+        getRestaurantUpdate,
+        getSettingsUpdate,
+        effectiveSlug,
+        syncPageSectionsToDatabase,
+        publishPage,
+        publishState,
+        hasLocalChanges,
+        hasUnpublishedChanges,
+        acknowledgeSave,
+      ],
     );
 
     const statusLabel =
@@ -1187,30 +1259,33 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           </div>
         ) : null}
 
-        <nav
-          className="flex flex-wrap gap-2 rounded-xl border border-zg-border/80 bg-zg-surface-elevated/40 p-2 text-xs font-medium"
-          aria-label="Zones de personnalisation"
-        >
-          {[
-            { href: "#zone-theme", label: "Thème" },
-            { href: "#zone-identite", label: "Identité" },
-            { href: "#zone-sections", label: "Sections" },
-            { href: "#zone-contenu", label: "Contenu" },
-          ].map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="rounded-lg px-3 py-1.5 text-zg-text-muted transition hover:bg-zg-border/40 hover:text-zg-fg"
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
+        {hideZoneNav ? null : (
+          <nav
+            className="flex flex-wrap gap-2 rounded-xl border border-zg-border/80 bg-zg-surface-elevated/40 p-2 text-xs font-medium"
+            aria-label="Zones de personnalisation"
+          >
+            {[
+              { href: "#zone-theme", label: "Thème" },
+              { href: "#zone-identite", label: "Identité" },
+              { href: "#zone-sections", label: "Sections" },
+              { href: "#zone-contenu", label: "Contenu" },
+            ].map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="rounded-lg px-3 py-1.5 text-zg-text-muted transition hover:bg-zg-border/40 hover:text-zg-fg"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+        )}
 
         <CustomizationZone
           id="zone-theme"
+          icon="🎨"
           title="Thème"
-          description="Choisissez le style visuel global de votre page publique."
+          description="Choisissez le style visuel global de votre page."
         >
           <PublicPageThemePicker
             publicUrl={publicLinkBase}
@@ -1218,6 +1293,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             onSelect={(id) => {
               setThemeId(id);
               markDirty();
+            }}
+            onThemeApplied={() => {
+              showToast({ message: "Thème changé.", icon: CheckCircle2 });
             }}
             overrides={themeOverrides}
             onResetOverrides={() => {
@@ -1229,8 +1307,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
         <CustomizationZone
           id="zone-identite"
+          icon="✨"
           title="Identité"
-          description="Typographie et couleur d’accent — presets validés pour la lisibilité (WCAG)."
+          description="Personnalisez les couleurs, polices et logo."
         >
           <PublicPageIdentitySection
             themeId={themeId}
@@ -1251,13 +1330,22 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               );
               markDirty();
             }}
+            logoUrl={logoUrl}
+            isUploadingLogo={isUploadingLogo}
+            onLogoUpload={(e) => void handleFileUpload(e, "logo")}
+            onLogoRemove={() => {
+              void tryRemoveRestaurantPublicObject(supabase, logoUrl);
+              setLogoUrl("");
+              markDirty();
+            }}
           />
         </CustomizationZone>
 
         <CustomizationZone
           id="zone-sections"
+          icon="🧱"
           title="Sections"
-          description="Réordonnez les blocs, choisissez les variantes de mise en page et activez les sections affichées."
+          description="Organisez les blocs de votre page publique."
         >
           <PageSectionsStructureCard
             themeId={themeId}
@@ -1268,8 +1356,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
         <CustomizationZone
           id="zone-contenu"
+          icon="✏️"
           title="Contenu"
-          description="Textes, images, menu et paramètres de réservation — le cœur éditorial de votre page."
+          description="Modifiez le texte, les images et les données de chaque section."
           className="space-y-8 !p-0 !border-0 !bg-transparent shadow-none"
         >
         <div className="space-y-8">
@@ -1360,7 +1449,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="mt-6">
             <div className="rounded-2xl border border-zg-border bg-zg-surface/60 p-4">
               <label className="dashboard-field-label">Image principale (hero)</label>
               <FieldHint>
@@ -1412,56 +1501,6 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               </div>
             </div>
 
-            <div className="rounded-2xl border border-zg-border bg-zg-surface/60 p-4">
-              <label className="dashboard-field-label">Logo</label>
-              <FieldHint>
-                Utilisez une photo nette pour votre logo. Format carré ou horizontal recommandé.
-              </FieldHint>
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
-                  <Upload className="h-4 w-4" />
-                  {logoUrl ? "Remplacer" : "Importer un logo"}
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
-                    className="hidden"
-                    onChange={(e) => handleFileUpload(e, "logo")}
-                  />
-                </label>
-                {logoUrl ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-h-9"
-                    onClick={() => {
-                      void tryRemoveRestaurantPublicObject(supabase, logoUrl);
-                      setLogoUrl("");
-                      markDirty();
-                    }}
-                  >
-                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                    Retirer
-                  </Button>
-                ) : null}
-                {isUploadingLogo ? <span className="text-xs text-zg-muted">Envoi…</span> : null}
-              </div>
-              <div className="mt-3 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border border-zg-border bg-zg-surface">
-                {logoUrl ? (
-                  <div className="relative h-full w-full">
-                    <Image
-                      src={logoUrl}
-                      alt=""
-                      fill
-                      className="object-contain p-2"
-                      unoptimized
-                      sizes="96px"
-                    />
-                  </div>
-                ) : (
-                  <ImageIcon className="h-7 w-7 text-zg-muted" />
-                )}
-              </div>
-            </div>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -3080,23 +3119,25 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     return (
       <div className="space-y-2">
         {editor}
-        <PublicPagePreviewStudio
-          draft={previewDraft}
-          publicPath={publicPath}
-          conversionScore={conversionScore}
-          pageStatusLabel={statusLabel}
-          onPublish={
-            hidePreviewPublish
-              ? undefined
-              : async () => {
-                  setIsPublishing(true);
-                  const result = await publishPage();
-                  setIsPublishing(false);
-                  if (!result.ok) onMessage?.(result.error ?? "Échec de la publication.");
-                }
-          }
-          isPublishing={hidePreviewPublish ? undefined : isPublishing}
-        />
+        {hideLivePreview ? null : (
+          <PublicPagePreviewStudio
+            draft={previewDraft}
+            publicPath={publicPath}
+            conversionScore={conversionScore}
+            pageStatusLabel={statusLabel}
+            onPublish={
+              hidePreviewPublish
+                ? undefined
+                : async () => {
+                    setIsPublishing(true);
+                    const result = await publishPage();
+                    setIsPublishing(false);
+                    if (!result.ok) onMessage?.(result.error ?? "Échec de la publication.");
+                  }
+            }
+            isPublishing={hidePreviewPublish ? undefined : isPublishing}
+          />
+        )}
       </div>
     );
   },

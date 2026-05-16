@@ -9,7 +9,9 @@ import {
   resolvePageBackgroundHex,
 } from "@/src/lib/themes/colors/accent-presets";
 import { contrastButtonText, evaluateAccentAccessibility } from "@/src/lib/themes/colors/contrast";
+import PublicPageLogoField from "@/src/components/dashboard/public-page/public-page-logo-field";
 import type { ThemeId, ThemeOverrides } from "@/src/lib/themes/types";
+import type { ChangeEvent } from "react";
 
 type PublicPageIdentitySectionProps = {
   themeId: ThemeId;
@@ -18,6 +20,10 @@ type PublicPageIdentitySectionProps = {
   /** Thème classique : couleur CTA stockée hors theme_overrides. */
   legacyAccentColor?: string;
   onLegacyAccentChange?: (hex: string) => void;
+  logoUrl?: string;
+  isUploadingLogo?: boolean;
+  onLogoUpload?: (event: ChangeEvent<HTMLInputElement>) => void;
+  onLogoRemove?: () => void;
 };
 
 function hexOrEmpty(v: string | undefined): string {
@@ -30,6 +36,10 @@ export default function PublicPageIdentitySection({
   onOverridesChange,
   legacyAccentColor,
   onLegacyAccentChange,
+  logoUrl = "",
+  isUploadingLogo = false,
+  onLogoUpload,
+  onLogoRemove,
 }: PublicPageIdentitySectionProps) {
   const isPremium = themeId !== "default";
   const pageBg = resolvePageBackgroundHex(themeId, overrides.colors?.bg);
@@ -84,6 +94,15 @@ export default function PublicPageIdentitySection({
 
   return (
     <div className="space-y-6">
+      {onLogoUpload && onLogoRemove ? (
+        <PublicPageLogoField
+          logoUrl={logoUrl}
+          isUploading={isUploadingLogo}
+          onUpload={onLogoUpload}
+          onRemove={onLogoRemove}
+        />
+      ) : null}
+
       <div>
         <h4 className="text-sm font-semibold text-zg-fg">Typographie</h4>
         <p className="mt-1 text-xs text-zg-text-muted">

@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { useMemo } from "react";
 import ThemeCard from "@/src/components/dashboard/public-page/theme-card";
 import Button from "@/src/components/ui/button";
@@ -13,6 +13,7 @@ type PublicPageThemePickerProps = {
   onSelect: (id: ThemeId) => void;
   overrides: ThemeOverrides;
   onResetOverrides: () => void;
+  onThemeApplied?: (id: ThemeId) => void;
 };
 
 function hasAnyOverrides(overrides: ThemeOverrides): boolean {
@@ -23,29 +24,21 @@ function hasAnyOverrides(overrides: ThemeOverrides): boolean {
 }
 
 export default function PublicPageThemePicker({
-  publicUrl,
   selectedId,
   onSelect,
   overrides,
   onResetOverrides,
+  onThemeApplied,
 }: PublicPageThemePickerProps) {
   const themes = useMemo(() => listThemes(), []);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <p className="max-w-2xl text-sm text-zg-text-muted">
-          La structure de la page (réservation, menu, galerie) reste identique — seul le rendu visuel change.
-        </p>
-        <a href={publicUrl} target="_blank" rel="noreferrer">
-          <Button type="button" variant="secondary" className="min-h-10 w-full gap-2 sm:w-auto">
-            <ExternalLink className="h-4 w-4" />
-            Aperçu public
-          </Button>
-        </a>
-      </div>
+      <p className="max-w-2xl text-sm text-zg-text-muted">
+        La structure de la page (réservation, menu, galerie) reste identique — seul le rendu visuel change.
+      </p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {themes.map((t) => (
           <ThemeCard
             key={t.id}
@@ -53,14 +46,19 @@ export default function PublicPageThemePicker({
             description={t.description}
             previewImage={t.previewImage}
             selected={selectedId === t.id}
-            onSelect={() => onSelect(t.id)}
+            onSelect={() => {
+              if (selectedId !== t.id) {
+                onSelect(t.id);
+                onThemeApplied?.(t.id);
+              }
+            }}
           />
         ))}
       </div>
 
       {hasAnyOverrides(overrides) ? (
         <div className="flex justify-end">
-          <Button type="button" variant="secondary" className="mt-4 min-h-9 gap-2 text-xs" onClick={onResetOverrides}>
+          <Button type="button" variant="secondary" className="min-h-9 gap-2 text-xs" onClick={onResetOverrides}>
             <RotateCcw className="h-3.5 w-3.5" />
             Revenir au préréglage du thème
           </Button>
