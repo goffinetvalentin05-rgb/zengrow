@@ -7,10 +7,12 @@ import DashboardSidebar from "@/src/components/dashboard/sidebar";
 import DashboardTopBar from "@/src/components/dashboard/dashboard-top-bar";
 import { DashboardToastProvider } from "@/src/components/dashboard/dashboard-toast-provider";
 import { DashboardTitleProvider } from "@/src/components/dashboard/dashboard-title-context";
+import { NotificationProvider } from "@/src/components/dashboard/notifications/notification-provider";
 
 type DashboardShellProps = {
   children: React.ReactNode;
   fontClassName: string;
+  restaurantId: string;
   publicLink: string;
   restaurantName: string;
   userDisplayName: string;
@@ -24,6 +26,7 @@ type DashboardShellProps = {
 export default function DashboardShell({
   children,
   fontClassName,
+  restaurantId,
   publicLink,
   restaurantName,
   userDisplayName,
@@ -40,6 +43,7 @@ export default function DashboardShell({
   return (
     <DashboardToastProvider>
       <DashboardTitleProvider>
+        <NotificationProvider restaurantId={restaurantId}>
         <div className={cn(fontClassName, "min-h-screen bg-zg-app text-zg-fg antialiased")}>
           <AnimatePresence>
             {mobileNavOpen ? (
@@ -80,6 +84,7 @@ export default function DashboardShell({
             </div>
           </div>
         </div>
+        </NotificationProvider>
       </DashboardTitleProvider>
     </DashboardToastProvider>
   );

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, Menu, Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
+import NotificationBell from "@/src/components/dashboard/notifications/notification-bell";
 import { cn } from "@/src/lib/utils";
 import { buttonClassName } from "@/src/components/ui/button";
 
@@ -15,8 +16,6 @@ type DashboardTopBarProps = {
   userInitials: string;
   userAvatarUrl?: string | null;
   onOpenMobileNav?: () => void;
-  /** Futur : brancher sur des événements réels (résas, avis…). */
-  hasNotifications?: boolean;
 };
 
 export default function DashboardTopBar({
@@ -27,7 +26,6 @@ export default function DashboardTopBar({
   userInitials,
   userAvatarUrl,
   onOpenMobileNav,
-  hasNotifications = false,
 }: DashboardTopBarProps) {
   void _restaurantName;
   const initials = (userInitials || "?").slice(0, 2).toUpperCase();
@@ -126,16 +124,7 @@ export default function DashboardTopBar({
           />
         </label>
 
-        <button
-          type="button"
-          className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-zg-border bg-zg-surface text-zg-text-secondary transition-all duration-200 ease-out hover:border-zg-border-hover hover:text-zg-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app"
-          aria-label="Notifications"
-        >
-          <Bell className="h-[18px] w-[18px]" strokeWidth={1.75} />
-          {hasNotifications ? (
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-zg-accent ring-2 ring-zg-surface" />
-          ) : null}
-        </button>
+        <NotificationBell />
 
         <div className="flex min-w-0 items-center gap-3 sm:pl-1">
           {userAvatarUrl ? (

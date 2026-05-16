@@ -55,6 +55,7 @@ export default async function DashboardLayout({
   return (
     <DashboardShell
       fontClassName={inter.className}
+      restaurantId={restaurant.id}
       publicLink={publicLink}
       restaurantName={restaurant.name}
       userDisplayName={userDisplayName}

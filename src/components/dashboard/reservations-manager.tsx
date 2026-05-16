@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { addDays } from "date-fns";
 import { formatInTimeZone, toDate } from "date-fns-tz";
 import { createClient } from "@/src/lib/supabase/client";
@@ -107,6 +108,8 @@ export default function ReservationsManager({
 }: ReservationsManagerProps) {
   void reservationDurationMinutes;
   const supabase = createClient();
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get("highlight");
   const [reservations, setReservations] = useState(sortReservations(initialReservations));
   const [daySectionDate, setDaySectionDate] = useState(() => calendarYmdInBusinessTz());
   const [daySectionStatus, setDaySectionStatus] = useState<DayStatusFilter>("all");
@@ -138,6 +141,14 @@ export default function ReservationsManager({
   );
 
   const zoneLabelTerrace = terraceLabel.trim() || "Terrasse";
+
+  useEffect(() => {
+    if (!highlightId) return;
+    const match = reservations.find((r) => r.id === highlightId);
+    if (!match) return;
+    setDaySectionDate(match.reservation_date);
+    setSelectedReservationId(match.id);
+  }, [highlightId, reservations]);
 
   const dayZoneOptions = useMemo(
     (): { value: DayZoneFilter; label: string }[] => [

@@ -9,6 +9,7 @@ import { asRestaurantReservationEmailRow } from "@/src/lib/reservation/restauran
 import type { SubscriptionStatus } from "@/src/lib/subscription";
 import type { PublicReservationPostInput } from "@/src/lib/reservation/schemas";
 import { parseAvailabilityPayload } from "@/src/lib/reservation/parse-availability";
+import { fireReservationCreated } from "@/src/lib/notifications/reservation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ExecutePublicReservationResult =
@@ -353,6 +354,18 @@ export async function executePublicReservation(
     } catch (error) {
       console.error("Pending reservation acknowledgment email failed", error);
     }
+  }
+
+  if (typeof row.id === "string") {
+    fireReservationCreated({
+      restaurantId,
+      reservationId: row.id,
+      guestName,
+      guests,
+      reservationDate,
+      reservationTime,
+      status: finalStatus,
+    });
   }
 
   return { ok: true, status: finalStatus };
