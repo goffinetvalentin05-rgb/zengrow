@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { Reveal } from "@/components/sections/Reveal";
+import { cn } from "@/src/lib/utils";
 
 const plans = [
   {
@@ -60,15 +61,14 @@ export function Tarifs() {
           {plans.map((plan, i) => (
             <motion.div
               key={plan.key}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 24, scale: 0.96 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.55, delay: 0.1 * i, ease: [0.22, 1, 0.36, 1] }}
-              className={
-                plan.featured
-                  ? "relative flex flex-col rounded-3xl border border-landing-accent/45 bg-landing-card/95 p-8 shadow-[0_0_56px_-18px_rgba(255,107,44,0.5)] backdrop-blur-sm sm:p-10"
-                  : "flex flex-col rounded-3xl border border-landing-border bg-landing-card/95 p-8 shadow-[0_0_48px_-28px_rgba(255,107,44,0.25)] backdrop-blur-sm sm:p-10"
-              }
+              className={cn(
+                "flex flex-col rounded-3xl p-8 backdrop-blur-sm sm:p-10",
+                plan.featured ? "landing-surface landing-surface--featured relative" : "landing-surface",
+              )}
             >
               {plan.featured ? (
                 <span className="mb-2 inline-flex self-start rounded-full border border-landing-accent/35 bg-landing-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-landing-accent">
@@ -94,7 +94,7 @@ export function Tarifs() {
                 className={
                   plan.featured
                     ? "mt-8 flex min-h-12 w-full items-center justify-center rounded-xl bg-landing-accent text-sm font-semibold text-white shadow-[0_0_40px_-8px_rgba(255,107,44,0.75)] transition hover:brightness-110"
-                    : "mt-8 flex min-h-12 w-full items-center justify-center rounded-xl border border-landing-border bg-landing-card text-sm font-semibold text-landing-fg transition hover:border-landing-accent/40 hover:text-landing-accent"
+                    : "landing-btn-secondary mt-8 flex min-h-12 w-full items-center justify-center rounded-xl text-sm font-semibold"
                 }
               >
                 {plan.cta}

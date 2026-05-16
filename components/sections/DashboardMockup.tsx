@@ -109,15 +109,15 @@ function DashboardFrame({ compactSidebar }: { compactSidebar?: boolean }) {
   const chartGradId = `zg-chart-${useId().replace(/:/g, "")}`;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-landing-border bg-landing-card shadow-[0_0_0_1px_rgba(255,107,44,0.06)_inset]">
-      <div className="flex h-9 items-center gap-2 border-b border-landing-border bg-[#0f0c0a] px-3 sm:h-10">
+    <div className="landing-surface overflow-hidden rounded-2xl shadow-[0_0_0_1px_rgba(255,107,44,0.06)_inset]">
+      <div className="landing-divider flex h-9 items-center gap-2 border-b bg-[#0f0c0a] px-3 sm:h-10">
         <div className="flex gap-1.5">
           <span className="size-2.5 rounded-full bg-[#ff5f57] sm:size-3" />
           <span className="size-2.5 rounded-full bg-[#febc2e] sm:size-3" />
           <span className="size-2.5 rounded-full bg-[#28c840] sm:size-3" />
         </div>
         <div className="flex min-w-0 flex-1 justify-center">
-          <span className="truncate rounded-full border border-landing-border/70 bg-landing-card/80 px-2.5 py-0.5 text-[10px] text-landing-muted sm:text-[11px]">
+          <span className="truncate rounded-full border border-[rgb(255_255_255/0.08)] bg-landing-card/80 px-2.5 py-0.5 text-[10px] text-landing-muted sm:text-[11px]">
             app.zengrow.ch/dashboard
           </span>
         </div>
@@ -126,7 +126,7 @@ function DashboardFrame({ compactSidebar }: { compactSidebar?: boolean }) {
 
       <div className="flex min-h-[280px] bg-[#0c0a08] sm:min-h-[320px]">
         <aside
-          className={`shrink-0 border-r border-landing-border bg-[#0f0c0a] py-4 ${
+          className={`landing-divider shrink-0 border-r bg-[#0f0c0a] py-4 ${
             compactSidebar ? "w-[148px] px-2 sm:w-[180px] sm:px-3" : "w-[200px] px-3"
           }`}
         >
@@ -158,7 +158,7 @@ function DashboardFrame({ compactSidebar }: { compactSidebar?: boolean }) {
             {statCards.map((s) => (
               <div
                 key={s.label}
-                className="rounded-xl border border-landing-border bg-landing-card/80 p-2.5 sm:p-3.5"
+                className="landing-surface rounded-xl p-2.5 sm:p-3.5"
               >
                 <p className="text-[10px] text-landing-muted sm:text-xs">{s.label}</p>
                 <p className="mt-1 font-landing-serif text-lg text-landing-fg sm:text-2xl">{s.value}</p>
@@ -167,7 +167,7 @@ function DashboardFrame({ compactSidebar }: { compactSidebar?: boolean }) {
             ))}
           </div>
 
-          <div className="mt-4 rounded-xl border border-landing-border bg-landing-card/60 p-3 sm:p-4">
+          <div className="landing-surface mt-4 rounded-xl p-3 sm:p-4">
             <p className="text-xs font-medium text-landing-fg sm:text-sm">Réservations sur 7 jours</p>
             <svg
               className="mt-3 h-16 w-full sm:h-20"
@@ -216,7 +216,7 @@ function FeatureMiniCard({
 
   return (
     <motion.div
-      className="w-full max-w-[240px] rounded-xl border border-landing-border bg-landing-card/90 p-4 shadow-[0_0_40px_-24px_rgba(255,107,44,0.35)] backdrop-blur-md"
+      className="landing-surface w-full max-w-[240px] rounded-xl p-4 shadow-[0_0_40px_-24px_rgba(255,107,44,0.35)] backdrop-blur-md"
       style={{ transformStyle: "preserve-3d" }}
       initial={false}
       animate={

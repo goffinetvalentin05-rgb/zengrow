@@ -15,7 +15,7 @@ function Badge({ children, muted }: { children: ReactNode; muted?: boolean }) {
     <div
       className={
         muted
-          ? "inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-landing-muted"
+          ? "inline-flex rounded-full border border-[rgb(255_255_255/0.08)] bg-[rgb(255_255_255/0.04)] px-3 py-1 text-xs text-landing-muted"
           : "inline-flex rounded-full border border-landing-accent/35 bg-landing-accent/10 px-3 py-1 text-xs font-medium text-landing-fg"
       }
     >

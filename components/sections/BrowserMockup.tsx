@@ -193,19 +193,19 @@ export function BrowserMockup() {
             style={{ transformStyle: "preserve-3d" }}
           >
             <div
-              className="origin-center overflow-hidden rounded-2xl border border-landing-border bg-landing-card"
+              className="landing-surface origin-center overflow-hidden rounded-2xl"
               style={{
                 transform: "rotateX(5deg) rotateY(-3deg)",
               }}
             >
-              <div className="flex h-10 items-center gap-3 border-b border-landing-border bg-[#0f0c0a] px-3 sm:h-[40px] sm:px-4">
+              <div className="landing-divider flex h-10 items-center gap-3 border-b bg-[#0f0c0a] px-3 sm:h-[40px] sm:px-4">
                 <div className="flex gap-1.5">
                   <span className="size-3 rounded-full bg-[#ff5f57] sm:size-[12px]" />
                   <span className="size-3 rounded-full bg-[#febc2e] sm:size-[12px]" />
                   <span className="size-3 rounded-full bg-[#28c840] sm:size-[12px]" />
                 </div>
                 <div className="flex min-w-0 flex-1 justify-center">
-                  <div className="truncate rounded-full border border-landing-border/80 bg-landing-card/90 px-3 py-1 text-center text-[11px] text-landing-muted sm:text-xs">
+                  <div className="truncate rounded-full border border-[rgb(255_255_255/0.08)] bg-landing-card/90 px-3 py-1 text-center text-[11px] text-landing-muted sm:text-xs">
                     lerestodupere.ch
                   </div>
                 </div>
@@ -229,7 +229,7 @@ export function BrowserMockup() {
                       Le Resto du Père
                     </h3>
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/90">
-                      <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
+                      <span className="rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.06)] px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
                         ★ 4.8 · 234 avis
                       </span>
                       <span className="text-xs text-white/80 sm:text-sm">Cuisine française · Bienne</span>

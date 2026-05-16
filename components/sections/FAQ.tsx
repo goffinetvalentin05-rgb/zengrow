@@ -90,15 +90,15 @@ function FaqCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 18, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: "-24px" }}
       transition={{ duration: 0.45, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "rounded-xl border border-landing-border border-l-2 border-l-transparent bg-landing-card/90 p-5 shadow-none backdrop-blur-sm transition-all duration-300",
-        !isOpen && "hover:border-l-landing-accent hover:bg-landing-card/70",
+        "landing-surface rounded-xl border-l-2 border-l-transparent p-5 backdrop-blur-sm",
+        !isOpen && "hover:border-l-landing-accent",
         isOpen &&
-          "border-landing-accent/40 border-l-landing-accent bg-landing-card/95 shadow-[0_0_28px_-10px_rgba(255,107,44,0.28)]",
+          "!border-l-landing-accent !border-[rgb(255_100_50/0.28)] bg-[rgb(255_255_255/0.03)] shadow-[0_0_28px_-10px_rgba(255,107,44,0.28)]",
       )}
     >
       <button
@@ -156,7 +156,7 @@ function FaqCard({
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="border-t border-landing-border pt-4">
+            <div className="landing-divider border-t pt-4">
               <p className="text-sm leading-relaxed text-landing-muted">{item.a}</p>
             </div>
           </motion.div>
@@ -216,7 +216,7 @@ export function FAQ() {
         >
           <Link
             href="mailto:contact@zengrow.ch"
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-landing-border bg-landing-card/80 px-6 py-3 text-sm font-medium text-landing-fg backdrop-blur-sm transition-all duration-300 hover:border-landing-accent hover:text-landing-accent"
+            className="landing-btn-secondary inline-flex min-h-11 items-center justify-center rounded-full px-6 py-3 text-sm font-medium backdrop-blur-sm"
           >
             Nous contacter
           </Link>

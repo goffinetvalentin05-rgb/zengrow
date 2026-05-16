@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/sections/Reveal";
 import { WaveBackground } from "@/components/sections/WaveBackground";
+import { cn } from "@/src/lib/utils";
 
 const stats = [
   {
@@ -109,15 +110,18 @@ function HeroOrbitCards() {
         {orbitCards.map((cfg, i) => (
           <motion.div
             key={cfg.stat.title}
-            initial={{ opacity: 0, y: 26 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 26, scale: 0.96 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.1 + i * 0.08, duration: 0.55 }}
+            transition={{ delay: 0.1 + i * 0.08, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className={cfg.posClass}
             style={{ transformStyle: "preserve-3d" }}
           >
             <motion.div
-              className="h-full cursor-default rounded-2xl border border-landing-border bg-landing-card/80 p-5 shadow-[0_0_40px_-24px_rgba(255,107,44,0.45)] backdrop-blur-md will-change-transform sm:p-6"
+              className={cn(
+                "landing-surface h-full cursor-default rounded-2xl p-5 backdrop-blur-md will-change-transform sm:p-6",
+                cfg.stat.title === "+40% de réservations" && "landing-surface--glow",
+              )}
               style={{ transformStyle: "preserve-3d" }}
               animate={{
                 y: cfg.animate.y,
@@ -177,7 +181,7 @@ function NeonArc({ flip = false, align = "bottom" }: { flip?: boolean; align?: "
           style={{ filter: "blur(2px)" }}
         />
         <motion.div
-          className="absolute left-1/2 top-1/2 h-[48%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-[100%] bg-white/22 blur-[100px] opacity-70"
+          className="absolute left-1/2 top-1/2 h-[48%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-[100%] bg-landing-accent/10 blur-[100px] opacity-70"
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -208,7 +212,7 @@ function NeonArc({ flip = false, align = "bottom" }: { flip?: boolean; align?: "
           style={{ filter: "blur(2px)" }}
         />
         <motion.div
-          className="absolute left-1/2 top-0 h-[45%] w-[55%] -translate-x-1/2 rounded-[100%] bg-white/25 blur-[100px] opacity-70"
+          className="absolute left-1/2 top-0 h-[45%] w-[55%] -translate-x-1/2 rounded-[100%] bg-landing-accent/10 blur-[100px] opacity-70"
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -248,7 +252,7 @@ export function Hero() {
           </Link>
           <Link
             href="/#demo"
-            className="inline-flex min-h-12 items-center justify-center rounded-xl border border-landing-border bg-landing-card/40 px-7 text-sm font-semibold text-landing-fg backdrop-blur-sm transition hover:border-landing-accent/50 hover:bg-landing-card/70"
+            className="landing-btn-secondary inline-flex min-h-12 items-center justify-center rounded-xl px-7 text-sm font-semibold backdrop-blur-sm"
           >
             Voir une démo
           </Link>

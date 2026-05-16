@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <div
-      className="min-h-screen bg-landing-bg text-landing-fg antialiased"
+      className="landing-page min-h-screen bg-landing-bg text-landing-fg antialiased"
       style={{
         fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
       }}

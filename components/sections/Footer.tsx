@@ -13,7 +13,7 @@ const main = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-landing-border bg-landing-section py-14">
+    <footer className="landing-divider border-t bg-landing-section py-14">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-4 sm:px-6">
         <div className="flex items-center gap-5 text-landing-muted">
           <Link href="#" className="transition hover:text-landing-accent-soft" aria-label="Twitter">
@@ -33,7 +33,7 @@ export function Footer() {
             </Link>
           ))}
         </nav>
-        <div className="flex w-full flex-col items-center justify-between gap-4 border-t border-landing-border/70 pt-8 text-xs text-landing-muted sm:flex-row">
+        <div className="landing-divider flex w-full flex-col items-center justify-between gap-4 border-t pt-8 text-xs text-landing-muted sm:flex-row">
           <p>© 2026 ZenGrow. Tous droits réservés.</p>
           <div className="flex gap-6">
             <Link href="#" className="hover:text-landing-fg">

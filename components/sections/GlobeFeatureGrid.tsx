@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { CalendarCheck, Palette, Pencil, Smartphone, Wallet, Zap, type LucideIcon } from "lucide-react";
+import { cn } from "@/src/lib/utils";
 
 type FeatureItem = {
   icon: LucideIcon;
@@ -75,19 +76,18 @@ export function GlobeFeatureGrid() {
           return (
             <motion.article
               key={item.title}
-              initial={{ opacity: 0, y: 22 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 22, scale: 0.96 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ delay: 0.08 * i, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{
                 scale: 1.02,
                 transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
               }}
-              className={
-                isHighlight
-                  ? "relative flex flex-col overflow-hidden rounded-2xl border border-landing-accent/40 bg-landing-card p-8 shadow-[0_0_52px_-14px_rgba(255,107,44,0.45)] transition-[box-shadow] duration-300 hover:shadow-[0_0_64px_-10px_rgba(255,107,44,0.55)]"
-                  : "relative flex flex-col overflow-hidden rounded-2xl border border-landing-border bg-landing-card p-8 shadow-[0_0_45px_-28px_rgba(255,107,44,0.4)] transition-[box-shadow] duration-300 hover:shadow-[0_0_56px_-22px_rgba(255,107,44,0.48)]"
-              }
+              className={cn(
+                "relative flex flex-col overflow-hidden rounded-2xl p-8",
+                isHighlight ? "landing-surface landing-surface--featured" : "landing-surface",
+              )}
             >
               {item.badge ? (
                 <span className="absolute right-5 top-5 rounded-full border border-landing-accent/25 bg-landing-accent/10 px-2.5 py-1 text-[11px] font-semibold leading-none text-landing-accent">
