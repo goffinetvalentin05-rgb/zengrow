@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, type Dispatch, type FormEvent, type SetStateAction } from "react";
+import type { UpcomingDaysRange } from "@/src/components/dashboard/reservations/constants";
 import type {
   DayStatusFilter,
   DayZoneFilter,
@@ -41,6 +42,8 @@ export type ReservationsContextValue = {
   dayZoneOptions: { value: DayZoneFilter; label: string }[];
   todayRows: ReservationRow[];
   upcomingRows: ReservationRow[];
+  upcomingDaysRange: UpcomingDaysRange;
+  setUpcomingDaysRange: (range: UpcomingDaysRange) => void;
   isDayFilterToday: boolean;
   selectedReservation: ReservationRow | null;
   detailStatusOptions: readonly ReservationStatus[];

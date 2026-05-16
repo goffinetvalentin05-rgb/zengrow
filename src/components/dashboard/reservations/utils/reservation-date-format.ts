@@ -18,6 +18,15 @@ export type CalendarDayCell = {
   inMonth: boolean;
 };
 
+/** Ex. « Lundi 18 mai » (sans année). */
+export function formatYmdHeadingFr(ymd: string): string {
+  const tz = businessCalendarTimeZone();
+  const raw = formatInTimeZone(toDate(`${ymd}T12:00:00`, { timeZone: tz }), tz, "EEEE d MMMM", {
+    locale: fr,
+  });
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
 export function formatYmdLongFr(ymd: string): string {
   const tz = businessCalendarTimeZone();
   const raw = formatInTimeZone(toDate(`${ymd}T12:00:00`, { timeZone: tz }), tz, "EEEE d MMMM yyyy", {

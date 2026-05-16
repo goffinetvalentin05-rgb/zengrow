@@ -1,11 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   EDITABLE_STATUSES,
   RESERVATION_SELECT_COLUMNS,
   STATUSES_WITHOUT_COMPLETED,
+  UPCOMING_RANGE_STORAGE_KEY,
+  type UpcomingDaysRange,
 } from "@/src/components/dashboard/reservations/constants";
 import {
   ReservationsContext,
@@ -60,7 +62,26 @@ export function ReservationsProvider({
   const [dayZoneFilter, setDayZoneFilter] = useState<DayZoneFilter>("all");
   const [manualForceOverbook, setManualForceOverbook] = useState(false);
   const [manualOverbookWarning, setManualOverbookWarning] = useState<string | null>(null);
+  const [upcomingDaysRange, setUpcomingDaysRangeState] = useState<UpcomingDaysRange>(7);
   const [savingId, setSavingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(UPCOMING_RANGE_STORAGE_KEY);
+      if (raw === "7" || raw === "30") setUpcomingDaysRangeState(Number(raw) as UpcomingDaysRange);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const setUpcomingDaysRange = useCallback((range: UpcomingDaysRange) => {
+    setUpcomingDaysRangeState(range);
+    try {
+      localStorage.setItem(UPCOMING_RANGE_STORAGE_KEY, String(range));
+    } catch {
+      /* ignore */
+    }
+  }, []);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
   const [showManualForm, setShowManualForm] = useState(initialShowManualForm);
@@ -114,9 +135,11 @@ export function ReservationsProvider({
   const upcomingRows = useMemo(() => {
     const today = calendarYmdInBusinessTz();
     const start = addCalendarDaysYmd(today, 1);
-    const end = addCalendarDaysYmd(today, 7);
-    return filterUpcomingReservations(reservations, start, end);
-  }, [reservations]);
+    const end = addCalendarDaysYmd(today, upcomingDaysRange);
+    return filterUpcomingReservations(reservations, start, end).filter(
+      (row) => row.reservation_date !== daySectionDate,
+    );
+  }, [reservations, upcomingDaysRange, daySectionDate]);
 
   const isDayFilterToday = daySectionDate === calendarYmdInBusinessTz();
 
@@ -320,6 +343,8 @@ export function ReservationsProvider({
     dayZoneOptions,
     todayRows,
     upcomingRows,
+    upcomingDaysRange,
+    setUpcomingDaysRange,
     isDayFilterToday,
     selectedReservation,
     detailStatusOptions,

@@ -1,6 +1,9 @@
 import type { DayStatusFilter, ReservationRow, ReservationStatus } from "@/src/components/dashboard/reservations/types";
 
 export const RESERVATIONS_VIEW_STORAGE_KEY = "zengrow.reservations.viewMode";
+export const UPCOMING_RANGE_STORAGE_KEY = "zengrow.reservations.upcomingDays";
+
+export type UpcomingDaysRange = 7 | 30;
 
 export const EDITABLE_STATUSES: readonly ReservationStatus[] = [
   "pending",
