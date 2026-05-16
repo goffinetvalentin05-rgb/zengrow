@@ -46,7 +46,7 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
 
   const { data: resSettings } = await supabase
     .from("restaurant_settings")
-    .select("terrace_enabled, auto_archive_reservations, reservation_duration")
+    .select("terrace_enabled, terrace_capacity, terrace_label, auto_archive_reservations, reservation_duration")
     .eq("restaurant_id", restaurant.id)
     .maybeSingle();
 
@@ -87,6 +87,8 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
         }))}
         initialShowManualForm={shouldOpenManualForm}
         terraceEnabled={resSettings?.terrace_enabled === true}
+        showZoneUi={(resSettings?.terrace_capacity ?? 0) > 0}
+        terraceLabel={resSettings?.terrace_label ?? "Terrasse"}
         autoArchiveReservations={resSettings?.auto_archive_reservations === true}
         reservationDurationMinutes={resSettings?.reservation_duration ?? 90}
       />

@@ -1,4 +1,8 @@
 import { calendarYmdInBusinessTz } from "@/src/lib/date/business-calendar";
+import {
+  countZoneCoversNow,
+  resolveInteriorCapacityMax,
+} from "@/src/lib/reservation/terrace-day-stats";
 import { countTerraceCoversNow } from "@/src/lib/reservation/terrace-occupancy";
 import { clampTerraceCapacity, normalizeTerraceLabel, terraceSettingsFromRow } from "@/src/lib/reservation/terrace-settings";
 import { createClient } from "@/src/lib/supabase/server";
@@ -16,7 +20,9 @@ export async function TerraceControlBanner({ restaurantId, className }: TerraceC
   const [{ data: settings }, { data: reservations }] = await Promise.all([
     supabase
       .from("restaurant_settings")
-      .select("terrace_enabled, terrace_capacity, terrace_label, reservation_duration")
+      .select(
+        "terrace_enabled, terrace_capacity, terrace_label, reservation_duration, reservation_mode, max_covers_per_slot, restaurant_capacity, service_lunch_max_covers, service_dinner_max_covers",
+      )
       .eq("restaurant_id", restaurantId)
       .maybeSingle(),
     supabase
@@ -35,14 +41,19 @@ export async function TerraceControlBanner({ restaurantId, className }: TerraceC
   }
 
   const durationMinutes = Math.max(30, settings?.reservation_duration ?? 90);
-  const occupiedCovers = countTerraceCoversNow(reservations ?? [], durationMinutes);
+  const rows = reservations ?? [];
+  const terraceOccupied = countTerraceCoversNow(rows, durationMinutes);
+  const interiorOccupied = countZoneCoversNow(rows, "interior", durationMinutes);
+  const interiorCapacity = resolveInteriorCapacityMax(settings ?? {});
 
   return (
     <TerraceControlWidget
       initialEnabled={terrace.terraceEnabled}
       terraceCapacity={capacity}
       terraceLabel={normalizeTerraceLabel(terrace.terraceLabel)}
-      initialOccupiedCovers={occupiedCovers}
+      terraceOccupiedCovers={terraceOccupied}
+      interiorOccupiedCovers={interiorOccupied}
+      interiorCapacity={interiorCapacity}
       className={className}
     />
   );

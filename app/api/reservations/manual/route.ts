@@ -16,6 +16,8 @@ type ManualReservationPayload = {
   zone?: string;
   /** Walk-in : champs contact optionnels, type `walkin` en base. */
   isWalkIn?: boolean;
+  /** Admin : ignorer la disponibilité (overbooking manuel). */
+  forceOverbook?: boolean;
 };
 
 function normalize(value?: string) {
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
   const guests = Number(body.guests);
   const note = isWalkIn ? null : normalize(body.note);
   const bodyZone = typeof body.zone === "string" ? body.zone.trim() : "";
+  const forceOverbook = body.forceOverbook === true;
 
   if (!reservationDate || !reservationTime || !Number.isInteger(guests) || guests <= 0) {
     return NextResponse.json({ error: "Données invalides." }, { status: 400 });
@@ -120,41 +123,47 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data: slotsData, error: availError } = await supabase.rpc("get_available_slots", {
-    p_restaurant_id: restaurant.id,
-    p_date: reservationDate,
-    p_covers: guests,
-    p_zone: reservationZone,
-  });
-
-  if (availError) {
-    return NextResponse.json({ error: "Impossible de vérifier les disponibilités." }, { status: 500 });
-  }
-
-  type SlotRow = { time: string; suggestedTableId?: string | null };
-  let slots: SlotRow[] = [];
-  if (Array.isArray(slotsData)) {
-    slots = slotsData as SlotRow[];
-  } else if (typeof slotsData === "string") {
-    try {
-      const parsed = JSON.parse(slotsData) as unknown;
-      if (Array.isArray(parsed)) slots = parsed as SlotRow[];
-    } catch {
-      slots = [];
-    }
-  }
-  const slotMatch = slots.find((s) => s.time === reservationTime);
-  if (!slotMatch) {
-    return NextResponse.json(
-      { error: "Ce créneau n’est pas disponible ou n’a plus assez de places." },
-      { status: 409 },
-    );
-  }
-
   let tableId: string | null = null;
-  if (useTables && reservationZone === "interior") {
-    const suggested = slotMatch.suggestedTableId;
-    tableId = suggested ?? null;
+
+  if (!forceOverbook) {
+    const { data: slotsData, error: availError } = await supabase.rpc("get_available_slots", {
+      p_restaurant_id: restaurant.id,
+      p_date: reservationDate,
+      p_covers: guests,
+      p_zone: reservationZone,
+    });
+
+    if (availError) {
+      return NextResponse.json({ error: "Impossible de vérifier les disponibilités." }, { status: 500 });
+    }
+
+    type SlotRow = { time: string; suggestedTableId?: string | null };
+    let slots: SlotRow[] = [];
+    if (Array.isArray(slotsData)) {
+      slots = slotsData as SlotRow[];
+    } else if (typeof slotsData === "string") {
+      try {
+        const parsed = JSON.parse(slotsData) as unknown;
+        if (Array.isArray(parsed)) slots = parsed as SlotRow[];
+      } catch {
+        slots = [];
+      }
+    }
+    const slotMatch = slots.find((s) => s.time === reservationTime);
+    if (!slotMatch) {
+      return NextResponse.json(
+        {
+          error: "Ce créneau n’est pas disponible ou n’a plus assez de places.",
+          code: "SLOT_UNAVAILABLE",
+          canForceOverbook: reservationZone === "terrace" || !useTables,
+        },
+        { status: 409 },
+      );
+    }
+
+    if (useTables && reservationZone === "interior") {
+      tableId = slotMatch.suggestedTableId ?? null;
+    }
   }
 
   const { data: reservation, error: insertError } = await supabase
@@ -173,6 +182,7 @@ export async function POST(request: NextRequest) {
       table_id: tableId,
       zone: reservationZone,
       reservation_type: isWalkIn ? "walkin" : "standard",
+      capacity_override: forceOverbook,
     })
     .select(
       "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, table_id, zone, reservation_type",

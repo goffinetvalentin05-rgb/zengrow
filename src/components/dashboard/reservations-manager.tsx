@@ -43,11 +43,15 @@ type ReservationsManagerProps = {
   initialReservations: ReservationRow[];
   initialShowManualForm?: boolean;
   terraceEnabled?: boolean;
+  /** Afficher badges / filtre zone (terrasse configurée). */
+  showZoneUi?: boolean;
+  terraceLabel?: string;
   autoArchiveReservations?: boolean;
   reservationDurationMinutes?: number;
 };
 
 type DayStatusFilter = "all" | "confirmed" | "pending" | "cancelled";
+type DayZoneFilter = "all" | "interior" | "terrace";
 
 function addCalendarDaysYmd(ymd: string, deltaDays: number): string {
   const tz = businessCalendarTimeZone();
@@ -96,6 +100,8 @@ export default function ReservationsManager({
   initialReservations,
   initialShowManualForm = false,
   terraceEnabled = false,
+  showZoneUi = false,
+  terraceLabel = "Terrasse",
   autoArchiveReservations = false,
   reservationDurationMinutes = 90,
 }: ReservationsManagerProps) {
@@ -104,6 +110,9 @@ export default function ReservationsManager({
   const [reservations, setReservations] = useState(sortReservations(initialReservations));
   const [daySectionDate, setDaySectionDate] = useState(() => calendarYmdInBusinessTz());
   const [daySectionStatus, setDaySectionStatus] = useState<DayStatusFilter>("all");
+  const [dayZoneFilter, setDayZoneFilter] = useState<DayZoneFilter>("all");
+  const [manualForceOverbook, setManualForceOverbook] = useState(false);
+  const [manualOverbookWarning, setManualOverbookWarning] = useState<string | null>(null);
   const [upcomingRangeStart, setUpcomingRangeStart] = useState(() =>
     addCalendarDaysYmd(calendarYmdInBusinessTz(), 1),
   );
@@ -128,13 +137,29 @@ export default function ReservationsManager({
     Object.fromEntries(initialReservations.map((reservation) => [reservation.id, reservation.internal_note ?? ""])),
   );
 
+  const zoneLabelTerrace = terraceLabel.trim() || "Terrasse";
+
+  const dayZoneOptions = useMemo(
+    (): { value: DayZoneFilter; label: string }[] => [
+      { value: "all", label: "Toutes" },
+      { value: "interior", label: "Salle" },
+      { value: "terrace", label: zoneLabelTerrace },
+    ],
+    [zoneLabelTerrace],
+  );
+
   const todayRows = useMemo(() => {
     let rows = reservations.filter((r) => r.reservation_date === daySectionDate);
     if (daySectionStatus === "confirmed") rows = rows.filter((r) => r.status === "confirmed");
     else if (daySectionStatus === "pending") rows = rows.filter((r) => r.status === "pending");
     else if (daySectionStatus === "cancelled") rows = rows.filter((r) => r.status === "cancelled");
+    if (showZoneUi && dayZoneFilter === "interior") {
+      rows = rows.filter((r) => seatingZoneFromRow(r) === "interior");
+    } else if (showZoneUi && dayZoneFilter === "terrace") {
+      rows = rows.filter((r) => seatingZoneFromRow(r) === "terrace");
+    }
     return sortReservations(rows);
-  }, [reservations, daySectionDate, daySectionStatus]);
+  }, [reservations, daySectionDate, daySectionStatus, showZoneUi, dayZoneFilter]);
 
   const upcomingRows = useMemo(() => {
     const bizToday = calendarYmdInBusinessTz();
@@ -215,6 +240,7 @@ export default function ReservationsManager({
   async function createManualReservation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
+    setManualOverbookWarning(null);
     setSavingId("manual-create");
 
     const response = await fetch("/api/reservations/manual", {
@@ -229,12 +255,26 @@ export default function ReservationsManager({
         guests: manualGuests,
         note: manualWalkInMode ? undefined : manualNote,
         isWalkIn: manualWalkInMode,
-        ...(terraceEnabled ? { zone: manualZone } : {}),
+        ...(showZoneUi || terraceEnabled ? { zone: manualZone } : {}),
+        ...(manualForceOverbook ? { forceOverbook: true } : {}),
       }),
     });
 
-    const payload = (await response.json().catch(() => ({}))) as { error?: string; reservation?: ReservationRow };
+    const payload = (await response.json().catch(() => ({}))) as {
+      error?: string;
+      code?: string;
+      canForceOverbook?: boolean;
+      reservation?: ReservationRow;
+    };
     if (!response.ok || !payload.reservation) {
+      if (response.status === 409 && payload.code === "SLOT_UNAVAILABLE" && payload.canForceOverbook) {
+        setManualOverbookWarning(
+          payload.error ??
+            "Ce créneau est complet pour la zone choisie. Vous pouvez forcer la réservation (surcharge manuelle).",
+        );
+        setSavingId(null);
+        return;
+      }
       setMessage(payload.error ?? "Impossible de créer la réservation.");
       setSavingId(null);
       return;
@@ -255,6 +295,8 @@ export default function ReservationsManager({
     setManualNote("");
     setManualWalkInMode(false);
     setShowWalkInContactFields(false);
+    setManualForceOverbook(false);
+    setManualOverbookWarning(null);
     setMessage(createdReservation.reservation_type === "walkin" ? "Walk-in ajouté." : "Réservation ajoutée.");
     setSavingId(null);
   }
@@ -296,9 +338,9 @@ export default function ReservationsManager({
                             Walk-in
                           </span>
                         ) : null}
-                        {terraceEnabled ? (
+                        {showZoneUi ? (
                           <span className="rounded-full border border-zg-border-accent bg-zg-surface-soft/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-teal">
-                            {seatingZoneFromRow(r) === "terrace" ? "Terrasse" : "Intérieur"}
+                            {seatingZoneFromRow(r) === "terrace" ? zoneLabelTerrace : "Salle"}
                           </span>
                         ) : null}
                       </div>
@@ -357,9 +399,9 @@ export default function ReservationsManager({
                             Walk-in
                           </span>
                         ) : null}
-                        {terraceEnabled ? (
+                        {showZoneUi ? (
                           <span className="rounded-full border border-zg-border-accent bg-zg-surface-soft/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-teal">
-                            {seatingZoneFromRow(r) === "terrace" ? "Terrasse" : "Intérieur"}
+                            {seatingZoneFromRow(r) === "terrace" ? zoneLabelTerrace : "Salle"}
                           </span>
                         ) : null}
                       </div>
@@ -426,7 +468,7 @@ export default function ReservationsManager({
             <span>
               <span className="font-semibold text-zg-fg">Walk-in (client sans réservation)</span>
               <span className="mt-1 block text-zg-muted">
-                Enregistrement minimal : date, créneau, couverts{terraceEnabled ? ", zone" : ""}. Le badge Walk-in
+                Enregistrement minimal : date, créneau, couverts{showZoneUi ? ", zone" : ""}. Le badge Walk-in
                 apparaît dans la liste.
               </span>
             </span>
@@ -476,7 +518,7 @@ export default function ReservationsManager({
                 required
               />
             </div>
-            {terraceEnabled ? (
+            {showZoneUi ? (
               <div className="space-y-2 md:col-span-2">
                 <p className="dashboard-field-label">Zone</p>
                 <div className="flex flex-wrap gap-4 text-sm">
@@ -486,10 +528,14 @@ export default function ReservationsManager({
                       name="manual-zone"
                       value="interior"
                       checked={manualZone === "interior"}
-                      onChange={() => setManualZone("interior")}
+                      onChange={() => {
+                        setManualZone("interior");
+                        setManualForceOverbook(false);
+                        setManualOverbookWarning(null);
+                      }}
                       required
                     />
-                    Intérieur
+                    Salle
                   </label>
                   <label className="flex cursor-pointer items-center gap-2">
                     <input
@@ -497,12 +543,30 @@ export default function ReservationsManager({
                       name="manual-zone"
                       value="terrace"
                       checked={manualZone === "terrace"}
-                      onChange={() => setManualZone("terrace")}
+                      onChange={() => {
+                        setManualZone("terrace");
+                        setManualForceOverbook(false);
+                        setManualOverbookWarning(null);
+                      }}
                       required
                     />
-                    Terrasse
+                    {zoneLabelTerrace}
                   </label>
                 </div>
+              </div>
+            ) : null}
+            {manualOverbookWarning ? (
+              <div className="md:col-span-2 rounded-xl border border-amber-500/35 bg-amber-500/10 p-4">
+                <p className="text-sm text-amber-100">{manualOverbookWarning}</p>
+                <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm text-zg-fg">
+                  <input
+                    type="checkbox"
+                    checked={manualForceOverbook}
+                    onChange={(e) => setManualForceOverbook(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <span>Forcer la réservation malgré la capacité (surcharge manuelle)</span>
+                </label>
               </div>
             ) : null}
             {manualWalkInMode && !showWalkInContactFields ? (
@@ -539,7 +603,12 @@ export default function ReservationsManager({
               </div>
             ) : null}
           </div>
-          <Button type="submit" disabled={savingId === "manual-create"}>
+          <Button
+            type="submit"
+            disabled={
+              savingId === "manual-create" || (!!manualOverbookWarning && !manualForceOverbook)
+            }
+          >
             {savingId === "manual-create"
               ? "Enregistrement…"
               : manualWalkInMode
@@ -589,6 +658,22 @@ export default function ReservationsManager({
                       ))}
                     </Select>
                   </div>
+                  {showZoneUi ? (
+                    <div className="w-[190px]">
+                      <label className="dashboard-field-label">Zone</label>
+                      <Select
+                        value={dayZoneFilter}
+                        onChange={(e) => setDayZoneFilter(e.target.value as DayZoneFilter)}
+                      >
+                        {dayZoneOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.value === "terrace" ? zoneLabelTerrace : opt.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  ) : null}
+
                 </FilterBar>
 
                 <div className="hidden md:block">
@@ -628,6 +713,8 @@ export default function ReservationsManager({
                           status={reservation.status}
                           seatingZone={seatingZoneFromRow(reservation)}
                           reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
+                          showZoneBadge={showZoneUi}
+                          terraceLabel={zoneLabelTerrace}
                           onClick={() => setSelectedReservationId(reservation.id)}
                         />
                       ))}
@@ -691,6 +778,8 @@ export default function ReservationsManager({
                           status={reservation.status}
                           seatingZone={seatingZoneFromRow(reservation)}
                           reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
+                          showZoneBadge={showZoneUi}
+                          terraceLabel={zoneLabelTerrace}
                           onClick={() => setSelectedReservationId(reservation.id)}
                         />
                       ))}
@@ -733,9 +822,9 @@ export default function ReservationsManager({
                             Walk-in
                           </span>
                         ) : null}
-                        {terraceEnabled ? (
+                        {showZoneUi ? (
                           <span className="rounded-full border border-zg-success/35 bg-zg-success-soft-bg px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-success">
-                            {seatingZoneFromRow(selectedReservation) === "terrace" ? "Terrasse" : "Intérieur"}
+                            {seatingZoneFromRow(selectedReservation) === "terrace" ? zoneLabelTerrace : "Salle"}
                           </span>
                         ) : null}
                         <StatusBadge

@@ -230,6 +230,12 @@ export default function SettingsForm({
   const [terraceLabel, setTerraceLabel] = useState(() =>
     normalizeTerraceLabel(settings.terrace_label),
   );
+  const initialTerraceCapacityRef = useRef(clampTerraceCapacity(settings.terrace_capacity ?? 0));
+  const [capacityConfirmOpen, setCapacityConfirmOpen] = useState(false);
+  const [pendingCapacityConfirm, setPendingCapacityConfirm] = useState<{
+    bookedCovers: number;
+    newCapacity: number;
+  } | null>(null);
   const [daysInAdvance, setDaysInAdvance] = useState(settings.days_in_advance ?? 60);
   const [floorPlanLunchDuration] = useState(
     settings.lunch_duration_minutes ?? settings.floor_plan_lunch_duration ?? settings.reservation_duration ?? 90,
@@ -503,19 +509,7 @@ export default function SettingsForm({
     return true;
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage(null);
-
-    if (reservationMode === "simple" && !lunchServiceEnabled && !dinnerServiceEnabled) {
-      setMessage("Activez au moins le service midi ou le service soir.");
-      return;
-    }
-
-    if (!validateReservationTables()) {
-      return;
-    }
-
+  async function saveSettings() {
     setIsSaving(true);
 
     const { error: restaurantError } = await supabase
@@ -594,6 +588,47 @@ export default function SettingsForm({
     setSaveButtonSuccess(true);
     window.setTimeout(() => setSaveButtonSuccess(false), 2000);
     setIsSaving(false);
+    initialTerraceCapacityRef.current = clampTerraceCapacity(terraceCapacity);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage(null);
+
+    if (reservationMode === "simple" && !lunchServiceEnabled && !dinnerServiceEnabled) {
+      setMessage("Activez au moins le service midi ou le service soir.");
+      return;
+    }
+
+    if (!validateReservationTables()) {
+      return;
+    }
+
+    const newCapacity = clampTerraceCapacity(terraceCapacity);
+    if (newCapacity !== initialTerraceCapacityRef.current) {
+      try {
+        const res = await fetch(
+          `/api/restaurant-settings/terrace-capacity-check?capacity=${encodeURIComponent(String(newCapacity))}`,
+        );
+        const payload = (await res.json().catch(() => null)) as {
+          needsConfirmation?: boolean;
+          bookedCovers?: number;
+          newCapacity?: number;
+        } | null;
+        if (res.ok && payload?.needsConfirmation) {
+          setPendingCapacityConfirm({
+            bookedCovers: payload.bookedCovers ?? 0,
+            newCapacity: payload.newCapacity ?? newCapacity,
+          });
+          setCapacityConfirmOpen(true);
+          return;
+        }
+      } catch {
+        /* enregistrement direct si la vérification échoue */
+      }
+    }
+
+    await saveSettings();
   }
 
   return (
@@ -992,6 +1027,51 @@ export default function SettingsForm({
           </Button>
         </div>
       </div>
+
+      {capacityConfirmOpen && pendingCapacityConfirm ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="presentation"
+          onClick={() => !isSaving && setCapacityConfirmOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-md rounded-2xl border border-zg-border bg-zg-surface p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-lg font-semibold text-zg-fg">Capacité terrasse réduite</p>
+            <p className="mt-2 text-sm leading-relaxed text-zg-muted">
+              Vous avez <strong className="text-zg-fg">{pendingCapacityConfirm.bookedCovers} couverts</strong>{" "}
+              réservés en terrasse aujourd&apos;hui, mais la nouvelle capacité est de{" "}
+              <strong className="text-zg-fg">{pendingCapacityConfirm.newCapacity}</strong>. Les réservations
+              existantes seront conservées ; seules les nouvelles réservations seront limitées.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="min-h-11"
+                disabled={isSaving}
+                onClick={() => setCapacityConfirmOpen(false)}
+              >
+                Annuler
+              </Button>
+              <Button
+                type="button"
+                className="min-h-11"
+                disabled={isSaving}
+                onClick={async () => {
+                  setCapacityConfirmOpen(false);
+                  await saveSettings();
+                }}
+              >
+                Confirmer
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {deleteAccountOpen ? (
         <div

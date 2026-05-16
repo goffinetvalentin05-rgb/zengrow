@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { calendarYmdInBusinessTz } from "@/src/lib/date/business-calendar";
 import { createClient } from "@/src/lib/supabase/server";
 
 const bodySchema = z.object({
   terrace_enabled: z.boolean(),
+  disposition: z.enum(["keep", "move_interior", "cancel"]).optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -37,6 +39,51 @@ export async function PATCH(request: Request) {
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "terrace_enabled (booléen) requis." }, { status: 400 });
+  }
+
+  const today = calendarYmdInBusinessTz();
+
+  if (!parsed.data.terrace_enabled) {
+    const { data: terraceToday } = await supabase
+      .from("reservations")
+      .select("id")
+      .eq("restaurant_id", restaurant.id)
+      .eq("reservation_date", today)
+      .eq("zone", "terrace")
+      .in("status", ["pending", "confirmed"]);
+
+    const ids = (terraceToday ?? []).map((r) => r.id);
+
+    if (ids.length > 0 && !parsed.data.disposition) {
+      return NextResponse.json(
+        {
+          error: "Des réservations terrasse existent pour aujourd'hui.",
+          requiresDisposition: true,
+          reservationCount: ids.length,
+        },
+        { status: 409 },
+      );
+    }
+
+    if (ids.length > 0 && parsed.data.disposition) {
+      if (parsed.data.disposition === "move_interior") {
+        const { error: moveError } = await supabase
+          .from("reservations")
+          .update({ zone: "interior", table_id: null })
+          .in("id", ids);
+        if (moveError) {
+          return NextResponse.json({ error: moveError.message }, { status: 500 });
+        }
+      } else if (parsed.data.disposition === "cancel") {
+        const { error: cancelError } = await supabase
+          .from("reservations")
+          .update({ status: "cancelled" })
+          .in("id", ids);
+        if (cancelError) {
+          return NextResponse.json({ error: cancelError.message }, { status: 500 });
+        }
+      }
+    }
   }
 
   const { error } = await supabase

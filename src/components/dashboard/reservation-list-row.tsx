@@ -1,5 +1,6 @@
 import StatusBadge from "@/src/components/dashboard/status-badge";
 import GuestAvatar from "@/src/components/dashboard/guest-avatar";
+import { zoneDisplayLabel } from "@/src/lib/reservation/terrace-settings";
 import { cn } from "@/src/lib/utils";
 
 type ReservationStatus = "pending" | "confirmed" | "refused" | "completed" | "cancelled" | "no-show";
@@ -22,6 +23,7 @@ type ReservationListRowProps = {
   /** Liste plate dans une carte (tableau de bord) ou ligne carte cliquable (gestion). */
   presentation?: "card" | "list";
   showZoneBadge?: boolean;
+  terraceLabel?: string;
 };
 
 export default function ReservationListRow({
@@ -37,8 +39,9 @@ export default function ReservationListRow({
   emphasizeTime,
   presentation = "card",
   showZoneBadge = true,
+  terraceLabel = "Terrasse",
 }: ReservationListRowProps) {
-  const zoneLabel = seatingZone === "terrace" ? "Terrasse" : "Intérieur";
+  const zoneLabel = zoneDisplayLabel(seatingZone, terraceLabel);
   const walkInBadge =
     reservationType === "walkin" ? (
       <span className="rounded-full border border-zg-warning/35 bg-zg-warning-soft-bg px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zg-warning">
