@@ -3,6 +3,8 @@
 import { MarketingProvider } from "@/src/components/dashboard/marketing/context/marketing-provider";
 import { useMarketing } from "@/src/components/dashboard/marketing/context/use-marketing";
 import CampaignCreateForm from "@/src/components/dashboard/marketing/create/campaign-create-form";
+import CampaignDetailModal from "@/src/components/dashboard/marketing/detail/campaign-detail-modal";
+import MarketingEmptyState from "@/src/components/dashboard/marketing/empty/marketing-empty-state";
 import MarketingHeader from "@/src/components/dashboard/marketing/header/marketing-header";
 import MarketingKpiCards from "@/src/components/dashboard/marketing/header/marketing-kpi-cards";
 import CampaignsListShell from "@/src/components/dashboard/marketing/list/campaigns-list-shell";
@@ -16,10 +18,8 @@ function MarketingPageContent() {
   const hasCampaigns = campaigns.length > 0;
 
   return (
-    <section className="w-full min-w-0 space-y-8 md:space-y-12">
+    <section className="w-full min-w-0 space-y-6 pb-[max(1rem,env(safe-area-inset-bottom))] md:space-y-10 lg:space-y-12">
       <MarketingHeader />
-      <MarketingKpiCards />
-      <MarketingQuickActions />
 
       {createMessage ? (
         <ToastInline
@@ -31,11 +31,19 @@ function MarketingPageContent() {
       {showCreateForm ? <CampaignCreateForm /> : null}
 
       {hasCampaigns ? (
-        <div className="space-y-6 md:space-y-8">
-          <MarketingToolbar />
-          <CampaignsListShell />
+        <div className="space-y-6 md:space-y-8 lg:space-y-10">
+          <MarketingKpiCards />
+          <MarketingQuickActions />
+          <div className="space-y-6 md:space-y-8">
+            <MarketingToolbar />
+            <CampaignsListShell />
+          </div>
         </div>
-      ) : null}
+      ) : (
+        <MarketingEmptyState />
+      )}
+
+      <CampaignDetailModal />
     </section>
   );
 }

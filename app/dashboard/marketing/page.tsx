@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import MarketingPage from "@/src/components/dashboard/marketing/marketing-page";
+import { buildRecipientsByCampaignId } from "@/src/components/dashboard/marketing/utils/build-recipients-by-campaign";
 import { mapCampaignRows } from "@/src/components/dashboard/marketing/utils/map-campaign-row";
 import { computeMarketingKpis } from "@/src/components/dashboard/marketing/utils/marketing-kpis";
 import { requireRestaurantSession } from "@/src/lib/auth";
@@ -10,7 +12,14 @@ import { buttonClassName } from "@/src/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardMarketingPage() {
+type DashboardMarketingPageProps = {
+  searchParams?: Promise<{ campaign?: string }>;
+};
+
+export default async function DashboardMarketingPage({ searchParams }: DashboardMarketingPageProps) {
+  const params = searchParams ? await searchParams : undefined;
+  const initialOpenCampaignId = params?.campaign?.trim() || null;
+
   const supabase = await createClient();
   const { restaurant, access } = await requireRestaurantSession();
   const hasMarketingAccess = access.canUseProFeatures;
@@ -52,25 +61,34 @@ export default async function DashboardMarketingPage() {
     );
   }
 
-  const { data: campaignsData } = await supabase
-    .from("email_campaigns")
-    .select("id, name, subject, content, image_url, created_at, sent_at")
-    .eq("restaurant_id", restaurant.id)
-    .order("created_at", { ascending: false });
+  const [{ data: campaignsData }, { data: restaurantSettings }] = await Promise.all([
+    supabase
+      .from("email_campaigns")
+      .select("id, name, subject, content, image_url, created_at, sent_at")
+      .eq("restaurant_id", restaurant.id)
+      .order("created_at", { ascending: false }),
+    supabase.from("restaurant_settings").select("logo_url").eq("restaurant_id", restaurant.id).maybeSingle(),
+  ]);
 
   const campaignIds = (campaignsData ?? []).map((campaign) => campaign.id);
-  let recipientsData: { campaign_id: string; email: string; opened_at: string | null }[] = [];
+  let recipientsData: {
+    campaign_id: string;
+    email: string;
+    opened_at: string | null;
+    sent_at: string;
+  }[] = [];
 
   if (campaignIds.length > 0) {
     const { data } = await supabase
       .from("email_campaign_recipients")
-      .select("campaign_id, email, opened_at")
+      .select("campaign_id, email, opened_at, sent_at")
       .in("campaign_id", campaignIds);
 
     recipientsData = data ?? [];
   }
 
   const campaigns = mapCampaignRows(campaignsData ?? [], recipientsData);
+  const recipientsByCampaignId = buildRecipientsByCampaignId(recipientsData);
   const recipientSnapshots = recipientsData.map((row) => ({
     campaignId: row.campaign_id,
     email: row.email,
@@ -78,9 +96,27 @@ export default async function DashboardMarketingPage() {
   }));
   const kpis = computeMarketingKpis(campaigns, recipientSnapshots);
 
+  const headerList = await headers();
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+  const protocol = headerList.get("x-forwarded-proto") ?? "https";
+  const origin = host ? `${protocol}://${host}` : "";
+  const reservationUrl = origin ? `${origin}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
+
+  const brand = {
+    restaurantName: restaurant.name,
+    restaurantLogoUrl: restaurantSettings?.logo_url ?? null,
+    reservationUrl,
+  };
+
   return (
     <DashboardContent>
-      <MarketingPage campaigns={campaigns} kpis={kpis} />
+      <MarketingPage
+        campaigns={campaigns}
+        kpis={kpis}
+        recipientsByCampaignId={recipientsByCampaignId}
+        brand={brand}
+        initialOpenCampaignId={initialOpenCampaignId}
+      />
     </DashboardContent>
   );
 }

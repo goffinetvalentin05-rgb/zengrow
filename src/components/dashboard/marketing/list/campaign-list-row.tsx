@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import CampaignListRowActions from "@/src/components/dashboard/marketing/list/campaign-list-row-actions";
 import { useMarketing } from "@/src/components/dashboard/marketing/context/use-marketing";
 import type { CampaignRecord } from "@/src/components/dashboard/marketing/types";
@@ -16,7 +15,6 @@ type CampaignListRowProps = {
 };
 
 function CampaignListRow({ campaign }: CampaignListRowProps) {
-  const router = useRouter();
   const { openCampaignDetail } = useMarketing();
   const status = campaignStatusBadge(campaign.status);
 
@@ -33,8 +31,7 @@ function CampaignListRow({ campaign }: CampaignListRowProps) {
 
   const onOpen = useCallback(() => {
     openCampaignDetail(campaign.id);
-    router.push(`/dashboard/marketing/${campaign.id}`);
-  }, [campaign.id, openCampaignDetail, router]);
+  }, [campaign.id, openCampaignDetail]);
 
   return (
     <article

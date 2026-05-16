@@ -26,10 +26,11 @@ export default function MarketingStatusSwitcher() {
   const { campaigns, filters, setFilters } = useMarketing();
 
   return (
+    <div className="max-w-full overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch]">
     <div
       role="tablist"
       aria-label="Filtrer par statut"
-      className="inline-flex max-w-full flex-wrap rounded-xl border border-zg-border bg-zg-surface p-1"
+      className="inline-flex min-w-max flex-wrap rounded-xl border border-zg-border bg-zg-surface p-1"
     >
       {STATUS_OPTIONS.map(({ value, label, disabled, title }) => {
         const active = filters.status === value;
@@ -63,6 +64,7 @@ export default function MarketingStatusSwitcher() {
           </button>
         );
       })}
+    </div>
     </div>
   );
 }

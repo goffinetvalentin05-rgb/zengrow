@@ -54,6 +54,9 @@ function draftFromCampaign(campaign: CampaignRecord): CampaignCreateDraft {
 export function MarketingProvider({
   campaigns: initialCampaigns,
   kpis: initialKpis,
+  recipientsByCampaignId,
+  brand,
+  initialOpenCampaignId = null,
   children,
 }: MarketingProviderProps) {
   const router = useRouter();
@@ -64,13 +67,24 @@ export function MarketingProvider({
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createDraft, setCreateDraft] = useState<CampaignCreateDraft>(EMPTY_CAMPAIGN_CREATE_DRAFT);
   const [createMessage, setCreateMessage] = useState<string | null>(null);
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(initialOpenCampaignId);
   const [deletingCampaignId, setDeletingCampaignId] = useState<string | null>(null);
 
   useEffect(() => {
     setCampaigns(initialCampaigns);
     setKpis(initialKpis);
   }, [initialCampaigns, initialKpis]);
+
+  useEffect(() => {
+    if (initialOpenCampaignId && initialCampaigns.some((c) => c.id === initialOpenCampaignId)) {
+      setSelectedCampaignId(initialOpenCampaignId);
+    }
+  }, [initialOpenCampaignId, initialCampaigns]);
+
+  const selectedCampaign = useMemo(
+    () => campaigns.find((c) => c.id === selectedCampaignId) ?? null,
+    [campaigns, selectedCampaignId],
+  );
 
   const filteredCampaigns = useMemo(
     () => filterCampaigns(campaigns, filters),
@@ -151,6 +165,8 @@ export function MarketingProvider({
         campaigns,
         filteredCampaigns,
         kpis,
+        recipientsByCampaignId,
+        brand,
         filters,
         setFilters,
         resetFilters,
@@ -164,6 +180,7 @@ export function MarketingProvider({
         deleteCampaign,
         deletingCampaignId,
         selectedCampaignId,
+        selectedCampaign,
         openCampaignDetail,
         closeCampaignDetail,
         createMessage,

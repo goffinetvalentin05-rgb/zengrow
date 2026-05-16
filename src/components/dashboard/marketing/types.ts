@@ -21,6 +21,18 @@ export type CampaignRecord = {
   openedCount: number;
 };
 
+export type CampaignRecipientDetail = {
+  email: string;
+  openedAt: string | null;
+  sentAt: string;
+};
+
+export type MarketingBrandContext = {
+  restaurantName: string;
+  restaurantLogoUrl: string | null;
+  reservationUrl: string;
+};
+
 export type CampaignCreateDraft = {
   name: string;
   subject: string;
@@ -42,4 +54,7 @@ export const EMPTY_CAMPAIGN_CREATE_DRAFT: CampaignCreateDraft = {
 export type MarketingPageProps = {
   campaigns: CampaignRecord[];
   kpis: MarketingKpis;
+  recipientsByCampaignId: Record<string, CampaignRecipientDetail[]>;
+  brand: MarketingBrandContext;
+  initialOpenCampaignId?: string | null;
 };

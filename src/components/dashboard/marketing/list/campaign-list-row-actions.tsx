@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMarketing } from "@/src/components/dashboard/marketing/context/use-marketing";
 import type { CampaignRecord } from "@/src/components/dashboard/marketing/types";
 import Button from "@/src/components/ui/button";
@@ -13,14 +12,13 @@ type CampaignListRowActionsProps = {
 };
 
 export default function CampaignListRowActions({ campaign, className }: CampaignListRowActionsProps) {
-  const router = useRouter();
-  const { duplicateCampaign, deleteCampaign, deletingCampaignId } = useMarketing();
+  const { duplicateCampaign, deleteCampaign, deletingCampaignId, openCampaignDetail } = useMarketing();
   const isDeleting = deletingCampaignId === campaign.id;
   const isDraft = campaign.status === "draft";
 
   function handleViewDetails(event: React.MouseEvent) {
     event.stopPropagation();
-    router.push(`/dashboard/marketing/${campaign.id}`);
+    openCampaignDetail(campaign.id);
   }
 
   function handleDuplicate(event: React.MouseEvent) {
