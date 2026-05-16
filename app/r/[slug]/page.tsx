@@ -116,10 +116,6 @@ type PublicSettingsRow = {
   terrace_enabled: boolean;
   terrace_capacity: number;
   terrace_label: string;
-  reservation_mode: string;
-  floor_plan_public_selection_mode: string;
-  public_table_selection_mode: string;
-  floor_plan_clients_choose_table: boolean;
   public_page_editor_config?: unknown;
 };
 
@@ -217,10 +213,6 @@ const SETTINGS_SELECT = [
   "terrace_enabled",
   "terrace_capacity",
   "terrace_label",
-  "reservation_mode",
-  "floor_plan_public_selection_mode",
-  "public_table_selection_mode",
-  "floor_plan_clients_choose_table",
   "public_page_editor_config",
 ].join(", ");
 
@@ -359,10 +351,6 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     terrace_enabled: false,
     terrace_capacity: 0,
     terrace_label: "Terrasse",
-    reservation_mode: "simple",
-    floor_plan_public_selection_mode: "automatic",
-    public_table_selection_mode: "automatic",
-    floor_plan_clients_choose_table: false,
   };
 
   const galleryImageUrls = (safeSettings.gallery_image_urls ?? []).filter(Boolean);
@@ -534,17 +522,6 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           terraceEnabled={safeSettings.terrace_enabled === true}
           terraceLabel={safeSettings.terrace_label}
           terraceCapacity={safeSettings.terrace_capacity}
-          reservationMode={(safeSettings.reservation_mode as "simple" | "floor_plan") ?? "simple"}
-          publicFloorPlanSelectionMode={
-            (safeSettings.floor_plan_public_selection_mode as "automatic" | "area" | "table") ??
-            ((safeSettings.public_table_selection_mode as "automatic" | "zone" | "table") === "zone"
-              ? "area"
-              : (safeSettings.public_table_selection_mode as "automatic" | "zone" | "table") === "table"
-                ? "table"
-                : "automatic")
-          }
-          subscriptionPlan={(restaurant.subscription_plan as string | null) ?? "starter"}
-          subscriptionStatus={(restaurant.subscription_status as string | null) ?? "active"}
           sectionLayoutVariants={sectionLayoutVariants}
           sectionContent={sectionContent}
         />

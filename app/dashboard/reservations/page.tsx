@@ -19,30 +19,11 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
   const { data: reservations } = await supabase
     .from("reservations")
     .select(
-      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone, reservation_type, table_id",
+      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone, reservation_type",
     )
     .eq("restaurant_id", restaurant.id)
     .order("reservation_date", { ascending: true })
     .order("reservation_time", { ascending: true });
-
-  const [{ data: tablesData }, { data: zonesData }] = await Promise.all([
-    supabase
-      .from("restaurant_tables")
-      .select("id, name, zone_id")
-      .eq("restaurant_id", restaurant.id),
-    supabase
-      .from("restaurant_zones")
-      .select("id, name")
-      .eq("restaurant_id", restaurant.id),
-  ]);
-
-  const zoneById = new Map<string, string>((zonesData ?? []).map((z) => [z.id, z.name]));
-  const tableLabelById = new Map<string, string>(
-    (tablesData ?? []).map((t) => {
-      const zoneName = t.zone_id ? zoneById.get(t.zone_id) : null;
-      return [t.id, zoneName ? `${t.name} · ${zoneName}` : t.name];
-    }),
-  );
 
   const { data: resSettings } = await supabase
     .from("restaurant_settings")
@@ -63,8 +44,6 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
     created_at: string;
     zone?: "interior" | "terrace" | string | null;
     reservation_type?: "standard" | "walkin";
-    table_id?: string | null;
-    table_label?: string | null;
   };
 
   return (
@@ -81,10 +60,7 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
       />
       <TerraceControlBanner restaurantId={restaurant.id} className="mb-4" />
       <ReservationsManager
-        initialReservations={((reservations ?? []) as ReservationRow[]).map((r) => ({
-          ...r,
-          table_label: r.table_id ? tableLabelById.get(r.table_id) ?? null : null,
-        }))}
+        initialReservations={(reservations ?? []) as ReservationRow[]}
         initialShowManualForm={shouldOpenManualForm}
         terraceEnabled={resSettings?.terrace_enabled === true}
         showZoneUi={(resSettings?.terrace_capacity ?? 0) > 0}

@@ -21,7 +21,7 @@ export async function TerraceControlBanner({ restaurantId, className }: TerraceC
     supabase
       .from("restaurant_settings")
       .select(
-        "terrace_enabled, terrace_capacity, terrace_label, reservation_duration, reservation_mode, max_covers_per_slot, restaurant_capacity, service_lunch_max_covers, service_dinner_max_covers",
+        "terrace_enabled, terrace_capacity, terrace_label, reservation_duration, max_covers_per_slot, restaurant_capacity, service_lunch_max_covers, service_dinner_max_covers",
       )
       .eq("restaurant_id", restaurantId)
       .maybeSingle(),

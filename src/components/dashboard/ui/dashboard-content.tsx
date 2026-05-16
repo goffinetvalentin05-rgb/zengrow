@@ -7,7 +7,7 @@ type DashboardContentProps = {
   /**
    * Largeur max du contenu (hors sidebar).
    * - default: confort lecture / SaaS (recommandé)
-   * - wide: pages “canvas” (ex. plan de salle)
+   * - wide: pages pleine largeur (canvas)
    */
   width?: "default" | "wide";
 };

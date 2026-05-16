@@ -163,13 +163,6 @@ export type PublicReservationFormProps = {
   terraceLabel?: string;
   /** Capacité max terrasse (affichage indicatif). */
   terraceCapacity?: number;
-  /** Mode réservation canonique (2 modes uniquement). */
-  reservationMode?: "simple" | "floor_plan";
-  /** Mode public en plan de salle. */
-  publicFloorPlanSelectionMode?: "automatic" | "area" | "table";
-  /** Abonnement (pour désactiver le plan de salle en Starter). */
-  subscriptionPlan?: string | null;
-  subscriptionStatus?: string | null;
 };
 
 function scrollToReservation() {
@@ -310,10 +303,6 @@ export default function PublicReservationForm({
   terraceEnabled = false,
   terraceLabel = "Terrasse",
   terraceCapacity = 0,
-  reservationMode = "simple",
-  publicFloorPlanSelectionMode = "automatic",
-  subscriptionPlan = "starter",
-  subscriptionStatus = "active",
   visualThemeId = "default",
   themeCssVarOverrides,
   showGrainOverlay = false,
@@ -328,15 +317,8 @@ export default function PublicReservationForm({
     return localYmd(d);
   }, [daysInAdvance]);
   const usePremiumChrome = visualThemeId !== "default";
-  const canUseProFeatures = subscriptionStatus === "trial" || subscriptionPlan === "pro";
-  const effectiveReservationMode: "simple" | "floor_plan" =
-    canUseProFeatures && reservationMode === "floor_plan" ? "floor_plan" : "simple";
-
-  const resolvedPublicMode: "automatic" | "area" | "table" = publicFloorPlanSelectionMode ?? "automatic";
-  const allowAreaChoice = effectiveReservationMode === "floor_plan" && resolvedPublicMode === "area";
-  const canChooseTable = effectiveReservationMode === "floor_plan" && resolvedPublicMode === "table";
-  const allowTerraceZoneChoice = terraceEnabled && !allowAreaChoice && !canChooseTable;
-  const totalSteps = canChooseTable ? 5 : allowAreaChoice ? 5 : allowTerraceZoneChoice ? 5 : 4;
+  const allowTerraceZoneChoice = terraceEnabled;
+  const totalSteps = allowTerraceZoneChoice ? 5 : 4;
   const terraceZoneStep = allowTerraceZoneChoice ? 4 : null;
   const contactStep = totalSteps;
   const [wizardStep, setWizardStep] = useState(1);
@@ -357,45 +339,18 @@ export default function PublicReservationForm({
   const [slotsByZone, setSlotsByZone] = useState<SlotsByZone>({ interior: [], terrace: [] });
   const [terraceMinCoverSlots, setTerraceMinCoverSlots] = useState<AvailabilitySlot[]>([]);
   const [zoneStepLoading, setZoneStepLoading] = useState(false);
-  const chooseTableInZone = canChooseTable;
   const effectiveTerraceLabel = normalizeTerraceLabel(terraceLabel);
   const datePickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (allowTerraceZoneChoice) return;
-    if (allowAreaChoice) return;
     queueMicrotask(() => setSeatingZone("interior"));
-  }, [allowTerraceZoneChoice, allowAreaChoice]);
+  }, [allowTerraceZoneChoice]);
 
   useEffect(() => {
     if (!allowTerraceZoneChoice) return;
     queueMicrotask(() => setSeatingZone(null));
   }, [allowTerraceZoneChoice, reservationTime, reservationDate, guests]);
-
-  const [clientSelectedTableId, setClientSelectedTableId] = useState<string | null>(null);
-  const [tablesChoiceLoading, setTablesChoiceLoading] = useState(false);
-  const [tablesChoiceError, setTablesChoiceError] = useState<string | null>(null);
-  const [publicPlans, setPublicPlans] = useState<Array<{ id: string; name: string; type: string }>>([]);
-  const [publicPlanId, setPublicPlanId] = useState<string | null>(null);
-  const [availablePlanIds, setAvailablePlanIds] = useState<Set<string>>(new Set());
-  const [tablesChoice, setTablesChoice] = useState<
-    Array<{
-      id: string;
-      name: string;
-      min_covers: number;
-      max_covers: number;
-      status: string;
-      reserved: boolean;
-      isSelectable: boolean;
-    }>
-  >([]);
-
-  const selectedPublicPlan = useMemo(
-    () => (publicPlanId ? publicPlans.find((p) => p.id === publicPlanId) ?? null : null),
-    [publicPlans, publicPlanId],
-  );
-  const zoneForSelectedPlan: "interior" | "terrace" =
-    selectedPublicPlan?.type === "terrace" ? "terrace" : "interior";
 
   const effectiveMaxParty = useMemo(
     () => Math.max(1, Math.floor(Number(maxPartySize)) || 8),
@@ -618,14 +573,6 @@ export default function PublicReservationForm({
       return;
     }
 
-    if (allowAreaChoice && !seatingZone) {
-      queueMicrotask(() => {
-        setAvailabilitySlots([]);
-        setSlotsError(null);
-      });
-      return;
-    }
-
     let cancelled = false;
     setSlotsLoading(true);
     setSlotsError(null);
@@ -636,10 +583,7 @@ export default function PublicReservationForm({
           setSlotsByZone(byZone);
           return mergeAvailabilitySlotTimes(byZone.interior, byZone.terrace);
         })
-      : (() => {
-          const zone: "interior" | "terrace" = allowAreaChoice ? seatingZone! : "interior";
-          return fetchAvailabilityForZone(restaurantId, reservationDate, guests, zone);
-        })();
+: fetchAvailabilityForZone(restaurantId, reservationDate, guests, "interior");
 
     loadSlots
       .then((slots) => {
@@ -668,7 +612,6 @@ export default function PublicReservationForm({
     closureEndDate,
     maxDateStr,
     allowTerraceZoneChoice,
-    allowAreaChoice,
     seatingZone,
   ]);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -742,152 +685,6 @@ export default function PublicReservationForm({
   }, [availabilitySlots, reservationTime]);
 
   useEffect(() => {
-    if (!canChooseTable && !allowAreaChoice) return;
-    // Si l'utilisateur change le créneau ou les paramètres, on réinitialise le choix table.
-    queueMicrotask(() => {
-      setClientSelectedTableId(null);
-      setPublicPlans([]);
-      setPublicPlanId(null);
-      setTablesChoice([]);
-      setTablesChoiceError(null);
-      setAvailablePlanIds(new Set());
-    });
-  }, [canChooseTable, allowAreaChoice, reservationTime, reservationDate, guests, seatingZone]);
-
-  useEffect(() => {
-    if (!canChooseTable && !allowAreaChoice) return;
-    if (wizardStep !== 4) return;
-
-    let cancelled = false;
-    fetch(`/api/floor-plan/plans?${new URLSearchParams({ restaurantId }).toString()}`)
-      .then(async (r) => {
-        const payload = (await r.json().catch(() => ({}))) as { plans?: Array<{ id: string; name: string; type: string }>; error?: string };
-        if (!r.ok) throw new Error(payload.error ?? "Impossible de charger les plans.");
-        return payload.plans ?? [];
-      })
-      .then((plans) => {
-        if (cancelled) return;
-        setPublicPlans(plans);
-        if (!publicPlanId) {
-          const indoor = plans.find((p) => p.type === "indoor") ?? plans[0];
-          setPublicPlanId(indoor?.id ?? null);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setPublicPlans([]);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [canChooseTable, allowAreaChoice, wizardStep, restaurantId, publicPlanId]);
-
-  // Mode “choix d’espace” : déterminer quels plans ont au moins une table disponible
-  useEffect(() => {
-    if (!allowAreaChoice) return;
-    if (wizardStep !== 4) return;
-    if (!reservationTime || !reservationDate) return;
-    if (!guests || guests < 1) return;
-    if (publicPlans.length === 0) return;
-
-    let cancelled = false;
-    (async () => {
-      const checks = await Promise.all(
-        publicPlans.map(async (p) => {
-          const query = new URLSearchParams({
-            restaurantId,
-            date: reservationDate,
-            time: reservationTime,
-            covers: String(guests),
-            zone: p.type === "terrace" ? "terrace" : "interior",
-            planId: p.id,
-          });
-          const res = await fetch(`/api/floor-plan/tables-availability?${query.toString()}`);
-          const payload = (await res.json().catch(() => ({}))) as { tables?: Array<{ isSelectable: boolean }> };
-          const ok = (payload.tables ?? []).some((t) => t.isSelectable);
-          return { id: p.id, ok };
-        }),
-      );
-
-      if (cancelled) return;
-      const next = new Set(checks.filter((c) => c.ok).map((c) => c.id));
-      setAvailablePlanIds(next);
-      if (!publicPlanId || !next.has(publicPlanId)) {
-        const first = checks.find((c) => c.ok)?.id ?? null;
-        setPublicPlanId(first);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [allowAreaChoice, wizardStep, reservationTime, reservationDate, guests, publicPlans, restaurantId, publicPlanId]);
-
-  useEffect(() => {
-    if (!chooseTableInZone) return;
-    if (wizardStep !== 4) return;
-    if (!reservationTime || !reservationDate) return;
-    if (!guests || guests < 1) return;
-    if (!publicPlanId) return;
-
-    let cancelled = false;
-    queueMicrotask(() => {
-      setTablesChoiceLoading(true);
-      setTablesChoiceError(null);
-      setTablesChoice([]);
-    });
-
-    const query = new URLSearchParams({
-      restaurantId,
-      date: reservationDate,
-      time: reservationTime,
-      covers: String(guests),
-      zone: zoneForSelectedPlan,
-      planId: publicPlanId,
-    });
-
-    fetch(`/api/floor-plan/tables-availability?${query.toString()}`)
-      .then(async (response) => {
-        const payload = (await response.json().catch(() => ({}))) as {
-          tables?: Array<{
-            id: string;
-            name: string;
-            min_covers: number;
-            max_covers: number;
-            status: string;
-            reserved: boolean;
-            isSelectable: boolean;
-          }>;
-          error?: string;
-        };
-        if (!response.ok) throw new Error(payload.error ?? "Impossible de charger les tables.");
-        return payload.tables ?? [];
-      })
-      .then((tables) => {
-        if (!cancelled) setTablesChoice(tables);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setTablesChoiceError(err instanceof Error ? err.message : "Erreur de chargement.");
-      })
-      .finally(() => {
-        if (!cancelled) setTablesChoiceLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    chooseTableInZone,
-    wizardStep,
-    reservationTime,
-    reservationDate,
-    guests,
-    restaurantId,
-    publicPlanId,
-    zoneForSelectedPlan,
-  ]);
-
-  useEffect(() => {
     queueMicrotask(() => setGuests((g) => Math.min(Math.max(1, g), effectiveMaxParty)));
   }, [effectiveMaxParty]);
 
@@ -940,25 +737,13 @@ export default function PublicReservationForm({
       return;
     }
 
-    if (allowAreaChoice && !publicPlanId) {
-      setError("Veuillez choisir un espace.");
-      setIsSubmitting(false);
-      return;
-    }
-
     if (allowTerraceZoneChoice && !seatingZone) {
       setError("Veuillez choisir un emplacement (salle ou terrasse).");
       setIsSubmitting(false);
       return;
     }
 
-    const submitZone: "interior" | "terrace" = allowTerraceZoneChoice
-      ? seatingZone!
-      : canChooseTable
-        ? zoneForSelectedPlan
-        : allowAreaChoice && seatingZone
-          ? seatingZone
-          : "interior";
+    const submitZone: "interior" | "terrace" = allowTerraceZoneChoice ? seatingZone! : "interior";
 
     const slotsForZone =
       submitZone === "terrace" ? slotsByZone.terrace : slotsByZone.interior;
@@ -968,12 +753,6 @@ export default function PublicReservationForm({
 
     if (!zoneSlotsCheck.some((s) => s.time === reservationTime)) {
       setError("Ce créneau n'est plus disponible. Veuillez choisir une autre heure.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (canChooseTable && !clientSelectedTableId) {
-      setError("Choisissez une table disponible sur le plan.");
       setIsSubmitting(false);
       return;
     }
@@ -989,11 +768,7 @@ export default function PublicReservationForm({
         guests,
         reservationDate,
         reservationTime,
-        ...(allowAreaChoice && publicPlanId ? { floorPlanId: publicPlanId } : {}),
-        ...(allowTerraceZoneChoice || canChooseTable || (allowAreaChoice && seatingZone)
-          ? { zone: submitZone }
-          : {}),
-        ...(canChooseTable && clientSelectedTableId ? { tableId: clientSelectedTableId } : {}),
+        ...(allowTerraceZoneChoice ? { zone: submitZone } : {}),
       }),
     });
     const payload = (await response.json().catch(() => ({}))) as { error?: string; status?: string };
@@ -1529,7 +1304,7 @@ export default function PublicReservationForm({
 
                 {wizardStep === 2 ? (
                   <div className="flex flex-col gap-6">
-                    {allowAreaChoice && terraceEnabled && !allowTerraceZoneChoice ? (
+                    {false ? (
                       <div className="flex flex-col gap-2" role="group" aria-label="Emplacement">
                         <p className="text-center text-sm font-medium" style={{ color: "var(--heading-color)" }}>
                           Emplacement
@@ -1700,200 +1475,6 @@ export default function PublicReservationForm({
                   </div>
                 ) : null}
 
-                {allowAreaChoice && !canChooseTable && wizardStep === 4 ? (
-                  <div className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-2">
-                      <p className="text-center text-sm font-medium" style={{ color: "var(--heading-color)" }}>
-                        Choisissez votre espace
-                      </p>
-                      <p
-                        className="text-center text-xs"
-                        style={{ color: "color-mix(in srgb, var(--body-text) 62%, var(--page-bg))" }}
-                      >
-                        Seuls les espaces avec au moins une table disponible sont proposés.
-                      </p>
-                    </div>
-
-                    {publicPlans.length === 0 ? (
-                      <p
-                        className="text-center text-sm"
-                        style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
-                      >
-                        Chargement des espaces…
-                      </p>
-                    ) : availablePlanIds.size === 0 ? (
-                      <div className="flex flex-col items-center gap-3 text-center">
-                        <p
-                          className="text-center text-sm"
-                          style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
-                        >
-                          Aucune table disponible pour ce créneau.
-                        </p>
-                        <button
-                          type="button"
-                          className="text-sm font-semibold underline-offset-4 hover:underline"
-                          style={{ color: "var(--accent-color)" }}
-                          onClick={() => setWizardStep(3)}
-                        >
-                          Choisir un autre horaire
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        {publicPlans
-                          .filter((p) => availablePlanIds.has(p.id))
-                          .map((p) => (
-                            <button
-                              key={p.id}
-                              type="button"
-                              disabled={previewMode}
-                              onClick={() => setPublicPlanId(p.id)}
-                              className={cn(
-                                "min-h-[52px] rounded-[var(--radius)] border-2 px-4 py-3 text-base font-semibold transition active:scale-[0.99] disabled:opacity-40",
-                                publicPlanId === p.id ? "border-transparent shadow-sm" : "bg-transparent",
-                              )}
-                              style={
-                                publicPlanId === p.id
-                                  ? {
-                                      backgroundColor: "var(--button-bg)",
-                                      color: "var(--button-text)",
-                                      borderColor: "var(--button-bg)",
-                                    }
-                                  : {
-                                      borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
-                                      color: "color-mix(in srgb, var(--body-text) 85%, var(--page-bg))",
-                                    }
-                              }
-                            >
-                              {p.name}
-                            </button>
-                          ))}
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-
-                {canChooseTable && wizardStep === 4 ? (
-                  <div className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-2">
-                      <p className="text-center text-sm font-medium" style={{ color: "var(--heading-color)" }}>
-                        Choisissez votre table
-                      </p>
-                      <p className="text-center text-xs" style={{ color: "color-mix(in srgb, var(--body-text) 62%, var(--page-bg))" }}>
-                        Les tables réservées et bloquées sont visibles mais non sélectionnables.
-                      </p>
-                    </div>
-
-                    {publicPlans.length > 1 ? (
-                      <div className="flex flex-wrap justify-center gap-2">
-                        {publicPlans.map((p) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            disabled={previewMode}
-                            onClick={() => {
-                              setPublicPlanId(p.id);
-                              setClientSelectedTableId(null);
-                            }}
-                            className={cn(
-                              "min-h-[44px] rounded-[var(--radius)] border-2 px-4 text-sm font-semibold transition active:scale-[0.99] disabled:opacity-40",
-                              publicPlanId === p.id ? "border-transparent shadow-sm" : "bg-transparent",
-                            )}
-                            style={
-                              publicPlanId === p.id
-                                ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
-                                : {
-                                    borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
-                                    color: "color-mix(in srgb, var(--body-text) 85%, var(--page-bg))",
-                                  }
-                            }
-                          >
-                            {p.name}
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    {tablesChoiceLoading ? (
-                      <p
-                        className="text-center text-sm"
-                        style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
-                      >
-                        Chargement du plan…
-                      </p>
-                    ) : tablesChoiceError ? (
-                      <p className="text-center text-sm text-amber-800">{tablesChoiceError}</p>
-                    ) : tablesChoice.length === 0 ? (
-                      <div className="flex flex-col items-center gap-3 text-center">
-                        <p
-                          className="text-center text-sm"
-                          style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
-                        >
-                          Aucune table disponible pour ce créneau.
-                        </p>
-                        <button
-                          type="button"
-                          className="text-sm font-semibold underline-offset-4 hover:underline"
-                          style={{ color: "var(--accent-color)" }}
-                          onClick={() => setWizardStep(3)}
-                        >
-                          Choisir un autre horaire
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
-                        {tablesChoice.map((t) => {
-                          const isSelected = clientSelectedTableId === t.id;
-                          const isDisabled = previewMode || !t.isSelectable;
-
-                          let border = "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))";
-                          let bg = "transparent";
-                          let text = "color-mix(in srgb, var(--body-text) 82%, var(--page-bg))";
-                          let overlayText = "";
-
-                          if (t.status === "blocked") {
-                            border = "color-mix(in srgb, #ef4444 45%, transparent)";
-                            bg = "color-mix(in srgb, #ef4444 10%, transparent)";
-                            text = "#ef4444";
-                            overlayText = "Bloquée";
-                          } else if (t.reserved) {
-                            border = "color-mix(in srgb, #f59e0b 45%, transparent)";
-                            bg = "color-mix(in srgb, #f59e0b 10%, transparent)";
-                            text = "#b45309";
-                            overlayText = "Réservée";
-                          }
-
-                          if (isSelected) {
-                            border = "var(--accent-color)";
-                            bg = "color-mix(in srgb, var(--accent-color) 12%, transparent)";
-                          }
-
-                          return (
-                            <button
-                              key={t.id}
-                              type="button"
-                              disabled={isDisabled}
-                              onClick={() => setClientSelectedTableId(t.id)}
-                              className="min-h-[52px] rounded-[var(--radius)] border-2 px-3 py-2 text-left transition active:scale-[0.99] disabled:opacity-40"
-                              style={{
-                                borderColor: isSelected ? "var(--accent-color)" : border,
-                                backgroundColor: bg,
-                                color: text,
-                              }}
-                            >
-                              <div className="text-sm font-semibold">{t.name}</div>
-                              <div className="mt-1 text-xs font-semibold" style={{ opacity: 0.7 }}>
-                                {t.min_covers}–{t.max_covers} pers.
-                              </div>
-                              {overlayText ? <div className="mt-1 text-[11px] font-semibold">{overlayText}</div> : null}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-
                 {wizardStep === contactStep ? (
                   <div className="grid gap-4">
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -2005,9 +1586,7 @@ export default function PublicReservationForm({
                       (wizardStep === 3 && !reservationTime) ||
                       (wizardStep === terraceZoneStep &&
                         allowTerraceZoneChoice &&
-                        (zoneStepLoading || !seatingZone)) ||
-                      (wizardStep === 4 && canChooseTable && !clientSelectedTableId) ||
-                      (wizardStep === 4 && allowAreaChoice && !canChooseTable && !publicPlanId)
+                        (zoneStepLoading || !seatingZone))
                     }
                     onClick={() => setWizardStep((s) => Math.min(totalSteps, s + 1))}
                     className="order-1 min-h-[48px] w-full rounded-[var(--radius)] border border-transparent px-6 text-sm font-semibold shadow-md transition hover:brightness-105 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-45 sm:order-2 sm:ml-auto sm:w-auto sm:min-w-[200px]"

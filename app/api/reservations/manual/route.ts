@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { calendarYmdInBusinessTz } from "@/src/lib/date/business-calendar";
-import { normalizeReservationMode } from "@/src/lib/reservation/reservation-modes";
 import { isRestaurantExpiredForUser } from "@/src/lib/access";
 import { expireTrialIfNeeded } from "@/src/lib/subscription";
 
@@ -100,13 +99,11 @@ export async function POST(request: NextRequest) {
 
   const { data: settings } = await supabase
     .from("restaurant_settings")
-    .select("max_party_size, use_tables, terrace_enabled, reservation_mode")
+    .select("max_party_size, terrace_enabled")
     .eq("restaurant_id", restaurant.id)
     .maybeSingle();
 
   const maxPartySize = settings?.max_party_size ?? 8;
-  const reservationMode = normalizeReservationMode(settings?.reservation_mode);
-  const useTables = reservationMode === "floor_plan";
   const terraceEnabled = settings?.terrace_enabled === true;
 
   let reservationZone: "interior" | "terrace" = "interior";
@@ -123,8 +120,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let tableId: string | null = null;
-
   if (!forceOverbook) {
     const { data: slotsData, error: availError } = await supabase.rpc("get_available_slots", {
       p_restaurant_id: restaurant.id,
@@ -137,7 +132,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Impossible de vérifier les disponibilités." }, { status: 500 });
     }
 
-    type SlotRow = { time: string; suggestedTableId?: string | null };
+    type SlotRow = { time: string };
     let slots: SlotRow[] = [];
     if (Array.isArray(slotsData)) {
       slots = slotsData as SlotRow[];
@@ -155,14 +150,10 @@ export async function POST(request: NextRequest) {
         {
           error: "Ce créneau n’est pas disponible ou n’a plus assez de places.",
           code: "SLOT_UNAVAILABLE",
-          canForceOverbook: reservationZone === "terrace" || !useTables,
+          canForceOverbook: true,
         },
         { status: 409 },
       );
-    }
-
-    if (useTables && reservationZone === "interior") {
-      tableId = slotMatch.suggestedTableId ?? null;
     }
   }
 
@@ -179,27 +170,21 @@ export async function POST(request: NextRequest) {
       internal_note: note,
       status: "confirmed",
       source: "manual_dashboard",
-      table_id: tableId,
       zone: reservationZone,
       reservation_type: isWalkIn ? "walkin" : "standard",
       capacity_override: forceOverbook,
     })
     .select(
-      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, table_id, zone, reservation_type",
+      "id, reservation_date, reservation_time, guest_name, guest_phone, guest_email, guests, status, internal_note, created_at, zone, reservation_type",
     )
     .single();
 
   if (insertError || !reservation) {
     const rawMessage = insertError?.message ?? "Impossible de créer la réservation.";
     const normalizedMessage = rawMessage.toLowerCase();
-    if (
-      normalizedMessage.includes("slot_full") ||
-      normalizedMessage.includes("table_taken") ||
-      normalizedMessage.includes("table_capacity") ||
-      normalizedMessage.includes("table_required")
-    ) {
+    if (normalizedMessage.includes("slot_full")) {
       return NextResponse.json(
-        { error: "Aucune table disponible ou créneau complet." },
+        { error: "Créneau complet ou capacité insuffisante." },
         { status: 409 },
       );
     }

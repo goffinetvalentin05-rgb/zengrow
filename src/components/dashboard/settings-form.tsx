@@ -29,12 +29,7 @@ import {
   effectiveReservationConfirmationSubject,
   sampleReservationConfirmationContext,
 } from "@/src/lib/email/reservation-confirmation-template";
-import {
-  type ReservationMode,
-  normalizeReservationMode,
-  reservationModeFromLegacy,
-  timeHhMmFromDb,
-} from "@/src/lib/reservation/reservation-modes";
+import { timeHhMmFromDb } from "@/src/lib/reservation/reservation-modes";
 import {
   clampTerraceCapacity,
   normalizeTerraceLabel,
@@ -84,7 +79,6 @@ type SettingsData = {
   restaurant_capacity: number | null;
   max_covers_per_slot: number | null;
   max_party_size: number | null;
-  use_tables: boolean | null;
   days_in_advance: number | null;
   accent_color: string | null;
   button_color: string | null;
@@ -115,15 +109,6 @@ type SettingsData = {
   terrace_capacity?: number | null;
   terrace_label?: string | null;
   auto_archive_reservations?: boolean | null;
-  reservation_mode?: string | null;
-  /** Mode public en plan de salle: automatic | zone | table */
-  public_table_selection_mode?: string | null;
-  /** Mode public canonique plan de salle: automatic | area | table */
-  floor_plan_public_selection_mode?: string | null;
-  /** Legacy: ancien booléen (à migrer) */
-  floor_plan_clients_choose_table?: boolean | null;
-  floor_plan_lunch_duration?: number | null;
-  floor_plan_dinner_duration?: number | null;
   lunch_duration_minutes?: number | null;
   dinner_duration_minutes?: number | null;
   service_lunch_enabled?: boolean | null;
@@ -193,20 +178,6 @@ export default function SettingsForm({
   const [address, setAddress] = useState(restaurant.address ?? "");
   const [description, setDescription] = useState(restaurant.description ?? "");
   const [slug, setSlug] = useState(restaurant.slug);
-  const [reservationMode, setReservationMode] = useState<ReservationMode>(() =>
-    normalizeReservationMode(settings.reservation_mode ?? reservationModeFromLegacy(settings.use_tables)),
-  );
-  const [floorPlanPublicSelectionMode, setFloorPlanPublicSelectionMode] = useState<"automatic" | "area" | "table">(
-    () => {
-      const v = settings.floor_plan_public_selection_mode;
-      if (v === "automatic" || v === "area" || v === "table") return v;
-      const legacy = settings.public_table_selection_mode;
-      if (legacy === "table") return "table";
-      if (legacy === "zone") return "area";
-      if (settings.floor_plan_clients_choose_table === true) return "table";
-      return "automatic";
-    },
-  );
   const [lunchServiceEnabled, setLunchServiceEnabled] = useState(settings.service_lunch_enabled !== false);
   const [lunchServiceStart, setLunchServiceStart] = useState(
     timeHhMmFromDb(settings.service_lunch_start ?? null, "11:30"),
@@ -237,11 +208,11 @@ export default function SettingsForm({
     newCapacity: number;
   } | null>(null);
   const [daysInAdvance, setDaysInAdvance] = useState(settings.days_in_advance ?? 60);
-  const [floorPlanLunchDuration] = useState(
-    settings.lunch_duration_minutes ?? settings.floor_plan_lunch_duration ?? settings.reservation_duration ?? 90,
+  const [lunchDurationMinutes, setLunchDurationMinutes] = useState(
+    settings.lunch_duration_minutes ?? settings.reservation_duration ?? 90,
   );
-  const [floorPlanDinnerDuration] = useState(
-    settings.dinner_duration_minutes ?? settings.floor_plan_dinner_duration ?? settings.reservation_duration ?? 90,
+  const [dinnerDurationMinutes, setDinnerDurationMinutes] = useState(
+    settings.dinner_duration_minutes ?? settings.reservation_duration ?? 90,
   );
   const [autoArchiveReservations] = useState(
     settings.auto_archive_reservations === true,
@@ -404,59 +375,6 @@ export default function SettingsForm({
 
   // Documents PDF / Galerie: retirés de l’UI dans la refonte.
 
-  const [floorPlanSummary, setFloorPlanSummary] = useState<{
-    activeTables: number;
-    blockedTables: number;
-    inactiveTables: number;
-    maxCovers: number;
-    activeZones: number;
-  } | null>(null);
-
-  useEffect(() => {
-    if (reservationMode !== "floor_plan") {
-      setFloorPlanSummary(null);
-      return;
-    }
-
-    let cancelled = false;
-    (async () => {
-      const [{ data: tablesData, error: tablesError }, { data: plansData, error: plansError }] = await Promise.all([
-        supabase
-          .from("restaurant_tables")
-          .select("id, status, max_covers, floor_plan_id")
-          .eq("restaurant_id", restaurant.id),
-        supabase
-          .from("floor_plans")
-          .select("id, is_active")
-          .eq("restaurant_id", restaurant.id),
-      ]);
-
-      if (cancelled) return;
-      if (tablesError || plansError) {
-        setFloorPlanSummary(null);
-        return;
-      }
-
-      const activeTables = (tablesData ?? []).filter((t) => t.status === "active");
-      const blockedTables = (tablesData ?? []).filter((t) => t.status === "blocked");
-      const inactiveTables = (tablesData ?? []).filter((t) => t.status === "inactive");
-      const maxCovers = activeTables.reduce((sum, t) => sum + Math.max(0, t.max_covers ?? 0), 0);
-      const activeZones = (plansData ?? []).filter((z) => z.is_active === true).length;
-
-      setFloorPlanSummary({
-        activeTables: activeTables.length,
-        blockedTables: blockedTables.length,
-        inactiveTables: inactiveTables.length,
-        maxCovers,
-        activeZones,
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [reservationMode, restaurant.id, supabase]);
-
   // Documents (PDF) : UI retirée de la refonte, donc pas de chargement ici.
 
 
@@ -542,23 +460,11 @@ export default function SettingsForm({
         max_covers_per_slot: Math.max(lunchMaxCovers, dinnerMaxCovers),
         reservation_duration: Math.max(
           30,
-          Math.min(600, Math.round((floorPlanLunchDuration + floorPlanDinnerDuration) / 2)),
+          Math.min(600, Math.round((lunchDurationMinutes + dinnerDurationMinutes) / 2)),
         ),
         auto_archive_reservations: autoArchiveReservations,
-        reservation_mode: reservationMode,
-        use_tables: reservationMode === "floor_plan",
-        floor_plan_public_selection_mode: reservationMode === "floor_plan" ? floorPlanPublicSelectionMode : "automatic",
-        // legacy compat (zone/table/automatic)
-        public_table_selection_mode:
-          reservationMode === "floor_plan"
-            ? floorPlanPublicSelectionMode === "area"
-              ? "zone"
-              : floorPlanPublicSelectionMode
-            : "automatic",
-        lunch_duration_minutes: Math.max(30, Math.min(600, floorPlanLunchDuration)),
-        dinner_duration_minutes: Math.max(30, Math.min(600, floorPlanDinnerDuration)),
-        floor_plan_lunch_duration: Math.max(30, Math.min(600, floorPlanLunchDuration)),
-        floor_plan_dinner_duration: Math.max(30, Math.min(600, floorPlanDinnerDuration)),
+        lunch_duration_minutes: Math.max(30, Math.min(600, lunchDurationMinutes)),
+        dinner_duration_minutes: Math.max(30, Math.min(600, dinnerDurationMinutes)),
         service_lunch_enabled: lunchServiceEnabled,
         service_lunch_start: lunchServiceStart.length === 5 ? `${lunchServiceStart}:00` : lunchServiceStart,
         service_lunch_end: lunchServiceEnd.length === 5 ? `${lunchServiceEnd}:00` : lunchServiceEnd,
@@ -595,7 +501,7 @@ export default function SettingsForm({
     event.preventDefault();
     setMessage(null);
 
-    if (reservationMode === "simple" && !lunchServiceEnabled && !dinnerServiceEnabled) {
+    if (!lunchServiceEnabled && !dinnerServiceEnabled) {
       setMessage("Activez au moins le service midi ou le service soir.");
       return;
     }
@@ -744,146 +650,69 @@ export default function SettingsForm({
             <SettingsAccordion title="Règles de capacité">
               <div className="space-y-6">
                 <div>
-                  <label className="dashboard-field-label">Capacité totale (mode simple)</label>
+                  <label className="dashboard-field-label">Capacité totale</label>
                   <p className="mt-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-semibold text-zg-fg">
                     {Math.max(lunchMaxCovers, dinnerMaxCovers)} couverts (max. midi / soir)
                   </p>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => setReservationMode("simple")}
-                    className={cn(
-                      "rounded-2xl border p-5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30",
-                      reservationMode === "simple"
-                        ? "border-zg-border-focus bg-zg-accent-soft-bg ring-1 ring-zg-accent/25"
-                        : "border-zg-border bg-zg-surface hover:border-zg-border-hover",
-                    )}
-                  >
-                    <p className="text-sm font-semibold text-zg-fg">Mode simple</p>
-                    <p className="mt-2 text-sm leading-relaxed text-zg-muted">
-                      Capacité par service (midi / soir), sans gestion des tables.
-                    </p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setReservationMode("floor_plan")}
-                    className={cn(
-                      "rounded-2xl border p-5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-zg-teal/30",
-                      reservationMode === "floor_plan"
-                        ? "border-zg-border-focus bg-zg-accent-soft-bg ring-1 ring-zg-accent/25"
-                        : "border-zg-border bg-zg-surface hover:border-zg-border-hover",
-                    )}
-                  >
-                    <p className="text-sm font-semibold text-zg-fg">Plan de salle</p>
-                    <p className="mt-2 text-sm leading-relaxed text-zg-muted">
-                      Disponibilités basées sur espaces, tables et plan visuel.
-                    </p>
-                  </button>
+                <div className="space-y-6 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">Limite par service</p>
+                  <div className="grid gap-4">
+                    <Toggle checked={lunchServiceEnabled} onChange={setLunchServiceEnabled} label="Service midi activé" />
+                    {lunchServiceEnabled ? (
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <div>
+                          <label className="dashboard-field-label">Début midi</label>
+                          <Input type="time" value={lunchServiceStart} onChange={(e) => setLunchServiceStart(e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="dashboard-field-label">Fin midi</label>
+                          <Input type="time" value={lunchServiceEnd} onChange={(e) => setLunchServiceEnd(e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="dashboard-field-label">Capacité midi (couverts)</label>
+                          <Input type="number" min={1} max={500} value={lunchMaxCovers} onChange={(e) => setLunchMaxCovers(Number(e.target.value))} />
+                        </div>
+                        <div>
+                          <label className="dashboard-field-label">Durée moyenne midi (min)</label>
+                          <Input type="number" min={30} max={600} value={lunchDurationMinutes} onChange={(e) => setLunchDurationMinutes(Number(e.target.value))} />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="grid gap-4">
+                    <Toggle checked={dinnerServiceEnabled} onChange={setDinnerServiceEnabled} label="Service soir activé" />
+                    {dinnerServiceEnabled ? (
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <div>
+                          <label className="dashboard-field-label">Début soir</label>
+                          <Input type="time" value={dinnerServiceStart} onChange={(e) => setDinnerServiceStart(e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="dashboard-field-label">Fin soir</label>
+                          <Input type="time" value={dinnerServiceEnd} onChange={(e) => setDinnerServiceEnd(e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="dashboard-field-label">Capacité soir (couverts)</label>
+                          <Input type="number" min={1} max={500} value={dinnerMaxCovers} onChange={(e) => setDinnerMaxCovers(Number(e.target.value))} />
+                        </div>
+                        <div>
+                          <label className="dashboard-field-label">Durée moyenne soir (min)</label>
+                          <Input type="number" min={30} max={600} value={dinnerDurationMinutes} onChange={(e) => setDinnerDurationMinutes(Number(e.target.value))} />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
-
-                {reservationMode === "simple" ? (
-                  <div className="space-y-6 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">Limite par service</p>
-                    <div className="grid gap-4">
-                      <Toggle checked={lunchServiceEnabled} onChange={setLunchServiceEnabled} label="Service midi activé" />
-                      {lunchServiceEnabled ? (
-                        <div className="grid gap-4 sm:grid-cols-3">
-                          <div>
-                            <label className="dashboard-field-label">Début midi</label>
-                            <Input type="time" value={lunchServiceStart} onChange={(e) => setLunchServiceStart(e.target.value)} />
-                          </div>
-                          <div>
-                            <label className="dashboard-field-label">Fin midi</label>
-                            <Input type="time" value={lunchServiceEnd} onChange={(e) => setLunchServiceEnd(e.target.value)} />
-                          </div>
-                          <div>
-                            <label className="dashboard-field-label">Capacité midi</label>
-                            <Input type="number" min={1} max={500} value={lunchMaxCovers} onChange={(e) => setLunchMaxCovers(Number(e.target.value))} />
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="grid gap-4">
-                      <Toggle checked={dinnerServiceEnabled} onChange={setDinnerServiceEnabled} label="Service soir activé" />
-                      {dinnerServiceEnabled ? (
-                        <div className="grid gap-4 sm:grid-cols-3">
-                          <div>
-                            <label className="dashboard-field-label">Début soir</label>
-                            <Input type="time" value={dinnerServiceStart} onChange={(e) => setDinnerServiceStart(e.target.value)} />
-                          </div>
-                          <div>
-                            <label className="dashboard-field-label">Fin soir</label>
-                            <Input type="time" value={dinnerServiceEnd} onChange={(e) => setDinnerServiceEnd(e.target.value)} />
-                          </div>
-                          <div>
-                            <label className="dashboard-field-label">Capacité soir</label>
-                            <Input type="number" min={1} max={500} value={dinnerMaxCovers} onChange={(e) => setDinnerMaxCovers(Number(e.target.value))} />
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
-
-                {reservationMode === "floor_plan" ? (
-                  <div className="space-y-5 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Espaces actifs</p>
-                        <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.activeZones ?? "—"}</p>
-                      </div>
-                      <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Tables actives</p>
-                        <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.activeTables ?? "—"}</p>
-                      </div>
-                      <div className="rounded-2xl border border-zg-border/70 bg-zg-surface/80 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-zg-muted">Capacité totale</p>
-                        <p className="mt-1 text-lg font-bold text-zg-fg">{floorPlanSummary?.maxCovers ?? "—"}</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-sm text-zg-muted">Gère ton plan dans l'éditeur dédié.</p>
-                      <Link href="/dashboard/floor-plan">
-                        <Button type="button" className="min-h-11">
-                          Ouvrir le plan de salle
-                        </Button>
-                      </Link>
-                    </div>
-                    <ReservationField
-                      label="Choix côté client"
-                      description="Assignation auto, espace ou table sur le plan."
-                    >
-                      <Select
-                        value={floorPlanPublicSelectionMode}
-                        onChange={(e) => setFloorPlanPublicSelectionMode(e.target.value as "automatic" | "area" | "table")}
-                      >
-                        <option value="automatic">ZenGrow choisit automatiquement la table</option>
-                        <option value="area">Le client choisit un espace</option>
-                        <option value="table">Le client choisit une table sur le plan</option>
-                      </Select>
-                    </ReservationField>
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-zg-border bg-zg-surface p-5">
-                    <p className="text-sm text-zg-muted">
-                      Passe en mode plan de salle pour une capacité calculée depuis tes tables.
-                    </p>
-                    <Button type="button" className="mt-4 min-h-11" onClick={() => setReservationMode("floor_plan")}>
-                      Activer le mode plan de salle
-                    </Button>
-                  </div>
-                )}
               </div>
             </SettingsAccordion>
             <SettingsAccordion
               title="Terrasse"
-              description="Capacité en couverts hors plan de salle. L’activation du jour se fait depuis le tableau de bord."
+              description="Capacité en couverts pour la terrasse. L’activation du jour se fait depuis le tableau de bord."
             >
               <div className="space-y-5">
                 <p className="text-sm leading-relaxed text-zg-muted">
-                  La terrasse n&apos;est pas liée à votre plan de salle. C&apos;est simplement un nombre de
-                  couverts en plus que vous pouvez accueillir lorsque la terrasse est activée pour la journée.
+                  Nombre de couverts en plus que vous pouvez accueillir en terrasse lorsque celle-ci est activée pour la journée.
                 </p>
                 <div className="grid gap-4 md:grid-cols-2">
                   <ReservationField

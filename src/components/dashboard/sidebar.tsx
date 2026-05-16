@@ -12,7 +12,6 @@ import {
   Copy,
   Gift,
   LayoutDashboard,
-  LayoutGrid,
   LogOut,
   Globe2,
   Megaphone,
@@ -49,7 +48,6 @@ type DashboardSidebarProps = {
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
-  { href: "/dashboard/floor-plan", label: "Plan de salle", icon: LayoutGrid, requiresPro: true },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
   { href: "/dashboard/feedbacks", label: "Feedbacks", icon: MessageSquare },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },

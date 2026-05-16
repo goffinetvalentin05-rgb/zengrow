@@ -130,8 +130,5 @@ export function resolveInteriorCapacityMax(settings: {
   const lunch = settings.service_lunch_max_covers ?? 40;
   const dinner = settings.service_dinner_max_covers ?? 40;
   const fallback = settings.max_covers_per_slot ?? settings.restaurant_capacity ?? 40;
-  if (settings.reservation_mode === "floor_plan") {
-    return Math.max(1, fallback);
-  }
   return Math.max(1, lunch, dinner, fallback);
 }

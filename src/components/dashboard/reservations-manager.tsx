@@ -37,7 +37,6 @@ type ReservationRow = {
   created_at: string;
   zone?: "interior" | "terrace" | string | null;
   reservation_type?: "standard" | "walkin";
-  table_label?: string | null;
 };
 
 type ReservationsManagerProps = {
@@ -241,7 +240,7 @@ export default function ReservationsManager({
 
     setReservations((current) =>
       current.map((item) =>
-        item.id === id ? { ...item, ...data, table_label: item.table_label } : item,
+        item.id === id ? { ...item, ...data } : item,
       ),
     );
     setMessage("Note enregistrée.");
@@ -319,7 +318,7 @@ export default function ReservationsManager({
           <div>Heure</div>
           <div>Client</div>
           <div>Couverts</div>
-          <div>Table</div>
+          <div>Zone</div>
           <div className="text-right">Statut</div>
         </div>
         <div className="divide-y divide-zg-border">
@@ -359,7 +358,9 @@ export default function ReservationsManager({
                   </div>
                 </div>
                 <div className="font-semibold tabular-nums text-zg-muted">{r.guests}</div>
-                <div className="truncate text-zg-muted">{r.table_label ?? "À placer"}</div>
+                <div className="truncate text-zg-muted">
+                  {showZoneUi ? (seatingZoneFromRow(r) === "terrace" ? zoneLabelTerrace : "Salle") : "—"}
+                </div>
                 <div className="flex justify-end">
                   <StatusBadge status={r.status} displayLabel={historyStatusDisplayLabel(r, autoArchiveReservations)} />
                 </div>
@@ -379,7 +380,7 @@ export default function ReservationsManager({
           <div>Heure</div>
           <div>Client</div>
           <div>Couverts</div>
-          <div>Table</div>
+          <div>Zone</div>
           <div className="text-right">Statut</div>
         </div>
         <div className="divide-y divide-zg-border">
@@ -420,7 +421,9 @@ export default function ReservationsManager({
                   </div>
                 </div>
                 <div className="font-semibold tabular-nums text-zg-muted">{r.guests}</div>
-                <div className="truncate text-zg-muted">{r.table_label ?? "À placer"}</div>
+                <div className="truncate text-zg-muted">
+                  {showZoneUi ? (seatingZoneFromRow(r) === "terrace" ? zoneLabelTerrace : "Salle") : "—"}
+                </div>
                 <div className="flex justify-end">
                   <StatusBadge status={r.status} displayLabel={historyStatusDisplayLabel(r, autoArchiveReservations)} />
                 </div>
@@ -720,7 +723,7 @@ export default function ReservationsManager({
                           key={reservation.id}
                           guestName={reservation.guest_name}
                           timeLabel={reservation.reservation_time}
-                          subtitle={`${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
+                          subtitle={`${reservation.guests} couverts${showZoneUi ? ` · ${seatingZoneFromRow(reservation) === "terrace" ? zoneLabelTerrace : "Salle"}` : ""}`}
                           status={reservation.status}
                           seatingZone={seatingZoneFromRow(reservation)}
                           reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
@@ -785,7 +788,7 @@ export default function ReservationsManager({
                           key={reservation.id}
                           guestName={reservation.guest_name}
                           timeLabel={`${reservation.reservation_date} · ${reservation.reservation_time}`}
-                          subtitle={`${reservation.guests} couverts · ${reservation.table_label ?? "À placer"}`}
+                          subtitle={`${reservation.guests} couverts${showZoneUi ? ` · ${seatingZoneFromRow(reservation) === "terrace" ? zoneLabelTerrace : "Salle"}` : ""}`}
                           status={reservation.status}
                           seatingZone={seatingZoneFromRow(reservation)}
                           reservationType={reservation.reservation_type === "walkin" ? "walkin" : "standard"}
