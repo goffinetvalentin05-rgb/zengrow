@@ -53,36 +53,41 @@ function CustomerListRow({ customer }: CustomerListRowProps) {
       className={cn(
         "group relative rounded-xl border border-zg-border bg-zg-surface transition-colors duration-150",
         "hover:border-zg-border-hover hover:bg-zg-accent/[0.05] md:hover:bg-zg-card-hover",
-        "focus-within:border-zg-border-hover focus-within:bg-zg-card-hover",
       )}
     >
-      <button
-        type="button"
-        onClick={onOpenDetail}
-        aria-label={`Ouvrir la fiche de ${customer.name}`}
-        className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 text-left sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:gap-4 sm:px-5"
-      >
-        <ReservationsGuestAvatar name={customer.name} size="md" variant="solid" />
+      <div className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5">
+        <button
+          type="button"
+          onClick={onOpenDetail}
+          aria-label={`Ouvrir la fiche de ${customer.name}`}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left sm:gap-4"
+        >
+          <ReservationsGuestAvatar name={customer.name} size="md" variant="solid" />
 
-        <span className="min-w-0">
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="min-w-0 flex-1 truncate text-base font-semibold leading-snug text-zg-fg">
-              {customer.name}
+          <span className="min-w-0 flex-1">
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="min-w-0 flex-1 truncate text-base font-semibold leading-snug text-zg-fg">
+                {customer.name}
+              </span>
+              <CustomerSegmentBadge customer={customer} className="shrink-0" />
             </span>
-            <CustomerSegmentBadge customer={customer} className="shrink-0" />
+            <span className="mt-1 block truncate text-sm text-zg-text-muted">{contactLine}</span>
+            <span className="mt-0.5 block truncate text-sm text-zg-text-muted">{metadataLine}</span>
           </span>
-          <span className="mt-1 block truncate text-sm text-zg-text-muted">{contactLine}</span>
-          <span className="mt-0.5 block truncate text-sm text-zg-text-muted">{metadataLine}</span>
-        </span>
+        </button>
 
         <CustomerListRowActions customer={customer} handlers={actionHandlers} />
 
-        <ChevronRight
-          className="hidden h-5 w-5 shrink-0 text-zg-text-muted sm:block"
-          strokeWidth={2}
+        <button
+          type="button"
+          onClick={onOpenDetail}
           aria-hidden
-        />
-      </button>
+          tabIndex={-1}
+          className="hidden shrink-0 rounded-lg p-1 text-zg-text-muted transition-colors hover:bg-zg-card-hover hover:text-zg-fg sm:block"
+        >
+          <ChevronRight className="h-5 w-5" strokeWidth={2} />
+        </button>
+      </div>
     </article>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import DashboardPortal from "@/src/components/dashboard/ui/dashboard-portal";
 import CustomerContactField from "@/src/components/dashboard/customers/detail/customer-contact-field";
 import CustomerDeleteDialog from "@/src/components/dashboard/customers/detail/customer-delete-dialog";
 import CustomerDetailSection from "@/src/components/dashboard/customers/detail/customer-detail-section";
@@ -114,7 +115,7 @@ export default function CustomerDetailModal() {
   }
 
   return (
-    <>
+    <DashboardPortal>
       <div
         className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/50 p-0 sm:items-center sm:p-4"
         role="presentation"
@@ -320,6 +321,6 @@ export default function CustomerDetailModal() {
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => void handleDeleteConfirm()}
       />
-    </>
+    </DashboardPortal>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import DashboardPortal from "@/src/components/dashboard/ui/dashboard-portal";
 import { useCustomers } from "@/src/components/dashboard/customers/context/use-customers";
 import { useDialogFocusTrap } from "@/src/components/dashboard/reservations/hooks/use-dialog-focus-trap";
 import type {
@@ -62,11 +63,12 @@ export default function CustomersFiltersDrawer({ open, onClose }: CustomersFilte
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex justify-end bg-black/40 max-md:items-end max-md:justify-center max-md:bg-black/50"
-      role="presentation"
-      onClick={onClose}
-    >
+    <DashboardPortal>
+      <div
+        className="fixed inset-0 z-50 flex justify-end bg-black/40 max-md:items-end max-md:justify-center max-md:bg-black/50"
+        role="presentation"
+        onClick={onClose}
+      >
       <div
         id="customers-filters-drawer"
         ref={panelRef}
@@ -211,6 +213,7 @@ export default function CustomersFiltersDrawer({ open, onClose }: CustomersFilte
         </footer>
       </div>
     </div>
+    </DashboardPortal>
   );
 }
 

@@ -160,7 +160,7 @@ export default function CustomerListRowActions({
       <div
         className={cn(
           "hidden items-center sm:flex",
-          "opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
+          "opacity-0 transition-opacity duration-150 group-hover:opacity-100",
         )}
       >
         <ActionButtons items={items} />
