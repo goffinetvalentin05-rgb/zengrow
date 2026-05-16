@@ -31,7 +31,13 @@ function isDisplayableCustomer(row: {
   );
 }
 
-export default async function DashboardCustomersPage() {
+type DashboardCustomersPageProps = {
+  searchParams?: Promise<{ customer?: string }>;
+};
+
+export default async function DashboardCustomersPage({ searchParams }: DashboardCustomersPageProps) {
+  const params = searchParams ? await searchParams : undefined;
+  const initialOpenCustomerId = params?.customer?.trim() || null;
   const supabase = await createClient();
   const { restaurant, access } = await requireRestaurantSession();
   const hasCustomersProAccess = access.canUseProFeatures;
@@ -162,7 +168,11 @@ export default async function DashboardCustomersPage() {
 
   return (
     <DashboardContent>
-      <CustomersPage customers={customers} kpis={kpis} />
+      <CustomersPage
+        customers={customers}
+        kpis={kpis}
+        initialOpenCustomerId={initialOpenCustomerId}
+      />
     </DashboardContent>
   );
 }

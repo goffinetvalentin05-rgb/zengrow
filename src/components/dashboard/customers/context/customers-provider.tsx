@@ -25,18 +25,30 @@ function noteDraftsFromCustomers(customers: CustomersPageProps["customers"]) {
 
 type CustomersProviderProps = CustomersPageProps & {
   children: ReactNode;
+  initialOpenCustomerId?: string | null;
 };
 
-export function CustomersProvider({ customers: initialCustomers, kpis, children }: CustomersProviderProps) {
+export function CustomersProvider({
+  customers: initialCustomers,
+  kpis,
+  initialOpenCustomerId = null,
+  children,
+}: CustomersProviderProps) {
   const router = useRouter();
   const showToast = useDashboardToast();
   const [customerRecords, setCustomerRecords] = useState(initialCustomers);
   const [filters, setFilters] = useState(DEFAULT_CUSTOMER_FILTERS);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(initialOpenCustomerId);
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>(() =>
     noteDraftsFromCustomers(initialCustomers),
   );
   const [noteSavingId, setNoteSavingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialOpenCustomerId && initialCustomers.some((c) => c.id === initialOpenCustomerId)) {
+      setSelectedCustomerId(initialOpenCustomerId);
+    }
+  }, [initialOpenCustomerId, initialCustomers]);
 
   useEffect(() => {
     setCustomerRecords(initialCustomers);

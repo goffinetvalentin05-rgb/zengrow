@@ -7,6 +7,8 @@ import FeedbacksHeader from "@/src/components/dashboard/feedbacks/header/feedbac
 import FeedbacksKpiCards from "@/src/components/dashboard/feedbacks/header/feedbacks-kpi-cards";
 import FeedbacksTrendChart from "@/src/components/dashboard/feedbacks/chart/feedbacks-trend-chart";
 import FeedbacksToolbar from "@/src/components/dashboard/feedbacks/toolbar/feedbacks-toolbar";
+import FeedbacksListShell from "@/src/components/dashboard/feedbacks/list/feedbacks-list-shell";
+import FeedbackDetailModal from "@/src/components/dashboard/feedbacks/detail/feedback-detail-modal";
 import type { FeedbacksPageProps } from "@/src/components/dashboard/feedbacks/types";
 
 function FeedbacksPageContent() {
@@ -19,7 +21,9 @@ function FeedbacksPageContent() {
       <FeedbacksKpiCards />
       {hasFeedbacks ? <FeedbacksTrendChart /> : null}
       {hasFeedbacks ? <FeedbacksToolbar /> : null}
+      {hasFeedbacks ? <FeedbacksListShell /> : null}
       {!hasFeedbacks ? <FeedbacksEmptyState /> : null}
+      <FeedbackDetailModal />
     </section>
   );
 }

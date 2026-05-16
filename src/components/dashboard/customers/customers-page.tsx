@@ -24,9 +24,13 @@ function CustomersPageContent() {
   );
 }
 
-export default function CustomersPage(props: CustomersPageProps) {
+type CustomersPageClientProps = CustomersPageProps & {
+  initialOpenCustomerId?: string | null;
+};
+
+export default function CustomersPage({ initialOpenCustomerId, ...props }: CustomersPageClientProps) {
   return (
-    <CustomersProvider {...props}>
+    <CustomersProvider {...props} initialOpenCustomerId={initialOpenCustomerId}>
       <CustomersPageContent />
     </CustomersProvider>
   );

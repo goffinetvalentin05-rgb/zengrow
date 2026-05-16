@@ -13,6 +13,12 @@ const baseFeedback = (overrides: Partial<FeedbackRecord>): FeedbackRecord => ({
   rating: 5,
   message: "Super",
   read_at: null,
+  internal_note: null,
+  rating_criteria: null,
+  reservation_id: "res-1",
+  reservation_date: "2026-05-10",
+  customer_id: null,
+  guests: 2,
   ...overrides,
 });
 
