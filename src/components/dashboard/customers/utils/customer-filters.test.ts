@@ -18,6 +18,7 @@ const customer = (overrides: Partial<CustomerRecord>): CustomerRecord => ({
   firstVisitAt: "2024-06-01",
   totalVisits: 4,
   avgCovers: 3.5,
+  internalNote: null,
   ...overrides,
 });
 

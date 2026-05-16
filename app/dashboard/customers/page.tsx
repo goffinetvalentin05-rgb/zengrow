@@ -39,7 +39,7 @@ export default async function DashboardCustomersPage() {
   const { data: customersData } = await supabase
     .from("customers")
     .select(
-      "id, full_name, phone, email, reservation_count, total_visits, last_visit_at, created_at",
+      "id, full_name, phone, email, reservation_count, total_visits, last_visit_at, created_at, internal_note",
     )
     .eq("restaurant_id", restaurant.id)
     .order("reservation_count", { ascending: false });
@@ -117,6 +117,7 @@ export default async function DashboardCustomersPage() {
         firstVisitByCustomer.get(customer.id) ?? customer.created_at.slice(0, 10),
       totalVisits: customer.total_visits ?? 0,
       avgCovers,
+      internalNote: customer.internal_note ?? null,
     };
   });
 

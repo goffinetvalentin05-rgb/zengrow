@@ -63,7 +63,7 @@ export default function CustomersFiltersDrawer({ open, onClose }: CustomersFilte
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-black/40"
+      className="fixed inset-0 z-50 flex justify-end bg-black/40 max-md:items-end max-md:justify-center max-md:bg-black/50"
       role="presentation"
       onClick={onClose}
     >
@@ -74,7 +74,8 @@ export default function CustomersFiltersDrawer({ open, onClose }: CustomersFilte
         aria-modal="true"
         aria-labelledby="customers-filters-title"
         className={cn(
-          "flex h-full w-full max-w-md flex-col border-l border-zg-border bg-zg-surface shadow-xl",
+          "flex w-full max-w-md flex-col border-zg-border bg-zg-surface shadow-xl",
+          "h-full border-l max-md:max-h-[min(92dvh,640px)] max-md:rounded-t-2xl max-md:border-l-0 max-md:border-t",
         )}
         onClick={(event) => event.stopPropagation()}
       >
@@ -200,7 +201,7 @@ export default function CustomersFiltersDrawer({ open, onClose }: CustomersFilte
           </fieldset>
         </div>
 
-        <footer className="flex flex-col gap-2 border-t border-zg-border px-5 py-4 sm:flex-row">
+        <footer className="flex flex-col gap-2 border-t border-zg-border px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:pb-4">
           <Button type="button" variant="ghost" className="sm:flex-1" onClick={handleReset}>
             Réinitialiser
           </Button>

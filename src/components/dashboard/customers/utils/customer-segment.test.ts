@@ -12,6 +12,7 @@ const base: CustomerRecord = {
   firstVisitAt: null,
   totalVisits: 0,
   avgCovers: null,
+  internalNote: null,
 };
 
 describe("getCustomerSegment", () => {

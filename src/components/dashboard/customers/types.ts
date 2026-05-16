@@ -2,6 +2,24 @@ import type { CustomerKpis } from "@/src/components/dashboard/customers/utils/cu
 
 export type { CustomerKpis };
 
+import type { ReservationStatus } from "@/src/components/dashboard/reservations/types";
+
+export type CustomerReservationSummary = {
+  id: string;
+  reservation_date: string;
+  reservation_time: string;
+  guests: number;
+  status: ReservationStatus;
+  internal_note: string | null;
+  source: string | null;
+  reservation_type: "standard" | "walkin" | null;
+};
+
+export type CustomerDetailStats = {
+  totalCovers: number;
+  acquisitionSource: string | null;
+};
+
 export type CustomerRecord = {
   id: string;
   name: string;
@@ -13,6 +31,7 @@ export type CustomerRecord = {
   firstVisitAt: string | null;
   totalVisits: number;
   avgCovers: number | null;
+  internalNote: string | null;
 };
 
 export type CustomersPageProps = {

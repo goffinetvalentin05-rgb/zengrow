@@ -7,7 +7,7 @@ import { cn } from "@/src/lib/utils";
 
 type ReservationsGuestAvatarProps = {
   name: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   variant?: "soft" | "solid";
   className?: string;
 };
@@ -16,6 +16,7 @@ const sizeMap = {
   sm: "h-9 w-9 text-xs",
   md: "h-10 w-10 text-sm",
   lg: "h-12 w-12 text-sm",
+  xl: "h-[60px] w-[60px] text-base",
 };
 
 export default function ReservationsGuestAvatar({

@@ -21,9 +21,15 @@ export type CustomersContextValue = {
   onExportCsv: () => void;
   onAddCustomer: () => void;
   selectedCustomerId: string | null;
+  selectedCustomer: CustomerRecord | null;
   openCustomerDetail: (customerId: string) => void;
   closeCustomerDetail: () => void;
   onEditCustomer: (customerId: string) => void;
+  deleteCustomer: (customerId: string) => Promise<boolean>;
+  noteDrafts: Record<string, string>;
+  setNoteDrafts: Dispatch<SetStateAction<Record<string, string>>>;
+  noteSavingId: string | null;
+  saveCustomerNote: (customerId: string) => Promise<void>;
 };
 
 export const CustomersContext = createContext<CustomersContextValue | null>(null);

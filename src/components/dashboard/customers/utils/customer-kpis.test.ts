@@ -16,6 +16,7 @@ const baseCustomer = (overrides: Partial<CustomerRecord>): CustomerRecord => ({
   firstVisitAt: null,
   totalVisits: 2,
   avgCovers: null,
+  internalNote: null,
   ...overrides,
 });
 
