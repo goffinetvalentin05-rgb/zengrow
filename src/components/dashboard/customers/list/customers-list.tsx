@@ -19,7 +19,7 @@ export default function CustomersList() {
   }
 
   return (
-    <ul className="space-y-2 md:space-y-2.5" role="list">
+    <ul className="w-full min-w-0 space-y-2 md:space-y-2.5" role="list">
       {filteredCustomers.map((customer) => (
         <li key={customer.id}>
           <CustomerListRow customer={customer} />

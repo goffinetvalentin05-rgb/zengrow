@@ -46,8 +46,7 @@ function CustomerListRow({ customer }: CustomerListRowProps) {
   return (
     <article
       className={cn(
-        "group relative rounded-xl border border-zg-border bg-zg-surface transition-colors duration-150",
-        "[content-visibility:auto] [contain-intrinsic-size:auto_5rem] sm:[contain-intrinsic-size:auto_6.5rem]",
+        "group relative isolate w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-zg-border bg-zg-surface transition-colors duration-150",
         "active:bg-zg-card-hover md:hover:border-zg-border-hover md:hover:bg-zg-card-hover",
         "focus-within:border-zg-border-hover focus-within:bg-zg-card-hover",
       )}
@@ -57,19 +56,18 @@ function CustomerListRow({ customer }: CustomerListRowProps) {
         onClick={onOpenDetail}
         aria-label={`Ouvrir la fiche de ${customer.name}`}
         className={cn(
-          "grid w-full items-center gap-3 px-4 py-3.5 text-left",
-          "grid-cols-[auto_minmax(0,1fr)_auto]",
-          "sm:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] sm:gap-4 sm:px-5",
+          "flex w-full min-w-0 items-center gap-3 px-4 py-3.5 text-left",
+          "sm:grid sm:w-full sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center sm:gap-4 sm:px-5",
         )}
       >
         <ReservationsGuestAvatar name={customer.name} size="md" variant="solid" />
 
-        <span className="min-w-0">
+        <span className="min-w-0 flex-1">
           <span className="flex min-w-0 items-start gap-2 sm:items-center">
             <span className="customer-row-name min-w-0 flex-1 truncate text-base font-semibold leading-snug text-zg-fg">
               {customer.name}
             </span>
-            <CustomerSegmentBadge customer={customer} className="mt-0.5 sm:mt-0" />
+            <CustomerSegmentBadge customer={customer} className="mt-0.5 shrink-0 sm:mt-0" />
           </span>
           <span className="mt-1 hidden truncate text-sm text-zg-text-muted sm:block">
             {contactLine}
@@ -79,16 +77,16 @@ function CustomerListRow({ customer }: CustomerListRowProps) {
           </span>
         </span>
 
-        <ChevronRight
-          className="h-5 w-5 shrink-0 text-zg-text-muted sm:order-last"
-          strokeWidth={2}
-          aria-hidden
-        />
-
         <CustomerListRowActions
           customer={customer}
           handlers={{ onEmail, onCall, onEdit }}
-          className="hidden sm:flex"
+          className="hidden shrink-0 sm:flex"
+        />
+
+        <ChevronRight
+          className="h-5 w-5 shrink-0 text-zg-text-muted"
+          strokeWidth={2}
+          aria-hidden
         />
       </button>
 

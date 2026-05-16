@@ -14,7 +14,7 @@ function CustomersPageContent() {
   const hasCustomers = customers.length > 0;
 
   return (
-    <section className="space-y-8 md:space-y-12">
+    <section className="w-full min-w-0 space-y-8 md:space-y-12">
       <CustomersHeader />
       <CustomersKpiCards />
       {hasCustomers ? <CustomersToolbar /> : null}
