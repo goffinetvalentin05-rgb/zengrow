@@ -4,12 +4,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink, Maximize2, Monitor, Smartphone } from "lucide-react";
 import PublicReservationForm from "@/src/components/reservation/public-reservation-form";
 import type { PublicPagePreviewDraft } from "@/src/components/dashboard/public-page-live-preview";
+import ThemeFontStyles from "@/src/components/public-page/theme-font-styles";
 import { googleFontsHref } from "@/src/lib/public-page-fonts";
+import { resolveThemeFonts } from "@/src/lib/themes/fonts/resolve";
 import type { PublicPageEditorConfig } from "@/src/lib/public-page/editor-config";
 import Button from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 
-import type { ThemeId } from "@/src/lib/themes/types";
+import type { ThemeId, ThemeOverrides } from "@/src/lib/themes/types";
+import type { SectionLayoutVariantsMap } from "@/src/lib/themes/sections/types";
 
 export type ExtendedPreviewDraft = PublicPagePreviewDraft & {
   editorConfig?: PublicPageEditorConfig;
@@ -20,7 +23,10 @@ export type ExtendedPreviewDraft = PublicPagePreviewDraft & {
   themeMode?: "light" | "dark" | "auto";
   visualThemeId?: ThemeId;
   themeCssVarOverrides?: Record<string, string>;
+  themeGoogleFontsUrl?: string | null;
+  themeOverrides?: ThemeOverrides;
   showGrainOverlay?: boolean;
+  sectionLayoutVariants?: SectionLayoutVariantsMap;
 };
 
 type PublicPagePreviewStudioProps = {
@@ -46,12 +52,18 @@ export default function PublicPagePreviewStudio({
   const fullscreenScrollRef = useRef<HTMLDivElement | null>(null);
 
   const fontsHref = useMemo(
-    () => googleFontsHref([draft.headingFont, draft.bodyFont]),
-    [draft.headingFont, draft.bodyFont],
+    () => draft.themeGoogleFontsUrl ?? googleFontsHref([draft.headingFont, draft.bodyFont]),
+    [draft.themeGoogleFontsUrl, draft.headingFont, draft.bodyFont],
   );
 
+  const themeFontCssVars = useMemo(() => {
+    if (!draft.visualThemeId) return {};
+    return resolveThemeFonts(draft.visualThemeId, draft.themeOverrides?.fonts).cssVarDefinitions;
+  }, [draft.visualThemeId, draft.themeOverrides?.fonts]);
+
   useEffect(() => {
-    if (!fontsHref || typeof document === "undefined") return;
+    if (draft.themeGoogleFontsUrl || typeof document === "undefined") return;
+    if (!fontsHref) return;
     const id = "public-preview-google-fonts";
     let link = document.getElementById(id) as HTMLLinkElement | null;
     if (!link) {
@@ -61,7 +73,7 @@ export default function PublicPagePreviewStudio({
       document.head.appendChild(link);
     }
     link.href = fontsHref;
-  }, [fontsHref]);
+  }, [draft.themeGoogleFontsUrl, fontsHref]);
 
   // Reset scroll position des aperçus quand on ouvre le plein écran, change de viewport
   // ou modifie la maquette — évite un viewer "déjà scrollé" qui cachait le haut du hero.
@@ -159,6 +171,7 @@ export default function PublicPagePreviewStudio({
       visualThemeId={draft.visualThemeId ?? "default"}
       themeCssVarOverrides={draft.themeCssVarOverrides}
       showGrainOverlay={draft.showGrainOverlay ?? false}
+      sectionLayoutVariants={draft.sectionLayoutVariants}
       sectionContent={draft.editorConfig?.pageSections}
     />
   );
@@ -168,6 +181,7 @@ export default function PublicPagePreviewStudio({
 
   const previewChrome = (
     <div className={cn("relative isolate overflow-hidden", previewViewportHeight)}>
+      <ThemeFontStyles googleFontsUrl={draft.themeGoogleFontsUrl ?? fontsHref} cssVarDefinitions={themeFontCssVars} />
       <div
         ref={inlineScrollRef}
         className="h-full overflow-x-hidden overflow-y-auto overscroll-contain"
@@ -300,6 +314,7 @@ export default function PublicPagePreviewStudio({
                 viewport === "mobile" ? "max-w-[420px]" : "max-w-[1400px]",
               )}
             >
+              <ThemeFontStyles googleFontsUrl={draft.themeGoogleFontsUrl ?? fontsHref} cssVarDefinitions={themeFontCssVars} />
               <div
                 ref={fullscreenScrollRef}
                 className="h-full w-full overflow-x-hidden overflow-y-auto overscroll-contain"

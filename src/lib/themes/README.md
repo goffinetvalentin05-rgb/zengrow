@@ -16,7 +16,7 @@ L’implémentation vit dans `src/lib/themes/` (import `@/src/lib/themes/...`). 
 ## Données restaurant (Supabase)
 
 - `restaurants.theme_id` : identifiant du thème (`default`, `premium-dark`, `premium-elegant`, …).
-- `restaurants.theme_overrides` : JSON, typiquement `{ "colors": { "accent": "#...", "bg": "#..." } }`.
+- `restaurants.theme_overrides` : JSON, ex. `{ "colors": { "accent": "#..." }, "fonts": { "display": "cormorant", "body": "inter", "script": "dancing" } }` (clés curatées par thème, voir `src/lib/themes/<id>/fonts.ts`).
 
 ## Ajouter un nouveau thème
 

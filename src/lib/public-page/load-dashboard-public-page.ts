@@ -130,10 +130,17 @@ export async function loadDashboardPublicPage(
 
   const { data: sectionRows } = await supabase
     .from("restaurant_page_sections")
-    .select("section_type, enabled, data")
+    .select("section_type, sort_index, enabled, layout_variant, data")
     .eq("restaurant_id", restaurantId);
 
   const pageSectionsFromDb = rowsToPageSectionBundle(sectionRows ?? []);
+  const pageSectionRows = (sectionRows ?? []).map((r) => ({
+    section_type: r.section_type as string,
+    sort_index: r.sort_index ?? 0,
+    enabled: r.enabled !== false,
+    layout_variant: (r.layout_variant as string | null) ?? null,
+    data: (r.data as Record<string, unknown>) ?? {},
+  }));
 
   const initial = buildPublicPageSettingsInitial(
     {
@@ -192,6 +199,7 @@ export async function loadDashboardPublicPage(
       position: d.position ?? 0,
     })),
     pageSectionsFromDb,
+    pageSectionRows,
   );
 
   return { publicLink, initial };

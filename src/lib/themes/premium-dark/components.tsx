@@ -318,14 +318,17 @@ export function PremiumDarkMenuOffersSection({
   menuPdfLabel,
   eyebrow,
   title,
+  variant = "editorial-list",
 }: {
   offers: MenuOfferItem[];
   menuHref?: string | null;
   menuPdfLabel?: string;
   eyebrow: string;
   title: string;
+  variant?: "editorial-list" | "grid-photos" | "split-categories";
 }) {
   const hasOffers = offers.length > 0;
+  const layoutVariant = variant ?? "editorial-list";
   if (!hasOffers && !menuHref) return null;
 
   return (
@@ -337,23 +340,130 @@ export function PremiumDarkMenuOffersSection({
       }}
     >
       <div className="mx-auto max-w-6xl px-[var(--zg-container-x)]">
-        <header className="mb-14 max-w-2xl">
-          <p
-            className="text-[clamp(1.35rem,3.5vw,2rem)] leading-tight"
-            style={{ fontFamily: "var(--zg-font-script)", color: "var(--accent-color)" }}
-          >
-            {eyebrow}
-          </p>
-          <h2
-            className="mt-4 text-[clamp(2rem,4.5vw,3rem)] font-medium leading-[1.02]"
-            style={{ fontFamily: "var(--zg-font-display), var(--heading-font)", color: "var(--heading-color)" }}
-          >
-            {title}
-          </h2>
-        </header>
+        {layoutVariant !== "split-categories" ? (
+          <header className="mb-14 max-w-2xl">
+            <p
+              className="text-[clamp(1.35rem,3.5vw,2rem)] leading-tight"
+              style={{ fontFamily: "var(--zg-font-script)", color: "var(--accent-color)" }}
+            >
+              {eyebrow}
+            </p>
+            <h2
+              className="mt-4 text-[clamp(2rem,4.5vw,3rem)] font-medium leading-[1.02]"
+              style={{ fontFamily: "var(--zg-font-display), var(--heading-font)", color: "var(--heading-color)" }}
+            >
+              {title}
+            </h2>
+          </header>
+        ) : null}
 
-        {hasOffers ? (
+        {hasOffers && layoutVariant === "grid-photos" ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {offers.map((o) => (
+              <article
+                key={o.id}
+                className="overflow-hidden rounded-2xl border"
+                style={{ borderColor: "color-mix(in srgb, var(--body-text) 12%, var(--page-bg))" }}
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  {o.imageUrl ? (
+                    <Image src={o.imageUrl} alt="" fill className="object-cover" sizes="(max-width:768px) 50vw, 33vw" unoptimized />
+                  ) : (
+                    <div
+                      className="flex h-full min-h-[180px] items-center justify-center"
+                      style={{ backgroundColor: "color-mix(in srgb, var(--body-text) 6%, var(--page-bg))" }}
+                      aria-hidden
+                    />
+                  )}
+                </div>
+                <div className="space-y-2 p-5">
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <h3
+                      className="text-lg font-medium leading-tight"
+                      style={{ fontFamily: "var(--zg-font-display), var(--heading-font)", color: "var(--heading-color)" }}
+                    >
+                      {o.title}
+                    </h3>
+                    {o.price ? (
+                      <span
+                        className="shrink-0 rounded-[var(--zg-radius-pill)] px-3 py-1 text-sm tabular-nums"
+                        style={{
+                          backgroundColor: "color-mix(in srgb, var(--accent-color) 14%, transparent)",
+                          color: "var(--accent-color)",
+                          fontFamily: "var(--heading-font)",
+                        }}
+                      >
+                        {o.price}
+                      </span>
+                    ) : null}
+                  </div>
+                  {o.description ? (
+                    <p className="text-sm leading-relaxed" style={{ color: "var(--body-text)" }}>
+                      {o.description}
+                    </p>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : hasOffers && layoutVariant === "split-categories" ? (
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] lg:items-start">
+            <header className="lg:sticky lg:top-28">
+              <p
+                className="text-[clamp(1.35rem,3.5vw,2rem)] leading-tight"
+                style={{ fontFamily: "var(--zg-font-script)", color: "var(--accent-color)" }}
+              >
+                {eyebrow}
+              </p>
+              <h2
+                className="mt-4 text-[clamp(2rem,4.5vw,3rem)] font-medium leading-[1.02]"
+                style={{ fontFamily: "var(--zg-font-display), var(--heading-font)", color: "var(--heading-color)" }}
+              >
+                {title}
+              </h2>
+            </header>
+            <ul className="space-y-8">
+              {offers.map((o) => (
+                <li key={o.id} className="grid gap-6 border-b pb-8 last:border-0 sm:grid-cols-[120px_1fr]">
+                  {o.imageUrl ? (
+                    <div className="relative aspect-square w-full max-w-[120px] overflow-hidden">
+                      <Image src={o.imageUrl} alt="" fill className="object-cover" sizes="120px" unoptimized />
+                    </div>
+                  ) : null}
+                  <div className="min-w-0 space-y-2">
+                    <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+                      <h3
+                        className="min-w-0 flex-1 text-xl font-medium"
+                        style={{ fontFamily: "var(--zg-font-display), var(--heading-font)", color: "var(--heading-color)" }}
+                      >
+                        {o.title}
+                      </h3>
+                      {o.price ? (
+                        <span
+                          className="shrink-0 rounded-[var(--zg-radius-pill)] px-3 py-1 text-sm tabular-nums"
+                          style={{
+                            backgroundColor: "color-mix(in srgb, var(--accent-color) 14%, transparent)",
+                            color: "var(--accent-color)",
+                            fontFamily: "var(--heading-font)",
+                          }}
+                        >
+                          {o.price}
+                        </span>
+                      ) : null}
+                    </div>
+                    {o.description ? (
+                      <p className="max-w-prose text-[15px] leading-[1.75]" style={{ color: "var(--body-text)" }}>
+                        {o.description}
+                      </p>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : hasOffers ? (
         <div className="flex flex-col gap-16">
+
           {offers.map((o, idx) => {
             const rowReverse = idx % 2 === 1;
             return (
@@ -455,6 +565,7 @@ export function PremiumDarkMasonryGallery({
   instagramUrl,
   showInstagram = false,
   instagramLinkLabel,
+  variant = "masonry",
 }: {
   images: string[];
   eyebrow: string;
@@ -462,7 +573,9 @@ export function PremiumDarkMasonryGallery({
   instagramUrl?: string | null;
   showInstagram?: boolean;
   instagramLinkLabel: string;
+  variant?: "masonry" | "grid-uniform" | "showcase-row";
 }) {
+  const galleryVariant = variant ?? "masonry";
   if (images.length === 0) return null;
 
   return (
@@ -494,6 +607,40 @@ export function PremiumDarkMasonryGallery({
             </a>
           ) : null}
         </header>
+        {galleryVariant === "grid-uniform" ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            {images.map((src) => (
+              <div key={src} className="group relative aspect-square overflow-hidden">
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  className="object-cover transition duration-700 group-hover:scale-[1.05]"
+                  sizes="(max-width:768px) 50vw, 33vw"
+                  unoptimized
+                />
+              </div>
+            ))}
+          </div>
+        ) : galleryVariant === "showcase-row" ? (
+          <div className="-mx-[var(--zg-container-x)] flex gap-4 overflow-x-auto px-[var(--zg-container-x)] pb-2 snap-x snap-mandatory">
+            {images.map((src) => (
+              <div
+                key={src}
+                className="group relative aspect-[16/10] min-w-[min(85vw,420px)] shrink-0 snap-center overflow-hidden sm:min-w-[min(55vw,520px)]"
+              >
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  className="object-cover transition duration-700 group-hover:scale-[1.03]"
+                  sizes="85vw"
+                  unoptimized
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
         <div className="columns-2 gap-3 sm:columns-3 sm:gap-4">
           {images.map((src, i) => (
             <div
@@ -521,7 +668,7 @@ export function PremiumDarkMasonryGallery({
               />
             </div>
           ))}
-        </div>
+        </div>        )}
       </div>
     </section>
   );

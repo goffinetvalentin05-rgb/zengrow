@@ -51,7 +51,18 @@ export type ThemeDefinition = {
   tokens: DesignTokens;
 };
 
+/** Clés de police curatées (`theme_overrides.fonts`). */
+export type ThemeFontOverrides = Partial<{
+  display: string;
+  body: string;
+  script: string;
+}>;
+
 /** Sous-ensemble autorisé pour `theme_overrides` (JSONB). */
-export type ThemeColorOverrides = {
+export type ThemeOverrides = {
   colors?: Partial<Pick<ColorTokens, "accent" | "bg" | "bgElevated" | "text" | "textMuted">>;
+  fonts?: ThemeFontOverrides;
 };
+
+/** @deprecated Utiliser `ThemeOverrides`. */
+export type ThemeColorOverrides = ThemeOverrides;

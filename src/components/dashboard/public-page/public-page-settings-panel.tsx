@@ -36,10 +36,13 @@ import {
   validateRestaurantImageFile,
   validateRestaurantPdfFile,
 } from "@/src/lib/restaurant-storage-upload";
-import type { ThemeColorOverrides, ThemeId } from "@/src/lib/themes/types";
+import type { ThemeId, ThemeOverrides } from "@/src/lib/themes/types";
+import { resolvedFontFamiliesForPreview, resolveThemeFonts } from "@/src/lib/themes/fonts/resolve";
 import { resolvePublicTheme } from "@/src/lib/themes/resolve";
 import { normalizeThemeId } from "@/src/lib/themes/registry";
-import PublicPageThemeSection from "@/src/components/dashboard/public-page/public-page-theme-section";
+import CustomizationZone from "@/src/components/dashboard/public-page/customization-zone";
+import PublicPageIdentitySection from "@/src/components/dashboard/public-page/public-page-identity-section";
+import PublicPageThemePicker from "@/src/components/dashboard/public-page/public-page-theme-picker";
 import Button, { buttonClassName } from "@/src/components/ui/button";
 import Badge from "@/src/components/ui/badge";
 import Input from "@/src/components/ui/input";
@@ -76,7 +79,16 @@ import {
   resolvePublicPageSectionContent,
 } from "@/src/lib/public-page/resolve-public-page-copy";
 import { newMenuOffer } from "@/src/lib/public-page/premium-content";
-import { mergePageSectionContent, syncRestaurantPageSections, type PageSectionContentV1 } from "@/src/lib/public-page/page-sections";
+import { mergePageSectionContent, type PageSectionContentV1 } from "@/src/lib/public-page/page-sections";
+import {
+  applyStructureToEditorConfig,
+  resolvePageSectionStructure,
+  sectionLayoutVariantsMap,
+  syncRestaurantPageSectionsFull,
+  type PageSectionDbRow,
+  type PageSectionLayoutItem,
+} from "@/src/lib/public-page/page-section-structure";
+import PageSectionsEditor from "@/src/components/dashboard/public-page/page-sections-editor";
 import { PUBLIC_PAGE_FONT_LIBRARY, googleFontsHref } from "@/src/lib/public-page-fonts";
 import {
   MAX_DESCRIPTION_CHARS,
@@ -249,9 +261,10 @@ export type PublicPageSettingsInitial = {
   terraceEnabled: boolean;
   editorConfigRaw?: unknown;
   themeId: ThemeId;
-  themeOverrides: ThemeColorOverrides;
+  themeOverrides: ThemeOverrides;
   /** Données brutes `restaurant_page_sections` (calque restaurant sur les défauts thème + gabarit). */
   pageSectionsFromDb: PageSectionContentV1;
+  pageSectionRows: PageSectionDbRow[];
 };
 
 export type PublicPageSettingsHandle = {
@@ -275,6 +288,32 @@ type PublicPageSettingsPanelProps = {
 
 function FieldHint({ children }: { children: React.ReactNode }) {
   return <p className="mt-1 text-xs leading-relaxed text-zg-text-muted">{children}</p>;
+}
+
+function PageSectionsStructureCard({
+  themeId,
+  pageSectionStructure,
+  setPageSectionStructure,
+}: {
+  themeId: ThemeId;
+  pageSectionStructure: PageSectionLayoutItem[];
+  setPageSectionStructure: (next: PageSectionLayoutItem[]) => void;
+}) {
+  return (
+    <>
+      <p className="max-w-2xl text-sm text-zg-text-muted">
+        Réordonnez les sections, choisissez une variante de mise en page (thèmes premium) et activez les blocs affichés.
+        Les changements apparaissent dans l’aperçu après enregistrement.
+      </p>
+      <div className="mt-4">
+        <PageSectionsEditor
+          themeId={themeId}
+          structure={pageSectionStructure}
+          onStructureChange={setPageSectionStructure}
+        />
+      </div>
+    </>
+  );
 }
 
 const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageSettingsPanelProps>(
@@ -416,7 +455,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const [heroHeight, setHeroHeight] = useState(initial.heroHeight);
 
     const [themeId, setThemeId] = useState<ThemeId>(() => normalizeThemeId(initial.themeId));
-    const [themeOverrides, setThemeOverrides] = useState<ThemeColorOverrides>(() => initial.themeOverrides ?? {});
+    const [themeOverrides, setThemeOverrides] = useState<ThemeOverrides>(() => initial.themeOverrides ?? {});
+    const [pageSectionStructure, setPageSectionStructure] = useState<PageSectionLayoutItem[]>(() =>
+      resolvePageSectionStructure(initial.pageSectionRows, parseEditorConfig(initial.editorConfigRaw)),
+    );
 
     useEffect(() => {
       setEditorConfig((c) =>
@@ -506,6 +548,14 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const markDirty = useCallback(() => {
       if (pageStatus === "published") setHasUnpublishedChanges(true);
     }, [pageStatus]);
+
+    const handleSectionStructureChange = useCallback(
+      (next: PageSectionLayoutItem[]) => {
+        setPageSectionStructure(next);
+        markDirty();
+      },
+      [markDirty],
+    );
 
     async function handleFileUpload(
       event: ChangeEvent<HTMLInputElement>,
@@ -778,7 +828,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
     const buildMergedConfig = useCallback((): PublicPageEditorConfig => {
       const c = editorConfig;
-      return parseEditorConfig({
+      const merged = parseEditorConfig({
         ...c,
         hero: { ...c.hero, title: heroTitle, subtitle: heroSubtitle, primaryCta: ctaLabel },
         appearance: {
@@ -814,8 +864,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           minLeadMinutes: minBookingLeadMinutes,
         },
       });
+      return applyStructureToEditorConfig(merged, pageSectionStructure);
     }, [
       editorConfig,
+      pageSectionStructure,
       heroTitle,
       heroSubtitle,
       ctaLabel,
@@ -844,15 +896,23 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         themeId,
         merged.conversion.structureTemplate,
       );
-      const { error } = await syncRestaurantPageSections(supabase, initial.restaurantId, overlay);
+      const { error } = await syncRestaurantPageSectionsFull(
+        supabase,
+        initial.restaurantId,
+        pageSectionStructure,
+        overlay,
+      );
       if (error) return { ok: false as const, error };
       return { ok: true as const };
-    }, [buildMergedConfig, themeId, supabase, initial.restaurantId]);
+    }, [buildMergedConfig, themeId, supabase, initial.restaurantId, pageSectionStructure]);
 
     const previewDraft = useMemo((): ExtendedPreviewDraft => {
       const merged = buildMergedConfig();
       const draft = editorConfigToPreviewDraft(merged, editorCtx);
       const resolvedTheme = resolvePublicTheme(themeId, themeOverrides);
+      const resolvedFonts = resolveThemeFonts(themeId, themeOverrides.fonts);
+      const themeFamilies = resolvedFontFamiliesForPreview(resolvedFonts);
+      const useThemeTypography = Boolean(resolvedTheme.cssVarOverrides);
       return {
         ...draft,
         specialMessage: specialMessage.trim() || null,
@@ -869,7 +929,12 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         terraceEnabled: initial.terraceEnabled,
         visualThemeId: resolvedTheme.id,
         themeCssVarOverrides: resolvedTheme.cssVarOverrides,
+        themeGoogleFontsUrl: resolvedTheme.googleFontsUrl,
+        themeOverrides,
+        headingFont: useThemeTypography ? themeFamilies.headingFont : draft.headingFont,
+        bodyFont: useThemeTypography ? themeFamilies.bodyFont : draft.bodyFont,
         showGrainOverlay: resolvedTheme.showGrain,
+        sectionLayoutVariants: sectionLayoutVariantsMap(themeId, pageSectionStructure),
       };
     }, [
       buildMergedConfig,
@@ -882,6 +947,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       initial.terraceEnabled,
       themeId,
       themeOverrides,
+      pageSectionStructure,
     ]);
 
     const getRestaurantUpdate = useCallback(() => {
@@ -1113,17 +1179,92 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           </div>
         ) : null}
 
-        <div className="rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
-          <PublicPageThemeSection
+        <nav
+          className="flex flex-wrap gap-2 rounded-xl border border-zg-border/80 bg-zg-surface-elevated/40 p-2 text-xs font-medium"
+          aria-label="Zones de personnalisation"
+        >
+          {[
+            { href: "#zone-theme", label: "Thème" },
+            { href: "#zone-identite", label: "Identité" },
+            { href: "#zone-sections", label: "Sections" },
+            { href: "#zone-contenu", label: "Contenu" },
+          ].map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="rounded-lg px-3 py-1.5 text-zg-text-muted transition hover:bg-zg-border/40 hover:text-zg-fg"
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+
+        <CustomizationZone
+          id="zone-theme"
+          title="Thème"
+          description="Choisissez le style visuel global de votre page publique."
+        >
+          <PublicPageThemePicker
             publicUrl={publicLinkBase}
             selectedId={themeId}
-            onSelect={setThemeId}
+            onSelect={(id) => {
+              setThemeId(id);
+              markDirty();
+            }}
             overrides={themeOverrides}
-            onOverridesChange={setThemeOverrides}
+            onResetOverrides={() => {
+              setThemeOverrides({});
+              markDirty();
+            }}
           />
-        </div>
+        </CustomizationZone>
 
+        <CustomizationZone
+          id="zone-identite"
+          title="Identité"
+          description="Typographie et couleur d’accent — presets validés pour la lisibilité (WCAG)."
+        >
+          <PublicPageIdentitySection
+            themeId={themeId}
+            overrides={themeOverrides}
+            onOverridesChange={(next) => {
+              setThemeOverrides(next);
+              markDirty();
+            }}
+            legacyAccentColor={accentColor}
+            onLegacyAccentChange={(hex) => {
+              setAccentColor(hex);
+              setSecondaryColor(hex);
+              setEditorConfig((c) =>
+                parseEditorConfig({
+                  ...c,
+                  appearance: { ...c.appearance, accentColor: hex, secondaryColor: hex },
+                }),
+              );
+              markDirty();
+            }}
+          />
+        </CustomizationZone>
 
+        <CustomizationZone
+          id="zone-sections"
+          title="Sections"
+          description="Réordonnez les blocs, choisissez les variantes de mise en page et activez les sections affichées."
+        >
+          <PageSectionsStructureCard
+            themeId={themeId}
+            pageSectionStructure={pageSectionStructure}
+            setPageSectionStructure={handleSectionStructureChange}
+          />
+        </CustomizationZone>
+
+        <CustomizationZone
+          id="zone-contenu"
+          title="Contenu"
+          description="Textes, images, menu et paramètres de réservation — le cœur éditorial de votre page."
+          className="space-y-8 !p-0 !border-0 !bg-transparent shadow-none"
+        >
+        <div className="space-y-8">
         {/* ============================================================
             ÉTAPE 1 — CONTENU PRINCIPAL
             ============================================================ */}
@@ -1316,37 +1457,27 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <ColorField
-              label="Couleur principale"
-              hint="Utilisée pour les titres et accents sur la page publique."
-              value={primaryColor}
-              onChange={(v) => {
-                setPrimaryColor(v);
-                setEditorConfig((c) =>
-                  parseEditorConfig({
-                    ...c,
-                    appearance: { ...c.appearance, primaryColor: v },
-                  }),
-                );
-                markDirty();
-              }}
-            />
-            <ColorField
-              label="Couleur du bouton « Réserver »"
-              hint="Couleur du CTA principal — choisissez quelque chose de chaud et contrasté."
-              value={accentColor}
-              onChange={(v) => {
-                setAccentColor(v);
-                setSecondaryColor(v);
-                setEditorConfig((c) =>
-                  parseEditorConfig({
-                    ...c,
-                    appearance: { ...c.appearance, accentColor: v, secondaryColor: v },
-                  }),
-                );
-                markDirty();
-              }}
-            />
+            {themeId === "default" ? (
+              <ColorField
+                label="Couleur principale"
+                hint="Utilisée pour les titres sur la page publique (thème classique)."
+                value={primaryColor}
+                onChange={(v) => {
+                  setPrimaryColor(v);
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      appearance: { ...c.appearance, primaryColor: v },
+                    }),
+                  );
+                  markDirty();
+                }}
+              />
+            ) : (
+              <p className="md:col-span-2 rounded-lg border border-zg-border/80 bg-zg-surface-elevated/50 px-3 py-2 text-xs text-zg-text-muted">
+                Les couleurs d&apos;accent et de fond se règlent dans la zone <strong>Identité</strong> ci-dessus.
+              </p>
+            )}
           </div>
         </StepCard>
 
@@ -2932,6 +3063,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             </div>
           </div>
         </StepCard>
+        </div>
+        </CustomizationZone>
       </div>
     );
 

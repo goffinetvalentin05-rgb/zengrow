@@ -129,6 +129,7 @@ export type RestaurantPageSectionRow = {
   section_type: PageSectionType;
   sort_index: number;
   enabled: boolean;
+  layout_variant?: string | null;
   data: Record<string, unknown>;
 };
 

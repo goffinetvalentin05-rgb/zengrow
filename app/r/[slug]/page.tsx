@@ -8,6 +8,12 @@ import { googleFontsHref, normalizePublicPageFont } from "@/src/lib/public-page-
 import { getDefaultOpeningHours, OpeningHours } from "@/src/lib/utils";
 import { parseEditorConfig } from "@/src/lib/public-page/editor-config";
 import { rowsToPageSectionBundle } from "@/src/lib/public-page/page-sections";
+import {
+  applyStructureToEditorConfig,
+  resolvePageSectionStructure,
+  sectionLayoutVariantsMap,
+  type PageSectionDbRow,
+} from "@/src/lib/public-page/page-section-structure";
 import { resolvePublicPageSectionContent } from "@/src/lib/public-page/resolve-public-page-copy";
 import { resolvePublicTheme } from "@/src/lib/themes/resolve";
 import type { ThemeId } from "@/src/lib/themes/types";
@@ -244,7 +250,7 @@ async function loadRestaurant(slug: string) {
 
   const { data: pageSectionRows } = await supabase
     .from("restaurant_page_sections")
-    .select("section_type, enabled, data")
+    .select("section_type, sort_index, enabled, layout_variant, data")
     .eq("restaurant_id", restaurant.id);
 
   return {
@@ -367,7 +373,9 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     "Playfair Display",
   );
   const bodyFont = normalizePublicPageFont(restaurant.public_body_font ?? safeSettings.body_font, "Inter");
-  const fontsHref = googleFontsHref([headingFont, bodyFont]);
+  const resolvedVisualTheme = resolvePublicTheme(restaurant.theme_id, restaurant.theme_overrides);
+  const fontsHref =
+    resolvedVisualTheme.googleFontsUrl ?? googleFontsHref([headingFont, bodyFont]);
 
   const displayName = restaurant.public_display_name?.trim() || restaurant.name;
   const tagline =
@@ -409,9 +417,20 @@ export default async function PublicReservationPage({ params }: PublicReservatio
       ? safeSettings.public_menu_url?.trim() || null
       : null;
 
-  const editorConfig = parseEditorConfig(safeSettings.public_page_editor_config);
-
-  const resolvedVisualTheme = resolvePublicTheme(restaurant.theme_id, restaurant.theme_overrides);
+  const editorConfigBase = parseEditorConfig(safeSettings.public_page_editor_config);
+  const pageSectionDbRows: PageSectionDbRow[] = (pageSectionRows ?? []).map((r) => ({
+    section_type: r.section_type,
+    sort_index: r.sort_index ?? 0,
+    enabled: r.enabled !== false,
+    layout_variant: (r.layout_variant as string | null) ?? null,
+    data: (r.data as Record<string, unknown>) ?? {},
+  }));
+  const pageStructure = resolvePageSectionStructure(pageSectionDbRows, editorConfigBase);
+  const editorConfig = applyStructureToEditorConfig(editorConfigBase, pageStructure);
+  const sectionLayoutVariants = sectionLayoutVariantsMap(
+    resolvedVisualTheme.id as ThemeId,
+    pageStructure,
+  );
 
   const sectionContent = resolvePublicPageSectionContent(
     resolvedVisualTheme.id as ThemeId,
@@ -518,6 +537,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           }
           subscriptionPlan={(restaurant.subscription_plan as string | null) ?? "starter"}
           subscriptionStatus={(restaurant.subscription_status as string | null) ?? "active"}
+          sectionLayoutVariants={sectionLayoutVariants}
           sectionContent={sectionContent}
         />
       </main>

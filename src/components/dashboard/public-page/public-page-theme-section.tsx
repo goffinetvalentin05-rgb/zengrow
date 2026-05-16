@@ -1,23 +1,31 @@
 "use client";
 
-import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink, RotateCcw } from "lucide-react";
 import ThemeCard from "@/src/components/dashboard/public-page/theme-card";
+import ThemeFontPickers from "@/src/components/dashboard/public-page/theme-font-pickers";
 import { useCallback, useMemo, useState } from "react";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import { listThemes } from "@/src/lib/themes/registry";
-import type { ThemeColorOverrides, ThemeId } from "@/src/lib/themes/types";
+import type { ThemeId, ThemeOverrides } from "@/src/lib/themes/types";
 
 type PublicPageThemeSectionProps = {
   publicUrl: string;
   selectedId: ThemeId;
   onSelect: (id: ThemeId) => void;
-  overrides: ThemeColorOverrides;
-  onOverridesChange: (next: ThemeColorOverrides) => void;
+  overrides: ThemeOverrides;
+  onOverridesChange: (next: ThemeOverrides) => void;
 };
 
 function hexOrEmpty(v: string | undefined): string {
   return v && /^#[0-9a-fA-F]{6}$/.test(v) ? v : "";
+}
+
+function hasAnyOverrides(overrides: ThemeOverrides): boolean {
+  return Boolean(
+    (overrides.colors && Object.keys(overrides.colors).length > 0) ||
+      (overrides.fonts && Object.keys(overrides.fonts).length > 0),
+  );
 }
 
 export default function PublicPageThemeSection({
@@ -28,7 +36,7 @@ export default function PublicPageThemeSection({
   onOverridesChange,
 }: PublicPageThemeSectionProps) {
   const themes = useMemo(() => listThemes(), []);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [colorsOpen, setColorsOpen] = useState(false);
 
   const accentVal = hexOrEmpty(overrides.colors?.accent);
   const bgVal = hexOrEmpty(overrides.colors?.bg);
@@ -39,11 +47,11 @@ export default function PublicPageThemeSection({
       if (trimmed === "") {
         const nextColors = { ...overrides.colors };
         delete nextColors[key];
-        const next: ThemeColorOverrides = { ...overrides, colors: nextColors };
+        const next: ThemeOverrides = { ...overrides, colors: nextColors };
         if (!next.colors || Object.keys(next.colors).length === 0) {
           delete next.colors;
         }
-        onOverridesChange(Object.keys(next).length ? next : {});
+        onOverridesChange(hasAnyOverrides(next) ? next : {});
         return;
       }
       if (!/^#[0-9a-fA-F]{6}$/.test(trimmed)) return;
@@ -86,17 +94,36 @@ export default function PublicPageThemeSection({
         ))}
       </div>
 
+      {hasAnyOverrides(overrides) ? (
+        <div className="flex justify-end">
+          <Button type="button" variant="secondary" className="min-h-9 gap-2 text-xs" onClick={() => onOverridesChange({})}>
+            <RotateCcw className="h-3.5 w-3.5" />
+            Revenir au préréglage du thème
+          </Button>
+        </div>
+      ) : null}
+
+      <div className="rounded-xl border border-zg-border bg-zg-surface-elevated/40 p-4 sm:p-5">
+        <h4 className="text-sm font-semibold text-zg-fg">Identité typographique</h4>
+        <p className="mt-1 text-xs text-zg-text-muted">
+          Trois rôles de police — chaque thème propose une sélection cohérente avec son ADN visuel.
+        </p>
+        <div className="mt-4">
+          <ThemeFontPickers themeId={selectedId} overrides={overrides} onOverridesChange={onOverridesChange} />
+        </div>
+      </div>
+
       <div className="rounded-xl border border-zg-border bg-zg-surface-elevated/40">
         <button
           type="button"
           className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-zg-fg"
-          onClick={() => setAdvancedOpen((v) => !v)}
-          aria-expanded={advancedOpen}
+          onClick={() => setColorsOpen((v) => !v)}
+          aria-expanded={colorsOpen}
         >
           Personnalisation avancée (couleurs)
-          {advancedOpen ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
+          {colorsOpen ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
         </button>
-        {advancedOpen ? (
+        {colorsOpen ? (
           <div className="space-y-4 border-t border-zg-border px-4 py-4">
             <p className="text-xs text-zg-text-muted">
               Surcharges optionnelles pour le thème actif. Laissez vide pour les couleurs d’origine du thème.

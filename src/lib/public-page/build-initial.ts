@@ -1,5 +1,6 @@
 import type { PublicPageSettingsInitial } from "@/src/components/dashboard/public-page/public-page-settings-panel";
 import type { PageSectionContentV1 } from "@/src/lib/public-page/page-sections";
+import type { PageSectionDbRow } from "@/src/lib/public-page/page-section-structure";
 import type { PublicAmbiance, PublicStylePreset } from "@/src/lib/public-page/constants";
 import { DEFAULT_PRIMARY, DEFAULT_SECONDARY } from "@/src/lib/public-page/colors";
 import { MAX_HIGHLIGHTS } from "@/src/lib/public-page/constants";
@@ -130,6 +131,7 @@ export function buildPublicPageSettingsInitial(
   openingHours: OpeningHours,
   menuDocuments: { id: string; label: string; fileUrl: string; position: number }[],
   pageSectionsFromDb: PageSectionContentV1 = {},
+  pageSectionRows: PageSectionDbRow[] = [],
 ): PublicPageSettingsInitial {
   const heroHeight = (restaurant.public_hero_height as "compact" | "normal" | "tall") || "compact";
 
@@ -210,5 +212,6 @@ export function buildPublicPageSettingsInitial(
     themeId: normalizeThemeId(restaurant.theme_id),
     themeOverrides: parseThemeOverrides(restaurant.theme_overrides),
     pageSectionsFromDb,
+    pageSectionRows,
   };
 }

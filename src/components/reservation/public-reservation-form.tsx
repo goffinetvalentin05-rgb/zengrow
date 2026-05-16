@@ -54,6 +54,8 @@ import {
   StickyReserveBar,
 } from "@/src/components/reservation/public-page-premium";
 import type { ThemeId } from "@/src/lib/themes/types";
+import type { SectionLayoutVariantsMap } from "@/src/lib/themes/sections/types";
+import { conceptLayoutFromVariant } from "@/src/lib/themes/sections/registry";
 import GrainOverlay from "@/src/lib/themes/shared/grain-overlay";
 import {
   PremiumDarkHero,
@@ -120,6 +122,8 @@ export type PublicReservationFormProps = {
   heroAlign?: "left" | "center" | "right";
   /** Contenu éditorial des sections (résolu serveur ou issu de l’éditeur). */
   sectionContent?: PageSectionContentV1;
+  /** Variantes de mise en page par section (thèmes premium). */
+  sectionLayoutVariants?: SectionLayoutVariantsMap;
   editorConfig?: PublicPageEditorConfig;
   fontSizeScale: "small" | "medium" | "large";
   borderRadius: "sharp" | "rounded" | "pill";
@@ -296,6 +300,7 @@ export default function PublicReservationForm({
   themeCssVarOverrides,
   showGrainOverlay = false,
   sectionContent,
+  sectionLayoutVariants,
 }: PublicReservationFormProps) {
   const todayDate = useMemo(() => localYmd(new Date()), []);
   const maxDateStr = useMemo(() => {
@@ -1149,12 +1154,14 @@ export default function PublicReservationForm({
               eyebrow={resolvedSectionContent.concept?.eyebrow ?? ""}
               imageStampLabel={resolvedSectionContent.concept?.imageStampLabel ?? ""}
               layout={
-                effectiveConfig.conversion.structureTemplate === "modern_brasserie" ||
-                effectiveConfig.conversion.structureTemplate === "minimal_conversion"
-                  ? "stacked"
-                  : effectiveConfig.conversion.structureTemplate === "warm_restaurant"
-                    ? "image-left"
-                    : "image-right"
+                usePremiumChrome && sectionLayoutVariants?.concept
+                  ? conceptLayoutFromVariant(sectionLayoutVariants.concept)
+                  : effectiveConfig.conversion.structureTemplate === "modern_brasserie" ||
+                      effectiveConfig.conversion.structureTemplate === "minimal_conversion"
+                    ? "stacked"
+                    : effectiveConfig.conversion.structureTemplate === "warm_restaurant"
+                      ? "image-left"
+                      : "image-right"
               }
             />
             {visibleEditorialSections(premium.editorialSections).map((section) => (
@@ -1928,6 +1935,13 @@ export default function PublicReservationForm({
                 menuPdfLabel={menuPdfLinkLabel}
                 eyebrow={resolvedSectionContent.menu_offers?.eyebrow ?? ""}
                 title={resolvedSectionContent.menu_offers?.title ?? ""}
+                variant={
+                  (sectionLayoutVariants?.menu_offers as
+                    | "editorial-list"
+                    | "grid-photos"
+                    | "split-categories"
+                    | undefined) ?? "editorial-list"
+                }
               />
             ) : (
             <MenuOffersSection
@@ -1965,6 +1979,10 @@ export default function PublicReservationForm({
                 instagramUrl={instagramUrl}
                 showInstagram={showInstagram}
                 instagramLinkLabel={resolvedSectionContent.gallery?.instagramLinkLabel ?? ""}
+                variant={
+                  (sectionLayoutVariants?.gallery as "masonry" | "grid-uniform" | "showcase-row" | undefined) ??
+                  "masonry"
+                }
               />
             ) : (
             <PremiumGallery
