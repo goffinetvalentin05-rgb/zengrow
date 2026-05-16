@@ -27,6 +27,12 @@ import {
   resolveTerraceSeatOption,
   type SlotsByZone,
 } from "@/src/lib/reservation/terrace-zone-availability";
+import { LargeGroupContactBlock } from "@/src/components/reservation/large-group-contact-block";
+import {
+  normalizeReservationMode,
+  type ReservationMode,
+} from "@/src/lib/reservation/reservation-modes";
+import { buildPublicWizardSteps, type PublicWizardStepKey } from "@/src/lib/reservation/public-wizard-steps";
 import { normalizeTerraceLabel } from "@/src/lib/reservation/terrace-settings";
 import SeatingZonePicker from "@/src/components/reservation/seating-zone-picker";
 import { cn, formatOpeningHoursLines, OpeningHours } from "@/src/lib/utils";
@@ -108,6 +114,7 @@ export type PublicReservationFormProps = {
   allowPhone?: boolean | null;
   allowEmail?: boolean | null;
   maxPartySize: number;
+  reservationMode?: ReservationMode | string | null;
   openingHours: OpeningHours | null;
   daysInAdvance: number;
   logoUrl?: string | null;
@@ -255,6 +262,7 @@ export default function PublicReservationForm({
   allowPhone,
   allowEmail,
   maxPartySize,
+  reservationMode: reservationModeProp = "global_covers",
   openingHours,
   daysInAdvance,
   logoUrl,
@@ -318,10 +326,22 @@ export default function PublicReservationForm({
   }, [daysInAdvance]);
   const usePremiumChrome = visualThemeId !== "default";
   const allowTerraceZoneChoice = terraceEnabled;
-  const totalSteps = allowTerraceZoneChoice ? 5 : 4;
-  const terraceZoneStep = allowTerraceZoneChoice ? 4 : null;
-  const contactStep = totalSteps;
+  const normalizedReservationMode = normalizeReservationMode(reservationModeProp);
+  const isTimeSlotsMode = normalizedReservationMode === "time_slots";
+  const stepOrder = useMemo(
+    () => buildPublicWizardSteps(normalizedReservationMode, allowTerraceZoneChoice),
+    [normalizedReservationMode, allowTerraceZoneChoice],
+  );
+  const totalSteps = stepOrder.length;
   const [wizardStep, setWizardStep] = useState(1);
+  const [largeGroupContact, setLargeGroupContact] = useState(false);
+  const groupBlocksOnlineBooking = isTimeSlotsMode && largeGroupContact;
+  const currentStepKey: PublicWizardStepKey = stepOrder[Math.max(0, wizardStep - 1)] ?? "date";
+  const terraceZoneStep = useMemo(() => {
+    const index = stepOrder.indexOf("zone");
+    return index >= 0 ? index + 1 : null;
+  }, [stepOrder]);
+  const contactStep = useMemo(() => stepOrder.indexOf("contact") + 1, [stepOrder]);
   const [guestFirstName, setGuestFirstName] = useState("");
   const [guestLastName, setGuestLastName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -634,7 +654,7 @@ export default function PublicReservationForm({
 
   useEffect(() => {
     if (!allowTerraceZoneChoice) return;
-    if (wizardStep !== terraceZoneStep) return;
+    if (currentStepKey !== "zone") return;
     if (!reservationDate || !reservationTime || guests < 1) return;
 
     let cancelled = false;
@@ -661,8 +681,7 @@ export default function PublicReservationForm({
     };
   }, [
     allowTerraceZoneChoice,
-    terraceZoneStep,
-    wizardStep,
+    currentStepKey,
     restaurantId,
     reservationDate,
     reservationTime,
@@ -1208,7 +1227,7 @@ export default function PublicReservationForm({
               </nav>
 
               <div className="min-h-0 flex-1">
-                {wizardStep === 1 ? (
+                {currentStepKey === "date" ? (
                   <div className="flex flex-col gap-6">
                     <div className="flex flex-col gap-3">
                       <div className="flex gap-2">
@@ -1302,7 +1321,7 @@ export default function PublicReservationForm({
                   </div>
                 ) : null}
 
-                {wizardStep === 2 ? (
+                {currentStepKey === "guests" ? (
                   <div className="flex flex-col gap-6">
                     {false ? (
                       <div className="flex flex-col gap-2" role="group" aria-label="Emplacement">
@@ -1356,6 +1375,13 @@ export default function PublicReservationForm({
                       <p className="text-center text-sm font-medium" style={{ color: "var(--heading-color)" }}>
                         Nombre de personnes
                       </p>
+                      {groupBlocksOnlineBooking ? (
+                        <LargeGroupContactBlock
+                          maxPartySize={effectiveMaxParty}
+                          restaurantPhone={restaurantPhone}
+                        />
+                      ) : null}
+                      {!groupBlocksOnlineBooking ? (
                       <div
                         className="grid gap-2"
                         style={{
@@ -1367,14 +1393,17 @@ export default function PublicReservationForm({
                             key={n}
                             type="button"
                             disabled={previewMode}
-                            onClick={() => setGuests(n)}
+                            onClick={() => {
+                              setGuests(n);
+                              setLargeGroupContact(false);
+                            }}
                             className={cn(
                               "min-h-[48px] border-2 text-base font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40",
                               dateBtnRadius,
-                              guests === n ? "border-transparent shadow-sm" : "bg-transparent",
+                              guests === n && !largeGroupContact ? "border-transparent shadow-sm" : "bg-transparent",
                             )}
                             style={
-                              guests === n
+                              guests === n && !largeGroupContact
                                 ? { backgroundColor: "var(--button-bg)", color: "var(--button-text)", borderColor: "var(--button-bg)" }
                                 : {
                                     borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
@@ -1386,17 +1415,46 @@ export default function PublicReservationForm({
                           </button>
                         ))}
                       </div>
-                      <p
-                        className="text-center text-xs leading-snug sm:text-sm"
-                        style={{ color: "color-mix(in srgb, var(--body-text) 62%, var(--page-bg))" }}
-                      >
-                        {`Veuillez nous appeler pour les groupes de plus de ${effectiveMaxParty} personnes.`}
-                      </p>
+                      ) : null}
+                      {!groupBlocksOnlineBooking && isTimeSlotsMode ? (
+                        <button
+                          type="button"
+                          disabled={previewMode}
+                          onClick={() => setLargeGroupContact(true)}
+                          className={cn(
+                            "min-h-[48px] w-full border-2 px-4 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-40",
+                            dateBtnRadius,
+                            largeGroupContact ? "border-transparent shadow-sm" : "bg-transparent",
+                          )}
+                          style={
+                            largeGroupContact
+                              ? {
+                                  backgroundColor: "var(--button-bg)",
+                                  color: "var(--button-text)",
+                                  borderColor: "var(--button-bg)",
+                                }
+                              : {
+                                  borderColor: "color-mix(in srgb, var(--body-text) 22%, var(--page-bg))",
+                                  color: "color-mix(in srgb, var(--body-text) 78%, var(--page-bg))",
+                                }
+                          }
+                        >
+                          Plus de {effectiveMaxParty} personnes
+                        </button>
+                      ) : null}
+                      {!groupBlocksOnlineBooking && !isTimeSlotsMode ? (
+                        <p
+                          className="text-center text-xs leading-snug sm:text-sm"
+                          style={{ color: "color-mix(in srgb, var(--body-text) 62%, var(--page-bg))" }}
+                        >
+                          {`Veuillez nous appeler pour les groupes de plus de ${effectiveMaxParty} personnes.`}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
 
-                {wizardStep === 3 ? (
+                {currentStepKey === "time" ? (
                   <div className="flex flex-col gap-4">
                     {slotsLoading ? (
                       <p className="text-center text-sm" style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}>
@@ -1416,7 +1474,7 @@ export default function PublicReservationForm({
                           type="button"
                           className="text-sm font-semibold underline-offset-4 hover:underline"
                           style={{ color: "var(--accent-color)" }}
-                          onClick={() => setWizardStep(1)}
+                          onClick={() => setWizardStep(stepOrder.indexOf("date") + 1)}
                         >
                           Choisir un autre jour
                         </button>
@@ -1451,7 +1509,7 @@ export default function PublicReservationForm({
                   </div>
                 ) : null}
 
-                {allowTerraceZoneChoice && wizardStep === terraceZoneStep ? (
+                {allowTerraceZoneChoice && currentStepKey === "zone" ? (
                   <div className="flex flex-col gap-4">
                     {zoneStepLoading ? (
                       <p
@@ -1475,7 +1533,7 @@ export default function PublicReservationForm({
                   </div>
                 ) : null}
 
-                {wizardStep === contactStep ? (
+                {currentStepKey === "contact" ? (
                   <div className="grid gap-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
@@ -1574,17 +1632,16 @@ export default function PublicReservationForm({
                   <span className="hidden sm:block sm:flex-1" aria-hidden />
                 )}
 
-                {wizardStep < totalSteps ? (
+                {wizardStep < totalSteps && !groupBlocksOnlineBooking ? (
                   <button
                     type="button"
                     disabled={
                       previewMode ||
-                      (wizardStep === 1 &&
+                      (currentStepKey === "date" &&
                         (!reservationDate || isDateInClosurePeriod || reservationDate > maxDateStr)) ||
-                      (wizardStep === 2 &&
-                        (guests < 1 || isDateInClosurePeriod)) ||
-                      (wizardStep === 3 && !reservationTime) ||
-                      (wizardStep === terraceZoneStep &&
+                      (currentStepKey === "guests" && (guests < 1 || isDateInClosurePeriod)) ||
+                      (currentStepKey === "time" && !reservationTime) ||
+                      (currentStepKey === "zone" &&
                         allowTerraceZoneChoice &&
                         (zoneStepLoading || !seatingZone))
                     }
@@ -1804,3 +1861,4 @@ export default function PublicReservationForm({
     </div>
   );
 }
+

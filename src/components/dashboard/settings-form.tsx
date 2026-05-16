@@ -29,11 +29,25 @@ import {
   effectiveReservationConfirmationSubject,
   sampleReservationConfirmationContext,
 } from "@/src/lib/email/reservation-confirmation-template";
-import { timeHhMmFromDb } from "@/src/lib/reservation/reservation-modes";
+import {
+  normalizeReservationMode,
+  timeHhMmFromDb,
+  type ReservationMode,
+} from "@/src/lib/reservation/reservation-modes";
+import {
+  clampCoversCapacity,
+  clampMealDurationMinutes,
+  clampPartySize,
+  clampSlotInterval,
+  clampTimeSlotsGroups,
+  isReservationCapacityConfigured,
+  validateReservationSettingsInput,
+} from "@/src/lib/reservation/reservation-settings";
 import {
   clampTerraceCapacity,
   normalizeTerraceLabel,
 } from "@/src/lib/reservation/terrace-settings";
+import { ReservationSettingsPanel } from "@/src/components/dashboard/settings/reservation-settings-panel";
 
 type RestaurantData = {
   id: string;
@@ -74,11 +88,15 @@ type RestaurantData = {
 };
 
 type SettingsData = {
+  reservation_mode?: string | null;
   reservation_duration: number | null;
   reservation_slot_interval: number | null;
   restaurant_capacity: number | null;
   max_covers_per_slot: number | null;
   max_party_size: number | null;
+  time_slots_lunch_max_groups?: number | null;
+  time_slots_dinner_max_groups?: number | null;
+  time_slots_max_party_size?: number | null;
   days_in_advance: number | null;
   accent_color: string | null;
   button_color: string | null;
@@ -208,16 +226,53 @@ export default function SettingsForm({
     newCapacity: number;
   } | null>(null);
   const [daysInAdvance, setDaysInAdvance] = useState(settings.days_in_advance ?? 60);
-  const [lunchDurationMinutes, setLunchDurationMinutes] = useState(
-    settings.lunch_duration_minutes ?? settings.reservation_duration ?? 90,
+  const [reservationMode, setReservationMode] = useState<ReservationMode>(() =>
+    normalizeReservationMode(settings.reservation_mode),
   );
-  const [dinnerDurationMinutes, setDinnerDurationMinutes] = useState(
-    settings.dinner_duration_minutes ?? settings.reservation_duration ?? 90,
+  const savedReservationModeRef = useRef<ReservationMode>(normalizeReservationMode(settings.reservation_mode));
+  const [slotInterval, setSlotInterval] = useState(() =>
+    clampSlotInterval(settings.reservation_slot_interval ?? 30),
+  );
+  const [timeSlotsLunchMaxGroups, setTimeSlotsLunchMaxGroups] = useState(() =>
+    clampTimeSlotsGroups(settings.time_slots_lunch_max_groups ?? 5),
+  );
+  const [timeSlotsDinnerMaxGroups, setTimeSlotsDinnerMaxGroups] = useState(() =>
+    clampTimeSlotsGroups(settings.time_slots_dinner_max_groups ?? 8),
+  );
+  const [timeSlotsMaxPartySize, setTimeSlotsMaxPartySize] = useState(() =>
+    clampPartySize(settings.time_slots_max_party_size ?? settings.max_party_size ?? 8),
+  );
+  const [lunchDurationMinutes, setLunchDurationMinutes] = useState(() =>
+    clampMealDurationMinutes(settings.lunch_duration_minutes ?? settings.reservation_duration ?? 90),
+  );
+  const [dinnerDurationMinutes, setDinnerDurationMinutes] = useState(() =>
+    clampMealDurationMinutes(settings.dinner_duration_minutes ?? settings.reservation_duration ?? 120),
   );
   const [autoArchiveReservations] = useState(
     settings.auto_archive_reservations === true,
   );
-  const [maxPartySize, setMaxPartySize] = useState(settings.max_party_size ?? 8);
+  const [maxPartySize, setMaxPartySize] = useState(() => clampPartySize(settings.max_party_size ?? 8));
+  const showReservationSetupBanner = useMemo(
+    () =>
+      !isReservationCapacityConfigured({
+        reservation_mode: reservationMode,
+        service_lunch_enabled: lunchServiceEnabled,
+        service_dinner_enabled: dinnerServiceEnabled,
+        service_lunch_max_covers: lunchMaxCovers,
+        service_dinner_max_covers: dinnerMaxCovers,
+        time_slots_lunch_max_groups: timeSlotsLunchMaxGroups,
+        time_slots_dinner_max_groups: timeSlotsDinnerMaxGroups,
+      }),
+    [
+      reservationMode,
+      lunchServiceEnabled,
+      dinnerServiceEnabled,
+      lunchMaxCovers,
+      dinnerMaxCovers,
+      timeSlotsLunchMaxGroups,
+      timeSlotsDinnerMaxGroups,
+    ],
+  );
   const [pageBackgroundColor] = useState(
     restaurant.page_background_color ?? "#f8fafc",
   );
@@ -451,34 +506,43 @@ export default function SettingsForm({
       return;
     }
 
+    const clampedLunchCovers = clampCoversCapacity(lunchMaxCovers);
+    const clampedDinnerCovers = clampCoversCapacity(dinnerMaxCovers);
+    const clampedLunchDuration = clampMealDurationMinutes(lunchDurationMinutes);
+    const clampedDinnerDuration = clampMealDurationMinutes(dinnerDurationMinutes);
+    const clampedMaxParty = clampPartySize(maxPartySize);
+    const clampedSlotInterval = clampSlotInterval(slotInterval);
+
     const { error: settingsError } = await supabase
       .from("restaurant_settings")
       .upsert({
         restaurant_id: restaurant.id,
+        reservation_mode: reservationMode,
         website_url: websiteUrl.trim() || null,
-        restaurant_capacity: Math.max(lunchMaxCovers, dinnerMaxCovers),
-        max_covers_per_slot: Math.max(lunchMaxCovers, dinnerMaxCovers),
-        reservation_duration: Math.max(
-          30,
-          Math.min(600, Math.round((lunchDurationMinutes + dinnerDurationMinutes) / 2)),
-        ),
+        restaurant_capacity: Math.max(clampedLunchCovers, clampedDinnerCovers),
+        max_covers_per_slot: Math.max(clampedLunchCovers, clampedDinnerCovers),
+        max_guests_per_slot: Math.max(clampedLunchCovers, clampedDinnerCovers),
+        reservation_duration: Math.round((clampedLunchDuration + clampedDinnerDuration) / 2),
         auto_archive_reservations: autoArchiveReservations,
-        lunch_duration_minutes: Math.max(30, Math.min(600, lunchDurationMinutes)),
-        dinner_duration_minutes: Math.max(30, Math.min(600, dinnerDurationMinutes)),
+        lunch_duration_minutes: clampedLunchDuration,
+        dinner_duration_minutes: clampedDinnerDuration,
         service_lunch_enabled: lunchServiceEnabled,
         service_lunch_start: lunchServiceStart.length === 5 ? `${lunchServiceStart}:00` : lunchServiceStart,
         service_lunch_end: lunchServiceEnd.length === 5 ? `${lunchServiceEnd}:00` : lunchServiceEnd,
-        service_lunch_max_covers: Math.max(1, Math.min(500, lunchMaxCovers)),
+        service_lunch_max_covers: clampedLunchCovers,
         service_dinner_enabled: dinnerServiceEnabled,
         service_dinner_start: dinnerServiceStart.length === 5 ? `${dinnerServiceStart}:00` : dinnerServiceStart,
         service_dinner_end: dinnerServiceEnd.length === 5 ? `${dinnerServiceEnd}:00` : dinnerServiceEnd,
-        service_dinner_max_covers: Math.max(1, Math.min(500, dinnerMaxCovers)),
+        service_dinner_max_covers: clampedDinnerCovers,
+        time_slots_lunch_max_groups: clampTimeSlotsGroups(timeSlotsLunchMaxGroups),
+        time_slots_dinner_max_groups: clampTimeSlotsGroups(timeSlotsDinnerMaxGroups),
+        time_slots_max_party_size: clampPartySize(timeSlotsMaxPartySize),
         terrace_enabled: terraceEnabled,
         terrace_capacity: clampTerraceCapacity(terraceCapacity),
         terrace_label: normalizeTerraceLabel(terraceLabel),
         days_in_advance: daysInAdvance,
-        reservation_slot_interval: 15,
-        max_party_size: maxPartySize,
+        reservation_slot_interval: clampedSlotInterval,
+        max_party_size: clampedMaxParty,
         closure_start_date: closureStartDate || null,
         closure_end_date: closureEndDate || null,
         closure_message: closureMessage || null,
@@ -495,14 +559,28 @@ export default function SettingsForm({
     window.setTimeout(() => setSaveButtonSuccess(false), 2000);
     setIsSaving(false);
     initialTerraceCapacityRef.current = clampTerraceCapacity(terraceCapacity);
+    savedReservationModeRef.current = reservationMode;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
 
-    if (!lunchServiceEnabled && !dinnerServiceEnabled) {
-      setMessage("Activez au moins le service midi ou le service soir.");
+    const validation = validateReservationSettingsInput({
+      mode: reservationMode,
+      lunchServiceEnabled,
+      dinnerServiceEnabled,
+      lunchMaxCovers,
+      dinnerMaxCovers,
+      lunchDurationMinutes,
+      dinnerDurationMinutes,
+      maxPartySize,
+      timeSlotsLunchMaxGroups,
+      timeSlotsDinnerMaxGroups,
+      timeSlotsMaxPartySize,
+    });
+    if (!validation.ok) {
+      setMessage(validation.message);
       return;
     }
 
@@ -615,109 +693,71 @@ export default function SettingsForm({
             title="Disponibilités & réservations"
             subtitle="Configure tes créneaux et les règles de réservation."
           >
-            <SettingsAccordion title="Horaires de réservation par jour">
+            <SettingsAccordion title="Réservations" defaultOpen>
+              <ReservationSettingsPanel
+                reservationMode={reservationMode}
+                savedReservationMode={savedReservationModeRef.current}
+                onReservationModeChange={setReservationMode}
+                showSetupBanner={showReservationSetupBanner}
+                lunchServiceEnabled={lunchServiceEnabled}
+                onLunchServiceEnabledChange={setLunchServiceEnabled}
+                dinnerServiceEnabled={dinnerServiceEnabled}
+                onDinnerServiceEnabledChange={setDinnerServiceEnabled}
+                lunchServiceStart={lunchServiceStart}
+                onLunchServiceStartChange={setLunchServiceStart}
+                lunchServiceEnd={lunchServiceEnd}
+                onLunchServiceEndChange={setLunchServiceEnd}
+                dinnerServiceStart={dinnerServiceStart}
+                onDinnerServiceStartChange={setDinnerServiceStart}
+                dinnerServiceEnd={dinnerServiceEnd}
+                onDinnerServiceEndChange={setDinnerServiceEnd}
+                slotInterval={slotInterval}
+                onSlotIntervalChange={setSlotInterval}
+                daysInAdvance={daysInAdvance}
+                onDaysInAdvanceChange={setDaysInAdvance}
+                lunchMaxCovers={lunchMaxCovers}
+                onLunchMaxCoversChange={setLunchMaxCovers}
+                dinnerMaxCovers={dinnerMaxCovers}
+                onDinnerMaxCoversChange={setDinnerMaxCovers}
+                lunchDurationMinutes={lunchDurationMinutes}
+                onLunchDurationMinutesChange={setLunchDurationMinutes}
+                dinnerDurationMinutes={dinnerDurationMinutes}
+                onDinnerDurationMinutesChange={setDinnerDurationMinutes}
+                maxPartySize={maxPartySize}
+                onMaxPartySizeChange={setMaxPartySize}
+                timeSlotsLunchMaxGroups={timeSlotsLunchMaxGroups}
+                onTimeSlotsLunchMaxGroupsChange={setTimeSlotsLunchMaxGroups}
+                timeSlotsDinnerMaxGroups={timeSlotsDinnerMaxGroups}
+                onTimeSlotsDinnerMaxGroupsChange={setTimeSlotsDinnerMaxGroups}
+                timeSlotsMaxPartySize={timeSlotsMaxPartySize}
+                onTimeSlotsMaxPartySizeChange={setTimeSlotsMaxPartySize}
+              />
+            </SettingsAccordion>
+            <SettingsAccordion title="Horaires d'ouverture par jour">
               <AvailabilityEditor embedded embeddedPart="hours" restaurantId={restaurant.id} settings={availabilitySettings} />
-            </SettingsAccordion>
-            <SettingsAccordion title="Paramètres de réservation">
-              <div className="flex flex-col gap-6">
-                <AvailabilityEditor embedded embeddedPart="params" restaurantId={restaurant.id} settings={availabilitySettings} />
-                <div className="grid gap-4 border-t border-zg-border/60 pt-4 md:grid-cols-2">
-                  <div>
-                    <label className="dashboard-field-label">Délai max. de réservation à l'avance (jours)</label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={365}
-                      className="mt-2"
-                      value={daysInAdvance}
-                      onChange={(e) => setDaysInAdvance(Number(e.target.value))}
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="dashboard-field-label">Convives max. par groupe (réservation)</label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={50}
-                      className="mt-2"
-                      value={maxPartySize}
-                      onChange={(e) => setMaxPartySize(Number(e.target.value))}
-                    />
-                  </div>
-                </div>
-              </div>
-            </SettingsAccordion>
-            <SettingsAccordion title="Règles de capacité">
-              <div className="space-y-6">
-                <div>
-                  <label className="dashboard-field-label">Capacité totale</label>
-                  <p className="mt-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-semibold text-zg-fg">
-                    {Math.max(lunchMaxCovers, dinnerMaxCovers)} couverts (max. midi / soir)
-                  </p>
-                </div>
-                <div className="space-y-6 rounded-2xl border border-zg-border bg-zg-surface p-5 md:p-6">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">Limite par service</p>
-                  <div className="grid gap-4">
-                    <Toggle checked={lunchServiceEnabled} onChange={setLunchServiceEnabled} label="Service midi activé" />
-                    {lunchServiceEnabled ? (
-                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <div>
-                          <label className="dashboard-field-label">Début midi</label>
-                          <Input type="time" value={lunchServiceStart} onChange={(e) => setLunchServiceStart(e.target.value)} />
-                        </div>
-                        <div>
-                          <label className="dashboard-field-label">Fin midi</label>
-                          <Input type="time" value={lunchServiceEnd} onChange={(e) => setLunchServiceEnd(e.target.value)} />
-                        </div>
-                        <div>
-                          <label className="dashboard-field-label">Capacité midi (couverts)</label>
-                          <Input type="number" min={1} max={500} value={lunchMaxCovers} onChange={(e) => setLunchMaxCovers(Number(e.target.value))} />
-                        </div>
-                        <div>
-                          <label className="dashboard-field-label">Durée moyenne midi (min)</label>
-                          <Input type="number" min={30} max={600} value={lunchDurationMinutes} onChange={(e) => setLunchDurationMinutes(Number(e.target.value))} />
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="grid gap-4">
-                    <Toggle checked={dinnerServiceEnabled} onChange={setDinnerServiceEnabled} label="Service soir activé" />
-                    {dinnerServiceEnabled ? (
-                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <div>
-                          <label className="dashboard-field-label">Début soir</label>
-                          <Input type="time" value={dinnerServiceStart} onChange={(e) => setDinnerServiceStart(e.target.value)} />
-                        </div>
-                        <div>
-                          <label className="dashboard-field-label">Fin soir</label>
-                          <Input type="time" value={dinnerServiceEnd} onChange={(e) => setDinnerServiceEnd(e.target.value)} />
-                        </div>
-                        <div>
-                          <label className="dashboard-field-label">Capacité soir (couverts)</label>
-                          <Input type="number" min={1} max={500} value={dinnerMaxCovers} onChange={(e) => setDinnerMaxCovers(Number(e.target.value))} />
-                        </div>
-                        <div>
-                          <label className="dashboard-field-label">Durée moyenne soir (min)</label>
-                          <Input type="number" min={30} max={600} value={dinnerDurationMinutes} onChange={(e) => setDinnerDurationMinutes(Number(e.target.value))} />
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
             </SettingsAccordion>
             <SettingsAccordion
               title="Terrasse"
-              description="Capacité en couverts pour la terrasse. L’activation du jour se fait depuis le tableau de bord."
+              description={
+                reservationMode === "time_slots"
+                  ? "Capacité en groupes pour la terrasse. L’activation du jour se fait depuis le tableau de bord."
+                  : "Capacité en couverts pour la terrasse. L’activation du jour se fait depuis le tableau de bord."
+              }
             >
               <div className="space-y-5">
                 <p className="text-sm leading-relaxed text-zg-muted">
-                  Nombre de couverts en plus que vous pouvez accueillir en terrasse lorsque celle-ci est activée pour la journée.
+                  {reservationMode === "time_slots"
+                    ? "Nombre de groupes maximum en terrasse en simultané lorsque celle-ci est activée pour la journée."
+                    : "Nombre de couverts en plus que vous pouvez accueillir en terrasse lorsque celle-ci est activée pour la journée."}
                 </p>
                 <div className="grid gap-4 md:grid-cols-2">
                   <ReservationField
                     label="Capacité totale"
-                    description="Nombre maximum de couverts en terrasse en simultané (tous créneaux confondus sur un même horaire)."
+                    description={
+                      reservationMode === "time_slots"
+                        ? "Nombre maximum de groupes en terrasse en simultané (par créneau)."
+                        : "Nombre maximum de couverts en terrasse en simultané (tous créneaux confondus sur un même horaire)."
+                    }
                   >
                     <Input
                       type="number"

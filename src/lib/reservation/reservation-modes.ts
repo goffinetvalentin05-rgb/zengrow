@@ -1,8 +1,15 @@
-/** @deprecated Conservé pour lectures legacy en base ; tout est en mode simple. */
-export type ReservationMode = "simple";
+export const RESERVATION_MODES = ["global_covers", "time_slots"] as const;
 
-export function normalizeReservationMode(_value: unknown): ReservationMode {
-  return "simple";
+export type ReservationMode = (typeof RESERVATION_MODES)[number];
+
+export const RESERVATION_MODE_LABELS: Record<ReservationMode, string> = {
+  global_covers: "Couverts globaux",
+  time_slots: "Slots par tranche",
+};
+
+export function normalizeReservationMode(value: unknown): ReservationMode {
+  if (value === "time_slots") return "time_slots";
+  return "global_covers";
 }
 
 export function timeHhMmFromDb(value: string | null | undefined, fallback: string): string {

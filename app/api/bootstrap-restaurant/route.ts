@@ -98,9 +98,12 @@ export async function POST(request: Request) {
   const primaryColor = optionalTrim(payload.primaryColor ?? metadataPrimaryColor) ?? "#1F7A6C";
   const tableCount = positiveIntegerOrDefault(payload.tableCount ?? metadataTableCount, 12);
   const maxPeople = positiveIntegerOrDefault(payload.maxPeople ?? metadataCapacity, 40);
-  const averageMealDuration = positiveIntegerOrDefault(
-    payload.averageMealDuration ?? metadataDuration,
-    90,
+  const averageMealDuration = Math.min(
+    240,
+    Math.max(
+      30,
+      positiveIntegerOrDefault(payload.averageMealDuration ?? metadataDuration, 90),
+    ),
   );
   const trialStartDate = new Date();
   const trialEndDate = new Date(trialStartDate.getTime() + 14 * 24 * 60 * 60 * 1000);
@@ -136,6 +139,7 @@ export async function POST(request: Request) {
 
   const { error: settingsError } = await supabase.from("restaurant_settings").insert({
     restaurant_id: restaurant.id,
+    reservation_mode: "global_covers",
     opening_hours: getDefaultOpeningHours(),
     table_count: tableCount,
     restaurant_capacity: maxPeople,
@@ -144,6 +148,9 @@ export async function POST(request: Request) {
     service_dinner_max_covers: maxPeople,
     lunch_duration_minutes: averageMealDuration,
     dinner_duration_minutes: averageMealDuration,
+    time_slots_lunch_max_groups: 5,
+    time_slots_dinner_max_groups: 8,
+    time_slots_max_party_size: Math.min(30, Math.max(2, maxPeople)),
     reservation_duration: averageMealDuration,
     instagram_url: instagram,
     website_url: website,

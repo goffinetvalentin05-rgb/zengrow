@@ -44,7 +44,7 @@ export default async function DashboardSettingsPage() {
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "opening_hours, max_guests_per_slot, reservation_duration, reservation_slot_interval, restaurant_capacity, max_covers_per_slot, max_party_size, lunch_duration_minutes, dinner_duration_minutes, service_lunch_enabled, service_lunch_start, service_lunch_end, service_lunch_max_covers, service_dinner_enabled, service_dinner_start, service_dinner_end, service_dinner_max_covers, terrace_enabled, terrace_capacity, terrace_label, auto_archive_reservations, days_in_advance, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message",
+      "opening_hours, max_guests_per_slot, reservation_duration, reservation_slot_interval, restaurant_capacity, max_covers_per_slot, reservation_mode, max_party_size, lunch_duration_minutes, dinner_duration_minutes, time_slots_lunch_max_groups, time_slots_dinner_max_groups, time_slots_max_party_size, service_lunch_enabled, service_lunch_start, service_lunch_end, service_lunch_max_covers, service_dinner_enabled, service_dinner_start, service_dinner_end, service_dinner_max_covers, terrace_enabled, terrace_capacity, terrace_label, auto_archive_reservations, days_in_advance, accent_color, button_color, text_color, heading_font, body_font, font_size_scale, border_radius, button_style, card_style, logo_url, cover_image_url, instagram_url, facebook_url, website_url, pre_booking_message, closure_start_date, closure_end_date, closure_message",
     )
     .eq("restaurant_id", restaurant.id)
     .single();
@@ -90,8 +90,12 @@ export default async function DashboardSettingsPage() {
   const restaurantConfig = restaurantConfigRaw as DashboardRestaurantPublicConfig | null;
 
   const defaultSettings = {
+    reservation_mode: "global_covers",
     reservation_duration: 90,
     reservation_slot_interval: 30,
+    time_slots_lunch_max_groups: 5,
+    time_slots_dinner_max_groups: 8,
+    time_slots_max_party_size: 8,
     restaurant_capacity: 40,
     max_covers_per_slot: 40,
     max_party_size: 8,

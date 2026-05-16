@@ -5,6 +5,7 @@ import {
 import { devOwnerBypassesPublicBookingBlock } from "@/src/lib/access";
 import { expireTrialIfNeeded, isRestaurantExpired } from "@/src/lib/subscription";
 import { mapReservationRpcError } from "@/src/lib/reservation/map-reservation-error";
+import { effectiveMaxPartySizeForPublic } from "@/src/lib/reservation/reservation-settings";
 import { asRestaurantReservationEmailRow } from "@/src/lib/reservation/restaurant-reservation-email-row";
 import type { SubscriptionStatus } from "@/src/lib/subscription";
 import type { PublicReservationPostInput } from "@/src/lib/reservation/schemas";
@@ -84,7 +85,7 @@ export async function executePublicReservation(
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select(
-      "reservation_duration, max_party_size, closure_start_date, closure_end_date, closure_message, days_in_advance, terrace_enabled, allow_phone, allow_email",
+      "reservation_mode, reservation_duration, max_party_size, time_slots_max_party_size, closure_start_date, closure_end_date, closure_message, days_in_advance, terrace_enabled, allow_phone, allow_email",
     )
     .eq("restaurant_id", restaurantId)
     .maybeSingle();
@@ -113,7 +114,11 @@ export async function executePublicReservation(
   }
   const reservationZone: "interior" | "terrace" = terraceEnabled ? parsed.zone! : "interior";
 
-  const maxPartySize = settings?.max_party_size ?? 8;
+  const maxPartySize = effectiveMaxPartySizeForPublic({
+    reservation_mode: settings?.reservation_mode,
+    max_party_size: settings?.max_party_size,
+    time_slots_max_party_size: settings?.time_slots_max_party_size,
+  });
   const daysInAdvance = settings?.days_in_advance ?? 60;
 
   const today = new Date();

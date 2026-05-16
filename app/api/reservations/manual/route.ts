@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { calendarYmdInBusinessTz } from "@/src/lib/date/business-calendar";
 import { isRestaurantExpiredForUser } from "@/src/lib/access";
+import { effectiveMaxPartySizeForPublic } from "@/src/lib/reservation/reservation-settings";
 import { expireTrialIfNeeded } from "@/src/lib/subscription";
 
 type ManualReservationPayload = {
@@ -99,11 +100,15 @@ export async function POST(request: NextRequest) {
 
   const { data: settings } = await supabase
     .from("restaurant_settings")
-    .select("max_party_size, terrace_enabled")
+    .select("reservation_mode, max_party_size, time_slots_max_party_size, terrace_enabled")
     .eq("restaurant_id", restaurant.id)
     .maybeSingle();
 
-  const maxPartySize = settings?.max_party_size ?? 8;
+  const maxPartySize = effectiveMaxPartySizeForPublic({
+    reservation_mode: settings?.reservation_mode,
+    max_party_size: settings?.max_party_size,
+    time_slots_max_party_size: settings?.time_slots_max_party_size,
+  });
   const terraceEnabled = settings?.terrace_enabled === true;
 
   let reservationZone: "interior" | "terrace" = "interior";

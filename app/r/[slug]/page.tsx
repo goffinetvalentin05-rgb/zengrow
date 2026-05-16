@@ -5,6 +5,8 @@ import { createClient } from "@/src/lib/supabase/server";
 import { effectiveHeroSubtitle, effectiveHeroTitle } from "@/src/lib/public-page/defaults";
 import type { PublicAmbiance } from "@/src/lib/public-page/constants";
 import { googleFontsHref, normalizePublicPageFont } from "@/src/lib/public-page-fonts";
+import { effectiveMaxPartySizeForPublic } from "@/src/lib/reservation/reservation-settings";
+import { normalizeReservationMode } from "@/src/lib/reservation/reservation-modes";
 import { getDefaultOpeningHours, OpeningHours } from "@/src/lib/utils";
 import { parseEditorConfig } from "@/src/lib/public-page/editor-config";
 import { rowsToPageSectionBundle } from "@/src/lib/public-page/page-sections";
@@ -73,7 +75,9 @@ type PublicRestaurantRow = {
 
 type PublicSettingsRow = {
   opening_hours: OpeningHours;
+  reservation_mode?: string | null;
   max_party_size: number;
+  time_slots_max_party_size?: number | null;
   reservation_slot_interval: number;
   allow_phone: boolean;
   allow_email: boolean;
@@ -170,8 +174,10 @@ const RESTAURANT_SELECT = [
 
 const SETTINGS_SELECT = [
   "opening_hours",
+  "reservation_mode",
   "reservation_slot_interval",
   "max_party_size",
+  "time_slots_max_party_size",
   "allow_phone",
   "allow_email",
   "logo_url",
@@ -473,7 +479,8 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           restaurantEmail={restaurant.email}
           allowPhone={safeSettings.allow_phone}
           allowEmail={safeSettings.allow_email}
-          maxPartySize={Math.max(1, safeSettings.max_party_size ?? 8)}
+          maxPartySize={effectiveMaxPartySizeForPublic(safeSettings)}
+          reservationMode={normalizeReservationMode(safeSettings.reservation_mode)}
           openingHours={safeSettings.opening_hours as OpeningHours}
           daysInAdvance={safeSettings.days_in_advance ?? 60}
           logoUrl={restaurant.logo_url ?? safeSettings.logo_url}
