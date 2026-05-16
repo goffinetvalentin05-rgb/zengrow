@@ -133,13 +133,14 @@ export function navigationLayoutItem(structure: PageSectionLayoutItem[]): PageSe
   return structure.find((i) => i.sectionType === "navigation");
 }
 
+/** Réattribue sort_index selon l’ordre du tableau (après drag). */
 export function reindexSortableItems(items: PageSectionLayoutItem[]): PageSectionLayoutItem[] {
   let cursor = HERO_SORT;
   return items.map((item) => {
     if (item.sectionType === "navigation") return { ...item, sortIndex: NAV_SORT };
-    if (item.sectionType === "hero") return { ...item, sortIndex: HERO_SORT };
+    const sortIndex = cursor;
     cursor += SORT_STEP;
-    return { ...item, sortIndex: cursor };
+    return { ...item, sortIndex };
   });
 }
 
@@ -147,9 +148,9 @@ export function mergeStructureUpdate(
   full: PageSectionLayoutItem[],
   sortableUpdated: PageSectionLayoutItem[],
 ): PageSectionLayoutItem[] {
-  const byType = new Map(sortableUpdated.map((i) => [i.sectionType, i]));
+  const fullByType = new Map(full.map((i) => [i.sectionType, i]));
   const reindexed = reindexSortableItems(
-    sortableLayoutItems(full).map((i) => byType.get(i.sectionType) ?? i),
+    sortableUpdated.map((i) => ({ ...fullByType.get(i.sectionType), ...i })),
   );
   const nav = full.find((i) => i.sectionType === "navigation");
   return [

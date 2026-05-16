@@ -110,20 +110,20 @@ function SortableRowContent({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-3 rounded-xl border bg-zg-surface px-3 py-3",
+        "flex touch-none items-center gap-3 rounded-xl border bg-zg-surface px-3 py-3",
         isDragging ? "z-10 border-zg-accent shadow-md" : "border-zg-border",
         !item.enabled && "opacity-55",
       )}
+      {...attributes}
+      {...listeners}
+      aria-label={`Réordonner ${meta.label}`}
     >
-      <button
-        type="button"
-        className="flex h-9 w-9 shrink-0 cursor-grab items-center justify-center rounded-lg text-zg-text-muted hover:bg-zg-border/50 active:cursor-grabbing"
-        aria-label={`Réordonner ${meta.label}`}
-        {...attributes}
-        {...listeners}
+      <div
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zg-text-muted"
+        aria-hidden
       >
         <GripVertical className="h-4 w-4" />
-      </button>
+      </div>
 
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-zg-fg">{meta.label}</p>
@@ -141,6 +141,7 @@ function SortableRowContent({
               className="mt-1 w-full max-w-[220px] rounded-lg border border-zg-border bg-zg-surface px-2 py-1.5 text-xs font-medium text-zg-fg"
               value={resolveSectionLayoutVariant(themeId, item.sectionType, item.layoutVariant) ?? ""}
               onChange={(e) => onVariantChange(item.sectionType, e.target.value)}
+              onPointerDown={(e) => e.stopPropagation()}
             >
               {variantOptions.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -152,7 +153,10 @@ function SortableRowContent({
         ) : null}
       </div>
 
-      <label className="flex shrink-0 cursor-pointer items-center gap-2 text-xs font-medium text-zg-text-muted">
+      <label
+        className="flex shrink-0 cursor-pointer items-center gap-2 text-xs font-medium text-zg-text-muted"
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <input
           type="checkbox"
           className="h-4 w-4 rounded border-zg-border accent-zg-accent"
