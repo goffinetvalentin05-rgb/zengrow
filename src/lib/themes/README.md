@@ -21,10 +21,10 @@ L’implémentation vit dans `src/lib/themes/` (import `@/src/lib/themes/...`). 
 ## Ajouter un nouveau thème
 
 1. **Créer un dossier** `src/lib/themes/<mon-theme>/`.
-2. **`tokens.ts`** : exporter `monTheme: ThemeDefinition` avec `id`, `name`, `description`, `previewImage` (fichier dans `public/themes/<mon-theme>/preview.svg`), et `tokens: DesignTokens`.
+2. **`tokens.ts`** : exporter `monTheme: ThemeDefinition` avec `id`, `name`, `description`, `previewImage` (fichier dans `public/themes/<mon-theme>/preview.webp`), et `tokens: DesignTokens`.
 3. **Enregistrer** le thème dans `registry.ts` (`THEME_REGISTRY` + contrat `ThemeId` dans `types.ts`).
 4. **Composants** (optionnel) : si le rendu doit différer fortement, ajouter `components.tsx` (souvent client `use client`) et brancher les exports dans `PublicReservationForm` comme pour `premium-dark`.
-5. **Preview dashboard** : l’image doit être accessible sous `public/themes/<id>/preview.svg` (ou autre format référencé dans `previewImage`).
+5. **Preview dashboard** : l’image doit être accessible sous `public/themes/<id>/preview.webp` (générer via `node scripts/generate-theme-previews.mjs` à partir du `preview.svg`).
 
 Les thèmes non-`default` appliquent leurs variables CSS par-dessus l’éditeur ; le contenu et l’ordre des blocs restent inchangés.
 

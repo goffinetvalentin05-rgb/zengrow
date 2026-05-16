@@ -40,6 +40,6 @@ export const defaultTheme: ThemeDefinition = {
   id: "default",
   name: "ZenGrow (défaut)",
   description: "Style actuel : couleurs et typo pilotés par l’éditeur de page.",
-  previewImage: "/themes/default/preview.svg",
+  previewImage: "/themes/default/preview.webp",
   tokens: defaultDesignTokens,
 };

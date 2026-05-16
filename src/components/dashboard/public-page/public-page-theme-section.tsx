@@ -1,11 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import ThemeCard from "@/src/components/dashboard/public-page/theme-card";
 import { useCallback, useMemo, useState } from "react";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
-import { cn } from "@/src/lib/utils";
 import { listThemes } from "@/src/lib/themes/registry";
 import type { ThemeColorOverrides, ThemeId } from "@/src/lib/themes/types";
 
@@ -75,29 +74,16 @@ export default function PublicPageThemeSection({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {themes.map((t) => {
-          const selected = selectedId === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => onSelect(t.id)}
-              className={cn(
-                "flex flex-col overflow-hidden rounded-2xl border text-left transition-all",
-                selected ? "border-zg-accent shadow-md ring-2 ring-zg-accent" : "border-zg-border hover:border-zg-accent/50",
-              )}
-            >
-              <div className="relative aspect-[16/10] w-full bg-zg-border/40">
-                <Image src={t.previewImage} alt="" fill className="object-cover" sizes="320px" />
-              </div>
-              <div className="space-y-1 p-4">
-                <p className="font-semibold text-zg-fg">{t.name}</p>
-                <p className="text-xs leading-relaxed text-zg-text-muted">{t.description}</p>
-              </div>
-            </button>
-          );
-        })}
+        {themes.map((t) => (
+          <ThemeCard
+            key={t.id}
+            name={t.name}
+            description={t.description}
+            previewImage={t.previewImage}
+            selected={selectedId === t.id}
+            onSelect={() => onSelect(t.id)}
+          />
+        ))}
       </div>
 
       <div className="rounded-xl border border-zg-border bg-zg-surface-elevated/40">

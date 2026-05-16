@@ -36,6 +36,6 @@ export const premiumDarkTheme: ThemeDefinition = {
   id: "premium-dark",
   name: "Premium Dark",
   description: "Ambiance gastronomique cinématographique — sombre, or, typographie éditoriale.",
-  previewImage: "/themes/premium-dark/preview.svg",
+  previewImage: "/themes/premium-dark/preview.webp",
   tokens: premiumDarkDesignTokens,
 };

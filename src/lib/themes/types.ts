@@ -46,7 +46,7 @@ export type ThemeDefinition = {
   id: ThemeId;
   name: string;
   description: string;
-  /** Chemin public (ex. /themes/premium-dark/preview.svg) */
+  /** Chemin public (ex. /themes/premium-dark/preview.webp) */
   previewImage: string;
   tokens: DesignTokens;
 };

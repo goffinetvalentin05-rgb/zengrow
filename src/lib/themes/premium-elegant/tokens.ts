@@ -36,6 +36,6 @@ export const premiumElegantTheme: ThemeDefinition = {
   id: "premium-elegant",
   name: "Premium Elegant",
   description: "Luxe clair — ivoire chaud, accents dorés, mise en page aérée.",
-  previewImage: "/themes/premium-elegant/preview.svg",
+  previewImage: "/themes/premium-elegant/preview.webp",
   tokens: premiumElegantDesignTokens,
 };

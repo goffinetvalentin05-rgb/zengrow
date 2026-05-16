@@ -1,11 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="750" viewBox="0 0 1200 750">
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#0a0a0a"/>
-      <stop offset="100%" style="stop-color:#141414"/>
+    <linearGradient id="hero" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="55%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#050505"/>
     </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="30%" r="55%">
+      <stop offset="0%" stop-color="#D4AF7A" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#D4AF7A" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="640" height="400" fill="url(#g)"/>
-  <text x="320" y="190" text-anchor="middle" fill="#d4af7a" font-family="Georgia,serif" font-style="italic" font-size="26">Premium Dark</text>
-  <text x="320" y="230" text-anchor="middle" fill="#a8a29e" font-family="system-ui,sans-serif" font-size="14">Ambiance cinématographique</text>
+  <rect width="1200" height="750" fill="#0A0A0A"/>
+  <rect x="0" y="0" width="1200" height="64" fill="#141414" opacity="0.95"/>
+  <rect x="56" y="22" width="140" height="20" rx="2" fill="#D4AF7A" opacity="0.75"/>
+  <rect x="900" y="24" width="80" height="14" rx="7" fill="#2a2a2a"/>
+  <rect x="1000" y="24" width="80" height="14" rx="7" fill="#2a2a2a"/>
+  <rect x="1088" y="18" width="56" height="28" rx="14" stroke="#D4AF7A" stroke-width="1" fill="none"/>
+  <rect x="0" y="64" width="1200" height="380" fill="url(#hero)"/>
+  <rect x="0" y="64" width="1200" height="380" fill="url(#glow)"/>
+  <text x="600" y="250" text-anchor="middle" fill="#F5F1EA" font-family="Georgia,serif" font-size="58" font-style="italic">L art de la table</text>
+  <text x="600" y="310" text-anchor="middle" fill="#A8A29E" font-family="system-ui,sans-serif" font-size="20" letter-spacing="0.2em">GASTRONOMIE</text>
+  <rect x="490" y="350" width="220" height="44" rx="2" fill="none" stroke="#D4AF7A" stroke-width="1.5"/>
+  <rect x="80" y="480" width="520" height="200" rx="4" fill="#141414" stroke="rgba(212,175,122,0.15)"/>
+  <rect x="600" y="480" width="520" height="200" rx="4" fill="#141414" stroke="rgba(212,175,122,0.15)"/>
+  <rect x="112" y="520" width="280" height="10" rx="2" fill="#D4AF7A" opacity="0.5"/>
+  <rect x="112" y="548" width="360" height="8" rx="2" fill="#3a3a3a"/>
+  <rect x="112" y="568" width="320" height="8" rx="2" fill="#2a2a2a"/>
+  <rect x="632" y="520" width="200" height="120" rx="2" fill="#1C1C1C"/>
+  <rect x="852" y="520" width="236" height="120" rx="2" fill="#1C1C1C"/>
+  <text x="600" y="720" text-anchor="middle" fill="#8B7355" font-family="system-ui,sans-serif" font-size="17" letter-spacing="0.18em">PREMIUM DARK</text>
 </svg>
