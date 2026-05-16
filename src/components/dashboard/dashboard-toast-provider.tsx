@@ -8,6 +8,8 @@ import { CheckCircle2 } from "lucide-react";
 export type DashboardToastInput = {
   message: string;
   icon?: LucideIcon;
+  /** Durée d'affichage en ms (défaut 4000). */
+  durationMs?: number;
 };
 
 type ToastItem = DashboardToastInput & { id: string };
@@ -25,10 +27,11 @@ export function DashboardToastProvider({ children }: { children: React.ReactNode
 
   const showToast = useCallback((input: DashboardToastInput) => {
     const id = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+    const durationMs = input.durationMs ?? 4000;
     setItems((prev) => [...prev, { ...input, id }]);
     window.setTimeout(() => {
       setItems((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    }, durationMs);
   }, []);
 
   const value = useMemo(() => showToast, [showToast]);

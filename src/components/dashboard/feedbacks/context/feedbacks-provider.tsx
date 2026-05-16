@@ -98,23 +98,40 @@ export function FeedbacksProvider({
 
   const updateReadAt = useCallback(
     async (feedbackId: string, readAt: string | null) => {
+      let previousReadAt: string | null = null;
+      setFeedbackRecords((prev) => {
+        const current = prev.find((row) => row.id === feedbackId);
+        previousReadAt = current?.read_at ?? null;
+        return prev.map((row) => (row.id === feedbackId ? { ...row, read_at: readAt } : row));
+      });
       setMarkFeedbackSavingId(feedbackId);
+
       const supabase = createClient();
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("feedbacks")
         .update({ read_at: readAt })
-        .eq("id", feedbackId);
+        .eq("id", feedbackId)
+        .select("id")
+        .maybeSingle();
 
       setMarkFeedbackSavingId(null);
 
-      if (error) {
-        showToast({ message: error.message, icon: AlertCircle });
-        return;
+      if (error || !data) {
+        setFeedbackRecords((prev) =>
+          prev.map((row) => (row.id === feedbackId ? { ...row, read_at: previousReadAt } : row)),
+        );
+        showToast({
+          message: error?.message ?? "Impossible de mettre à jour le statut de lecture.",
+          icon: AlertCircle,
+        });
+        return false;
       }
 
-      setFeedbackRecords((prev) =>
-        prev.map((row) => (row.id === feedbackId ? { ...row, read_at: readAt } : row)),
-      );
+      showToast({
+        message: readAt ? "Marqué comme lu" : "Marqué comme non lu",
+        durationMs: 1500,
+      });
+      return true;
     },
     [showToast],
   );
@@ -136,25 +153,41 @@ export function FeedbacksProvider({
   const saveFeedbackNote = useCallback(
     async (feedbackId: string) => {
       const internalNote = noteDrafts[feedbackId] ?? "";
+      const trimmed = internalNote.trim() || null;
+      let previousNote: string | null = null;
+
+      setFeedbackRecords((prev) => {
+        const current = prev.find((row) => row.id === feedbackId);
+        previousNote = current?.internal_note ?? null;
+        return prev.map((row) =>
+          row.id === feedbackId ? { ...row, internal_note: trimmed } : row,
+        );
+      });
+
       setNoteSavingId(feedbackId);
       const supabase = createClient();
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("feedbacks")
-        .update({ internal_note: internalNote.trim() || null })
-        .eq("id", feedbackId);
+        .update({ internal_note: trimmed })
+        .eq("id", feedbackId)
+        .select("id")
+        .maybeSingle();
 
       setNoteSavingId(null);
 
-      if (error) {
-        showToast({ message: error.message, icon: AlertCircle });
+      if (error || !data) {
+        setFeedbackRecords((prev) =>
+          prev.map((row) =>
+            row.id === feedbackId ? { ...row, internal_note: previousNote } : row,
+          ),
+        );
+        setNoteDrafts((prev) => ({ ...prev, [feedbackId]: previousNote ?? "" }));
+        showToast({
+          message: error?.message ?? "Impossible d'enregistrer la note interne.",
+          icon: AlertCircle,
+        });
         return;
       }
-
-      setFeedbackRecords((prev) =>
-        prev.map((row) =>
-          row.id === feedbackId ? { ...row, internal_note: internalNote.trim() || null } : row,
-        ),
-      );
     },
     [noteDrafts, showToast],
   );
