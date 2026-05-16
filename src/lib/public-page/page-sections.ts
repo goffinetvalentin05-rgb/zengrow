@@ -1,5 +1,19 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isGiftCardsEnabled } from "@/src/lib/config/features";
+import type {
+  ConceptSectionDisplay,
+  FinalCtaSectionDisplay,
+  GallerySectionDisplay,
+  GiftVouchersSectionDisplay,
+  HeroSectionDisplay,
+  HighlightsSectionDisplay,
+  MenuDocumentsSectionDisplay,
+  MenuOffersSectionDisplay,
+  NavigationSectionDisplay,
+  PracticalSectionDisplay,
+  ReservationShellSectionDisplay,
+  ReviewsSectionDisplay,
+} from "@/src/lib/public-page/section-display";
 
 /** Clés persistées dans `restaurant_page_sections.section_type`. */
 export const PAGE_SECTION_TYPES = [
@@ -28,27 +42,32 @@ export type NavigationSectionData = {
   items: NavLinkContent[];
   /** Libellé du lien ancrage bons cadeaux (injecté entre menu et le reste). */
   giftNavLabel?: string;
+  display?: Partial<NavigationSectionDisplay>;
 };
 
 export type HeroSectionCopy = {
   scriptLineFallback?: string;
   scrollHintLabel?: string;
   discoverConceptLabel?: string;
+  display?: Partial<HeroSectionDisplay>;
 };
 
 export type ConceptSectionCopy = {
   eyebrow?: string;
   imageStampLabel?: string;
+  display?: Partial<ConceptSectionDisplay>;
 };
 
 export type HighlightsSectionCopy = {
   eyebrow?: string;
+  display?: Partial<HighlightsSectionDisplay>;
 };
 
 export type MenuOffersSectionCopy = {
   eyebrow?: string;
   title?: string;
   pdfButtonLabel?: string;
+  display?: Partial<MenuOffersSectionDisplay>;
 };
 
 export type GallerySectionCopy = {
@@ -60,6 +79,7 @@ export type GallerySectionCopy = {
   /** Thème default : titre sans Instagram. */
   titleIfNoInstagram?: string;
   instagramLinkLabel?: string;
+  display?: Partial<GallerySectionDisplay>;
 };
 
 export type ReviewsSectionCopy = {
@@ -67,6 +87,7 @@ export type ReviewsSectionCopy = {
   googleCtaLabel?: string;
   pressHeading?: string;
   tripAdvisorLabel?: string;
+  display?: Partial<ReviewsSectionDisplay>;
 };
 
 export type GiftVouchersSectionCopy = {
@@ -80,10 +101,12 @@ export type GiftVouchersSectionCopy = {
   fallbackTitle?: string;
   fallbackBody?: string;
   fallbackCta?: string;
+  display?: Partial<GiftVouchersSectionDisplay>;
 };
 
 export type FinalCtaSectionCopy = {
   eyebrow?: string;
+  display?: Partial<FinalCtaSectionDisplay>;
 };
 
 export type PracticalSectionCopy = {
@@ -95,11 +118,13 @@ export type PracticalSectionCopy = {
   labelParking?: string;
   labelAccessibility?: string;
   directionsLabel?: string;
+  display?: Partial<PracticalSectionDisplay>;
 };
 
 export type ReservationShellCopy = {
   eyebrow?: string;
   phonePreferLabel?: string;
+  display?: Partial<ReservationShellSectionDisplay>;
 };
 
 export type MenuDocumentsSectionCopy = {
@@ -107,6 +132,7 @@ export type MenuDocumentsSectionCopy = {
   title?: string;
   linkPrefix?: string;
   linkOpen?: string;
+  display?: Partial<MenuDocumentsSectionDisplay>;
 };
 
 /** Données éditoriales par section (séparées du rendu thème). */
@@ -138,6 +164,29 @@ function isNonEmptyObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v) && Object.keys(v as object).length > 0;
 }
 
+function mergeSectionSlice(
+  base: Record<string, unknown> | undefined,
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...(base ?? {}), ...patch };
+  const baseDisplay = base?.display;
+  const patchDisplay = patch.display;
+  if (
+    (baseDisplay && typeof baseDisplay === "object") ||
+    (patchDisplay && typeof patchDisplay === "object")
+  ) {
+    merged.display = {
+      ...(typeof baseDisplay === "object" && baseDisplay !== null && !Array.isArray(baseDisplay)
+        ? baseDisplay
+        : {}),
+      ...(typeof patchDisplay === "object" && patchDisplay !== null && !Array.isArray(patchDisplay)
+        ? patchDisplay
+        : {}),
+    };
+  }
+  return merged;
+}
+
 export function mergePageSectionContent(
   base: PageSectionContentV1,
   patch: PageSectionContentV1 | undefined,
@@ -156,7 +205,10 @@ export function mergePageSectionContent(
       !Array.isArray(bv) &&
       !Array.isArray(pv)
     ) {
-      (out as Record<string, unknown>)[k] = { ...bv, ...pv };
+      (out as Record<string, unknown>)[k] = mergeSectionSlice(
+        bv as Record<string, unknown>,
+        pv as Record<string, unknown>,
+      );
     } else {
       (out as Record<string, unknown>)[k] = pv;
     }

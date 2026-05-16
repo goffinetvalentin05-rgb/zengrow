@@ -66,6 +66,7 @@ type PublicRestaurantRow = {
   public_seo_title: string | null;
   public_seo_description: string | null;
   google_maps_url: string | null;
+  tiktok_url: string | null;
   show_public_instagram: boolean | null;
   show_public_facebook: boolean | null;
   show_public_google_maps: boolean | null;
@@ -165,6 +166,7 @@ const RESTAURANT_SELECT = [
   "public_seo_title",
   "public_seo_description",
   "google_maps_url",
+  "tiktok_url",
   "show_public_instagram",
   "show_public_facebook",
   "show_public_google_maps",
@@ -436,6 +438,32 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     resolvedVisualTheme.id as ThemeId,
     editorConfig.conversion.structureTemplate,
     rowsToPageSectionBundle(pageSectionRows ?? []),
+    {
+      contact: {
+        showAddress: safeSettings.public_page_show_address ?? true,
+        showPhone: safeSettings.public_page_show_phone ?? true,
+        showEmail: safeSettings.public_page_show_email ?? true,
+        showWebsite: safeSettings.public_page_show_website ?? true,
+        showOpeningHours: safeSettings.public_page_show_opening_hours ?? true,
+        showInstagram: restaurant.show_public_instagram !== false,
+        showFacebook: restaurant.show_public_facebook !== false,
+        showGoogleMaps: restaurant.show_public_google_maps !== false,
+      },
+      hero: {
+        showPhone: safeSettings.show_phone_cta !== false,
+        showSecondaryCta: editorConfig.hero.secondaryCtaEnabled,
+      },
+      reservation: {
+        showHoursBlock: safeSettings.show_hours_before_form !== false,
+        showPhoneAlt: safeSettings.show_phone_cta !== false,
+      },
+      gallery: {
+        showInstagramLink: restaurant.show_public_instagram !== false,
+      },
+      finalCta: {
+        showPhone: safeSettings.show_phone_cta !== false,
+      },
+    },
   );
 
   return (
@@ -522,6 +550,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           facebookUrl={safeSettings.facebook_url}
           websiteUrl={safeSettings.website_url}
           googleMapsUrl={restaurant.google_maps_url}
+          tiktokUrl={restaurant.tiktok_url}
           preBookingMessage={safeSettings.pre_booking_message}
           closureStartDate={safeSettings.closure_start_date}
           closureEndDate={safeSettings.closure_end_date}

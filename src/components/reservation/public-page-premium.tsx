@@ -1,7 +1,21 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
-import { ChevronRight, Check, Clock, Gift, MapPin, Menu, Phone, Star, X } from "lucide-react";
+import {
+  ChevronRight,
+  Check,
+  Clock,
+  Facebook,
+  Gift,
+  Globe,
+  Instagram,
+  Mail,
+  MapPin,
+  Menu,
+  Phone,
+  Star,
+  X,
+} from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { cn } from "@/src/lib/utils";
 import type { SectionSurface } from "@/src/lib/public-page/theme";
@@ -21,6 +35,14 @@ import type {
   PracticalSectionCopy,
   ReviewsSectionCopy,
 } from "@/src/lib/public-page/page-sections";
+import {
+  DEFAULT_PRACTICAL_DISPLAY,
+  practicalSectionHasVisibleContent,
+  resolveHeroDisplay,
+  resolvePracticalDisplay,
+  type HeroSectionDisplay,
+  type PracticalSectionDisplay,
+} from "@/src/lib/public-page/section-display";
 
 type CtaStyle = { className: string; style?: React.CSSProperties };
 
@@ -63,7 +85,7 @@ export function PublicPageNav({
       <header
         className={cn(
           "z-40 w-full border-b border-white/10",
-          // Reste transparent au-dessus du hero pour un rendu éditorial ; les couleurs sont définies par les CSS vars
+          // Reste transparent au-dessus du hero pour un rendu Ã©ditorial ; les couleurs sont dÃ©finies par les CSS vars
           "bg-gradient-to-b from-black/35 via-black/15 to-transparent backdrop-blur-[2px]",
           previewMode ? "sticky top-0 left-0 right-0" : "fixed inset-x-0 top-0",
         )}
@@ -164,8 +186,8 @@ export function PublicPageNav({
 
 /**
  * Hauteur minimale du hero.
- * Le hero ne doit JAMAIS imposer de max-h : c'est ce qui causait le bug "haut coupé"
- * dans l'aperçu (le contenu débordait et `overflow-hidden` + `justify-end` rognaient le haut).
+ * Le hero ne doit JAMAIS imposer de max-h : c'est ce qui causait le bug "haut coupÃ©"
+ * dans l'aperÃ§u (le contenu dÃ©bordait et `overflow-hidden` + `justify-end` rognaient le haut).
  */
 function premiumHeroMinHeight(heroHeight: "compact" | "normal" | "tall", previewMode: boolean) {
   if (previewMode) {
@@ -195,6 +217,7 @@ function HeroContentInner({
   textTheme,
   align,
   discoverConceptLabel,
+  display,
 }: {
   badgeText?: string | null;
   logoUrl?: string | null;
@@ -212,6 +235,7 @@ function HeroContentInner({
   textTheme: "onImage" | "onSurface";
   align: "left" | "center";
   discoverConceptLabel: string;
+  display: HeroSectionDisplay;
 }) {
   const isCenter = align === "center";
   const subtle = textTheme === "onImage" ? "text-white/65" : "opacity-60";
@@ -234,7 +258,7 @@ function HeroContentInner({
         isCenter && "items-center text-center",
       )}
     >
-      {badgeText?.trim() ? (
+      {display.showBadge && badgeText?.trim() ? (
         <p
           className={cn(
             "inline-flex max-w-[90vw] items-center rounded-full px-5 py-2 font-semibold uppercase tracking-[0.28em]",
@@ -245,7 +269,7 @@ function HeroContentInner({
           {badgeText.trim()}
         </p>
       ) : null}
-      {logoUrl?.trim() ? (
+      {display.showLogo && logoUrl?.trim() ? (
         <>
           <h1 className="sr-only">{headline}</h1>
           <div
@@ -274,7 +298,7 @@ function HeroContentInner({
             />
           </div>
         </>
-      ) : (
+      ) : display.showTitle ? (
         <h1
           className={cn(
             "max-w-3xl text-balance font-medium leading-[0.98] tracking-tight",
@@ -290,9 +314,9 @@ function HeroContentInner({
         >
           {headline}
         </h1>
-      )}
+      ) : null}
 
-      {tagline ? (
+      {display.showTagline && tagline ? (
         <p
           className={cn(
             "max-w-2xl text-pretty leading-[1.58]",
@@ -313,7 +337,7 @@ function HeroContentInner({
         </p>
       ) : null}
 
-      {/* — Infos secondaires (horaires / téléphone) sur une ligne discrète — */}
+      {display.showOpenStatus || (display.showPhone && showPhone && phone) ? (
       <div
         className={cn(
           "flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[13px] font-medium",
@@ -322,11 +346,13 @@ function HeroContentInner({
         )}
         style={textTheme === "onSurface" ? { color: "var(--body-text)" } : undefined}
       >
+        {display.showOpenStatus ? (
         <span className="inline-flex items-center gap-1.5">
           <Clock className="h-3.5 w-3.5" aria-hidden />
           {openStatus}
         </span>
-        {showPhone && phone ? (
+        ) : null}
+        {display.showPhone && showPhone && phone ? (
           <>
             <span
               className={cn(
@@ -345,26 +371,29 @@ function HeroContentInner({
           </>
         ) : null}
       </div>
+      ) : null}
 
-      {/* — Boutons — primary en couleur d'accent, secondary en lien fin — */}
-      <div
-        className={cn(
-          "mt-2 flex flex-col gap-3 sm:flex-row sm:items-center",
-          isCenter ? "sm:justify-center" : "sm:justify-start",
-        )}
-      >
-        <button
-          type="button"
-          onClick={onReserve}
+      {display.showPrimaryCta || display.showSecondaryCta ? (
+        <div
           className={cn(
-            ctaStyle.className,
-            "min-h-[56px] px-9 text-sm uppercase tracking-[0.18em]",
+            "mt-2 flex flex-col gap-3 sm:flex-row sm:items-center",
+            isCenter ? "sm:justify-center" : "sm:justify-start",
           )}
-          style={ctaStyle.style}
         >
-          {ctaLabel}
-        </button>
-        {showSecondary && secondaryHref ? (
+          {display.showPrimaryCta ? (
+            <button
+              type="button"
+              onClick={onReserve}
+              className={cn(
+                ctaStyle.className,
+                "min-h-[56px] px-9 text-sm uppercase tracking-[0.18em]",
+              )}
+              style={ctaStyle.style}
+            >
+              {ctaLabel}
+            </button>
+          ) : null}
+        {display.showSecondaryCta && showSecondary && secondaryHref ? (
           <a
             href={secondaryHref}
             target="_blank"
@@ -380,7 +409,7 @@ function HeroContentInner({
             <span className="border-b border-current pb-1">{secondaryLabel}</span>
             <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
           </a>
-        ) : (
+        ) : display.showSecondaryCta ? (
           <button
             type="button"
             onClick={() => scrollToId("concept")}
@@ -395,8 +424,9 @@ function HeroContentInner({
             <span className="border-b border-current pb-1">{discoverConceptLabel}</span>
             <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
           </button>
-        )}
-      </div>
+        ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -423,6 +453,7 @@ export function PremiumHero({
   previewMode = false,
   discoverConceptLabel,
   scrollHintLabel,
+  display: displayPatch,
 }: {
   badgeText?: string | null;
   coverImageUrl?: string | null;
@@ -445,13 +476,20 @@ export function PremiumHero({
   previewMode?: boolean;
   discoverConceptLabel: string;
   scrollHintLabel: string;
+  display?: Partial<HeroSectionDisplay>;
 }) {
+  const display = resolveHeroDisplay(displayPatch, {
+    showPhone,
+    showSecondaryCta: showSecondary,
+  });
+  const effectiveCoverUrl =
+    display.showCoverImage && coverImageUrl?.trim() ? coverImageUrl.trim() : null;
   const minH = premiumHeroMinHeight(heroHeight, previewMode);
   const isCenter = heroAlign === "center" || heroLayout === "center";
   const align: "left" | "center" = isCenter ? "center" : "left";
 
-  /* === LAYOUT 1 : SPLIT — image à droite, contenu sur fond clair à gauche === */
-  if (heroLayout === "split" && coverImageUrl) {
+  /* === LAYOUT 1 : SPLIT â€” image Ã  droite, contenu sur fond clair Ã  gauche === */
+  if (heroLayout === "split" && effectiveCoverUrl) {
     return (
       <section
         id="accueil"
@@ -481,12 +519,13 @@ export function PremiumHero({
                 textTheme="onSurface"
                 align="left"
                 discoverConceptLabel={discoverConceptLabel}
+                display={display}
               />
             </div>
           </div>
           <div className="relative min-h-[260px] overflow-hidden lg:min-h-full">
             <Image
-              src={coverImageUrl}
+              src={effectiveCoverUrl}
               alt=""
               fill
               priority
@@ -505,7 +544,7 @@ export function PremiumHero({
     );
   }
 
-  /* === LAYOUT 2 : CENTER — image en fond, contenu centré (style minimal/brasserie) === */
+  /* === LAYOUT 2 : CENTER â€” image en fond, contenu centrÃ© (style minimal/brasserie) === */
   if (heroLayout === "center") {
     return (
       <section
@@ -515,10 +554,10 @@ export function PremiumHero({
           minH,
         )}
       >
-        {coverImageUrl ? (
+        {effectiveCoverUrl ? (
           <div className="absolute inset-0 overflow-hidden">
             <Image
-              src={coverImageUrl}
+              src={effectiveCoverUrl}
               alt=""
               fill
               priority
@@ -564,13 +603,14 @@ export function PremiumHero({
             textTheme="onImage"
             align="center"
             discoverConceptLabel={discoverConceptLabel}
+            display={display}
           />
         </div>
       </section>
     );
   }
 
-  /* === LAYOUT 3 (DEFAULT) : OVERLAY immersif ou LEFT — image plein cadre, contenu en bas/gauche === */
+  /* === LAYOUT 3 (DEFAULT) : OVERLAY immersif ou LEFT â€” image plein cadre, contenu en bas/gauche === */
   return (
     <section
       id="accueil"
@@ -579,10 +619,10 @@ export function PremiumHero({
         minH,
       )}
     >
-      {coverImageUrl ? (
+      {effectiveCoverUrl ? (
         <div className="absolute inset-0 overflow-hidden">
           <Image
-            src={coverImageUrl}
+            src={effectiveCoverUrl}
             alt=""
             fill
             priority
@@ -600,7 +640,7 @@ export function PremiumHero({
           aria-hidden
         />
       )}
-      {/* Voile cinéma : gradient principal + vignette + chaleur accent discrète */}
+      {/* Voile cinÃ©ma : gradient principal + vignette + chaleur accent discrÃ¨te */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/42 to-black/15" aria-hidden />
       <div
         className="absolute inset-0 mix-blend-soft-light opacity-[0.38]"
@@ -620,7 +660,7 @@ export function PremiumHero({
       />
       <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} aria-hidden />
 
-      {/* Contenu : positionné dans le tiers inférieur pour un rendu cinéma */}
+      {/* Contenu : positionnÃ© dans le tiers infÃ©rieur pour un rendu cinÃ©ma */}
       <div
         className={cn(
           "relative z-[1] mx-auto mt-auto flex w-full max-w-7xl flex-col px-5 pb-14 pt-24 sm:px-8 sm:pb-20 sm:pt-28 lg:px-12 lg:pb-24",
@@ -644,15 +684,16 @@ export function PremiumHero({
           textTheme="onImage"
           align={align}
           discoverConceptLabel={discoverConceptLabel}
+          display={display}
         />
       </div>
 
       {/* Scroll hint discret, visible uniquement sur les heros immersifs et hors preview */}
-      {heroHeight === "tall" && !previewMode ? (
+      {display.showScrollHint && heroHeight === "tall" && !previewMode ? (
         <button
           type="button"
           onClick={() => scrollToId("concept")}
-          aria-label="Faire défiler vers le contenu"
+          aria-label="Faire dÃ©filer vers le contenu"
           className="absolute bottom-6 left-1/2 z-[2] -translate-x-1/2 text-white/70 transition hover:text-white"
         >
           <span className="flex flex-col items-center gap-1.5">
@@ -679,7 +720,7 @@ export function ConceptSection({
   imageUrl?: string;
   pillars: ConceptPillar[];
   eyebrow: string;
-  /** Vide = ne pas afficher le cachet sous l’image. */
+  /** Vide = ne pas afficher le cachet sous lâ€™image. */
   imageStampLabel: string;
   layout?: "image-right" | "image-left" | "stacked";
 }) {
@@ -688,7 +729,7 @@ export function ConceptSection({
   const stacked = layout === "stacked" || !imageUrl;
   const imageOnRight = layout === "image-right";
 
-  // Si le texte fait plus de 60 caractères, on active la drop-cap (capitale lettrine éditoriale).
+  // Si le texte fait plus de 60 caractÃ¨res, on active la drop-cap (capitale lettrine Ã©ditoriale).
   const enableDropCap = body.trim().length > 80 && !stacked;
   const dropCapChar = enableDropCap ? body.trim().charAt(0) : null;
   const restOfBody = enableDropCap ? body.trim().slice(1) : body;
@@ -979,7 +1020,7 @@ export function MenuOffersSection({
   const hasOffers = offers.length > 0;
   if (!hasOffers && !menuHref) return null;
 
-  // Si toutes les offres ont une image → grille de cartes premium. Sinon → menu éditorial avec ligne pointillée.
+  // Si toutes les offres ont une image â†’ grille de cartes premium. Sinon â†’ menu Ã©ditorial avec ligne pointillÃ©e.
   const allHaveImages = hasOffers && offers.every((o) => Boolean(o.imageUrl));
 
   return (
@@ -1272,7 +1313,7 @@ export function CredibilitySection({
         {data.quote.trim() ? (
           <blockquote className="mx-auto mt-10 max-w-3xl text-center">
             <p className="text-xl font-light italic leading-relaxed sm:text-2xl" style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}>
-              « {data.quote.trim()} »
+              Â« {data.quote.trim()} Â»
             </p>
             {data.quoteAuthor.trim() ? (
               <footer className="mt-4 text-sm uppercase tracking-widest opacity-70" style={{ color: "var(--body-text)" }}>
@@ -1332,7 +1373,7 @@ export function PremiumGallery({
 }) {
   if (images.length === 0) return null;
 
-  /* === STYLE SHOWCASE : 1 grande photo + mosaïque secondaire (premium) === */
+  /* === STYLE SHOWCASE : 1 grande photo + mosaÃ¯que secondaire (premium) === */
   if (style === "showcase" && images.length >= 2) {
     const [hero, ...rest] = images;
     return (
@@ -1411,7 +1452,7 @@ export function PremiumGallery({
     );
   }
 
-  /* === STYLE INSTAGRAM : grille carrée régulière, style social === */
+  /* === STYLE INSTAGRAM : grille carrÃ©e rÃ©guliÃ¨re, style social === */
   if (style === "instagram") {
     return (
       <section className="">
@@ -1480,7 +1521,7 @@ export function PremiumGallery({
     );
   }
 
-  /* === STYLE GRID (par défaut) : masonry verticale === */
+  /* === STYLE GRID (par dÃ©faut) : masonry verticale === */
   return (
     <section className="">
       <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
@@ -1564,7 +1605,7 @@ export function PremiumFinalCta({
         }}
         aria-hidden
       />
-      {/* Subtle grain (svg noise) — apporte vraiment du luxe */}
+      {/* Subtle grain (svg noise) â€” apporte vraiment du luxe */}
       <div
         className="absolute inset-0 opacity-[0.06] mix-blend-overlay"
         style={{
@@ -1574,7 +1615,7 @@ export function PremiumFinalCta({
         aria-hidden
       />
       <div className="relative mx-auto max-w-3xl px-5 py-28 text-center sm:px-8 lg:py-36">
-        {/* Eyebrow line + label centré */}
+        {/* Eyebrow line + label centrÃ© */}
         <div className="flex items-center justify-center gap-3">
           <span
             className="h-px w-10"
@@ -1645,183 +1686,7 @@ export function PremiumFinalCta({
   );
 }
 
-export function PremiumPracticalInfo({
-  address,
-  phone,
-  openingHoursLines,
-  googleMapsUrl,
-  parking,
-  accessibility,
-  showMaps,
-  copy,
-}: {
-  address?: string | null;
-  phone?: string | null;
-  openingHoursLines: string[];
-  googleMapsUrl?: string | null;
-  parking?: string;
-  accessibility?: string;
-  showMaps?: boolean;
-  copy: PracticalSectionCopy;
-}) {
-  return (
-    <section
-      id="infos"
-      className="scroll-mt-24"
-      style={{
-        backgroundColor: "var(--surface-muted, color-mix(in srgb, var(--body-text) 4%, var(--page-bg)))",
-      }}
-    >
-      <div className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-28">
-        <div className="max-w-2xl">
-          <div className="flex items-center gap-3">
-            <span
-              className="h-px w-10"
-              style={{
-                backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
-              }}
-              aria-hidden
-            />
-            <p
-              className="text-[10px] font-semibold uppercase tracking-[0.32em]"
-              style={{ color: "var(--accent-color)" }}
-            >
-              {copy.eyebrow}
-            </p>
-          </div>
-          <h2
-            className="mt-5 text-4xl font-medium leading-[1.05] sm:text-5xl"
-            style={{
-              fontFamily: "var(--heading-font)",
-              color: "var(--heading-color)",
-              letterSpacing: "-0.015em",
-            }}
-          >
-            {copy.title}
-          </h2>
-        </div>
-        <div className="mt-10 grid gap-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-12">
-          {address ? (
-            <div id="contact" className="flex flex-col gap-3">
-              <span
-                className="flex h-10 w-10 items-center justify-center rounded-full"
-                style={{
-                  backgroundColor: "color-mix(in srgb, var(--accent-color) 12%, transparent)",
-                  color: "var(--accent-color)",
-                }}
-              >
-                <MapPin className="h-5 w-5" />
-              </span>
-              <p
-                className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
-                style={{ color: "var(--heading-color)" }}
-              >
-                {copy.labelAddress}
-              </p>
-              <p
-                className="text-base leading-relaxed"
-                style={{ color: "var(--heading-color)", fontFamily: "var(--heading-font)" }}
-              >
-                {address}
-              </p>
-              {showMaps && googleMapsUrl ? (
-                <a
-                  href={googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm font-semibold uppercase tracking-[0.18em] underline-offset-4 hover:underline"
-                  style={{ color: "var(--accent-color)" }}
-                >
-                  {copy.directionsLabel}
-                  <ChevronRight className="h-4 w-4" />
-                </a>
-              ) : null}
-            </div>
-          ) : null}
-          {phone ? (
-            <div className="flex flex-col gap-3">
-              <span
-                className="flex h-10 w-10 items-center justify-center rounded-full"
-                style={{
-                  backgroundColor: "color-mix(in srgb, var(--accent-color) 12%, transparent)",
-                  color: "var(--accent-color)",
-                }}
-              >
-                <Phone className="h-5 w-5" />
-              </span>
-              <p
-                className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
-                style={{ color: "var(--heading-color)" }}
-              >
-                {copy.labelPhone}
-              </p>
-              <a
-                href={`tel:${phone.replace(/\s/g, "")}`}
-                className="text-base font-medium"
-                style={{ color: "var(--heading-color)", fontFamily: "var(--heading-font)" }}
-              >
-                {phone}
-              </a>
-            </div>
-          ) : null}
-          {openingHoursLines.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              <span
-                className="flex h-10 w-10 items-center justify-center rounded-full"
-                style={{
-                  backgroundColor: "color-mix(in srgb, var(--accent-color) 12%, transparent)",
-                  color: "var(--accent-color)",
-                }}
-              >
-                <Clock className="h-5 w-5" />
-              </span>
-              <p
-                className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
-                style={{ color: "var(--heading-color)" }}
-              >
-                {copy.labelHours}
-              </p>
-              <ul
-                className="space-y-1 text-sm leading-relaxed"
-                style={{ color: "var(--body-text)" }}
-              >
-                {openingHoursLines.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-          {parking?.trim() ? (
-            <div className="flex flex-col gap-3">
-              <p
-                className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
-                style={{ color: "var(--heading-color)" }}
-              >
-                {copy.labelParking}
-              </p>
-              <p className="text-sm leading-relaxed" style={{ color: "var(--body-text)" }}>
-                {parking}
-              </p>
-            </div>
-          ) : null}
-          {accessibility?.trim() ? (
-            <div className="flex flex-col gap-3">
-              <p
-                className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-60"
-                style={{ color: "var(--heading-color)" }}
-              >
-                {copy.labelAccessibility}
-              </p>
-              <p className="text-sm leading-relaxed" style={{ color: "var(--body-text)" }}>
-                {accessibility}
-              </p>
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </section>
-  );
-}
+export { PremiumPracticalInfo } from "@/src/components/reservation/premium-practical-info";
 
 export function PremiumReservationSection({
   title,
@@ -2042,15 +1907,15 @@ export function GiftVouchersSection({
     e.preventDefault();
     setErr(null);
     if (previewMode) {
-      setErr("L’envoi est désactivé dans l’aperçu du tableau de bord.");
+      setErr("Lâ€™envoi est dÃ©sactivÃ© dans lâ€™aperÃ§u du tableau de bord.");
       return;
     }
     if (!restaurantSlug.trim()) {
-      setErr("Impossible d’envoyer la demande pour le moment.");
+      setErr("Impossible dâ€™envoyer la demande pour le moment.");
       return;
     }
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      setErr("Merci de remplir au minimum prénom, nom et e-mail.");
+      setErr("Merci de remplir au minimum prÃ©nom, nom et e-mail.");
       return;
     }
     setBusy(true);
@@ -2072,7 +1937,7 @@ export function GiftVouchersSection({
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean };
       if (!res.ok || !data.ok) {
-        setErr(data.error ?? "Envoi impossible. Réessayez plus tard.");
+        setErr(data.error ?? "Envoi impossible. RÃ©essayez plus tard.");
         setBusy(false);
         return;
       }
@@ -2087,7 +1952,7 @@ export function GiftVouchersSection({
       setOccasion("");
       setMessage("");
     } catch {
-      setErr("Erreur réseau. Réessayez plus tard.");
+      setErr("Erreur rÃ©seau. RÃ©essayez plus tard.");
     } finally {
       setBusy(false);
     }
@@ -2263,7 +2128,7 @@ export function GiftVouchersSection({
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
-                  <span className="text-xs font-semibold uppercase tracking-wide opacity-80">Prénom</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide opacity-80">PrÃ©nom</span>
                   <input
                     required
                     className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
@@ -2310,7 +2175,7 @@ export function GiftVouchersSection({
                 />
               </label>
               <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wide opacity-80">Téléphone (optionnel)</span>
+                <span className="text-xs font-semibold uppercase tracking-wide opacity-80">TÃ©lÃ©phone (optionnel)</span>
                 <input
                   type="tel"
                   className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
@@ -2326,7 +2191,7 @@ export function GiftVouchersSection({
               </label>
               <label className="block">
                 <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
-                  Montant souhaité (ex. 80€)
+                  Montant souhaitÃ© (ex. 80â‚¬)
                 </span>
                 <input
                   className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
@@ -2341,7 +2206,7 @@ export function GiftVouchersSection({
               </label>
               <label className="block">
                 <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
-                  Nom du bénéficiaire (optionnel)
+                  Nom du bÃ©nÃ©ficiaire (optionnel)
                 </span>
                 <input
                   className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
@@ -2360,7 +2225,7 @@ export function GiftVouchersSection({
                 </span>
                 <input
                   className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
-                  placeholder="Anniversaire, Noël…"
+                  placeholder="Anniversaire, NoÃ«lâ€¦"
                   style={{
                     borderColor: "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
                     backgroundColor: "color-mix(in srgb, var(--body-text) 4%, var(--page-bg))",

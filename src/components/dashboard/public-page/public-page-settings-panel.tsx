@@ -80,7 +80,20 @@ import {
 import {
   pageSectionsOverlayForPersistence,
   resolvePublicPageSectionContent,
+  type SectionDisplayLegacyHints,
 } from "@/src/lib/public-page/resolve-public-page-copy";
+import {
+  HERO_DISPLAY_TOGGLE_OPTIONS,
+  PRACTICAL_DISPLAY_TOGGLE_OPTIONS,
+  resolveHeroDisplay,
+  resolvePracticalDisplay,
+  practicalDisplayToLegacySettings,
+} from "@/src/lib/public-page/section-display";
+import {
+  patchHeroDisplay,
+  patchPracticalDisplay,
+} from "@/src/lib/public-page/patch-section-display";
+import SectionDisplayToggles from "@/src/components/dashboard/public-page/section-display-toggles";
 import { newMenuOffer } from "@/src/lib/public-page/premium-content";
 import { mergePageSectionContent, type PageSectionContentV1 } from "@/src/lib/public-page/page-sections";
 import {
@@ -119,6 +132,23 @@ const PAGE_SECTIONS: { id: PageBlockId; label: string; description: string }[] =
 const VISIBLE_PAGE_SECTIONS = PAGE_SECTIONS.filter(
   (section) => isGiftCardsEnabled() || section.id !== "gift_vouchers",
 );
+
+function sectionDisplayLegacyFromInitial(
+  initial: PublicPageSettingsInitial,
+): SectionDisplayLegacyHints {
+  return {
+    contact: {
+      showAddress: initial.showPublicAddress,
+      showPhone: initial.showPublicPhone,
+      showEmail: initial.showPublicEmail,
+      showWebsite: initial.showPublicWebsite,
+      showOpeningHours: initial.showPublicOpeningHours,
+      showInstagram: initial.showPublicInstagram,
+      showFacebook: initial.showPublicFacebook,
+      showGoogleMaps: initial.showPublicGoogleMaps,
+    },
+  };
+}
 
 function applyPageSectionPatch(
   c: PublicPageEditorConfig,
@@ -427,6 +457,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           normalizeThemeId(initial.themeId),
           base.conversion.structureTemplate,
           initial.pageSectionsFromDb,
+          sectionDisplayLegacyFromInitial(initial),
         ),
       });
     });
@@ -501,6 +532,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             themeId,
             c.conversion.structureTemplate,
             initial.pageSectionsFromDb,
+            sectionDisplayLegacyFromInitial(initial),
           ),
         }),
       );
@@ -515,6 +547,26 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const [isUploadingMenuPdf, setIsUploadingMenuPdf] = useState(false);
 
     const displayName = name.trim() || "Restaurant";
+    const practicalDisplayResolved = useMemo(
+      () =>
+        resolvePracticalDisplay(
+          editorConfig.pageSections?.practical?.display,
+          sectionDisplayLegacyFromInitial(initial).contact,
+        ),
+      [editorConfig.pageSections?.practical?.display, initial],
+    );
+    const heroDisplayResolved = useMemo(
+      () =>
+        resolveHeroDisplay(editorConfig.pageSections?.hero?.display, {
+          showPhone: showPhoneCta,
+          showSecondaryCta: editorConfig.hero.secondaryCtaEnabled,
+        }),
+      [
+        editorConfig.pageSections?.hero?.display,
+        editorConfig.hero.secondaryCtaEnabled,
+        showPhoneCta,
+      ],
+    );
     const effectiveSlug = sanitizePublicSlug(slug || name);
     const publicPath = publicLinkBase.replace(/\/r\/[^/]+$/, `/r/${effectiveSlug}`);
 
@@ -1009,6 +1061,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       // et la typographie : les colonnes plates sont synchronisées à partir
       // de cette source pour rester cohérentes après refresh / publication.
       const a = editorConfig.appearance;
+      const practicalLegacy = practicalDisplayToLegacySettings(practicalDisplayResolved);
       return {
         name: name.trim(),
         slug: effectiveSlug,
@@ -1044,6 +1097,9 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         public_hero_height: heroHeight,
         google_maps_url: googleMapsUrl.trim() || null,
         tiktok_url: tiktokUrl.trim() || null,
+        show_public_instagram: practicalLegacy.show_public_instagram,
+        show_public_facebook: practicalLegacy.show_public_facebook,
+        show_public_google_maps: practicalLegacy.show_public_google_maps,
         public_seo_title: seoTitle.trim().slice(0, 70) || null,
         public_seo_description: seoDescription.trim().slice(0, 160) || null,
         public_page_status: pageStatus,
@@ -1077,6 +1133,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
       publishedAt,
       themeId,
       themeOverrides,
+      practicalDisplayResolved,
     ]);
 
     const getSettingsUpdate = useCallback(
@@ -1091,6 +1148,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             : a.borderRadius === "premium"
               ? "pill"
               : "rounded";
+        const practicalLegacy = practicalDisplayToLegacySettings(practicalDisplayResolved);
         return {
           logo_url: logoUrl.trim() || null,
           cover_image_url: coverImageUrl.trim() || null,
@@ -1111,6 +1169,11 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           no_slots_message: noSlotsMessage.trim() || null,
           show_hours_before_form: showHoursBeforeForm,
           show_phone_cta: showPhoneCta,
+          public_page_show_address: practicalLegacy.public_page_show_address,
+          public_page_show_phone: practicalLegacy.public_page_show_phone,
+          public_page_show_email: practicalLegacy.public_page_show_email,
+          public_page_show_website: practicalLegacy.public_page_show_website,
+          public_page_show_opening_hours: practicalLegacy.public_page_show_opening_hours,
           // Toutes les valeurs visuelles sont synchronisées depuis editorConfig.appearance.
           accent_color: normalizeHexColor(a.accentColor),
           button_color: normalizeHexColor(a.accentColor),
@@ -1144,6 +1207,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         noSlotsMessage,
         showHoursBeforeForm,
         showPhoneCta,
+        practicalDisplayResolved,
       ],
     );
 
@@ -1504,6 +1568,24 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             </div>
 
           </div>
+
+          <SectionDisplayToggles
+            className="mt-6 border-t border-zg-border/60 pt-6"
+            display={heroDisplayResolved}
+            options={HERO_DISPLAY_TOGGLE_OPTIONS}
+            availability={{
+              showCoverImage: Boolean(coverImageUrl.trim()),
+              showLogo: Boolean(logoUrl.trim()),
+              showBadge: Boolean(editorConfig.hero.badgeText?.trim()),
+              showPhone: Boolean(phone.trim()),
+              showSecondaryCta: editorConfig.hero.secondaryCtaEnabled,
+            }}
+            onChange={(key, value) => {
+              setEditorConfig((c) => parseEditorConfig(patchHeroDisplay(c, key, value)));
+              markDirty();
+              showToast({ message: "Affichage mis à jour", icon: CheckCircle2 });
+            }}
+          />
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {themeId === "default" ? (
@@ -2616,6 +2698,33 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
 
                   {enabled && section.id === "location" ? (
                     <div className="space-y-3 border-t border-zg-border/60 p-4">
+                      <SectionDisplayToggles
+                        display={practicalDisplayResolved}
+                        options={PRACTICAL_DISPLAY_TOGGLE_OPTIONS}
+                        availability={{
+                          showDirections: Boolean(googleMapsUrl.trim()),
+                          showEmail: Boolean(email.trim()),
+                          showWebsite: Boolean(websiteUrl.trim()),
+                          showParking: Boolean(editorConfig.premium.practical.parking.trim()),
+                          showAccessibility: Boolean(
+                            editorConfig.premium.practical.accessibility.trim(),
+                          ),
+                          showInstagram: Boolean(instagramUrl.trim()),
+                          showFacebook: Boolean(facebookUrl.trim()),
+                          showTiktok: Boolean(tiktokUrl.trim()),
+                        }}
+                        onChange={(key, value) => {
+                          setEditorConfig((c) =>
+                            parseEditorConfig(patchPracticalDisplay(c, key, value)),
+                          );
+                          markDirty();
+                          showToast({ message: "Affichage mis à jour", icon: CheckCircle2 });
+                        }}
+                      />
+                      <div className="space-y-3 border-t border-zg-border/60 pt-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zg-muted">
+                          Contenu
+                        </p>
                       <div>
                         <label className="dashboard-field-label">Adresse complète</label>
                         <Input
@@ -2667,6 +2776,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                           }}
                           placeholder="https://maps.google.com/…"
                         />
+                      </div>
                       </div>
                     </div>
                   ) : null}

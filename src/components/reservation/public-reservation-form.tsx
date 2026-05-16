@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
@@ -84,14 +84,14 @@ import {
 
 export type PublicReservationFormProps = {
   previewMode?: boolean;
-  /** Thème visuel page publique (`default` = rendu historique inchangé côté structure). */
+  /** ThÃ¨me visuel page publique (`default` = rendu historique inchangÃ© cÃ´tÃ© structure). */
   visualThemeId?: ThemeId;
-  /** Variables CSS fusionnées depuis `resolvePublicTheme` (premium uniquement). */
+  /** Variables CSS fusionnÃ©es depuis `resolvePublicTheme` (premium uniquement). */
   themeCssVarOverrides?: Record<string, string>;
-  /** Grain SVG (thèmes premium avec `effects.grain`). */
+  /** Grain SVG (thÃ¨mes premium avec `effects.grain`). */
   showGrainOverlay?: boolean;
   restaurantId: string;
-  /** Slug URL publique `/r/[slug]` — requis pour les demandes de bons cadeaux. */
+  /** Slug URL publique `/r/[slug]` â€” requis pour les demandes de bons cadeaux. */
   restaurantSlug: string;
   restaurantName: string;
   heroTitle?: string | null;
@@ -139,9 +139,9 @@ export type PublicReservationFormProps = {
   heroBadgeText?: string;
   heroLayout?: "left" | "center" | "overlay" | "split";
   heroAlign?: "left" | "center" | "right";
-  /** Contenu éditorial des sections (résolu serveur ou issu de l’éditeur). */
+  /** Contenu Ã©ditorial des sections (rÃ©solu serveur ou issu de lâ€™Ã©diteur). */
   sectionContent?: PageSectionContentV1;
-  /** Variantes de mise en page par section (thèmes premium). */
+  /** Variantes de mise en page par section (thÃ¨mes premium). */
   sectionLayoutVariants?: SectionLayoutVariantsMap;
   editorConfig?: PublicPageEditorConfig;
   fontSizeScale: "small" | "medium" | "large";
@@ -158,17 +158,18 @@ export type PublicReservationFormProps = {
   showPublicGoogleMaps: boolean;
   instagramUrl?: string | null;
   facebookUrl?: string | null;
+  tiktokUrl?: string | null;
   websiteUrl?: string | null;
   googleMapsUrl?: string | null;
   preBookingMessage?: string | null;
   closureStartDate?: string | null;
   closureEndDate?: string | null;
   closureMessage?: string | null;
-  /** Si vrai, le client doit choisir salle ou terrasse (paramètres restaurant). */
+  /** Si vrai, le client doit choisir salle ou terrasse (paramÃ¨tres restaurant). */
   terraceEnabled?: boolean;
-  /** Label terrasse affiché au client (ex. Patio). */
+  /** Label terrasse affichÃ© au client (ex. Patio). */
   terraceLabel?: string;
-  /** Capacité max terrasse (affichage indicatif). */
+  /** CapacitÃ© max terrasse (affichage indicatif). */
   terraceCapacity?: number;
 };
 
@@ -302,6 +303,7 @@ export default function PublicReservationForm({
   showPublicGoogleMaps,
   instagramUrl,
   facebookUrl,
+  tiktokUrl,
   websiteUrl,
   googleMapsUrl,
   preBookingMessage,
@@ -462,14 +464,14 @@ export default function PublicReservationForm({
   }, [effectiveConfig.hero.height, heroHeight]);
 
   /**
-   * Source unique de vérité pour les variables visuelles :
-   * `effectiveConfig.appearance` est mis à jour en temps réel par le dashboard
-   * et reflète exactement ce que l'utilisateur a choisi.
-   * Les props anciens (`headingFont`, `buttonBgColor`, etc.) ne sont conservés
+   * Source unique de vÃ©ritÃ© pour les variables visuelles :
+   * `effectiveConfig.appearance` est mis Ã  jour en temps rÃ©el par le dashboard
+   * et reflÃ¨te exactement ce que l'utilisateur a choisi.
+   * Les props anciens (`headingFont`, `buttonBgColor`, etc.) ne sont conservÃ©s
    * que comme fallback pour les pages legacy sans editorConfig.
    */
   const appearance = effectiveConfig.appearance;
-  // CTA / accent = même couleur : c'est la couleur d'action choisie par l'utilisateur.
+  // CTA / accent = mÃªme couleur : c'est la couleur d'action choisie par l'utilisateur.
   const effButtonBg = appearance.accentColor || buttonBgColor;
   const effButtonText = appearance.buttonTextColor || buttonTextColor;
   const effHeadingFont = appearance.headingFont || headingFont;
@@ -570,7 +572,7 @@ export default function PublicReservationForm({
     };
   }, [effButtonStyle]);
 
-  /* eslint-disable react-hooks/set-state-in-effect -- chargement asynchrone des créneaux et indicateurs associés */
+  /* eslint-disable react-hooks/set-state-in-effect -- chargement asynchrone des crÃ©neaux et indicateurs associÃ©s */
   useEffect(() => {
     if (previewMode) return;
     if (
@@ -588,7 +590,7 @@ export default function PublicReservationForm({
     if (reservationDate > maxDateStr) {
       queueMicrotask(() => {
         setAvailabilitySlots([]);
-        setSlotsError("Cette date dépasse la fenêtre de réservation autorisée.");
+        setSlotsError("Cette date dÃ©passe la fenÃªtre de rÃ©servation autorisÃ©e.");
       });
       return;
     }
@@ -613,7 +615,7 @@ export default function PublicReservationForm({
         if (!cancelled) {
           setAvailabilitySlots([]);
           setSlotsByZone({ interior: [], terrace: [] });
-          setSlotsError(err instanceof Error ? err.message : "Impossible de charger les créneaux.");
+          setSlotsError(err instanceof Error ? err.message : "Impossible de charger les crÃ©neaux.");
         }
       })
       .finally(() => {
@@ -719,7 +721,7 @@ export default function PublicReservationForm({
         ? `${closureMessage.trim()} - `
         : "";
       setError(
-        `${closureLabel}Le restaurant est fermé du ${closureStartDate} au ${closureEndDate}. Les réservations restent disponibles après cette période.`,
+        `${closureLabel}Le restaurant est fermÃ© du ${closureStartDate} au ${closureEndDate}. Les rÃ©servations restent disponibles aprÃ¨s cette pÃ©riode.`,
       );
       setIsSubmitting(false);
       return;
@@ -727,13 +729,13 @@ export default function PublicReservationForm({
 
     const guestName = `${guestFirstName.trim()} ${guestLastName.trim()}`.trim();
     if (!guestName) {
-      setError("Le prénom et le nom sont requis.");
+      setError("Le prÃ©nom et le nom sont requis.");
       setIsSubmitting(false);
       return;
     }
 
     if ((allowEmail ?? true) && !guestEmail.trim()) {
-      setError("L’adresse e-mail est requise.");
+      setError("Lâ€™adresse e-mail est requise.");
       setIsSubmitting(false);
       return;
     }
@@ -745,13 +747,13 @@ export default function PublicReservationForm({
     }
 
     if ((allowPhone ?? true) && !guestPhone.trim()) {
-      setError("Le numéro de téléphone est requis.");
+      setError("Le numÃ©ro de tÃ©lÃ©phone est requis.");
       setIsSubmitting(false);
       return;
     }
 
     if (guestPhone.trim() && guestPhone.trim().replace(/\D/g, "").length < 8) {
-      setError("Numéro de téléphone invalide (minimum 8 chiffres).");
+      setError("NumÃ©ro de tÃ©lÃ©phone invalide (minimum 8 chiffres).");
       setIsSubmitting(false);
       return;
     }
@@ -771,7 +773,7 @@ export default function PublicReservationForm({
       : availabilitySlots;
 
     if (!zoneSlotsCheck.some((s) => s.time === reservationTime)) {
-      setError("Ce créneau n'est plus disponible. Veuillez choisir une autre heure.");
+      setError("Ce crÃ©neau n'est plus disponible. Veuillez choisir une autre heure.");
       setIsSubmitting(false);
       return;
     }
@@ -793,7 +795,7 @@ export default function PublicReservationForm({
     const payload = (await response.json().catch(() => ({}))) as { error?: string; status?: string };
 
     if (!response.ok) {
-      setError(payload.error ?? "Impossible d'enregistrer votre réservation.");
+      setError(payload.error ?? "Impossible d'enregistrer votre rÃ©servation.");
       setIsSubmitting(false);
       return;
     }
@@ -801,8 +803,8 @@ export default function PublicReservationForm({
     const isConfirmed = payload.status === "confirmed";
     setMessage(
       isConfirmed
-        ? "Votre réservation est confirmée. Un e-mail de confirmation vous a été envoyé."
-        : "Votre demande de réservation a été enregistrée. Si vous avez indiqué une adresse e-mail, un accusé de réception vous a été envoyé.",
+        ? "Votre rÃ©servation est confirmÃ©e. Un e-mail de confirmation vous a Ã©tÃ© envoyÃ©."
+        : "Votre demande de rÃ©servation a Ã©tÃ© enregistrÃ©e. Si vous avez indiquÃ© une adresse e-mail, un accusÃ© de rÃ©ception vous a Ã©tÃ© envoyÃ©.",
     );
     setGuestFirstName("");
     setGuestLastName("");
@@ -825,7 +827,7 @@ export default function PublicReservationForm({
   );
   const closureNotice =
     closureStartDate && closureEndDate
-      ? `Le restaurant est fermé du ${closureStartDate} au ${closureEndDate}. Les réservations restent disponibles après cette période.`
+      ? `Le restaurant est fermÃ© du ${closureStartDate} au ${closureEndDate}. Les rÃ©servations restent disponibles aprÃ¨s cette pÃ©riode.`
       : null;
 
   const headlineText = heroTitle?.trim() || restaurantName;
@@ -838,24 +840,28 @@ export default function PublicReservationForm({
 
   const openingHoursLines = formatOpeningHoursLines(openingHours);
 
-  const showAddressRow = showPublicAddress && Boolean(restaurantAddress?.trim());
-  const showPhoneRow = showPublicPhone && Boolean(restaurantPhone?.trim());
-  const showEmailRow = showPublicEmail && Boolean(restaurantEmail?.trim());
-  const showWebsiteRow = showPublicWebsite && Boolean(websiteUrl?.trim());
-  const showMapsRow = showPublicGoogleMaps && Boolean(googleMapsUrl?.trim());
-  const showHoursRow = showPublicOpeningHours;
-  const showInstagram = showPublicInstagram && Boolean(instagramUrl?.trim());
-  const showFacebook = showPublicFacebook && Boolean(facebookUrl?.trim());
-
-  const hasFooterContent =
-    showAddressRow ||
-    showPhoneRow ||
-    showEmailRow ||
-    showWebsiteRow ||
-    showMapsRow ||
-    showHoursRow ||
-    showInstagram ||
-    showFacebook;
+  const legacyContactHints = useMemo(
+    () => ({
+      showAddress: showPublicAddress,
+      showPhone: showPublicPhone,
+      showEmail: showPublicEmail,
+      showWebsite: showPublicWebsite,
+      showOpeningHours: showPublicOpeningHours,
+      showInstagram: showPublicInstagram,
+      showFacebook: showPublicFacebook,
+      showGoogleMaps: showPublicGoogleMaps,
+    }),
+    [
+      showPublicAddress,
+      showPublicPhone,
+      showPublicEmail,
+      showPublicWebsite,
+      showPublicOpeningHours,
+      showPublicInstagram,
+      showPublicFacebook,
+      showPublicGoogleMaps,
+    ],
+  );
 
   const labelClass = "block text-xs font-semibold uppercase tracking-[0.18em]";
   const iconRing =
@@ -871,7 +877,7 @@ export default function PublicReservationForm({
   const overlayOpacity = Math.min(80, Math.max(0, heroOverlayOpacity)) / 100;
 
   const blockEnabled = (id: PageBlockId) => {
-    // GIFT_CARDS feature flag — réactivable
+    // GIFT_CARDS feature flag â€” rÃ©activable
     if (isGiftVouchersBlockId(id) && !isGiftCardsEnabled()) return false;
     return effectiveConfig.blocks[id]?.enabled !== false;
   };
@@ -879,9 +885,47 @@ export default function PublicReservationForm({
   const resolvedSectionContent = useMemo(
     () =>
       sectionContent ??
-      resolvePublicPageSectionContent(visualThemeId, effectiveConfig.conversion.structureTemplate, {}),
-    [sectionContent, visualThemeId, effectiveConfig.conversion.structureTemplate],
+      resolvePublicPageSectionContent(
+        visualThemeId,
+        effectiveConfig.conversion.structureTemplate,
+        {},
+        {
+          contact: legacyContactHints,
+          hero: {
+            showPhone: showPhoneCta,
+            showSecondaryCta: effectiveConfig.hero.secondaryCtaEnabled,
+          },
+          reservation: {
+            showHoursBlock: showHoursBeforeForm,
+            showPhoneAlt: showPhoneCta,
+          },
+          gallery: { showInstagramLink: showPublicInstagram },
+          finalCta: { showPhone: showPhoneCta },
+        },
+      ),
+    [
+      sectionContent,
+      visualThemeId,
+      effectiveConfig.conversion.structureTemplate,
+      effectiveConfig.hero.secondaryCtaEnabled,
+      legacyContactHints,
+      showPhoneCta,
+      showHoursBeforeForm,
+      showPublicInstagram,
+    ],
   );
+
+  const practicalDisplay = resolvedSectionContent.practical?.display;
+  const galleryDisplay = resolvedSectionContent.gallery?.display;
+  const showAddressRow = Boolean(practicalDisplay?.showAddress && restaurantAddress?.trim());
+  const showPhoneRow = Boolean(practicalDisplay?.showPhone && restaurantPhone?.trim());
+  const showEmailRow = Boolean(practicalDisplay?.showEmail && restaurantEmail?.trim());
+  const showWebsiteRow = Boolean(practicalDisplay?.showWebsite && websiteUrl?.trim());
+  const showHoursRow = Boolean(practicalDisplay?.showHours && openingHoursLines.length > 0);
+  const showInstagram =
+    Boolean(galleryDisplay?.showInstagramLink && instagramUrl?.trim()) ||
+    Boolean(practicalDisplay?.showInstagram && instagramUrl?.trim());
+  const showFacebook = Boolean(practicalDisplay?.showFacebook && facebookUrl?.trim());
 
   const navLinksPublic = useMemo(
     () => buildPublicNavLinks(resolvedSectionContent.navigation, blockEnabled("gift_vouchers")),
@@ -904,7 +948,7 @@ export default function PublicReservationForm({
     descriptionText ||
     effectiveConfig.blockContent.about.body.trim();
   const conceptTitle =
-    premium.concept.title.trim() || effectiveConfig.blockContent.about.title || "Notre expérience";
+    premium.concept.title.trim() || effectiveConfig.blockContent.about.title || "Notre expÃ©rience";
   const conceptImage =
     premium.concept.imageUrl.trim() || galleryImageUrls[0] || coverImageUrl || "";
 
@@ -1018,6 +1062,7 @@ export default function PublicReservationForm({
             previewMode={previewMode}
             discoverConceptLabel={resolvedSectionContent.hero?.discoverConceptLabel ?? ""}
             scrollHintLabel={resolvedSectionContent.hero?.scrollHintLabel ?? ""}
+            display={resolvedSectionContent.hero?.display}
           />
         </>
       )}
@@ -1173,7 +1218,7 @@ export default function PublicReservationForm({
             <form className="flex min-h-0 flex-col gap-5" onSubmit={handleSubmit}>
               {closureNotice ? (
                 <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-950">
-                  {closureMessage?.trim() ? `${closureMessage.trim()} — ${closureNotice}` : closureNotice}
+                  {closureMessage?.trim() ? `${closureMessage.trim()} â€” ${closureNotice}` : closureNotice}
                 </div>
               ) : null}
               {preBookingMessage ? (
@@ -1189,7 +1234,7 @@ export default function PublicReservationForm({
                 </div>
               ) : null}
 
-              <nav aria-label="Étapes" className="w-full px-1">
+              <nav aria-label="Ã‰tapes" className="w-full px-1">
                 <ol className="flex w-full list-none items-center justify-between gap-1 p-0">
                   {Array.from({ length: totalSteps }, (_, i) => i + 1).map((n, idx) => {
                     const active = wizardStep === n;
@@ -1315,7 +1360,7 @@ export default function PublicReservationForm({
                         className="text-center text-sm font-medium tabular-nums sm:text-base"
                         style={{ color: "var(--heading-color)" }}
                       >
-                        {reservationDate ? formatDateDdMmYyyy(reservationDate) : "—"}
+                        {reservationDate ? formatDateDdMmYyyy(reservationDate) : "â€”"}
                       </p>
                     </div>
                   </div>
@@ -1346,7 +1391,7 @@ export default function PublicReservationForm({
                                   }
                             }
                           >
-                            Intérieur
+                            IntÃ©rieur
                           </button>
                           <button
                             type="button"
@@ -1458,7 +1503,7 @@ export default function PublicReservationForm({
                   <div className="flex flex-col gap-4">
                     {slotsLoading ? (
                       <p className="text-center text-sm" style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}>
-                        Chargement des créneaux…
+                        Chargement des crÃ©neauxâ€¦
                       </p>
                     ) : slotsError ? (
                       <p className="text-center text-sm text-amber-800">{slotsError}</p>
@@ -1468,7 +1513,7 @@ export default function PublicReservationForm({
                           className="text-center text-sm"
                           style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
                         >
-                          {noSlotsMessage?.trim() || "Aucun créneau disponible pour cette date."}
+                          {noSlotsMessage?.trim() || "Aucun crÃ©neau disponible pour cette date."}
                         </p>
                         <button
                           type="button"
@@ -1516,7 +1561,7 @@ export default function PublicReservationForm({
                         className="text-center text-sm"
                         style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
                       >
-                        Vérification des places…
+                        VÃ©rification des placesâ€¦
                       </p>
                     ) : (
                       <SeatingZonePicker
@@ -1542,7 +1587,7 @@ export default function PublicReservationForm({
                           className={labelClass}
                           style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}
                         >
-                          Prénom
+                          PrÃ©nom
                         </label>
                         <Input
                           id="guest-first-name"
@@ -1595,7 +1640,7 @@ export default function PublicReservationForm({
                     ) : null}
                     <div className="space-y-2">
                       <label htmlFor="phone" className={labelClass} style={{ color: "color-mix(in srgb, var(--body-text) 65%, var(--page-bg))" }}>
-                        Téléphone
+                        TÃ©lÃ©phone
                       </label>
                       <Input
                         id="phone"
@@ -1667,7 +1712,7 @@ export default function PublicReservationForm({
                           : { backgroundColor: "var(--button-bg)", color: "var(--button-text)" }),
                     }}
                   >
-                    {isSubmitting ? "Envoi en cours…" : "Confirmer la réservation"}
+                    {isSubmitting ? "Envoi en coursâ€¦" : "Confirmer la rÃ©servation"}
                   </button>
                 )}
               </div>
@@ -1688,8 +1733,8 @@ export default function PublicReservationForm({
         ) : showPhoneCta && showPhoneRow ? (
         <section id="reservation" className="scroll-mt-24">
           <div className={cardShell} style={{ backgroundColor: "color-mix(in srgb, var(--body-text) 7%, var(--page-bg))", borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))" }}>
-            <h2 className="text-2xl font-medium" style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}>Réserver</h2>
-            <p className="mt-3 text-sm" style={{ color: "var(--body-text)" }}>Les réservations en ligne sont désactivées. Appelez-nous pour réserver.</p>
+            <h2 className="text-2xl font-medium" style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}>RÃ©server</h2>
+            <p className="mt-3 text-sm" style={{ color: "var(--body-text)" }}>Les rÃ©servations en ligne sont dÃ©sactivÃ©es. Appelez-nous pour rÃ©server.</p>
             <a href={`tel:${restaurantPhone!.replace(/\s/g, "")}`} className="mt-6 inline-flex min-h-[48px] items-center justify-center rounded-[var(--radius)] px-6 text-sm font-semibold" style={{ backgroundColor: "var(--button-bg)", color: "var(--button-text)" }}>
               <Phone className="mr-2 h-4 w-4" /> {restaurantPhone}
             </a>
@@ -1773,7 +1818,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {/* GIFT_CARDS feature flag — réactivable */}
+        {/* GIFT_CARDS feature flag â€” rÃ©activable */}
         {blockEnabled("gift_vouchers") ? (
           <div style={{ order: sectionOrderIndex("gift_vouchers") }}>
             <GiftVouchersSection
@@ -1819,17 +1864,21 @@ export default function PublicReservationForm({
         visible={!previewMode && conversionCta.showSticky && reservationEnabled && blockEnabled("reservation")}
       />
 
-      {blockEnabled("location") && hasFooterContent ? (
-        <>
-          <PremiumPracticalInfo
-            address={showAddressRow ? restaurantAddress : null}
-            phone={showPhoneRow ? restaurantPhone : null}
-            openingHoursLines={showHoursRow ? openingHoursLines : []}
-            googleMapsUrl={googleMapsUrl}
-            parking={premium.practical.parking}
-            accessibility={premium.practical.accessibility}
-            showMaps={showMapsRow}
-            copy={{
+      {blockEnabled("location") ? (
+        <PremiumPracticalInfo
+          address={restaurantAddress}
+          phone={restaurantPhone}
+          email={restaurantEmail}
+          websiteUrl={websiteUrl}
+          openingHoursLines={openingHoursLines}
+          googleMapsUrl={googleMapsUrl}
+          parking={premium.practical.parking}
+          accessibility={premium.practical.accessibility}
+          instagramUrl={instagramUrl}
+          facebookUrl={facebookUrl}
+          tiktokUrl={tiktokUrl}
+          display={practicalDisplay}
+          copy={{
               eyebrow: resolvedSectionContent.practical?.eyebrow ?? "",
               title: resolvedSectionContent.practical?.title ?? "",
               labelAddress: resolvedSectionContent.practical?.labelAddress ?? "",
@@ -1839,24 +1888,7 @@ export default function PublicReservationForm({
               labelAccessibility: resolvedSectionContent.practical?.labelAccessibility ?? "",
               directionsLabel: resolvedSectionContent.practical?.directionsLabel ?? "",
             }}
-          />
-          {(showInstagram || showFacebook) && blockEnabled("social") ? (
-            <div className="py-10">
-              <div className="mx-auto flex max-w-7xl justify-center gap-4 px-5">
-                {showInstagram ? (
-                  <a href={instagramUrl!} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="opacity-70 transition hover:opacity-100">
-                    <Instagram className="h-6 w-6" />
-                  </a>
-                ) : null}
-                {showFacebook ? (
-                  <a href={facebookUrl!} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="opacity-70 transition hover:opacity-100">
-                    <Facebook className="h-6 w-6" />
-                  </a>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-        </>
+        />
       ) : null}
     </div>
   );
