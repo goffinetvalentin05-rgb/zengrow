@@ -1,10 +1,35 @@
 import Link from "next/link";
-import CustomersPanel, { type CustomerRow } from "@/src/components/dashboard/customers-panel";
+import { subMonths } from "date-fns";
+import CustomersPage from "@/src/components/dashboard/customers/customers-page";
+import type { CustomerRecord } from "@/src/components/dashboard/customers/types";
+import {
+  computeCustomerKpis,
+  countCustomersCreatedBetween,
+} from "@/src/components/dashboard/customers/utils/customer-kpis";
 import { requireRestaurantSession } from "@/src/lib/auth";
+import {
+  endOfBusinessYmdAsUtcIso,
+  monthBoundsInBusinessTz,
+  startOfBusinessYmdAsUtcIso,
+} from "@/src/lib/date/business-calendar";
 import { createClient } from "@/src/lib/supabase/server";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 import { buttonClassName } from "@/src/components/ui/button";
+
+function isDisplayableCustomer(row: {
+  reservation_count: number | null;
+  total_visits: number | null;
+  email: string | null;
+  phone: string | null;
+}): boolean {
+  return (
+    (row.reservation_count ?? 0) > 0 ||
+    (row.total_visits ?? 0) > 0 ||
+    (row.email != null && row.email.trim().length > 0) ||
+    (row.phone != null && row.phone.trim().length > 0)
+  );
+}
 
 export default async function DashboardCustomersPage() {
   const supabase = await createClient();
@@ -13,7 +38,9 @@ export default async function DashboardCustomersPage() {
 
   const { data: customersData } = await supabase
     .from("customers")
-    .select("id, full_name, phone, email, reservation_count, total_visits, last_visit_at")
+    .select(
+      "id, full_name, phone, email, reservation_count, total_visits, last_visit_at, created_at",
+    )
     .eq("restaurant_id", restaurant.id)
     .order("reservation_count", { ascending: false });
 
@@ -35,29 +62,47 @@ export default async function DashboardCustomersPage() {
     avgByCustomer.set(id, cur);
   }
 
-  const customers: CustomerRow[] = (customersData ?? [])
-    .map((customer) => {
-      const agg = avgByCustomer.get(customer.id);
-      const avgCovers =
-        agg && agg.count > 0 ? Math.round((agg.sum / agg.count) * 10) / 10 : null;
-      return {
-        id: customer.id,
-        name: customer.full_name,
-        phone: customer.phone,
-        email: customer.email,
-        reservations: customer.reservation_count ?? 0,
-        lastVisit: customer.last_visit_at,
-        totalVisits: customer.total_visits ?? 0,
-        avgCovers,
-      };
-    })
-    .filter(
-      (c) =>
-        c.reservations > 0 ||
-        c.totalVisits > 0 ||
-        (c.email != null && c.email.trim().length > 0) ||
-        (c.phone != null && c.phone.trim().length > 0),
-    );
+  const now = new Date();
+  const currentMonth = monthBoundsInBusinessTz(now);
+  const previousMonth = monthBoundsInBusinessTz(subMonths(now, 1));
+  const currentMonthStart = startOfBusinessYmdAsUtcIso(currentMonth.startYmd);
+  const currentMonthEnd = endOfBusinessYmdAsUtcIso(currentMonth.endYmd);
+  const previousMonthStart = startOfBusinessYmdAsUtcIso(previousMonth.startYmd);
+  const previousMonthEnd = endOfBusinessYmdAsUtcIso(previousMonth.endYmd);
+
+  const displayableRows = (customersData ?? []).filter(isDisplayableCustomer);
+  const createdAtRows = displayableRows.map((row) => ({
+    createdAt: row.created_at,
+  }));
+
+  const newThisMonth = countCustomersCreatedBetween(
+    createdAtRows,
+    currentMonthStart,
+    currentMonthEnd,
+  );
+  const newPreviousMonth = countCustomersCreatedBetween(
+    createdAtRows,
+    previousMonthStart,
+    previousMonthEnd,
+  );
+
+  const customers: CustomerRecord[] = displayableRows.map((customer) => {
+    const agg = avgByCustomer.get(customer.id);
+    const avgCovers =
+      agg && agg.count > 0 ? Math.round((agg.sum / agg.count) * 10) / 10 : null;
+    return {
+      id: customer.id,
+      name: customer.full_name,
+      phone: customer.phone,
+      email: customer.email,
+      reservationCount: customer.reservation_count ?? 0,
+      lastVisitAt: customer.last_visit_at,
+      totalVisits: customer.total_visits ?? 0,
+      avgCovers,
+    };
+  });
+
+  const kpis = computeCustomerKpis(customers, newThisMonth, newPreviousMonth);
 
   if (!hasCustomersProAccess) {
     return (
@@ -65,7 +110,7 @@ export default async function DashboardCustomersPage() {
         <section className="relative space-y-6">
           <PageHeader
             title="Clients"
-            subtitle="Fiches construites à partir des réservations — idéal pour reconnaître vos habitués."
+            subtitle="Vos habitués et nouveaux visiteurs"
           />
 
           <div className="relative min-h-[min(70vh,560px)] overflow-hidden rounded-2xl border border-zg-border bg-zg-surface transition-all duration-200 ease-out">
@@ -98,14 +143,7 @@ export default async function DashboardCustomersPage() {
 
   return (
     <DashboardContent>
-      <section className="space-y-10">
-        <PageHeader
-          title="Clients"
-          subtitle="Fiches construites à partir des réservations — idéal pour reconnaître vos habitués."
-        />
-
-        <CustomersPanel customers={customers} />
-      </section>
+      <CustomersPage customers={customers} kpis={kpis} />
     </DashboardContent>
   );
 }
