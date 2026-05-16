@@ -5,7 +5,7 @@ import { useReservations } from "@/src/components/dashboard/reservations/context
 import type { ReservationViewMode } from "@/src/components/dashboard/reservations/types";
 import { useIsMdUp } from "@/src/hooks/use-is-md-up";
 import { cn } from "@/src/lib/utils";
-import { Calendar, LayoutList, Timer } from "lucide-react";
+import { LayoutList, Timer } from "lucide-react";
 
 const VIEW_OPTIONS: {
   mode: ReservationViewMode;
@@ -15,7 +15,6 @@ const VIEW_OPTIONS: {
 }[] = [
   { mode: "list", label: "Liste", icon: LayoutList, shortcut: "1" },
   { mode: "timeline", label: "Timeline", icon: Timer, shortcut: "2" },
-  { mode: "calendar", label: "Calendrier", icon: Calendar, shortcut: "3" },
 ];
 
 export default function ReservationsViewSwitcher() {

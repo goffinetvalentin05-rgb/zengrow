@@ -60,12 +60,6 @@ export function ReservationsProvider({
   const [dayZoneFilter, setDayZoneFilter] = useState<DayZoneFilter>("all");
   const [manualForceOverbook, setManualForceOverbook] = useState(false);
   const [manualOverbookWarning, setManualOverbookWarning] = useState<string | null>(null);
-  const [upcomingRangeStart, setUpcomingRangeStart] = useState(() =>
-    addCalendarDaysYmd(calendarYmdInBusinessTz(), 1),
-  );
-  const [upcomingRangeEnd, setUpcomingRangeEnd] = useState(() =>
-    addCalendarDaysYmd(calendarYmdInBusinessTz(), 7),
-  );
   const [savingId, setSavingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
@@ -117,10 +111,12 @@ export function ReservationsProvider({
     [reservations, daySectionDate, daySectionStatus, showZoneUi, dayZoneFilter],
   );
 
-  const upcomingRows = useMemo(
-    () => filterUpcomingReservations(reservations, upcomingRangeStart, upcomingRangeEnd),
-    [reservations, upcomingRangeStart, upcomingRangeEnd],
-  );
+  const upcomingRows = useMemo(() => {
+    const today = calendarYmdInBusinessTz();
+    const start = addCalendarDaysYmd(today, 1);
+    const end = addCalendarDaysYmd(today, 7);
+    return filterUpcomingReservations(reservations, start, end);
+  }, [reservations]);
 
   const isDayFilterToday = daySectionDate === calendarYmdInBusinessTz();
 
@@ -292,10 +288,6 @@ export function ReservationsProvider({
     setDaySectionStatus,
     dayZoneFilter,
     setDayZoneFilter,
-    upcomingRangeStart,
-    setUpcomingRangeStart,
-    upcomingRangeEnd,
-    setUpcomingRangeEnd,
     savingId,
     message,
     setMessage,

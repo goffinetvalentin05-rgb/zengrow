@@ -3,10 +3,9 @@
 import { useMemo } from "react";
 import { useReservations } from "@/src/components/dashboard/reservations/context/use-reservations";
 import {
-  computeNextArrivalKpi,
   computeTodayCoversKpi,
   computeTodayFillKpi,
-  computeWeekNoShowKpi,
+  computeWeekReservationsKpi,
   formatCoversSubline,
 } from "@/src/components/dashboard/reservations/utils/reservation-kpi";
 import { calendarYmdInBusinessTz } from "@/src/lib/date/business-calendar";
@@ -18,8 +17,7 @@ export function useReservationsKpi() {
   return useMemo(() => {
     const covers = computeTodayCoversKpi(reservations, todayYmd, openingHours);
     const fill = computeTodayFillKpi(covers, restaurantCapacity);
-    const nextArrival = computeNextArrivalKpi(reservations, todayYmd);
-    const weekNoShow = computeWeekNoShowKpi(reservations);
+    const week = computeWeekReservationsKpi(reservations, todayYmd);
     const coversSubline = formatCoversSubline(covers);
 
     return {
@@ -27,8 +25,7 @@ export function useReservationsKpi() {
       covers,
       coversSubline,
       fill,
-      nextArrival,
-      weekNoShow,
+      week,
     };
   }, [reservations, todayYmd, openingHours, restaurantCapacity]);
 }

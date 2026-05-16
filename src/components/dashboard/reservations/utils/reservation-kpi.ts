@@ -1,9 +1,5 @@
-import {
-  calendarYmdInBusinessTz,
-  isoWeekBoundsInBusinessTz,
-  reservationIsAtOrAfterNow,
-  reservationStartInBusinessTz,
-} from "@/src/lib/date/business-calendar";
+import { addCalendarDaysYmd } from "@/src/components/dashboard/reservations/utils/reservation-filters";
+import { calendarYmdInBusinessTz } from "@/src/lib/date/business-calendar";
 import {
   getCoverServicePeriodForReservationTime,
   getLunchDinnerMinuteWindowsForYmd,
@@ -13,13 +9,7 @@ import type { OpeningHours } from "@/src/lib/utils";
 import type { ReservationRow, ReservationStatus } from "@/src/components/dashboard/reservations/types";
 
 const COVERS_STATUSES: ReservationStatus[] = ["pending", "confirmed"];
-const ARRIVAL_STATUSES: ReservationStatus[] = ["pending", "confirmed"];
-const WEEK_DENOMINATOR_STATUSES: ReservationStatus[] = [
-  "pending",
-  "confirmed",
-  "completed",
-  "no-show",
-];
+const CONFIRMED_STATUS: ReservationStatus = "confirmed";
 
 export type TodayCoversKpi = {
   totalCovers: number;
@@ -36,18 +26,14 @@ export type TodayFillKpi = {
   maxCovers: number;
 };
 
-export type NextArrivalKpi = {
-  guestName: string;
-  timeLabel: string;
-  guests: number;
-  minutesUntil: number;
-} | null;
-
-export type WeekNoShowKpi = {
-  noShowCount: number;
-  totalReservations: number;
-  ratePercent: number;
+export type WeekReservationsKpi = {
+  reservationCount: number;
+  totalCovers: number;
+  trendLabel: string;
+  trendTone: "success" | "warning" | "muted";
 };
+
+export type WeekReservationsTrendTone = WeekReservationsKpi["trendTone"];
 
 export function computeTodayCoversKpi(
   reservations: ReservationRow[],
@@ -84,52 +70,61 @@ export function computeTodayFillKpi(
   return { fillPercent, expectedCovers, maxCovers };
 }
 
-export function computeNextArrivalKpi(
-  reservations: ReservationRow[],
-  todayYmd: string,
-  ref: Date = new Date(),
-): NextArrivalKpi {
-  const candidates = reservations
-    .filter(
-      (r) =>
-        r.reservation_date === todayYmd &&
-        ARRIVAL_STATUSES.includes(r.status) &&
-        reservationIsAtOrAfterNow(r.reservation_date, r.reservation_time, ref),
-    )
-    .sort(
-      (a, b) =>
-        reservationStartInBusinessTz(a.reservation_date, a.reservation_time).getTime() -
-        reservationStartInBusinessTz(b.reservation_date, b.reservation_time).getTime(),
-    );
-
-  const next = candidates[0];
-  if (!next) return null;
-
-  const start = reservationStartInBusinessTz(next.reservation_date, next.reservation_time);
-  const minutesUntil = Math.max(0, Math.round((start.getTime() - ref.getTime()) / 60_000));
-  const timeLabel = next.reservation_time.trim().slice(0, 5);
-
-  return {
-    guestName: next.guest_name,
-    timeLabel,
-    guests: next.guests,
-    minutesUntil,
-  };
+function isYmdInInclusiveRange(ymd: string, startYmd: string, endYmd: string): boolean {
+  return ymd >= startYmd && ymd <= endYmd;
 }
 
-export function computeWeekNoShowKpi(
+export function formatWeekReservationsTrend(
+  currentCount: number,
+  previousCount: number,
+): Pick<WeekReservationsKpi, "trendLabel" | "trendTone"> {
+  const suffix = " vs semaine dernière";
+  if (currentCount === previousCount) {
+    return { trendLabel: `+0%${suffix}`, trendTone: "muted" };
+  }
+  if (previousCount <= 0) {
+    if (currentCount <= 0) {
+      return { trendLabel: `—${suffix}`, trendTone: "muted" };
+    }
+    return { trendLabel: `+100%${suffix}`, trendTone: "success" };
+  }
+  const raw = ((currentCount - previousCount) / previousCount) * 100;
+  const rounded = Math.round(raw);
+  if (rounded > 0) {
+    return { trendLabel: `+${rounded}%${suffix}`, trendTone: "success" };
+  }
+  if (rounded < 0) {
+    return { trendLabel: `${rounded}%${suffix}`, trendTone: "warning" };
+  }
+  return { trendLabel: `+0%${suffix}`, trendTone: "muted" };
+}
+
+/** Réservations confirmées sur 7 jours à partir d’aujourd’hui (inclus), vs les 7 jours précédents. */
+export function computeWeekReservationsKpi(
   reservations: ReservationRow[],
-  ref: Date = new Date(),
-): WeekNoShowKpi {
-  const { start, end } = isoWeekBoundsInBusinessTz(ref);
-  const inWeek = reservations.filter((r) => r.reservation_date >= start && r.reservation_date <= end);
-  const noShowCount = inWeek.filter((r) => r.status === "no-show").length;
-  const totalReservations = inWeek.filter((r) =>
-    WEEK_DENOMINATOR_STATUSES.includes(r.status),
+  todayYmd: string = calendarYmdInBusinessTz(),
+): WeekReservationsKpi {
+  const endYmd = addCalendarDaysYmd(todayYmd, 6);
+  const previousStartYmd = addCalendarDaysYmd(todayYmd, -7);
+  const previousEndYmd = addCalendarDaysYmd(todayYmd, -1);
+
+  const confirmed = reservations.filter((r) => r.status === CONFIRMED_STATUS);
+  const currentRows = confirmed.filter((r) =>
+    isYmdInInclusiveRange(r.reservation_date, todayYmd, endYmd),
+  );
+  const previousCount = confirmed.filter((r) =>
+    isYmdInInclusiveRange(r.reservation_date, previousStartYmd, previousEndYmd),
   ).length;
-  const ratePercent =
-    totalReservations > 0 ? Math.round((noShowCount / totalReservations) * 100) : 0;
-  return { noShowCount, totalReservations, ratePercent };
+
+  const reservationCount = currentRows.length;
+  const totalCovers = currentRows.reduce((sum, row) => sum + row.guests, 0);
+  const trend = formatWeekReservationsTrend(reservationCount, previousCount);
+
+  return {
+    reservationCount,
+    totalCovers,
+    ...trend,
+  };
 }
 
 export function formatCoversSubline(covers: TodayCoversKpi): string {

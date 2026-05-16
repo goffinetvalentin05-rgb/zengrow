@@ -9,13 +9,32 @@ const PALETTES = [
   { bg: "bg-rose-500/15", text: "text-rose-300" },
 ] as const;
 
-export function guestAvatarColorClasses(name: string): { bg: string; text: string } {
+const SOLID_PALETTES = [
+  { bg: "bg-zg-accent", text: "text-white" },
+  { bg: "bg-zg-info", text: "text-white" },
+  { bg: "bg-emerald-600", text: "text-white" },
+  { bg: "bg-violet-600", text: "text-white" },
+  { bg: "bg-sky-600", text: "text-white" },
+  { bg: "bg-rose-600", text: "text-white" },
+  { bg: "bg-amber-600", text: "text-white" },
+  { bg: "bg-indigo-600", text: "text-white" },
+] as const;
+
+function hashName(name: string): number {
   const seed = name.trim() || "?";
   let hash = 0;
   for (let i = 0; i < seed.length; i += 1) {
     hash = seed.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return PALETTES[Math.abs(hash) % PALETTES.length] ?? PALETTES[0];
+  return Math.abs(hash);
+}
+
+export function guestAvatarColorClasses(name: string): { bg: string; text: string } {
+  return PALETTES[hashName(name) % PALETTES.length] ?? PALETTES[0];
+}
+
+export function guestAvatarSolidClasses(name: string): { bg: string; text: string } {
+  return SOLID_PALETTES[hashName(name) % SOLID_PALETTES.length] ?? SOLID_PALETTES[0];
 }
 
 export function guestInitials(name: string): string {

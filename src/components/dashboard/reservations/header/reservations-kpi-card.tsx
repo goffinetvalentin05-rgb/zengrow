@@ -11,10 +11,20 @@ const tonePill: Record<StatDataTone, string> = {
   danger: "bg-zg-danger-soft-bg text-zg-danger",
 };
 
+export type ReservationsKpiTrendTone = "success" | "warning" | "muted";
+
+const trendTextClass: Record<ReservationsKpiTrendTone, string> = {
+  success: "text-zg-success",
+  warning: "text-zg-warning",
+  muted: "text-zg-text-muted",
+};
+
 export type ReservationsKpiCardProps = {
   label: string;
   value: string | number;
   subline?: string;
+  trend?: string;
+  trendTone?: ReservationsKpiTrendTone;
   icon: LucideIcon;
   dataTone?: StatDataTone;
   progressPercent?: number;
@@ -26,6 +36,8 @@ export default function ReservationsKpiCard({
   label,
   value,
   subline,
+  trend,
+  trendTone = "muted",
   icon: Icon,
   dataTone = "accent",
   progressPercent,
@@ -65,6 +77,9 @@ export default function ReservationsKpiCard({
         {value}
       </p>
       {subline ? <p className="mt-2 text-sm leading-snug text-zg-text-muted">{subline}</p> : null}
+      {trend ? (
+        <p className={cn("mt-1 text-xs font-medium leading-snug", trendTextClass[trendTone])}>{trend}</p>
+      ) : null}
       {progressPercent != null ? (
         <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-zg-border/80">
           <div

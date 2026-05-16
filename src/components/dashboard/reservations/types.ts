@@ -29,7 +29,7 @@ export type DayStatusFilter = "all" | "confirmed" | "pending" | "cancelled";
 
 export type DayZoneFilter = "all" | "interior" | "terrace";
 
-export type ReservationViewMode = "list" | "timeline" | "calendar";
+export type ReservationViewMode = "list" | "timeline";
 
 export type ReservationsPageProps = {
   initialReservations: ReservationRow[];

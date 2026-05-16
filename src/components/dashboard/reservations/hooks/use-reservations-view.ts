@@ -8,7 +8,8 @@ function readStoredViewMode(): ReservationViewMode {
   if (typeof window === "undefined") return "list";
   try {
     const raw = localStorage.getItem(RESERVATIONS_VIEW_STORAGE_KEY);
-    if (raw === "timeline" || raw === "calendar" || raw === "list") return raw;
+    if (raw === "timeline" || raw === "list") return raw;
+    if (raw === "calendar") return "list";
   } catch {
     /* ignore */
   }
@@ -38,7 +39,6 @@ export function useReservationsView() {
       }
       if (event.key === "1") setViewMode("list");
       if (event.key === "2") setViewMode("timeline");
-      if (event.key === "3") setViewMode("calendar");
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);

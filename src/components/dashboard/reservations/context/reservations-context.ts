@@ -29,10 +29,6 @@ export type ReservationsContextValue = {
   setDaySectionStatus: (filter: DayStatusFilter) => void;
   dayZoneFilter: DayZoneFilter;
   setDayZoneFilter: (filter: DayZoneFilter) => void;
-  upcomingRangeStart: string;
-  setUpcomingRangeStart: (ymd: string) => void;
-  upcomingRangeEnd: string;
-  setUpcomingRangeEnd: (ymd: string) => void;
   savingId: string | null;
   message: string | null;
   setMessage: (message: string | null) => void;

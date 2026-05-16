@@ -68,6 +68,42 @@ export function groupReservationsByService(
   return groups;
 }
 
+/** Sections Midi / Soir toujours présentes pour la vue liste (y compris vides). */
+export function buildListServiceSections(
+  rows: ReservationRow[],
+  ymd: string,
+  openingHours: OpeningHours | null | undefined,
+): ServiceGroup[] {
+  const lunchRows: ReservationRow[] = [];
+  const dinnerRows: ReservationRow[] = [];
+  const otherRows: ReservationRow[] = [];
+
+  for (const row of rows) {
+    const period = reservationTimePeriod(ymd, row.reservation_time, openingHours);
+    if (period === "lunch") lunchRows.push(row);
+    else if (period === "dinner") dinnerRows.push(row);
+    else otherRows.push(row);
+  }
+
+  if (otherRows.length > 0) {
+    if (lunchRows.length > 0 && dinnerRows.length === 0) {
+      lunchRows.push(...otherRows);
+    } else {
+      dinnerRows.push(...otherRows);
+    }
+  }
+
+  return (["lunch", "dinner"] as const).map((key) => {
+    const sectionRows = key === "lunch" ? lunchRows : dinnerRows;
+    return {
+      key,
+      label: key === "lunch" ? "Service midi" : "Service soir",
+      rows: sectionRows,
+      ...serviceGroupStats(sectionRows),
+    };
+  });
+}
+
 export function groupReservationsByDate(
   rows: ReservationRow[],
 ): { date: string; rows: ReservationRow[]; reservationCount: number; coverCount: number }[] {
