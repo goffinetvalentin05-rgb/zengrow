@@ -89,6 +89,7 @@ import {
   type PageSectionLayoutItem,
 } from "@/src/lib/public-page/page-section-structure";
 import PageSectionsEditor from "@/src/components/dashboard/public-page/page-sections-editor";
+import { isBlockEnabledInStructure } from "@/src/lib/public-page/section-registry";
 import { PUBLIC_PAGE_FONT_LIBRARY, googleFontsHref } from "@/src/lib/public-page-fonts";
 import {
   MAX_DESCRIPTION_CHARS,
@@ -552,6 +553,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const handleSectionStructureChange = useCallback(
       (next: PageSectionLayoutItem[]) => {
         setPageSectionStructure(next);
+        setEditorConfig((c) => applyStructureToEditorConfig(c, next));
         markDirty();
       },
       [markDirty],
@@ -2067,12 +2069,21 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         <StepCard
           step={3}
           icon={<Layout className="h-5 w-5" />}
-          title="Sections de la page"
-          subtitle="Activez les sections que vous voulez afficher. Personnalisez le contenu de chacune juste en dessous."
+          title="Contenu des sections"
+          subtitle="Textes, images et options par bloc. L’ordre, l’activation et les variantes se règlent dans la zone Sections."
         >
+          <p className="mb-4 text-sm text-zg-text-muted">
+            Les sections désactivées sont réduites ci-dessous — réactivez-les via la zone{" "}
+            <a href="#zone-sections" className="font-semibold text-zg-accent hover:underline">
+              Sections
+            </a>
+            .
+          </p>
           <div className="space-y-3">
             {PAGE_SECTIONS.map((section) => {
-              const enabled = editorConfig.blocks[section.id]?.enabled !== false;
+              const enabled =
+                section.id === "reservation" ||
+                isBlockEnabledInStructure(pageSectionStructure, section.id, editorConfig);
               return (
                 <div
                   key={section.id}
@@ -2080,29 +2091,15 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                     "rounded-2xl border transition",
                     enabled
                       ? "border-zg-border bg-zg-surface"
-                      : "border-zg-border/60 bg-zg-surface/40",
+                      : "border-zg-border/60 bg-zg-surface/40 opacity-70",
                   )}
                 >
-                  <div className="flex items-center justify-between gap-3 p-4">
-                    <div>
-                      <p className="text-sm font-semibold text-zg-fg">{section.label}</p>
-                      <p className="mt-0.5 text-xs text-zg-muted">{section.description}</p>
-                    </div>
-                    <Toggle
-                      checked={enabled}
-                      onChange={(v) => {
-                        setEditorConfig((c) =>
-                          parseEditorConfig({
-                            ...c,
-                            blocks: {
-                              ...c.blocks,
-                              [section.id]: { ...c.blocks[section.id], enabled: v },
-                            },
-                          }),
-                        );
-                        markDirty();
-                      }}
-                    />
+                  <div className="p-4">
+                    <p className="text-sm font-semibold text-zg-fg">{section.label}</p>
+                    <p className="mt-0.5 text-xs text-zg-muted">{section.description}</p>
+                    {!enabled ? (
+                      <p className="mt-2 text-xs text-zg-text-muted">Section masquée sur la page publique.</p>
+                    ) : null}
                   </div>
 
                   {enabled && section.id === "about" ? (

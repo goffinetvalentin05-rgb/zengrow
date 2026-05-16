@@ -28,7 +28,7 @@ import {
   sortableLayoutItems,
 } from "@/src/lib/public-page/page-section-structure";
 import type { PageSectionType } from "@/src/lib/public-page/page-sections";
-import { getSectionVariantsForTheme } from "@/src/lib/themes/sections/registry";
+import { getSectionVariantsForTheme, resolveSectionLayoutVariant } from "@/src/lib/themes/sections/registry";
 import type { ThemeId } from "@/src/lib/themes/types";
 
 type PageSectionsEditorProps = {
@@ -62,6 +62,7 @@ function SortableRow({
 
   return (
     <SortableRowContent
+      themeId={themeId}
       setNodeRef={setNodeRef}
       style={style}
       isDragging={isDragging}
@@ -78,6 +79,7 @@ function SortableRow({
 }
 
 function SortableRowContent({
+  themeId,
   setNodeRef,
   style,
   isDragging,
@@ -90,6 +92,7 @@ function SortableRowContent({
   attributes,
   listeners,
 }: {
+  themeId: ThemeId;
   setNodeRef: (node: HTMLElement | null) => void;
   style: CSSProperties;
   isDragging: boolean;
@@ -136,7 +139,7 @@ function SortableRowContent({
             <span className="sr-only">Variante de mise en page pour {meta.label}</span>
             <select
               className="mt-1 w-full max-w-[220px] rounded-lg border border-zg-border bg-zg-surface px-2 py-1.5 text-xs font-medium text-zg-fg"
-              value={item.layoutVariant ?? variantOptions[0]?.id ?? ""}
+              value={resolveSectionLayoutVariant(themeId, item.sectionType, item.layoutVariant) ?? ""}
               onChange={(e) => onVariantChange(item.sectionType, e.target.value)}
             >
               {variantOptions.map((v) => (

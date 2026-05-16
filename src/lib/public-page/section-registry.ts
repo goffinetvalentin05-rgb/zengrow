@@ -1,5 +1,6 @@
 import type { PageSectionType } from "@/src/lib/public-page/page-sections";
-import type { PageBlockId } from "@/src/lib/public-page/editor-config";
+import type { PageBlockId, PublicPageEditorConfig } from "@/src/lib/public-page/editor-config";
+import type { PageSectionLayoutItem } from "@/src/lib/public-page/page-section-structure";
 
 export type SectionRegistryEntry = {
   type: PageSectionType;
@@ -187,4 +188,22 @@ export function listAddableSectionTypes(activeTypes: PageSectionType[]): PageSec
   return (Object.values(SECTION_REGISTRY) as SectionRegistryEntry[])
     .filter((e) => e.optional && e.sortable && !active.has(e.type))
     .map((e) => e.type);
+}
+
+/** État activé d’un bloc legacy dérivé de `restaurant_page_sections` (prioritaire). */
+export function isBlockEnabledInStructure(
+  structure: PageSectionLayoutItem[],
+  blockId: PageBlockId,
+  fallbackConfig: PublicPageEditorConfig,
+): boolean {
+  const type = blockIdToSectionType(blockId);
+  if (type) {
+    const item = structure.find((i) => i.sectionType === type);
+    if (item) return item.enabled;
+  }
+  if (blockId === "hours" || blockId === "location") {
+    const practical = structure.find((i) => i.sectionType === "practical");
+    if (practical) return practical.enabled;
+  }
+  return fallbackConfig.blocks[blockId]?.enabled !== false;
 }
