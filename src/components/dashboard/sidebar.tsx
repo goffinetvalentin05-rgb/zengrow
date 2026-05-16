@@ -18,7 +18,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
-  Sparkles,
   Users,
   X,
   MessageSquare,
@@ -28,6 +27,7 @@ import { createClient } from "@/src/lib/supabase/client";
 import { cn } from "@/src/lib/utils";
 import { buttonClassName } from "@/src/components/ui/button";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
+import CompactProUpsell from "@/src/components/dashboard/sidebar/compact-pro-upsell";
 import { useIsMdUp } from "@/src/hooks/use-is-md-up";
 
 const STORAGE_KEY = "zengrow_dashboard_sidebar_collapsed";
@@ -73,6 +73,7 @@ export default function DashboardSidebar({
   const showToast = useDashboardToast();
   const isMdUp = useIsMdUp();
   const hasProMarketingAccess = subscriptionStatus === "trial" || subscriptionPlan === "pro";
+  const showProUpsell = subscriptionPlan === "starter" && subscriptionStatus !== "trial";
 
   const [collapsed, setCollapsed] = useState(false);
   const [hoverTip, setHoverTip] = useState<HoverTipState>(null);
@@ -272,29 +273,17 @@ export default function DashboardSidebar({
           ))}
         </nav>
 
-        <div className={cn("mt-auto shrink-0 space-y-3 pb-6", showExpandedChrome ? "px-3" : "flex flex-col items-center gap-3 px-2")}>
+        <div
+          className={cn(
+            "mt-auto shrink-0 pb-6",
+            showExpandedChrome
+              ? cn("space-y-2.5 px-3", showProUpsell ? "pt-1" : "pt-2")
+              : "flex flex-col items-center gap-3 px-2",
+          )}
+        >
           {showExpandedChrome ? (
             <>
-              <div className="rounded-2xl border border-zg-border-accent/50 bg-zg-surface p-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zg-accent-soft-bg">
-                  <Sparkles className="h-[18px] w-[18px] text-zg-accent" strokeWidth={1.85} aria-hidden />
-                </div>
-                <p className="mt-3 text-sm font-semibold text-zg-on-dark">Booste ton resto</p>
-                <p className="mt-1 text-xs leading-relaxed text-zg-on-dark-muted">
-                  Active toutes les automatisations en 1 clic.
-                </p>
-                <Link
-                  href="/dashboard/settings?section=subscription"
-                  onClick={onNavigate}
-                  className={buttonClassName({
-                    variant: "primary",
-                    size: "md",
-                    className: "mt-3 w-full",
-                  })}
-                >
-                  Activer Pro
-                </Link>
-              </div>
+              {showProUpsell ? <CompactProUpsell onNavigate={onNavigate} /> : null}
 
               <div className="rounded-xl px-1">
                 <div className="flex items-center gap-2">
