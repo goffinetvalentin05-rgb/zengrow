@@ -209,10 +209,6 @@ export default function DashboardSidebar({
                   className="h-7 w-auto max-w-[140px] object-contain object-left"
                   priority
                 />
-                <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-zg-accent opacity-40" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-zg-accent" />
-                </span>
               </Link>
               <button
                 type="button"
