@@ -114,6 +114,8 @@ type PublicSettingsRow = {
   public_page_show_opening_hours: boolean;
   days_in_advance: number;
   terrace_enabled: boolean;
+  terrace_capacity: number;
+  terrace_label: string;
   reservation_mode: string;
   floor_plan_public_selection_mode: string;
   public_table_selection_mode: string;
@@ -213,6 +215,8 @@ const SETTINGS_SELECT = [
   "public_page_show_opening_hours",
   "days_in_advance",
   "terrace_enabled",
+  "terrace_capacity",
+  "terrace_label",
   "reservation_mode",
   "floor_plan_public_selection_mode",
   "public_table_selection_mode",
@@ -353,6 +357,8 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     public_page_show_opening_hours: true,
     days_in_advance: 60,
     terrace_enabled: false,
+    terrace_capacity: 0,
+    terrace_label: "Terrasse",
     reservation_mode: "simple",
     floor_plan_public_selection_mode: "automatic",
     public_table_selection_mode: "automatic",
@@ -526,6 +532,8 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           closureEndDate={safeSettings.closure_end_date}
           closureMessage={safeSettings.closure_message}
           terraceEnabled={safeSettings.terrace_enabled === true}
+          terraceLabel={safeSettings.terrace_label}
+          terraceCapacity={safeSettings.terrace_capacity}
           reservationMode={(safeSettings.reservation_mode as "simple" | "floor_plan") ?? "simple"}
           publicFloorPlanSelectionMode={
             (safeSettings.floor_plan_public_selection_mode as "automatic" | "area" | "table") ??

@@ -5,6 +5,7 @@ import {
   DashboardHomeMetrics,
   DashboardHomeMetricsSkeleton,
 } from "@/src/components/dashboard/dashboard-home-metrics";
+import { TerraceControlBanner } from "@/src/components/dashboard/terrace-control-banner";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import PageHeader from "@/src/components/dashboard/page-header";
@@ -52,6 +53,8 @@ export default async function DashboardPage() {
           icon: <Plus className="h-4 w-4" strokeWidth={2} />,
         }}
       />
+
+      <TerraceControlBanner restaurantId={restaurant.id} className="mt-4" />
 
       <section aria-labelledby="dashboard-stats-heading" className="mt-2 space-y-4">
         <div className="sr-only">

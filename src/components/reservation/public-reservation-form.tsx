@@ -18,6 +18,17 @@ import {
 import Input from "@/src/components/ui/input";
 import { isGiftCardsEnabled, isGiftVouchersBlockId } from "@/src/lib/config/features";
 import type { AvailabilitySlot } from "@/src/lib/reservation/schemas";
+import {
+  fetchAvailabilityForZone,
+  fetchSlotsByZone,
+  findSlotAtTime,
+  mergeAvailabilitySlotTimes,
+  resolveInteriorSeatOption,
+  resolveTerraceSeatOption,
+  type SlotsByZone,
+} from "@/src/lib/reservation/terrace-zone-availability";
+import { normalizeTerraceLabel } from "@/src/lib/reservation/terrace-settings";
+import SeatingZonePicker from "@/src/components/reservation/seating-zone-picker";
 import { cn, formatOpeningHoursLines, OpeningHours } from "@/src/lib/utils";
 import {
   type PublicPageEditorConfig,
@@ -148,6 +159,10 @@ export type PublicReservationFormProps = {
   closureMessage?: string | null;
   /** Si vrai, le client doit choisir salle ou terrasse (paramètres restaurant). */
   terraceEnabled?: boolean;
+  /** Label terrasse affiché au client (ex. Patio). */
+  terraceLabel?: string;
+  /** Capacité max terrasse (affichage indicatif). */
+  terraceCapacity?: number;
   /** Mode réservation canonique (2 modes uniquement). */
   reservationMode?: "simple" | "floor_plan";
   /** Mode public en plan de salle. */
@@ -293,6 +308,8 @@ export default function PublicReservationForm({
   closureEndDate,
   closureMessage,
   terraceEnabled = false,
+  terraceLabel = "Terrasse",
+  terraceCapacity = 0,
   reservationMode = "simple",
   publicFloorPlanSelectionMode = "automatic",
   subscriptionPlan = "starter",
@@ -318,8 +335,10 @@ export default function PublicReservationForm({
   const resolvedPublicMode: "automatic" | "area" | "table" = publicFloorPlanSelectionMode ?? "automatic";
   const allowAreaChoice = effectiveReservationMode === "floor_plan" && resolvedPublicMode === "area";
   const canChooseTable = effectiveReservationMode === "floor_plan" && resolvedPublicMode === "table";
-  const totalSteps = canChooseTable ? 5 : allowAreaChoice ? 5 : 4;
-  const contactStep = canChooseTable ? 5 : allowAreaChoice ? 5 : 4;
+  const allowTerraceZoneChoice = terraceEnabled && !allowAreaChoice && !canChooseTable;
+  const totalSteps = canChooseTable ? 5 : allowAreaChoice ? 5 : allowTerraceZoneChoice ? 5 : 4;
+  const terraceZoneStep = allowTerraceZoneChoice ? 4 : null;
+  const contactStep = totalSteps;
   const [wizardStep, setWizardStep] = useState(1);
   const [guestFirstName, setGuestFirstName] = useState("");
   const [guestLastName, setGuestLastName] = useState("");
@@ -335,16 +354,23 @@ export default function PublicReservationForm({
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const [seatingZone, setSeatingZone] = useState<"interior" | "terrace" | null>(null);
+  const [slotsByZone, setSlotsByZone] = useState<SlotsByZone>({ interior: [], terrace: [] });
+  const [terraceMinCoverSlots, setTerraceMinCoverSlots] = useState<AvailabilitySlot[]>([]);
+  const [zoneStepLoading, setZoneStepLoading] = useState(false);
   const chooseTableInZone = canChooseTable;
+  const effectiveTerraceLabel = normalizeTerraceLabel(terraceLabel);
   const datePickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!terraceEnabled) return;
+    if (allowTerraceZoneChoice) return;
     if (allowAreaChoice) return;
-    // Si la terrasse est activée mais que le mode public ne propose pas le choix de zone,
-    // on force l'intérieur pour éviter un état bloquant.
     queueMicrotask(() => setSeatingZone("interior"));
-  }, [terraceEnabled, allowAreaChoice]);
+  }, [allowTerraceZoneChoice, allowAreaChoice]);
+
+  useEffect(() => {
+    if (!allowTerraceZoneChoice) return;
+    queueMicrotask(() => setSeatingZone(null));
+  }, [allowTerraceZoneChoice, reservationTime, reservationDate, guests]);
 
   const [clientSelectedTableId, setClientSelectedTableId] = useState<string | null>(null);
   const [tablesChoiceLoading, setTablesChoiceLoading] = useState(false);
@@ -604,31 +630,25 @@ export default function PublicReservationForm({
     setSlotsLoading(true);
     setSlotsError(null);
 
-    const zone: "interior" | "terrace" = allowAreaChoice ? seatingZone! : "interior";
-    const q = new URLSearchParams({
-      restaurantId,
-      date: reservationDate,
-      covers: String(guests),
-      zone,
-    });
+    const loadSlots = allowTerraceZoneChoice
+      ? fetchSlotsByZone(restaurantId, reservationDate, guests).then((byZone) => {
+          if (cancelled) return;
+          setSlotsByZone(byZone);
+          return mergeAvailabilitySlotTimes(byZone.interior, byZone.terrace);
+        })
+      : (() => {
+          const zone: "interior" | "terrace" = allowAreaChoice ? seatingZone! : "interior";
+          return fetchAvailabilityForZone(restaurantId, reservationDate, guests, zone);
+        })();
 
-    fetch(`/api/reservations/availability?${q.toString()}`)
-      .then(async (response) => {
-        const payload = (await response.json().catch(() => ({}))) as {
-          slots?: AvailabilitySlot[];
-          error?: string;
-        };
-        if (!response.ok) {
-          throw new Error(payload.error ?? "Impossible de charger les créneaux.");
-        }
-        return payload.slots ?? [];
-      })
+    loadSlots
       .then((slots) => {
-        if (!cancelled) setAvailabilitySlots(slots);
+        if (!cancelled && slots) setAvailabilitySlots(slots);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
           setAvailabilitySlots([]);
+          setSlotsByZone({ interior: [], terrace: [] });
           setSlotsError(err instanceof Error ? err.message : "Impossible de charger les créneaux.");
         }
       })
@@ -647,11 +667,72 @@ export default function PublicReservationForm({
     closureStartDate,
     closureEndDate,
     maxDateStr,
-    terraceEnabled,
+    allowTerraceZoneChoice,
     allowAreaChoice,
     seatingZone,
   ]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  const zoneSeatStates = useMemo(() => {
+    if (!reservationTime) {
+      return {
+        interior: resolveInteriorSeatOption(null),
+        terrace: resolveTerraceSeatOption(null, null, guests),
+      };
+    }
+    const interiorSlot = findSlotAtTime(slotsByZone.interior, reservationTime);
+    const terraceSlot = findSlotAtTime(slotsByZone.terrace, reservationTime);
+    const terraceMinSlot = findSlotAtTime(terraceMinCoverSlots, reservationTime);
+    return {
+      interior: resolveInteriorSeatOption(interiorSlot),
+      terrace: resolveTerraceSeatOption(terraceSlot, terraceMinSlot, guests),
+    };
+  }, [slotsByZone, terraceMinCoverSlots, reservationTime, guests]);
+
+  useEffect(() => {
+    if (!allowTerraceZoneChoice) return;
+    if (wizardStep !== terraceZoneStep) return;
+    if (!reservationDate || !reservationTime || guests < 1) return;
+
+    let cancelled = false;
+    setZoneStepLoading(true);
+
+    Promise.all([
+      fetchSlotsByZone(restaurantId, reservationDate, guests),
+      fetchAvailabilityForZone(restaurantId, reservationDate, 1, "terrace"),
+    ])
+      .then(([byZone, minTerrace]) => {
+        if (cancelled) return;
+        setSlotsByZone(byZone);
+        setTerraceMinCoverSlots(minTerrace);
+      })
+      .catch(() => {
+        if (!cancelled) setTerraceMinCoverSlots([]);
+      })
+      .finally(() => {
+        if (!cancelled) setZoneStepLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    allowTerraceZoneChoice,
+    terraceZoneStep,
+    wizardStep,
+    restaurantId,
+    reservationDate,
+    reservationTime,
+    guests,
+  ]);
+
+  useEffect(() => {
+    if (!allowTerraceZoneChoice || !seatingZone) return;
+    const state = seatingZone === "terrace" ? zoneSeatStates.terrace : zoneSeatStates.interior;
+    if (!state.available) {
+      queueMicrotask(() => setSeatingZone(null));
+    }
+  }, [allowTerraceZoneChoice, seatingZone, zoneSeatStates]);
 
   useEffect(() => {
     const times = new Set(availabilitySlots.map((s) => s.time));
@@ -864,7 +945,28 @@ export default function PublicReservationForm({
       setIsSubmitting(false);
       return;
     }
-    if (!availabilitySlots.some((s) => s.time === reservationTime)) {
+
+    if (allowTerraceZoneChoice && !seatingZone) {
+      setError("Veuillez choisir un emplacement (salle ou terrasse).");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const submitZone: "interior" | "terrace" = allowTerraceZoneChoice
+      ? seatingZone!
+      : canChooseTable
+        ? zoneForSelectedPlan
+        : allowAreaChoice && seatingZone
+          ? seatingZone
+          : "interior";
+
+    const slotsForZone =
+      submitZone === "terrace" ? slotsByZone.terrace : slotsByZone.interior;
+    const zoneSlotsCheck = allowTerraceZoneChoice
+      ? slotsForZone
+      : availabilitySlots;
+
+    if (!zoneSlotsCheck.some((s) => s.time === reservationTime)) {
       setError("Ce créneau n'est plus disponible. Veuillez choisir une autre heure.");
       setIsSubmitting(false);
       return;
@@ -888,7 +990,9 @@ export default function PublicReservationForm({
         reservationDate,
         reservationTime,
         ...(allowAreaChoice && publicPlanId ? { floorPlanId: publicPlanId } : {}),
-        ...(canChooseTable ? { zone: zoneForSelectedPlan } : {}),
+        ...(allowTerraceZoneChoice || canChooseTable || (allowAreaChoice && seatingZone)
+          ? { zone: submitZone }
+          : {}),
         ...(canChooseTable && clientSelectedTableId ? { tableId: clientSelectedTableId } : {}),
       }),
     });
@@ -1425,7 +1529,7 @@ export default function PublicReservationForm({
 
                 {wizardStep === 2 ? (
                   <div className="flex flex-col gap-6">
-                    {allowAreaChoice && terraceEnabled ? (
+                    {allowAreaChoice && terraceEnabled && !allowTerraceZoneChoice ? (
                       <div className="flex flex-col gap-2" role="group" aria-label="Emplacement">
                         <p className="text-center text-sm font-medium" style={{ color: "var(--heading-color)" }}>
                           Emplacement
@@ -1568,6 +1672,30 @@ export default function PublicReservationForm({
                           </button>
                         ))}
                       </div>
+                    )}
+                  </div>
+                ) : null}
+
+                {allowTerraceZoneChoice && wizardStep === terraceZoneStep ? (
+                  <div className="flex flex-col gap-4">
+                    {zoneStepLoading ? (
+                      <p
+                        className="text-center text-sm"
+                        style={{ color: "color-mix(in srgb, var(--body-text) 70%, var(--page-bg))" }}
+                      >
+                        Vérification des places…
+                      </p>
+                    ) : (
+                      <SeatingZonePicker
+                        interiorLabel="Salle"
+                        terraceLabel={effectiveTerraceLabel}
+                        value={seatingZone}
+                        onChange={setSeatingZone}
+                        interiorState={zoneSeatStates.interior}
+                        terraceState={zoneSeatStates.terrace}
+                        previewMode={previewMode}
+                        radiusClass={dateBtnRadius}
+                      />
                     )}
                   </div>
                 ) : null}
@@ -1875,6 +2003,9 @@ export default function PublicReservationForm({
                       (wizardStep === 2 &&
                         (guests < 1 || isDateInClosurePeriod)) ||
                       (wizardStep === 3 && !reservationTime) ||
+                      (wizardStep === terraceZoneStep &&
+                        allowTerraceZoneChoice &&
+                        (zoneStepLoading || !seatingZone)) ||
                       (wizardStep === 4 && canChooseTable && !clientSelectedTableId) ||
                       (wizardStep === 4 && allowAreaChoice && !canChooseTable && !publicPlanId)
                     }

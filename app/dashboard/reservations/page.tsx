@@ -4,6 +4,7 @@ import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import { Plus } from "lucide-react";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
+import { TerraceControlBanner } from "@/src/components/dashboard/terrace-control-banner";
 
 type DashboardReservationsPageProps = {
   searchParams?: Promise<{ new?: string }>;
@@ -78,6 +79,7 @@ export default async function DashboardReservationsPage({ searchParams }: Dashbo
           icon: <Plus className="h-4 w-4" strokeWidth={2} />,
         }}
       />
+      <TerraceControlBanner restaurantId={restaurant.id} className="mb-4" />
       <ReservationsManager
         initialReservations={((reservations ?? []) as ReservationRow[]).map((r) => ({
           ...r,

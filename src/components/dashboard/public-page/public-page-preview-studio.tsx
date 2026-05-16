@@ -168,6 +168,8 @@ export default function PublicPagePreviewStudio({
       closureEndDate={null}
       closureMessage={null}
       terraceEnabled={draft.terraceEnabled ?? false}
+      terraceLabel="Terrasse"
+      terraceCapacity={0}
       visualThemeId={draft.visualThemeId ?? "default"}
       themeCssVarOverrides={draft.themeCssVarOverrides}
       showGrainOverlay={draft.showGrainOverlay ?? false}

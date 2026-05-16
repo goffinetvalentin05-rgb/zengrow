@@ -35,6 +35,10 @@ import {
   reservationModeFromLegacy,
   timeHhMmFromDb,
 } from "@/src/lib/reservation/reservation-modes";
+import {
+  clampTerraceCapacity,
+  normalizeTerraceLabel,
+} from "@/src/lib/reservation/terrace-settings";
 
 type RestaurantData = {
   id: string;
@@ -109,6 +113,7 @@ type SettingsData = {
   public_page_show_opening_hours: boolean | null;
   terrace_enabled?: boolean | null;
   terrace_capacity?: number | null;
+  terrace_label?: string | null;
   auto_archive_reservations?: boolean | null;
   reservation_mode?: string | null;
   /** Mode public en plan de salle: automatic | zone | table */
@@ -219,8 +224,11 @@ export default function SettingsForm({
     Math.max(1, Math.min(500, settings.service_dinner_max_covers ?? settings.max_covers_per_slot ?? 40)),
   );
   const [terraceEnabled] = useState(settings.terrace_enabled ?? false);
-  const [terraceCapacity] = useState(
-    Math.max(0, Math.min(500, settings.terrace_capacity ?? 0)),
+  const [terraceCapacity, setTerraceCapacity] = useState(() =>
+    clampTerraceCapacity(settings.terrace_capacity ?? 0),
+  );
+  const [terraceLabel, setTerraceLabel] = useState(() =>
+    normalizeTerraceLabel(settings.terrace_label),
   );
   const [daysInAdvance, setDaysInAdvance] = useState(settings.days_in_advance ?? 60);
   const [floorPlanLunchDuration] = useState(
@@ -566,7 +574,8 @@ export default function SettingsForm({
         service_dinner_end: dinnerServiceEnd.length === 5 ? `${dinnerServiceEnd}:00` : dinnerServiceEnd,
         service_dinner_max_covers: Math.max(1, Math.min(500, dinnerMaxCovers)),
         terrace_enabled: terraceEnabled,
-        terrace_capacity: Math.max(0, Math.min(500, terraceCapacity)),
+        terrace_capacity: clampTerraceCapacity(terraceCapacity),
+        terrace_label: normalizeTerraceLabel(terraceLabel),
         days_in_advance: daysInAdvance,
         reservation_slot_interval: 15,
         max_party_size: maxPartySize,
@@ -830,6 +839,42 @@ export default function SettingsForm({
                     </Button>
                   </div>
                 )}
+              </div>
+            </SettingsAccordion>
+            <SettingsAccordion
+              title="Terrasse"
+              description="Capacité en couverts hors plan de salle. L’activation du jour se fait depuis le tableau de bord."
+            >
+              <div className="space-y-5">
+                <p className="text-sm leading-relaxed text-zg-muted">
+                  La terrasse n&apos;est pas liée à votre plan de salle. C&apos;est simplement un nombre de
+                  couverts en plus que vous pouvez accueillir lorsque la terrasse est activée pour la journée.
+                </p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <ReservationField
+                    label="Capacité totale"
+                    description="Nombre maximum de couverts en terrasse en simultané (tous créneaux confondus sur un même horaire)."
+                  >
+                    <Input
+                      type="number"
+                      min={0}
+                      max={500}
+                      value={terraceCapacity}
+                      onChange={(e) => setTerraceCapacity(clampTerraceCapacity(Number(e.target.value)))}
+                    />
+                  </ReservationField>
+                  <ReservationField
+                    label="Label affiché aux clients"
+                    description="Ex. Patio, Jardin, Rooftop…"
+                  >
+                    <Input
+                      value={terraceLabel}
+                      onChange={(e) => setTerraceLabel(e.target.value)}
+                      placeholder="Terrasse"
+                      maxLength={40}
+                    />
+                  </ReservationField>
+                </div>
               </div>
             </SettingsAccordion>
           </SettingsCategoryCard>
