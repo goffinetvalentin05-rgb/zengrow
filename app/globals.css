@@ -390,9 +390,14 @@ body {
   backdrop-filter: blur(16px);
 }
 
-/* Parcours showroom : respiration, moins d’effet “blocs SaaS” */
-[data-showroom-flow="true"] section {
-  scroll-margin-top: 5rem;
+/* Parcours showroom : landing sociale, pas site web */
+[data-showroom-flow="true"] {
+  --page-bg: color-mix(in srgb, var(--hero-primary, #0c0b0a) 8%, #0a0908);
+}
+
+[data-showroom-flow="true"] section,
+[data-showroom-flow="true"] footer {
+  scroll-margin-top: 0;
 }
 
 [data-showroom-flow="true"] .flex.w-full.flex-col > div {
@@ -400,16 +405,17 @@ body {
 }
 
 [data-showroom-flow="true"] #reservation {
-  margin-top: clamp(1.5rem, 6vw, 3rem);
-}
-
-[data-showroom-flow="true"] #ambiance {
-  padding-top: clamp(0.5rem, 2vw, 1rem);
+  margin-top: 0;
+  border-top: 1px solid color-mix(in srgb, var(--body-text) 8%, transparent);
 }
 
 [data-showroom-flow="true"] #accueil {
   min-height: 100dvh;
   min-height: 100svh;
+}
+
+[data-showroom-flow="true"] .zg-showroom-gallery + .zg-showroom-signature {
+  margin-top: -0.5rem;
 }
 
 /* Hero affiche premium — centré, CTA discret avec léger glow */

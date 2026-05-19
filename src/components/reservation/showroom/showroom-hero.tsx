@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronDown } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
 export function ShowroomHero({
@@ -9,6 +8,7 @@ export function ShowroomHero({
   logoUrl,
   restaurantName,
   emotionalHeadline,
+  emotionalSubtitle,
   ctaLabel,
   secondaryLabel,
   secondaryHref,
@@ -19,8 +19,8 @@ export function ShowroomHero({
   coverImageUrl?: string | null;
   logoUrl?: string | null;
   restaurantName: string;
-  /** Phrase émotionnelle courte — distincte du nom de l’établissement */
   emotionalHeadline?: string | null;
+  emotionalSubtitle?: string | null;
   ctaLabel: string;
   secondaryLabel: string;
   secondaryHref?: string | null;
@@ -30,10 +30,8 @@ export function ShowroomHero({
 }) {
   const cover = coverImageUrl?.trim() || null;
   const name = restaurantName.trim();
-  const line = emotionalHeadline?.trim();
-  const showName =
-    name.length > 0 &&
-    (!line || line.toLowerCase() !== name.toLowerCase());
+  const headline = emotionalHeadline?.trim();
+  const subtitle = emotionalSubtitle?.trim();
 
   const scrollToMenu = () => {
     document.getElementById("signature")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -54,7 +52,7 @@ export function ShowroomHero({
             alt=""
             fill
             priority
-            className="object-cover zg-public-hero-media"
+            className="object-cover zg-public-hero-media scale-[1.03]"
             sizes="100vw"
             unoptimized
           />
@@ -63,93 +61,87 @@ export function ShowroomHero({
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(165deg, var(--hero-primary) 0%, color-mix(in srgb, var(--body-text) 28%, var(--hero-primary)) 100%)`,
+            background: `linear-gradient(168deg, #0a0908 0%, color-mix(in srgb, var(--hero-primary) 40%, #0a0908) 55%, #0a0908 100%)`,
           }}
           aria-hidden
         />
       )}
 
-      {/* Overlay cinéma */}
-      <div className="pointer-events-none absolute inset-0 bg-black/45" aria-hidden />
+      <div className="pointer-events-none absolute inset-0 bg-black/50" aria-hidden />
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-black/25 to-black/75"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"
         aria-hidden
       />
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 90% 70% at 50% 45%, transparent 0%, rgba(0,0,0,0.55) 100%)",
-        }}
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-60"
-        style={{
-          background:
-            "radial-gradient(ellipse 50% 35% at 50% 100%, color-mix(in srgb, var(--accent-color) 18%, transparent), transparent 70%)",
+            "radial-gradient(ellipse 85% 65% at 50% 42%, transparent 0%, rgba(0,0,0,0.62) 100%)",
         }}
         aria-hidden
       />
 
       <div
         className={cn(
-          "relative z-[1] mx-auto flex w-full max-w-lg flex-col items-center px-6 py-[max(5rem,env(safe-area-inset-top))] text-center sm:max-w-xl",
-          previewMode ? "pb-14" : "pb-[max(3rem,env(safe-area-inset-bottom))]",
+          "relative z-[1] mx-auto flex w-full max-w-md flex-col items-center px-6 text-center sm:max-w-lg",
+          previewMode
+            ? "py-[max(4rem,env(safe-area-inset-top))] pb-14"
+            : "justify-center py-[max(5.5rem,env(safe-area-inset-top))] pb-[max(3.5rem,env(safe-area-inset-bottom))]",
         )}
       >
         {logoUrl?.trim() ? (
-          <div className="relative mb-6 h-16 w-48 sm:mb-8 sm:h-[4.5rem] sm:w-56">
+          <div className="relative mb-8 h-[3.25rem] w-44 sm:mb-10 sm:h-14 sm:w-52">
             <Image
               src={logoUrl.trim()}
               alt=""
               fill
               className="object-contain object-center"
-              style={{ filter: "drop-shadow(0 6px 32px rgba(0,0,0,0.45))" }}
-              sizes="224px"
+              style={{ filter: "drop-shadow(0 8px 40px rgba(0,0,0,0.5))" }}
+              sizes="208px"
               priority
               unoptimized
             />
           </div>
         ) : null}
 
-        {showName ? (
+        {name ? (
           <p
-            className={cn(
-              "text-balance font-medium tracking-[0.2em] text-white/90 uppercase",
-              logoUrl?.trim() ? "text-[11px] sm:text-xs" : "text-[clamp(1.5rem,5vw,2.25rem)] normal-case tracking-tight",
-            )}
-            style={{
-              fontFamily: logoUrl?.trim()
-                ? "var(--body-font), system-ui, sans-serif"
-                : "var(--heading-font), Georgia, serif",
-              letterSpacing: logoUrl?.trim() ? undefined : "-0.02em",
-            }}
+            className="text-balance text-[11px] font-medium tracking-[0.28em] text-white/85 uppercase sm:text-xs"
+            style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
           >
             {name}
           </p>
         ) : null}
 
-        {line ? (
+        {headline ? (
           <h1
             className={cn(
-              "text-balance font-medium leading-[1.08] tracking-tight text-white",
-              showName ? "mt-5 text-[clamp(1.65rem,6.5vw,2.75rem)]" : "text-[clamp(2rem,7.5vw,3.35rem)]",
+              "text-balance font-medium leading-[1.1] tracking-tight text-white",
+              name ? "mt-6 text-[clamp(1.75rem,6vw,2.85rem)]" : "text-[clamp(2rem,7.5vw,3.25rem)]",
             )}
-            style={{ fontFamily: "var(--heading-font), Georgia, serif", letterSpacing: "-0.025em" }}
+            style={{ fontFamily: "var(--heading-font), Georgia, serif", letterSpacing: "-0.03em" }}
           >
-            {line}
+            {headline}
           </h1>
-        ) : showName ? null : (
+        ) : name ? (
           <h1
-            className="text-balance text-[clamp(2rem,7.5vw,3.35rem)] font-medium leading-[1.08] tracking-tight text-white"
-            style={{ fontFamily: "var(--heading-font), Georgia, serif", letterSpacing: "-0.025em" }}
+            className="text-balance text-[clamp(2rem,7.5vw,3.25rem)] font-medium leading-[1.1] tracking-tight text-white"
+            style={{ fontFamily: "var(--heading-font), Georgia, serif", letterSpacing: "-0.03em" }}
           >
             {name}
           </h1>
-        )}
+        ) : null}
 
-        <div className="mt-10 flex flex-col items-center gap-5 sm:mt-12">
+        {subtitle ? (
+          <p
+            className="mt-5 max-w-[22rem] text-pretty text-[15px] leading-relaxed font-light text-white/62 sm:text-base"
+            style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
+          >
+            {subtitle}
+          </p>
+        ) : null}
+
+        <div className="mt-11 flex flex-col items-center gap-5 sm:mt-12">
           <button type="button" onClick={onReserve} className="zg-showroom-hero-cta">
             {ctaLabel}
           </button>
@@ -159,7 +151,7 @@ export function ShowroomHero({
               href={secondaryHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[13px] font-medium tracking-wide text-white/55 underline-offset-[5px] transition hover:text-white/85 hover:underline"
+              className="text-[12px] font-medium tracking-[0.04em] text-white/45 underline-offset-[6px] transition hover:text-white/75 hover:underline"
             >
               {secondaryLabel}
             </a>
@@ -167,22 +159,13 @@ export function ShowroomHero({
             <button
               type="button"
               onClick={scrollToMenu}
-              className="text-[13px] font-medium tracking-wide text-white/55 underline-offset-[5px] transition hover:text-white/85 hover:underline"
+              className="text-[12px] font-medium tracking-[0.04em] text-white/45 underline-offset-[6px] transition hover:text-white/75 hover:underline"
             >
               {secondaryLabel}
             </button>
           ) : null}
         </div>
       </div>
-
-      {!previewMode ? (
-        <div
-          className="pointer-events-none absolute bottom-5 left-1/2 z-[1] -translate-x-1/2 text-white/30 sm:bottom-7"
-          aria-hidden
-        >
-          <ChevronDown className="h-5 w-5 animate-bounce" style={{ animationDuration: "2.8s" }} />
-        </div>
-      ) : null}
     </section>
   );
 }

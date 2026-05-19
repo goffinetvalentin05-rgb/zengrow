@@ -1814,21 +1814,57 @@ export function PremiumReservationSection({
   phonePreferLabel: string;
   showroomMinimal?: boolean;
 }) {
+  if (showroomMinimal) {
+    return (
+      <section id="reservation" className="zg-showroom-reservation relative scroll-mt-0" style={{ backgroundColor: "var(--page-bg)" }}>
+        <div className="mx-auto max-w-md px-5 py-16 sm:px-6 sm:py-20">
+          <header className="mb-10 text-center">
+            <h2
+              className="text-balance text-[clamp(1.5rem,5vw,2rem)] font-medium leading-tight tracking-tight"
+              style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
+            >
+              {title}
+            </h2>
+            {intro?.trim() ? (
+              <p className="mt-3 text-[15px] font-light leading-relaxed opacity-55" style={{ color: "var(--body-text)" }}>
+                {intro}
+              </p>
+            ) : null}
+          </header>
+          <div
+            className="rounded-[calc(var(--radius)+4px)] border p-5 sm:p-7"
+            style={{
+              borderColor: "color-mix(in srgb, var(--body-text) 10%, var(--page-bg))",
+              backgroundColor: "color-mix(in srgb, var(--body-text) 3%, var(--page-bg))",
+            }}
+          >
+            {children}
+          </div>
+          {showPhoneAlt && phone ? (
+            <p className="mt-8 text-center text-[13px] opacity-50" style={{ color: "var(--body-text)" }}>
+              {phonePreferLabel}{" "}
+              <a
+                href={`tel:${phone.replace(/\s/g, "")}`}
+                className="font-medium underline-offset-4 hover:underline"
+                style={{ color: "var(--accent-color)" }}
+              >
+                {phone}
+              </a>
+            </p>
+          ) : null}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section
       id="reservation"
-      className={cn(
-        "scroll-mt-24 relative overflow-hidden",
-        showroomMinimal && "border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]",
-      )}
-      style={
-        showroomMinimal
-          ? { backgroundColor: "var(--page-bg)" }
-          : {
-              background:
-                "linear-gradient(180deg, color-mix(in srgb, var(--hero-primary) 6%, var(--page-bg)) 0%, color-mix(in srgb, var(--accent-color) 3%, var(--page-bg)) 38%, var(--page-bg) 100%)",
-            }
-      }
+      className="scroll-mt-24 relative overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(180deg, color-mix(in srgb, var(--hero-primary) 6%, var(--page-bg)) 0%, color-mix(in srgb, var(--accent-color) 3%, var(--page-bg)) 38%, var(--page-bg) 100%)",
+      }}
     >
       <div
         className="pointer-events-none absolute -left-[12%] top-[-18%] h-[460px] w-[560px] rounded-full blur-[100px] opacity-[0.14]"

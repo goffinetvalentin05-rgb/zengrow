@@ -252,7 +252,7 @@ export function ctaFlags(
 } {
   if (structureTemplate && isSocialShowroomFlow(structureTemplate)) {
     return {
-      showSticky: conversion.stickyMobile !== false,
+      showSticky: false,
       showMiddle: false,
       showFinal: false,
       showNavReserve: false,

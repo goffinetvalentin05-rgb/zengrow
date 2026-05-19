@@ -82,9 +82,7 @@ import {
   PremiumDarkMasonryGallery,
   PremiumDarkNav,
 } from "@/src/lib/themes/premium-dark/components";
-import { ShowroomNav } from "@/src/components/reservation/showroom/showroom-nav";
 import { ShowroomHero } from "@/src/components/reservation/showroom/showroom-hero";
-import { ShowroomAmbiance } from "@/src/components/reservation/showroom/showroom-ambiance";
 import { ShowroomGallery } from "@/src/components/reservation/showroom/showroom-gallery";
 import { ShowroomSignature } from "@/src/components/reservation/showroom/showroom-signature";
 import { ShowroomSocialProof } from "@/src/components/reservation/showroom/showroom-social-proof";
@@ -844,15 +842,25 @@ export default function PublicReservationForm({
 
   const headlineText = heroTitle?.trim() || restaurantName;
   const taglineText = restaurantTagline?.trim();
-  const showroomEmotionalHeadline = (() => {
+  const descriptionText = publicPageDescription?.trim() ?? "";
+  const showroomHeroCopy = (() => {
     const name = restaurantName.trim();
     const title = heroTitle?.trim();
     const tag = taglineText;
-    if (title && title.toLowerCase() !== name.toLowerCase()) return title;
-    if (tag && tag.toLowerCase() !== name.toLowerCase()) return tag;
-    return null;
+    const desc = descriptionText;
+    let headline: string | null = null;
+    let subtitle: string | null = null;
+    if (title && title.toLowerCase() !== name.toLowerCase()) {
+      headline = title;
+      subtitle = tag && tag.toLowerCase() !== title.toLowerCase() ? tag : desc?.slice(0, 140) || null;
+    } else if (tag && tag.toLowerCase() !== name.toLowerCase()) {
+      headline = tag;
+      subtitle = desc?.slice(0, 140) || null;
+    } else if (desc) {
+      subtitle = desc.slice(0, 140);
+    }
+    return { headline, subtitle };
   })();
-  const descriptionText = publicPageDescription?.trim() ?? "";
   const menuHref =
     menuUrl?.trim() ||
     (sortedDocuments[0]?.fileUrl ?? null);
@@ -1021,7 +1029,11 @@ export default function PublicReservationForm({
         previewMode ? "relative min-h-0 w-full" : "min-h-screen",
         "[font-size:calc(16px*var(--font-scale))]",
         isShowroomFlow && "zg-showroom-flow",
-        !previewMode && conversionCta.showSticky && reservationEnabled && "pb-[4.75rem] md:pb-0",
+        !previewMode &&
+          !isShowroomFlow &&
+          conversionCta.showSticky &&
+          reservationEnabled &&
+          "pb-[4.75rem] md:pb-0",
       )}
       data-showroom-flow={isShowroomFlow ? "true" : undefined}
       style={{
@@ -1034,21 +1046,19 @@ export default function PublicReservationForm({
       {showGrainOverlay ? <GrainOverlay /> : null}
 
       {isShowroomFlow ? (
-        <>
-          <ShowroomNav visible={premium.navigationEnabled} previewMode={previewMode} />
-          <ShowroomHero
-            coverImageUrl={coverImageUrl}
-            logoUrl={logoUrl}
-            restaurantName={restaurantName}
-            emotionalHeadline={showroomEmotionalHeadline}
-            ctaLabel={ctaLabel}
-            secondaryLabel={secondaryLabel}
-            secondaryHref={menuHref}
-            showSecondary={Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)}
-            onReserve={scrollToReservation}
-            previewMode={previewMode}
-          />
-        </>
+        <ShowroomHero
+          coverImageUrl={coverImageUrl}
+          logoUrl={logoUrl}
+          restaurantName={restaurantName}
+          emotionalHeadline={showroomHeroCopy.headline}
+          emotionalSubtitle={showroomHeroCopy.subtitle}
+          ctaLabel={ctaLabel}
+          secondaryLabel={secondaryLabel}
+          secondaryHref={menuHref}
+          showSecondary={Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)}
+          onReserve={scrollToReservation}
+          previewMode={previewMode}
+        />
       ) : usePremiumChrome ? (
         <>
           <PremiumDarkNav
@@ -1128,16 +1138,14 @@ export default function PublicReservationForm({
         </>
       )}
 
-      {isShowroomFlow ? <div id="showroom-hero-sentinel" className="h-px w-full" aria-hidden /> : null}
-
       {isShowroomFlow ? (
         <>
-          <ShowroomAmbiance
+          <ShowroomGallery images={showroomGalleryImages} />
+          <ShowroomSignature
+            offers={menuOffers}
             moodLine={conceptBody}
             atmosphereImageUrl={showroomAtmosphereImage}
           />
-          <ShowroomGallery images={showroomGalleryImages} />
-          <ShowroomSignature offers={menuOffers} menuHref={menuHref} menuPdfLabel={menuPdfLinkLabel} />
           {showCredibility ? (
             <ShowroomSocialProof
               data={credibilityData}
@@ -1149,13 +1157,6 @@ export default function PublicReservationForm({
               }}
             />
           ) : null}
-          <ShowroomEssentials
-            address={restaurantAddress}
-            openingHoursLines={openingHoursLines}
-            googleMapsUrl={googleMapsUrl}
-            menuHref={menuHref}
-            menuLabel={menuPdfLinkLabel}
-          />
         </>
       ) : null}
 
@@ -1282,8 +1283,8 @@ export default function PublicReservationForm({
         {blockEnabled("reservation") && reservationEnabled ? (
         <div style={isShowroomFlow ? undefined : { order: sectionOrderIndex("reservation") }}>
         <PremiumReservationSection
-          title={reservationSectionTitle()}
-          intro={isShowroomFlow ? "Quelques secondes pour confirmer votre table." : effectiveConfig.reservation.intro}
+          title={isShowroomFlow ? "Réserver une table" : reservationSectionTitle()}
+          intro={isShowroomFlow ? "" : effectiveConfig.reservation.intro}
           groupMessage={premium.reservation.groupMessage}
           showPhoneAlt={showPhoneCta && showPhoneRow}
           phone={restaurantPhone}
@@ -1954,10 +1955,19 @@ export default function PublicReservationForm({
       <StickyReserveBar
         label={ctaLabel}
         onClick={scrollToReservation}
-        visible={!previewMode && conversionCta.showSticky && reservationEnabled && blockEnabled("reservation")}
+        visible={
+          !isShowroomFlow &&
+          !previewMode &&
+          conversionCta.showSticky &&
+          reservationEnabled &&
+          blockEnabled("reservation")
+        }
         previewMode={previewMode}
-        scrollSmart={isShowroomFlow}
       />
+
+      {isShowroomFlow ? (
+        <ShowroomEssentials address={restaurantAddress} googleMapsUrl={googleMapsUrl} />
+      ) : null}
 
       {blockEnabled("location") && !isShowroomFlow ? (
         <PremiumPracticalInfo
