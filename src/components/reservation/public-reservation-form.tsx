@@ -85,6 +85,7 @@ import {
 import { ShowroomNav } from "@/src/components/reservation/showroom/showroom-nav";
 import { ShowroomHero } from "@/src/components/reservation/showroom/showroom-hero";
 import { ShowroomAmbiance } from "@/src/components/reservation/showroom/showroom-ambiance";
+import { ShowroomGallery } from "@/src/components/reservation/showroom/showroom-gallery";
 import { ShowroomSignature } from "@/src/components/reservation/showroom/showroom-signature";
 import { ShowroomSocialProof } from "@/src/components/reservation/showroom/showroom-social-proof";
 import { ShowroomEssentials } from "@/src/components/reservation/showroom/showroom-essentials";
@@ -843,6 +844,14 @@ export default function PublicReservationForm({
 
   const headlineText = heroTitle?.trim() || restaurantName;
   const taglineText = restaurantTagline?.trim();
+  const showroomEmotionalHeadline = (() => {
+    const name = restaurantName.trim();
+    const title = heroTitle?.trim();
+    const tag = taglineText;
+    if (title && title.toLowerCase() !== name.toLowerCase()) return title;
+    if (tag && tag.toLowerCase() !== name.toLowerCase()) return tag;
+    return null;
+  })();
   const descriptionText = publicPageDescription?.trim() ?? "";
   const menuHref =
     menuUrl?.trim() ||
@@ -978,6 +987,14 @@ export default function PublicReservationForm({
     premium.concept.title.trim() || effectiveConfig.blockContent.about.title || "Notre expÃ©rience";
   const conceptImage =
     premium.concept.imageUrl.trim() || galleryImageUrls[0] || coverImageUrl || "";
+  const showroomAtmosphereImage =
+    premium.concept.imageUrl.trim() || galleryImageUrls[0] || null;
+  const showroomGalleryImages =
+    showroomAtmosphereImage &&
+    !premium.concept.imageUrl.trim() &&
+    galleryImageUrls[0] === showroomAtmosphereImage
+      ? galleryImageUrls.slice(1)
+      : galleryImageUrls;
 
   const secondaryLabel =
     secondaryCtaLabel?.trim() || effectiveConfig.hero.secondaryCta || "Voir le menu";
@@ -1018,22 +1035,17 @@ export default function PublicReservationForm({
 
       {isShowroomFlow ? (
         <>
-          <ShowroomNav
-            restaurantName={restaurantName}
-            visible={premium.navigationEnabled}
-            previewMode={previewMode}
-          />
+          <ShowroomNav visible={premium.navigationEnabled} previewMode={previewMode} />
           <ShowroomHero
             coverImageUrl={coverImageUrl}
             logoUrl={logoUrl}
-            headline={headlineText}
-            tagline={taglineText || undefined}
+            restaurantName={restaurantName}
+            emotionalHeadline={showroomEmotionalHeadline}
             ctaLabel={ctaLabel}
             secondaryLabel={secondaryLabel}
             secondaryHref={menuHref}
             showSecondary={Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)}
             onReserve={scrollToReservation}
-            ctaStyle={ctaStyle}
             previewMode={previewMode}
           />
         </>
@@ -1120,7 +1132,11 @@ export default function PublicReservationForm({
 
       {isShowroomFlow ? (
         <>
-          <ShowroomAmbiance images={galleryImageUrls} moodLine={conceptBody} />
+          <ShowroomAmbiance
+            moodLine={conceptBody}
+            atmosphereImageUrl={showroomAtmosphereImage}
+          />
+          <ShowroomGallery images={showroomGalleryImages} />
           <ShowroomSignature offers={menuOffers} menuHref={menuHref} menuPdfLabel={menuPdfLinkLabel} />
           {showCredibility ? (
             <ShowroomSocialProof

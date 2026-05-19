@@ -15,7 +15,7 @@ export function ShowroomSocialProof({
   if (!hasCredibilityContent(data)) return null;
 
   return (
-    <section id="avis" className="scroll-mt-20 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] py-16 sm:py-20">
+    <section id="avis" className="scroll-mt-20 py-20 sm:py-28">
       <CredibilitySection data={data} copy={copy} />
     </section>
   );

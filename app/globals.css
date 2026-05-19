@@ -412,6 +412,51 @@ body {
   min-height: 100svh;
 }
 
+/* Hero affiche premium — centré, CTA discret avec léger glow */
+.zg-showroom-hero-poster {
+  isolation: isolate;
+}
+
+.zg-showroom-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0 1.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  background: color-mix(in srgb, white 94%, var(--accent-color) 6%);
+  color: #141210;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: none;
+  box-shadow:
+    0 12px 40px -10px rgb(0 0 0 / 0.45),
+    0 0 28px -6px color-mix(in srgb, var(--accent-color) 35%, transparent);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+.zg-showroom-hero-cta:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 16px 48px -8px rgb(0 0 0 / 0.5),
+    0 0 36px -4px color-mix(in srgb, var(--accent-color) 45%, transparent);
+}
+
+.zg-showroom-hero-cta:active {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .zg-showroom-hero-cta {
+    animation: zg-showroom-cta-pulse 4s ease-in-out infinite;
+  }
+}
+
 /* Landing — évite #eae6dd (var(--border) global) sur fond sombre */
 .landing-page {
   --border: rgb(255 255 255 / 0.06);

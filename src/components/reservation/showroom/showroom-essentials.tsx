@@ -25,7 +25,7 @@ export function ShowroomEssentials({
   return (
     <section
       id="infos"
-      className="scroll-mt-20 border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] py-14 sm:py-20"
+      className="scroll-mt-20 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-md space-y-8 px-4 sm:px-6">
         <p

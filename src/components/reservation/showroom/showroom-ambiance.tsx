@@ -1,35 +1,36 @@
 "use client";
 
 import Image from "next/image";
-import { cn } from "@/src/lib/utils";
 
+/** Ambiance & expérience — texte éditorial + visuel d’atmosphère optionnel */
 export function ShowroomAmbiance({
-  images,
   moodLine,
-  eyebrow = "L'ambiance",
+  atmosphereImageUrl,
+  eyebrow = "L'expérience",
 }: {
-  images: string[];
   moodLine?: string;
+  atmosphereImageUrl?: string | null;
   eyebrow?: string;
 }) {
-  if (images.length === 0 && !moodLine?.trim()) return null;
-
   const line = moodLine?.trim();
+  const image = atmosphereImageUrl?.trim();
+  if (!line && !image) return null;
+
   const shortLine =
-    line && line.length <= 140 ? line : line ? line.slice(0, 137).trimEnd() + "…" : null;
+    line && line.length <= 160 ? line : line ? line.slice(0, 157).trimEnd() + "…" : null;
 
   return (
-    <section id="ambiance" className="scroll-mt-20 py-16 sm:py-24">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section id="ambiance" className="scroll-mt-20 py-20 sm:py-28">
+      <div className="mx-auto max-w-lg px-6 text-center sm:max-w-xl">
         <p
-          className="text-center text-[10px] font-semibold uppercase tracking-[0.32em]"
+          className="text-[10px] font-semibold uppercase tracking-[0.32em]"
           style={{ color: "var(--accent-color)" }}
         >
           {eyebrow}
         </p>
         {shortLine ? (
           <p
-            className="mx-auto mt-5 max-w-md text-center text-lg font-light leading-relaxed opacity-90 sm:text-xl"
+            className="mt-6 text-pretty text-[clamp(1.25rem,4.5vw,1.65rem)] font-light leading-[1.45] tracking-tight opacity-92"
             style={{ color: "var(--heading-color)", fontFamily: "var(--heading-font)" }}
           >
             {shortLine}
@@ -37,34 +38,21 @@ export function ShowroomAmbiance({
         ) : null}
       </div>
 
-      {images.length > 0 ? (
-        <div className="zg-showroom-reels-scroll mt-12 flex gap-3 overflow-x-auto px-4 pb-1 snap-x snap-mandatory sm:gap-4 sm:px-6 md:grid md:grid-cols-3 md:overflow-visible md:pb-0 lg:grid-cols-4 lg:gap-4">
-          {images.slice(0, 8).map((src, i) => (
-            <div
-              key={src}
-              className={cn(
-                "relative shrink-0 snap-center overflow-hidden rounded-2xl",
-                "aspect-[9/16] w-[min(78vw,300px)] shadow-[0_32px_80px_-40px_rgba(0,0,0,0.5)]",
-                "md:w-full md:shrink",
-                i % 3 === 1 && "md:mt-10",
-                i % 3 === 2 && "md:mt-5",
-              )}
-            >
-              <Image
-                src={src}
-                alt=""
-                fill
-                className="object-cover"
-                sizes="(max-width:768px) 78vw, 25vw"
-                unoptimized
-                priority={i < 2}
-              />
-              <div
-                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"
-                aria-hidden
-              />
-            </div>
-          ))}
+      {image ? (
+        <div className="relative mx-auto mt-14 aspect-[4/5] w-[min(88vw,420px)] overflow-hidden sm:mt-16 sm:aspect-[3/4] sm:w-[min(72vw,480px)]">
+          <Image
+            src={image}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="(max-width:640px) 88vw, 480px"
+            unoptimized
+            priority
+          />
+          <div
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"
+            aria-hidden
+          />
         </div>
       ) : null}
     </section>
