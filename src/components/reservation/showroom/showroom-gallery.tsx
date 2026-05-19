@@ -8,7 +8,7 @@ export function ShowroomGallery({ images }: { images: string[] }) {
   if (images.length === 0) return null;
 
   return (
-    <section id="galerie" className="zg-showroom-gallery scroll-mt-0 py-6 sm:py-10">
+    <section id="galerie" className="zg-showroom-gallery scroll-mt-0 py-10 sm:py-14">
       <div className="zg-showroom-reels-scroll flex gap-2.5 overflow-x-auto px-3 pb-1 snap-x snap-mandatory sm:gap-3 sm:px-4 md:justify-center md:gap-4 md:overflow-visible md:px-6">
         {images.slice(0, 8).map((src, i) => (
           <div

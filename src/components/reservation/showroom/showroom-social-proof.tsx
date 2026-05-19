@@ -10,17 +10,23 @@ import { hasCredibilityContent } from "@/src/lib/public-page/premium-content";
 export function ShowroomSocialProof({
   data,
   copy,
+  omitRating = false,
 }: {
   data: CredibilityContent;
   copy: ReviewsSectionCopy;
+  /** Note déjà affichée dans le hero */
+  omitRating?: boolean;
 }) {
   if (!hasCredibilityContent(data)) return null;
 
-  const hasRating = Boolean(data.googleRating && data.reviewCount);
+  const hasRating = !omitRating && Boolean(data.googleRating && data.reviewCount);
   const hasQuote = Boolean(data.quote.trim());
+  const hasPress = data.pressMentions.length > 0;
+
+  if (!hasRating && !hasQuote && !hasPress) return null;
 
   return (
-    <section id="avis" className="zg-showroom-proof scroll-mt-0 py-16 sm:py-20">
+    <section id="avis" className="zg-showroom-proof scroll-mt-0 py-20 sm:py-28">
       <div className="mx-auto flex max-w-lg flex-col items-center gap-8 px-6 text-center">
         {hasRating ? (
           <div className="flex flex-col items-center gap-2">

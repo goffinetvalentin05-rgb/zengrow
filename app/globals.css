@@ -414,11 +414,19 @@ body {
   min-height: 100svh;
 }
 
-[data-showroom-flow="true"] .zg-showroom-gallery + .zg-showroom-signature {
-  margin-top: -0.5rem;
+[data-showroom-flow="true"] .zg-showroom-gallery {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--page-bg) 40%, transparent) 100%
+  );
 }
 
-/* Hero affiche premium — centré, CTA discret avec léger glow */
+[data-showroom-flow="true"] #accueil + .zg-showroom-gallery {
+  margin-top: -2.5rem;
+}
+
+/* Hero affiche premium — CTA capsule luxe, intégré à l’image */
 .zg-showroom-hero-poster {
   isolation: isolate;
 }
@@ -427,40 +435,52 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 3rem;
-  padding: 0 1.75rem;
+  min-height: 0;
+  padding: 0.65rem 1.35rem;
   border-radius: 9999px;
-  border: 1px solid rgb(255 255 255 / 0.22);
-  background: color-mix(in srgb, white 94%, var(--accent-color) 6%);
-  color: #141210;
-  font-size: 0.8125rem;
+  border: 1px solid color-mix(in srgb, var(--button-bg) 55%, rgb(255 255 255 / 0.2));
+  background: color-mix(in srgb, var(--button-bg) 92%, transparent);
+  color: var(--button-text);
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: none;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  white-space: nowrap;
   box-shadow:
-    0 12px 40px -10px rgb(0 0 0 / 0.45),
-    0 0 28px -6px color-mix(in srgb, var(--accent-color) 35%, transparent);
+    0 10px 32px -12px rgb(0 0 0 / 0.55),
+    0 0 24px -8px color-mix(in srgb, var(--button-bg) 45%, transparent);
   transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background 0.25s ease;
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.35s ease;
 }
 
 .zg-showroom-hero-cta:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  filter: brightness(1.06);
   box-shadow:
-    0 16px 48px -8px rgb(0 0 0 / 0.5),
-    0 0 36px -4px color-mix(in srgb, var(--accent-color) 45%, transparent);
+    0 14px 40px -10px rgb(0 0 0 / 0.58),
+    0 0 32px -6px color-mix(in srgb, var(--button-bg) 55%, transparent);
 }
 
 .zg-showroom-hero-cta:active {
   transform: translateY(0);
+  filter: brightness(0.98);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .zg-showroom-hero-cta {
-    animation: zg-showroom-cta-pulse 4s ease-in-out infinite;
-  }
+.zg-showroom-hero-footer-link {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--button-bg) 70%, white);
+  text-underline-offset: 4px;
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+.zg-showroom-hero-footer-link:hover {
+  color: color-mix(in srgb, var(--button-bg) 88%, white);
+  text-decoration: underline;
 }
 
 /* Landing — évite #eae6dd (var(--border) global) sur fond sombre */

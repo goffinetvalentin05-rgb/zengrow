@@ -25,7 +25,7 @@ export function ShowroomSignature({
   if (!shortMood && !atmosphere && items.length === 0) return null;
 
   return (
-    <section id="signature" className="zg-showroom-signature scroll-mt-0 py-16 sm:py-24">
+    <section id="signature" className="zg-showroom-signature scroll-mt-0 py-20 sm:py-28">
       {shortMood ? (
         <p
           className="mx-auto max-w-md px-6 text-center text-pretty text-[clamp(1.2rem,4vw,1.55rem)] font-light leading-[1.45] tracking-tight opacity-90"

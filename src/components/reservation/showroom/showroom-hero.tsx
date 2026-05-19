@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Star } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
 export function ShowroomHero({
@@ -9,6 +10,12 @@ export function ShowroomHero({
   restaurantName,
   emotionalHeadline,
   emotionalSubtitle,
+  cuisineType,
+  city,
+  googleRating,
+  reviewCount,
+  reviewsSuffix = "avis",
+  hoursSummary,
   ctaLabel,
   secondaryLabel,
   secondaryHref,
@@ -21,6 +28,12 @@ export function ShowroomHero({
   restaurantName: string;
   emotionalHeadline?: string | null;
   emotionalSubtitle?: string | null;
+  cuisineType?: string | null;
+  city?: string | null;
+  googleRating?: number | null;
+  reviewCount?: number | null;
+  reviewsSuffix?: string;
+  hoursSummary?: string | null;
   ctaLabel: string;
   secondaryLabel: string;
   secondaryHref?: string | null;
@@ -32,16 +45,38 @@ export function ShowroomHero({
   const name = restaurantName.trim();
   const headline = emotionalHeadline?.trim();
   const subtitle = emotionalSubtitle?.trim();
+  const hours = hoursSummary?.trim();
+
+  const metaParts = [cuisineType?.trim(), city?.trim()].filter(Boolean);
+  const metaLine = metaParts.length > 0 ? metaParts.join(" • ") : null;
+  const showRating = googleRating != null && reviewCount != null && reviewCount > 0;
 
   const scrollToMenu = () => {
     document.getElementById("signature")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const secondaryFooter =
+    showSecondary &&
+    (secondaryHref ? (
+      <a
+        href={secondaryHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="zg-showroom-hero-footer-link"
+      >
+        {secondaryLabel}
+      </a>
+    ) : (
+      <button type="button" onClick={scrollToMenu} className="zg-showroom-hero-footer-link">
+        {secondaryLabel}
+      </button>
+    ));
+
   return (
     <section
       id="accueil"
       className={cn(
-        "zg-showroom-hero-poster relative flex w-full flex-col items-center justify-center overflow-hidden",
+        "zg-showroom-hero-poster relative flex w-full flex-col overflow-hidden",
         previewMode ? "min-h-[min(100dvh,720px)]" : "min-h-[100dvh] min-h-[100svh]",
       )}
     >
@@ -52,7 +87,7 @@ export function ShowroomHero({
             alt=""
             fill
             priority
-            className="object-cover zg-public-hero-media scale-[1.03]"
+            className="object-cover zg-public-hero-media scale-[1.04]"
             sizes="100vw"
             unoptimized
           />
@@ -61,110 +96,117 @@ export function ShowroomHero({
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(168deg, #0a0908 0%, color-mix(in srgb, var(--hero-primary) 40%, #0a0908) 55%, #0a0908 100%)`,
+            background: `linear-gradient(165deg, #080706 0%, color-mix(in srgb, var(--hero-primary) 35%, #080706) 50%, #050504 100%)`,
           }}
           aria-hidden
         />
       )}
 
-      <div className="pointer-events-none absolute inset-0 bg-black/50" aria-hidden />
+      <div className="pointer-events-none absolute inset-0 bg-black/35" aria-hidden />
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-black/15 to-black/85"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/25"
         aria-hidden
       />
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 85% 65% at 50% 42%, transparent 0%, rgba(0,0,0,0.62) 100%)",
+            "radial-gradient(ellipse 120% 80% at 50% 100%, rgba(0,0,0,0.55) 0%, transparent 55%)",
         }}
         aria-hidden
       />
 
       <div
         className={cn(
-          "relative z-[1] mx-auto flex w-full max-w-md flex-col items-center px-6 text-center sm:max-w-lg",
-          previewMode
-            ? "py-[max(4rem,env(safe-area-inset-top))] pb-14"
-            : "justify-center py-[max(5.5rem,env(safe-area-inset-top))] pb-[max(3.5rem,env(safe-area-inset-bottom))]",
+          "relative z-[1] flex min-h-[inherit] flex-1 flex-col",
+          previewMode ? "min-h-[min(100dvh,720px)]" : "min-h-[100dvh] min-h-[100svh]",
         )}
       >
-        {logoUrl?.trim() ? (
-          <div className="relative mb-8 h-[3.25rem] w-44 sm:mb-10 sm:h-14 sm:w-52">
-            <Image
-              src={logoUrl.trim()}
-              alt=""
-              fill
-              className="object-contain object-center"
-              style={{ filter: "drop-shadow(0 8px 40px rgba(0,0,0,0.5))" }}
-              sizes="208px"
-              priority
-              unoptimized
-            />
-          </div>
-        ) : null}
-
-        {name ? (
-          <p
-            className="text-balance text-[11px] font-medium tracking-[0.28em] text-white/85 uppercase sm:text-xs"
-            style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
-          >
-            {name}
-          </p>
-        ) : null}
-
-        {headline ? (
-          <h1
-            className={cn(
-              "text-balance font-medium leading-[1.1] tracking-tight text-white",
-              name ? "mt-6 text-[clamp(1.75rem,6vw,2.85rem)]" : "text-[clamp(2rem,7.5vw,3.25rem)]",
-            )}
-            style={{ fontFamily: "var(--heading-font), Georgia, serif", letterSpacing: "-0.03em" }}
-          >
-            {headline}
-          </h1>
-        ) : name ? (
-          <h1
-            className="text-balance text-[clamp(2rem,7.5vw,3.25rem)] font-medium leading-[1.1] tracking-tight text-white"
-            style={{ fontFamily: "var(--heading-font), Georgia, serif", letterSpacing: "-0.03em" }}
-          >
-            {name}
-          </h1>
-        ) : null}
-
-        {subtitle ? (
-          <p
-            className="mt-5 max-w-[22rem] text-pretty text-[15px] leading-relaxed font-light text-white/62 sm:text-base"
-            style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
-          >
-            {subtitle}
-          </p>
-        ) : null}
-
-        <div className="mt-11 flex flex-col items-center gap-5 sm:mt-12">
-          <button type="button" onClick={onReserve} className="zg-showroom-hero-cta">
-            {ctaLabel}
-          </button>
-
-          {showSecondary && secondaryHref ? (
-            <a
-              href={secondaryHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[12px] font-medium tracking-[0.04em] text-white/45 underline-offset-[6px] transition hover:text-white/75 hover:underline"
-            >
-              {secondaryLabel}
-            </a>
-          ) : showSecondary ? (
-            <button
-              type="button"
-              onClick={scrollToMenu}
-              className="text-[12px] font-medium tracking-[0.04em] text-white/45 underline-offset-[6px] transition hover:text-white/75 hover:underline"
-            >
-              {secondaryLabel}
-            </button>
+        <div className="flex flex-1 flex-col items-center justify-center px-7 pb-8 pt-[max(3.5rem,env(safe-area-inset-top))] text-center sm:px-8">
+          {logoUrl?.trim() ? (
+            <div className="relative mb-10 h-12 w-40 sm:mb-12 sm:h-14 sm:w-48">
+              <Image
+                src={logoUrl.trim()}
+                alt=""
+                fill
+                className="object-contain object-center"
+                style={{ filter: "drop-shadow(0 12px 48px rgba(0,0,0,0.55))" }}
+                sizes="192px"
+                priority
+                unoptimized
+              />
+            </div>
           ) : null}
+
+          {name ? (
+            <h1
+              className="text-balance max-w-[16rem] text-[clamp(1.85rem,8vw,2.65rem)] font-medium leading-[1.05] tracking-[-0.02em] text-white sm:max-w-md"
+              style={{ fontFamily: "var(--heading-font), Georgia, serif" }}
+            >
+              {name}
+            </h1>
+          ) : null}
+
+          {(showRating || metaLine) && (
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+              {showRating ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] font-medium tracking-wide text-white/90 backdrop-blur-md">
+                  <Star className="h-3 w-3 fill-amber-400/95 text-amber-400/95" aria-hidden />
+                  <span className="tabular-nums">{googleRating!.toFixed(1)}</span>
+                  <span className="text-white/35">•</span>
+                  <span className="tabular-nums text-white/75">
+                    {reviewCount} {reviewsSuffix}
+                  </span>
+                </span>
+              ) : null}
+              {metaLine ? (
+                <span className="text-[12px] font-normal tracking-wide text-white/55">{metaLine}</span>
+              ) : null}
+            </div>
+          )}
+
+          {headline && headline.toLowerCase() !== name.toLowerCase() ? (
+            <p
+              className={cn(
+                "text-balance mt-8 max-w-[19rem] text-pretty font-light leading-[1.35] tracking-[-0.01em] text-white/88 sm:max-w-sm",
+                "text-[clamp(1.15rem,4.2vw,1.45rem)]",
+              )}
+              style={{ fontFamily: "var(--heading-font), Georgia, serif" }}
+            >
+              {headline}
+            </p>
+          ) : null}
+
+          {subtitle ? (
+            <p
+              className="mt-4 max-w-[18rem] text-pretty text-[13px] leading-relaxed font-light text-white/48 sm:max-w-xs sm:text-sm"
+              style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
+            >
+              {subtitle}
+            </p>
+          ) : null}
+
+          <div className="mt-10 sm:mt-12">
+            <button type="button" onClick={onReserve} className="zg-showroom-hero-cta">
+              {ctaLabel}
+            </button>
+          </div>
         </div>
+
+        {(hours || secondaryFooter) && (
+          <div className="flex items-end justify-between gap-4 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-2 sm:px-8">
+            {hours ? (
+              <p className="max-w-[58%] text-left text-[11px] leading-snug text-white/40">{hours}</p>
+            ) : (
+              <span aria-hidden />
+            )}
+            {secondaryFooter}
+          </div>
+        )}
       </div>
     </section>
   );

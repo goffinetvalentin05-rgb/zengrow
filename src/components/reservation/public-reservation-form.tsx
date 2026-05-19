@@ -873,6 +873,12 @@ export default function PublicReservationForm({
   const activeHighlights = highlights.filter(Boolean).slice(0, 6);
 
   const openingHoursLines = formatOpeningHoursLines(openingHours);
+  const showroomHoursSummary = useMemo(() => {
+    const lines = openingHoursLines.filter(Boolean);
+    if (lines.length === 0) return null;
+    const joined = lines.slice(0, 2).join(" • ");
+    return joined.length > 80 ? `${joined.slice(0, 77).trimEnd()}…` : joined;
+  }, [openingHoursLines]);
 
   const legacyContactHints = useMemo(
     () => ({
@@ -1060,6 +1066,12 @@ export default function PublicReservationForm({
           restaurantName={restaurantName}
           emotionalHeadline={showroomHeroCopy.headline}
           emotionalSubtitle={showroomHeroCopy.subtitle}
+          cuisineType={cuisineType}
+          city={city}
+          googleRating={showCredibility ? credibilityData.googleRating : null}
+          reviewCount={showCredibility ? credibilityData.reviewCount : null}
+          reviewsSuffix={resolvedSectionContent.reviews?.googleReviewsSuffix ?? "avis"}
+          hoursSummary={showroomHoursSummary}
           ctaLabel={ctaLabel}
           secondaryLabel={secondaryLabel}
           secondaryHref={menuHref}
@@ -1157,6 +1169,7 @@ export default function PublicReservationForm({
           {showCredibility ? (
             <ShowroomSocialProof
               data={credibilityData}
+              omitRating
               copy={{
                 googleReviewsSuffix: resolvedSectionContent.reviews?.googleReviewsSuffix ?? "",
                 googleCtaLabel: resolvedSectionContent.reviews?.googleCtaLabel ?? "",
