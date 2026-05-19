@@ -89,6 +89,11 @@ import { ShowroomSocialProof } from "@/src/components/reservation/showroom/showr
 import { ShowroomEssentials } from "@/src/components/reservation/showroom/showroom-essentials";
 
 export type PublicReservationFormProps = {
+  /**
+   * Force le renderer landing cinématique (route publique `/r/[slug]`).
+   * Ignore le template « site web » legacy et la navbar.
+   */
+  forceLandingExperience?: boolean;
   previewMode?: boolean;
   /** ThÃ¨me visuel page publique (`default` = rendu historique inchangÃ© cÃ´tÃ© structure). */
   visualThemeId?: ThemeId;
@@ -245,6 +250,7 @@ function PublicDescription({
 }
 
 export default function PublicReservationForm({
+  forceLandingExperience = false,
   previewMode = false,
   restaurantId,
   restaurantSlug = "",
@@ -965,15 +971,17 @@ export default function PublicReservationForm({
     const i = sectionOrder.indexOf(id);
     return i >= 0 ? i : 50;
   };
-  const isShowroomFlow = isSocialShowroomFlow(effectiveConfig.conversion.structureTemplate);
+  const isLandingPage =
+    forceLandingExperience === true ||
+    isSocialShowroomFlow(effectiveConfig.conversion.structureTemplate);
   const conversionCta = ctaFlags(
     effectiveConfig.conversion,
-    effectiveConfig.conversion.structureTemplate,
+    isLandingPage ? "social_showroom" : effectiveConfig.conversion.structureTemplate,
   );
 
   const heroDisplay = useMemo(() => {
     const base = resolvedSectionContent.hero?.display;
-    if (!isShowroomFlow) return base;
+    if (!isLandingPage) return base;
     return {
       ...base,
       showOpenStatus: false,
@@ -981,7 +989,7 @@ export default function PublicReservationForm({
       showBadge: base?.showBadge ?? false,
       showScrollHint: base?.showScrollHint ?? true,
     };
-  }, [isShowroomFlow, resolvedSectionContent.hero?.display]);
+  }, [isLandingPage, resolvedSectionContent.hero?.display]);
   const premium = effectiveConfig.premium;
   const openStatus = openStatusLabel(openingHours);
   const credibilityData = premium.credibility;
@@ -1028,14 +1036,14 @@ export default function PublicReservationForm({
       className={cn(
         previewMode ? "relative min-h-0 w-full" : "min-h-screen",
         "[font-size:calc(16px*var(--font-scale))]",
-        isShowroomFlow && "zg-showroom-flow",
+        isLandingPage && "zg-showroom-flow",
         !previewMode &&
-          !isShowroomFlow &&
+          !isLandingPage &&
           conversionCta.showSticky &&
           reservationEnabled &&
           "pb-[4.75rem] md:pb-0",
       )}
-      data-showroom-flow={isShowroomFlow ? "true" : undefined}
+      data-showroom-flow={isLandingPage ? "true" : undefined}
       style={{
         ...cssVars,
         backgroundColor: "var(--page-bg)",
@@ -1043,9 +1051,9 @@ export default function PublicReservationForm({
         fontFamily: "var(--body-font), system-ui, sans-serif",
       }}
     >
-      {showGrainOverlay ? <GrainOverlay /> : null}
+      {showGrainOverlay && !isLandingPage ? <GrainOverlay /> : null}
 
-      {isShowroomFlow ? (
+      {isLandingPage ? (
         <ShowroomHero
           coverImageUrl={coverImageUrl}
           logoUrl={logoUrl}
@@ -1082,7 +1090,7 @@ export default function PublicReservationForm({
             secondaryLabel={secondaryLabel}
             secondaryHref={menuHref}
             showSecondary={
-              isShowroomFlow
+              isLandingPage
                 ? Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)
                 : Boolean(menuHref && effectiveConfig.hero.secondaryCtaEnabled)
             }
@@ -1118,7 +1126,7 @@ export default function PublicReservationForm({
             secondaryLabel={secondaryLabel}
             secondaryHref={menuHref}
             showSecondary={
-              isShowroomFlow
+              isLandingPage
                 ? Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)
                 : Boolean(menuHref && effectiveConfig.hero.secondaryCtaEnabled)
             }
@@ -1132,13 +1140,13 @@ export default function PublicReservationForm({
             discoverConceptLabel={resolvedSectionContent.hero?.discoverConceptLabel ?? ""}
             scrollHintLabel={resolvedSectionContent.hero?.scrollHintLabel ?? ""}
             display={heroDisplay}
-            discoverAnchorId={isShowroomFlow ? "galerie" : "concept"}
-            tone={isShowroomFlow ? "cinematic" : "default"}
+            discoverAnchorId={isLandingPage ? "galerie" : "concept"}
+            tone={isLandingPage ? "cinematic" : "default"}
           />
         </>
       )}
 
-      {isShowroomFlow ? (
+      {isLandingPage ? (
         <>
           <ShowroomGallery images={showroomGalleryImages} />
           <ShowroomSignature
@@ -1160,7 +1168,7 @@ export default function PublicReservationForm({
         </>
       ) : null}
 
-      {specialMessage?.trim() && !isShowroomFlow ? (
+      {specialMessage?.trim() && !isLandingPage ? (
         <div
           className="mx-auto mt-6 max-w-3xl rounded-2xl border px-5 py-3 text-center text-sm font-medium"
           style={{
@@ -1173,9 +1181,9 @@ export default function PublicReservationForm({
         </div>
       ) : null}
 
-      <div className="flex w-full flex-col">
+      <div className={cn("flex w-full flex-col", isLandingPage && "contents")}>
 
-        {!isShowroomFlow && blockEnabled("highlights") && activeHighlights.length > 0 ? (
+        {!isLandingPage && blockEnabled("highlights") && activeHighlights.length > 0 ? (
           <div style={{ order: sectionOrderIndex("highlights") }}>
             <HighlightsBand
               items={activeHighlights}
@@ -1184,7 +1192,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {!isShowroomFlow && blockEnabled("about") && premium.concept.enabled ? (
+        {!isLandingPage && blockEnabled("about") && premium.concept.enabled ? (
           <div style={{ order: sectionOrderIndex("about") }}>
             <ConceptSection
               title={conceptTitle}
@@ -1210,7 +1218,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {!isShowroomFlow && blockEnabled("menu") && sortedDocuments.length > 0 && !menuHref ? (
+        {!isLandingPage && blockEnabled("menu") && sortedDocuments.length > 0 && !menuHref ? (
           <section
             className="relative scroll-mt-24 overflow-hidden"
             style={{
@@ -1281,18 +1289,18 @@ export default function PublicReservationForm({
         ) : null}
 
         {blockEnabled("reservation") && reservationEnabled ? (
-        <div style={isShowroomFlow ? undefined : { order: sectionOrderIndex("reservation") }}>
+        <div style={isLandingPage ? undefined : { order: sectionOrderIndex("reservation") }}>
         <PremiumReservationSection
-          title={isShowroomFlow ? "Réserver une table" : reservationSectionTitle()}
-          intro={isShowroomFlow ? "" : effectiveConfig.reservation.intro}
+          title={isLandingPage ? "Réserver une table" : reservationSectionTitle()}
+          intro={isLandingPage ? "" : effectiveConfig.reservation.intro}
           groupMessage={premium.reservation.groupMessage}
           showPhoneAlt={showPhoneCta && showPhoneRow}
           phone={restaurantPhone}
           eyebrow={resolvedSectionContent.reservation_shell?.eyebrow ?? ""}
           phonePreferLabel={resolvedSectionContent.reservation_shell?.phonePreferLabel ?? ""}
-          showroomMinimal={isShowroomFlow}
+          showroomMinimal={isLandingPage}
         >
-            {showHoursBeforeForm && showHoursRow ? (
+            {showHoursBeforeForm && showHoursRow && !isLandingPage ? (
               <div
                 className="mb-5 rounded-xl border px-4 py-3 text-sm"
                 style={{
@@ -1836,7 +1844,7 @@ export default function PublicReservationForm({
         </section>
         ) : null}
 
-        {!isShowroomFlow && blockEnabled("menu") && (menuHref || menuOffers.length > 0) ? (
+        {!isLandingPage && blockEnabled("menu") && (menuHref || menuOffers.length > 0) ? (
           <div style={{ order: sectionOrderIndex("menu") }}>
             {usePremiumChrome ? (
               <PremiumDarkMenuOffersSection
@@ -1865,7 +1873,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {!isShowroomFlow && showCredibility ? (
+        {!isLandingPage && showCredibility ? (
           <div style={{ order: sectionOrderIndex("reviews") }}>
             <CredibilitySection
               data={credibilityData}
@@ -1879,7 +1887,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {!isShowroomFlow && blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
+        {!isLandingPage && blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
           <div style={{ order: sectionOrderIndex("gallery") }}>
             {usePremiumChrome ? (
               <PremiumDarkMasonryGallery
@@ -1913,7 +1921,7 @@ export default function PublicReservationForm({
         ) : null}
 
         {/* GIFT_CARDS feature flag â€” rÃ©activable */}
-        {!isShowroomFlow && blockEnabled("gift_vouchers") ? (
+        {!isLandingPage && blockEnabled("gift_vouchers") ? (
           <div style={{ order: sectionOrderIndex("gift_vouchers") }}>
             <GiftVouchersSection
               content={premium.giftVouchers}
@@ -1936,7 +1944,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {!isShowroomFlow && blockEnabled("final_cta") && reservationEnabled && conversionCta.showFinal ? (
+        {!isLandingPage && blockEnabled("final_cta") && reservationEnabled && conversionCta.showFinal ? (
           <div style={{ order: sectionOrderIndex("final_cta") }}>
             <PremiumFinalCta
               eyebrow={resolvedSectionContent.final_cta?.eyebrow ?? ""}
@@ -1956,7 +1964,7 @@ export default function PublicReservationForm({
         label={ctaLabel}
         onClick={scrollToReservation}
         visible={
-          !isShowroomFlow &&
+          !isLandingPage &&
           !previewMode &&
           conversionCta.showSticky &&
           reservationEnabled &&
@@ -1965,11 +1973,11 @@ export default function PublicReservationForm({
         previewMode={previewMode}
       />
 
-      {isShowroomFlow ? (
+      {isLandingPage ? (
         <ShowroomEssentials address={restaurantAddress} googleMapsUrl={googleMapsUrl} />
       ) : null}
 
-      {blockEnabled("location") && !isShowroomFlow ? (
+      {blockEnabled("location") && !isLandingPage ? (
         <PremiumPracticalInfo
           address={restaurantAddress}
           phone={restaurantPhone}

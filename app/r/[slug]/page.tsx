@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import PublicReservationForm from "@/src/components/reservation/public-reservation-form";
+import PublicLandingPage from "@/src/components/reservation/public-landing-page";
 import { createClient } from "@/src/lib/supabase/server";
 import { effectiveHeroSubtitle, effectiveHeroTitle } from "@/src/lib/public-page/defaults";
 import type { PublicAmbiance } from "@/src/lib/public-page/constants";
@@ -476,7 +476,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
         </>
       ) : null}
       <main className="min-h-screen">
-        <PublicReservationForm
+        <PublicLandingPage
           visualThemeId={resolvedVisualTheme.id as ThemeId}
           themeCssVarOverrides={resolvedVisualTheme.cssVarOverrides}
           showGrainOverlay={resolvedVisualTheme.showGrain}
