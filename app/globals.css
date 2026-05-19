@@ -371,11 +371,6 @@ body {
     animation: zg-showroom-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .zg-showroom-quick-cta__button,
-  .zg-showroom-sticky-cta__button {
-    animation: zg-showroom-cta-pulse 3.2s ease-in-out infinite;
-  }
-
   .zg-showroom-reels-scroll {
     scrollbar-width: none;
   }
@@ -393,6 +388,23 @@ body {
     color-mix(in srgb, var(--page-bg) 98%, transparent) 100%
   );
   backdrop-filter: blur(16px);
+}
+
+/* Parcours showroom : respiration, moins d’effet “blocs SaaS” */
+[data-showroom-flow="true"] section {
+  scroll-margin-top: 5rem;
+}
+
+[data-showroom-flow="true"] .flex.w-full.flex-col > div {
+  isolation: isolate;
+}
+
+[data-showroom-flow="true"] #reservation {
+  margin-top: clamp(1.5rem, 6vw, 3rem);
+}
+
+[data-showroom-flow="true"] #galerie {
+  padding-top: clamp(0.5rem, 2vw, 1rem);
 }
 
 /* Landing — évite #eae6dd (var(--border) global) sur fond sombre */

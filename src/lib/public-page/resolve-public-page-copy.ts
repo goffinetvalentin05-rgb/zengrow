@@ -36,9 +36,11 @@ export function themeBasePageSections(themeId: ThemeId): PageSectionContentV1 {
 
 function templateLayer(structureTemplate: StructureTemplate): PageSectionContentV1 {
   const conceptEyebrow =
-    structureTemplate === "event_venue"
-      ? "Notre maison"
-      : "Le concept";
+    structureTemplate === "social_showroom"
+      ? "L'expérience"
+      : structureTemplate === "event_venue"
+        ? "Notre maison"
+        : "Le concept";
 
   let menu: PageSectionContentV1["menu_offers"] = { eyebrow: "Carte & offres", title: "Notre menu" };
   if (structureTemplate === "event_venue") {

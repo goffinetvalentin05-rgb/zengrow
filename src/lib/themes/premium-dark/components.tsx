@@ -21,6 +21,7 @@ export function PremiumDarkNav({
   visible,
   previewMode = false,
   navLinks,
+  showReserveCta = true,
 }: {
   restaurantName: string;
   ctaLabel: string;
@@ -28,6 +29,7 @@ export function PremiumDarkNav({
   visible: boolean;
   previewMode?: boolean;
   navLinks: NavLinkContent[];
+  showReserveCta?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [compact, setCompact] = useState(false);
@@ -92,6 +94,7 @@ export function PremiumDarkNav({
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {showReserveCta ? (
             <button
               type="button"
               className="hidden min-h-10 items-center rounded-[var(--zg-radius-pill)] px-5 text-[11px] font-semibold uppercase tracking-[0.12em] transition hover:brightness-110 md:inline-flex"
@@ -104,6 +107,7 @@ export function PremiumDarkNav({
             >
               {ctaLabel}
             </button>
+            ) : null}
             <button
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--heading-color)_18%,transparent)] text-[var(--heading-color)] md:hidden"
@@ -143,17 +147,19 @@ export function PremiumDarkNav({
                   {item.label}
                 </button>
               ))}
-              <button
-                type="button"
-                className="mt-4 min-h-12 rounded-[var(--zg-radius-pill)] text-sm font-semibold uppercase tracking-wider"
-                style={{ backgroundColor: "var(--accent-color)", color: "var(--button-text)" }}
-                onClick={() => {
-                  setOpen(false);
-                  onReserve();
-                }}
-              >
-                {ctaLabel}
-              </button>
+              {showReserveCta ? (
+                <button
+                  type="button"
+                  className="mt-4 min-h-12 rounded-[var(--zg-radius-pill)] text-sm font-semibold uppercase tracking-wider"
+                  style={{ backgroundColor: "var(--accent-color)", color: "var(--button-text)" }}
+                  onClick={() => {
+                    setOpen(false);
+                    onReserve();
+                  }}
+                >
+                  {ctaLabel}
+                </button>
+              ) : null}
             </nav>
           </div>
         </div>

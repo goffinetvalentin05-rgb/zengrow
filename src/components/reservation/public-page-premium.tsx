@@ -59,6 +59,7 @@ export function PublicPageNav({
   visible,
   previewMode = false,
   navLinks,
+  showReserveCta = true,
 }: {
   restaurantName: string;
   ctaLabel: string;
@@ -66,6 +67,8 @@ export function PublicPageNav({
   visible: boolean;
   previewMode?: boolean;
   navLinks: NavLinkContent[];
+  /** Désactivé en parcours showroom : un seul CTA dans le hero + sticky au scroll. */
+  showReserveCta?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -113,13 +116,15 @@ export function PublicPageNav({
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="hidden min-h-10 items-center rounded-full border border-white/40 bg-white/5 px-4 text-xs font-semibold uppercase tracking-wider text-white transition hover:bg-white/15 md:inline-flex"
-              onClick={onReserve}
-            >
-              {ctaLabel}
-            </button>
+            {showReserveCta ? (
+              <button
+                type="button"
+                className="hidden min-h-10 items-center rounded-full border border-white/40 bg-white/5 px-4 text-xs font-semibold uppercase tracking-wider text-white transition hover:bg-white/15 md:inline-flex"
+                onClick={onReserve}
+              >
+                {ctaLabel}
+              </button>
+            ) : null}
             <button
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/5 text-white md:hidden"
@@ -166,17 +171,19 @@ export function PublicPageNav({
                 </button>
               ))}
             </nav>
-            <button
-              type="button"
-              className="mt-8 min-h-12 w-full text-sm font-semibold uppercase tracking-wider"
-              style={{ backgroundColor: "var(--button-bg)", color: "var(--button-text)" }}
-              onClick={() => {
-                setOpen(false);
-                onReserve();
-              }}
-            >
-              {ctaLabel}
-            </button>
+            {showReserveCta ? (
+              <button
+                type="button"
+                className="mt-8 min-h-12 w-full text-sm font-semibold uppercase tracking-wider"
+                style={{ backgroundColor: "var(--button-bg)", color: "var(--button-text)" }}
+                onClick={() => {
+                  setOpen(false);
+                  onReserve();
+                }}
+              >
+                {ctaLabel}
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -200,48 +207,6 @@ function premiumHeroMinHeight(heroHeight: "compact" | "normal" | "tall", preview
   return "min-h-[min(85vh,840px)]";
 }
 
-/** Bande CTA immédiate sous le hero — conversion sociale en < 10 s. */
-export function ShowroomQuickReserveBand({
-  ctaLabel,
-  onReserve,
-  openStatus,
-  visible,
-}: {
-  ctaLabel: string;
-  onReserve: () => void;
-  openStatus?: string;
-  visible: boolean;
-}) {
-  if (!visible) return null;
-
-  return (
-    <section
-      className="relative z-20 -mt-6 px-4 sm:-mt-8 sm:px-6"
-      aria-label="Réserver maintenant"
-    >
-      <div className="zg-showroom-quick-cta zg-showroom-fade-in mx-auto max-w-lg">
-        {openStatus ? (
-          <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[color-mix(in_srgb,var(--body-text)_55%,transparent)]">
-            {openStatus}
-          </p>
-        ) : null}
-        <button
-          type="button"
-          onClick={onReserve}
-          className="zg-showroom-quick-cta__button flex min-h-[58px] w-full items-center justify-center gap-2 rounded-2xl px-6 text-sm font-bold uppercase tracking-[0.14em] shadow-[0_20px_50px_-12px_color-mix(in_srgb,var(--button-bg)_55%,transparent)] transition active:scale-[0.98]"
-          style={{ backgroundColor: "var(--button-bg)", color: "var(--button-text)" }}
-        >
-          {ctaLabel}
-          <ChevronRight className="h-5 w-5" aria-hidden />
-        </button>
-        <p className="mt-2.5 text-center text-[11px] font-medium tracking-wide text-[color-mix(in_srgb,var(--body-text)_50%,transparent)]">
-          Réservation en ligne · quelques secondes
-        </p>
-      </div>
-    </section>
-  );
-}
-
 function HeroContentInner({
   badgeText,
   logoUrl,
@@ -259,6 +224,8 @@ function HeroContentInner({
   textTheme,
   align,
   discoverConceptLabel,
+  discoverAnchorId = "concept",
+  tone = "default",
   display,
 }: {
   badgeText?: string | null;
@@ -277,9 +244,12 @@ function HeroContentInner({
   textTheme: "onImage" | "onSurface";
   align: "left" | "center";
   discoverConceptLabel: string;
+  discoverAnchorId?: string;
+  tone?: "default" | "cinematic";
   display: HeroSectionDisplay;
 }) {
   const isCenter = align === "center";
+  const cinematic = tone === "cinematic";
   const subtle = textTheme === "onImage" ? "text-white/65" : "opacity-60";
   const headingColor =
     textTheme === "onImage" ? ("#ffffff" as const) : ("var(--heading-color)" as const);
@@ -296,7 +266,8 @@ function HeroContentInner({
   return (
     <div
       className={cn(
-        "flex w-full flex-col gap-5 sm:gap-6",
+        "flex w-full flex-col",
+        cinematic ? "gap-4 sm:gap-5" : "gap-5 sm:gap-6",
         isCenter && "items-center text-center",
       )}
     >
@@ -428,7 +399,9 @@ function HeroContentInner({
               onClick={onReserve}
               className={cn(
                 ctaStyle.className,
-                "min-h-[56px] px-9 text-sm uppercase tracking-[0.18em]",
+                cinematic
+                  ? "min-h-[52px] px-8 text-[13px] font-semibold tracking-[0.1em]"
+                  : "min-h-[56px] px-9 text-sm uppercase tracking-[0.18em]",
               )}
               style={ctaStyle.style}
             >
@@ -454,9 +427,10 @@ function HeroContentInner({
         ) : display.showSecondaryCta ? (
           <button
             type="button"
-            onClick={() => scrollToId("concept")}
+            onClick={() => scrollToId(discoverAnchorId)}
             className={cn(
-              "group inline-flex min-h-[56px] items-center gap-2 px-2 text-sm font-semibold uppercase tracking-[0.18em] transition",
+              "group inline-flex items-center gap-2 px-2 text-sm font-medium tracking-wide transition",
+              cinematic ? "min-h-0 py-1 opacity-90" : "min-h-[56px] font-semibold uppercase tracking-[0.18em]",
               textTheme === "onImage"
                 ? "text-white/85 hover:text-white"
                 : "hover:opacity-80",
@@ -496,6 +470,8 @@ export function PremiumHero({
   discoverConceptLabel,
   scrollHintLabel,
   display: displayPatch,
+  discoverAnchorId = "concept",
+  tone = "default",
 }: {
   badgeText?: string | null;
   coverImageUrl?: string | null;
@@ -519,6 +495,8 @@ export function PremiumHero({
   discoverConceptLabel: string;
   scrollHintLabel: string;
   display?: Partial<HeroSectionDisplay>;
+  discoverAnchorId?: string;
+  tone?: "default" | "cinematic";
 }) {
   const display = resolveHeroDisplay(displayPatch, {
     showPhone,
@@ -561,6 +539,8 @@ export function PremiumHero({
                 textTheme="onSurface"
                 align="left"
                 discoverConceptLabel={discoverConceptLabel}
+                discoverAnchorId={discoverAnchorId}
+                tone={tone}
                 display={display}
               />
             </div>
@@ -645,6 +625,8 @@ export function PremiumHero({
             textTheme="onImage"
             align="center"
             discoverConceptLabel={discoverConceptLabel}
+            discoverAnchorId={discoverAnchorId}
+            tone={tone}
             display={display}
           />
         </div>
@@ -726,6 +708,8 @@ export function PremiumHero({
           textTheme="onImage"
           align={align}
           discoverConceptLabel={discoverConceptLabel}
+          discoverAnchorId={discoverAnchorId}
+          tone={tone}
           display={display}
         />
       </div>
@@ -2396,30 +2380,79 @@ export function StickyReserveBar({
   label,
   onClick,
   visible,
+  previewMode = false,
+  scrollSmart = false,
 }: {
   label: string;
   onClick: () => void;
   visible: boolean;
+  previewMode?: boolean;
+  scrollSmart?: boolean;
 }) {
+  const [pastHero, setPastHero] = useState(!scrollSmart);
+  const [atReservation, setAtReservation] = useState(false);
+
+  useEffect(() => {
+    if (!visible || previewMode || !scrollSmart) {
+      setPastHero(!scrollSmart);
+      setAtReservation(false);
+      return;
+    }
+
+    const sentinel = document.getElementById("showroom-hero-sentinel");
+    const reservation = document.getElementById("reservation");
+    if (!sentinel) return;
+
+    const onSentinel = new IntersectionObserver(
+      ([entry]) => setPastHero(!entry.isIntersecting),
+      { threshold: 0, rootMargin: "-8% 0px 0px 0px" },
+    );
+    onSentinel.observe(sentinel);
+
+    let onReservation: IntersectionObserver | undefined;
+    if (reservation) {
+      onReservation = new IntersectionObserver(
+        ([entry]) => setAtReservation(entry.isIntersecting),
+        { threshold: 0.12, rootMargin: "0px 0px -20% 0px" },
+      );
+      onReservation.observe(reservation);
+    }
+
+    return () => {
+      onSentinel.disconnect();
+      onReservation?.disconnect();
+    };
+  }, [visible, previewMode, scrollSmart]);
+
   if (!visible) return null;
+
+  const showBar = previewMode || !scrollSmart || (pastHero && !atReservation);
+
   return (
     <div
-      className="zg-showroom-sticky-cta fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] md:hidden"
+      className={cn(
+        "zg-showroom-sticky-cta fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] md:hidden",
+        "transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        showBar ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0",
+      )}
       role="complementary"
       aria-label="Réserver"
+      aria-hidden={!showBar}
     >
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-full h-12 bg-gradient-to-t from-[var(--page-bg)] to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-t from-[var(--page-bg)] to-transparent"
         aria-hidden
       />
       <button
         type="button"
         onClick={onClick}
-        className="zg-showroom-sticky-cta__button relative flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl text-sm font-bold uppercase tracking-[0.14em] shadow-[0_-8px_40px_-8px_color-mix(in_srgb,var(--button-bg)_45%,transparent),0_16px_48px_-12px_rgba(0,0,0,0.35)] transition active:scale-[0.98]"
-        style={{ backgroundColor: "var(--button-bg)", color: "var(--button-text)" }}
+        className="zg-showroom-sticky-cta__button relative mx-auto flex min-h-[50px] max-w-md items-center justify-center rounded-full px-8 text-[13px] font-semibold tracking-[0.06em] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.35)] transition active:scale-[0.98]"
+        style={{
+          backgroundColor: "color-mix(in srgb, var(--button-bg) 92%, transparent)",
+          color: "var(--button-text)",
+        }}
       >
         {label}
-        <ChevronRight className="h-5 w-5 shrink-0" aria-hidden />
       </button>
     </div>
   );

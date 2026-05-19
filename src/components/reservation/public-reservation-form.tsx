@@ -46,6 +46,7 @@ import { resolvePublicPageTheme } from "@/src/lib/public-page/theme";
 import { PublicPageSection } from "@/src/components/reservation/public-page-section";
 import {
   ctaFlags,
+  isSocialShowroomFlow,
   reservationSectionTitle,
   resolveEffectiveSectionOrder,
 } from "@/src/lib/public-page/conversion";
@@ -69,7 +70,6 @@ import {
   PremiumPracticalInfo,
   PremiumReservationSection,
   PublicPageNav,
-  ShowroomQuickReserveBand,
   StickyReserveBar,
 } from "@/src/components/reservation/public-page-premium";
 import type { ThemeId } from "@/src/lib/themes/types";
@@ -942,7 +942,23 @@ export default function PublicReservationForm({
     const i = sectionOrder.indexOf(id);
     return i >= 0 ? i : 50;
   };
-  const conversionCta = ctaFlags(effectiveConfig.conversion);
+  const isShowroomFlow = isSocialShowroomFlow(effectiveConfig.conversion.structureTemplate);
+  const conversionCta = ctaFlags(
+    effectiveConfig.conversion,
+    effectiveConfig.conversion.structureTemplate,
+  );
+
+  const heroDisplay = useMemo(() => {
+    const base = resolvedSectionContent.hero?.display;
+    if (!isShowroomFlow) return base;
+    return {
+      ...base,
+      showOpenStatus: false,
+      showPhone: false,
+      showBadge: base?.showBadge ?? false,
+      showScrollHint: base?.showScrollHint ?? true,
+    };
+  }, [isShowroomFlow, resolvedSectionContent.hero?.display]);
   const premium = effectiveConfig.premium;
   const openStatus = openStatusLabel(openingHours);
   const credibilityData = premium.credibility;
@@ -956,19 +972,6 @@ export default function PublicReservationForm({
     premium.concept.title.trim() || effectiveConfig.blockContent.about.title || "Notre expÃ©rience";
   const conceptImage =
     premium.concept.imageUrl.trim() || galleryImageUrls[0] || coverImageUrl || "";
-
-  const reservationSortIndex = sectionOrder.indexOf("reservation");
-  let nextSectionPos = reservationSortIndex + 1;
-  while (
-    nextSectionPos < sectionOrder.length &&
-    !blockEnabled(sectionOrder[nextSectionPos]!)
-  ) {
-    nextSectionPos += 1;
-  }
-  const middleCtaOrder =
-    nextSectionPos < sectionOrder.length
-      ? Math.floor((reservationSortIndex + nextSectionPos) / 2) + 1
-      : reservationSortIndex + 2;
 
   const secondaryLabel =
     secondaryCtaLabel?.trim() || effectiveConfig.hero.secondaryCta || "Voir le menu";
@@ -994,8 +997,10 @@ export default function PublicReservationForm({
       className={cn(
         previewMode ? "relative min-h-0 w-full" : "min-h-screen",
         "[font-size:calc(16px*var(--font-scale))]",
-        !previewMode && conversionCta.showSticky && reservationEnabled && "pb-[5.5rem] md:pb-0",
+        isShowroomFlow && "zg-showroom-flow",
+        !previewMode && conversionCta.showSticky && reservationEnabled && "pb-[4.75rem] md:pb-0",
       )}
+      data-showroom-flow={isShowroomFlow ? "true" : undefined}
       style={{
         ...cssVars,
         backgroundColor: "var(--page-bg)",
@@ -1014,6 +1019,7 @@ export default function PublicReservationForm({
             visible={premium.navigationEnabled}
             previewMode={previewMode}
             navLinks={navLinksPublic}
+            showReserveCta={conversionCta.showNavReserve}
           />
           <PremiumDarkHero
             badgeText={effectiveConfig.hero.badgeText?.trim() || heroBadgeText?.trim() || undefined}
@@ -1026,7 +1032,11 @@ export default function PublicReservationForm({
             ctaLabel={ctaLabel}
             secondaryLabel={secondaryLabel}
             secondaryHref={menuHref}
-            showSecondary={Boolean(menuHref && effectiveConfig.hero.secondaryCtaEnabled)}
+            showSecondary={
+              isShowroomFlow
+                ? Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)
+                : Boolean(menuHref && effectiveConfig.hero.secondaryCtaEnabled)
+            }
             onReserve={scrollToReservation}
             ctaStyle={ctaStyle}
             previewMode={previewMode}
@@ -1043,6 +1053,7 @@ export default function PublicReservationForm({
             visible={premium.navigationEnabled}
             previewMode={previewMode}
             navLinks={navLinksPublic}
+            showReserveCta={conversionCta.showNavReserve}
           />
 
           <PremiumHero
@@ -1057,7 +1068,11 @@ export default function PublicReservationForm({
             ctaLabel={ctaLabel}
             secondaryLabel={secondaryLabel}
             secondaryHref={menuHref}
-            showSecondary={Boolean(menuHref && effectiveConfig.hero.secondaryCtaEnabled)}
+            showSecondary={
+              isShowroomFlow
+                ? Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)
+                : Boolean(menuHref && effectiveConfig.hero.secondaryCtaEnabled)
+            }
             onReserve={scrollToReservation}
             ctaStyle={ctaStyle}
             overlayOpacity={heroOverlayEnabled ? overlayOpacity : 0}
@@ -1067,17 +1082,14 @@ export default function PublicReservationForm({
             previewMode={previewMode}
             discoverConceptLabel={resolvedSectionContent.hero?.discoverConceptLabel ?? ""}
             scrollHintLabel={resolvedSectionContent.hero?.scrollHintLabel ?? ""}
-            display={resolvedSectionContent.hero?.display}
+            display={heroDisplay}
+            discoverAnchorId={isShowroomFlow ? "galerie" : "concept"}
+            tone={isShowroomFlow ? "cinematic" : "default"}
           />
         </>
       )}
 
-      <ShowroomQuickReserveBand
-        ctaLabel={ctaLabel}
-        onReserve={scrollToReservation}
-        openStatus={openStatus}
-        visible={!previewMode && reservationEnabled && blockEnabled("reservation")}
-      />
+      {isShowroomFlow ? <div id="showroom-hero-sentinel" className="h-px w-full" aria-hidden /> : null}
 
       {specialMessage?.trim() ? (
         <div
@@ -1874,6 +1886,8 @@ export default function PublicReservationForm({
         label={ctaLabel}
         onClick={scrollToReservation}
         visible={!previewMode && conversionCta.showSticky && reservationEnabled && blockEnabled("reservation")}
+        previewMode={previewMode}
+        scrollSmart={isShowroomFlow}
       />
 
       {blockEnabled("location") ? (

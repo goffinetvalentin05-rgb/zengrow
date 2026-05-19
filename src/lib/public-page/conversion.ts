@@ -35,17 +35,16 @@ export const STRUCTURE_TEMPLATES: {
     id: "social_showroom",
     label: "Showroom social",
     description:
-      "Conversion sociale — ambiance et photos d'abord, réservation en fin de parcours avec CTA immédiat.",
+      "Parcours émotionnel — ressentir l'ambiance avant de réserver. CTA discrets, réservation en fin.",
     order: [
-      "gallery",
-      "menu",
-      "hours",
-      "location",
       "about",
+      "gallery",
+      "highlights",
+      "menu",
       "reviews",
       "reservation",
-      "final_cta",
-      "highlights",
+      "hours",
+      "location",
       "gift_vouchers",
       "social",
     ],
@@ -229,6 +228,10 @@ export function applyStructureTemplate(template: StructureTemplate): PageBlockId
   return order;
 }
 
+export function isSocialShowroomFlow(structureTemplate: StructureTemplate): boolean {
+  return structureTemplate === "social_showroom";
+}
+
 export function resolveEffectiveSectionOrder(config: PublicPageEditorConfig): PageBlockId[] {
   const templateOrder = applyStructureTemplate(config.conversion.structureTemplate);
   const custom = config.sectionOrder.filter((id) => templateOrder.includes(id));
@@ -241,21 +244,35 @@ export function resolveEffectiveSectionOrder(config: PublicPageEditorConfig): Pa
   return merged;
 }
 
-export function ctaFlags(conversion: ConversionSettings): {
+export function ctaFlags(
+  conversion: ConversionSettings,
+  structureTemplate?: StructureTemplate,
+): {
   showSticky: boolean;
   showMiddle: boolean;
   showFinal: boolean;
+  /** Navbar / drawer : pas de doublon avec le hero. */
+  showNavReserve: boolean;
 } {
+  if (structureTemplate && isSocialShowroomFlow(structureTemplate)) {
+    return {
+      showSticky: conversion.stickyMobile !== false,
+      showMiddle: false,
+      showFinal: false,
+      showNavReserve: false,
+    };
+  }
   if (conversion.ctaPlacement === "top_only") {
-    return { showSticky: false, showMiddle: false, showFinal: true };
+    return { showSticky: false, showMiddle: false, showFinal: true, showNavReserve: true };
   }
   if (conversion.ctaPlacement === "top_middle") {
-    return { showSticky: false, showMiddle: true, showFinal: true };
+    return { showSticky: false, showMiddle: true, showFinal: true, showNavReserve: true };
   }
   return {
     showSticky: conversion.stickyMobile,
     showMiddle: true,
     showFinal: true,
+    showNavReserve: true,
   };
 }
 
