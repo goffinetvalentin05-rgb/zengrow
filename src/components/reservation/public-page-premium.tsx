@@ -1802,6 +1802,7 @@ export function PremiumReservationSection({
   children,
   eyebrow,
   phonePreferLabel,
+  showroomMinimal = false,
 }: {
   title: string;
   intro: string;
@@ -1811,15 +1812,23 @@ export function PremiumReservationSection({
   children: React.ReactNode;
   eyebrow: string;
   phonePreferLabel: string;
+  showroomMinimal?: boolean;
 }) {
   return (
     <section
       id="reservation"
-      className="scroll-mt-24 relative overflow-hidden"
-      style={{
-        background:
-          "linear-gradient(180deg, color-mix(in srgb, var(--hero-primary) 6%, var(--page-bg)) 0%, color-mix(in srgb, var(--accent-color) 3%, var(--page-bg)) 38%, var(--page-bg) 100%)",
-      }}
+      className={cn(
+        "scroll-mt-24 relative overflow-hidden",
+        showroomMinimal && "border-t border-[color-mix(in_srgb,var(--body-text)_8%,transparent)]",
+      )}
+      style={
+        showroomMinimal
+          ? { backgroundColor: "var(--page-bg)" }
+          : {
+              background:
+                "linear-gradient(180deg, color-mix(in srgb, var(--hero-primary) 6%, var(--page-bg)) 0%, color-mix(in srgb, var(--accent-color) 3%, var(--page-bg)) 38%, var(--page-bg) 100%)",
+            }
+      }
     >
       <div
         className="pointer-events-none absolute -left-[12%] top-[-18%] h-[460px] w-[560px] rounded-full blur-[100px] opacity-[0.14]"

@@ -403,8 +403,13 @@ body {
   margin-top: clamp(1.5rem, 6vw, 3rem);
 }
 
-[data-showroom-flow="true"] #galerie {
+[data-showroom-flow="true"] #ambiance {
   padding-top: clamp(0.5rem, 2vw, 1rem);
+}
+
+[data-showroom-flow="true"] #accueil {
+  min-height: 100dvh;
+  min-height: 100svh;
 }
 
 /* Landing — évite #eae6dd (var(--border) global) sur fond sombre */

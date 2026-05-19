@@ -82,6 +82,12 @@ import {
   PremiumDarkMasonryGallery,
   PremiumDarkNav,
 } from "@/src/lib/themes/premium-dark/components";
+import { ShowroomNav } from "@/src/components/reservation/showroom/showroom-nav";
+import { ShowroomHero } from "@/src/components/reservation/showroom/showroom-hero";
+import { ShowroomAmbiance } from "@/src/components/reservation/showroom/showroom-ambiance";
+import { ShowroomSignature } from "@/src/components/reservation/showroom/showroom-signature";
+import { ShowroomSocialProof } from "@/src/components/reservation/showroom/showroom-social-proof";
+import { ShowroomEssentials } from "@/src/components/reservation/showroom/showroom-essentials";
 
 export type PublicReservationFormProps = {
   previewMode?: boolean;
@@ -1010,7 +1016,28 @@ export default function PublicReservationForm({
     >
       {showGrainOverlay ? <GrainOverlay /> : null}
 
-      {usePremiumChrome ? (
+      {isShowroomFlow ? (
+        <>
+          <ShowroomNav
+            restaurantName={restaurantName}
+            visible={premium.navigationEnabled}
+            previewMode={previewMode}
+          />
+          <ShowroomHero
+            coverImageUrl={coverImageUrl}
+            logoUrl={logoUrl}
+            headline={headlineText}
+            tagline={taglineText || undefined}
+            ctaLabel={ctaLabel}
+            secondaryLabel={secondaryLabel}
+            secondaryHref={menuHref}
+            showSecondary={Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)}
+            onReserve={scrollToReservation}
+            ctaStyle={ctaStyle}
+            previewMode={previewMode}
+          />
+        </>
+      ) : usePremiumChrome ? (
         <>
           <PremiumDarkNav
             restaurantName={restaurantName}
@@ -1091,7 +1118,32 @@ export default function PublicReservationForm({
 
       {isShowroomFlow ? <div id="showroom-hero-sentinel" className="h-px w-full" aria-hidden /> : null}
 
-      {specialMessage?.trim() ? (
+      {isShowroomFlow ? (
+        <>
+          <ShowroomAmbiance images={galleryImageUrls} moodLine={conceptBody} />
+          <ShowroomSignature offers={menuOffers} menuHref={menuHref} menuPdfLabel={menuPdfLinkLabel} />
+          {showCredibility ? (
+            <ShowroomSocialProof
+              data={credibilityData}
+              copy={{
+                googleReviewsSuffix: resolvedSectionContent.reviews?.googleReviewsSuffix ?? "",
+                googleCtaLabel: resolvedSectionContent.reviews?.googleCtaLabel ?? "",
+                pressHeading: resolvedSectionContent.reviews?.pressHeading ?? "",
+                tripAdvisorLabel: resolvedSectionContent.reviews?.tripAdvisorLabel ?? "",
+              }}
+            />
+          ) : null}
+          <ShowroomEssentials
+            address={restaurantAddress}
+            openingHoursLines={openingHoursLines}
+            googleMapsUrl={googleMapsUrl}
+            menuHref={menuHref}
+            menuLabel={menuPdfLinkLabel}
+          />
+        </>
+      ) : null}
+
+      {specialMessage?.trim() && !isShowroomFlow ? (
         <div
           className="mx-auto mt-6 max-w-3xl rounded-2xl border px-5 py-3 text-center text-sm font-medium"
           style={{
@@ -1106,7 +1158,7 @@ export default function PublicReservationForm({
 
       <div className="flex w-full flex-col">
 
-        {blockEnabled("highlights") && activeHighlights.length > 0 ? (
+        {!isShowroomFlow && blockEnabled("highlights") && activeHighlights.length > 0 ? (
           <div style={{ order: sectionOrderIndex("highlights") }}>
             <HighlightsBand
               items={activeHighlights}
@@ -1115,7 +1167,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {blockEnabled("about") && premium.concept.enabled ? (
+        {!isShowroomFlow && blockEnabled("about") && premium.concept.enabled ? (
           <div style={{ order: sectionOrderIndex("about") }}>
             <ConceptSection
               title={conceptTitle}
@@ -1141,7 +1193,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {blockEnabled("menu") && sortedDocuments.length > 0 && !menuHref ? (
+        {!isShowroomFlow && blockEnabled("menu") && sortedDocuments.length > 0 && !menuHref ? (
           <section
             className="relative scroll-mt-24 overflow-hidden"
             style={{
@@ -1212,15 +1264,16 @@ export default function PublicReservationForm({
         ) : null}
 
         {blockEnabled("reservation") && reservationEnabled ? (
-        <div style={{ order: sectionOrderIndex("reservation") }}>
+        <div style={isShowroomFlow ? undefined : { order: sectionOrderIndex("reservation") }}>
         <PremiumReservationSection
           title={reservationSectionTitle()}
-          intro={effectiveConfig.reservation.intro}
+          intro={isShowroomFlow ? "Quelques secondes pour confirmer votre table." : effectiveConfig.reservation.intro}
           groupMessage={premium.reservation.groupMessage}
           showPhoneAlt={showPhoneCta && showPhoneRow}
           phone={restaurantPhone}
           eyebrow={resolvedSectionContent.reservation_shell?.eyebrow ?? ""}
           phonePreferLabel={resolvedSectionContent.reservation_shell?.phonePreferLabel ?? ""}
+          showroomMinimal={isShowroomFlow}
         >
             {showHoursBeforeForm && showHoursRow ? (
               <div
@@ -1766,7 +1819,7 @@ export default function PublicReservationForm({
         </section>
         ) : null}
 
-        {blockEnabled("menu") && (menuHref || menuOffers.length > 0) ? (
+        {!isShowroomFlow && blockEnabled("menu") && (menuHref || menuOffers.length > 0) ? (
           <div style={{ order: sectionOrderIndex("menu") }}>
             {usePremiumChrome ? (
               <PremiumDarkMenuOffersSection
@@ -1795,7 +1848,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {showCredibility ? (
+        {!isShowroomFlow && showCredibility ? (
           <div style={{ order: sectionOrderIndex("reviews") }}>
             <CredibilitySection
               data={credibilityData}
@@ -1809,7 +1862,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
+        {!isShowroomFlow && blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
           <div style={{ order: sectionOrderIndex("gallery") }}>
             {usePremiumChrome ? (
               <PremiumDarkMasonryGallery
@@ -1843,7 +1896,7 @@ export default function PublicReservationForm({
         ) : null}
 
         {/* GIFT_CARDS feature flag â€” rÃ©activable */}
-        {blockEnabled("gift_vouchers") ? (
+        {!isShowroomFlow && blockEnabled("gift_vouchers") ? (
           <div style={{ order: sectionOrderIndex("gift_vouchers") }}>
             <GiftVouchersSection
               content={premium.giftVouchers}
@@ -1866,7 +1919,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {blockEnabled("final_cta") && reservationEnabled && conversionCta.showFinal ? (
+        {!isShowroomFlow && blockEnabled("final_cta") && reservationEnabled && conversionCta.showFinal ? (
           <div style={{ order: sectionOrderIndex("final_cta") }}>
             <PremiumFinalCta
               eyebrow={resolvedSectionContent.final_cta?.eyebrow ?? ""}
@@ -1890,7 +1943,7 @@ export default function PublicReservationForm({
         scrollSmart={isShowroomFlow}
       />
 
-      {blockEnabled("location") ? (
+      {blockEnabled("location") && !isShowroomFlow ? (
         <PremiumPracticalInfo
           address={restaurantAddress}
           phone={restaurantPhone}

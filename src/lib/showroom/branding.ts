@@ -8,7 +8,7 @@ export const SHOWROOM_PRODUCT_NAME = "Showroom";
 
 /** Sous-titre éditeur / dashboard. */
 export const SHOWROOM_PRODUCT_TAGLINE =
-  "Votre vitrine sociale qui transforme Instagram & TikTok en réservations";
+  "Landing de conversion — Instagram, TikTok et réseaux sociaux vers la réservation";
 
 /** Description courte pour les cartes et empty states. */
 export const SHOWROOM_PRODUCT_DESCRIPTION =

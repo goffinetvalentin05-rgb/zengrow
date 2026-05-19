@@ -37,16 +37,12 @@ export const STRUCTURE_TEMPLATES: {
     description:
       "Parcours émotionnel — ressentir l'ambiance avant de réserver. CTA discrets, réservation en fin.",
     order: [
-      "about",
       "gallery",
-      "highlights",
       "menu",
       "reviews",
       "reservation",
       "hours",
       "location",
-      "gift_vouchers",
-      "social",
     ],
   },
   {
