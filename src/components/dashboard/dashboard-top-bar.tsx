@@ -79,7 +79,7 @@ export default function DashboardTopBar({
             className: "hidden lg:inline-flex shrink-0",
           })}
         >
-          Page publique
+          Showroom
         </Link>
       </div>
     </header>

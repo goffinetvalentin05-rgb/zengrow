@@ -61,7 +61,7 @@ export default function PublicPageSectionNav({ className }: PublicPageSectionNav
 
       <nav
         className={cn("hidden w-[220px] shrink-0 lg:block", className)}
-        aria-label="Sections de la page publique"
+        aria-label="Sections du showroom"
       >
         <div className="sticky top-6 space-y-0.5">
           {PUBLIC_PAGE_EDITOR_SECTIONS.map((section) => {

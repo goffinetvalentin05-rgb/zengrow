@@ -123,7 +123,7 @@ export default function DashboardHomeChart({ series }: { series: DashboardChartD
               className="h-full py-8"
               icon={BarChart3}
               title="Pas encore de données"
-              description="Tes premières réservations apparaîtront ici. Partage ta page publique pour remplir ce graphique."
+              description="Tes premières réservations apparaîtront ici. Partage ton lien showroom pour remplir ce graphique."
             />
           </div>
         ) : (

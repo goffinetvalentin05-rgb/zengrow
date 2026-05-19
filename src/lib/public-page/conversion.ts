@@ -5,6 +5,7 @@ import type { OpeningHours } from "@/src/lib/utils";
 export type PageGoal = "reservations" | "menu" | "ambiance" | "terrace_event" | "simple_direct";
 export type PersuasionStyle = "direct" | "premium" | "warm" | "fast";
 export type StructureTemplate =
+  | "social_showroom"
   | "premium_experience"
   | "warm_restaurant"
   | "modern_brasserie"
@@ -30,6 +31,25 @@ export const STRUCTURE_TEMPLATES: {
   description: string;
   order: PageBlockId[];
 }[] = [
+  {
+    id: "social_showroom",
+    label: "Showroom social",
+    description:
+      "Conversion sociale — ambiance et photos d'abord, réservation en fin de parcours avec CTA immédiat.",
+    order: [
+      "gallery",
+      "menu",
+      "hours",
+      "location",
+      "about",
+      "reviews",
+      "reservation",
+      "final_cta",
+      "highlights",
+      "gift_vouchers",
+      "social",
+    ],
+  },
   {
     id: "premium_experience",
     label: "Expérience premium",
@@ -159,15 +179,15 @@ export const SECTION_DISABLE_WARNINGS: Partial<Record<PageBlockId, string>> = {
 const LEGACY_TEMPLATE_MAP: Record<string, StructureTemplate> = {
   conversion_direct: "minimal_conversion",
   premium: "premium_experience",
-  mobile_fast: "minimal_conversion",
-  ambiance_experience: "premium_experience",
+  mobile_fast: "social_showroom",
+  ambiance_experience: "social_showroom",
 };
 
 export function defaultConversionSettings(): ConversionSettings {
   return {
     pageGoal: "reservations",
     persuasionStyle: "premium",
-    structureTemplate: "premium_experience",
+    structureTemplate: "social_showroom",
     ctaPlacement: "full",
     stickyMobile: true,
   };

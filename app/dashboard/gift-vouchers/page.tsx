@@ -51,7 +51,7 @@ export default async function DashboardGiftVouchersPage() {
       <div className="space-y-10">
         <PageHeader
           title="Bons cadeaux"
-          subtitle="Demandes reçues depuis votre page publique. Vous préparez le bon et l’envoyez au client."
+          subtitle="Demandes reçues depuis votre showroom. Vous préparez le bon et l’envoyez au client."
         />
         <GiftVouchersDashboard initialRows={rows} />
       </div>

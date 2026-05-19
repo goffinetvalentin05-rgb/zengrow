@@ -132,7 +132,7 @@ function SortableRowContent({
           <p className="mt-0.5 text-[11px] font-medium text-zg-accent">Section obligatoire</p>
         ) : null}
         {!item.enabled && !meta.required ? (
-          <p className="mt-0.5 text-[11px] text-zg-text-muted">Masquée sur la page publique</p>
+          <p className="mt-0.5 text-[11px] text-zg-text-muted">Masquée sur le showroom</p>
         ) : null}
         {variantOptions.length > 0 && item.enabled ? (
           <label className="mt-2 block text-xs text-zg-text-muted">

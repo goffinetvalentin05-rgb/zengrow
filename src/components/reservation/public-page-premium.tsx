@@ -191,13 +191,55 @@ export function PublicPageNav({
  */
 function premiumHeroMinHeight(heroHeight: "compact" | "normal" | "tall", previewMode: boolean) {
   if (previewMode) {
-    if (heroHeight === "compact") return "min-h-[440px]";
-    if (heroHeight === "tall") return "min-h-[640px]";
-    return "min-h-[540px]";
+    if (heroHeight === "compact") return "min-h-[480px]";
+    if (heroHeight === "tall") return "min-h-[680px]";
+    return "min-h-[580px]";
   }
-  if (heroHeight === "compact") return "min-h-[min(62vh,560px)]";
-  if (heroHeight === "tall") return "min-h-[min(88vh,920px)]";
-  return "min-h-[min(78vh,780px)]";
+  if (heroHeight === "compact") return "min-h-[min(68vh,600px)]";
+  if (heroHeight === "tall") return "min-h-[min(92vh,960px)]";
+  return "min-h-[min(85vh,840px)]";
+}
+
+/** Bande CTA immédiate sous le hero — conversion sociale en < 10 s. */
+export function ShowroomQuickReserveBand({
+  ctaLabel,
+  onReserve,
+  openStatus,
+  visible,
+}: {
+  ctaLabel: string;
+  onReserve: () => void;
+  openStatus?: string;
+  visible: boolean;
+}) {
+  if (!visible) return null;
+
+  return (
+    <section
+      className="relative z-20 -mt-6 px-4 sm:-mt-8 sm:px-6"
+      aria-label="Réserver maintenant"
+    >
+      <div className="zg-showroom-quick-cta zg-showroom-fade-in mx-auto max-w-lg">
+        {openStatus ? (
+          <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[color-mix(in_srgb,var(--body-text)_55%,transparent)]">
+            {openStatus}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          onClick={onReserve}
+          className="zg-showroom-quick-cta__button flex min-h-[58px] w-full items-center justify-center gap-2 rounded-2xl px-6 text-sm font-bold uppercase tracking-[0.14em] shadow-[0_20px_50px_-12px_color-mix(in_srgb,var(--button-bg)_55%,transparent)] transition active:scale-[0.98]"
+          style={{ backgroundColor: "var(--button-bg)", color: "var(--button-text)" }}
+        >
+          {ctaLabel}
+          <ChevronRight className="h-5 w-5" aria-hidden />
+        </button>
+        <p className="mt-2.5 text-center text-[11px] font-medium tracking-wide text-[color-mix(in_srgb,var(--body-text)_50%,transparent)]">
+          Réservation en ligne · quelques secondes
+        </p>
+      </div>
+    </section>
+  );
 }
 
 function HeroContentInner({
@@ -1452,7 +1494,86 @@ export function PremiumGallery({
     );
   }
 
-  /* === STYLE INSTAGRAM : grille carrÃ©e rÃ©guliÃ¨re, style social === */
+  /* === STYLE REELS : colonnes verticales type TikTok / Reels (social-native) === */
+  if (style === "reels") {
+    return (
+      <section id="galerie" className="scroll-mt-24">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-10">
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="flex items-center gap-3">
+                <span
+                  className="h-px w-10"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, transparent)",
+                  }}
+                  aria-hidden
+                />
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-[0.32em]"
+                  style={{ color: "var(--accent-color)" }}
+                >
+                  {eyebrow}
+                </p>
+              </div>
+              <h2
+                className="mt-4 text-[clamp(1.75rem,4.5vw,2.75rem)] font-medium leading-[1.05]"
+                style={{
+                  fontFamily: "var(--heading-font)",
+                  color: "var(--heading-color)",
+                  letterSpacing: "-0.015em",
+                }}
+              >
+                {title}
+              </h2>
+            </div>
+            {showInstagram && instagramUrl ? (
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex shrink-0 items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em]"
+                style={{ color: "var(--accent-color)" }}
+              >
+                <Instagram className="h-4 w-4" aria-hidden />
+                <span className="border-b border-current pb-0.5">{instagramLinkLabel}</span>
+              </a>
+            ) : null}
+          </div>
+          <div className="zg-showroom-reels-scroll -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 snap-x snap-mandatory sm:-mx-6 sm:gap-4 sm:px-6 md:grid md:grid-cols-3 md:overflow-visible md:pb-0 lg:grid-cols-4 lg:gap-4">
+            {images.slice(0, 8).map((src, i) => (
+              <div
+                key={src}
+                className={cn(
+                  "zg-showroom-reels-card relative shrink-0 snap-center overflow-hidden rounded-2xl shadow-[0_24px_60px_-28px_rgba(0,0,0,0.55)]",
+                  "w-[min(72vw,280px)] aspect-[9/16]",
+                  "md:w-full md:shrink",
+                  i % 3 === 1 && "md:mt-8",
+                  i % 3 === 2 && "md:mt-4",
+                )}
+              >
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  className="object-cover transition duration-700 hover:scale-[1.04]"
+                  sizes="(max-width:768px) 72vw, 25vw"
+                  unoptimized
+                  priority={i < 2}
+                />
+                <div
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10"
+                  aria-hidden
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* === STYLE INSTAGRAM : grille carrée régulière, style social === */
   if (style === "instagram") {
     return (
       <section className="">
@@ -2282,15 +2403,25 @@ export function StickyReserveBar({
 }) {
   if (!visible) return null;
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-[color-mix(in_srgb,var(--body-text)_10%,var(--page-bg))] bg-[color-mix(in_srgb,var(--page-bg)_96%,transparent)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-lg md:hidden">
+    <div
+      className="zg-showroom-sticky-cta fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] md:hidden"
+      role="complementary"
+      aria-label="Réserver"
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-full h-12 bg-gradient-to-t from-[var(--page-bg)] to-transparent"
+        aria-hidden
+      />
       <button
         type="button"
         onClick={onClick}
-        className="flex min-h-[52px] w-full items-center justify-center text-sm font-semibold uppercase tracking-[0.12em]"
+        className="zg-showroom-sticky-cta__button relative flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl text-sm font-bold uppercase tracking-[0.14em] shadow-[0_-8px_40px_-8px_color-mix(in_srgb,var(--button-bg)_45%,transparent),0_16px_48px_-12px_rgba(0,0,0,0.35)] transition active:scale-[0.98]"
         style={{ backgroundColor: "var(--button-bg)", color: "var(--button-text)" }}
       >
         {label}
+        <ChevronRight className="h-5 w-5 shrink-0" aria-hidden />
       </button>
     </div>
   );
 }
+

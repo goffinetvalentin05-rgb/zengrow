@@ -33,7 +33,7 @@ export function formatReservationSourceLabel(
   if (reservationType === "walkin") return "Walk-in";
   const value = (source ?? "public_link").trim();
   if (value === "manual_dashboard") return "Saisie manuelle";
-  if (value === "public_link" || value === "public") return "Page publique";
+  if (value === "public_link" || value === "public") return "Showroom";
   return value.replace(/_/g, " ");
 }
 

@@ -7,7 +7,7 @@ export type SectionRegistryEntry = {
   type: PageSectionType;
   label: string;
   description: string;
-  /** Toujours présente sur la page publique. */
+  /** Toujours présente sur le showroom publié. */
   required: boolean;
   /** Affichée dans la liste drag & drop (navigation reste fixe). */
   sortable: boolean;
@@ -31,8 +31,8 @@ export const SECTION_REGISTRY: Record<PageSectionType, SectionRegistryEntry> = {
   },
   hero: {
     type: "hero",
-    label: "Hero",
-    description: "Bannière d’accueil et accroche principale.",
+    label: "Hero immersif",
+    description: "Première impression — vibe et émotion en moins de 3 secondes.",
     required: true,
     sortable: true,
     optional: false,
@@ -90,8 +90,8 @@ export const SECTION_REGISTRY: Record<PageSectionType, SectionRegistryEntry> = {
   },
   gallery: {
     type: "gallery",
-    label: "Galerie",
-    description: "Photos du lieu et des plats.",
+    label: "Galerie ambiance",
+    description: "Visuels verticaux type Reels — donner envie avant de réserver.",
     required: false,
     sortable: true,
     optional: true,

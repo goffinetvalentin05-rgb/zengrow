@@ -113,7 +113,7 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
         <div>
           <p className="text-sm font-semibold text-[var(--foreground)]">Aperçu en direct</p>
           <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">
-            Rendu identique à la page publique (sans enregistrement).{" "}
+            Rendu identique au showroom publié (sans enregistrement).{" "}
             <span className="font-mono text-[11px]">{publicPath}</span>
           </p>
         </div>

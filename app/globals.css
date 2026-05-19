@@ -318,7 +318,7 @@ body {
 }
 
 /* ============================================================
-   Page publique restaurant — hero immersif “cinéma” léger.
+   Showroom social — hero immersif, CTA conversion, galerie Reels.
    Respecte prefers-reduced-motion.
    ============================================================ */
 @keyframes zg-public-hero-drift {
@@ -339,6 +339,60 @@ body {
     animation: zg-public-hero-drift 32s cubic-bezier(0.45, 0, 0.25, 1) infinite alternate;
     will-change: transform;
   }
+}
+
+@keyframes zg-showroom-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zg-showroom-cta-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 20px 50px -12px color-mix(in srgb, var(--button-bg) 55%, transparent),
+      0 0 0 0 color-mix(in srgb, var(--button-bg) 35%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 24px 56px -10px color-mix(in srgb, var(--button-bg) 65%, transparent),
+      0 0 0 6px color-mix(in srgb, var(--button-bg) 12%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .zg-showroom-fade-in {
+    animation: zg-showroom-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .zg-showroom-quick-cta__button,
+  .zg-showroom-sticky-cta__button {
+    animation: zg-showroom-cta-pulse 3.2s ease-in-out infinite;
+  }
+
+  .zg-showroom-reels-scroll {
+    scrollbar-width: none;
+  }
+
+  .zg-showroom-reels-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.zg-showroom-sticky-cta {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--page-bg) 88%, transparent) 28%,
+    color-mix(in srgb, var(--page-bg) 98%, transparent) 100%
+  );
+  backdrop-filter: blur(16px);
 }
 
 /* Landing — évite #eae6dd (var(--border) global) sur fond sombre */

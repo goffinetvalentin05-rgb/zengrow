@@ -17,7 +17,7 @@ type SectionDisplayTogglesProps<T extends Record<string, boolean>> = {
 
 export default function SectionDisplayToggles<T extends Record<string, boolean>>({
   title = "Affichage",
-  description = "Choisissez ce qui est visible sur votre page publique :",
+  description = "Choisissez ce qui est visible sur votre showroom :",
   display,
   options,
   availability = {},

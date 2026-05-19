@@ -36,7 +36,7 @@ export default async function DashboardPage() {
           {
             kind: "external",
             href: publicLink,
-            label: "Page publique",
+            label: "Showroom",
             icon: <ExternalLink className="h-4 w-4" strokeWidth={2} />,
           },
           {

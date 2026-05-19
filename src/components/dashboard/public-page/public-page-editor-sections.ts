@@ -10,8 +10,8 @@ export type PublicPageEditorSection = {
 };
 
 export const PUBLIC_PAGE_EDITOR_SECTIONS: PublicPageEditorSection[] = [
-  { id: "zone-theme", label: "Thème", icon: Palette },
-  { id: "zone-identite", label: "Identité", icon: Sparkles },
-  { id: "zone-sections", label: "Sections", icon: Layers },
-  { id: "zone-contenu", label: "Contenu", icon: FileText },
+  { id: "zone-theme", label: "Ambiance", icon: Palette },
+  { id: "zone-identite", label: "Identité & lien", icon: Sparkles },
+  { id: "zone-sections", label: "Parcours", icon: Layers },
+  { id: "zone-contenu", label: "Photos & menu", icon: FileText },
 ];

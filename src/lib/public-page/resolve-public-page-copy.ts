@@ -50,7 +50,8 @@ function templateLayer(structureTemplate: StructureTemplate): PageSectionContent
   }
 
   let galleryEyebrow = "En images";
-  if (structureTemplate === "premium_experience") galleryEyebrow = "Galerie";
+  if (structureTemplate === "social_showroom") galleryEyebrow = "L'ambiance";
+  else if (structureTemplate === "premium_experience") galleryEyebrow = "Galerie";
   else if (structureTemplate === "warm_restaurant") galleryEyebrow = "Ambiance";
   else if (structureTemplate === "event_venue") galleryEyebrow = "Nos espaces";
 

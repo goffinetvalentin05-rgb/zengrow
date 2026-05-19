@@ -660,7 +660,7 @@ export default function SettingsForm({
                 <p className="text-sm text-zg-muted">
                   Photos, hero, sections et publication :{" "}
                   <Link href="/dashboard/public-page" className="font-semibold text-zg-accent hover:underline">
-                    Gérer la page publique →
+                    Gérer le showroom →
                   </Link>
                 </p>
               </div>
@@ -881,7 +881,7 @@ export default function SettingsForm({
           </SettingsAccordion>
           <SettingsAccordion title="Zone de danger" danger>
             <p className="text-sm text-zg-muted">
-              La suppression est définitive : réservations, page publique et données associées seront perdues.
+              La suppression est définitive : réservations, showroom et données associées seront perdues.
             </p>
             <Button
               type="button"

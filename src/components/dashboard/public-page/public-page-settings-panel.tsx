@@ -1411,7 +1411,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
           id="zone-sections"
           icon={Layers}
           title="Sections"
-          description="Organisez les blocs de votre page publique."
+          description="Structurez votre showroom : ambiance, menu, réservation."
         >
           <PageSectionsStructureCard
             themeId={themeId}
@@ -2669,9 +2669,10 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                             markDirty();
                           }}
                         >
+                          <option value="reels">Reels (vertical · TikTok / Stories)</option>
                           <option value="showcase">Showcase (grande image + vignettes)</option>
                           <option value="grid">Grille (mosaïque)</option>
-                          <option value="instagram">Style Instagram</option>
+                          <option value="instagram">Style Instagram (carré)</option>
                         </select>
                       </div>
                     </div>

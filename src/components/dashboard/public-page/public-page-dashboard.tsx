@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Eye, Sparkles } from "lucide-react";
+import { Copy, Eye, Instagram, Sparkles } from "lucide-react";
+import {
+  SHOWROOM_PRODUCT_NAME,
+  SHOWROOM_PRODUCT_TAGLINE,
+} from "@/src/lib/showroom/branding";
 import { createClient } from "@/src/lib/supabase/client";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
@@ -144,7 +148,7 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
     }
 
     setPublicPath(publicLink.replace(initial.slug, panel.getSlug()));
-    showToast({ message: "Page publiée.", icon: CheckCircle2 });
+    showToast({ message: "Showroom publié.", icon: CheckCircle2 });
   }, [handleSave, initial.slug, publicLink, showToast]);
 
   const publishLabel = useMemo(() => {
@@ -159,9 +163,33 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
   return (
     <DashboardContent className="pb-16">
       <div className="space-y-4">
+        <div className="relative overflow-hidden rounded-2xl border border-zg-border/80 bg-gradient-to-br from-zg-accent/12 via-zg-surface to-zg-surface px-5 py-5 sm:px-7 sm:py-6">
+          <div
+            className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-zg-accent/15 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-xl space-y-1.5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-zg-accent">
+                Conversion sociale
+              </p>
+              <h2 className="text-xl font-bold tracking-tight text-zg-fg sm:text-2xl">
+                {SHOWROOM_PRODUCT_NAME}
+              </h2>
+              <p className="text-sm leading-relaxed text-zg-text-muted">{SHOWROOM_PRODUCT_TAGLINE}</p>
+            </div>
+            <div className="flex items-center gap-2 text-zg-text-muted">
+              <Instagram className="h-5 w-5 shrink-0 text-zg-accent" aria-hidden />
+              <p className="text-xs leading-snug sm:max-w-[200px]">
+                Pensé pour Instagram, TikTok et le lien en bio — pas un site web classique.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <PageHeader
-          title="Page publique"
-          subtitle="Personnalisez votre page restaurant"
+          title={SHOWROOM_PRODUCT_NAME}
+          subtitle="Vitrine immersive · ambiance · réservation en quelques secondes"
           secondaryActions={[
             {
               kind: "external",

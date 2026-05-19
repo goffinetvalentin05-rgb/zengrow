@@ -65,7 +65,7 @@ export default function GiftVouchersDashboard({ initialRows }: { initialRows: Gi
   if (sorted.length === 0) {
     return (
       <div className="rounded-2xl border border-zg-border bg-zg-surface p-8 text-center text-sm text-zg-muted">
-        Aucune demande de bon cadeau pour l’instant. Activez la section sur la page publique pour en recevoir.
+        Aucune demande de bon cadeau pour l’instant. Activez la section sur votre showroom pour en recevoir.
       </div>
     );
   }

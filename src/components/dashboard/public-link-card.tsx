@@ -18,7 +18,7 @@ export default function PublicLinkCard({ link }: PublicLinkCardProps) {
   return (
     <section className="space-y-4 border-t border-zg-border/80 pt-10">
       <div>
-        <h3 className="text-lg font-bold tracking-tight text-zg-fg">Lien public</h3>
+        <h3 className="text-lg font-bold tracking-tight text-zg-fg">Lien showroom</h3>
         <p className="dashboard-section-subtitle mt-1">À partager sur vos canaux.</p>
       </div>
       <p className="break-all text-sm text-zg-muted">{link}</p>

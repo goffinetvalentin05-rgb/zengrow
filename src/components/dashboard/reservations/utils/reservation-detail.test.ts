@@ -33,7 +33,7 @@ describe("reservation-detail utils", () => {
 
   it("formate les libellés source", () => {
     expect(formatReservationSourceLabel("manual_dashboard")).toBe("Saisie manuelle");
-    expect(formatReservationSourceLabel("public_link")).toBe("Page publique");
+    expect(formatReservationSourceLabel("public_link")).toBe("Showroom");
   });
 
   it("calcule l'historique client", () => {

@@ -1,5 +1,5 @@
 export type EditorialLayout = "image-left" | "image-right" | "full-bleed";
-export type GalleryStyle = "grid" | "showcase" | "instagram";
+export type GalleryStyle = "grid" | "showcase" | "instagram" | "reels";
 
 export type ConceptPillar = {
   id: string;
@@ -105,7 +105,7 @@ export function defaultPremiumContent(): PremiumPageContent {
       quoteAuthor: "",
       pressMentions: [],
     },
-    gallery: { style: "showcase" },
+    gallery: { style: "reels" },
     practical: { parking: "", accessibility: "" },
     reservation: {
       groupMessage: "Pour les groupes ou événements, contactez-nous par téléphone.",
@@ -229,8 +229,13 @@ export function normalizePremiumContent(raw: unknown): PremiumPageContent {
   const practicalRaw = o.practical as Partial<PremiumPageContent["practical"]> | undefined;
   const reservationRaw = o.reservation as Partial<PremiumPageContent["reservation"]> | undefined;
   const giftRaw = o.giftVouchers as Partial<GiftVouchersSectionContent> | undefined;
-  const style =
-    galleryRaw?.style === "grid" || galleryRaw?.style === "instagram" ? galleryRaw.style : "showcase";
+  const style: GalleryStyle =
+    galleryRaw?.style === "grid" ||
+    galleryRaw?.style === "instagram" ||
+    galleryRaw?.style === "showcase" ||
+    galleryRaw?.style === "reels"
+      ? galleryRaw.style
+      : base.gallery.style;
 
   return {
     navigationEnabled: o.navigationEnabled !== false,

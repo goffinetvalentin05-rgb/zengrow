@@ -51,7 +51,7 @@ const navItems = [
   { href: "/dashboard/customers", label: "Clients", icon: Users },
   { href: "/dashboard/feedbacks", label: "Feedbacks", icon: MessageSquare },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
-  { href: "/dashboard/public-page", label: "Page publique", icon: Globe2 },
+  { href: "/dashboard/public-page", label: "Showroom", icon: Globe2 },
   // GIFT_CARDS feature flag — réactivable
   ...(isGiftCardsEnabled()
     ? [{ href: "/dashboard/gift-vouchers" as const, label: "Bons cadeaux", icon: Gift }]
@@ -137,7 +137,7 @@ export default function DashboardSidebar({
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(reservationLink);
-      showToast({ message: "Lien public copié.", icon: Copy });
+      showToast({ message: "Lien showroom copié.", icon: Copy });
     } catch {
       showToast({ message: "Impossible de copier le lien.", icon: Copy });
     }

@@ -69,6 +69,7 @@ import {
   PremiumPracticalInfo,
   PremiumReservationSection,
   PublicPageNav,
+  ShowroomQuickReserveBand,
   StickyReserveBar,
 } from "@/src/components/reservation/public-page-premium";
 import type { ThemeId } from "@/src/lib/themes/types";
@@ -993,7 +994,7 @@ export default function PublicReservationForm({
       className={cn(
         previewMode ? "relative min-h-0 w-full" : "min-h-screen",
         "[font-size:calc(16px*var(--font-scale))]",
-        !previewMode && conversionCta.showSticky && reservationEnabled && "pb-24 md:pb-0",
+        !previewMode && conversionCta.showSticky && reservationEnabled && "pb-[5.5rem] md:pb-0",
       )}
       style={{
         ...cssVars,
@@ -1070,6 +1071,13 @@ export default function PublicReservationForm({
           />
         </>
       )}
+
+      <ShowroomQuickReserveBand
+        ctaLabel={ctaLabel}
+        onReserve={scrollToReservation}
+        openStatus={openStatus}
+        visible={!previewMode && reservationEnabled && blockEnabled("reservation")}
+      />
 
       {specialMessage?.trim() ? (
         <div

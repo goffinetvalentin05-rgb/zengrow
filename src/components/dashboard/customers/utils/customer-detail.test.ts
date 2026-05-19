@@ -22,6 +22,6 @@ describe("computeCustomerDetailStats", () => {
       row({ id: "b", reservation_date: "2024-01-15", guests: 2, source: "public_link" }),
     ]);
     expect(stats.totalCovers).toBe(6);
-    expect(stats.acquisitionSource).toBe("Page publique");
+    expect(stats.acquisitionSource).toBe("Showroom");
   });
 });

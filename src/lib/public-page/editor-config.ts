@@ -219,7 +219,6 @@ export function defaultEditorConfig(): PublicPageEditorConfig {
     },
     conversion: {
       ...defaultConversionSettings(),
-      structureTemplate: "premium_experience",
       persuasionStyle: "premium",
     },
     premium: defaultPremiumContent(),
