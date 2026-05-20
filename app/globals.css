@@ -548,6 +548,45 @@ body {
   text-transform: none;
 }
 
+/* Landing conversion — CTA central lumineux */
+.zg-showroom-hero-cta--conversion {
+  min-height: 56px;
+  padding: 0.95rem 1.75rem;
+  border-radius: 1rem;
+  border: none;
+  background: var(--button-bg);
+  color: var(--button-text);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  box-shadow:
+    0 4px 24px color-mix(in srgb, var(--button-bg) 35%, transparent),
+    0 0 48px color-mix(in srgb, var(--button-bg) 25%, transparent);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+  animation: none;
+}
+
+.zg-showroom-hero-cta--conversion:hover {
+  transform: scale(1.02);
+  filter: brightness(1.04);
+  box-shadow:
+    0 6px 28px color-mix(in srgb, var(--button-bg) 45%, transparent),
+    0 0 56px color-mix(in srgb, var(--button-bg) 35%, transparent);
+}
+
+.zg-showroom-hero-cta--conversion:active {
+  transform: scale(1);
+  filter: brightness(0.98);
+}
+
+[data-showroom-flow="true"].zg-showroom-flow--conversion-screen {
+  overflow: hidden;
+}
+
 .zg-showroom-hero-cta--large {
   min-height: 56px;
   font-size: 0.875rem;
