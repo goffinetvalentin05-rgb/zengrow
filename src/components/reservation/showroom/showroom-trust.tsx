@@ -6,6 +6,31 @@ import type { CredibilityContent } from "@/src/lib/public-page/premium-content";
 import type { ReviewsSectionCopy } from "@/src/lib/public-page/page-sections";
 import { hasCredibilityContent } from "@/src/lib/public-page/premium-content";
 
+/** Tags courts issus de public_highlights — conversion, pas social proof chiffré */
+export function ShowroomHighlights({ highlights = [] }: { highlights?: string[] }) {
+  const tags = highlights.map((s) => s.trim()).filter(Boolean).slice(0, 6);
+  if (tags.length === 0) return null;
+
+  return (
+    <section className="zg-showroom-highlights scroll-mt-0 py-8 sm:py-10">
+      <div className="mx-auto max-w-lg px-5 sm:max-w-xl sm:px-6 md:max-w-2xl">
+        <ul className="flex flex-wrap justify-center gap-2 sm:justify-start">
+          {tags.map((item, i) => (
+            <li
+              key={`${item}-${i}`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--accent-color)_22%,transparent)] bg-[color-mix(in_srgb,var(--accent-color)_6%,transparent)] px-3 py-1.5 text-[11px] font-medium tracking-wide"
+              style={{ color: "var(--heading-color)" }}
+            >
+              <Check className="h-3 w-3 shrink-0" style={{ color: "var(--accent-color)" }} aria-hidden />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 /** Preuves de confiance — note, avis, tags, citation */
 export function ShowroomTrust({
   data,

@@ -322,9 +322,9 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     allow_email: true,
     logo_url: null,
     cover_image_url: null,
-    accent_color: "#1F7A6C",
-    button_color: "#1F7A6C",
-    text_color: "#111827",
+    accent_color: "#FF5722",
+    button_color: "#FF5722",
+    text_color: "#A8A29E",
     heading_font: "Inter",
     body_font: "Inter",
     font_size_scale: "medium" as const,
@@ -398,14 +398,14 @@ export default async function PublicReservationPage({ params }: PublicReservatio
     galleryImageUrls[0] ??
     null;
 
-  const pageBg = restaurant.page_background_color?.trim() || "#f8fafc";
+  const pageBg = restaurant.page_background_color?.trim() || "#0A0A0B";
   const heroPrimary =
     restaurant.hero_primary_color?.trim() || restaurant.primary_color?.trim() || "#12151c";
-  const btnBg = restaurant.public_button_bg_color?.trim() || safeSettings.button_color || "#1F7A6C";
+  const btnBg = restaurant.public_button_bg_color?.trim() || safeSettings.button_color || "#FF5722";
   const btnText = restaurant.public_button_text_color?.trim() || "#ffffff";
-  const headingColor = restaurant.public_heading_text_color?.trim() || "#0f172a";
-  const bodyColor = restaurant.public_body_text_color?.trim() || safeSettings.text_color || "#334155";
-  const accent = restaurant.public_accent_color?.trim() || safeSettings.accent_color || "#1F7A6C";
+  const headingColor = restaurant.public_heading_text_color?.trim() || "#F5F1EA";
+  const bodyColor = restaurant.public_body_text_color?.trim() || safeSettings.text_color || "#A8A29E";
+  const accent = restaurant.public_accent_color?.trim() || safeSettings.accent_color || "#FF5722";
   const footerBg = pageBg;
   const footerText = bodyColor;
 

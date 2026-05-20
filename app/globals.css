@@ -390,10 +390,17 @@ body {
   backdrop-filter: blur(16px);
 }
 
-/* Parcours showroom : landing sociale, pas site web */
+@media (min-width: 768px) {
+  .zg-showroom-sticky-cta {
+    background: transparent;
+    backdrop-filter: none;
+  }
+}
+
+/* Parcours showroom : landing conversion dark premium */
 [data-showroom-flow="true"] {
-  --page-bg: color-mix(in srgb, var(--hero-primary, #0c0b0a) 8%, #0a0908);
-  --showroom-glow: color-mix(in srgb, var(--button-bg, #ff6b35) 35%, transparent);
+  --showroom-glow: color-mix(in srgb, var(--button-bg, #ff5722) 40%, transparent);
+  background-color: var(--page-bg);
 }
 
 [data-showroom-flow="true"] section,
@@ -405,21 +412,40 @@ body {
   isolation: isolate;
 }
 
-[data-showroom-flow="true"] #reservation {
-  margin-top: 0;
-  border-top: 1px solid color-mix(in srgb, var(--body-text) 8%, transparent);
+[data-showroom-flow="true"] #accueil {
+  min-height: 100dvh;
 }
 
-[data-showroom-flow="true"] #accueil {
-  min-height: min(100dvh, 900px);
-  min-height: min(100svh, 900px);
+[data-showroom-flow="true"] .zg-showroom-gallery {
+  background: linear-gradient(
+    180deg,
+    #0A0A0B 0%,
+    color-mix(in srgb, var(--page-bg) 92%, #111113) 100%
+  );
+}
+
+[data-showroom-flow="true"] #accueil + .zg-showroom-highlights,
+[data-showroom-flow="true"] #accueil + .zg-showroom-gallery {
+  margin-top: -1.5rem;
+}
+
+[data-showroom-flow="true"] .zg-showroom-highlights {
+  background: color-mix(in srgb, var(--page-bg) 96%, #111113);
+}
+
+[data-showroom-flow="true"] .zg-showroom-menu {
+  background: color-mix(in srgb, var(--page-bg) 94%, #0f0f11);
+}
+
+[data-showroom-flow="true"] .zg-showroom-practical {
+  background: var(--page-bg);
 }
 
 [data-showroom-flow="true"] .zg-showroom-card {
   border-radius: calc(var(--radius) + 8px);
-  border: 1px solid color-mix(in srgb, var(--body-text) 8%, transparent);
-  background: color-mix(in srgb, var(--body-text) 3%, var(--page-bg));
-  box-shadow: 0 24px 64px -48px rgba(0, 0, 0, 0.55);
+  border: 1px solid color-mix(in srgb, var(--body-text) 7%, transparent);
+  background: color-mix(in srgb, var(--body-text) 4%, var(--page-bg));
+  box-shadow: 0 20px 56px -44px rgba(0, 0, 0, 0.65);
 }
 
 .zg-showroom-btn-secondary {
@@ -457,6 +483,12 @@ body {
   animation: zg-showroom-sheet-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@media (min-width: 768px) {
+  .zg-showroom-drawer-panel--side {
+    animation: zg-showroom-sheet-right 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
 @keyframes zg-showroom-sheet-up {
   from {
     transform: translateY(100%);
@@ -468,16 +500,15 @@ body {
   }
 }
 
-[data-showroom-flow="true"] .zg-showroom-gallery {
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    color-mix(in srgb, var(--page-bg) 40%, transparent) 100%
-  );
-}
-
-[data-showroom-flow="true"] #accueil + .zg-showroom-gallery {
-  margin-top: -2.5rem;
+@keyframes zg-showroom-sheet-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 /* Hero affiche premium — CTA capsule luxe, intégré à l’image */
@@ -541,6 +572,26 @@ body {
   box-shadow:
     0 12px 40px -10px rgb(0 0 0 / 0.5),
     0 0 28px -6px color-mix(in srgb, var(--button-bg) 50%, transparent);
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    filter 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  [data-showroom-flow="true"] .zg-showroom-sticky-cta__button {
+    width: auto;
+    min-width: 220px;
+    max-width: none;
+  }
+
+  [data-showroom-flow="true"] .zg-showroom-sticky-cta__button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+    box-shadow:
+      0 16px 44px -12px rgb(0 0 0 / 0.55),
+      0 0 36px -4px color-mix(in srgb, var(--button-bg) 58%, transparent);
+  }
 }
 
 .zg-showroom-hero-cta:hover {

@@ -30,7 +30,7 @@ export function ShowroomMenu({
   if (items.length === 0 && !href) return null;
 
   return (
-    <section id="menu" className="zg-showroom-menu scroll-mt-0 py-14 sm:py-20">
+    <section id="menu" className="zg-showroom-menu scroll-mt-0 py-12 sm:py-16">
       <div className="mx-auto max-w-lg px-5 sm:max-w-xl sm:px-6 md:max-w-2xl">
         <header className="mb-8">
           <p

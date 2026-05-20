@@ -13,12 +13,12 @@ export function ShowroomFinalCta({
   onReserve: () => void;
 }) {
   return (
-    <section className="zg-showroom-final-cta relative overflow-hidden py-16 sm:py-24">
+    <section className="zg-showroom-final-cta relative overflow-hidden py-14 sm:py-20">
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 100% 80% at 50% 0%, color-mix(in srgb, var(--button-bg) 18%, transparent) 0%, transparent 55%), linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--button-bg) 4%, var(--page-bg)) 100%)",
+            "radial-gradient(ellipse 90% 70% at 50% 0%, color-mix(in srgb, var(--button-bg) 14%, transparent) 0%, transparent 52%), linear-gradient(180deg, color-mix(in srgb, var(--page-bg) 96%, #111113) 0%, var(--page-bg) 100%)",
         }}
         aria-hidden
       />
@@ -30,18 +30,18 @@ export function ShowroomFinalCta({
           Réservation
         </p>
         <h2
-          className="mt-4 text-balance text-[clamp(1.75rem,5.5vw,2.5rem)] font-medium leading-[1.05] tracking-tight"
+          className="mt-4 text-balance text-[clamp(1.65rem,5.5vw,2.35rem)] font-medium leading-[1.05] tracking-tight"
           style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
         >
           {title}
         </h2>
-        <p className="mx-auto mt-4 max-w-sm text-[15px] leading-relaxed opacity-60" style={{ color: "var(--body-text)" }}>
+        <p className="mx-auto mt-4 max-w-sm text-[15px] leading-relaxed opacity-55" style={{ color: "var(--body-text)" }}>
           {subtitle}
         </p>
         <button
           type="button"
           onClick={onReserve}
-          className="zg-showroom-hero-cta zg-showroom-hero-cta--primary zg-showroom-hero-cta--large mt-9 w-full max-w-md"
+          className="zg-showroom-hero-cta zg-showroom-hero-cta--primary zg-showroom-hero-cta--large mx-auto mt-9 w-full max-w-md"
         >
           {buttonLabel}
         </button>

@@ -84,10 +84,11 @@ import {
 } from "@/src/lib/themes/premium-dark/components";
 import { ShowroomHero } from "@/src/components/reservation/showroom/showroom-hero";
 import { ShowroomGallery } from "@/src/components/reservation/showroom/showroom-gallery";
-import { ShowroomTrust } from "@/src/components/reservation/showroom/showroom-trust";
+import { ShowroomHighlights } from "@/src/components/reservation/showroom/showroom-trust";
 import { ShowroomMenu } from "@/src/components/reservation/showroom/showroom-menu";
 import { ShowroomPractical } from "@/src/components/reservation/showroom/showroom-practical";
 import { ShowroomFinalCta } from "@/src/components/reservation/showroom/showroom-final-cta";
+import { ShowroomReservationDrawer } from "@/src/components/reservation/showroom/showroom-reservation-drawer";
 
 export type PublicReservationFormProps = {
   /**
@@ -187,11 +188,6 @@ export type PublicReservationFormProps = {
 
 function scrollToReservation() {
   document.getElementById("reservation")?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function prefersShowroomDrawer() {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(max-width: 767px)").matches;
 }
 
 function localYmd(d: Date): string {
@@ -1044,7 +1040,7 @@ export default function PublicReservationForm({
   const dateBtnRadius = usePremiumChrome ? "rounded-full" : "rounded-[var(--radius)]";
 
   function handleReserve() {
-    if (isLandingPage && prefersShowroomDrawer()) {
+    if (isLandingPage) {
       setShowroomReserveOpen(true);
       return;
     }
@@ -1066,7 +1062,7 @@ export default function PublicReservationForm({
           (isLandingPage || conversionCta.showSticky) &&
           reservationEnabled &&
           blockEnabled("reservation") &&
-          "pb-[5.25rem] md:pb-0",
+          "pb-[5.25rem]",
       )}
       data-showroom-flow={isLandingPage ? "true" : undefined}
       style={{
@@ -1087,9 +1083,6 @@ export default function PublicReservationForm({
           emotionalSubtitle={showroomHeroCopy.subtitle}
           cuisineType={cuisineType}
           city={city}
-          googleRating={showCredibility ? credibilityData.googleRating : null}
-          reviewCount={showCredibility ? credibilityData.reviewCount : null}
-          reviewsSuffix={resolvedSectionContent.reviews?.googleReviewsSuffix ?? "avis"}
           openStatus={openStatus}
           hoursSummary={showroomHoursSummary}
           ctaLabel={ctaLabel}
@@ -1298,43 +1291,13 @@ export default function PublicReservationForm({
           </section>
         ) : null}
 
-        {isLandingPage && showroomReserveOpen ? (
-          <button
-            type="button"
-            className="fixed inset-0 z-[79] bg-black/55 backdrop-blur-[2px] md:hidden"
-            aria-label="Fermer"
-            onClick={closeShowroomReserve}
-          />
-        ) : null}
         {blockEnabled("reservation") && reservationEnabled ? (
-        <div
-          id="reservation"
-          style={isLandingPage ? undefined : { order: sectionOrderIndex("reservation") }}
-          className={cn(
-            isLandingPage &&
-              (showroomReserveOpen
-                ? "fixed inset-x-0 bottom-0 z-[80] max-h-[min(92dvh,720px)] overflow-y-auto overscroll-contain rounded-t-[1.35rem] border-t border-white/10 shadow-[0_-24px_80px_rgba(0,0,0,0.55)]"
-                : "hidden md:block"),
-          )}
-        >
-        {isLandingPage && showroomReserveOpen ? (
-          <div
-            className="sticky top-0 z-[1] flex items-center justify-between gap-3 border-b border-[color-mix(in_srgb,var(--body-text)_8%,transparent)] px-5 py-3.5 md:hidden"
-            style={{ backgroundColor: "var(--page-bg)" }}
+          <ReservationWizardShell
+            landing={isLandingPage}
+            drawerOpen={showroomReserveOpen}
+            onClose={closeShowroomReserve}
+            sectionOrder={sectionOrderIndex("reservation")}
           >
-            <p className="text-sm font-medium" style={{ color: "var(--heading-color)", fontFamily: "var(--heading-font)" }}>
-              Réserver une table
-            </p>
-            <button
-              type="button"
-              onClick={closeShowroomReserve}
-              className="rounded-full px-3 py-1.5 text-xs font-semibold opacity-70"
-              style={{ color: "var(--body-text)" }}
-            >
-              Fermer
-            </button>
-          </div>
-        ) : null}
         <PremiumReservationSection
           title={isLandingPage ? "Réserver une table" : reservationSectionTitle()}
           intro={isLandingPage ? "" : effectiveConfig.reservation.intro}
@@ -1876,7 +1839,7 @@ export default function PublicReservationForm({
               </p>
             ) : null}
         </PremiumReservationSection>
-        </div>
+          </ReservationWizardShell>
         ) : showPhoneCta && showPhoneRow ? (
         <section id="reservation" className="scroll-mt-24">
           <div className={cardShell} style={{ backgroundColor: "color-mix(in srgb, var(--body-text) 7%, var(--page-bg))", borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))" }}>
@@ -2007,17 +1970,13 @@ export default function PublicReservationForm({
 
       {isLandingPage ? (
         <>
-          {showCredibility || activeHighlights.length > 0 ? (
-            <ShowroomTrust
-              data={credibilityData}
-              highlights={activeHighlights}
-              omitRating={showCredibility}
-              copy={{
-                googleReviewsSuffix: resolvedSectionContent.reviews?.googleReviewsSuffix ?? "avis",
-                googleCtaLabel: resolvedSectionContent.reviews?.googleCtaLabel ?? "",
-                pressHeading: resolvedSectionContent.reviews?.pressHeading ?? "",
-                tripAdvisorLabel: resolvedSectionContent.reviews?.tripAdvisorLabel ?? "",
-              }}
+          <ShowroomHighlights highlights={activeHighlights} />
+          {blockEnabled("gallery") && showroomGalleryImages.length > 0 ? (
+            <ShowroomGallery
+              images={showroomGalleryImages}
+              title={resolvedSectionContent.gallery?.titleIfNoInstagram ?? "L'ambiance"}
+              eyebrow={resolvedSectionContent.gallery?.eyebrow ?? "Galerie"}
+              tagline={taglineText || publicPageDescription?.trim() || undefined}
             />
           ) : null}
           {(menuOffers.length > 0 || menuHref) && blockEnabled("menu") ? (
@@ -2027,43 +1986,6 @@ export default function PublicReservationForm({
               menuPdfLabel={menuPdfLinkLabel}
               title={resolvedSectionContent.menu_offers?.title ?? "À la carte"}
               eyebrow={resolvedSectionContent.menu_offers?.eyebrow ?? "Le menu"}
-              onReserve={handleReserve}
-            />
-          ) : null}
-          {blockEnabled("gallery") && showroomGalleryImages.length > 0 ? (
-            <ShowroomGallery
-              images={showroomGalleryImages}
-              title={resolvedSectionContent.gallery?.titleIfNoInstagram ?? "L'ambiance"}
-              eyebrow={resolvedSectionContent.gallery?.eyebrow ?? "Galerie"}
-            />
-          ) : null}
-        </>
-      ) : null}
-
-      <StickyReserveBar
-        label={ctaLabel}
-        onClick={handleReserve}
-        visible={
-          isLandingPage
-            ? !previewMode && reservationEnabled && blockEnabled("reservation")
-            : !previewMode &&
-              conversionCta.showSticky &&
-              reservationEnabled &&
-              blockEnabled("reservation")
-        }
-        previewMode={previewMode}
-        scrollSmart={isLandingPage}
-      />
-
-      {isLandingPage ? (
-        <>
-          {blockEnabled("final_cta") && reservationEnabled ? (
-            <ShowroomFinalCta
-              title={effectiveConfig.blockContent.finalCta.title || "Votre table vous attend"}
-              subtitle={
-                effectiveConfig.blockContent.finalCta.subtitle || "Réservez en quelques clics — confirmation rapide."
-              }
-              buttonLabel={effectiveConfig.blockContent.finalCta.button || ctaLabel}
               onReserve={handleReserve}
             />
           ) : null}
@@ -2085,8 +2007,33 @@ export default function PublicReservationForm({
             showFacebook={practicalDisplay?.showFacebook}
             directionsLabel={resolvedSectionContent.practical?.directionsLabel ?? "Itinéraire"}
           />
+          {blockEnabled("final_cta") && reservationEnabled ? (
+            <ShowroomFinalCta
+              title={effectiveConfig.blockContent.finalCta.title || "Votre table vous attend"}
+              subtitle={
+                effectiveConfig.blockContent.finalCta.subtitle || "Réservez en quelques clics — confirmation rapide."
+              }
+              buttonLabel={effectiveConfig.blockContent.finalCta.button || ctaLabel}
+              onReserve={handleReserve}
+            />
+          ) : null}
         </>
       ) : null}
+
+      <StickyReserveBar
+        label={ctaLabel}
+        onClick={handleReserve}
+        visible={
+          isLandingPage
+            ? !previewMode && reservationEnabled && blockEnabled("reservation") && !showroomReserveOpen
+            : !previewMode &&
+              conversionCta.showSticky &&
+              reservationEnabled &&
+              blockEnabled("reservation")
+        }
+        previewMode={previewMode}
+        scrollSmart={isLandingPage}
+      />
 
       {blockEnabled("location") && !isLandingPage ? (
         <PremiumPracticalInfo
@@ -2114,6 +2061,34 @@ export default function PublicReservationForm({
             }}
         />
       ) : null}
+    </div>
+  );
+}
+
+/** Enveloppe landing (drawer) vs site legacy (inline) — sans dupliquer le wizard */
+function ReservationWizardShell({
+  landing,
+  drawerOpen,
+  onClose,
+  sectionOrder,
+  children,
+}: {
+  landing: boolean;
+  drawerOpen: boolean;
+  onClose: () => void;
+  sectionOrder: number;
+  children: React.ReactNode;
+}) {
+  if (landing) {
+    return (
+      <ShowroomReservationDrawer open={drawerOpen} onClose={onClose} title="Réserver une table">
+        <div id="reservation">{children}</div>
+      </ShowroomReservationDrawer>
+    );
+  }
+  return (
+    <div id="reservation" style={{ order: sectionOrder }}>
+      {children}
     </div>
   );
 }

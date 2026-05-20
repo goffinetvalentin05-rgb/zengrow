@@ -117,9 +117,9 @@ export function ShowroomPractical({
   if (rows.length === 0 && socials.length === 0 && !googleMapsUrl?.trim()) return null;
 
   return (
-    <section id="infos" className="zg-showroom-practical scroll-mt-0 border-t border-[color-mix(in_srgb,var(--body-text)_6%,transparent)] py-14 sm:py-20">
-      <div className="mx-auto max-w-lg px-5 sm:max-w-xl sm:px-6">
-        <header className="mb-8">
+    <section id="infos" className="zg-showroom-practical scroll-mt-0 border-t border-[color-mix(in_srgb,var(--body-text)_5%,transparent)] py-12 sm:py-16">
+      <div className="mx-auto max-w-lg px-5 sm:max-w-xl sm:px-6 md:max-w-2xl">
+        <header className="mb-6">
           <p
             className="text-[10px] font-semibold uppercase tracking-[0.32em]"
             style={{ color: "var(--accent-color)" }}
@@ -127,7 +127,7 @@ export function ShowroomPractical({
             Infos pratiques
           </p>
           <h2
-            className="mt-3 text-xl font-medium leading-tight sm:text-2xl"
+            className="mt-2 text-lg font-medium leading-tight sm:text-xl"
             style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}
           >
             Nous trouver

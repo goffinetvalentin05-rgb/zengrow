@@ -2476,7 +2476,8 @@ export function StickyReserveBar({
   return (
     <div
       className={cn(
-        "zg-showroom-sticky-cta fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] md:hidden",
+        "zg-showroom-sticky-cta fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[max(0.65rem,env(safe-area-inset-bottom))]",
+        "md:inset-x-auto md:right-6 md:bottom-6 md:left-auto md:w-auto md:px-0 md:pt-0 md:pb-0",
         "transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
         showBar ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0",
       )}
@@ -2485,13 +2486,17 @@ export function StickyReserveBar({
       aria-hidden={!showBar}
     >
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-t from-[var(--page-bg)] to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-t from-[var(--page-bg)] to-transparent md:hidden"
         aria-hidden
       />
       <button
         type="button"
         onClick={onClick}
-        className="zg-showroom-sticky-cta__button relative mx-auto flex min-h-[50px] max-w-md items-center justify-center rounded-full px-8 text-[13px] font-semibold tracking-[0.06em] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.35)] transition active:scale-[0.98]"
+        className={cn(
+          "zg-showroom-sticky-cta__button relative flex min-h-[50px] items-center justify-center rounded-full px-8 text-[13px] font-semibold tracking-[0.06em] transition active:scale-[0.98]",
+          "mx-auto w-full max-w-md shadow-[0_8px_32px_-8px_rgba(0,0,0,0.35)]",
+          "md:mx-0 md:w-auto md:min-w-[220px] md:max-w-none md:px-10 md:text-sm",
+        )}
         style={{
           backgroundColor: "color-mix(in srgb, var(--button-bg) 92%, transparent)",
           color: "var(--button-text)",

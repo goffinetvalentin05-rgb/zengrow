@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { Star } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
 export function ShowroomHero({
@@ -12,9 +11,6 @@ export function ShowroomHero({
   emotionalSubtitle,
   cuisineType,
   city,
-  googleRating,
-  reviewCount,
-  reviewsSuffix = "avis",
   openStatus,
   hoursSummary,
   ctaLabel,
@@ -31,9 +27,6 @@ export function ShowroomHero({
   emotionalSubtitle?: string | null;
   cuisineType?: string | null;
   city?: string | null;
-  googleRating?: number | null;
-  reviewCount?: number | null;
-  reviewsSuffix?: string;
   openStatus?: string | null;
   hoursSummary?: string | null;
   ctaLabel: string;
@@ -53,7 +46,6 @@ export function ShowroomHero({
 
   const metaParts = [cuisineType?.trim(), city?.trim()].filter(Boolean);
   const metaLine = metaParts.length > 0 ? metaParts.join(" · ") : null;
-  const showRating = googleRating != null && reviewCount != null && reviewCount > 0;
 
   const scrollToMenu = () => {
     document.getElementById("menu")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -81,7 +73,7 @@ export function ShowroomHero({
       id="accueil"
       className={cn(
         "zg-showroom-hero-poster relative flex w-full flex-col overflow-hidden",
-        previewMode ? "min-h-[min(100dvh,720px)]" : "min-h-[min(100dvh,900px)] min-h-[min(100svh,900px)]",
+        previewMode ? "min-h-[min(100dvh,720px)]" : "min-h-[100dvh]",
       )}
     >
       {cover ? (
@@ -91,7 +83,7 @@ export function ShowroomHero({
             alt=""
             fill
             priority
-            className="object-cover zg-public-hero-media scale-[1.03]"
+            className="object-cover zg-public-hero-media scale-[1.04]"
             sizes="100vw"
             unoptimized
           />
@@ -100,22 +92,27 @@ export function ShowroomHero({
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(165deg, #080706 0%, color-mix(in srgb, var(--hero-primary) 40%, #080706) 55%, #050504 100%)`,
+            background: `linear-gradient(165deg, #0A0A0B 0%, color-mix(in srgb, var(--hero-primary) 35%, #0A0A0B) 55%, #080809 100%)`,
           }}
           aria-hidden
         />
       )}
 
-      <div className="pointer-events-none absolute inset-0 bg-black/30" aria-hidden />
+      <div className="pointer-events-none absolute inset-0 bg-black/25" aria-hidden />
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/10 to-black/90"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-black/20 to-[#0A0A0B]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0A0A0B] via-transparent to-transparent"
+        style={{ backgroundSize: "100% 45%", backgroundPosition: "bottom", backgroundRepeat: "no-repeat" }}
         aria-hidden
       />
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 130% 70% at 50% 100%, color-mix(in srgb, var(--button-bg) 22%, transparent) 0%, transparent 55%)",
+            "radial-gradient(ellipse 120% 55% at 50% 100%, color-mix(in srgb, var(--button-bg) 18%, transparent) 0%, transparent 58%)",
         }}
         aria-hidden
       />
@@ -123,7 +120,7 @@ export function ShowroomHero({
       <div
         className={cn(
           "relative z-[1] flex min-h-[inherit] flex-1 flex-col justify-end",
-          previewMode ? "min-h-[min(100dvh,720px)]" : "min-h-[min(100dvh,900px)] min-h-[min(100svh,900px)]",
+          previewMode ? "min-h-[min(100dvh,720px)]" : "min-h-[100dvh]",
         )}
       >
         <div className="mx-auto w-full max-w-lg px-5 pb-4 pt-[max(3rem,env(safe-area-inset-top))] sm:max-w-xl sm:px-6 md:max-w-2xl">
@@ -144,7 +141,7 @@ export function ShowroomHero({
 
           {name ? (
             <h1
-              className="text-balance max-w-[20rem] text-[clamp(2rem,9vw,3rem)] font-medium leading-[1.02] tracking-[-0.02em] text-white sm:max-w-none"
+              className="text-balance max-w-[20rem] text-[clamp(2.25rem,10vw,3.5rem)] font-medium leading-[1.0] tracking-[-0.025em] text-white sm:max-w-none"
               style={{ fontFamily: "var(--heading-font), Georgia, serif" }}
             >
               {name}
@@ -153,16 +150,23 @@ export function ShowroomHero({
 
           {headline && headline.toLowerCase() !== name.toLowerCase() ? (
             <p
-              className="mt-3 max-w-md text-pretty text-[clamp(1rem,3.5vw,1.2rem)] font-light leading-snug text-white/82"
+              className="mt-3 max-w-md text-pretty text-[clamp(1.05rem,3.8vw,1.25rem)] font-light leading-snug text-white/85"
               style={{ fontFamily: "var(--heading-font), Georgia, serif" }}
             >
               {headline}
+            </p>
+          ) : metaLine ? (
+            <p
+              className="mt-3 max-w-md text-pretty text-[clamp(0.95rem,3.2vw,1.1rem)] font-light leading-snug text-white/72"
+              style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
+            >
+              {metaLine}
             </p>
           ) : null}
 
           {subtitle ? (
             <p
-              className="mt-2 max-w-md text-pretty text-[13px] leading-relaxed text-white/52 sm:text-sm"
+              className="mt-2 max-w-md text-pretty text-[13px] leading-relaxed text-white/48 sm:text-sm"
               style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
             >
               {subtitle}
@@ -189,17 +193,7 @@ export function ShowroomHero({
                 {status}
               </span>
             ) : null}
-            {showRating ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-black/35 px-3 py-1 text-[11px] font-medium text-white/90 backdrop-blur-md">
-                <Star className="h-3 w-3 fill-amber-400/95 text-amber-400/95" aria-hidden />
-                <span className="tabular-nums">{googleRating!.toFixed(1)}</span>
-                <span className="text-white/35">·</span>
-                <span className="tabular-nums text-white/75">
-                  {reviewCount} {reviewsSuffix}
-                </span>
-              </span>
-            ) : null}
-            {metaLine ? (
+            {metaLine && headline && headline.toLowerCase() !== name.toLowerCase() ? (
               <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[11px] font-medium tracking-wide text-white/70 backdrop-blur-sm">
                 {metaLine}
               </span>
@@ -216,18 +210,11 @@ export function ShowroomHero({
           </div>
         </div>
 
-        {(hours || (showSecondary && secondaryHref)) && (
-          <div className="mx-auto flex w-full max-w-lg items-end justify-between gap-4 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:max-w-xl sm:px-6 md:max-w-2xl">
-            {hours ? (
-              <p className="max-w-[65%] text-left text-[11px] leading-snug text-white/42">{hours}</p>
-            ) : (
-              <span aria-hidden />
-            )}
-            {showSecondary && secondaryHref ? (
-              <span className="hidden sm:inline">{secondaryFooter}</span>
-            ) : null}
+        {hours ? (
+          <div className="mx-auto w-full max-w-lg px-5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:max-w-xl sm:px-6 md:max-w-2xl">
+            <p className="max-w-[85%] text-left text-[11px] leading-snug text-white/38">{hours}</p>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div id="showroom-hero-sentinel" className="pointer-events-none absolute bottom-0 h-px w-full opacity-0" aria-hidden />
