@@ -89,6 +89,7 @@ import { ShowroomMenu } from "@/src/components/reservation/showroom/showroom-men
 import { ShowroomPractical } from "@/src/components/reservation/showroom/showroom-practical";
 import { ShowroomFinalCta } from "@/src/components/reservation/showroom/showroom-final-cta";
 import { ShowroomReservationDrawer } from "@/src/components/reservation/showroom/showroom-reservation-drawer";
+import { ShowroomReservationHeader } from "@/src/components/reservation/showroom/showroom-reservation-header";
 
 export type PublicReservationFormProps = {
   /**
@@ -96,6 +97,8 @@ export type PublicReservationFormProps = {
    * Ignore le template « site web » legacy et la navbar.
    */
   forceLandingExperience?: boolean;
+  /** Page dédiée `/r/[slug]/reserver` : formulaire inline, sans hero ni sections showroom. */
+  dedicatedReservationPage?: boolean;
   previewMode?: boolean;
   /** ThÃ¨me visuel page publique (`default` = rendu historique inchangÃ© cÃ´tÃ© structure). */
   visualThemeId?: ThemeId;
@@ -253,6 +256,7 @@ function PublicDescription({
 
 export default function PublicReservationForm({
   forceLandingExperience = false,
+  dedicatedReservationPage = false,
   previewMode = false,
   restaurantId,
   restaurantSlug = "",
@@ -1059,7 +1063,9 @@ export default function PublicReservationForm({
         previewMode ? "relative min-h-0 w-full" : "min-h-[100dvh] min-h-dvh",
         "[font-size:calc(16px*var(--font-scale))]",
         isLandingPage && "zg-showroom-flow",
+        dedicatedReservationPage && "zg-public-reservation-route flex flex-col",
         !previewMode &&
+          !dedicatedReservationPage &&
           (isLandingPage || conversionCta.showSticky) &&
           reservationEnabled &&
           blockEnabled("reservation") &&
@@ -1073,9 +1079,17 @@ export default function PublicReservationForm({
         fontFamily: "var(--body-font), system-ui, sans-serif",
       }}
     >
-      {showGrainOverlay && !isLandingPage ? <GrainOverlay /> : null}
+      {showGrainOverlay && !isLandingPage && !dedicatedReservationPage ? <GrainOverlay /> : null}
 
-      {isLandingPage ? (
+      {dedicatedReservationPage && restaurantSlug ? (
+        <ShowroomReservationHeader
+          logoUrl={logoUrl}
+          restaurantName={restaurantName}
+          backHref={`/r/${restaurantSlug}`}
+        />
+      ) : null}
+
+      {!dedicatedReservationPage && isLandingPage ? (
         <ShowroomHero
           coverImageUrl={coverImageUrl}
           logoUrl={logoUrl}
@@ -1180,7 +1194,7 @@ export default function PublicReservationForm({
         </>
       )}
 
-      {specialMessage?.trim() && !isLandingPage ? (
+      {specialMessage?.trim() && !isLandingPage && !dedicatedReservationPage ? (
         <div
           className="mx-auto mt-6 max-w-3xl rounded-2xl border px-5 py-3 text-center text-sm font-medium"
           style={{
@@ -1193,9 +1207,15 @@ export default function PublicReservationForm({
         </div>
       ) : null}
 
-      <div className={cn("flex w-full flex-col", isLandingPage && "flex flex-col")}>
+      <div
+        className={cn(
+          "flex w-full flex-col",
+          isLandingPage && "flex flex-col",
+          dedicatedReservationPage && "mx-auto w-full max-w-lg flex-1 px-5 py-6 sm:max-w-xl",
+        )}
+      >
 
-        {!isLandingPage && blockEnabled("highlights") && activeHighlights.length > 0 ? (
+        {!dedicatedReservationPage && !isLandingPage && blockEnabled("highlights") && activeHighlights.length > 0 ? (
           <div style={{ order: sectionOrderIndex("highlights") }}>
             <HighlightsBand
               items={activeHighlights}
@@ -1204,7 +1224,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {!isLandingPage && blockEnabled("about") && premium.concept.enabled ? (
+        {!dedicatedReservationPage && !isLandingPage && blockEnabled("about") && premium.concept.enabled ? (
           <div style={{ order: sectionOrderIndex("about") }}>
             <ConceptSection
               title={conceptTitle}
@@ -1230,7 +1250,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {!isLandingPage && blockEnabled("menu") && sortedDocuments.length > 0 && !menuHref ? (
+        {!dedicatedReservationPage && !isLandingPage && blockEnabled("menu") && sortedDocuments.length > 0 && !menuHref ? (
           <section
             className="relative scroll-mt-24 overflow-hidden"
             style={{
@@ -1300,22 +1320,32 @@ export default function PublicReservationForm({
           </section>
         ) : null}
 
+        {dedicatedReservationPage && !reservationEnabled ? (
+          <div className="py-8 text-center">
+            <p className="text-sm text-white/70">Les réservations en ligne ne sont pas disponibles pour le moment.</p>
+          </div>
+        ) : null}
+
         {blockEnabled("reservation") && reservationEnabled ? (
           <ReservationWizardShell
-            landing={isLandingPage}
+            landing={isLandingPage && !dedicatedReservationPage}
             drawerOpen={showroomReserveOpen}
             onClose={closeShowroomReserve}
             sectionOrder={sectionOrderIndex("reservation")}
           >
         <PremiumReservationSection
-          title={isLandingPage ? "Réserver une table" : reservationSectionTitle()}
-          intro={isLandingPage ? "" : effectiveConfig.reservation.intro}
+          title={
+            dedicatedReservationPage || isLandingPage
+              ? "Réserver une table"
+              : reservationSectionTitle()
+          }
+          intro={dedicatedReservationPage || isLandingPage ? "" : effectiveConfig.reservation.intro}
           groupMessage={premium.reservation.groupMessage}
           showPhoneAlt={showPhoneCta && showPhoneRow}
           phone={restaurantPhone}
           eyebrow={resolvedSectionContent.reservation_shell?.eyebrow ?? ""}
           phonePreferLabel={resolvedSectionContent.reservation_shell?.phonePreferLabel ?? ""}
-          showroomMinimal={isLandingPage}
+          showroomMinimal={isLandingPage || dedicatedReservationPage}
         >
             {showHoursBeforeForm && showHoursRow && !isLandingPage ? (
               <div
@@ -1849,7 +1879,7 @@ export default function PublicReservationForm({
             ) : null}
         </PremiumReservationSection>
           </ReservationWizardShell>
-        ) : showPhoneCta && showPhoneRow ? (
+        ) : !dedicatedReservationPage && showPhoneCta && showPhoneRow ? (
         <section id="reservation" className="scroll-mt-24">
           <div className={cardShell} style={{ backgroundColor: "color-mix(in srgb, var(--body-text) 7%, var(--page-bg))", borderColor: "color-mix(in srgb, var(--body-text) 14%, var(--page-bg))" }}>
             <h2 className="text-2xl font-medium" style={{ fontFamily: "var(--heading-font)", color: "var(--heading-color)" }}>RÃ©server</h2>
@@ -1861,7 +1891,7 @@ export default function PublicReservationForm({
         </section>
         ) : null}
 
-        {!isLandingPage && blockEnabled("menu") && (menuHref || menuOffers.length > 0) ? (
+        {!dedicatedReservationPage && !isLandingPage && blockEnabled("menu") && (menuHref || menuOffers.length > 0) ? (
           <div style={{ order: sectionOrderIndex("menu") }}>
             {usePremiumChrome ? (
               <PremiumDarkMenuOffersSection
@@ -1890,7 +1920,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {!isLandingPage && showCredibility ? (
+        {!dedicatedReservationPage && !isLandingPage && showCredibility ? (
           <div style={{ order: sectionOrderIndex("reviews") }}>
             <CredibilitySection
               data={credibilityData}
@@ -1904,7 +1934,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {!isLandingPage && blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
+        {!dedicatedReservationPage && !isLandingPage && blockEnabled("gallery") && galleryImageUrls.length > 0 ? (
           <div style={{ order: sectionOrderIndex("gallery") }}>
             {usePremiumChrome ? (
               <PremiumDarkMasonryGallery
@@ -1938,7 +1968,7 @@ export default function PublicReservationForm({
         ) : null}
 
         {/* GIFT_CARDS feature flag â€” rÃ©activable */}
-        {!isLandingPage && blockEnabled("gift_vouchers") ? (
+        {!dedicatedReservationPage && !isLandingPage && blockEnabled("gift_vouchers") ? (
           <div style={{ order: sectionOrderIndex("gift_vouchers") }}>
             <GiftVouchersSection
               content={premium.giftVouchers}
@@ -1961,7 +1991,7 @@ export default function PublicReservationForm({
           </div>
         ) : null}
 
-        {!isLandingPage && blockEnabled("final_cta") && reservationEnabled && conversionCta.showFinal ? (
+        {!dedicatedReservationPage && !isLandingPage && blockEnabled("final_cta") && reservationEnabled && conversionCta.showFinal ? (
           <div style={{ order: sectionOrderIndex("final_cta") }}>
             <PremiumFinalCta
               eyebrow={resolvedSectionContent.final_cta?.eyebrow ?? ""}
@@ -1977,7 +2007,7 @@ export default function PublicReservationForm({
         ) : null}
       </div>
 
-      {isLandingPage ? (
+      {!dedicatedReservationPage && isLandingPage ? (
         <>
           <ShowroomHighlights highlights={activeHighlights} />
           {blockEnabled("gallery") && showroomGalleryImages.length > 0 ? (
@@ -2033,7 +2063,9 @@ export default function PublicReservationForm({
         label={ctaLabel}
         onClick={handleReserve}
         visible={
-          isLandingPage
+          dedicatedReservationPage
+            ? false
+            : isLandingPage
             ? !previewMode && reservationEnabled && blockEnabled("reservation") && !showroomReserveOpen
             : !previewMode &&
               conversionCta.showSticky &&
@@ -2044,7 +2076,7 @@ export default function PublicReservationForm({
         scrollSmart={isLandingPage}
       />
 
-      {blockEnabled("location") && !isLandingPage ? (
+      {blockEnabled("location") && !isLandingPage && !dedicatedReservationPage ? (
         <PremiumPracticalInfo
           address={restaurantAddress}
           phone={restaurantPhone}
