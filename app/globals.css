@@ -393,6 +393,7 @@ body {
 /* Parcours showroom : landing sociale, pas site web */
 [data-showroom-flow="true"] {
   --page-bg: color-mix(in srgb, var(--hero-primary, #0c0b0a) 8%, #0a0908);
+  --showroom-glow: color-mix(in srgb, var(--button-bg, #ff6b35) 35%, transparent);
 }
 
 [data-showroom-flow="true"] section,
@@ -410,8 +411,61 @@ body {
 }
 
 [data-showroom-flow="true"] #accueil {
-  min-height: 100dvh;
-  min-height: 100svh;
+  min-height: min(100dvh, 900px);
+  min-height: min(100svh, 900px);
+}
+
+[data-showroom-flow="true"] .zg-showroom-card {
+  border-radius: calc(var(--radius) + 8px);
+  border: 1px solid color-mix(in srgb, var(--body-text) 8%, transparent);
+  background: color-mix(in srgb, var(--body-text) 3%, var(--page-bg));
+  box-shadow: 0 24px 64px -48px rgba(0, 0, 0, 0.55);
+}
+
+.zg-showroom-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--accent-color) 40%, transparent);
+  color: var(--accent-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.zg-showroom-btn-secondary:hover {
+  background: color-mix(in srgb, var(--accent-color) 6%, transparent);
+  border-color: color-mix(in srgb, var(--accent-color) 55%, transparent);
+}
+
+.zg-showroom-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: color-mix(in srgb, var(--heading-color) 75%, transparent);
+  transition: color 0.2s ease;
+}
+
+.zg-showroom-btn-ghost:hover {
+  color: var(--heading-color);
+}
+
+.zg-showroom-drawer-panel {
+  animation: zg-showroom-sheet-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes zg-showroom-sheet-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 [data-showroom-flow="true"] .zg-showroom-gallery {
@@ -453,6 +507,40 @@ body {
     transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
     filter 0.35s ease;
+}
+
+.zg-showroom-hero-cta--primary {
+  min-height: 52px;
+  padding: 0.85rem 1.5rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: none;
+}
+
+.zg-showroom-hero-cta--large {
+  min-height: 56px;
+  font-size: 0.875rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .zg-showroom-hero-cta--primary {
+    animation: zg-showroom-cta-pulse 3.5s ease-in-out infinite;
+  }
+}
+
+[data-showroom-flow="true"] .zg-showroom-sticky-cta__button {
+  min-height: 54px;
+  width: 100%;
+  max-width: 28rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  background: var(--button-bg) !important;
+  color: var(--button-text) !important;
+  box-shadow:
+    0 12px 40px -10px rgb(0 0 0 / 0.5),
+    0 0 28px -6px color-mix(in srgb, var(--button-bg) 50%, transparent);
 }
 
 .zg-showroom-hero-cta:hover {
