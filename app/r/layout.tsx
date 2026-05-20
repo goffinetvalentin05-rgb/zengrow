@@ -3,8 +3,12 @@ export default function PublicRestaurantLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div
-      className="min-h-screen antialiased"
-      style={{ fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" }}
+      className="zg-public-r-root min-h-[100dvh] min-h-dvh w-full antialiased"
+      style={{
+        fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+        backgroundColor: "#0A0A0B",
+        color: "#A8A29E",
+      }}
     >
       {children}
     </div>

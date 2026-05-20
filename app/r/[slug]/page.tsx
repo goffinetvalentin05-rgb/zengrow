@@ -56,9 +56,12 @@ export async function generateMetadata({ params }: PublicReservationPageProps): 
     gallery[0] ??
     undefined;
 
+  const themeColor = restaurant.page_background_color?.trim() || "#0A0A0B";
+
   return {
     title,
     description,
+    themeColor,
     openGraph: {
       title,
       description,
@@ -238,7 +241,7 @@ export default async function PublicReservationPage({ params }: PublicReservatio
           <link rel="stylesheet" href={fontsHref} />
         </>
       ) : null}
-      <main className="h-[100dvh] overflow-hidden">
+      <main className="min-h-[100dvh] min-h-dvh w-full">
         <PublicLandingPage
           visualThemeId={resolvedVisualTheme.id as ThemeId}
           themeCssVarOverrides={resolvedVisualTheme.cssVarOverrides}

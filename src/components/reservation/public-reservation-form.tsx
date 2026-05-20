@@ -96,8 +96,6 @@ export type PublicReservationFormProps = {
    * Ignore le template « site web » legacy et la navbar.
    */
   forceLandingExperience?: boolean;
-  /** Landing publique `/r/[slug]` : un seul écran, pas de scroll ni sections showroom. */
-  landingConversionScreen?: boolean;
   previewMode?: boolean;
   /** ThÃ¨me visuel page publique (`default` = rendu historique inchangÃ© cÃ´tÃ© structure). */
   visualThemeId?: ThemeId;
@@ -255,7 +253,6 @@ function PublicDescription({
 
 export default function PublicReservationForm({
   forceLandingExperience = false,
-  landingConversionScreen = false,
   previewMode = false,
   restaurantId,
   restaurantSlug = "",
@@ -986,7 +983,7 @@ export default function PublicReservationForm({
   const isLandingPage =
     forceLandingExperience === true ||
     isSocialShowroomFlow(effectiveConfig.conversion.structureTemplate);
-  const isSingleScreenLanding = isLandingPage && landingConversionScreen === true;
+  const useConversionHero = isLandingPage && !previewMode;
   const conversionCta = ctaFlags(
     effectiveConfig.conversion,
     isLandingPage ? "social_showroom" : effectiveConfig.conversion.structureTemplate,
@@ -1059,12 +1056,10 @@ export default function PublicReservationForm({
     <div
       data-zg-theme={visualThemeId}
       className={cn(
-        previewMode ? "relative min-h-0 w-full" : isSingleScreenLanding ? "h-[100dvh] overflow-hidden" : "min-h-screen",
+        previewMode ? "relative min-h-0 w-full" : "min-h-[100dvh] min-h-dvh",
         "[font-size:calc(16px*var(--font-scale))]",
         isLandingPage && "zg-showroom-flow",
-        isSingleScreenLanding && "zg-showroom-flow--conversion-screen",
         !previewMode &&
-          !isSingleScreenLanding &&
           (isLandingPage || conversionCta.showSticky) &&
           reservationEnabled &&
           blockEnabled("reservation") &&
@@ -1094,14 +1089,16 @@ export default function PublicReservationForm({
           ctaLabel={ctaLabel}
           secondaryLabel={secondaryLabel}
           secondaryHref={menuHref}
-          showSecondary={Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)}
+          showSecondary={
+            useConversionHero
+              ? true
+              : Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)
+          }
           onReserve={handleReserve}
           reserveHref={
-            isSingleScreenLanding && restaurantSlug
-              ? `/r/${restaurantSlug}/reserver`
-              : undefined
+            useConversionHero && restaurantSlug ? `/r/${restaurantSlug}/reserver` : undefined
           }
-          conversionScreen={isSingleScreenLanding}
+          conversionScreen={useConversionHero}
           previewMode={previewMode}
         />
       ) : usePremiumChrome ? (
@@ -1196,7 +1193,6 @@ export default function PublicReservationForm({
         </div>
       ) : null}
 
-      {!isSingleScreenLanding ? (
       <div className={cn("flex w-full flex-col", isLandingPage && "flex flex-col")}>
 
         {!isLandingPage && blockEnabled("highlights") && activeHighlights.length > 0 ? (
@@ -1304,7 +1300,7 @@ export default function PublicReservationForm({
           </section>
         ) : null}
 
-        {blockEnabled("reservation") && reservationEnabled && !isSingleScreenLanding ? (
+        {blockEnabled("reservation") && reservationEnabled ? (
           <ReservationWizardShell
             landing={isLandingPage}
             drawerOpen={showroomReserveOpen}
@@ -1980,9 +1976,8 @@ export default function PublicReservationForm({
           </div>
         ) : null}
       </div>
-      ) : null}
 
-      {isLandingPage && !isSingleScreenLanding ? (
+      {isLandingPage ? (
         <>
           <ShowroomHighlights highlights={activeHighlights} />
           {blockEnabled("gallery") && showroomGalleryImages.length > 0 ? (
@@ -2038,14 +2033,12 @@ export default function PublicReservationForm({
         label={ctaLabel}
         onClick={handleReserve}
         visible={
-          isSingleScreenLanding
-            ? false
-            : isLandingPage
-              ? !previewMode && reservationEnabled && blockEnabled("reservation") && !showroomReserveOpen
-              : !previewMode &&
-                conversionCta.showSticky &&
-                reservationEnabled &&
-                blockEnabled("reservation")
+          isLandingPage
+            ? !previewMode && reservationEnabled && blockEnabled("reservation") && !showroomReserveOpen
+            : !previewMode &&
+              conversionCta.showSticky &&
+              reservationEnabled &&
+              blockEnabled("reservation")
         }
         previewMode={previewMode}
         scrollSmart={isLandingPage}

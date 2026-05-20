@@ -37,7 +37,7 @@ export function ShowroomHero({
   secondaryHref?: string | null;
   showSecondary: boolean;
   onReserve: () => void;
-  /** Lien page réservation dédiée (landing conversion single-screen). */
+  /** Page réservation dédiée `/r/[slug]/reserver`. */
   reserveHref?: string | null;
   conversionScreen?: boolean;
   previewMode?: boolean;
@@ -49,7 +49,6 @@ export function ShowroomHero({
   const hours = hoursSummary?.trim();
   const status = openStatus?.trim();
   const isOpen = status?.toLowerCase().includes("ouvert");
-  const cuisine = cuisineType?.trim();
 
   const metaParts = [cuisineType?.trim(), city?.trim()].filter(Boolean);
   const metaLine = metaParts.length > 0 ? metaParts.join(" · ") : null;
@@ -57,23 +56,6 @@ export function ShowroomHero({
   const scrollToMenu = () => {
     document.getElementById("menu")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-
-  const secondaryFooter =
-    showSecondary &&
-    (secondaryHref ? (
-      <a
-        href={secondaryHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="zg-showroom-hero-footer-link"
-      >
-        {secondaryLabel ?? "Voir le menu"}
-      </a>
-    ) : (
-      <button type="button" onClick={scrollToMenu} className="zg-showroom-hero-footer-link">
-        {secondaryLabel ?? "Voir le menu"}
-      </button>
-    ));
 
   const ctaClassName = cn(
     "zg-showroom-hero-cta zg-showroom-hero-cta--primary w-full",
@@ -92,12 +74,18 @@ export function ShowroomHero({
     );
 
   if (conversionScreen) {
+    const menuLink = (
+      <button type="button" onClick={scrollToMenu} className="zg-showroom-hero-footer-link">
+        {secondaryLabel ?? "Voir le menu"}
+      </button>
+    );
+
     return (
       <section
         id="accueil"
         className={cn(
           "zg-showroom-hero-poster zg-showroom-hero-poster--conversion relative flex w-full flex-col overflow-hidden",
-          previewMode ? "h-[min(100dvh,720px)]" : "h-[100dvh]",
+          previewMode ? "min-h-[min(100dvh,720px)]" : "min-h-[100dvh]",
         )}
       >
         {cover ? (
@@ -136,7 +124,7 @@ export function ShowroomHero({
           aria-hidden
         />
 
-        <div className="relative z-[1] flex h-full flex-1 flex-col items-center justify-center px-5 py-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] text-center sm:px-6">
+        <div className="relative z-[1] flex min-h-[inherit] flex-1 flex-col items-center justify-center px-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] text-center sm:px-6">
           <div className="flex w-full max-w-md flex-col items-center">
             {logoUrl?.trim() ? (
               <div className="relative mb-5 h-9 w-28 opacity-90 sm:h-10 sm:w-32">
@@ -162,62 +150,16 @@ export function ShowroomHero({
               </h1>
             ) : null}
 
-            {metaLine ? (
-              <p
-                className="mt-3 max-w-sm text-pretty text-[clamp(0.9rem,3.5vw,1.05rem)] font-normal tracking-wide text-white/72"
-                style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
-              >
-                {metaLine}
-              </p>
-            ) : null}
-
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-              {status ? (
-                <span
-                  className={cn(
-                    "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold tracking-wide backdrop-blur-md",
-                    isOpen
-                      ? "border-emerald-400/25 bg-emerald-500/15 text-emerald-100"
-                      : "border-white/12 bg-white/8 text-white/75",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "mr-1.5 h-1.5 w-1.5 rounded-full",
-                      isOpen ? "bg-emerald-400" : "bg-white/40",
-                    )}
-                    aria-hidden
-                  />
-                  {status}
-                </span>
-              ) : null}
-              {cuisine ? (
-                <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] font-medium tracking-wide text-white/70 backdrop-blur-sm">
-                  {cuisine}
-                </span>
-              ) : null}
-            </div>
-
             <div className="mt-8 w-full max-w-sm sm:mt-9">{reserveCta}</div>
 
-            {(showSecondary && secondaryFooter) || hours ? (
-              <div className="mt-5 flex max-w-sm flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] leading-snug text-white/40">
-                {showSecondary ? secondaryFooter : null}
-                {showSecondary && hours ? (
-                  <span className="text-white/25" aria-hidden>
-                    ·
-                  </span>
-                ) : null}
-                {hours ? <span>{hours}</span> : null}
-              </div>
-            ) : null}
+            {showSecondary ? <div className="mt-4">{menuLink}</div> : null}
           </div>
         </div>
       </section>
     );
   }
 
-  const secondaryFooterLegacy =
+  const secondaryFooter =
     showSecondary &&
     (secondaryHref ? (
       <a
@@ -369,7 +311,7 @@ export function ShowroomHero({
           <div className="mt-8 flex w-full flex-col gap-3 sm:mt-9">
             {reserveCta}
             {showSecondary ? (
-              <div className="flex justify-center sm:justify-start">{secondaryFooterLegacy}</div>
+              <div className="flex justify-center sm:justify-start">{secondaryFooter}</div>
             ) : null}
           </div>
         </div>
