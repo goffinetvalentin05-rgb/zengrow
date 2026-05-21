@@ -38,18 +38,25 @@ function ProductCardShell({
       style={{ rotate }}
       animate={{
         y: [0, -floatY, 0],
-        rotate: [rotate, rotate + 0.6, rotate - 0.4, rotate],
+        rotate: [rotate, rotate + 0.5, rotate - 0.35, rotate],
       }}
       transition={{
         y: { duration: 5.2 + delay * 0.3, repeat: Infinity, ease: "easeInOut", delay },
-        rotate: { duration: 8 + delay, repeat: Infinity, ease: "easeInOut", delay: delay * 0.5 },
+        rotate: { duration: 9 + delay, repeat: Infinity, ease: "easeInOut", delay: delay * 0.5 },
       }}
       whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.35 } }}
     >
+      {/* Halo orange derrière la carte */}
+      <motion.div
+        className="pointer-events-none absolute -inset-3 rounded-[1.75rem] bg-[radial-gradient(ellipse_at_50%_80%,rgba(255,90,42,0.18),transparent_72%)] blur-xl"
+        animate={{ opacity: [0.35, 0.6, 0.35] }}
+        transition={{ duration: 4.5 + delay, repeat: Infinity, ease: "easeInOut" }}
+        aria-hidden
+      />
       <article
         className={cn(
           "group relative overflow-hidden rounded-2xl border border-[rgba(255,122,61,0.16)] p-[1px] shadow-[0_32px_90px_-28px_rgba(0,0,0,0.92)]",
-          featured && "border-[rgba(255,122,61,0.32)]",
+          featured && "border-[rgba(255,122,61,0.32)] shadow-[0_0_48px_-12px_rgba(255,90,42,0.35)]",
         )}
       >
         {glowPulse ? (
@@ -189,30 +196,40 @@ function OrbitSlot({ children, className }: OrbitSlotProps) {
   );
 }
 
-/** Cartes autour du hero — desktop */
+/** Cartes autour du hero — desktop, safe zone centrale préservée */
 export function HeroOrbitDesktop() {
   return (
     <div className="absolute inset-0 hidden lg:block">
+      {/* Safe zone : repousse visuellement les cartes du centre */}
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[5] h-[min(420px,48vh)] w-[min(560px,52%)] -translate-x-1/2 -translate-y-1/2 rounded-[3rem] bg-[radial-gradient(ellipse_at_center,rgba(5,4,3,0.92)_0%,rgba(5,4,3,0.55)_55%,transparent_78%)]"
+        aria-hidden
+      />
+
       <motion.div
-        className="pointer-events-none absolute left-1/2 top-[46%] h-[min(520px,55vh)] w-[min(900px,85%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,90,42,0.1),transparent_68%)] blur-2xl"
-        animate={{ opacity: [0.5, 0.75, 0.5], scale: [1, 1.03, 1] }}
+        className="pointer-events-none absolute left-1/2 top-[46%] h-[min(560px,58vh)] w-[min(960px,92%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,90,42,0.09),transparent_68%)] blur-2xl"
+        animate={{ opacity: [0.45, 0.7, 0.45], scale: [1, 1.04, 1] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         aria-hidden
       />
 
-      <OrbitSlot className="left-[2%] top-[20%] z-[15] w-[min(300px,28vw)] xl:left-[4%]">
+      {/* Analytics — haut gauche, loin du centre */}
+      <OrbitSlot className="left-0 top-[10%] z-[15] w-[min(290px,26vw)] xl:left-[1%] xl:top-[12%]">
         <InactiveClientsCard />
       </OrbitSlot>
 
-      <OrbitSlot className="right-[2%] top-[12%] z-[28] w-[min(260px,24vw)] xl:right-[5%]">
+      {/* Réservation — haut droite */}
+      <OrbitSlot className="right-0 top-[8%] z-[28] w-[min(255px,23vw)] xl:right-[1%] xl:top-[10%]">
         <ReservationCard />
       </OrbitSlot>
 
-      <OrbitSlot className="right-[5%] bottom-[18%] z-[22] w-[min(270px,25vw)]">
+      {/* Campagne — bas droite, sous la zone CTA */}
+      <OrbitSlot className="right-[1%] bottom-[6%] z-[22] w-[min(265px,24vw)] xl:right-[2%] xl:bottom-[8%]">
         <CampaignCard />
       </OrbitSlot>
 
-      <OrbitSlot className="bottom-[14%] left-[24%] z-[32] w-[min(230px,21vw)] xl:left-[28%]">
+      {/* Avis — bas gauche, éloigné du centre (plus de chevauchement CTA) */}
+      <OrbitSlot className="bottom-[5%] left-0 z-[32] w-[min(220px,20vw)] xl:bottom-[7%] xl:left-[1%]">
         <ReviewsCard />
       </OrbitSlot>
     </div>

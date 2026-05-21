@@ -79,7 +79,7 @@ export function Hero() {
         <HeroOrbitDesktop />
 
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="pointer-events-auto relative z-30 w-full max-w-xl px-4 text-center">
+          <div className="pointer-events-auto relative z-30 w-full max-w-lg px-6 py-8 text-center sm:max-w-xl sm:px-8">
             <HeroCopy />
           </div>
         </div>
