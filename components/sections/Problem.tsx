@@ -17,124 +17,101 @@ const gained = [
   { label: "Avis collectés", icon: Star },
 ] as const;
 
-function FlowColumn({
-  title,
-  tone,
-  items,
+function FlowPill({
+  label,
+  icon: Icon,
+  variant,
+  delay,
 }: {
-  title: string;
-  tone: "lost" | "gained";
-  items: readonly { label: string; icon: typeof Users }[];
+  label: string;
+  icon: typeof Users;
+  variant: "muted" | "accent";
+  delay: number;
 }) {
-  const isLost = tone === "lost";
-
+  const accent = variant === "accent";
   return (
-    <div
-      className={cn(
-        "flex h-full flex-col rounded-[1.5rem] border p-5 backdrop-blur-2xl sm:p-6",
-        isLost
-          ? "border-[rgba(255,255,255,0.08)] bg-[rgba(8,5,4,0.65)]"
-          : "border-[rgba(255,122,61,0.22)] bg-[rgba(255,90,42,0.06)] shadow-[0_0_48px_-16px_rgba(255,90,42,0.3)]",
-      )}
+    <motion.li
+      className={
+        accent
+          ? "inline-flex items-center gap-2.5 rounded-full border border-[rgba(255,122,61,0.28)] bg-[rgba(255,90,42,0.1)] px-4 py-2.5 text-sm font-medium text-[#FFF7EF] shadow-[0_0_28px_-8px_rgba(255,90,42,0.35)]"
+          : "inline-flex items-center gap-2.5 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.4)] px-4 py-2.5 text-sm text-[#AFA39A] backdrop-blur-md"
+      }
+      initial={{ opacity: 0, scale: 0.92 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay, duration: 0.45 }}
     >
-      <p
-        className={cn(
-          "text-xs font-semibold uppercase tracking-wider",
-          isLost ? "text-[#AFA39A]" : "text-[#F6A85A]",
-        )}
-      >
-        {title}
-      </p>
-      <ul className="mt-5 flex flex-1 flex-col justify-center gap-3">
-        {items.map((item, i) => {
-          const Icon = item.icon;
-          return (
-            <motion.li
-              key={item.label}
-              className={cn(
-                "flex items-center gap-3 rounded-xl border px-3.5 py-3 text-sm",
-                isLost
-                  ? "border-[rgba(255,255,255,0.05)] bg-[rgba(0,0,0,0.35)] text-[#AFA39A]"
-                  : "border-[rgba(255,122,61,0.15)] bg-[rgba(255,90,42,0.08)] font-medium text-[#FFF7EF]",
-              )}
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-            >
-              <span
-                className={cn(
-                  "flex size-8 shrink-0 items-center justify-center rounded-lg",
-                  isLost ? "bg-white/5 text-[#AFA39A]" : "bg-[rgba(255,90,42,0.15)] text-[#FF7A3D]",
-                )}
-              >
-                <Icon className="size-4" strokeWidth={1.5} />
-              </span>
-              {item.label}
-            </motion.li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-function ZenGrowHub() {
-  return (
-    <div className="relative flex h-full min-h-[280px] flex-col items-center justify-center px-4 py-8 lg:min-h-0">
-      <svg
-        className="pointer-events-none absolute inset-0 h-full w-full text-[rgba(255,122,61,0.2)]"
-        aria-hidden
-        viewBox="0 0 200 200"
-        preserveAspectRatio="none"
-      >
-        <line x1="0" y1="100" x2="70" y2="100" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-        <line x1="130" y1="100" x2="200" y2="100" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-      </svg>
-
-      <motion.div
-        className="absolute size-40 rounded-full bg-[radial-gradient(circle,rgba(255,90,42,0.2),transparent_70%)] blur-2xl"
-        animate={{ scale: [1, 1.08, 1], opacity: [0.5, 0.75, 0.5] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        aria-hidden
-      />
-
-      <motion.div
-        className="relative z-10 flex size-[4.5rem] items-center justify-center rounded-full border border-[rgba(255,122,61,0.4)] bg-[rgba(255,90,42,0.12)] shadow-[0_0_48px_rgba(255,90,42,0.35)] sm:size-20"
-        animate={{ boxShadow: ["0 0 32px rgba(255,90,42,0.25)", "0 0 56px rgba(255,90,42,0.4)", "0 0 32px rgba(255,90,42,0.25)"] }}
-        transition={{ duration: 4, repeat: Infinity }}
-      >
-        <Sparkles className="size-7 text-[#FF7A3D] sm:size-8" />
-      </motion.div>
-
-      <p className="relative z-10 mt-5 text-center font-landing-serif text-lg text-[#FFF7EF] sm:text-xl">
-        Moteur IA ZenGrow
-      </p>
-      <p className="relative z-10 mt-2 max-w-[14rem] text-center text-xs leading-relaxed text-[#AFA39A]">
-        Détecte, propose et automatise — vous gardez le contrôle.
-      </p>
-    </div>
+      <Icon className={cn("size-4", accent ? "text-[#FF7A3D]" : "text-[#AFA39A]")} strokeWidth={1.5} />
+      {label}
+    </motion.li>
   );
 }
 
 export function Problem() {
   return (
-    <section id="probleme" className="relative overflow-x-hidden px-4 py-20 sm:px-6 sm:py-28">
-      <div className="mx-auto max-w-6xl">
+    <section id="probleme" className="relative overflow-x-hidden px-4 py-24 sm:px-6 sm:py-32">
+      <div className="mx-auto max-w-5xl">
         <Reveal className="mx-auto max-w-3xl text-center">
-          <h2 className="font-landing-serif text-[clamp(1.75rem,4vw,2.65rem)] font-normal leading-tight text-[#FFF7EF]">
+          <h2 className="font-landing-serif text-[clamp(1.85rem,4vw,2.65rem)] font-normal leading-tight text-[#FFF7EF]">
             Votre restaurant reçoit des visites. Mais combien deviennent vraiment des réservations ?
           </h2>
           <p className="mt-5 text-base leading-relaxed text-[#AFA39A]">
-            ZenGrow transforme les opportunités perdues en actions concrètes pour votre établissement.
+            ZenGrow transforme les opportunités perdues en actions mesurables pour votre établissement.
           </p>
         </Reveal>
 
         <Reveal delay={0.08}>
-          <div className="relative mt-14 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_minmax(200px,0.85fr)_1fr] lg:gap-5 lg:items-stretch">
-            <FlowColumn title="Opportunités perdues" tone="lost" items={lost} />
-            <ZenGrowHub />
-            <FlowColumn title="Résultats" tone="gained" items={gained} />
+          <div className="relative mt-16 sm:mt-20">
+            <svg
+              className="pointer-events-none absolute left-0 right-0 top-1/2 hidden h-24 w-full -translate-y-1/2 text-[rgba(255,122,61,0.25)] md:block"
+              viewBox="0 0 800 80"
+              preserveAspectRatio="none"
+              aria-hidden
+            >
+              <path
+                d="M 20 40 Q 200 8 400 40 T 780 40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeDasharray="6 8"
+              />
+            </svg>
+
+            <div className="flex flex-col items-center gap-12 md:flex-row md:items-center md:justify-between md:gap-6">
+              <ul className="flex flex-col items-center gap-3 md:items-end">
+                <p className="mb-1 text-xs font-medium text-[#AFA39A]">Opportunités perdues</p>
+                {lost.map((item, i) => (
+                  <FlowPill key={item.label} {...item} variant="muted" delay={i * 0.08} />
+                ))}
+              </ul>
+
+              <motion.div
+                className="relative flex shrink-0 flex-col items-center px-6"
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <motion.div
+                  className="absolute size-32 rounded-full bg-[radial-gradient(circle,rgba(255,90,42,0.25),transparent_70%)] blur-2xl"
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
+                  transition={{ duration: 5, repeat: Infinity }}
+                  aria-hidden
+                />
+                <div className="relative flex size-20 items-center justify-center rounded-full border border-[rgba(255,122,61,0.4)] bg-[rgba(255,90,42,0.12)] shadow-[0_0_48px_rgba(255,90,42,0.3)] sm:size-24">
+                  <Sparkles className="size-8 text-[#FF7A3D] sm:size-9" />
+                </div>
+                <p className="mt-4 text-center font-landing-serif text-lg text-[#FFF7EF]">Moteur IA</p>
+                <p className="mt-1 text-center text-xs text-[#AFA39A]">ZenGrow</p>
+              </motion.div>
+
+              <ul className="flex flex-col items-center gap-3 md:items-start">
+                <p className="mb-1 text-xs font-medium text-[#F6A85A]">Résultats</p>
+                {gained.map((item, i) => (
+                  <FlowPill key={item.label} {...item} variant="accent" delay={0.15 + i * 0.08} />
+                ))}
+              </ul>
+            </div>
           </div>
         </Reveal>
       </div>
