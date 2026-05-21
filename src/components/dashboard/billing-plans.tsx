@@ -19,6 +19,7 @@ import {
 import Badge from "@/src/components/ui/badge";
 import Button from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { ZENGROW_PLAN_CATALOG, ZENGROW_TRIAL_DAYS } from "@/src/lib/billing/plan-catalog";
 import type { SubscriptionPlan, SubscriptionStatus } from "@/src/lib/subscription";
 
 type BillingPlansProps = {
@@ -29,39 +30,23 @@ type BillingPlansProps = {
   isOwnerDev?: boolean;
 };
 
-const PLAN_ITEMS = [
-  {
-    key: "starter" as const,
-    title: "Starter",
-    price: "49 CHF / mois",
-    subtitle: "Pour bien démarrer",
-    cta: "Choisir Starter",
-    featured: false,
-    features: [
-      { label: "Réservations en ligne", icon: CalendarDays },
-      { label: "Gestion des disponibilités", icon: Clock3 },
-      { label: "Page de réservation personnalisable", icon: LayoutTemplate },
-      { label: "Demandes d'avis Google automatiques", icon: Star },
-      { label: "Feedback privé clients", icon: MessageSquare },
-      { label: "Base clients", icon: Users },
-    ],
-  },
-  {
-    key: "pro" as const,
-    title: "Pro",
-    price: "69 CHF / mois",
-    subtitle: "Pour accélérer",
-    cta: "Choisir Pro",
-    featured: true,
-    features: [
-      { label: "Tout le plan Starter", icon: BadgeCheck },
-      { label: "Campagnes e-mail marketing", icon: Megaphone },
-      { label: "Segmentation clients", icon: Sparkles },
-      { label: "Stats clients", icon: BarChart2 },
-      { label: "Export clients", icon: Gem },
-    ],
-  },
-];
+const PLAN_FEATURE_ICONS: Record<string, LucideIcon[]> = {
+  starter: [CalendarDays, Clock3, LayoutTemplate, Star, MessageSquare, Users],
+  pro: [BadgeCheck, Megaphone, Sparkles, BarChart2, Gem],
+};
+
+const PLAN_ITEMS = ZENGROW_PLAN_CATALOG.map((plan) => ({
+  key: plan.key,
+  title: plan.title,
+  price: plan.priceLabel,
+  subtitle: plan.subtitle,
+  cta: plan.cta,
+  featured: plan.featured,
+  features: plan.features.map((label, i) => ({
+    label,
+    icon: PLAN_FEATURE_ICONS[plan.key][i] ?? BadgeCheck,
+  })),
+}));
 
 function formatDate(value: string | null) {
   if (!value) return null;
@@ -89,7 +74,7 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
   const formattedTrialDate = formatDate(trialEndDate);
   const trialEndMs = trialEndDate ? new Date(trialEndDate).getTime() : null;
   const [now] = useState(() => Date.now());
-  const totalTrialDays = 14;
+  const totalTrialDays = ZENGROW_TRIAL_DAYS;
   const totalTrialMs = totalTrialDays * 24 * 60 * 60 * 1000;
   const trialStartMs = trialEndMs ? trialEndMs - totalTrialMs : null;
   const elapsedMs = trialStartMs ? now - trialStartMs : 0;

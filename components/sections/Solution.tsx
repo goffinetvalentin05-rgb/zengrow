@@ -9,8 +9,7 @@ export function Solution() {
     <section className="relative overflow-x-hidden px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#F6A85A]">La solution</p>
-          <h2 className="mt-4 font-landing-serif text-[clamp(1.75rem,4vw,2.75rem)] font-normal text-[#FFF7EF]">
+          <h2 className="font-landing-serif text-[clamp(1.75rem,4vw,2.75rem)] font-normal text-[#FFF7EF]">
             Une page qui réserve. Une IA qui relance.
           </h2>
         </Reveal>

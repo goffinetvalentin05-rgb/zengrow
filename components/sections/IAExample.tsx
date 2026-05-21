@@ -12,8 +12,7 @@ export function IAExample() {
 
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-3xl text-center lg:text-left">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#F6A85A]">Exemple concret</p>
-          <h2 className="mt-4 font-landing-serif text-[clamp(1.75rem,4vw,2.75rem)] font-normal leading-tight text-[#FFF7EF]">
+          <h2 className="font-landing-serif text-[clamp(1.75rem,4vw,2.75rem)] font-normal leading-tight text-[#FFF7EF]">
             42 clients n&apos;ont pas réservé depuis 60 jours.
           </h2>
           <p className="mt-4 text-base text-[#AFA39A] lg:max-w-xl">

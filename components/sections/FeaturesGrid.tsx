@@ -57,8 +57,7 @@ export function FeaturesGrid() {
       <div className="mx-auto max-w-6xl">
         <Reveal className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#F6A85A]">Fonctionnalités</p>
-            <h2 className="mt-3 font-landing-serif text-[clamp(1.75rem,4vw,2.5rem)] font-normal text-[#FFF7EF]">
+            <h2 className="font-landing-serif text-[clamp(1.75rem,4vw,2.5rem)] font-normal text-[#FFF7EF]">
               Tout ce qu&apos;il faut, sans outil compliqué
             </h2>
           </div>
