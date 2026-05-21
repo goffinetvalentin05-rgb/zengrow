@@ -3,6 +3,7 @@ import { LandingGlobalBackground } from "@/components/landing/LandingGlobalBackg
 import { Navbar } from "@/components/sections/Navbar";
 import { Hero } from "@/components/sections/Hero";
 import { Problem } from "@/components/sections/Problem";
+import { Credibility } from "@/components/sections/Credibility";
 import { Solution } from "@/components/sections/Solution";
 import { IAExample } from "@/components/sections/IAExample";
 import { FeaturesGrid } from "@/components/sections/FeaturesGrid";
@@ -31,6 +32,7 @@ export default function Home() {
         <main>
           <Hero />
           <Problem />
+          <Credibility />
           <Solution />
           <IAExample />
           <FeaturesGrid />
