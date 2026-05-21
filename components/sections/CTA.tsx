@@ -10,8 +10,6 @@ export function CTA() {
       id="cta"
       className="relative w-full overflow-hidden pb-20 pt-24 sm:pb-28 sm:pt-32"
     >
-      <div id="pricing" className="absolute top-0 h-px w-px overflow-hidden opacity-0" aria-hidden />
-
       <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center px-4 py-12 text-center sm:px-6 sm:py-16">
         <Reveal className="flex w-full flex-col items-center">
           <h2 className="max-w-2xl font-landing-serif text-[clamp(1.85rem,4.5vw,3rem)] font-normal leading-tight text-[#FFF7EF]">

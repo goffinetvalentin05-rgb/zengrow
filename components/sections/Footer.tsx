@@ -13,7 +13,7 @@ const main = [
 
 export function Footer() {
   return (
-    <footer id="faq" className="relative border-t border-[rgba(255,122,61,0.08)] pb-10 pt-14">
+    <footer className="relative border-t border-[rgba(255,122,61,0.08)] pb-10 pt-14">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-4 sm:px-6">
         <div className="flex items-center gap-5 text-[#AFA39A]">
           <Link href="#" className="transition hover:text-[#FF7A3D]" aria-label="Twitter">

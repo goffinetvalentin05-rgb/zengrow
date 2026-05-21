@@ -71,7 +71,7 @@ export function Hero() {
         </motion.p>
       </div>
 
-      <Reveal className="relative z-10 mx-auto mt-16 w-full max-w-6xl px-4 sm:mt-24 sm:px-6">
+      <Reveal className="relative z-10 mx-auto mt-20 w-full max-w-5xl px-4 sm:mt-28 sm:px-6">
         <HeroProductCards />
       </Reveal>
     </section>

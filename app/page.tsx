@@ -6,6 +6,8 @@ import { Problem } from "@/components/sections/Problem";
 import { Solution } from "@/components/sections/Solution";
 import { IAExample } from "@/components/sections/IAExample";
 import { FeaturesGrid } from "@/components/sections/FeaturesGrid";
+import { Tarifs } from "@/components/sections/Tarifs";
+import { FAQ } from "@/components/sections/FAQ";
 import { CTA } from "@/components/sections/CTA";
 import { Footer } from "@/components/sections/Footer";
 
@@ -32,6 +34,8 @@ export default function Home() {
           <Solution />
           <IAExample />
           <FeaturesGrid />
+          <Tarifs />
+          <FAQ />
           <CTA />
         </main>
         <Footer />

@@ -10,96 +10,113 @@ const plans = [
   {
     key: "starter",
     title: "Starter",
-    subtitle: "Pour bien démarrer",
-    amount: "49",
-    unit: "CHF / mois",
-    featured: false,
+    price: "39",
+    description:
+      "Pour les restaurants qui veulent une page simple avec réservations en ligne.",
     features: [
+      "Page restaurant mobile-first",
       "Réservations en ligne",
-      "Gestion des disponibilités",
-      "Page de réservation personnalisable",
-      "Demandes d'avis Google automatiques",
-      "Feedback privé clients",
-      "Base clients",
+      "Informations essentielles",
+      "Support standard",
     ],
-    cta: "Choisir Starter",
+    featured: false,
   },
   {
-    key: "pro",
-    title: "Pro",
-    subtitle: "Pour accélérer",
-    amount: "69",
-    unit: "CHF / mois",
-    featured: true,
+    key: "growth",
+    title: "Growth",
+    price: "79",
+    badge: "Le plus choisi",
+    description:
+      "Pour les restaurants qui veulent convertir plus et faire revenir leurs clients.",
     features: [
-      "Tout le plan Starter",
-      "Campagnes e-mail marketing",
-      "Segmentation clients",
-      "Stats clients",
-      "Export clients",
+      "Tout Starter",
+      "Base clients automatique",
+      "Avis Google automatisés",
+      "Campagnes IA",
+      "Relances clients",
     ],
-    cta: "Choisir Pro",
+    featured: true,
+  },
+  {
+    key: "premium",
+    title: "Premium",
+    price: "149",
+    description:
+      "Pour les établissements qui veulent aller plus loin avec l'IA et l'automatisation.",
+    features: [
+      "Tout Growth",
+      "Relances avancées",
+      "Campagnes plus poussées",
+      "Outils IA avancés",
+      "Support prioritaire",
+    ],
+    featured: false,
   },
 ] as const;
 
 export function Tarifs() {
   return (
-    <section id="pricing" className="relative bg-landing-section py-24 sm:py-28">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_50%_50%,rgba(255,107,44,0.1),transparent)]" />
-      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
+    <section id="pricing" className="relative overflow-x-hidden px-4 py-20 sm:px-6 sm:py-28">
+      <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <h2 className="font-landing-serif text-[clamp(2rem,4vw,3rem)] font-normal text-landing-fg">
-            Des tarifs <em className="italic text-landing-accent">simples</em>, tout inclus
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#F6A85A]">Tarifs</p>
+          <h2 className="mt-4 font-landing-serif text-[clamp(1.85rem,4vw,2.75rem)] font-normal text-[#FFF7EF]">
+            Des tarifs pensés pour les restaurants
           </h2>
-          <p className="mt-4 text-landing-muted">
-            Deux formules alignées sur l&apos;app : Starter ou Pro. <strong className="font-medium text-landing-fg/90">14 jours d&apos;essai gratuit</strong> pour tout
-            tester. Sans engagement long terme.
+          <p className="mt-4 text-base text-[#AFA39A]">
+            Choisissez l&apos;offre adaptée à votre établissement et commencez à transformer vos visiteurs
+            en réservations.
           </p>
         </Reveal>
 
-        <div className="mx-auto mt-14 grid max-w-5xl gap-8 md:grid-cols-2">
+        <div className="mt-14 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3 lg:gap-5 lg:items-center">
           {plans.map((plan, i) => (
             <motion.div
               key={plan.key}
-              initial={{ opacity: 0, y: 24, scale: 0.96 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.55, delay: 0.1 * i, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
               className={cn(
-                "flex flex-col rounded-3xl p-8 backdrop-blur-sm sm:p-10",
-                plan.featured ? "landing-surface landing-surface--featured relative" : "landing-surface",
+                "relative flex flex-col rounded-[1.5rem] border p-6 backdrop-blur-2xl sm:p-7",
+                plan.featured
+                  ? "z-10 border-[rgba(255,122,61,0.32)] bg-[rgba(255,90,42,0.08)] shadow-[0_0_64px_-16px_rgba(255,90,42,0.45)] lg:scale-[1.04] lg:py-9"
+                  : "border-[rgba(255,255,255,0.08)] bg-[rgba(10,7,5,0.6)]",
               )}
             >
-              {plan.featured ? (
-                <span className="mb-2 inline-flex self-start rounded-full border border-landing-accent/35 bg-landing-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-landing-accent">
-                  Recommandé
+              {"badge" in plan && plan.badge ? (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-[rgba(255,122,61,0.35)] bg-[#FF5A2A] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-[0_0_24px_rgba(255,90,42,0.5)]">
+                  {plan.badge}
                 </span>
               ) : null}
-              <h3 className="font-landing-serif text-2xl font-normal text-landing-fg">{plan.title}</h3>
-              <p className="mt-1 text-sm text-landing-muted">{plan.subtitle}</p>
-              <div className="mt-6 flex items-end gap-2">
-                <span className="font-landing-serif text-5xl tabular-nums text-landing-fg">{plan.amount}</span>
-                <span className="pb-1 text-base font-medium text-landing-muted">{plan.unit}</span>
+
+              <h3 className="font-landing-serif text-2xl text-[#FFF7EF]">{plan.title}</h3>
+              <div className="mt-4 flex items-end gap-1">
+                <span className="font-landing-serif text-4xl tabular-nums text-[#FFF7EF]">{plan.price}</span>
+                <span className="pb-1 text-sm text-[#AFA39A]">CHF/mois</span>
               </div>
-              <ul className="mt-8 flex-1 space-y-3 text-sm text-landing-fg/90">
+              <p className="mt-4 text-sm leading-relaxed text-[#AFA39A]">{plan.description}</p>
+
+              <ul className="mt-6 flex-1 space-y-2.5">
                 {plan.features.map((line) => (
-                  <li key={line} className="flex gap-3">
-                    <Check className="mt-0.5 size-4 shrink-0 text-landing-accent" strokeWidth={2.5} />
+                  <li key={line} className="flex gap-2.5 text-sm text-[#FFF7EF]/90">
+                    <Check className="mt-0.5 size-4 shrink-0 text-[#FF7A3D]" strokeWidth={2.5} />
                     <span>{line}</span>
                   </li>
                 ))}
               </ul>
+
               <Link
                 href="/signup"
-                className={
+                className={cn(
+                  "mt-8 flex min-h-11 items-center justify-center rounded-full text-sm font-semibold transition",
                   plan.featured
-                    ? "mt-8 flex min-h-12 w-full items-center justify-center rounded-xl bg-landing-accent text-sm font-semibold text-white shadow-[0_0_40px_-8px_rgba(255,107,44,0.75)] transition hover:brightness-110"
-                    : "landing-btn-secondary mt-8 flex min-h-12 w-full items-center justify-center rounded-xl text-sm font-semibold"
-                }
+                    ? "bg-[#FF5A2A] text-white shadow-[0_0_40px_-8px_rgba(255,90,42,0.85)] hover:bg-[#FF7A3D]"
+                    : "border border-[rgba(255,255,255,0.12)] text-[#FFF7EF] hover:border-[rgba(255,122,61,0.35)] hover:bg-[rgba(255,90,42,0.08)]",
+                )}
               >
-                {plan.cta}
+                Commencer
               </Link>
-              <p className="mt-3 text-center text-xs text-landing-muted">Sans engagement long terme</p>
             </motion.div>
           ))}
         </div>
