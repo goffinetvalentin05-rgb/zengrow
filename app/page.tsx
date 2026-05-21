@@ -5,7 +5,7 @@ import { Hero } from "@/components/sections/Hero";
 import { Problem } from "@/components/sections/Problem";
 import { Credibility } from "@/components/sections/Credibility";
 import { Solution } from "@/components/sections/Solution";
-import { IAExample } from "@/components/sections/IAExample";
+import { WhyZenGrow } from "@/components/sections/WhyZenGrow";
 import { FeaturesGrid } from "@/components/sections/FeaturesGrid";
 import { Tarifs } from "@/components/sections/Tarifs";
 import { FAQ } from "@/components/sections/FAQ";
@@ -33,7 +33,7 @@ export default function Home() {
           <Hero />
           <Problem />
           <Solution />
-          <IAExample />
+          <WhyZenGrow />
           <Credibility />
           <FeaturesGrid />
           <Tarifs />
