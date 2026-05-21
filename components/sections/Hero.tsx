@@ -3,37 +3,27 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { HeroOrbitDesktop, HeroOrbitMobile } from "@/components/landing/HeroProductCards";
-import { LandingBadge } from "@/components/landing/landing-ui";
 
 function HeroCopy() {
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <LandingBadge>Page restaurant + IA</LandingBadge>
-      </motion.div>
-
       <motion.h1
-        className="mt-7 font-landing-serif text-[clamp(2rem,5.5vw,3.35rem)] font-normal leading-[1.08] text-[#FFF7EF]"
+        className="font-landing-serif text-[clamp(2rem,5.5vw,3.35rem)] font-normal leading-[1.08] text-[#FFF7EF]"
         initial={{ opacity: 0, y: 22 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.75, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
       >
-        L&apos;<em className="not-italic text-[#FF7A3D]">IA</em> qui transforme vos visiteurs en{" "}
-        <em className="italic text-[#FF7A3D]">réservations</em>
+        Remplissez votre restaurant grâce à l&apos;IA
       </motion.h1>
 
       <motion.p
-        className="mx-auto mt-5 max-w-lg text-sm leading-relaxed text-[#AFA39A] sm:text-base"
+        className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-[#AFA39A] sm:text-base"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, delay: 0.14 }}
       >
-        ZenGrow crée une page restaurant pensée pour faire réserver, puis utilise l&apos;IA pour relancer
-        vos clients, générer vos campagnes et récolter plus d&apos;avis Google.
+        ZenGrow crée votre page de réservation, relance les clients qui ne reviennent plus et génère vos
+        campagnes marketing pour remplir vos tables plus souvent.
       </motion.p>
 
       <motion.div
@@ -62,7 +52,7 @@ function HeroCopy() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        Sans site compliqué. Sans outils dispersés. Tout au même endroit.
+        Page restaurant · Réservations · Relances IA · Avis Google
       </motion.p>
     </>
   );
@@ -74,10 +64,8 @@ export function Hero() {
       id="hero"
       className="relative w-full overflow-x-hidden px-4 pb-16 pt-[7rem] sm:px-6 sm:pb-20 sm:pt-[8.5rem]"
     >
-      {/* Scène desktop : cartes orbitent autour du centre */}
       <div className="relative mx-auto hidden min-h-[min(780px,92vh)] w-full max-w-[1280px] lg:block">
         <HeroOrbitDesktop />
-
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="pointer-events-auto relative z-30 w-full max-w-lg px-6 py-8 text-center sm:max-w-xl sm:px-8">
             <HeroCopy />
@@ -85,7 +73,6 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Mobile : texte puis cartes */}
       <div className="relative z-10 mx-auto max-w-xl text-center lg:hidden">
         <HeroCopy />
         <HeroOrbitMobile />

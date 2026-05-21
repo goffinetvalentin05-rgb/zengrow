@@ -6,18 +6,15 @@ import { Reveal } from "@/components/sections/Reveal";
 
 export function CTA() {
   return (
-    <section
-      id="cta"
-      className="relative w-full overflow-hidden pb-20 pt-24 sm:pb-28 sm:pt-32"
-    >
+    <section id="cta" className="relative w-full overflow-hidden pb-20 pt-24 sm:pb-28 sm:pt-32">
       <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center px-4 py-12 text-center sm:px-6 sm:py-16">
         <Reveal className="flex w-full flex-col items-center">
           <h2 className="max-w-2xl font-landing-serif text-[clamp(1.85rem,4.5vw,3rem)] font-normal leading-tight text-[#FFF7EF]">
-            Passez à la vitesse supérieure avec ZenGrow
+            Votre restaurant a déjà des clients. ZenGrow les fait revenir.
           </h2>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-[#AFA39A]">
-            Une page restaurant, des réservations en ligne et une IA qui vous aide à faire revenir vos
-            clients.
+            Créez votre page de réservation, automatisez vos relances et remplissez vos tables plus souvent
+            grâce à l&apos;IA.
           </p>
           <div className="mt-10 flex w-full max-w-md flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center">
             <Link
@@ -33,6 +30,9 @@ export function CTA() {
               Voir une démo
             </Link>
           </div>
+          <p className="mt-6 text-xs text-[#AFA39A]/85 sm:text-sm">
+            Simple à lancer. Pensé pour les restaurants. Propulsé par l&apos;IA.
+          </p>
         </Reveal>
       </div>
 

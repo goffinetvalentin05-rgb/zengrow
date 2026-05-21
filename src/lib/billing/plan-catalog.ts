@@ -15,6 +15,9 @@ export type PlanCatalogItem = {
   featured: boolean;
   badge?: string;
   features: readonly string[];
+  /** Textes landing (positionnement) */
+  landingHeadline: string;
+  landingDescription: string;
 };
 
 export const ZENGROW_PLAN_CATALOG: readonly PlanCatalogItem[] = [
@@ -26,6 +29,8 @@ export const ZENGROW_PLAN_CATALOG: readonly PlanCatalogItem[] = [
     subtitle: "Pour bien démarrer",
     cta: "Choisir Starter",
     featured: false,
+    landingHeadline: "Pour démarrer",
+    landingDescription: "Une page restaurant et les réservations en ligne.",
     features: [
       "Réservations en ligne",
       "Gestion des disponibilités",
@@ -43,7 +48,9 @@ export const ZENGROW_PLAN_CATALOG: readonly PlanCatalogItem[] = [
     subtitle: "Pour accélérer",
     cta: "Choisir Pro",
     featured: true,
-    badge: "Recommandé",
+    badge: "Le plus choisi",
+    landingHeadline: "Pour faire revenir vos clients",
+    landingDescription: "Réservations, base clients, relances IA et avis Google.",
     features: [
       "Tout le plan Starter",
       "Campagnes e-mail marketing",

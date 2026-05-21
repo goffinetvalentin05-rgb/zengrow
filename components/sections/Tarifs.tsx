@@ -16,95 +16,67 @@ export function Tarifs() {
       <div className="mx-auto max-w-5xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <h2 className="font-landing-serif text-[clamp(1.85rem,4vw,2.75rem)] font-normal text-[#FFF7EF]">
-            Des tarifs pensés pour les restaurants
+            Des tarifs simples pour passer à l&apos;action.
           </h2>
           <p className="mt-4 text-base text-[#AFA39A]">
-            <strong className="font-medium text-[#FFF7EF]/90">{ZENGROW_TRIAL_DAYS} jours d&apos;essai gratuit</strong>
-            {" "}— sans engagement long terme.
+            Choisissez l&apos;offre adaptée à votre restaurant et commencez à transformer vos visiteurs en
+            réservations.
+          </p>
+          <p className="mt-2 text-sm text-[#AFA39A]">
+            {ZENGROW_TRIAL_DAYS} jours d&apos;essai gratuit
           </p>
         </Reveal>
 
         <Reveal delay={0.1}>
-          <div className="relative mx-auto mt-16 max-w-4xl">
-            <div
-              className="pointer-events-none absolute inset-0 rounded-[3rem] bg-[radial-gradient(ellipse_at_50%_40%,rgba(255,90,42,0.14),transparent_70%)]"
-              aria-hidden
-            />
-
-            <div className="relative flex flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:justify-center lg:gap-0">
-              {/* Starter — panneau latéral incliné */}
+          <div className="relative mx-auto mt-14 flex max-w-4xl flex-col items-stretch gap-8 lg:flex-row lg:items-center lg:justify-center lg:gap-0">
+            {[starter, pro].map((plan, i) => (
               <motion.div
-                className={cn(
-                  "relative z-10 w-full max-w-sm rounded-[1.75rem] border border-[rgba(255,255,255,0.08)]",
-                  "bg-[rgba(10,7,5,0.65)] p-6 backdrop-blur-xl sm:p-7",
-                  "lg:-mr-6 lg:mt-10 lg:w-[min(100%,340px)] lg:rotate-[-1.5deg]",
-                )}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.55 }}
-              >
-                <h3 className="font-landing-serif text-2xl text-[#FFF7EF]">{starter.title}</h3>
-                <p className="mt-1 text-sm text-[#AFA39A]">{starter.subtitle}</p>
-                <p className="mt-5 font-landing-serif text-4xl tabular-nums text-[#FFF7EF]">
-                  {starter.priceAmount}
-                  <span className="ml-1 font-sans text-base font-normal text-[#AFA39A]">CHF/mois</span>
-                </p>
-                <ul className="mt-6 space-y-2 text-sm text-[#AFA39A]">
-                  {starter.features.slice(0, 4).map((line) => (
-                    <li key={line} className="flex gap-2">
-                      <Check className="size-4 shrink-0 text-[#FF7A3D]/80" />
-                      {line}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/signup"
-                  className="mt-8 flex min-h-11 items-center justify-center rounded-full border border-white/12 text-sm font-semibold text-[#FFF7EF] transition hover:border-[rgba(255,122,61,0.35)]"
-                >
-                  {starter.cta}
-                </Link>
-              </motion.div>
-
-              {/* Pro — carte dominante */}
-              <motion.div
-                className={cn(
-                  "relative z-20 w-full max-w-md rounded-[2rem] border border-[rgba(255,122,61,0.35)]",
-                  "bg-[rgba(255,90,42,0.08)] p-8 shadow-[0_0_80px_-20px_rgba(255,90,42,0.55)] backdrop-blur-2xl sm:p-9",
-                  "lg:scale-[1.05]",
-                )}
+                key={plan.key}
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.08 }}
+                transition={{ duration: 0.55, delay: i * 0.1 }}
+                className={cn(
+                  "relative flex w-full flex-col rounded-[1.75rem] border p-6 backdrop-blur-2xl sm:p-8",
+                  plan.featured
+                    ? "z-10 border-[rgba(255,122,61,0.32)] bg-[rgba(255,90,42,0.08)] shadow-[0_0_64px_-16px_rgba(255,90,42,0.45)] lg:scale-[1.05]"
+                    : "border-[rgba(255,255,255,0.08)] bg-[rgba(10,7,5,0.6)] lg:-mr-4 lg:mt-8 lg:rotate-[-1deg]",
+                )}
               >
-                {pro.badge ? (
-                  <span className="mb-4 inline-block rounded-full bg-[#FF5A2A] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-[0_0_24px_rgba(255,90,42,0.5)]">
-                    {pro.badge}
+                {plan.badge ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-[rgba(255,122,61,0.35)] bg-[#FF5A2A] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-[0_0_24px_rgba(255,90,42,0.5)]">
+                    {plan.badge}
                   </span>
                 ) : null}
-                <h3 className="font-landing-serif text-3xl text-[#FFF7EF]">{pro.title}</h3>
-                <p className="mt-2 text-[#AFA39A]">{pro.subtitle}</p>
-                <p className="mt-6 font-landing-serif text-5xl tabular-nums text-[#FFF7EF]">
-                  {pro.priceAmount}
-                  <span className="ml-2 font-sans text-lg font-normal text-[#AFA39A]">CHF/mois</span>
+
+                <p className="font-landing-serif text-xl text-[#FFF7EF]">{plan.landingHeadline}</p>
+                <p className="mt-2 text-sm text-[#AFA39A]">{plan.landingDescription}</p>
+                <p className="mt-1 text-xs text-[#AFA39A]/80">
+                  {plan.title} · {plan.priceAmount} CHF / mois
                 </p>
-                <ul className="mt-8 space-y-3">
-                  {pro.features.map((line) => (
-                    <li key={line} className="flex gap-2.5 text-sm text-[#FFF7EF]/95">
+
+                <ul className="mt-6 flex-1 space-y-2">
+                  {plan.features.map((line) => (
+                    <li key={line} className="flex gap-2 text-sm text-[#FFF7EF]/90">
                       <Check className="mt-0.5 size-4 shrink-0 text-[#FF7A3D]" strokeWidth={2.5} />
                       {line}
                     </li>
                   ))}
                 </ul>
+
                 <Link
                   href="/signup"
-                  className="mt-10 flex min-h-12 items-center justify-center rounded-full bg-[#FF5A2A] text-sm font-semibold text-white shadow-[0_0_48px_-8px_rgba(255,90,42,0.9)] transition hover:bg-[#FF7A3D]"
+                  className={cn(
+                    "mt-8 flex min-h-11 items-center justify-center rounded-full text-sm font-semibold transition",
+                    plan.featured
+                      ? "bg-[#FF5A2A] text-white shadow-[0_0_40px_-8px_rgba(255,90,42,0.85)] hover:bg-[#FF7A3D]"
+                      : "border border-[rgba(255,255,255,0.12)] text-[#FFF7EF] hover:border-[rgba(255,122,61,0.35)]",
+                  )}
                 >
-                  {pro.cta}
+                  {plan.cta}
                 </Link>
               </motion.div>
-            </div>
+            ))}
           </div>
         </Reveal>
       </div>

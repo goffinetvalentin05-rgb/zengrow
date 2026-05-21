@@ -1,16 +1,22 @@
 "use client";
 
-import { Calendar, Megaphone, Sparkles, Star } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 import { Reveal } from "@/components/sections/Reveal";
 
-const automations: { label: string; icon: LucideIcon }[] = [
-  { label: "Relances clients", icon: Sparkles },
-  { label: "Campagnes IA", icon: Megaphone },
-  { label: "Avis Google", icon: Star },
-  { label: "Réservations", icon: Calendar },
-];
+const automations = [
+  "Relancer les anciens clients",
+  "Générer vos campagnes",
+  "Demander des avis Google",
+  "Transformer les visites en réservations",
+] as const;
+
+const assistantOptions = [
+  "Remplir un soir calme",
+  "Faire revenir les anciens clients",
+  "Demander des avis Google",
+  "Promouvoir un menu spécial",
+] as const;
 
 export function Credibility() {
   return (
@@ -18,47 +24,55 @@ export function Credibility() {
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <div className="relative overflow-hidden rounded-[1.5rem] border border-[rgba(255,122,61,0.1)] bg-[rgba(8,5,4,0.45)] px-5 py-8 backdrop-blur-xl sm:rounded-[1.75rem] sm:px-8 sm:py-9">
-            <div
-              className="pointer-events-none absolute -right-16 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,90,42,0.12),transparent_70%)] blur-2xl"
-              aria-hidden
-            />
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="font-landing-serif text-[clamp(1.35rem,3vw,1.85rem)] font-normal leading-snug text-[#FFF7EF]">
+                L&apos;IA n&apos;est plus réservée aux grandes entreprises.
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-[#AFA39A] sm:text-[15px]">
+                De plus en plus d&apos;entreprises suisses utilisent l&apos;IA pour gagner du temps et
+                automatiser leurs tâches. ZenGrow applique cette logique aux restaurants.
+              </p>
+            </div>
 
-            <div className="relative grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
-              <div>
-                <h2 className="font-landing-serif text-[clamp(1.35rem,3vw,1.85rem)] font-normal leading-snug text-[#FFF7EF]">
-                  L&apos;IA n&apos;est plus réservée aux grandes entreprises.
-                </h2>
-                <p className="mt-3 max-w-lg text-sm leading-relaxed text-[#AFA39A] sm:text-[15px]">
-                  De plus en plus d&apos;entreprises suisses utilisent l&apos;IA pour gagner du temps et
-                  automatiser leurs tâches. ZenGrow applique cette logique aux restaurants : relances
-                  clients, campagnes marketing, avis Google et réservations en ligne.
-                </p>
+            <div className="relative mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+              <div className="rounded-2xl border border-[rgba(255,122,61,0.15)] bg-[rgba(255,90,42,0.04)] p-5">
+                <p className="text-sm font-medium text-[#FFF7EF]">Ce que ZenGrow automatise pour vous :</p>
+                <ul className="mt-4 space-y-2.5">
+                  {automations.map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-sm text-[#AFA39A]">
+                      <span className="size-1.5 shrink-0 rounded-full bg-[#FF7A3D]" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               <motion.div
-                className="rounded-2xl border border-[rgba(255,122,61,0.18)] bg-[rgba(255,90,42,0.05)] p-4 shadow-[0_0_40px_-16px_rgba(255,90,42,0.35)] sm:p-5"
-                animate={{ y: [0, -3, 0] }}
+                className="rounded-2xl border border-[rgba(255,122,61,0.2)] bg-[rgba(8,5,4,0.8)] p-5 shadow-[0_0_40px_-16px_rgba(255,90,42,0.35)]"
+                animate={{ y: [0, -4, 0] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               >
-                <p className="text-[11px] font-medium uppercase tracking-wider text-[#F6A85A]">
-                  Ce que ZenGrow automatise
-                </p>
-                <ul className="mt-3 grid grid-cols-2 gap-2.5">
-                  {automations.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <li
-                        key={item.label}
-                        className="flex items-center gap-2 rounded-xl border border-[rgba(255,255,255,0.05)] bg-[rgba(0,0,0,0.35)] px-2.5 py-2"
-                      >
-                        <Icon className="size-3.5 shrink-0 text-[#FF7A3D]" strokeWidth={1.5} />
-                        <span className="text-[11px] font-medium text-[#FFF7EF] sm:text-xs">
-                          {item.label}
-                        </span>
-                      </li>
-                    );
-                  })}
+                <div className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-[#FF7A3D]" />
+                  <span className="text-xs font-medium text-[#F6A85A]">assistant IA ZenGrow</span>
+                </div>
+                <p className="mt-4 text-sm font-medium text-[#FFF7EF]">Que voulez-vous faire aujourd&apos;hui ?</p>
+                <ul className="mt-3 space-y-2">
+                  {assistantOptions.map((opt) => (
+                    <li
+                      key={opt}
+                      className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[rgba(0,0,0,0.35)] px-3 py-2.5 text-xs text-[#AFA39A]"
+                    >
+                      {opt}
+                    </li>
+                  ))}
                 </ul>
+                <button
+                  type="button"
+                  className="mt-4 w-full rounded-full bg-[#FF5A2A] py-2.5 text-xs font-semibold text-white shadow-[0_0_24px_-6px_rgba(255,90,42,0.7)]"
+                >
+                  Générer avec l&apos;IA
+                </button>
               </motion.div>
             </div>
           </div>

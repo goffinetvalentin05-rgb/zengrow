@@ -9,33 +9,33 @@ import { cn } from "@/src/lib/utils";
 const faqs = [
   {
     id: "q1",
-    q: "ZenGrow est-il seulement un outil de réservation ?",
-    a: "Non. ZenGrow combine une page restaurant pensée pour convertir, les réservations en ligne, les relances clients par IA, les campagnes marketing et les avis Google automatisés.",
+    q: "ZenGrow remplace-t-il mon site actuel ?",
+    a: "ZenGrow peut remplacer une page trop compliquée ou compléter votre site existant avec une page pensée pour la réservation.",
   },
   {
     id: "q2",
-    q: "Ai-je besoin d'un site web existant ?",
-    a: "Non. ZenGrow peut servir de page principale pour votre restaurant ou compléter votre présence actuelle.",
+    q: "Est-ce seulement un outil de réservation ?",
+    a: "Non. ZenGrow combine page restaurant, réservations en ligne, relances IA, campagnes marketing et avis Google.",
   },
   {
     id: "q3",
-    q: "L'IA envoie-t-elle automatiquement les campagnes ?",
-    a: "Non. ZenGrow prépare et génère les campagnes, mais vous gardez toujours la validation avant l'envoi.",
+    q: "L'IA envoie-t-elle les messages automatiquement ?",
+    a: "Non. ZenGrow prépare les campagnes, mais vous validez toujours avant l'envoi.",
   },
   {
     id: "q4",
-    q: "Est-ce adapté aux petits restaurants ?",
-    a: "Oui. ZenGrow a été pensé pour être simple, rapide à mettre en place et utile dès les premières réservations.",
+    q: "Est-ce adapté à un petit restaurant ?",
+    a: "Oui. ZenGrow est pensé pour être simple, rapide à mettre en place et utile même pour un restaurant indépendant.",
   },
   {
     id: "q5",
-    q: "Puis-je personnaliser ma page restaurant ?",
-    a: "Oui. Vous pouvez personnaliser vos textes, vos photos, vos horaires, votre menu et l'apparence générale de votre page.",
+    q: "Est-ce que je peux personnaliser ma page ?",
+    a: "Oui. Vous pouvez adapter vos textes, photos, horaires, menu, couleurs et informations.",
   },
   {
     id: "q6",
-    q: "Puis-je annuler à tout moment ?",
-    a: "Oui. Vous gardez la liberté d'arrêter ou de faire évoluer votre abonnement selon vos besoins.",
+    q: "Pourquoi utiliser l'IA dans un restaurant ?",
+    a: "Parce qu'elle aide à faire ce que beaucoup de restaurants n'ont pas le temps de faire : relancer les clients, préparer des campagnes et demander des avis au bon moment.",
   },
 ] as const;
 
@@ -84,7 +84,7 @@ function FaqItem({
           className={cn(
             "flex size-10 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
             isOpen
-              ? "rotate-0 border-[rgba(255,122,61,0.4)] bg-[rgba(255,90,42,0.15)] text-[#FF7A3D] shadow-[0_0_24px_-6px_rgba(255,90,42,0.4)]"
+              ? "border-[rgba(255,122,61,0.4)] bg-[rgba(255,90,42,0.15)] text-[#FF7A3D]"
               : "border-[rgba(255,255,255,0.1)] text-[#AFA39A]",
           )}
         >
@@ -106,16 +106,12 @@ export function FAQ() {
             Questions fréquentes
           </h2>
           <p className="mt-4 text-base text-[#AFA39A]">
-            Tout ce qu&apos;il faut savoir avant de lancer ZenGrow pour votre restaurant.
+            Ce que les restaurants veulent savoir avant de lancer ZenGrow.
           </p>
         </Reveal>
 
         <Reveal delay={0.08}>
           <div className="relative mt-14 overflow-hidden rounded-[2rem] border border-[rgba(255,122,61,0.12)] bg-[rgba(8,5,4,0.5)] p-1 shadow-[0_48px_120px_-60px_rgba(0,0,0,0.95)] backdrop-blur-2xl sm:rounded-[2.5rem] sm:p-1.5">
-            <div
-              className="pointer-events-none absolute -left-24 top-0 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(255,90,42,0.15),transparent)] blur-3xl"
-              aria-hidden
-            />
             <ul className="relative divide-y divide-[rgba(255,255,255,0.06)] px-5 sm:px-8 md:px-10">
               {faqs.map((item, i) => (
                 <FaqItem

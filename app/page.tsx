@@ -13,9 +13,9 @@ import { CTA } from "@/components/sections/CTA";
 import { Footer } from "@/components/sections/Footer";
 
 export const metadata: Metadata = {
-  title: "ZenGrow — Page restaurant IA & réservations pour restaurants",
+  title: "ZenGrow — Remplissez votre restaurant grâce à l'IA",
   description:
-    "ZenGrow transforme vos visiteurs en réservations et aide votre restaurant à faire revenir vos clients grâce à l'IA : page mobile-first, relances, campagnes et avis Google.",
+    "ZenGrow crée votre page de réservation, relance les clients qui ne reviennent plus et génère vos campagnes marketing pour remplir vos tables plus souvent.",
 };
 
 export default function Home() {
@@ -32,9 +32,9 @@ export default function Home() {
         <main>
           <Hero />
           <Problem />
-          <Credibility />
           <Solution />
           <IAExample />
+          <Credibility />
           <FeaturesGrid />
           <Tarifs />
           <FAQ />
