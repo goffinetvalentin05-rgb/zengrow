@@ -1,24 +1,23 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/sections/Navbar";
 import { Hero } from "@/components/sections/Hero";
-import { Globe } from "@/components/sections/Globe";
-import { Connected } from "@/components/sections/Connected";
-import { HowItWorks } from "@/components/sections/HowItWorks";
-import { Tarifs } from "@/components/sections/Tarifs";
-import { FAQ } from "@/components/sections/FAQ";
+import { Problem } from "@/components/sections/Problem";
+import { Solution } from "@/components/sections/Solution";
+import { IAExample } from "@/components/sections/IAExample";
+import { FeaturesGrid } from "@/components/sections/FeaturesGrid";
 import { CTA } from "@/components/sections/CTA";
 import { Footer } from "@/components/sections/Footer";
 
 export const metadata: Metadata = {
-  title: "ZenGrow — Page web pro & réservation pour restaurants",
+  title: "ZenGrow — Page restaurant IA & réservations pour restaurants",
   description:
-    "ZenGrow crée des pages web professionnelles avec réservation intégrée pour les restaurants. Conversion, design premium, sans friction.",
+    "ZenGrow transforme vos visiteurs en réservations et aide votre restaurant à faire revenir vos clients grâce à l'IA : page mobile-first, relances, campagnes et avis Google.",
 };
 
 export default function Home() {
   return (
     <div
-      className="landing-page min-h-screen bg-landing-bg text-landing-fg antialiased"
+      className="landing-page min-h-screen overflow-x-hidden bg-[#050403] text-[#FFF7EF] antialiased"
       style={{
         fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
       }}
@@ -26,11 +25,10 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <Globe />
-        <Connected />
-        <HowItWorks />
-        <Tarifs />
-        <FAQ />
+        <Problem />
+        <Solution />
+        <IAExample />
+        <FeaturesGrid />
         <CTA />
       </main>
       <Footer />

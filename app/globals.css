@@ -95,14 +95,14 @@ html:has(.zg-public-r-root) {
   --font-mono: var(--font-geist-mono);
 
   /* Landing ZenGrow */
-  --color-landing-bg: #0a0806;
-  --color-landing-section: #100c09;
-  --color-landing-card: #16110d;
-  --color-landing-border: rgb(255 255 255 / 0.06);
-  --color-landing-fg: #faf7f2;
-  --color-landing-muted: #8a7f73;
-  --color-landing-accent: #e85d2c;
-  --color-landing-accent-soft: #ffa86b;
+  --color-landing-bg: #050403;
+  --color-landing-section: #120b07;
+  --color-landing-card: #1b100b;
+  --color-landing-border: rgb(255 122 61 / 0.18);
+  --color-landing-fg: #fff7ef;
+  --color-landing-muted: #afa39a;
+  --color-landing-accent: #ff5a2a;
+  --color-landing-accent-soft: #ff7a3d;
   --font-landing-serif: var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
 
   --color-zg-app: var(--zg-app);
