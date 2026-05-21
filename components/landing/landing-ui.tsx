@@ -107,7 +107,10 @@ export function SectionShell({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className={cn("relative w-full overflow-hidden px-4 py-20 sm:px-6 sm:py-28", className)}>
+    <section
+      id={id}
+      className={cn("relative w-full overflow-x-hidden px-4 py-20 sm:px-6 sm:py-28", className)}
+    >
       {children}
     </section>
   );

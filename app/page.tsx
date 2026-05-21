@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LandingGlobalBackground } from "@/components/landing/LandingGlobalBackground";
 import { Navbar } from "@/components/sections/Navbar";
 import { Hero } from "@/components/sections/Hero";
 import { Problem } from "@/components/sections/Problem";
@@ -17,21 +18,24 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <div
-      className="landing-page min-h-screen overflow-x-hidden bg-[#050403] text-[#FFF7EF] antialiased"
+      className="landing-page relative min-h-screen overflow-x-hidden text-[#FFF7EF] antialiased"
       style={{
         fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
       }}
     >
-      <Navbar />
-      <main>
-        <Hero />
-        <Problem />
-        <Solution />
-        <IAExample />
-        <FeaturesGrid />
-        <CTA />
-      </main>
-      <Footer />
+      <LandingGlobalBackground />
+      <div className="relative z-10">
+        <Navbar />
+        <main>
+          <Hero />
+          <Problem />
+          <Solution />
+          <IAExample />
+          <FeaturesGrid />
+          <CTA />
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }

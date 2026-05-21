@@ -681,6 +681,14 @@ button.zg-showroom-hero-cta--conversion:active {
 .landing-page {
   --border: rgb(255 255 255 / 0.06);
   --border-soft: rgb(255 255 255 / 0.06);
+  background-color: #050403;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page [data-reduce-motion] {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 @layer components {

@@ -64,7 +64,7 @@ const cards = [
 
 export function Solution() {
   return (
-    <SectionShell className="bg-[#050403]">
+    <SectionShell>
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionTitle title="Une page qui réserve. Une IA qui relance." />
 

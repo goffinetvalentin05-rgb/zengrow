@@ -47,7 +47,7 @@ const features: { title: string; body: string; icon: LucideIcon }[] = [
 
 export function FeaturesGrid() {
   return (
-    <SectionShell id="features" className="bg-[#050403]">
+    <SectionShell id="features">
       <div className="mx-auto max-w-6xl">
         <SectionTitle title="Tout ce qu'il faut, sans outil compliqué" />
 

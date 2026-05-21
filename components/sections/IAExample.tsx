@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
-import { GlassCard, LandingGlows, SectionShell, SectionTitle } from "@/components/landing/landing-ui";
+import { GlassCard, SectionShell, SectionTitle } from "@/components/landing/landing-ui";
 import { Reveal } from "@/components/sections/Reveal";
 
 export function IAExample() {
   return (
-    <SectionShell id="ia" className="bg-[#120B07]">
-      <LandingGlows />
-      <div className="relative z-10 mx-auto max-w-6xl">
+    <SectionShell id="ia">
+      <div className="mx-auto max-w-6xl">
         <SectionTitle
           title="42 clients n'ont pas réservé depuis 60 jours."
           subtitle="ZenGrow les détecte, génère une campagne de retour et vous laisse l'envoyer en quelques clics."

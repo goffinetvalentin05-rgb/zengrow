@@ -2,7 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { LandingGlows, SectionShell, SectionTitle } from "@/components/landing/landing-ui";
+import { SectionShell, SectionTitle } from "@/components/landing/landing-ui";
 import { Reveal } from "@/components/sections/Reveal";
 
 const problems = ["Visiteurs sans réservation", "Clients inactifs", "Avis Google oubliés"];
@@ -10,9 +10,8 @@ const outcomes = ["Réservations", "Relances", "Avis collectés"];
 
 export function Problem() {
   return (
-    <SectionShell id="probleme" className="bg-[#0B0705]">
-      <LandingGlows />
-      <div className="relative z-10 mx-auto max-w-6xl">
+    <SectionShell id="probleme">
+      <div className="mx-auto max-w-6xl">
         <SectionTitle
           title="Votre restaurant reçoit des visites. Mais combien deviennent vraiment des réservations ?"
           subtitle="Entre les visiteurs qui consultent sans réserver, les clients qui ne reviennent plus et les avis jamais demandés, beaucoup d'opportunités se perdent. ZenGrow les transforme en actions concrètes."
