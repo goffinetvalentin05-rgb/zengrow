@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { LANDING_PRICING_CARDS } from "@/src/lib/billing/landing-plans";
 import { ZENGROW_PLAN_CATALOG, ZENGROW_TRIAL_DAYS } from "@/src/lib/billing/plan-catalog";
 import { cn } from "@/src/lib/utils";
 import {
@@ -12,6 +13,11 @@ import {
 } from "../ui";
 import { ScrollReveal } from "../ScrollReveal";
 
+const catalogByKey = Object.fromEntries(ZENGROW_PLAN_CATALOG.map((p) => [p.key, p]));
+
+/** Exactement 2 offres : Starter + Pro */
+const LANDING_PLANS = LANDING_PRICING_CARDS.filter((card) => card.planKey in catalogByKey);
+
 export function PricingSection() {
   return (
     <Section id="tarifs" className="relative overflow-hidden">
@@ -20,7 +26,7 @@ export function PricingSection() {
         <ScrollReveal>
           <BlockHeader
             title="Choisissez l'offre adaptée à votre restaurant."
-            subtitle="Une table remplie en plus ou quelques clients qui reviennent peuvent déjà rentabiliser votre abonnement."
+            subtitle="Deux formules simples en CHF / mois. Starter pour bien démarrer, Pro pour accélérer avec le marketing et l’IA."
           />
           <p className="-mt-6 text-center text-sm font-medium text-violet-200/90">
             {ZENGROW_TRIAL_DAYS} jours d&apos;essai gratuit · Sans carte bancaire pour commencer
@@ -28,22 +34,23 @@ export function PricingSection() {
         </ScrollReveal>
 
         <ScrollReveal delay={0.1}>
-          <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2 md:items-stretch">
-            {ZENGROW_PLAN_CATALOG.map((plan) => {
-              const featured = plan.featured;
+          <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 sm:items-stretch">
+            {LANDING_PLANS.map((card) => {
+              const plan = catalogByKey[card.planKey];
+              const featured = card.featured ?? plan.featured;
 
               const cardBody = (
                 <div className="flex h-full flex-col p-7 md:p-8">
-                  {plan.badge ? (
+                  {card.badge ? (
                     <span className="mb-4 inline-flex w-fit rounded-full border border-violet-400/35 bg-violet-500/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-100">
-                      {plan.badge}
+                      {card.badge}
                     </span>
                   ) : (
                     <span className="mb-4 block h-6" aria-hidden />
                   )}
 
                   <p className="zg-display text-lg font-bold text-white">{plan.title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-[#9b8fb8]">{plan.landingDescription}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-[#9b8fb8]">{card.description}</p>
 
                   <p className="zg-display mt-6 text-4xl font-bold tracking-tight text-white md:text-5xl">
                     {plan.priceAmount}
@@ -63,18 +70,15 @@ export function PricingSection() {
                   </ul>
 
                   {featured ? (
-                    <PrimaryButton href="/signup" className="mt-8 w-full justify-center">
-                      {plan.cta}
+                    <PrimaryButton href={card.cta.href} className="mt-8 w-full justify-center">
+                      {card.cta.label}
                     </PrimaryButton>
                   ) : (
                     <Link
-                      href="/signup"
-                      className={cn(
-                        "zg-btn-ghost mt-8 w-full justify-center",
-                        "text-center",
-                      )}
+                      href={card.cta.href}
+                      className={cn("zg-btn-ghost mt-8 w-full justify-center text-center")}
                     >
-                      {plan.cta}
+                      {card.cta.label}
                     </Link>
                   )}
                 </div>
@@ -82,7 +86,7 @@ export function PricingSection() {
 
               if (featured) {
                 return (
-                  <div key={plan.key} className="zg-pricing-shell relative md:-mt-1">
+                  <div key={card.id} className="zg-pricing-shell relative sm:-mt-1">
                     <div className="zg-pricing-glow" aria-hidden />
                     <div className="zg-pricing-card-inner h-full">
                       <PremiumCard className="h-full overflow-hidden !border-0 !shadow-none">
@@ -94,7 +98,7 @@ export function PricingSection() {
               }
 
               return (
-                <PremiumCard key={plan.key} glow className="h-full">
+                <PremiumCard key={card.id} glow className="h-full">
                   {cardBody}
                 </PremiumCard>
               );

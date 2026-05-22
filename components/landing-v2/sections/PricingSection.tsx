@@ -16,9 +16,9 @@ export function PricingSection() {
           {ZENGROW_TRIAL_DAYS} jours d&apos;essai gratuit sur les offres en ligne
         </p>
 
-        <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
-          {LANDING_PRICING_CARDS.map((card) => {
-            const catalog = card.planKey ? catalogByKey[card.planKey] : null;
+        <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-2 lg:items-stretch">
+          {LANDING_PRICING_CARDS.filter((card) => card.planKey).map((card) => {
+            const catalog = catalogByKey[card.planKey];
             const featured = card.featured;
 
             return (

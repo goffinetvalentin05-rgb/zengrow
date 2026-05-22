@@ -29,9 +29,9 @@ export function Tarifs() {
         </Reveal>
 
         <Reveal delay={0.1}>
-          <div className="relative mx-auto mt-14 grid max-w-5xl grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch lg:gap-5">
-            {LANDING_PRICING_CARDS.map((card, i) => {
-              const catalog = card.planKey ? catalogByKey[card.planKey] : null;
+          <div className="relative mx-auto mt-14 grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2 lg:items-stretch lg:gap-6">
+            {LANDING_PRICING_CARDS.filter((card) => card.planKey).map((card, i) => {
+              const catalog = catalogByKey[card.planKey];
               const featured = card.featured;
 
               return (
