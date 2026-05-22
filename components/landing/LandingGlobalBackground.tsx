@@ -17,22 +17,32 @@ export function LandingGlobalBackground() {
       />
 
       <motion.div
-        className="absolute -left-[15%] top-[2%] h-[min(640px,85vw)] w-[min(640px,85vw)] rounded-full opacity-80"
+        className="absolute -left-[15%] top-[2%] h-[min(640px,85vw)] w-[min(640px,85vw)] rounded-full opacity-90 blur-[2px]"
         style={{
           background:
-            "radial-gradient(circle, rgba(255, 90, 42, 0.14) 0%, rgba(255, 122, 61, 0.06) 38%, transparent 68%)",
+            "radial-gradient(circle, rgba(255, 90, 42, 0.18) 0%, rgba(255, 122, 61, 0.08) 38%, transparent 68%)",
         }}
-        animate={{ opacity: [0.65, 0.85, 0.65], scale: [1, 1.03, 1] }}
+        animate={{ opacity: [0.7, 0.92, 0.7], scale: [1, 1.04, 1] }}
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
       />
 
       <motion.div
-        className="absolute -right-[12%] top-[22%] h-[min(560px,78vw)] w-[min(560px,78vw)] rounded-full"
+        className="absolute left-1/2 top-[6%] h-[min(480px,70vw)] w-[min(560px,82vw)] -translate-x-1/2 rounded-full"
         style={{
           background:
-            "radial-gradient(circle, rgba(246, 168, 90, 0.1) 0%, rgba(255, 90, 42, 0.04) 42%, transparent 70%)",
+            "radial-gradient(ellipse 65% 50% at 50% 40%, rgba(255, 122, 61, 0.12) 0%, rgba(255, 90, 42, 0.05) 45%, transparent 72%)",
         }}
-        animate={{ opacity: [0.5, 0.72, 0.5], scale: [1.02, 1, 1.02] }}
+        animate={{ opacity: [0.55, 0.78, 0.55], scale: [1.01, 1, 1.01] }}
+        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+      />
+
+      <motion.div
+        className="absolute -right-[12%] top-[22%] h-[min(560px,78vw)] w-[min(560px,78vw)] rounded-full blur-[1px]"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(246, 168, 90, 0.14) 0%, rgba(255, 90, 42, 0.06) 42%, transparent 70%)",
+        }}
+        animate={{ opacity: [0.55, 0.78, 0.55], scale: [1.02, 1, 1.02] }}
         transition={{ duration: 16, repeat: Infinity, ease: "easeInOut", delay: 2 }}
       />
 
@@ -68,10 +78,26 @@ export function LandingGlobalBackground() {
       />
 
       <div
+        className="absolute inset-0 opacity-60"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 55% at 50% -8%, rgba(255, 90, 42, 0.06) 0%, transparent 55%)",
+        }}
+      />
+
+      <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 120% 80% at 50% 0%, transparent 40%, rgba(5, 4, 3, 0.5) 100%)",
+            "radial-gradient(ellipse 120% 80% at 50% 0%, transparent 38%, rgba(5, 4, 3, 0.55) 100%)",
+        }}
+      />
+
+      <div
+        className="absolute inset-0 opacity-[0.35]"
+        style={{
+          background:
+            "linear-gradient(105deg, transparent 42%, rgba(255, 122, 61, 0.03) 50%, transparent 58%)",
         }}
       />
     </div>

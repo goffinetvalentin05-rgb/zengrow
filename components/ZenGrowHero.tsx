@@ -15,7 +15,7 @@ const ZG_HERO_STYLES = `
   .zghero *{margin:0;padding:0;box-sizing:border-box}
 
   .zghero .bg{position:fixed;inset:0;z-index:0;pointer-events:none}
-  .zghero .bg .grad{position:absolute;inset:0;background:radial-gradient(70% 60% at 36% 50%, rgba(240,106,50,.10) 0%, transparent 55%),radial-gradient(90% 70% at 50% -5%, #2a1810 0%, transparent 55%),radial-gradient(70% 50% at 50% 108%, #1c100a 0%, transparent 50%),#070504}
+  .zghero .bg .grad{position:absolute;inset:0;background:radial-gradient(55% 45% at 50% 0%, rgba(255,90,42,.14) 0%, transparent 52%),radial-gradient(70% 60% at 36% 50%, rgba(240,106,50,.12) 0%, transparent 55%),radial-gradient(90% 70% at 50% -5%, #2a1810 0%, transparent 55%),radial-gradient(70% 50% at 50% 108%, #1c100a 0%, transparent 50%),#070504}
   .zghero .bg .grid{position:absolute;inset:0;opacity:.4;background-image:linear-gradient(rgba(240,106,50,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(240,106,50,.04) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(85% 75% at 50% 50%,#000 0%,transparent 84%);-webkit-mask-image:radial-gradient(85% 75% at 50% 50%,#000 0%,transparent 84%)}
   .zghero .bg .noise{position:absolute;inset:0;opacity:.045;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
   .zghero .bg .floor{position:absolute;left:0;right:0;bottom:0;height:40%;background:radial-gradient(60% 100% at 50% 100%, rgba(240,106,50,.12) 0%, transparent 70%);filter:blur(20px)}
