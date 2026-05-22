@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
+const MOBILE_MAX_WIDTH = 767;
+
 const ZG_HERO_STYLES = `
   .zghero{
     --orange:#f06a32;--orange-soft:#f5894f;--orange-bright:#ff8347;--orange-pale:#ffb088;
@@ -22,10 +24,11 @@ const ZG_HERO_STYLES = `
 
   .zghero .fx{position:absolute;inset:0;z-index:3;pointer-events:none}
 
-  .zghero .halo{position:absolute;left:42%;top:50%;transform:translate(-50%,-50%);width:680px;height:680px;border-radius:50%;pointer-events:none;z-index:1;background:radial-gradient(circle,rgba(255,131,71,.20) 0%,rgba(240,106,50,.06) 40%,transparent 68%);filter:blur(16px);animation:zg-haloPulse 5s ease-in-out infinite}
-  .zghero .rays{position:absolute;left:42%;top:50%;transform:translate(-50%,-50%);width:760px;height:760px;z-index:1;pointer-events:none;opacity:.5;background:conic-gradient(from 0deg, transparent 0deg, rgba(240,106,50,.10) 12deg, transparent 24deg, transparent 60deg, rgba(240,106,50,.07) 72deg, transparent 84deg, transparent 130deg, rgba(240,106,50,.09) 142deg, transparent 154deg, transparent 220deg, rgba(240,106,50,.07) 232deg, transparent 244deg, transparent 310deg, rgba(240,106,50,.08) 322deg, transparent 334deg);mask-image:radial-gradient(circle, transparent 24%, #000 38%, transparent 70%);-webkit-mask-image:radial-gradient(circle, transparent 24%, #000 38%, transparent 70%);filter:blur(3px);animation:zg-spin 40s linear infinite}
+  .zghero .core-zone{position:absolute;left:42%;top:50%;transform:translate(-50%,-50%);z-index:8;width:180px;height:180px}
+  .zghero .core-zone .halo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:680px;height:680px;border-radius:50%;pointer-events:none;z-index:1;background:radial-gradient(circle,rgba(255,131,71,.20) 0%,rgba(240,106,50,.06) 40%,transparent 68%);filter:blur(16px);animation:zg-haloPulse 5s ease-in-out infinite}
+  .zghero .core-zone .rays{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:760px;height:760px;z-index:1;pointer-events:none;opacity:.5;background:conic-gradient(from 0deg, transparent 0deg, rgba(240,106,50,.10) 12deg, transparent 24deg, transparent 60deg, rgba(240,106,50,.07) 72deg, transparent 84deg, transparent 130deg, rgba(240,106,50,.09) 142deg, transparent 154deg, transparent 220deg, rgba(240,106,50,.07) 232deg, transparent 244deg, transparent 310deg, rgba(240,106,50,.08) 322deg, transparent 334deg);mask-image:radial-gradient(circle, transparent 24%, #000 38%, transparent 70%);-webkit-mask-image:radial-gradient(circle, transparent 24%, #000 38%, transparent 70%);filter:blur(3px);animation:zg-spin 40s linear infinite}
 
-  .zghero .core{position:absolute;left:42%;top:50%;transform:translate(-50%,-50%);z-index:8;width:180px;height:180px;display:flex;align-items:center;justify-content:center}
+  .zghero .core{position:relative;left:auto;top:auto;transform:none;z-index:8;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
   .zghero .core .orbit{position:absolute;border-radius:50%;border:1px solid rgba(240,106,50,.16)}
   .zghero .core .orbit.o1{inset:0}
   .zghero .core .orbit.o2{inset:-34px;border-color:rgba(240,106,50,.09)}
@@ -87,14 +90,27 @@ const ZG_HERO_STYLES = `
   @keyframes zg-ripple{0%{transform:scale(.7);opacity:.55}100%{transform:scale(2.6);opacity:0}}
   @keyframes zg-flashPop{0%{opacity:0;transform:scale(.7)}40%{opacity:1;transform:scale(1.05)}100%{opacity:0;transform:scale(1.25)}}
   @keyframes zg-floaty{0%,100%{transform:translateY(-50%) perspective(1500px) rotateY(-12deg) rotateX(2deg)}50%{transform:translateY(-53%) perspective(1500px) rotateY(-12deg) rotateX(2deg)}}
+  @keyframes zg-floaty-flat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
   @keyframes zg-dayPop{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1.06)}}
 
-  @media (max-width:900px){
-    .zghero .core{left:36%;width:140px;height:140px}.zghero .core .disc{inset:32px}.zghero .core .ripple{inset:18px}.zghero .core .mark{font-size:40px}
-    .zghero .calendar{width:300px;right:4vw;padding:22px 22px 20px}
-    .zghero .cal-head .month{font-size:24px}.zghero .cal-grid{gap:6px}.zghero .cal-grid .cell{font-size:12px;border-radius:10px}
+  @media (max-width:767px){
+    .zghero .bg .grad{background:radial-gradient(70% 50% at 50% 22%, rgba(240,106,50,.12) 0%, transparent 55%),radial-gradient(90% 70% at 50% -5%, #2a1810 0%, transparent 55%),radial-gradient(70% 50% at 50% 108%, #1c100a 0%, transparent 50%),#070504}
+    .zghero .scene{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;width:100%;min-width:0;min-height:100svh;height:auto;padding:10vh 16px 28px;box-sizing:border-box}
+    .zghero .core-zone{position:relative;left:auto;top:auto;transform:none;flex-shrink:0;width:120px;height:120px;margin:0 auto}
+    .zghero .core-zone .halo{width:320px;height:320px}
+    .zghero .core-zone .rays{width:360px;height:360px}
+    .zghero .core .disc{inset:28px}
+    .zghero .core .ripple{inset:14px}
+    .zghero .core .flash{inset:18px}
+    .zghero .core .mark{font-size:36px}
+    .zghero .calendar{position:relative;right:auto;top:auto;left:auto;width:calc(100% - 8px);max-width:360px;margin:22px auto 0;transform:none;padding:20px 18px 18px;animation:zg-floaty-flat 7.5s ease-in-out infinite}
+    .zghero .cal-head{margin-bottom:16px}
+    .zghero .cal-head .month{font-size:24px}
+    .zghero .cal-grid{gap:6px}
+    .zghero .cal-grid .cell{font-size:12px;border-radius:10px}
+    .zghero .cal-foot{margin-top:18px;padding-top:16px}
     .zghero .cal-foot .count b{font-size:26px}
-    .zghero .caption{font-size:15px;bottom:30px}
+    .zghero .caption{position:relative;bottom:auto;left:auto;transform:none;width:100%;max-width:360px;margin:18px auto 0;padding:0 4px;font-size:15px}
   }
 `;
 
@@ -106,17 +122,20 @@ export function ZenGrowHero() {
     if (!root) return;
 
     const scene = root.querySelector<HTMLElement>("[data-zg-scene]");
+    const coreEl = root.querySelector<HTMLElement>("[data-zg-core]");
     const flash = root.querySelector<HTMLElement>("[data-zg-flash]");
     const canvas = root.querySelector<HTMLCanvasElement>("[data-zg-fx]");
     const grid = root.querySelector<HTMLElement>("[data-zg-calgrid]");
     const counter = root.querySelector<HTMLElement>("[data-zg-count]");
 
-    if (!scene || !flash || !canvas || !grid || !counter) return;
+    if (!scene || !coreEl || !flash || !canvas || !grid || !counter) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const rootEl = root;
     const sceneEl = scene;
+    const coreElement = coreEl;
     const flashEl = flash;
     const canvasEl = canvas;
     const gridEl = grid;
@@ -147,6 +166,17 @@ export function ZenGrowHero() {
 
     const personSVG = `<svg viewBox="0 0 24 24"><circle class="head" cx="12" cy="8.5" r="3.6"/><path class="body" d="M5.5 20c0-3.6 2.9-6.3 6.5-6.3s6.5 2.7 6.5 6.3z"/></svg>`;
     const rect = () => sceneEl.getBoundingClientRect();
+    const mobileMql = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`);
+    const isMobile = () => mobileMql.matches;
+
+    const elementCenterInScene = (el: HTMLElement) => {
+      const er = el.getBoundingClientRect();
+      const sr = rect();
+      return {
+        x: er.left - sr.left + er.width / 2,
+        y: er.top - sr.top + er.height / 2,
+      };
+    };
     const palettes = [
       ["#ff8347", "#e0551f"],
       ["#f5894f", "#d9491a"],
@@ -269,15 +299,12 @@ export function ZenGrowHero() {
     }
 
     function center() {
-      const r = rect();
-      return { x: r.width * 0.42, y: r.height / 2 };
+      return elementCenterInScene(coreElement);
     }
     function calTarget() {
-      const cal = rootRef.current?.querySelector<HTMLElement>(".calendar");
-      if (!cal) return { x: 0, y: 0 };
-      const cr = cal.getBoundingClientRect();
-      const sr = rect();
-      return { x: cr.left - sr.left + cr.width / 2, y: cr.top - sr.top + cr.height / 2 };
+      const cal = rootEl.querySelector<HTMLElement>("[data-zg-calendar]");
+      if (!cal) return center();
+      return elementCenterInScene(cal);
     }
 
     function emitSpark() {
@@ -286,8 +313,10 @@ export function ZenGrowHero() {
       sceneEl.appendChild(s);
       const c = center();
       const tg = calTarget();
-      const cpX = (c.x + tg.x) / 2,
-        cpY = c.y - 100;
+      const cpX = (c.x + tg.x) / 2 + (isMobile() ? (Math.random() * 24 - 12) : 0);
+      const cpY = isMobile()
+        ? c.y + (tg.y - c.y) * 0.42
+        : c.y - 100;
       const dur = 900,
         start = performance.now();
       function step(now: number) {
@@ -315,29 +344,35 @@ export function ZenGrowHero() {
     function spawnVisitor() {
       const v = document.createElement("div");
       v.className = "visitor";
-      const size = 34 + Math.random() * 16;
+      const size = isMobile() ? 26 + Math.random() * 10 : 34 + Math.random() * 16;
       const pal = palettes[Math.floor(Math.random() * palettes.length)];
       v.innerHTML = `<div class="av" style="width:${size}px;height:${size}px;background:radial-gradient(circle at 38% 32%, ${pal[0]}, ${pal[1]})">${personSVG}<span class="ring-glow"></span></div>`;
       sceneEl.appendChild(v);
       const rg = v.querySelector<HTMLElement>(".ring-glow");
       const r = rect();
       const c = center();
-      const edge = Math.random();
       let sx: number, sy: number;
-      if (edge < 0.55) {
-        sx = -60;
-        sy = 40 + Math.random() * (r.height - 120);
-      } else if (edge < 0.78) {
-        sx = Math.random() * r.width * 0.38;
-        sy = -60;
+      if (isMobile()) {
+        const margin = 16;
+        sx = margin + Math.random() * Math.max(r.width - size - margin * 2, 40);
+        sy = -48 - Math.random() * 56;
       } else {
-        sx = Math.random() * r.width * 0.38;
-        sy = r.height + 60;
+        const edge = Math.random();
+        if (edge < 0.55) {
+          sx = -60;
+          sy = 40 + Math.random() * (r.height - 120);
+        } else if (edge < 0.78) {
+          sx = Math.random() * r.width * 0.38;
+          sy = -60;
+        } else {
+          sx = Math.random() * r.width * 0.38;
+          sy = r.height + 60;
+        }
       }
       const tx = c.x - size / 2,
         ty = c.y - size / 2;
-      const cpX = sx + (tx - sx) * 0.5 + (Math.random() * 160 - 80);
-      const cpY = sy + (ty - sy) * 0.5 + (Math.random() * 180 - 90);
+      const cpX = sx + (tx - sx) * 0.5 + (isMobile() ? Math.random() * 50 - 25 : Math.random() * 160 - 80);
+      const cpY = sy + (ty - sy) * 0.5 + (isMobile() ? Math.random() * 40 - 20 : Math.random() * 180 - 90);
       const dur = 2400 + Math.random() * 1200,
         start = performance.now();
       function step(now: number) {
@@ -405,21 +440,23 @@ export function ZenGrowHero() {
       </div>
 
       <div className="scene" data-zg-scene>
-        <div className="rays" />
-        <div className="halo" />
         <canvas className="fx" data-zg-fx />
 
-        <div className="core">
-          <span className="orbit o1" />
-          <span className="orbit o2" />
-          <span className="ripple a" />
-          <span className="ripple b" />
-          <span className="disc" />
-          <span className="flash" data-zg-flash />
-          <span className="mark">Z</span>
+        <div className="core-zone">
+          <div className="rays" />
+          <div className="halo" />
+          <div className="core" data-zg-core>
+            <span className="orbit o1" />
+            <span className="orbit o2" />
+            <span className="ripple a" />
+            <span className="ripple b" />
+            <span className="disc" />
+            <span className="flash" data-zg-flash />
+            <span className="mark">Z</span>
+          </div>
         </div>
 
-        <div className="calendar">
+        <div className="calendar" data-zg-calendar>
           <div className="cal-head">
             <span className="month">
               Mai<small>2026</small>
