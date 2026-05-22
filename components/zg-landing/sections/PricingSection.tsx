@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { Check } from "lucide-react";
+import { ZENGROW_PLAN_CATALOG, ZENGROW_TRIAL_DAYS } from "@/src/lib/billing/plan-catalog";
+import { cn } from "@/src/lib/utils";
 import {
   BlockHeader,
   Container,
@@ -9,17 +12,6 @@ import {
 } from "../ui";
 import { ScrollReveal } from "../ScrollReveal";
 
-const INCLUDED = [
-  "Réservations en ligne",
-  "Page restaurant partageable",
-  "Base clients",
-  "Relances IA",
-  "Campagnes marketing",
-  "Avis Google automatisés",
-  "Tableau de bord restaurateur",
-  "Support inclus",
-];
-
 export function PricingSection() {
   return (
     <Section id="tarifs" className="relative overflow-hidden">
@@ -27,40 +19,86 @@ export function PricingSection() {
       <Container>
         <ScrollReveal>
           <BlockHeader
-            title="Un outil pensé pour être rentable rapidement."
-            subtitle="Une table remplie en plus, quelques clients qui reviennent ou des avis Google plus réguliers peuvent déjà faire la différence."
+            title="Choisissez l'offre adaptée à votre restaurant."
+            subtitle="Une table remplie en plus ou quelques clients qui reviennent peuvent déjà rentabiliser votre abonnement."
           />
+          <p className="-mt-6 text-center text-sm font-medium text-violet-200/90">
+            {ZENGROW_TRIAL_DAYS} jours d&apos;essai gratuit · Sans carte bancaire pour commencer
+          </p>
         </ScrollReveal>
 
         <ScrollReveal delay={0.1}>
-          <div className="zg-pricing-shell mx-auto mt-14 max-w-2xl">
-            <div className="zg-pricing-glow" aria-hidden />
-            <div className="zg-pricing-card-inner">
-              <PremiumCard className="overflow-hidden !border-0 !shadow-none">
-                <div className="p-8 text-center md:p-10">
-                  <p className="zg-display text-2xl font-bold text-white">ZenGrow</p>
-                  <p className="zg-display mt-4 text-5xl font-bold text-white md:text-6xl">
-                    CHF 69
-                    <span className="text-xl font-medium text-[#9b8fb8]"> / mois</span>
+          <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2 md:items-stretch">
+            {ZENGROW_PLAN_CATALOG.map((plan) => {
+              const featured = plan.featured;
+
+              const cardBody = (
+                <div className="flex h-full flex-col p-7 md:p-8">
+                  {plan.badge ? (
+                    <span className="mb-4 inline-flex w-fit rounded-full border border-violet-400/35 bg-violet-500/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-100">
+                      {plan.badge}
+                    </span>
+                  ) : (
+                    <span className="mb-4 block h-6" aria-hidden />
+                  )}
+
+                  <p className="zg-display text-lg font-bold text-white">{plan.title}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-[#9b8fb8]">{plan.landingDescription}</p>
+
+                  <p className="zg-display mt-6 text-4xl font-bold tracking-tight text-white md:text-5xl">
+                    {plan.priceAmount}
+                    <span className="ml-1 text-base font-medium text-[#9b8fb8]">CHF / mois</span>
                   </p>
-                  <ul className="mx-auto mt-8 max-w-sm space-y-2.5 text-left text-sm text-white/90">
-                    {INCLUDED.map((item) => (
-                      <li key={item} className="flex items-center gap-2.5">
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-500/30">
-                          <Check className="h-3 w-3 text-violet-200" />
+                  <p className="mt-1 text-xs text-[#9b8fb8]/80">{plan.subtitle}</p>
+
+                  <ul className="mt-6 flex-1 space-y-2.5 border-t border-white/[0.06] pt-6">
+                    {plan.features.map((item) => (
+                      <li key={item} className="flex items-start gap-2.5 text-sm text-white/90">
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-500/25">
+                          <Check className="h-3 w-3 text-violet-200" strokeWidth={2.5} aria-hidden />
                         </span>
                         {item}
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-8">
-                    <PrimaryButton href="/signup" className="w-full justify-center sm:w-auto">
-                      Commencer maintenant
+
+                  {featured ? (
+                    <PrimaryButton href="/signup" className="mt-8 w-full justify-center">
+                      {plan.cta}
                     </PrimaryButton>
-                  </div>
+                  ) : (
+                    <Link
+                      href="/signup"
+                      className={cn(
+                        "zg-btn-ghost mt-8 w-full justify-center",
+                        "text-center",
+                      )}
+                    >
+                      {plan.cta}
+                    </Link>
+                  )}
                 </div>
-              </PremiumCard>
-            </div>
+              );
+
+              if (featured) {
+                return (
+                  <div key={plan.key} className="zg-pricing-shell relative md:-mt-1">
+                    <div className="zg-pricing-glow" aria-hidden />
+                    <div className="zg-pricing-card-inner h-full">
+                      <PremiumCard className="h-full overflow-hidden !border-0 !shadow-none">
+                        {cardBody}
+                      </PremiumCard>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <PremiumCard key={plan.key} glow className="h-full">
+                  {cardBody}
+                </PremiumCard>
+              );
+            })}
           </div>
         </ScrollReveal>
       </Container>
