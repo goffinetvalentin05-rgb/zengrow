@@ -33,18 +33,15 @@ export function Navbar() {
             scrolled && "zg-nav-shell--scrolled",
           )}
         >
-          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <Link href="/" className="flex shrink-0 items-center" aria-label="ZenGrow — accueil">
             <Image
               src="/logo-zengrow.png"
               alt="ZenGrow"
-              width={36}
-              height={36}
-              className="rounded-lg"
+              width={1680}
+              height={482}
+              className="h-7 w-auto sm:h-8 md:h-9"
               priority
             />
-            <span className="zg-display text-lg font-bold tracking-tight text-white">
-              ZenGrow
-            </span>
           </Link>
 
           <ul className="hidden items-center gap-8 md:flex">

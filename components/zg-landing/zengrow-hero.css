@@ -1,0 +1,600 @@
+/* ZenGrow Hero animation — scoped under .zghero */
+
+.zghero {
+  --zgh-violet: #7c5cff;
+  --zgh-violet-soft: #a78bfa;
+  --zgh-violet-bright: #8b5cf6;
+  --zgh-violet-pale: #c4b5fd;
+  --zgh-violet-dark: #5b21b6;
+  --zgh-violet-deep: #4c1d95;
+  --zgh-glow: rgba(124, 92, 255, 0.55);
+  --zgh-text: #f4f0ff;
+  --zgh-muted: #9b8fb8;
+  --zgh-muted-dim: rgba(155, 143, 184, 0.4);
+
+  position: relative;
+  width: 100%;
+  min-height: 480px;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--font-zg-body), system-ui, sans-serif;
+  color: var(--zgh-text);
+}
+
+/* Couches de fond décoratives désactivées — fond = landing page */
+.zghero .zghero-bg {
+  display: none;
+  pointer-events: none;
+}
+
+.zghero .zghero-scene {
+  position: relative;
+  width: 100%;
+  min-height: 480px;
+  height: 520px;
+  z-index: 2;
+  overflow: visible;
+}
+
+.zghero .zghero-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.zghero .zghero-core-wrap {
+  position: absolute;
+  left: 42%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 180px;
+  height: 180px;
+  z-index: 8;
+}
+
+.zghero .zghero-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 680px;
+  height: 680px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.22) 0%,
+    rgba(124, 92, 255, 0.06) 40%,
+    transparent 68%
+  );
+  filter: blur(16px);
+  animation: zg-halo-pulse 5s ease-in-out infinite;
+}
+
+.zghero .zghero-rays {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 760px;
+  height: 760px;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.5;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(124, 92, 255, 0.1) 12deg,
+    transparent 24deg,
+    transparent 60deg,
+    rgba(124, 92, 255, 0.07) 72deg,
+    transparent 84deg,
+    transparent 130deg,
+    rgba(124, 92, 255, 0.09) 142deg,
+    transparent 154deg,
+    transparent 220deg,
+    rgba(124, 92, 255, 0.07) 232deg,
+    transparent 244deg,
+    transparent 310deg,
+    rgba(124, 92, 255, 0.08) 322deg,
+    transparent 334deg
+  );
+  mask-image: radial-gradient(circle, transparent 24%, #000 38%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle, transparent 24%, #000 38%, transparent 70%);
+  filter: blur(3px);
+  animation: zg-spin 40s linear infinite;
+}
+
+.zghero .zghero-core {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zghero .zghero-core .orbit {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(124, 92, 255, 0.16);
+}
+
+.zghero .zghero-core .orbit.o1 {
+  inset: 0;
+}
+
+.zghero .zghero-core .orbit.o2 {
+  inset: -34px;
+  border-color: rgba(124, 92, 255, 0.09);
+}
+
+.zghero .zghero-core .ripple {
+  position: absolute;
+  inset: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(167, 139, 250, 0.45);
+}
+
+.zghero .zghero-core .ripple.a {
+  animation: zg-ripple 3.6s cubic-bezier(0.2, 0.6, 0.2, 1) infinite;
+}
+
+.zghero .zghero-core .ripple.b {
+  animation: zg-ripple 3.6s cubic-bezier(0.2, 0.6, 0.2, 1) infinite;
+  animation-delay: 1.8s;
+}
+
+.zghero .zghero-core .disc {
+  position: absolute;
+  inset: 42px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 35%,
+    var(--zgh-violet-pale) 0%,
+    var(--zgh-violet-bright) 30%,
+    var(--zgh-violet) 60%,
+    var(--zgh-violet-deep) 100%
+  );
+  box-shadow:
+    0 0 60px var(--zgh-glow),
+    0 0 120px rgba(124, 92, 255, 0.3),
+    inset 0 -9px 20px rgba(76, 29, 149, 0.5),
+    inset 0 6px 14px rgba(196, 181, 253, 0.45);
+  animation: zg-disc-breathe 3s ease-in-out infinite;
+}
+
+.zghero .zghero-core .flash {
+  position: absolute;
+  inset: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(221, 214, 254, 0.95) 0%, transparent 58%);
+  opacity: 0;
+  z-index: 9;
+}
+
+.zghero .zghero-core .flash.active {
+  animation: zg-flash-pop 0.5s ease-out;
+}
+
+.zghero .zghero-core .mark {
+  position: relative;
+  z-index: 10;
+  font-family: var(--font-zg-display), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 50px;
+  color: #fff;
+  text-shadow: 0 3px 22px rgba(49, 25, 99, 0.8);
+  letter-spacing: -0.04em;
+}
+
+.zghero .zghero-calendar {
+  position: absolute;
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%) perspective(1500px) rotateY(-12deg) rotateX(2deg);
+  width: min(420px, 42vw);
+  z-index: 7;
+  background: linear-gradient(160deg, rgba(28, 18, 48, 0.65), rgba(6, 4, 15, 0.88));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  padding: 30px 30px 26px;
+  -webkit-backdrop-filter: blur(28px);
+  backdrop-filter: blur(28px);
+  box-shadow:
+    0 70px 120px -36px rgba(0, 0, 0, 0.94),
+    0 0 110px -14px rgba(124, 92, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13),
+    inset 0 -38px 70px -34px rgba(0, 0, 0, 0.6);
+  animation: zg-floaty 7.5s ease-in-out infinite;
+}
+
+.zghero .cal-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.zghero .cal-head .month {
+  font-family: var(--font-zg-display), system-ui, sans-serif;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--zgh-text);
+}
+
+.zghero .cal-head .month small {
+  display: block;
+  font-family: var(--font-zg-body), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--zgh-muted);
+  letter-spacing: 0.04em;
+  margin-top: 5px;
+}
+
+.zghero .cal-head .live {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--zgh-violet-soft);
+  font-weight: 600;
+}
+
+.zghero .cal-head .live .d {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--zgh-violet-bright);
+  box-shadow: 0 0 9px var(--zgh-glow);
+  animation: zg-pulse 1.6s infinite;
+}
+
+.zghero .cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 9px;
+}
+
+.zghero .cal-grid .dow {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--zgh-muted-dim);
+  padding-bottom: 4px;
+  letter-spacing: 0.03em;
+}
+
+.zghero .cal-grid .cell {
+  aspect-ratio: 1;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--zgh-muted);
+  transition:
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.45s,
+    box-shadow 0.45s,
+    color 0.45s;
+}
+
+.zghero .cal-grid .cell.empty {
+  background: none;
+  border: none;
+}
+
+.zghero .cal-grid .cell.filled {
+  background: linear-gradient(155deg, var(--zgh-violet-bright), var(--zgh-violet));
+  color: #fff;
+  font-weight: 700;
+  border-color: transparent;
+  box-shadow: 0 6px 20px var(--zgh-glow);
+}
+
+.zghero .cal-grid .cell.justfilled {
+  animation: zg-day-pop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.zghero .cal-foot {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.zghero .cal-foot .count {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.zghero .cal-foot .count .cal-count-num {
+  color: #fff;
+  font-size: 32px;
+  font-weight: 700;
+  font-family: var(--font-zg-display), system-ui, sans-serif;
+  line-height: 1;
+}
+
+.zghero .cal-foot .count span:not(.cal-count-num) {
+  font-size: 13px;
+  color: var(--zgh-muted);
+}
+
+.zghero .cal-foot .tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--zgh-violet-pale);
+  background: rgba(124, 92, 255, 0.13);
+  border: 1px solid rgba(124, 92, 255, 0.26);
+  padding: 7px 13px;
+  border-radius: 999px;
+}
+
+.zghero .visitor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  z-index: 5;
+  will-change: transform, opacity;
+}
+
+.zghero .av {
+  position: relative;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.4),
+    0 0 16px rgba(124, 92, 255, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.zghero .av::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), transparent 50%);
+}
+
+.zghero .av svg {
+  width: 62%;
+  height: 62%;
+  position: relative;
+  z-index: 2;
+}
+
+.zghero .av .head {
+  fill: rgba(255, 255, 255, 0.92);
+}
+
+.zghero .av .body {
+  fill: rgba(255, 255, 255, 0.82);
+}
+
+.zghero .av .ring-glow {
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(196, 181, 253, 0.5);
+  opacity: 0;
+}
+
+.zghero .spark {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #fff 0%,
+    var(--zgh-violet-bright) 45%,
+    var(--zgh-violet) 100%
+  );
+  box-shadow:
+    0 0 26px var(--zgh-glow),
+    0 0 50px rgba(124, 92, 255, 0.4);
+  z-index: 6;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+@keyframes zg-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes zg-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes zg-disc-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes zg-halo-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+}
+
+@keyframes zg-ripple {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+@keyframes zg-flash-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+@keyframes zg-floaty {
+  0%,
+  100% {
+    transform: translateY(-50%) perspective(1500px) rotateY(-12deg) rotateX(2deg);
+  }
+  50% {
+    transform: translateY(-53%) perspective(1500px) rotateY(-12deg) rotateX(2deg);
+  }
+}
+
+@keyframes zg-floaty-static {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes zg-day-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1.06);
+  }
+}
+
+/* Mobile — vertical stack */
+@media (max-width: 767px) {
+  .zghero {
+    min-height: 640px;
+  }
+
+  .zghero .zghero-scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: auto;
+    min-height: 640px;
+    padding: 1.5rem 0.75rem 2rem;
+  }
+
+  .zghero .zghero-halo {
+    width: 420px;
+    height: 420px;
+  }
+
+  .zghero .zghero-rays {
+    width: 480px;
+    height: 480px;
+  }
+
+  .zghero .zghero-core-wrap {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+    margin-top: 0.5rem;
+  }
+
+  .zghero .zghero-core .disc {
+    inset: 28px;
+  }
+
+  .zghero .zghero-core .ripple {
+    inset: 14px;
+  }
+
+  .zghero .zghero-core .mark {
+    font-size: 36px;
+  }
+
+  .zghero .zghero-calendar {
+    position: relative;
+    right: auto;
+    top: auto;
+    transform: none;
+    width: min(100%, 340px);
+    margin: 2rem auto 0;
+    padding: 22px 20px 20px;
+    animation: zg-floaty-static 7.5s ease-in-out infinite;
+  }
+
+  .zghero .cal-head .month {
+    font-size: 24px;
+  }
+
+  .zghero .cal-grid {
+    gap: 6px;
+  }
+
+  .zghero .cal-grid .cell {
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  .zghero .cal-foot .count .cal-count-num {
+    font-size: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zghero .zghero-halo,
+  .zghero .zghero-rays,
+  .zghero .zghero-core .disc,
+  .zghero .zghero-calendar {
+    animation: none !important;
+  }
+}
