@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LandingPageV2 } from "@/components/landing-v2/LandingPage";
+import { LandingPage } from "@/components/landing-page/LandingPage";
 
 export const metadata: Metadata = {
   title: "ZenGrow — Remplissez votre restaurant grâce à l'IA",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  return <LandingPageV2 />;
+  return <LandingPage />;
 }
