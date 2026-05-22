@@ -100,6 +100,7 @@ export function GlassCard({
   hover,
   depth,
   danger,
+  problem,
   children,
 }: {
   className?: string;
@@ -108,6 +109,7 @@ export function GlassCard({
   hover?: boolean;
   depth?: boolean;
   danger?: boolean;
+  problem?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -119,6 +121,7 @@ export function GlassCard({
         hover && "zg-glass-interactive",
         depth && "zg-glass--depth",
         danger && "zg-glass--danger",
+        problem && "zg-glass--problem",
         className,
       )}
     >

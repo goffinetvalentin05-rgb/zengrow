@@ -7,7 +7,6 @@ import {
 } from "../ui";
 import {
   ScenarioClientNoFollowup,
-  ScenarioQuietNight,
   ScenarioReviewMissed,
   ScenarioVisitorLost,
 } from "../scenarios";
@@ -18,25 +17,16 @@ const SCENARIOS = [
     title: "Visiteur intéressé",
     caption: "Il découvre votre restaurant, mais ne réserve pas.",
     visual: <ScenarioVisitorLost />,
-    offset: "",
   },
   {
     title: "Client venu une fois",
     caption: "Il repart satisfait, puis vous oublie.",
     visual: <ScenarioClientNoFollowup />,
-    offset: "md:translate-y-8",
   },
   {
     title: "Avis oublié",
     caption: "Un client content ne laisse pas toujours un avis tout seul.",
     visual: <ScenarioReviewMissed />,
-    offset: "",
-  },
-  {
-    title: "Soirée calme",
-    caption: "Les périodes creuses restent difficiles à remplir.",
-    visual: <ScenarioQuietNight />,
-    offset: "md:translate-y-6",
   },
 ];
 
@@ -52,10 +42,15 @@ export function ProblemSection() {
           />
         </ScrollReveal>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:gap-6">
+        <div className="zg-pain-grid mt-14">
           {SCENARIOS.map((s, i) => (
-            <ScrollReveal key={s.title} delay={i * 0.06} className={s.offset}>
-              <PremiumCard danger depth hover className="flex h-full flex-col p-5 md:p-6">
+            <ScrollReveal key={s.title} delay={i * 0.06}>
+              <PremiumCard
+                danger
+                hover
+                problem
+                className="flex h-full flex-col p-5 md:p-6"
+              >
                 <h3 className="zg-display text-lg font-bold text-white md:text-xl">
                   {s.title}
                 </h3>

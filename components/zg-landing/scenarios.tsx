@@ -72,30 +72,6 @@ export function ScenarioReviewMissed() {
   );
 }
 
-/** Mardi soir calme */
-export function ScenarioQuietNight() {
-  return (
-    <div className="zg-mini-ui rounded-xl p-3">
-      <div className="flex items-center justify-between text-[10px]">
-        <span className="font-semibold text-white">Mardi · 19h</span>
-        <span className="text-red-300/90">2 / 12 tables</span>
-      </div>
-      <div className="mt-2 flex gap-1">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className={cn(
-              "h-6 flex-1 rounded",
-              i < 2 ? "bg-violet-500/40" : "bg-white/5",
-            )}
-          />
-        ))}
-      </div>
-      <p className="mt-2 text-[9px] font-medium text-violet-300">Action recommandée</p>
-    </div>
-  );
-}
-
 /** Hero — carte réservations */
 export function HeroCardReservations() {
   return (
