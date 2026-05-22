@@ -9,7 +9,7 @@ export function Card({ className, children }: DivProps) {
   return (
     <article
       className={cn(
-        "h-full rounded-2xl border border-zg-border bg-zg-surface p-6 transition-all duration-200 ease-out",
+        "zg-premium-card h-full p-6 transition-all duration-200 ease-out",
         "hover:border-zg-border-hover hover:bg-zg-card-hover",
         className,
       )}

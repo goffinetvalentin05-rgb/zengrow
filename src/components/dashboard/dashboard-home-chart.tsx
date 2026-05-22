@@ -148,7 +148,7 @@ export default function DashboardHomeChart({ series }: { series: DashboardChartD
                   cursor={{ fill: "rgba(255,255,255,0.04)" }}
                   contentStyle={{
                     background: "#1C1612",
-                    border: "1px solid rgba(232, 93, 44, 0.25)",
+                    border: "1px solid rgba(124, 92, 255, 0.3)",
                     borderRadius: "12px",
                     fontSize: "12px",
                     color: "#FAF7F2",

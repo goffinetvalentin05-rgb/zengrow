@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { zgBody, zgDisplay } from "@/components/zg-landing/fonts";
 import { Cormorant_Garamond, Dancing_Script, Geist, Geist_Mono, Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
@@ -64,7 +65,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${instrumentSerif.variable} ${cormorant.variable} ${dancingScript.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${instrumentSerif.variable} ${cormorant.variable} ${dancingScript.variable} ${zgDisplay.variable} ${zgBody.variable} antialiased`}
       >
         {children}
       </body>

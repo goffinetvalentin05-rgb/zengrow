@@ -164,7 +164,7 @@ export default function FeedbacksTrendChart() {
                   width={28}
                 />
                 <Tooltip
-                  cursor={{ stroke: "rgba(232, 93, 44, 0.2)", strokeWidth: 1 }}
+                  cursor={{ stroke: "rgba(124, 92, 255, 0.25)", strokeWidth: 1 }}
                   content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
                     const row = payload[0]?.payload as ChartRow | undefined;
@@ -172,8 +172,8 @@ export default function FeedbacksTrendChart() {
                     const count = row?.count ?? 0;
                     return (
                       <div className="rounded-xl border border-zg-accent/25 bg-[#1C1612] px-3 py-2 text-xs shadow-lg">
-                        <p className="font-medium text-[#B5ABA0]">{label}</p>
-                        <p className="mt-1 text-[#FAF7F2]">
+                        <p className="font-medium text-zg-text-muted">{label}</p>
+                        <p className="mt-1 text-zg-fg">
                           {avg != null ? `${avg.toLocaleString("fr-CH")} / 5` : "—"}
                           {count > 0 ? ` · ${count} avis` : ""}
                         </p>

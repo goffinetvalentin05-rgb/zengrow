@@ -169,7 +169,7 @@ export default function DashboardSidebar({
       {tipPortal}
       <motion.aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col bg-zg-sidebar-bg md:static md:z-0",
+          "fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col border-r border-zg-sidebar-border bg-zg-sidebar-bg/95 backdrop-blur-xl md:static md:z-0",
         )}
         initial={false}
         animate={animate}
@@ -380,7 +380,7 @@ function NavItem({
           locked
             ? "text-zg-on-dark-muted/80 hover:bg-white/[0.04] hover:text-zg-on-dark"
             : active
-              ? "bg-zg-accent text-white shadow-[0_0_24px_-8px_rgba(232,93,44,0.65)]"
+              ? "bg-gradient-to-br from-[#7c5cff] to-[#6366f1] text-white shadow-[0_0_24px_-8px_rgba(124,92,255,0.55)]"
               : "text-zg-on-dark-muted hover:bg-white/5 hover:text-zg-on-dark",
         )}
         aria-label={label}
@@ -409,7 +409,7 @@ function NavItem({
         locked
           ? "text-zg-on-dark-muted/80 hover:bg-white/[0.04] hover:text-zg-on-dark"
           : active
-            ? "bg-zg-accent text-white shadow-[0_0_24px_-8px_rgba(232,93,44,0.65)]"
+            ? "bg-gradient-to-br from-[#7c5cff] to-[#6366f1] text-white shadow-[0_0_24px_-8px_rgba(124,92,255,0.55)]"
             : "text-zg-on-dark-muted hover:bg-white/5 hover:text-zg-on-dark",
       )}
     >

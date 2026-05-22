@@ -14,9 +14,9 @@ const base =
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "border border-transparent bg-zg-accent text-white shadow-sm hover:scale-[1.02] hover:bg-zg-accent-hover hover:shadow-[0_0_28px_-6px_rgba(232,93,44,0.5)] focus-visible:ring-2 focus-visible:ring-zg-accent/20 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app active:scale-[0.99]",
+    "border border-transparent bg-gradient-to-br from-[#7c5cff] via-[#6366f1] to-[#4f46e5] text-white shadow-[0_12px_36px_-14px_rgba(124,92,255,0.45)] hover:scale-[1.02] hover:brightness-110 hover:shadow-[0_18px_44px_-12px_rgba(124,92,255,0.5)] focus-visible:ring-2 focus-visible:ring-zg-accent/30 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app active:scale-[0.99]",
   secondary:
-    "border border-zg-border bg-zg-surface text-zg-fg hover:scale-[1.02] hover:border-zg-border-hover hover:bg-zg-surface-elevated focus-visible:ring-2 focus-visible:ring-zg-accent/20 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app active:scale-[0.99]",
+    "border border-zg-border bg-zg-surface/80 text-zg-fg backdrop-blur-sm hover:scale-[1.02] hover:border-zg-border-hover hover:bg-zg-surface-elevated hover:shadow-[0_0_24px_-8px_rgba(124,92,255,0.2)] focus-visible:ring-2 focus-visible:ring-zg-accent/25 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app active:scale-[0.99]",
   ghost:
     "border border-transparent bg-transparent text-zg-text-secondary hover:bg-white/5 hover:text-zg-fg focus-visible:ring-2 focus-visible:ring-zg-accent/20 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
   ghostDark:

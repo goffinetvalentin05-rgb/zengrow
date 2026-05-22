@@ -3,7 +3,7 @@ import { cn } from "@/src/lib/utils";
 
 export function Table({ className, children, ...props }: TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-zg-border bg-zg-surface">
+    <div className="zg-premium-card overflow-x-auto">
       <table className={cn("w-full min-w-[480px] border-collapse text-left", className)} {...props}>
         {children}
       </table>

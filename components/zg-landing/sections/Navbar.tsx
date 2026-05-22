@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/src/lib/utils";
-import { Container, PrimaryButton } from "../ui";
+import { Container, GhostButton } from "../ui";
 
 const LINKS = [
   { href: "#workflow", label: "Comment ça marche" },
@@ -58,9 +58,9 @@ export function Navbar() {
           </ul>
 
           <div className="hidden md:block">
-            <PrimaryButton href="/signup" className="!min-h-10 !px-5 !text-sm">
-              Essayer ZenGrow
-            </PrimaryButton>
+            <GhostButton href="/login" className="!min-h-10 !px-5 !text-sm">
+              Connexion
+            </GhostButton>
           </div>
 
           <button
@@ -88,9 +88,9 @@ export function Navbar() {
                 </li>
               ))}
               <li className="pt-2">
-                <PrimaryButton href="/signup" className="w-full justify-center">
-                  Essayer ZenGrow
-                </PrimaryButton>
+                <GhostButton href="/login" className="w-full justify-center">
+                  Connexion
+                </GhostButton>
               </li>
             </ul>
           </div>

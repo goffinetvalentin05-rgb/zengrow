@@ -35,7 +35,7 @@ export function StatCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex h-full min-w-0 justify-between rounded-2xl border border-zg-border bg-zg-surface p-6 transition-all duration-200 ease-out",
+        "zg-premium-card flex h-full min-w-0 justify-between p-6 transition-all duration-200 ease-out",
         className,
       )}
       aria-hidden
@@ -71,7 +71,7 @@ export function StatCardHighlight({
       className={cn(
         "relative isolate flex h-full min-h-[220px] min-w-0 flex-col overflow-hidden rounded-2xl border p-6 transition-all duration-200 ease-out",
         isAccent
-          ? "border-white/25 bg-gradient-to-br from-zg-accent via-zg-accent to-zg-accent-hover text-white shadow-[0_0_60px_-12px_rgba(232,93,44,0.55)]"
+          ? "border-white/20 bg-gradient-to-br from-[#7c5cff] via-[#6366f1] to-[#4f46e5] text-white shadow-[0_0_60px_-12px_rgba(124,92,255,0.55)]"
           : "border-emerald-400/30 bg-gradient-to-br from-emerald-600 via-emerald-600 to-emerald-500 text-white shadow-[0_0_50px_-14px_rgba(34,197,94,0.45)]",
         className,
       )}
@@ -116,7 +116,7 @@ export default function StatCard({
   return (
     <div
       className={cn(
-        "flex h-full min-w-0 justify-between gap-4 rounded-2xl border border-zg-border bg-zg-surface p-6 transition-all duration-200 ease-out",
+        "zg-premium-card flex h-full min-w-0 justify-between gap-4 p-6 transition-all duration-200 ease-out",
         "hover:border-zg-border-hover hover:bg-zg-card-hover",
         className,
       )}

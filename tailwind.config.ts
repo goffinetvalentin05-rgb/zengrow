@@ -14,14 +14,14 @@ const config: Config = {
     extend: {
       colors: {
         landing: {
-          bg: "#050403",
-          section: "#120B07",
-          card: "#1B100B",
-          border: "#2A1F17",
-          fg: "#FFF7EF",
-          muted: "#AFA39A",
-          accent: "#FF5A2A",
-          "accent-soft": "#FF7A3D",
+          bg: "#06040f",
+          section: "#0c0818",
+          card: "#120e1a",
+          border: "rgb(255 255 255 / 0.1)",
+          fg: "#f4f0ff",
+          muted: "#9b8fb8",
+          accent: "#7c5cff",
+          "accent-soft": "#a78bfa",
         },
       },
       fontFamily: {

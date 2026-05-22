@@ -1,7 +1,7 @@
 "use client";
 
 import { ZenGrowHero } from "@/components/zg-landing/ZenGrowHero";
-import { Container, GhostButton, MegaTitle, PrimaryButton } from "../ui";
+import { Container, MegaTitle, PrimaryButton } from "../ui";
 
 export function HeroSection() {
   return (
@@ -19,9 +19,10 @@ export function HeroSection() {
             <p className="mt-5 text-sm font-semibold tracking-[0.12em] text-violet-200/95 uppercase">
               Attirer · Réserver · Relancer · Fidéliser
             </p>
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <PrimaryButton href="/signup">Essayer ZenGrow</PrimaryButton>
-              <GhostButton href="#workflow">Voir comment ça marche</GhostButton>
+            <div className="mt-9 flex justify-center">
+              <PrimaryButton href="/signup" className="!min-h-14 !px-8 !text-base sm:!text-lg">
+                Essayer ZenGrow
+              </PrimaryButton>
             </div>
           </div>
         </Container>

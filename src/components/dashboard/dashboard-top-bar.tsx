@@ -32,7 +32,7 @@ export default function DashboardTopBar({
   return (
     <header
       className={cn(
-        "relative flex h-[72px] shrink-0 items-center justify-between gap-4 bg-zg-app px-4 transition-colors duration-200 ease-out md:px-8",
+        "relative flex h-[72px] shrink-0 items-center justify-between gap-4 border-b border-zg-border/60 bg-zg-app/80 px-4 backdrop-blur-md transition-colors duration-200 ease-out md:px-8",
       )}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
@@ -59,7 +59,7 @@ export default function DashboardTopBar({
             />
           ) : (
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zg-accent text-sm font-semibold text-white shadow-[0_0_20px_-6px_rgba(232,93,44,0.55)]"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#7c5cff] to-[#6366f1] text-sm font-semibold text-white shadow-[0_0_20px_-6px_rgba(124,92,255,0.55)]"
               aria-hidden
             >
               {initials}

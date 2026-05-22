@@ -1,20 +1,21 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { cn } from "@/src/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ZenGrowAuthCard, ZenGrowAuthPageShell } from "@/src/components/auth/zengrow-auth-page-shell";
 import { createClient } from "@/src/lib/supabase/client";
+import {
+  authErrorClassName,
+  authFieldLabel,
+  authInputClassName,
+  authLinkClassName,
+  authSubmitClassName,
+  authBadgeClassName,
+} from "@/src/lib/auth/auth-form-styles";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
-
-const authFieldLabel = "mb-2 block text-xs font-medium uppercase tracking-wider text-landing-muted";
-
-const authInputClassName =
-  "min-h-[44px] w-full rounded-xl border border-landing-border bg-landing-bg px-4 py-3 text-sm text-landing-fg shadow-none placeholder:text-landing-muted/50 transition duration-200 focus:border-landing-accent focus:ring-2 focus:ring-landing-accent/20";
-
-const authSubmitClassName =
-  "h-12 w-full rounded-xl border-0 bg-landing-accent text-[15px] font-medium text-white shadow-[0_12px_36px_-14px_rgba(255,107,44,0.55)] transition hover:scale-[1.01] hover:bg-landing-accent/90 hover:shadow-[0_18px_44px_-12px_rgba(255,107,44,0.5)] focus-visible:ring-2 focus-visible:ring-landing-accent/35 focus-visible:ring-offset-2 focus-visible:ring-offset-landing-bg active:scale-[0.99] disabled:pointer-events-none disabled:opacity-60 disabled:hover:scale-100 disabled:hover:shadow-[0_12px_36px_-14px_rgba(255,107,44,0.55)]";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,11 +61,15 @@ export default function LoginPage() {
     <ZenGrowAuthPageShell variant="dark" footerLine={null}>
       <ZenGrowAuthCard variant="dark">
         <div className="mb-8 flex flex-col items-center text-center">
-          <p className="mb-2 font-landing-serif text-3xl italic text-landing-fg">ZenGrow</p>
-          <span className="mb-6 inline-flex rounded-full border border-landing-accent/20 bg-landing-accent/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-landing-accent">
+          <p className="mb-2 font-[family-name:var(--font-zg-display)] text-3xl font-bold tracking-tight text-landing-fg">
+            ZenGrow
+          </p>
+          <span className={cn("mb-6", authBadgeClassName)}>
             Espace professionnel
           </span>
-          <h1 className="mb-2 font-landing-serif text-3xl font-normal text-landing-fg">Connexion</h1>
+          <h1 className="mb-2 font-[family-name:var(--font-zg-display)] text-3xl font-bold tracking-tight text-landing-fg">
+            Connexion
+          </h1>
           <p className="mb-8 text-sm text-landing-muted">Accède à ton dashboard ZenGrow.</p>
           <p className="mb-8 max-w-sm text-pretty text-xs text-landing-muted">
             Gère tes réservations, ta page web, ta base clients et tes campagnes depuis un seul espace.
@@ -103,7 +108,7 @@ export default function LoginPage() {
               className={authInputClassName}
             />
             <div className="mt-2 flex justify-end">
-              <Link href="/forgot-password" className="text-xs text-landing-accent transition hover:underline">
+              <Link href="/forgot-password" className={cn("text-xs", authLinkClassName)}>
                 Mot de passe oublié ?
               </Link>
             </div>
@@ -118,7 +123,7 @@ export default function LoginPage() {
 
         <div className="mt-6 min-h-[1.25rem]" role="status" aria-live="polite" aria-atomic="true">
           {error ? (
-            <p className="rounded-xl border border-red-500/30 bg-red-950/50 px-3.5 py-3 text-sm leading-snug text-red-200/95">
+            <p className={authErrorClassName}>
               {error}
             </p>
           ) : null}
@@ -126,7 +131,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-landing-muted">
           Pas encore de compte ?{" "}
-          <Link href="/signup" className="text-landing-accent transition hover:underline">
+          <Link href="/signup" className={authLinkClassName}>
             Créer mon restaurant
           </Link>
         </p>

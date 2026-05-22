@@ -1,13 +1,8 @@
-import { Inter } from "next/font/google";
+import { zgBody } from "@/components/zg-landing/fonts";
 import { headers } from "next/headers";
 import DashboardShell from "@/src/components/dashboard/dashboard-shell";
 import { requireRestaurantSession } from "@/src/lib/auth";
 import type { EffectiveAccess } from "@/src/lib/access";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-});
 
 function initialsFromUser(meta: Record<string, unknown> | undefined, email: string | undefined) {
   const name = typeof meta?.full_name === "string" ? meta.full_name.trim() : "";
@@ -54,7 +49,7 @@ export default async function DashboardLayout({
 
   return (
     <DashboardShell
-      fontClassName={inter.className}
+      fontClassName={zgBody.className}
       restaurantId={restaurant.id}
       publicLink={publicLink}
       restaurantName={restaurant.name}

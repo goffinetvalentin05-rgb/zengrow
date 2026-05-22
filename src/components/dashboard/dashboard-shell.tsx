@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { AppAmbientBackground } from "@/src/components/app/app-ambient-background";
 import { cn } from "@/src/lib/utils";
 import DashboardSidebar from "@/src/components/dashboard/sidebar";
 import DashboardTopBar from "@/src/components/dashboard/dashboard-top-bar";
@@ -44,7 +45,8 @@ export default function DashboardShell({
     <DashboardToastProvider>
       <DashboardTitleProvider>
         <NotificationProvider restaurantId={restaurantId}>
-        <div className={cn(fontClassName, "min-h-screen bg-zg-app text-zg-fg antialiased")}>
+        <div className={cn(fontClassName, "relative min-h-screen bg-zg-app font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}>
+          <AppAmbientBackground />
           <AnimatePresence>
             {mobileNavOpen ? (
               <motion.button
@@ -61,7 +63,7 @@ export default function DashboardShell({
             ) : null}
           </AnimatePresence>
 
-          <div className="flex min-h-screen">
+          <div className="relative z-10 flex min-h-screen">
             <DashboardSidebar
               reservationLink={publicLink}
               subscriptionPlan={subscriptionPlan}
