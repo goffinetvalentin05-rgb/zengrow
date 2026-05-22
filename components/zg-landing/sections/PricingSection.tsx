@@ -24,13 +24,15 @@ export function PricingSection() {
       <SectionAmbient />
       <Container>
         <ScrollReveal>
-          <BlockHeader
-            title="Choisissez l'offre adaptée à votre restaurant."
-            subtitle="Deux formules simples en CHF / mois. Starter pour bien démarrer, Pro pour accélérer avec le marketing et l’IA."
-          />
-          <p className="-mt-6 text-center text-sm font-medium text-violet-200/90">
-            {ZENGROW_TRIAL_DAYS} jours d&apos;essai gratuit · Sans carte bancaire pour commencer
-          </p>
+          <div className="mx-auto max-w-2xl text-center">
+            <BlockHeader
+              title="Choisissez l'offre adaptée à votre restaurant."
+              subtitle="Deux formules simples en CHF / mois — Starter pour bien démarrer, Pro pour accélérer avec le marketing et l’IA."
+            />
+            <p className="mt-4 text-sm font-medium text-violet-200/90">
+              {ZENGROW_TRIAL_DAYS} jours d&apos;essai gratuit · Sans carte bancaire pour commencer
+            </p>
+          </div>
         </ScrollReveal>
 
         <ScrollReveal delay={0.1}>

@@ -830,3 +830,31 @@ body:has(.zg-landing) {
     transform: none !important;
   }
 }
+
+/* Footer — filigrane ZENGROW coupé (style Linear / Vercel) */
+.zg-landing footer {
+  --zg-footer-watermark-opacity: 0.06;
+}
+
+.zg-footer-watermark {
+  position: relative;
+  height: clamp(70px, 8vw, 140px);
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.zg-footer-watermark__text {
+  position: absolute;
+  left: 50%;
+  bottom: -0.34em;
+  transform: translateX(-50%);
+  font-family: var(--font-zg-display), system-ui, sans-serif;
+  font-size: clamp(80px, 18vw, 240px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  color: #f4f0ff;
+  opacity: var(--zg-footer-watermark-opacity);
+}

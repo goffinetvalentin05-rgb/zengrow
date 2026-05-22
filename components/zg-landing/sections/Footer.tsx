@@ -18,12 +18,12 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative border-t border-white/[0.06] bg-[#06040f]/80 pt-14 pb-8 backdrop-blur-sm">
+    <footer className="relative overflow-hidden border-t border-white/[0.06] bg-[#06040f]/80 pt-14 backdrop-blur-sm">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent"
         aria-hidden
       />
-      <Container>
+      <Container className="pb-8">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           <div className="lg:col-span-4">
             <Link href="/" className="inline-flex shrink-0" aria-label="ZenGrow — accueil">
@@ -111,6 +111,10 @@ export function Footer() {
           </p>
         </div>
       </Container>
+
+      <div className="zg-footer-watermark" aria-hidden>
+        <span className="zg-footer-watermark__text">ZENGROW</span>
+      </div>
     </footer>
   );
 }
