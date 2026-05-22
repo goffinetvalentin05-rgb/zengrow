@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { HeroOrbitDesktop, HeroOrbitMobile } from "@/components/landing/HeroProductCards";
+import { ZenGrowHero } from "@/components/ZenGrowHero";
 
 function HeroCopy() {
   return (
@@ -45,15 +45,6 @@ function HeroCopy() {
           Voir une démo
         </Link>
       </motion.div>
-
-      <motion.p
-        className="mt-5 text-xs text-[#AFA39A]/85 sm:text-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
-        Page restaurant · Réservations · Relances IA · Avis Google
-      </motion.p>
     </>
   );
 }
@@ -62,21 +53,12 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative w-full overflow-x-hidden px-4 pb-16 pt-[7rem] sm:px-6 sm:pb-20 sm:pt-[8.5rem]"
+      className="relative w-full overflow-x-hidden px-4 pt-[7rem] sm:px-6 sm:pt-[8.5rem]"
     >
-      <div className="relative mx-auto hidden min-h-[min(780px,92vh)] w-full max-w-[1280px] lg:block">
-        <HeroOrbitDesktop />
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="pointer-events-auto relative z-30 w-full max-w-lg px-6 py-8 text-center sm:max-w-xl sm:px-8">
-            <HeroCopy />
-          </div>
-        </div>
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-xl text-center lg:hidden">
+      <div className="relative z-10 mx-auto max-w-xl px-2 pb-6 text-center sm:max-w-xl sm:px-4 sm:pb-8">
         <HeroCopy />
-        <HeroOrbitMobile />
       </div>
+      <ZenGrowHero />
     </section>
   );
 }

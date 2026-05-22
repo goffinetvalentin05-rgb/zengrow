@@ -19,7 +19,6 @@ const ZG_HERO_STYLES = `
   .zghero .bg .floor{position:absolute;left:0;right:0;bottom:0;height:40%;background:radial-gradient(60% 100% at 50% 100%, rgba(240,106,50,.12) 0%, transparent 70%);filter:blur(20px)}
 
   .zghero .scene{position:relative;width:100vw;height:100vh;z-index:2}
-  .zghero .label{position:absolute;top:26px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--muted);opacity:.4;z-index:20}
 
   .zghero .fx{position:absolute;inset:0;z-index:3;pointer-events:none}
 
@@ -406,7 +405,6 @@ export function ZenGrowHero() {
       </div>
 
       <div className="scene" data-zg-scene>
-        <div className="label">ZenGrow · concept hero — V9</div>
         <div className="rays" />
         <div className="halo" />
         <canvas className="fx" data-zg-fx />
