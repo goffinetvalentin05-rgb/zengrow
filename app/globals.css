@@ -94,15 +94,17 @@ html:has(.zg-public-r-root) {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Landing ZenGrow */
-  --color-landing-bg: #050403;
-  --color-landing-section: #120b07;
-  --color-landing-card: #1b100b;
-  --color-landing-border: rgb(255 122 61 / 0.18);
-  --color-landing-fg: #fff7ef;
-  --color-landing-muted: #afa39a;
-  --color-landing-accent: #ff5a2a;
-  --color-landing-accent-soft: #ff7a3d;
+  /* Landing ZenGrow — dark blue / electric blue */
+  --color-landing-bg: #020610;
+  --color-landing-section: #061018;
+  --color-landing-card: #0a1628;
+  --color-landing-border: rgb(59 158 255 / 0.22);
+  --color-landing-fg: #eef6ff;
+  --color-landing-muted: #8ba3c7;
+  --color-landing-accent: #2b8cff;
+  --color-landing-accent-soft: #5eb3ff;
+  --color-landing-glow: rgb(43 140 255 / 0.45);
+  --color-landing-cyan: #38d4ff;
   --font-landing-serif: var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
 
   --color-zg-app: var(--zg-app);
@@ -681,7 +683,8 @@ button.zg-showroom-hero-cta--conversion:active {
 .landing-page {
   --border: rgb(255 255 255 / 0.06);
   --border-soft: rgb(255 255 255 / 0.06);
-  background-color: #050403;
+  background-color: #020610;
+  color: var(--color-landing-fg);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -702,41 +705,41 @@ button.zg-showroom-hero-cta--conversion:active {
   }
 
   .landing-surface:hover {
-    border-color: rgb(255 100 50 / 0.2);
-    box-shadow: 0 0 40px rgb(255 100 50 / 0.08);
+    border-color: rgb(59 158 255 / 0.28);
+    box-shadow: 0 0 40px rgb(43 140 255 / 0.12);
   }
 
   .landing-surface--glow {
-    box-shadow: 0 0 60px rgb(255 100 50 / 0.05);
+    box-shadow: 0 0 60px rgb(43 140 255 / 0.08);
   }
 
   .landing-surface--glow:hover {
     box-shadow:
-      0 0 40px rgb(255 100 50 / 0.08),
-      0 0 60px rgb(255 100 50 / 0.05);
+      0 0 40px rgb(43 140 255 / 0.14),
+      0 0 60px rgb(43 140 255 / 0.08);
   }
 
   .landing-surface--featured {
-    border-color: rgb(255 100 50 / 0.22);
-    background: rgb(255 255 255 / 0.03);
-    box-shadow: 0 0 48px rgb(255 100 50 / 0.1);
+    border-color: rgb(59 158 255 / 0.32);
+    background: rgb(43 140 255 / 0.06);
+    box-shadow: 0 0 48px rgb(43 140 255 / 0.18);
   }
 
   .landing-surface--featured:hover {
-    border-color: rgb(255 100 50 / 0.32);
-    box-shadow: 0 0 56px rgb(255 100 50 / 0.16);
+    border-color: rgb(94 179 255 / 0.42);
+    box-shadow: 0 0 56px rgb(43 140 255 / 0.24);
   }
 
   /* Navbar pill flottante (voir components/sections/Navbar.tsx) */
   .landing-navbar {
-    background: rgb(22 17 13 / 0.6);
+    background: rgb(6 16 32 / 0.72);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
-    border: 1px solid rgb(255 255 255 / 0.06);
+    border: 1px solid rgb(59 158 255 / 0.14);
     border-radius: 9999px;
     box-shadow:
-      0 25px 50px -12px rgb(0 0 0 / 0.35),
-      0 0 40px rgb(255 107 44 / 0.08);
+      0 25px 50px -12px rgb(0 0 0 / 0.45),
+      0 0 40px rgb(43 140 255 / 0.12);
     transition:
       background-color 300ms ease,
       border-color 300ms ease,
@@ -744,7 +747,7 @@ button.zg-showroom-hero-cta--conversion:active {
   }
 
   .landing-navbar--scrolled {
-    background: rgb(22 17 13 / 0.75);
+    background: rgb(6 16 32 / 0.88);
     border-color: rgb(255 255 255 / 0.08);
     -webkit-backdrop-filter: blur(24px);
     backdrop-filter: blur(24px);
@@ -762,9 +765,9 @@ button.zg-showroom-hero-cta--conversion:active {
   }
 
   .landing-btn-secondary:hover {
-    background: rgb(255 255 255 / 0.05);
-    border-color: rgb(255 100 50 / 0.4);
-    box-shadow: 0 0 20px rgb(255 100 50 / 0.1);
+    background: rgb(43 140 255 / 0.08);
+    border-color: rgb(59 158 255 / 0.45);
+    box-shadow: 0 0 20px rgb(43 140 255 / 0.15);
     color: rgb(255 255 255 / 0.95);
   }
 
@@ -772,7 +775,7 @@ button.zg-showroom-hero-cta--conversion:active {
     border-color: rgb(255 255 255 / 0.06) !important;
   }
 
-  /* Logo — halo discret aligné sur l’identité orange */
+  /* Logo — halo bleu électrique */
   .landing-logo-wrap {
     position: relative;
     isolation: isolate;
@@ -785,8 +788,8 @@ button.zg-showroom-hero-cta--conversion:active {
     border-radius: 50%;
     background: radial-gradient(
       ellipse 75% 58% at 50% 50%,
-      rgb(255 90 42 / 0.32),
-      rgb(255 122 61 / 0.1) 45%,
+      rgb(43 140 255 / 0.35),
+      rgb(56 212 255 / 0.1) 45%,
       transparent 72%
     );
     filter: blur(14px);
@@ -800,14 +803,14 @@ button.zg-showroom-hero-cta--conversion:active {
     opacity: 0.9;
     background: radial-gradient(
       ellipse 78% 62% at 50% 48%,
-      rgb(255 90 42 / 0.38),
-      rgb(255 122 61 / 0.12) 48%,
+      rgb(43 140 255 / 0.42),
+      rgb(56 212 255 / 0.14) 48%,
       transparent 74%
     );
   }
 
   .landing-logo-wrap img {
-    filter: drop-shadow(0 0 18px rgb(255 90 42 / 0.28))
+    filter: drop-shadow(0 0 18px rgb(43 140 255 / 0.35))
       drop-shadow(0 4px 14px rgb(0 0 0 / 0.45));
   }
 
@@ -818,7 +821,7 @@ button.zg-showroom-hero-cta--conversion:active {
     border-radius: 9999px;
     background: radial-gradient(
       ellipse 90% 120% at 50% 50%,
-      rgb(255 90 42 / 0.14),
+      rgb(43 140 255 / 0.16),
       transparent 68%
     );
     filter: blur(20px);

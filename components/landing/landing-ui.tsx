@@ -1,10 +1,21 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/src/lib/utils";
 
-/** Logo ZenGrow avec halo discret — cohérent navbar / hero */
+export const landingColors = {
+  fg: "#EEF6FF",
+  muted: "#8BA3C7",
+  accent: "#2B8CFF",
+  accentSoft: "#5EB3FF",
+  cyan: "#38D4FF",
+  border: "rgba(59, 158, 255, 0.22)",
+  cardBg: "rgba(8, 22, 48, 0.55)",
+} as const;
+
+/** Logo ZenGrow avec halo discret */
 export function LandingLogo({
   variant = "navbar",
   priority = false,
@@ -40,47 +51,44 @@ export function LandingLogo({
   );
 }
 
-/** Atmosphère locale du hero — halos et reflets derrière le bloc texte */
 export function HeroAtmosphere() {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-[min(720px,95vh)] overflow-hidden" aria-hidden>
       <motion.div
-        className="absolute left-1/2 top-[18%] h-[min(420px,72vw)] w-[min(520px,88vw)] -translate-x-1/2 rounded-full opacity-90"
+        className="absolute left-1/2 top-[16%] h-[min(440px,74vw)] w-[min(540px,90vw)] -translate-x-1/2 rounded-full opacity-90"
         style={{
           background:
-            "radial-gradient(ellipse 70% 55% at 50% 45%, rgba(255, 90, 42, 0.2) 0%, rgba(255, 122, 61, 0.08) 42%, transparent 72%)",
+            "radial-gradient(ellipse 70% 55% at 50% 45%, rgba(43, 140, 255, 0.22) 0%, rgba(56, 212, 255, 0.08) 42%, transparent 72%)",
         }}
-        animate={{ opacity: [0.72, 0.92, 0.72], scale: [1, 1.04, 1] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ opacity: [0.65, 0.9, 0.65], scale: [1, 1.05, 1] }}
+        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute -left-[8%] top-[28%] h-[min(280px,50vw)] w-[min(280px,50vw)] rounded-full blur-2xl"
+        className="absolute -left-[10%] top-[26%] h-[min(300px,52vw)] w-[min(300px,52vw)] rounded-full blur-3xl"
         style={{
-          background: "radial-gradient(circle, rgba(246, 168, 90, 0.12) 0%, transparent 68%)",
+          background: "radial-gradient(circle, rgba(56, 212, 255, 0.14) 0%, transparent 68%)",
         }}
-        animate={{ opacity: [0.45, 0.65, 0.45], x: [0, 12, 0] }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        animate={{ opacity: [0.4, 0.62, 0.4], x: [0, 14, 0] }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       />
       <motion.div
-        className="absolute -right-[6%] top-[32%] h-[min(240px,44vw)] w-[min(240px,44vw)] rounded-full blur-2xl"
+        className="absolute -right-[8%] top-[30%] h-[min(260px,46vw)] w-[min(260px,46vw)] rounded-full blur-3xl"
         style={{
-          background: "radial-gradient(circle, rgba(255, 90, 42, 0.1) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(43, 140, 255, 0.12) 0%, transparent 70%)",
         }}
-        animate={{ opacity: [0.4, 0.58, 0.4], x: [0, -10, 0] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        animate={{ opacity: [0.35, 0.55, 0.35], x: [0, -12, 0] }}
+        transition={{ duration: 13, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
       />
       <div
         className="absolute inset-x-0 top-0 h-48"
         style={{
-          background:
-            "linear-gradient(180deg, rgba(255, 122, 61, 0.06) 0%, transparent 100%)",
+          background: "linear-gradient(180deg, rgba(43, 140, 255, 0.08) 0%, transparent 100%)",
         }}
       />
       <div
         className="absolute inset-x-0 bottom-0 h-40"
         style={{
-          background:
-            "linear-gradient(0deg, rgba(5, 4, 3, 0.85) 0%, transparent 100%)",
+          background: "linear-gradient(0deg, rgba(2, 6, 16, 0.9) 0%, transparent 100%)",
         }}
       />
     </div>
@@ -90,11 +98,11 @@ export function HeroAtmosphere() {
 export function LandingDotGrid({ className }: { className?: string }) {
   return (
     <div
-      className={cn("pointer-events-none absolute inset-0 opacity-[0.35]", className)}
+      className={cn("pointer-events-none absolute inset-0 opacity-[0.32]", className)}
       aria-hidden
       style={{
         backgroundImage:
-          "radial-gradient(circle at 1px 1px, rgba(255, 122, 61, 0.14) 1px, transparent 0)",
+          "radial-gradient(circle at 1px 1px, rgba(59, 158, 255, 0.16) 1px, transparent 0)",
         backgroundSize: "28px 28px",
         maskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%)",
       }}
@@ -106,21 +114,15 @@ export function LandingGlows() {
   return (
     <>
       <motion.div
-        className="pointer-events-none absolute -left-[20%] top-[8%] h-[min(520px,70vw)] w-[min(520px,70vw)] rounded-full bg-[radial-gradient(circle,rgba(255,90,42,0.26),transparent_68%)] blur-3xl"
-        animate={{ opacity: [0.58, 0.8, 0.58], scale: [1, 1.05, 1] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute -left-[20%] top-[8%] h-[min(520px,70vw)] w-[min(520px,70vw)] rounded-full bg-[radial-gradient(circle,rgba(43,140,255,0.28),transparent_68%)] blur-3xl"
+        animate={{ opacity: [0.5, 0.78, 0.5], scale: [1, 1.05, 1] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         aria-hidden
       />
       <motion.div
-        className="pointer-events-none absolute -right-[18%] top-[18%] h-[min(480px,65vw)] w-[min(480px,65vw)] rounded-full bg-[radial-gradient(circle,rgba(246,168,90,0.18),transparent_70%)] blur-3xl"
-        animate={{ opacity: [0.45, 0.68, 0.45], scale: [1.02, 1, 1.02] }}
-        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        aria-hidden
-      />
-      <motion.div
-        className="pointer-events-none absolute left-1/2 top-[42%] h-[min(360px,55vw)] w-[min(400px,60vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,122,61,0.08),transparent_72%)] blur-3xl"
-        animate={{ opacity: [0.35, 0.52, 0.35] }}
-        transition={{ duration: 13, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        className="pointer-events-none absolute -right-[18%] top-[18%] h-[min(480px,65vw)] w-[min(480px,65vw)] rounded-full bg-[radial-gradient(circle,rgba(56,212,255,0.16),transparent_70%)] blur-3xl"
+        animate={{ opacity: [0.4, 0.65, 0.4], scale: [1.02, 1, 1.02] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         aria-hidden
       />
     </>
@@ -141,16 +143,16 @@ export function GlassCard({
   return (
     <motion.div
       className={cn(
-        "rounded-2xl border border-[rgba(255,122,61,0.2)] bg-[rgba(255,255,255,0.045)] p-4 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl sm:rounded-3xl sm:p-5",
+        "rounded-2xl border border-[rgba(59,158,255,0.2)] bg-[rgba(8,22,48,0.5)] p-4 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.07)] backdrop-blur-xl sm:rounded-3xl sm:p-5",
         featured &&
-          "border-[rgba(255,90,42,0.32)] bg-[rgba(255,90,42,0.07)] shadow-[0_0_56px_-10px_rgba(255,90,42,0.32),inset_0_1px_0_rgba(255,180,130,0.12)]",
+          "border-[rgba(43,140,255,0.35)] bg-[rgba(43,140,255,0.08)] shadow-[0_0_56px_-10px_rgba(43,140,255,0.35),inset_0_1px_0_rgba(180,220,255,0.12)]",
         className,
       )}
       animate={{ y: [0, -5, 0] }}
       transition={{ duration: 6 + floatDelay, repeat: Infinity, ease: "easeInOut", delay: floatDelay }}
       whileHover={{
-        borderColor: "rgba(255, 122, 61, 0.32)",
-        boxShadow: "0 0 40px rgba(255, 90, 42, 0.12)",
+        borderColor: "rgba(94, 179, 255, 0.38)",
+        boxShadow: "0 0 48px rgba(43, 140, 255, 0.16)",
       }}
     >
       {children}
@@ -160,29 +162,8 @@ export function GlassCard({
 
 export function LandingBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,122,61,0.22)] bg-[rgba(255,90,42,0.08)] px-3.5 py-1.5 text-xs font-medium tracking-wide text-[#F6A85A]">
-      <span className="size-1.5 rounded-full bg-[#FF7A3D] shadow-[0_0_8px_rgba(255,122,61,0.8)]" aria-hidden />
-      {children}
-    </span>
-  );
-}
-
-export function StatusBadge({
-  children,
-  variant = "default",
-}: {
-  children: React.ReactNode;
-  variant?: "default" | "success";
-}) {
-  return (
-    <span
-      className={cn(
-        "rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-        variant === "success"
-          ? "bg-[rgba(34,197,94,0.15)] text-emerald-300"
-          : "bg-[rgba(255,90,42,0.15)] text-[#FF7A3D]",
-      )}
-    >
+    <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(59,158,255,0.28)] bg-[rgba(43,140,255,0.1)] px-3.5 py-1.5 text-xs font-medium tracking-wide text-[#5EB3FF]">
+      <span className="size-1.5 rounded-full bg-[#38D4FF] shadow-[0_0_10px_rgba(56,212,255,0.85)]" aria-hidden />
       {children}
     </span>
   );
@@ -211,17 +192,65 @@ export function SectionTitle({
   title,
   subtitle,
   className,
+  align = "center",
 }: {
   title: React.ReactNode;
   subtitle?: string;
   className?: string;
+  align?: "center" | "left";
 }) {
   return (
-    <div className={cn("mx-auto mb-12 max-w-3xl text-center sm:mb-16", className)}>
-      <h2 className="font-landing-serif text-[clamp(1.75rem,4vw,2.75rem)] font-normal leading-tight text-[#FFF7EF]">
+    <div
+      className={cn(
+        "mx-auto mb-12 max-w-3xl sm:mb-16",
+        align === "center" ? "text-center" : "text-left",
+        className,
+      )}
+    >
+      <h2 className="font-landing-serif text-[clamp(1.75rem,4vw,2.75rem)] font-normal leading-tight text-[#EEF6FF]">
         {title}
       </h2>
-      {subtitle ? <p className="mt-4 text-base leading-relaxed text-[#AFA39A] sm:text-lg">{subtitle}</p> : null}
+      {subtitle ? (
+        <p className="mt-4 text-base leading-relaxed text-[#8BA3C7] sm:text-lg">{subtitle}</p>
+      ) : null}
     </div>
+  );
+}
+
+export function LandingPrimaryButton({
+  href,
+  children,
+  className,
+}: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "inline-flex min-h-12 items-center justify-center rounded-full bg-[#2B8CFF] px-8 text-sm font-semibold text-white shadow-[0_0_48px_-8px_rgba(43,140,255,0.85)] transition hover:bg-[#5EB3FF] hover:shadow-[0_0_56px_-6px_rgba(94,179,255,0.9)]",
+        className,
+      )}
+    >
+      {children}
+    </Link>
+  );
+}
+
+export function LandingSecondaryButton({
+  href,
+  children,
+  className,
+}: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Link href={href} className={cn("landing-btn-secondary inline-flex min-h-12 items-center justify-center rounded-full px-8 text-sm font-medium", className)}>
+      {children}
+    </Link>
   );
 }

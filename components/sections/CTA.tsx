@@ -1,37 +1,34 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
+import {
+  LandingPrimaryButton,
+  LandingSecondaryButton,
+} from "@/components/landing/landing-ui";
 import { Reveal } from "@/components/sections/Reveal";
 
 export function CTA() {
   return (
     <section id="cta" className="relative w-full overflow-hidden pb-20 pt-24 sm:pb-28 sm:pt-32">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-1/2 h-[min(420px,70vw)] -translate-y-1/2 bg-[radial-gradient(ellipse,rgba(43,140,255,0.12),transparent_65%)]"
+        aria-hidden
+      />
+
       <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center px-4 py-12 text-center sm:px-6 sm:py-16">
         <Reveal className="flex w-full flex-col items-center">
-          <h2 className="max-w-2xl font-landing-serif text-[clamp(1.85rem,4.5vw,3rem)] font-normal leading-tight text-[#FFF7EF]">
-            Votre restaurant a déjà des clients. ZenGrow les fait{" "}
-            <span className="text-[#f06a32]">revenir</span>.
+          <h2 className="max-w-2xl font-landing-serif text-[clamp(1.85rem,4.5vw,3rem)] font-normal leading-tight text-[#EEF6FF]">
+            Faites revenir vos clients. Remplissez vos tables.
           </h2>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-[#AFA39A]">
-            Créez votre page de réservation, automatisez vos relances et remplissez vos tables plus souvent
-            grâce à l&apos;IA.
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-[#8BA3C7]">
+            Avec ZenGrow, votre restaurant dispose d&apos;une page de réservation, de relances IA, de
+            campagnes marketing et d&apos;un système pour récolter plus d&apos;avis Google.
           </p>
           <div className="mt-10 flex w-full max-w-md flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center">
-            <Link
-              href="/signup"
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#FF5A2A] px-8 text-sm font-semibold text-white shadow-[0_0_48px_-10px_rgba(255,90,42,0.85)] transition hover:bg-[#FF7A3D] hover:brightness-110"
-            >
-              Commencer maintenant
-            </Link>
-            <Link
-              href="/#ia"
-              className="landing-btn-secondary inline-flex min-h-12 items-center justify-center rounded-full px-8 text-sm font-medium"
-            >
-              Voir une démo
-            </Link>
+            <LandingPrimaryButton href="/signup">Commencer maintenant</LandingPrimaryButton>
+            <LandingSecondaryButton href="/#ia">Voir une démo</LandingSecondaryButton>
           </div>
-          <p className="mt-6 text-xs text-[#AFA39A]/85 sm:text-sm">
+          <p className="mt-6 text-xs text-[#8BA3C7]/90 sm:text-sm">
             Simple à lancer. Pensé pour les restaurants. Propulsé par l&apos;IA.
           </p>
         </Reveal>
@@ -46,8 +43,8 @@ export function CTA() {
         aria-hidden
       >
         <span
-          className="bg-gradient-to-b from-[rgba(255,90,42,0.28)] via-[rgba(120,60,30,0.14)] to-transparent bg-clip-text text-transparent"
-          style={{ WebkitTextStroke: "1px rgba(255, 122, 61, 0.1)" }}
+          className="bg-gradient-to-b from-[rgba(43,140,255,0.32)] via-[rgba(30,80,160,0.14)] to-transparent bg-clip-text text-transparent"
+          style={{ WebkitTextStroke: "1px rgba(59, 158, 255, 0.12)" }}
         >
           ZENGROW
         </span>

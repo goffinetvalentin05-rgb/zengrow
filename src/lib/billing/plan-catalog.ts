@@ -30,7 +30,8 @@ export const ZENGROW_PLAN_CATALOG: readonly PlanCatalogItem[] = [
     cta: "Choisir Starter",
     featured: false,
     landingHeadline: "Pour démarrer",
-    landingDescription: "Une page restaurant et les réservations en ligne.",
+    landingDescription:
+      "Une page de réservation claire pour présenter votre restaurant et recevoir vos premières réservations en ligne.",
     features: [
       "Réservations en ligne",
       "Gestion des disponibilités",
@@ -50,7 +51,8 @@ export const ZENGROW_PLAN_CATALOG: readonly PlanCatalogItem[] = [
     featured: true,
     badge: "Le plus choisi",
     landingHeadline: "Pour faire revenir vos clients",
-    landingDescription: "Réservations, base clients, relances IA et avis Google.",
+    landingDescription:
+      "Réservations, base clients, relances IA, campagnes marketing et avis Google.",
     features: [
       "Tout le plan Starter",
       "Campagnes e-mail marketing",
