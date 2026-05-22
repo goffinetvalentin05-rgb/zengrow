@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LandingGlobalBackground } from "@/components/landing/LandingGlobalBackground";
 import { Navbar } from "@/components/sections/Navbar";
 import { Hero } from "@/components/sections/Hero";
+import { ZenGrowHero } from "@/components/ZenGrowHero";
 import { Problem } from "@/components/sections/Problem";
 import { Credibility } from "@/components/sections/Credibility";
 import { Solution } from "@/components/sections/Solution";
@@ -31,6 +32,7 @@ export default function Home() {
         <Navbar />
         <main>
           <Hero />
+          <ZenGrowHero />
           <Problem />
           <Solution />
           <WhyZenGrow />
