@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ZenGrowHero } from "@/components/ZenGrowHero";
@@ -7,6 +8,22 @@ import { ZenGrowHero } from "@/components/ZenGrowHero";
 function HeroCopy() {
   return (
     <>
+      <motion.div
+        className="mb-7 flex justify-center sm:mb-8"
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <Image
+          src="/logo-zengrow.png"
+          alt="ZenGrow"
+          width={200}
+          height={56}
+          className="h-10 w-auto max-w-[min(220px,72vw)] object-contain sm:h-12"
+          priority
+        />
+      </motion.div>
+
       <motion.h1
         className="font-landing-serif text-[clamp(2rem,5.5vw,3.35rem)] font-normal leading-[1.08] text-[#FFF7EF]"
         initial={{ opacity: 0, y: 22 }}

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
@@ -39,10 +40,18 @@ export function Navbar() {
       >
         <Link
           href="/"
-          className="shrink-0 font-landing-serif text-lg font-normal italic tracking-tight text-[#FFF7EF] sm:text-xl"
+          className="flex shrink-0 items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A3D]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-lg"
           onClick={() => setOpen(false)}
+          aria-label="ZenGrow — accueil"
         >
-          ZenGrow
+          <Image
+            src="/logo-zengrow.png"
+            alt="ZenGrow"
+            width={160}
+            height={44}
+            className="h-7 w-auto max-w-[120px] object-contain sm:h-8 sm:max-w-[140px]"
+            priority
+          />
         </Link>
 
         <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-6 lg:flex xl:gap-8">
