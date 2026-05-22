@@ -2,21 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { PrimaryButton } from "@/components/landing-page/ui";
 import { cn } from "@/src/lib/utils";
-import { Container, PrimaryButton, SecondaryButton } from "@/components/landing-page/ui";
 
-const LINKS = [
-  { href: "#produit", label: "Produit" },
-  { href: "#ia", label: "IA" },
+const NAV_LINKS = [
   { href: "#fonctionnalites", label: "Fonctionnalités" },
-  { href: "#tarifs", label: "Tarifs" },
+  { href: "#comment-ca-marche", label: "Comment ça marche" },
   { href: "#faq", label: "FAQ" },
+  { href: "#tarifs", label: "Tarifs" },
 ] as const;
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -25,80 +25,75 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 border-b transition-colors duration-300",
-        scrolled
-          ? "border-[rgba(27,79,255,0.2)] bg-[rgba(0,0,5,0.82)] backdrop-blur-xl"
-          : "border-transparent bg-transparent",
-      )}
-    >
-      <Container className="flex h-16 items-center justify-between gap-4 md:h-[4.25rem]">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
+    <header className={cn("zg-lp-nav zg-lp-body", scrolled && "zg-lp-nav--scrolled")}>
+      <div className="zg-lp-container flex h-16 items-center justify-between gap-4 md:h-[4.25rem]">
+        <Link href="/" className="relative z-10 flex shrink-0 items-center gap-2.5" onClick={() => setOpen(false)}>
           <Image
             src="/logo-zengrow.png"
             alt="ZenGrow"
-            width={140}
-            height={40}
-            className="h-8 w-auto sm:h-9"
+            width={120}
+            height={32}
+            className="h-7 w-auto brightness-0 invert md:h-8"
             priority
           />
         </Link>
 
-        <nav
-          className="zg-lp-nav-pill hidden items-center gap-1 px-2 py-1.5 md:flex"
-          aria-label="Navigation principale"
-        >
-          {LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="rounded-full px-3 py-1.5 text-sm text-[#8BA3C7] transition hover:bg-[rgba(27,79,255,0.12)] hover:text-[#EEF6FF]"
+        <nav className="hidden items-center gap-8 md:flex" aria-label="Navigation principale">
+          {NAV_LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="text-sm font-medium text-[var(--zg-muted)] transition-colors hover:text-[var(--zg-fg)]"
             >
-              {l.label}
-            </Link>
+              {link.label}
+            </a>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 sm:flex">
-          <SecondaryButton href="/login" className="min-h-9 px-4 text-sm">
-            Connexion
-          </SecondaryButton>
-          <PrimaryButton href="/signup" className="min-h-9 px-4 text-sm">
-            Commencer
+        <div className="hidden items-center gap-3 md:flex">
+          <PrimaryButton href="/signup" className="min-h-10 px-5 text-sm" showArrow>
+            Commencer maintenant
           </PrimaryButton>
         </div>
 
         <button
           type="button"
-          className="rounded-lg border border-[rgba(27,79,255,0.25)] px-3 py-2 text-sm text-[#EEF6FF] md:hidden"
+          className="relative z-10 flex size-10 items-center justify-center rounded-lg border border-[var(--zg-border-soft)] text-[var(--zg-fg)] md:hidden"
           aria-expanded={open}
-          aria-controls="zg-mobile-nav"
+          aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
           onClick={() => setOpen((v) => !v)}
         >
-          Menu
+          {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
-      </Container>
+      </div>
 
       {open ? (
-        <div id="zg-mobile-nav" className="border-t border-[rgba(27,79,255,0.15)] bg-[rgba(0,0,5,0.95)] md:hidden">
-          <Container className="flex flex-col gap-1 py-4">
-            {LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="rounded-lg px-3 py-2.5 text-[#EEF6FF]"
+        <div className="fixed inset-0 top-16 z-40 border-t border-[var(--zg-border-soft)] bg-[rgba(3,0,5,0.96)] backdrop-blur-xl md:hidden">
+          <nav className="zg-lp-container flex flex-col gap-1 py-6" aria-label="Navigation mobile">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="rounded-lg px-3 py-3.5 text-base font-medium text-[var(--zg-fg)] transition-colors hover:bg-white/5"
                 onClick={() => setOpen(false)}
               >
-                {l.label}
-              </Link>
+                {link.label}
+              </a>
             ))}
-            <div className="mt-3 flex flex-col gap-2">
-              <SecondaryButton href="/login">Connexion</SecondaryButton>
-              <PrimaryButton href="/signup">Commencer</PrimaryButton>
+            <div className="mt-4 pt-4">
+              <PrimaryButton href="/signup" className="w-full justify-center" showArrow onClick={() => setOpen(false)}>
+                Commencer maintenant
+              </PrimaryButton>
             </div>
-          </Container>
+          </nav>
         </div>
       ) : null}
     </header>

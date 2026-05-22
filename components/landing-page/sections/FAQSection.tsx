@@ -1,52 +1,73 @@
-import { Container, GlassCard, Section, SectionHeader } from "@/components/landing-page/ui";
+"use client";
+
+import * as Accordion from "@radix-ui/react-accordion";
+import { ChevronDown } from "lucide-react";
+import { Container, Section, SectionHeader } from "@/components/landing-page/ui";
 import { ScrollReveal } from "@/components/landing-page/ScrollReveal";
 
 const FAQ_ITEMS = [
   {
-    q: "ZenGrow est-il seulement un outil de réservation ?",
-    a: "Non. ZenGrow combine page de réservation, relances IA, campagnes marketing et avis Google.",
+    q: "Est-ce que ZenGrow est seulement un outil de réservation ?",
+    a: "Non. La réservation fait partie de ZenGrow, mais le vrai objectif est plus large : vous aider à faire revenir vos clients, créer des campagnes, automatiser vos avis Google et remplir vos tables plus régulièrement.",
   },
   {
-    q: "Est-ce que ZenGrow peut remplacer mon site ?",
-    a: "Oui. ZenGrow peut servir de page principale pour votre restaurant ou compléter votre site actuel avec une page pensée pour convertir.",
+    q: "Comment l'IA aide concrètement mon restaurant ?",
+    a: "L'IA vous aide à trouver des idées de campagnes, écrire des messages, identifier les clients à relancer et proposer des actions simples pour générer plus de réservations.",
   },
   {
-    q: "L'IA envoie-t-elle les messages automatiquement ?",
-    a: "Non. ZenGrow prépare les messages, mais vous gardez toujours la validation avant l'envoi.",
+    q: "Est-ce que je dois savoir utiliser l'IA ?",
+    a: "Non. ZenGrow est pensé pour être simple. Vous n'avez pas besoin de savoir utiliser ChatGPT ou un autre outil. L'IA est directement intégrée dans la plateforme.",
   },
   {
-    q: "Pourquoi les avis Google sont importants ?",
-    a: "Parce qu'ils rassurent les futurs clients. Une meilleure réputation en ligne peut aider votre restaurant à inspirer plus de confiance avant la réservation.",
+    q: "Est-ce que ZenGrow peut m'aider à avoir plus d'avis Google ?",
+    a: "Oui. Après une visite confirmée, ZenGrow peut envoyer automatiquement une demande d'avis à vos clients.",
   },
   {
-    q: "Est-ce adapté à un petit restaurant ?",
-    a: "Oui. ZenGrow est pensé pour être simple, rapide à mettre en place et utile même pour un restaurant indépendant.",
+    q: "Est-ce que je garde le contrôle sur les messages ?",
+    a: "Oui. ZenGrow peut proposer ou générer des messages, mais vous pouvez toujours les modifier, les valider et décider quand les envoyer.",
   },
   {
-    q: "Puis-je personnaliser ma page ?",
-    a: "Oui. Vous pouvez modifier vos textes, photos, horaires, menu, couleurs et informations.",
+    q: "Est-ce que ZenGrow peut faire revenir mes anciens clients ?",
+    a: "Oui. C'est l'un des objectifs principaux. ZenGrow vous aide à identifier les clients à relancer et à créer des messages adaptés pour leur donner envie de revenir.",
+  },
+  {
+    q: "Est-ce que mes clients doivent télécharger une application ?",
+    a: "Non. Vos clients n'ont rien à télécharger. Ils peuvent réserver ou interagir depuis un simple lien.",
+  },
+  {
+    q: "Est-ce que ZenGrow est compliqué à mettre en place ?",
+    a: "Non. Vous configurez votre restaurant, vos informations, vos réservations et vos préférences. Ensuite, ZenGrow vous aide à exploiter vos clients plus intelligemment.",
   },
 ] as const;
 
 export function FAQSection() {
   return (
-    <Section id="faq">
+    <Section id="faq" className="relative">
       <Container>
         <ScrollReveal>
-          <SectionHeader title="Questions fréquentes" />
+          <SectionHeader badge="FAQ" title="Questions fréquentes" />
         </ScrollReveal>
 
-        <ScrollReveal className="mx-auto mt-10 max-w-2xl">
-          <GlassCard className="zg-lp-faq px-5 sm:px-6">
-            {FAQ_ITEMS.map((item) => (
-              <details key={item.q} className="group">
-                <summary className="zg-lp-display text-left text-sm font-semibold text-[#EEF6FF] sm:text-base">
-                  {item.q}
-                </summary>
-                <p className="pb-4 text-sm leading-relaxed text-[#8BA3C7]">{item.a}</p>
-              </details>
+        <ScrollReveal delay={0.08} className="mx-auto mt-12 max-w-3xl">
+          <Accordion.Root type="single" collapsible className="space-y-3">
+            {FAQ_ITEMS.map((item, i) => (
+              <Accordion.Item
+                key={item.q}
+                value={`item-${i}`}
+                className="zg-lp-faq-item zg-lp-body"
+              >
+                <Accordion.Header>
+                  <Accordion.Trigger className="group flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-base font-semibold text-[var(--zg-fg)] transition-colors hover:text-violet-200">
+                    {item.q}
+                    <ChevronDown className="size-4 shrink-0 text-[var(--zg-muted)] transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </Accordion.Trigger>
+                </Accordion.Header>
+                <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                  <p className="px-5 pb-5 text-sm leading-relaxed text-[var(--zg-muted)]">{item.a}</p>
+                </Accordion.Content>
+              </Accordion.Item>
             ))}
-          </GlassCard>
+          </Accordion.Root>
         </ScrollReveal>
       </Container>
     </Section>

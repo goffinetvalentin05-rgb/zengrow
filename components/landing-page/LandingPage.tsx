@@ -1,32 +1,38 @@
 import { AnimatedBackground } from "@/components/landing-page/AnimatedBackground";
 import { landingBody, landingDisplay } from "@/components/landing-page/fonts";
+import { AIAssistantSection } from "@/components/landing-page/sections/AIAssistantSection";
 import { AITrendSection } from "@/components/landing-page/sections/AITrendSection";
-import { AIConcreteSection } from "@/components/landing-page/sections/AIConcreteSection";
+import { BenefitsSection } from "@/components/landing-page/sections/BenefitsSection";
+import { ComparisonSection } from "@/components/landing-page/sections/ComparisonSection";
 import { CTASection } from "@/components/landing-page/sections/CTASection";
+import { DiscoverySection } from "@/components/landing-page/sections/DiscoverySection";
 import { FAQSection } from "@/components/landing-page/sections/FAQSection";
 import { FeaturesSection } from "@/components/landing-page/sections/FeaturesSection";
 import { Footer } from "@/components/landing-page/sections/Footer";
 import { HeroSection } from "@/components/landing-page/sections/HeroSection";
 import { Navbar } from "@/components/landing-page/sections/Navbar";
 import { PricingSection } from "@/components/landing-page/sections/PricingSection";
-import { ProblemSection } from "@/components/landing-page/sections/ProblemSection";
-import { SolutionSection } from "@/components/landing-page/sections/SolutionSection";
+import { ThreeMomentsSection } from "@/components/landing-page/sections/ThreeMomentsSection";
+import { WhySection } from "@/components/landing-page/sections/WhySection";
 import "@/components/landing-page/landing.css";
 
 export function LandingPage() {
   return (
     <div
-      className={`zg-landing-v3 zg-lp-body ${landingDisplay.variable} ${landingBody.variable}`}
+      className={`zg-landing zg-lp-body ${landingDisplay.variable} ${landingBody.variable}`}
     >
       <AnimatedBackground />
       <Navbar />
-      <main className="zg-landing-v3__main">
+      <main className="zg-landing__main">
         <HeroSection />
-        <ProblemSection />
+        <DiscoverySection />
         <AITrendSection />
-        <SolutionSection />
-        <AIConcreteSection />
+        <ThreeMomentsSection />
+        <BenefitsSection />
         <FeaturesSection />
+        <AIAssistantSection />
+        <WhySection />
+        <ComparisonSection />
         <PricingSection />
         <FAQSection />
         <CTASection />

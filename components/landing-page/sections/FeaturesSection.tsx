@@ -1,75 +1,69 @@
 import {
+  Brain,
   Calendar,
-  Globe,
   Mail,
   MessageSquare,
   Star,
   Users,
 } from "lucide-react";
-import { Container, Section, SectionHeader } from "@/components/landing-page/ui";
+import { Container, GlassCard, IconBox, Section, SectionHeader } from "@/components/landing-page/ui";
 import { ScrollReveal } from "@/components/landing-page/ScrollReveal";
 
-const MODULES = [
-  { icon: Globe, label: "Page de réservation" },
-  { icon: Calendar, label: "Réservations en ligne" },
-  { icon: Users, label: "Base clients" },
-  { icon: MessageSquare, label: "Relances IA" },
-  { icon: Mail, label: "Campagnes marketing" },
-  { icon: Star, label: "Avis Google" },
+const FEATURES = [
+  {
+    title: "Réservations en ligne",
+    desc: "Recevez des demandes de réservation depuis une page claire, rapide et adaptée au mobile.",
+    icon: Calendar,
+  },
+  {
+    title: "Base clients",
+    desc: "Chaque réservation enrichit votre base clients avec les informations importantes : nom, contact, historique et fréquence de visite.",
+    icon: Users,
+  },
+  {
+    title: "Relances IA",
+    desc: "ZenGrow vous aide à savoir quels clients relancer et avec quel message.",
+    icon: MessageSquare,
+  },
+  {
+    title: "Campagnes marketing",
+    desc: "Créez rapidement des campagnes pour annoncer un menu, remplir une soirée calme ou promouvoir un événement.",
+    icon: Mail,
+  },
+  {
+    title: "Avis Google automatisés",
+    desc: "Envoyez automatiquement une demande d'avis après une visite confirmée.",
+    icon: Star,
+  },
+  {
+    title: "Suggestions intelligentes",
+    desc: "L'IA peut proposer des actions concrètes : relancer les clients inactifs, remplir jeudi soir, demander des avis ou promouvoir une offre spéciale.",
+    icon: Brain,
+  },
 ] as const;
 
 export function FeaturesSection() {
   return (
-    <Section id="fonctionnalites">
+    <Section id="fonctionnalites" className="relative">
       <Container>
         <ScrollReveal>
           <SectionHeader
-            title="Tout ce qu'il faut pour convertir et fidéliser."
-            subtitle="ZenGrow centralise votre page, vos réservations, vos clients, vos campagnes et vos avis Google."
+            title="Une plateforme simple pour faire grandir votre restaurant."
           />
         </ScrollReveal>
 
-        {/* Bento asymétrique — pas de grille répétitive 3×2 */}
-        <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-12 lg:grid-rows-2 lg:gap-4">
-          {MODULES.map((mod, i) => {
-            const spans =
-              i === 0
-                ? "col-span-2 row-span-1 lg:col-span-5 lg:row-span-2"
-                : i === 1
-                  ? "col-span-1 lg:col-span-4"
-                  : i === 2
-                    ? "col-span-1 lg:col-span-3"
-                    : i === 3
-                      ? "col-span-2 lg:col-span-4"
-                      : i === 4
-                        ? "col-span-1 lg:col-span-4"
-                        : "col-span-1 lg:col-span-4";
-
-            return (
-              <ScrollReveal
-                key={mod.label}
-                delay={i * 0.05}
-                className={spans}
-              >
-                <div
-                  className={`zg-lp-glass flex h-full flex-col justify-between p-4 sm:p-5 ${
-                    i === 0 ? "min-h-[140px] sm:min-h-[180px]" : ""
-                  }`}
-                >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(27,79,255,0.18)] text-[#3b7bff]">
-                    <mod.icon className="h-5 w-5" aria-hidden />
-                  </span>
-                  <p
-                    className={`zg-lp-display mt-3 font-semibold text-[#EEF6FF] ${
-                      i === 0 ? "text-lg sm:text-xl" : "text-sm"
-                    }`}
-                  >
-                    {mod.label}
-                  </p>
-                </div>
-              </ScrollReveal>
-            );
-          })}
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((item, i) => (
+            <ScrollReveal key={item.title} delay={i * 0.04}>
+              <GlassCard className="h-full p-6">
+                <IconBox className="mb-4">
+                  <item.icon className="size-5" />
+                </IconBox>
+                <h3 className="zg-lp-display text-base font-bold text-[var(--zg-fg)]">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--zg-muted)]">{item.desc}</p>
+              </GlassCard>
+            </ScrollReveal>
+          ))}
         </div>
       </Container>
     </Section>

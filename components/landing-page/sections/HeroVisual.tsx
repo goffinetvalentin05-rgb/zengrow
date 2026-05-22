@@ -1,100 +1,151 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { Calendar, Sparkles, Star } from "lucide-react";
-import { GlassCard } from "@/components/landing-page/ui";
+import {
+  CalendarCheck,
+  Megaphone,
+  MessageSquare,
+  Sparkles,
+  Star,
+  Users,
+} from "lucide-react";
 
-/** Dashboard / réservation style Mufi — glow bleu, cartes superposées. */
+const FLOAT_CARDS = [
+  {
+    label: "Clients à relancer",
+    value: "12",
+    sub: "inactifs 30+ jours",
+    icon: Users,
+    position: "left-[4%] top-[12%] md:left-[2%] md:top-[18%]",
+    delay: 0,
+  },
+  {
+    label: "Campagne IA prête",
+    value: "Mardi soir",
+    sub: "à remplir",
+    icon: Megaphone,
+    position: "right-[2%] top-[8%] md:right-[0%] md:top-[14%]",
+    delay: 0.15,
+  },
+  {
+    label: "Demandes d'avis",
+    value: "8",
+    sub: "cette semaine",
+    icon: Star,
+    position: "left-[6%] bottom-[14%] md:left-[4%] md:bottom-[18%]",
+    delay: 0.3,
+  },
+  {
+    label: "Réservations",
+    value: "+24%",
+    sub: "ce mois-ci",
+    icon: CalendarCheck,
+    position: "right-[4%] bottom-[12%] md:right-[2%] md:bottom-[16%]",
+    delay: 0.45,
+  },
+] as const;
+
 export function HeroVisual() {
   const reduce = useReducedMotion();
 
   return (
-    <div className="relative w-full max-w-lg mx-auto lg:max-w-none">
+    <div className="relative mx-auto mt-12 w-full max-w-5xl md:mt-16">
       <div
-        className="pointer-events-none absolute -inset-8 rounded-[2rem] opacity-80"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[min(420px,70vw)] w-[min(640px,95vw)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-80"
         style={{
           background:
-            "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(27,79,255,0.35) 0%, transparent 70%)",
+            "radial-gradient(ellipse, rgba(139,92,246,0.4) 0%, rgba(99,102,241,0.15) 50%, transparent 72%)",
         }}
+        aria-hidden
       />
 
-      <GlassCard strong className="relative p-5 sm:p-6">
-        <div className="flex items-center justify-between gap-3 border-b border-[rgba(27,79,255,0.2)] pb-4">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-[#8BA3C7]">
-              Réservations
-            </p>
-            <p className="mt-1 zg-lp-display text-lg font-semibold text-[#EEF6FF]">
-              Ce soir — 18 couverts
-            </p>
+      {!reduce
+        ? FLOAT_CARDS.map((card) => (
+            <motion.div
+              key={card.label}
+              className={`absolute z-20 hidden w-[11.5rem] sm:block ${card.position}`}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 + card.delay, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 5 + card.delay * 2, repeat: Infinity, ease: "easeInOut" }}
+                className="zg-lp-glass zg-lp-glass--strong rounded-xl p-3.5 shadow-lg"
+              >
+                <div className="flex items-start gap-2.5">
+                  <div className="zg-lp-icon-wrap size-9 shrink-0 rounded-lg">
+                    <card.icon className="size-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--zg-muted)]">
+                      {card.label}
+                    </p>
+                    <p className="zg-lp-display text-sm font-bold text-[var(--zg-fg)]">{card.value}</p>
+                    <p className="text-xs text-[var(--zg-muted-soft)]">{card.sub}</p>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          ))
+        : null}
+
+      <motion.div
+        className="zg-lp-mockup relative z-10 mx-auto w-full overflow-hidden p-4 sm:p-5 md:p-6"
+        initial={reduce ? undefined : { opacity: 0, y: 28 }}
+        animate={reduce ? undefined : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="mb-4 flex items-center justify-between gap-3 border-b border-[var(--zg-border-soft)] pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/40 to-indigo-500/20">
+              <Sparkles className="size-4 text-violet-300" />
+            </div>
+            <div>
+              <p className="zg-lp-display text-sm font-bold text-[var(--zg-fg)]">ZenGrow</p>
+              <p className="text-xs text-[var(--zg-muted)]">Tableau de bord restaurateur</p>
+            </div>
           </div>
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(27,79,255,0.2)] text-[#3b7bff]">
-            <Calendar className="h-5 w-5" aria-hidden />
+          <span className="rounded-lg border border-violet-500/30 bg-violet-500/15 px-3 py-1.5 text-xs font-semibold text-violet-200">
+            Mardi soir à remplir
           </span>
         </div>
 
-        <ul className="mt-4 space-y-3">
+        <div className="grid gap-3 sm:grid-cols-3">
           {[
-            { name: "Marie D.", time: "19:30", guests: 2, status: "Confirmée" },
-            { name: "Thomas L.", time: "20:00", guests: 4, status: "Nouvelle" },
-            { name: "Sophie M.", time: "20:30", guests: 2, status: "Confirmée" },
-          ].map((row, i) => (
-            <motion.li
-              key={row.name}
-              className="flex items-center justify-between gap-3 rounded-xl border border-[rgba(27,79,255,0.18)] bg-[rgba(27,79,255,0.06)] px-3 py-2.5"
-              initial={{ opacity: 1, x: reduce ? 0 : 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + i * 0.15, duration: 0.45 }}
+            { title: "Réservations", stat: "47", trend: "+12 cette semaine", color: "from-violet-500/25" },
+            { title: "Relances IA", stat: "5", trend: "messages prêts", color: "from-indigo-500/25" },
+            { title: "Avis Google", stat: "4.8", trend: "+6 nouveaux avis", color: "from-fuchsia-500/20" },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className={`rounded-xl border border-[var(--zg-border-soft)] bg-gradient-to-br ${item.color} to-transparent p-4`}
             >
-              <div>
-                <p className="text-sm font-medium text-[#EEF6FF]">{row.name}</p>
-                <p className="text-xs text-[#8BA3C7]">
-                  {row.time} · {row.guests} pers.
-                </p>
-              </div>
-              <span
-                className={
-                  row.status === "Nouvelle"
-                    ? "rounded-full bg-[rgba(27,79,255,0.25)] px-2 py-0.5 text-[10px] font-semibold text-[#3b7bff]"
-                    : "text-[10px] text-[#8BA3C7]"
-                }
-              >
-                {row.status}
-              </span>
-            </motion.li>
-          ))}
-        </ul>
-      </GlassCard>
-
-      <motion.div
-        className="relative -mt-6 ml-6 mr-2 sm:ml-10"
-        initial={{ opacity: 1, y: reduce ? 0 : 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-      >
-        <GlassCard className="p-4">
-          <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[rgba(27,79,255,0.22)] text-[#3b7bff]">
-              <Sparkles className="h-4 w-4" aria-hidden />
-            </span>
-            <div>
-              <p className="text-xs text-[#8BA3C7]">Relance IA prête</p>
-              <p className="mt-1 text-sm leading-snug text-[#EEF6FF]">
-                Bonjour Marie, une table vous attend samedi…
-              </p>
+              <p className="text-xs font-medium text-[var(--zg-muted)]">{item.title}</p>
+              <p className="zg-lp-display mt-1 text-2xl font-bold">{item.stat}</p>
+              <p className="mt-1 text-xs text-violet-300/90">{item.trend}</p>
             </div>
-          </div>
-        </GlassCard>
-      </motion.div>
+          ))}
+        </div>
 
-      <motion.div
-        className="absolute -right-2 top-8 sm:right-0"
-        animate={reduce ? undefined : { y: [0, -6, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <div className="zg-lp-glass flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium text-[#EEF6FF]">
-          <Star className="h-3.5 w-3.5 fill-[#1b4fff] text-[#3b7bff]" aria-hidden />
-          +12 avis Google
+        <div className="mt-4 rounded-xl border border-[var(--zg-border-soft)] bg-black/30 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <MessageSquare className="size-4 text-violet-400" />
+            <p className="text-sm font-semibold text-[var(--zg-fg)]">Suggestion IA</p>
+          </div>
+          <p className="rounded-lg border border-violet-500/20 bg-violet-500/10 px-3 py-2.5 text-sm leading-relaxed text-[var(--zg-muted)]">
+            Relancer les clients venus il y a plus de 30 jours avec une offre mardi soir.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {["Valider", "Modifier", "Planifier"].map((action) => (
+              <span
+                key={action}
+                className="rounded-md border border-[var(--zg-border-soft)] px-2.5 py-1 text-xs font-medium text-[var(--zg-fg)]"
+              >
+                {action}
+              </span>
+            ))}
+          </div>
         </div>
       </motion.div>
     </div>

@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     template: "%s | ZenGrow",
   },
   description:
-    "ZenGrow — une nouvelle façon pour les restaurants d’exister en ligne : expérience immersive, découverte en quelques secondes, menu éditorial et réservation instantanée. Premium, fluide, pensé pour l’hospitality moderne.",
+    "ZenGrow — plateforme IA pour restaurants : plus de réservations, relances clients, campagnes marketing et avis Google automatisés.",
   applicationName: "ZenGrow",
 };
 

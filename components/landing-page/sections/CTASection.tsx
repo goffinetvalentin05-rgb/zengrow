@@ -1,39 +1,42 @@
-import { Container, PrimaryButton, SecondaryButton, Section } from "@/components/landing-page/ui";
+import { Container, GradientText, PrimaryButton, SecondaryButton } from "@/components/landing-page/ui";
 import { ScrollReveal } from "@/components/landing-page/ScrollReveal";
 
 export function CTASection() {
   return (
-    <Section id="cta" className="pb-16 md:pb-20">
+    <section className="relative z-10 py-20 md:py-28">
       <Container>
         <ScrollReveal>
-          <div className="zg-lp-glass zg-lp-glass--strong relative overflow-hidden px-6 py-12 text-center sm:px-12 sm:py-14">
+          <div className="relative overflow-hidden rounded-3xl border border-[var(--zg-border)] bg-gradient-to-br from-violet-950/80 via-[#0a0614] to-black px-6 py-14 text-center sm:px-12 md:py-20">
             <div
-              className="pointer-events-none absolute inset-0 opacity-70"
+              className="pointer-events-none absolute inset-0 opacity-80"
               style={{
                 background:
-                  "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(27,79,255,0.25) 0%, transparent 65%)",
+                  "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(139,92,246,0.35), transparent 65%)",
               }}
               aria-hidden
             />
-            <div className="relative">
-              <h2 className="zg-lp-display zg-lp-title text-[clamp(1.75rem,4vw,2.5rem)]">
-                Faites revenir vos clients. Remplissez vos tables.
+            <div className="relative z-10 mx-auto max-w-2xl">
+              <h2 className="zg-lp-title zg-lp-display">
+                Vos prochains clients sont peut-être déjà venus chez vous.
               </h2>
-              <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-[#8BA3C7] sm:text-base">
-                Avec ZenGrow, votre restaurant dispose d&apos;une page de réservation, de relances IA,
-                de campagnes marketing et d&apos;un système pour récolter plus d&apos;avis Google.
+              <p className="zg-lp-lead">
+                ZenGrow vous aide à les faire revenir grâce à l&apos;IA, aux relances, aux campagnes
+                marketing et aux avis Google automatisés.
               </p>
-              <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap">
-                <PrimaryButton href="/signup">Commencer maintenant</PrimaryButton>
-                <SecondaryButton href="#hero">Voir une démo</SecondaryButton>
+              <p className="zg-lp-display mt-4 text-lg font-bold text-[var(--zg-fg)]">
+                Commencez à remplir vos tables plus{" "}
+                <GradientText>intelligemment</GradientText>.
+              </p>
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <PrimaryButton href="/signup" showArrow>
+                  Commencer maintenant
+                </PrimaryButton>
+                <SecondaryButton href="#fonctionnalites">Voir une démo</SecondaryButton>
               </div>
-              <p className="mt-6 text-xs text-[#8BA3C7] sm:text-sm">
-                Simple à lancer. Pensé pour les restaurants. Propulsé par l&apos;IA.
-              </p>
             </div>
           </div>
         </ScrollReveal>
       </Container>
-    </Section>
+    </section>
   );
 }
