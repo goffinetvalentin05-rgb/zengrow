@@ -13,7 +13,8 @@ function HeroCopy() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.75, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
       >
-        Remplissez votre restaurant grâce à l&apos;IA
+        Remplissez votre restaurant grâce à l&apos;
+        <span className="text-[#f06a32]">IA</span>
       </motion.h1>
 
       <motion.p
@@ -51,11 +52,8 @@ function HeroCopy() {
 
 export function Hero() {
   return (
-    <section
-      id="hero"
-      className="relative w-full overflow-x-hidden px-4 pt-[7rem] sm:px-6 sm:pt-[8.5rem]"
-    >
-      <div className="relative z-10 mx-auto max-w-xl px-2 pb-6 text-center sm:max-w-xl sm:px-4 sm:pb-8">
+    <section id="hero" className="relative w-full overflow-x-hidden px-4 sm:px-6">
+      <div className="relative z-10 mx-auto flex min-h-[min(58vh,560px)] max-w-xl flex-col items-center justify-center px-2 pb-8 pt-[calc(7rem+2.5rem)] text-center sm:max-w-xl sm:px-4 sm:pb-10 sm:pt-[calc(8.5rem+3.5rem)]">
         <HeroCopy />
       </div>
       <ZenGrowHero />

@@ -16,7 +16,7 @@ export function Tarifs() {
       <div className="mx-auto max-w-5xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <h2 className="font-landing-serif text-[clamp(1.85rem,4vw,2.75rem)] font-normal text-[#FFF7EF]">
-            Des tarifs simples pour passer à l&apos;action.
+            Des tarifs simples pour passer à l&apos;<span className="text-[#f06a32]">action</span>.
           </h2>
           <p className="mt-4 text-base text-[#AFA39A]">
             Choisissez l&apos;offre adaptée à votre restaurant et commencez à transformer vos visiteurs en

@@ -39,7 +39,7 @@ export function WhyZenGrow() {
       <div className="relative mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-3xl text-center">
           <h2 className="font-landing-serif text-[clamp(1.85rem,4vw,2.75rem)] font-normal leading-tight text-[#FFF7EF]">
-            Pourquoi les restaurants utilisent ZenGrow
+            Pourquoi les restaurants utilisent <span className="text-[#f06a32]">ZenGrow</span>
           </h2>
           <p className="mt-4 text-base leading-relaxed text-[#AFA39A] sm:text-lg">
             Parce qu&apos;une page seule ne suffit pas. Il faut aussi faire réserver, relancer et fidéliser.

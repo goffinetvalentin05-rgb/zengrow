@@ -10,7 +10,8 @@ export function Solution() {
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-3xl text-center">
           <h2 className="font-landing-serif text-[clamp(1.85rem,4vw,2.75rem)] font-normal text-[#FFF7EF]">
-            Une page qui réserve. Une IA qui relance.
+            Une page qui <span className="text-[#f06a32]">réserve</span>. Une IA qui{" "}
+            <span className="text-[#f06a32]">relance</span>.
           </h2>
           <p className="mt-4 text-base text-[#AFA39A]">
             ZenGrow réunit ce qu&apos;un restaurant a vraiment besoin : être trouvé, faire réserver, puis

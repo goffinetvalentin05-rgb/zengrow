@@ -17,7 +17,7 @@ export function FeaturesGrid() {
       <div className="relative mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-3xl text-center">
           <h2 className="font-landing-serif text-[clamp(1.85rem,4vw,2.5rem)] font-normal text-[#FFF7EF]">
-            Tout est au même endroit.
+            Tout est au <span className="text-[#f06a32]">même endroit</span>.
           </h2>
           <p className="mt-4 text-sm text-[#AFA39A] sm:text-base">
             Plus besoin de jongler entre votre site, vos messages, vos réservations et vos avis.

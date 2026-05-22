@@ -103,7 +103,7 @@ export function FAQ() {
       <div className="mx-auto max-w-4xl">
         <Reveal className="text-center">
           <h2 className="font-landing-serif text-[clamp(1.85rem,4vw,2.75rem)] font-normal text-[#FFF7EF]">
-            Questions fréquentes
+            <span className="text-[#f06a32]">Questions</span> fréquentes
           </h2>
           <p className="mt-4 text-base text-[#AFA39A]">
             Ce que les restaurants veulent savoir avant de lancer ZenGrow.

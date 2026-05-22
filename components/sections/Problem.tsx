@@ -51,7 +51,7 @@ export function Problem() {
       <div className="mx-auto max-w-4xl">
         <Reveal className="mx-auto max-w-3xl text-center">
           <h2 className="font-landing-serif text-[clamp(1.85rem,4vw,2.65rem)] font-normal leading-tight text-[#FFF7EF]">
-            Vous perdez des réservations sans forcément le voir.
+            Vous perdez des <span className="text-[#f06a32]">réservations</span> sans forcément le voir.
           </h2>
           <p className="mt-5 text-base leading-relaxed text-[#AFA39A]">
             Un client visite votre page, hésite, repart… et ne revient jamais. ZenGrow transforme ces

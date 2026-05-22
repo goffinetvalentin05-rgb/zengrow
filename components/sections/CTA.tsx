@@ -10,7 +10,8 @@ export function CTA() {
       <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center px-4 py-12 text-center sm:px-6 sm:py-16">
         <Reveal className="flex w-full flex-col items-center">
           <h2 className="max-w-2xl font-landing-serif text-[clamp(1.85rem,4.5vw,3rem)] font-normal leading-tight text-[#FFF7EF]">
-            Votre restaurant a déjà des clients. ZenGrow les fait revenir.
+            Votre restaurant a déjà des clients. ZenGrow les fait{" "}
+            <span className="text-[#f06a32]">revenir</span>.
           </h2>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-[#AFA39A]">
             Créez votre page de réservation, automatisez vos relances et remplissez vos tables plus souvent

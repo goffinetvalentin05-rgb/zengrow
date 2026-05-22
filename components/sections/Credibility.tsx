@@ -30,7 +30,7 @@ export function Credibility() {
         <Reveal>
           <div className="max-w-xl">
             <h2 className="font-landing-serif text-[clamp(1.75rem,3.5vw,2.35rem)] font-normal leading-snug text-[#FFF7EF]">
-              L&apos;IA n&apos;est plus réservée aux grandes entreprises.
+              L&apos;<span className="text-[#f06a32]">IA</span> n&apos;est plus réservée aux grandes entreprises.
             </h2>
             <p className="mt-5 text-base leading-relaxed text-[#AFA39A]">
               De plus en plus d&apos;entreprises suisses utilisent l&apos;IA pour gagner du temps et
