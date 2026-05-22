@@ -1,4 +1,5 @@
 import "@/components/landing-v2/landing-v2.css";
+import { HeroBackground } from "@/components/landing-v2/HeroBackground";
 import { LandingNavbar } from "@/components/landing-v2/Navbar";
 import { LandingFooter } from "@/components/landing-v2/Footer";
 import { HeroSection } from "@/components/landing-v2/sections/HeroSection";
@@ -14,7 +15,7 @@ import { CTASection } from "@/components/landing-v2/sections/CTASection";
 export function LandingPageV2() {
   return (
     <div className="zg-landing">
-      <div className="zg-landing__ambient" aria-hidden />
+      <HeroBackground />
       <LandingNavbar />
       <div className="zg-landing__main">
         <main>
