@@ -1093,21 +1093,24 @@ export default function PublicReservationForm({
           coverImageUrl={coverImageUrl}
           logoUrl={logoUrl}
           restaurantName={restaurantName}
-          tagline={taglineText || showroomHeroCopy.headline}
+          tagline={taglineText}
+          description={descriptionText}
+          heroSubtitle={showroomHeroCopy.subtitle ?? undefined}
           cuisineType={cuisineType}
           city={city}
-          hoursSummary={showroomHoursSummary}
+          openingHours={openingHours}
           ctaLabel={ctaLabel}
+          ctaReassurance={preBookingMessage}
           menuLabel={secondaryLabel}
           menuHref={menuHref}
           menuEnabled={Boolean(menuHref?.trim())}
+          reservationEnabled={reservationEnabled}
           credibility={credibilityData}
           showRating={effectiveConfig.blockContent.reviews.showRating}
           instagramUrl={instagramUrl}
           facebookUrl={facebookUrl}
           tiktokUrl={tiktokUrl}
           websiteUrl={websiteUrl}
-          googleMapsUrl={googleMapsUrl}
           previewMode={previewMode}
           onReserve={handleReserve}
         />
@@ -2004,7 +2007,7 @@ export default function PublicReservationForm({
       </div>
 
       <StickyReserveBar
-        label={ctaLabel}
+        label={isLandingPage ? "Réserver" : ctaLabel}
         onClick={handleReserve}
         visible={
           dedicatedReservationPage

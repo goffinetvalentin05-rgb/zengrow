@@ -1528,19 +1528,49 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                 placeholder="Genève"
               />
             </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Phrase d&apos;accroche</label>
-              <FieldHint>Une phrase courte affichée sous le titre principal du hero.</FieldHint>
-              <Input
-                className="mt-2"
-                value={heroSubtitle}
-                onChange={(e) => {
-                  setHeroSubtitle(e.target.value);
-                  markDirty();
-                }}
-                placeholder={defaultHeroSubtitle(cuisineType, city, ambiance)}
-              />
-            </div>
+            {showroomMode ? (
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Phrase d&apos;accroche</label>
+                <FieldHint>
+                  Vendez un moment, pas une fiche admin. Ex. « Une table, une ambiance, un moment à partager. »
+                </FieldHint>
+                <Textarea
+                  className="mt-2 min-h-20"
+                  maxLength={140}
+                  value={shortDescription}
+                  onChange={(e) => {
+                    setShortDescription(e.target.value);
+                    setHeroSubtitle(e.target.value);
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        premium: {
+                          ...c.premium,
+                          concept: { ...c.premium.concept, body: e.target.value },
+                        },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                  placeholder="Une table, une ambiance, un moment à partager."
+                />
+                <p className="mt-1 text-xs text-zg-text-muted">{shortDescription.length}/140</p>
+              </div>
+            ) : (
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Phrase d&apos;accroche</label>
+                <FieldHint>Une phrase courte affichée sous le titre principal du hero.</FieldHint>
+                <Input
+                  className="mt-2"
+                  value={heroSubtitle}
+                  onChange={(e) => {
+                    setHeroSubtitle(e.target.value);
+                    markDirty();
+                  }}
+                  placeholder={defaultHeroSubtitle(cuisineType, city, ambiance)}
+                />
+              </div>
+            )}
             {!showroomMode ? (
               <div className="md:col-span-2">
                 <label className="dashboard-field-label">Petite description</label>
@@ -1703,6 +1733,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               <ShowroomActionsFields
                 ctaLabel={ctaLabel}
                 onCtaLabelChange={setCtaLabel}
+                ctaReassurance={preBookingMessage}
+                onCtaReassuranceChange={setPreBookingMessage}
                 menuMode={menuMode}
                 menuUrl={menuUrl}
                 onMenuModeChange={setMenuMode}

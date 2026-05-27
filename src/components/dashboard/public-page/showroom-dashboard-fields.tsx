@@ -28,6 +28,8 @@ function FieldHint({ children }: { children: React.ReactNode }) {
 export type ShowroomActionsFieldsProps = {
   ctaLabel: string;
   onCtaLabelChange: (v: string) => void;
+  ctaReassurance: string;
+  onCtaReassuranceChange: (v: string) => void;
   menuMode: "url" | "pdf" | null;
   menuUrl: string;
   onMenuModeChange: (mode: "url" | "pdf" | null) => void;
@@ -50,6 +52,8 @@ export type ShowroomActionsFieldsProps = {
 export function ShowroomActionsFields({
   ctaLabel,
   onCtaLabelChange,
+  ctaReassurance,
+  onCtaReassuranceChange,
   menuMode,
   menuUrl,
   onMenuModeChange,
@@ -80,6 +84,20 @@ export function ShowroomActionsFields({
             markDirty();
           }}
           placeholder="Réserver une table"
+        />
+      </div>
+
+      <div>
+        <label className="dashboard-field-label">Microphrase sous le bouton</label>
+        <FieldHint>Ex. « Réservation en moins de 30 secondes » — réduit la friction.</FieldHint>
+        <Input
+          className="mt-2"
+          value={ctaReassurance}
+          onChange={(e) => {
+            onCtaReassuranceChange(e.target.value);
+            markDirty();
+          }}
+          placeholder="Réservation en moins de 30 secondes"
         />
       </div>
 

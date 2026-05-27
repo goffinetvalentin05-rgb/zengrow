@@ -2,7 +2,7 @@
 
 import { cn } from "@/src/lib/utils";
 
-/** Ligne discrète — pas d’étoiles, pas de badges */
+/** Badge premium — sans étoiles */
 export function ShowroomSocialProof({
   googleRating,
   reviewCount,
@@ -15,8 +15,8 @@ export function ShowroomSocialProof({
   const score = googleRating.toFixed(1);
 
   return (
-    <p className={cn("zg-showroom-proof-line", className)}>
+    <span className={cn("zg-showroom-proof-badge", className)}>
       Noté {score} sur Google · {reviewCount} avis
-    </p>
+    </span>
   );
 }

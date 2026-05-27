@@ -6,55 +6,58 @@ import Link from "next/link";
 import { cn } from "@/src/lib/utils";
 import { ShowroomSocialProof } from "@/src/components/reservation/showroom/showroom-social-proof";
 
-/** Hero Showroom — plein écran, contenu centré sur l’image, sans carte glass */
+/**
+ * Hero Showroom — scénario conversion : accroche → CTA → preuve → urgence
+ */
 export function ShowroomHero({
   coverImageUrl,
   logoUrl,
   restaurantName,
-  tagline,
-  cuisineType,
-  city,
+  metaLine,
+  marketingHook,
   googleRating,
   reviewCount,
   showRating = true,
   ctaLabel,
+  ctaReassurance,
   menuLabel = "Voir le menu",
   menuHref,
   showMenu = true,
+  tonightLabel,
+  locationLabel,
   onReserve,
   reserveHref,
   previewMode = false,
-  templateMode = "dark",
-  essentialsSlot,
+  trustFooter,
 }: {
   coverImageUrl?: string | null;
   logoUrl?: string | null;
   restaurantName: string;
-  tagline?: string | null;
-  cuisineType?: string | null;
-  city?: string | null;
+  metaLine?: string | null;
+  marketingHook?: string | null;
   googleRating?: number | null;
   reviewCount?: number | null;
   showRating?: boolean;
   ctaLabel: string;
+  ctaReassurance?: string | null;
   menuLabel?: string;
   menuHref?: string | null;
   showMenu?: boolean;
+  tonightLabel?: string | null;
+  locationLabel?: string | null;
   onReserve: () => void;
   reserveHref?: string | null;
   previewMode?: boolean;
-  templateMode?: "dark" | "light";
-  essentialsSlot?: ReactNode;
+  trustFooter?: ReactNode;
 }) {
   const cover = coverImageUrl?.trim() || null;
   const name = restaurantName.trim();
-  const metaParts = [cuisineType?.trim(), city?.trim()].filter(Boolean);
-  const metaLine = metaParts.length > 0 ? metaParts.join(" · ") : null;
-  const subtitle = tagline?.trim();
-  const showSubtitle = Boolean(subtitle && subtitle.toLowerCase() !== name.toLowerCase());
+  const hook = marketingHook?.trim();
+  const reassurance = ctaReassurance?.trim() || "Réservation en moins de 30 secondes";
   const hasRating =
     showRating && typeof googleRating === "number" && googleRating >= 1 && reviewCount && reviewCount > 0;
   const menuVisible = showMenu && menuHref?.trim();
+  const trustLine = [tonightLabel?.trim(), locationLabel?.trim()].filter(Boolean).join(" · ");
 
   const primaryCta = reserveHref?.trim() ? (
     <Link href={reserveHref.trim()} className="zg-showroom-cta-primary">
@@ -87,14 +90,13 @@ export function ShowroomHero({
           />
         </div>
       ) : (
-        <div
-          className="absolute inset-0 zg-showroom-hero-fallback"
-          aria-hidden
-        />
+        <div className="absolute inset-0 zg-showroom-hero-fallback" aria-hidden />
       )}
 
       <div className="zg-showroom-hero-overlay zg-showroom-hero-overlay--base" aria-hidden />
       <div className="zg-showroom-hero-overlay zg-showroom-hero-overlay--vignette" aria-hidden />
+      <div className="zg-showroom-hero-overlay zg-showroom-hero-overlay--bottom" aria-hidden />
+      <div className="zg-showroom-hero-overlay zg-showroom-hero-overlay--cta-glow" aria-hidden />
 
       <div
         className={cn(
@@ -130,6 +132,29 @@ export function ShowroomHero({
             </p>
           ) : null}
 
+          {hook ? (
+            <p className="zg-showroom-hero-hook" style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}>
+              {hook}
+            </p>
+          ) : null}
+
+          <div className="zg-showroom-cta-zone">
+            <div className="zg-showroom-cta-zone-glow" aria-hidden />
+            {primaryCta}
+            <p className="zg-showroom-cta-reassurance">{reassurance}</p>
+          </div>
+
+          {menuVisible ? (
+            <a
+              href={menuHref!.trim()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="zg-showroom-cta-menu-link"
+            >
+              {menuLabel}
+            </a>
+          ) : null}
+
           {hasRating ? (
             <ShowroomSocialProof
               googleRating={googleRating!}
@@ -138,27 +163,9 @@ export function ShowroomHero({
             />
           ) : null}
 
-          {showSubtitle ? (
-            <p className="zg-showroom-hero-tagline" style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}>
-              {subtitle}
-            </p>
-          ) : null}
+          {trustLine ? <p className="zg-showroom-trust-line">{trustLine}</p> : null}
 
-          <div className="zg-showroom-hero-actions">
-            {primaryCta}
-            {menuVisible ? (
-              <a
-                href={menuHref!.trim()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="zg-showroom-cta-menu-link"
-              >
-                {menuLabel}
-              </a>
-            ) : null}
-          </div>
-
-          {essentialsSlot ? <div className="zg-showroom-hero-essentials-slot">{essentialsSlot}</div> : null}
+          {trustFooter ? <div className="zg-showroom-hero-trust-footer">{trustFooter}</div> : null}
         </div>
       </div>
 
