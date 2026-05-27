@@ -4,16 +4,37 @@ import {
   type ShowroomAvailability,
 } from "@/src/lib/public-page/showroom-availability";
 
-const DEFAULT_CTA_REASSURANCE = "Réservation en moins de 30 secondes";
+const DEFAULT_CTA_REASSURANCE = "Confirmation rapide · choix de l'horaire en ligne";
+const DEFAULT_ACTION_LINE =
+  "Réservez votre table en quelques secondes, sans appel et sans attente.";
 
-/** Phrase émotionnelle — vend un moment, pas une fiche descriptive */
-export function resolveShowroomHook(input: {
+/** Promesse — ex. « Votre prochaine soirée italienne à Lausanne » */
+export function resolveShowroomPromiseLine(
+  cuisineType?: string | null,
+  city?: string | null,
+): string | null {
+  const cuisine = normalizeCuisineAdjective(cuisineType);
+  const cityName = city?.trim();
+
+  if (cuisine && cityName) {
+    return `Votre prochaine soirée ${cuisine} à ${cityName}`;
+  }
+  if (cityName) {
+    return `Votre prochaine soirée à ${cityName}`;
+  }
+  if (cuisine) {
+    return `Votre prochaine expérience ${cuisine}`;
+  }
+  return null;
+}
+
+/** Ligne d’action — pousse à réserver, pas à décrire le lieu */
+export function resolveShowroomActionLine(input: {
   description?: string | null;
   tagline?: string | null;
   heroSubtitle?: string | null;
-  cuisineType?: string | null;
   city?: string | null;
-}): string | null {
+}): string {
   const candidates = [
     input.heroSubtitle?.trim(),
     input.description?.trim(),
@@ -21,37 +42,24 @@ export function resolveShowroomHook(input: {
   ].filter(Boolean) as string[];
 
   for (const text of candidates) {
-    if (text.length > 140) continue;
+    if (text.length > 160) continue;
     if (looksAdministrative(text)) continue;
-    return text;
+    if (looksDescriptive(text) && !looksActionOriented(text)) continue;
+    if (looksActionOriented(text) || !looksDescriptive(text)) {
+      return text;
+    }
   }
 
-  const cuisine = input.cuisineType?.trim();
-  const city = input.city?.trim();
-  if (cuisine && city) {
-    return `Une table, une ambiance, un moment à partager à ${city}.`;
+  const cityName = input.city?.trim();
+  if (cityName) {
+    return `Réservez votre prochaine soirée à ${cityName}, en quelques secondes.`;
   }
-  if (city) {
-    return `Réservez votre prochaine soirée en quelques secondes.`;
-  }
-  return null;
-}
-
-/** Sous-titre type « Cuisine italienne à Lausanne » */
-export function resolveShowroomMetaLine(cuisineType?: string | null, city?: string | null): string | null {
-  const cuisine = cuisineType?.trim();
-  const cityName = city?.trim();
-  if (cuisine && cityName) {
-    const c = cuisine.charAt(0).toUpperCase() + cuisine.slice(1);
-    if (/cuisine/i.test(c)) return `${c} à ${cityName}`;
-    return `${c} à ${cityName}`;
-  }
-  return [cuisine, cityName].filter(Boolean).join(" · ") || null;
+  return DEFAULT_ACTION_LINE;
 }
 
 export function resolveCtaReassurance(preBookingMessage?: string | null): string {
   const msg = preBookingMessage?.trim();
-  if (msg && msg.length <= 72 && !msg.includes("\n")) {
+  if (msg && msg.length <= 88 && !msg.includes("\n")) {
     return msg;
   }
   return DEFAULT_CTA_REASSURANCE;
@@ -64,6 +72,95 @@ export function resolveShowroomAvailabilityDisplay(input: {
   return resolveShowroomAvailability(input.openingHours, {
     reservationEnabled: input.reservationEnabled,
   });
+}
+
+/** @deprecated Utiliser resolveShowroomPromiseLine */
+export function resolveShowroomMetaLine(cuisineType?: string | null, city?: string | null): string | null {
+  return resolveShowroomPromiseLine(cuisineType, city);
+}
+
+/** @deprecated Utiliser resolveShowroomActionLine */
+export function resolveShowroomHook(input: {
+  description?: string | null;
+  tagline?: string | null;
+  heroSubtitle?: string | null;
+  cuisineType?: string | null;
+  city?: string | null;
+}): string | null {
+  return resolveShowroomActionLine(input);
+}
+
+function normalizeCuisineAdjective(raw?: string | null): string | null {
+  const t = raw?.trim();
+  if (!t) return null;
+  let c = t.toLowerCase().replace(/^cuisine\s+/i, "").trim();
+
+  const map: Record<string, string> = {
+    italien: "italienne",
+    italienne: "italienne",
+    italian: "italienne",
+    français: "française",
+    francais: "française",
+    française: "française",
+    french: "française",
+    japonais: "japonaise",
+    japonaise: "japonaise",
+    japanese: "japonaise",
+    chinois: "chinoise",
+    chinoise: "chinoise",
+    chinese: "chinoise",
+    thaï: "thaï",
+    thai: "thaï",
+    indien: "indienne",
+    indienne: "indienne",
+    indian: "indienne",
+    mexicain: "mexicaine",
+    mexicaine: "mexicaine",
+    méditerranéen: "méditerranéenne",
+    mediterraneen: "méditerranéenne",
+    suisse: "suisse",
+    burger: "burger",
+    grill: "grill",
+    pizza: "pizza",
+    sushi: "sushi",
+  };
+
+  if (map[c]) return map[c];
+  if (c.endsWith("e") || c.endsWith("a")) return c;
+  if (/[sxz]$/.test(c)) return c;
+  return `${c}e`;
+}
+
+function looksActionOriented(text: string): boolean {
+  const lower = text.toLowerCase();
+  return (
+    lower.includes("réservez") ||
+    lower.includes("reservez") ||
+    lower.includes("réserver") ||
+    lower.includes("reserver") ||
+    lower.includes("sans appel") ||
+    lower.includes("quelques secondes") ||
+    lower.includes("confirmez") ||
+    lower.includes("choisissez") ||
+    lower.includes("votre table") ||
+    lower.includes("en ligne")
+  );
+}
+
+function looksDescriptive(text: string): boolean {
+  const lower = text.toLowerCase();
+  return (
+    lower.includes("ambiance") ||
+    lower.includes("bar &") ||
+    lower.includes("bar et") ||
+    lower.includes("dans une") ||
+    lower.includes("au cœur") ||
+    lower.includes("au coeur") ||
+    lower.includes("nous vous") ||
+    lower.includes("notre restaurant") ||
+    lower.includes("établissement") ||
+    (lower.includes("cuisine") && lower.includes("à ") && !looksActionOriented(text))
+  );
 }
 
 function looksAdministrative(text: string): boolean {

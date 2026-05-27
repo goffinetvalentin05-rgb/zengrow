@@ -1532,7 +1532,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               <div className="md:col-span-2">
                 <label className="dashboard-field-label">Phrase d&apos;accroche</label>
                 <FieldHint>
-                  Vendez un moment, pas une fiche admin. Ex. « Une table, une ambiance, un moment à partager. »
+                  Poussez à réserver. Ex. « Réservez votre table en quelques secondes, sans appel et sans attente. »
+                  Les textes trop descriptifs sont ignorés au profit du message par défaut.
                 </FieldHint>
                 <Textarea
                   className="mt-2 min-h-20"
@@ -1552,7 +1553,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                     );
                     markDirty();
                   }}
-                  placeholder="Une table, une ambiance, un moment à partager."
+                  placeholder="Réservez votre table en quelques secondes, sans appel et sans attente."
                 />
                 <p className="mt-1 text-xs text-zg-text-muted">{shortDescription.length}/140</p>
               </div>

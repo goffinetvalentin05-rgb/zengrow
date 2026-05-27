@@ -45,9 +45,7 @@ function isEveningRange(range: { start: string; end: string }): boolean {
   return start !== null && start >= 16 * 60;
 }
 
-/**
- * Une seule plage horaire + libellé court — pas de liste « Ouvert maintenant · midi · soir ».
- */
+/** Libellés orientés conversion — une plage horaire max */
 export function resolveShowroomAvailability(
   openingHours: OpeningHours | null | undefined,
   options?: { reservationEnabled?: boolean; at?: Date },
@@ -57,7 +55,7 @@ export function resolveShowroomAvailability(
 
   if (!openingHours) {
     return reservationEnabled
-      ? { headline: "Réservation disponible aujourd'hui", timeRange: null }
+      ? { headline: "Réservations ouvertes aujourd'hui", timeRange: null }
       : null;
   }
 
@@ -72,19 +70,28 @@ export function resolveShowroomAvailability(
   if (open) {
     const active = findActiveRange(ranges, at);
     if (active) {
-      const headline = isEveningRange(active) ? "Ouvert ce soir" : "Ouvert maintenant";
-      return { headline, timeRange: formatRangeShort(active) };
+      if (isEveningRange(active)) {
+        return {
+          headline: "Tables disponibles ce soir",
+          timeRange: formatRangeShort(active),
+        };
+      }
+      return {
+        headline: "Réservations ouvertes aujourd'hui",
+        timeRange: formatRangeShort(active),
+      };
     }
   }
 
   if (eveningRanges.length > 0) {
     const slot = eveningRanges[0];
-    const headline = hour >= 14 ? "Ouvert ce soir" : "Service du soir";
+    const headline =
+      hour >= 17 ? "Service du soir disponible" : hour >= 14 ? "Tables disponibles ce soir" : "Service du soir disponible";
     return { headline, timeRange: formatRangeShort(slot) };
   }
 
   if (ranges.length === 1) {
-    return { headline: "Aujourd'hui", timeRange: formatRangeShort(ranges[0]) };
+    return { headline: "Ce soir", timeRange: formatRangeShort(ranges[0]) };
   }
 
   const nowMin = at.getHours() * 60 + at.getMinutes();
@@ -93,11 +100,12 @@ export function resolveShowroomAvailability(
     return start !== null && start > nowMin;
   });
   if (upcoming) {
-    return { headline: "Aujourd'hui", timeRange: formatRangeShort(upcoming) };
+    const headline = isEveningRange(upcoming) ? "Service du soir disponible" : "Réservations ouvertes aujourd'hui";
+    return { headline, timeRange: formatRangeShort(upcoming) };
   }
 
   if (reservationEnabled) {
-    return { headline: "Réservation disponible aujourd'hui", timeRange: null };
+    return { headline: "Réservations ouvertes aujourd'hui", timeRange: null };
   }
 
   return null;

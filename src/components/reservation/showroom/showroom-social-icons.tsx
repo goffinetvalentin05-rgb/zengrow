@@ -1,6 +1,6 @@
 "use client";
 
-import { Facebook, Globe, Instagram, Music2 } from "lucide-react";
+import { Facebook, Globe, Instagram, MapPin, Music2 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
 type SocialLink = {
@@ -9,18 +9,20 @@ type SocialLink = {
   icon: typeof Instagram;
 };
 
-/** Icônes réseaux — discret, centré, sans texte */
+/** Icônes réseaux + itinéraire — discret, centré, sans texte */
 export function ShowroomSocialIcons({
   instagramUrl,
   facebookUrl,
   tiktokUrl,
   websiteUrl,
+  directionsUrl,
   className,
 }: {
   instagramUrl?: string | null;
   facebookUrl?: string | null;
   tiktokUrl?: string | null;
   websiteUrl?: string | null;
+  directionsUrl?: string | null;
   className?: string;
 }) {
   const links: SocialLink[] = [];
@@ -35,6 +37,9 @@ export function ShowroomSocialIcons({
   }
   if (websiteUrl?.trim()) {
     links.push({ href: websiteUrl.trim(), label: "Site web", icon: Globe });
+  }
+  if (directionsUrl?.trim()) {
+    links.push({ href: directionsUrl.trim(), label: "Itinéraire", icon: MapPin });
   }
 
   if (links.length === 0) return null;

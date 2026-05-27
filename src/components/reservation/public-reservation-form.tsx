@@ -1111,6 +1111,8 @@ export default function PublicReservationForm({
           facebookUrl={facebookUrl}
           tiktokUrl={tiktokUrl}
           websiteUrl={websiteUrl}
+          googleMapsUrl={googleMapsUrl}
+          address={restaurantAddress}
           previewMode={previewMode}
           onReserve={handleReserve}
         />

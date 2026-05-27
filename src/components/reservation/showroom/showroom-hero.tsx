@@ -9,14 +9,14 @@ import { ShowroomAvailabilityBadge } from "@/src/components/reservation/showroom
 import { ShowroomSocialIcons } from "@/src/components/reservation/showroom/showroom-social-icons";
 
 /**
- * Hero Showroom — scénario conversion : accroche → CTA → preuve → disponibilité → réseaux
+ * Hero Showroom — landing conversion : promesse → action → CTA → preuve
  */
 export function ShowroomHero({
   coverImageUrl,
   logoUrl,
   restaurantName,
-  metaLine,
-  marketingHook,
+  promiseLine,
+  actionLine,
   googleRating,
   reviewCount,
   showRating = true,
@@ -30,6 +30,7 @@ export function ShowroomHero({
   facebookUrl,
   tiktokUrl,
   websiteUrl,
+  directionsUrl,
   onReserve,
   reserveHref,
   previewMode = false,
@@ -37,8 +38,8 @@ export function ShowroomHero({
   coverImageUrl?: string | null;
   logoUrl?: string | null;
   restaurantName: string;
-  metaLine?: string | null;
-  marketingHook?: string | null;
+  promiseLine?: string | null;
+  actionLine: string;
   googleRating?: number | null;
   reviewCount?: number | null;
   showRating?: boolean;
@@ -52,14 +53,16 @@ export function ShowroomHero({
   facebookUrl?: string | null;
   tiktokUrl?: string | null;
   websiteUrl?: string | null;
+  directionsUrl?: string | null;
   onReserve: () => void;
   reserveHref?: string | null;
   previewMode?: boolean;
 }) {
   const cover = coverImageUrl?.trim() || null;
   const name = restaurantName.trim();
-  const hook = marketingHook?.trim();
-  const reassurance = ctaReassurance?.trim() || "Réservation en moins de 30 secondes";
+  const promise = promiseLine?.trim();
+  const action = actionLine.trim();
+  const reassurance = ctaReassurance?.trim() || "Confirmation rapide · choix de l'horaire en ligne";
   const hasRating =
     showRating && typeof googleRating === "number" && googleRating >= 1 && reviewCount && reviewCount > 0;
   const menuVisible = showMenu && menuHref?.trim();
@@ -67,7 +70,11 @@ export function ShowroomHero({
     hasRating ||
     Boolean(availability?.headline) ||
     Boolean(
-      instagramUrl?.trim() || facebookUrl?.trim() || tiktokUrl?.trim() || websiteUrl?.trim(),
+      instagramUrl?.trim() ||
+        facebookUrl?.trim() ||
+        tiktokUrl?.trim() ||
+        websiteUrl?.trim() ||
+        directionsUrl?.trim(),
     );
 
   const primaryCta = reserveHref?.trim() ? (
@@ -106,6 +113,7 @@ export function ShowroomHero({
 
       <div className="zg-showroom-hero-overlay zg-showroom-hero-overlay--base" aria-hidden />
       <div className="zg-showroom-hero-overlay zg-showroom-hero-overlay--vignette" aria-hidden />
+      <div className="zg-showroom-hero-overlay zg-showroom-hero-overlay--spotlight" aria-hidden />
       <div className="zg-showroom-hero-overlay zg-showroom-hero-overlay--bottom" aria-hidden />
       <div className="zg-showroom-hero-overlay zg-showroom-hero-overlay--cta-glow" aria-hidden />
 
@@ -137,22 +145,25 @@ export function ShowroomHero({
             </h1>
           ) : null}
 
-          {metaLine ? (
-            <p className="zg-showroom-hero-meta" style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}>
-              {metaLine}
+          {promise ? (
+            <p className="zg-showroom-hero-promise" style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}>
+              {promise}
             </p>
           ) : null}
 
-          {hook ? (
-            <p className="zg-showroom-hero-hook" style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}>
-              {hook}
+          {action ? (
+            <p className="zg-showroom-hero-action" style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}>
+              {action}
             </p>
           ) : null}
 
-          <div className="zg-showroom-cta-zone">
-            <div className="zg-showroom-cta-zone-glow" aria-hidden />
-            {primaryCta}
-            <p className="zg-showroom-cta-reassurance">{reassurance}</p>
+          <div className="zg-showroom-conversion-stage">
+            <div className="zg-showroom-conversion-stage__spotlight" aria-hidden />
+            <div className="zg-showroom-cta-zone">
+              <div className="zg-showroom-cta-zone-glow" aria-hidden />
+              {primaryCta}
+              <p className="zg-showroom-cta-reassurance">{reassurance}</p>
+            </div>
           </div>
 
           {menuVisible ? (
@@ -185,6 +196,7 @@ export function ShowroomHero({
                 facebookUrl={facebookUrl}
                 tiktokUrl={tiktokUrl}
                 websiteUrl={websiteUrl}
+                directionsUrl={directionsUrl}
               />
             </div>
           ) : null}

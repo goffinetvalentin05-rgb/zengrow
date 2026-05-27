@@ -89,7 +89,7 @@ export function ShowroomActionsFields({
 
       <div>
         <label className="dashboard-field-label">Microphrase sous le bouton</label>
-        <FieldHint>Ex. « Réservation en moins de 30 secondes » — réduit la friction.</FieldHint>
+        <FieldHint>Ex. « Confirmation rapide · choix de l&apos;horaire en ligne » — réduit la friction.</FieldHint>
         <Input
           className="mt-2"
           value={ctaReassurance}
@@ -97,7 +97,7 @@ export function ShowroomActionsFields({
             onCtaReassuranceChange(e.target.value);
             markDirty();
           }}
-          placeholder="Réservation en moins de 30 secondes"
+          placeholder="Confirmation rapide · choix de l'horaire en ligne"
         />
       </div>
 

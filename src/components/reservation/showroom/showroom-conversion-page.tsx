@@ -5,9 +5,9 @@ import type { OpeningHours } from "@/src/lib/utils";
 import { getShowroomTemplate } from "@/src/lib/showroom/templates";
 import {
   resolveCtaReassurance,
+  resolveShowroomActionLine,
   resolveShowroomAvailabilityDisplay,
-  resolveShowroomHook,
-  resolveShowroomMetaLine,
+  resolveShowroomPromiseLine,
 } from "@/src/lib/showroom/conversion-copy";
 import { ShowroomHero } from "@/src/components/reservation/showroom/showroom-hero";
 
@@ -34,9 +34,19 @@ export type ShowroomConversionPageProps = {
   facebookUrl?: string | null;
   tiktokUrl?: string | null;
   websiteUrl?: string | null;
+  googleMapsUrl?: string | null;
+  address?: string | null;
   previewMode?: boolean;
   onReserve: () => void;
 };
+
+function resolveDirectionsUrl(googleMapsUrl?: string | null, address?: string | null): string | null {
+  const maps = googleMapsUrl?.trim();
+  if (maps) return maps;
+  const addr = address?.trim();
+  if (!addr) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
+}
 
 export function ShowroomConversionPage({
   templateId,
@@ -61,6 +71,8 @@ export function ShowroomConversionPage({
   facebookUrl,
   tiktokUrl,
   websiteUrl,
+  googleMapsUrl,
+  address,
   previewMode = false,
   onReserve,
 }: ShowroomConversionPageProps) {
@@ -68,12 +80,11 @@ export function ShowroomConversionPage({
 
   const rating = credibility?.googleRating ?? null;
   const reviewCount = credibility?.reviewCount ?? null;
-  const metaLine = resolveShowroomMetaLine(cuisineType, city);
-  const marketingHook = resolveShowroomHook({
+  const promiseLine = resolveShowroomPromiseLine(cuisineType, city);
+  const actionLine = resolveShowroomActionLine({
     description,
     tagline,
     heroSubtitle,
-    cuisineType,
     city,
   });
   const reassurance = resolveCtaReassurance(ctaReassurance);
@@ -81,14 +92,15 @@ export function ShowroomConversionPage({
     openingHours,
     reservationEnabled,
   });
+  const directionsUrl = resolveDirectionsUrl(googleMapsUrl, address);
 
   return (
     <ShowroomHero
       coverImageUrl={coverImageUrl}
       logoUrl={logoUrl}
       restaurantName={restaurantName}
-      metaLine={metaLine}
-      marketingHook={marketingHook}
+      promiseLine={promiseLine}
+      actionLine={actionLine}
       googleRating={rating}
       reviewCount={reviewCount}
       showRating={showRating}
@@ -102,6 +114,7 @@ export function ShowroomConversionPage({
       facebookUrl={facebookUrl}
       tiktokUrl={tiktokUrl}
       websiteUrl={websiteUrl}
+      directionsUrl={directionsUrl}
       previewMode={previewMode}
       onReserve={onReserve}
     />
