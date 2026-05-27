@@ -189,7 +189,7 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
 
         <PageHeader
           title={SHOWROOM_PRODUCT_NAME}
-          subtitle="Vitrine immersive · ambiance · réservation en quelques secondes"
+          subtitle="Page de conversion mobile · réservez depuis Instagram, TikTok ou le lien en bio"
           secondaryActions={[
             {
               kind: "external",
@@ -215,9 +215,9 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
 
         <PublicPageStatusLine publicPath={effectivePublicPath} publishState={publishState} />
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-          <PublicPageSectionNav />
-          <div className="min-w-0 flex-1 space-y-8">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
+          <PublicPageSectionNav className="xl:order-1" />
+          <div className="min-w-0 flex-1 space-y-8 xl:order-2">
             <PublicPageSettingsPanel
               ref={panelRef}
               initial={initial}
@@ -225,7 +225,7 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
               showSummaryBar={false}
               hidePreviewPublish
               hideZoneNav
-              hideLivePreview
+              hideLivePreview={false}
               onDirtyChange={handleDirtyChange}
               onPublishStateChange={setPublishState}
             />

@@ -1350,8 +1350,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         <CustomizationZone
           id="zone-theme"
           icon={Palette}
-          title="Thème"
-          description="Choisissez le style visuel global de votre page."
+          title="Personnalisez l'expérience"
+          description="Template de conversion, couleurs et typographie."
         >
           <PublicPageThemePicker
             publicUrl={publicLinkBase}
@@ -1374,8 +1374,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         <CustomizationZone
           id="zone-identite"
           icon={Sparkles}
-          title="Identité"
-          description="Personnalisez les couleurs, polices et logo."
+          title="Présentez votre restaurant"
+          description="Nom, slogan, logo et identité visuelle."
         >
           <PublicPageIdentitySection
             themeId={themeId}
@@ -1410,8 +1410,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         <CustomizationZone
           id="zone-sections"
           icon={Layers}
-          title="Sections"
-          description="Structurez votre showroom : ambiance, menu, réservation."
+          title="Réservation"
+          description="Bouton principal, sections visibles et parcours de réservation."
         >
           <PageSectionsStructureCard
             themeId={themeId}
@@ -1423,8 +1423,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         <CustomizationZone
           id="zone-contenu"
           icon={FileText}
-          title="Contenu"
-          description="Modifiez le texte, les images et les données de chaque section."
+          title="Donnez envie de réserver"
+          description="Photo principale, galerie, texte d'ambiance et menu."
           className="space-y-8 !p-0 !border-0 !bg-transparent shadow-none"
         >
         <div className="space-y-8">
@@ -3230,26 +3230,32 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     );
 
     return (
-      <div className="space-y-2">
-        {editor}
+      <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-start">
+        <div className="min-w-0 flex-1 space-y-2">{editor}</div>
         {hideLivePreview ? null : (
-          <PublicPagePreviewStudio
-            draft={previewDraft}
-            publicPath={publicPath}
-            conversionScore={conversionScore}
-            pageStatusLabel={statusLabel}
-            onPublish={
-              hidePreviewPublish
-                ? undefined
-                : async () => {
-                    setIsPublishing(true);
-                    const result = await publishPage();
-                    setIsPublishing(false);
-                    if (!result.ok) onMessage?.(result.error ?? "Échec de la publication.");
-                  }
-            }
-            isPublishing={hidePreviewPublish ? undefined : isPublishing}
-          />
+          <div
+            id="zone-publication"
+            className="scroll-mt-24 2xl:sticky 2xl:top-6 2xl:w-[min(100%,400px)] 2xl:shrink-0"
+          >
+            <PublicPagePreviewStudio
+              draft={previewDraft}
+              publicPath={publicPath}
+              conversionScore={conversionScore}
+              pageStatusLabel={statusLabel}
+              defaultViewport="mobile"
+              onPublish={
+                hidePreviewPublish
+                  ? undefined
+                  : async () => {
+                      setIsPublishing(true);
+                      const result = await publishPage();
+                      setIsPublishing(false);
+                      if (!result.ok) onMessage?.(result.error ?? "Échec de la publication.");
+                    }
+              }
+              isPublishing={hidePreviewPublish ? undefined : isPublishing}
+            />
+          </div>
         )}
       </div>
     );

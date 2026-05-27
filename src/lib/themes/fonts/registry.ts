@@ -18,12 +18,18 @@ const CATALOGS: Record<ThemeId, ThemeFontCatalog> = {
   default: DEFAULT_THEME_FONTS,
   "premium-dark": PREMIUM_DARK_FONTS,
   "premium-elegant": PREMIUM_ELEGANT_FONTS,
+  "elegant-light": PREMIUM_ELEGANT_FONTS,
+  "social-bold": PREMIUM_DARK_FONTS,
+  "minimal-chic": DEFAULT_THEME_FONTS,
 };
 
 const DEFAULTS: Record<ThemeId, Record<FontRole, string>> = {
   default: DEFAULT_THEME_FONT_DEFAULTS,
   "premium-dark": PREMIUM_DARK_FONT_DEFAULTS,
   "premium-elegant": PREMIUM_ELEGANT_FONT_DEFAULTS,
+  "elegant-light": PREMIUM_ELEGANT_FONT_DEFAULTS,
+  "social-bold": PREMIUM_DARK_FONT_DEFAULTS,
+  "minimal-chic": DEFAULT_THEME_FONT_DEFAULTS,
 };
 
 export function getThemeFontCatalog(themeId: ThemeId): ThemeFontCatalog {

@@ -36,6 +36,7 @@ type PublicPagePreviewStudioProps = {
   isPublishing?: boolean;
   conversionScore?: number;
   pageStatusLabel?: string;
+  defaultViewport?: "desktop" | "mobile";
 };
 
 export default function PublicPagePreviewStudio({
@@ -45,8 +46,9 @@ export default function PublicPagePreviewStudio({
   isPublishing,
   conversionScore,
   pageStatusLabel,
+  defaultViewport = "mobile",
 }: PublicPagePreviewStudioProps) {
-  const [viewport, setViewport] = useState<"desktop" | "mobile">("desktop");
+  const [viewport, setViewport] = useState<"desktop" | "mobile">(defaultViewport);
   const [fullscreen, setFullscreen] = useState(false);
   const inlineScrollRef = useRef<HTMLDivElement | null>(null);
   const fullscreenScrollRef = useRef<HTMLDivElement | null>(null);
@@ -100,6 +102,7 @@ export default function PublicPagePreviewStudio({
   const previewForm = (
     <PublicReservationForm
       previewMode
+      forceLandingExperience
       restaurantId={draft.restaurantId}
       restaurantSlug={draft.slug}
       restaurantName={draft.displayName.trim() || "Restaurant"}

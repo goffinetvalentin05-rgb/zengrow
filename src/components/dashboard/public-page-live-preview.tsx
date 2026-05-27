@@ -154,6 +154,7 @@ export default function PublicPageLivePreview({ draft, publicPath }: PublicPageL
           >
           <PublicReservationForm
             previewMode
+            forceLandingExperience
             restaurantId={draft.restaurantId}
             restaurantSlug={draft.slug}
             restaurantName={draft.displayName.trim() || "Restaurant"}

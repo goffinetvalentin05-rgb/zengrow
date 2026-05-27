@@ -4,7 +4,7 @@ import { RotateCcw } from "lucide-react";
 import { useMemo } from "react";
 import ThemeCard from "@/src/components/dashboard/public-page/theme-card";
 import Button from "@/src/components/ui/button";
-import { listThemes } from "@/src/lib/themes/registry";
+import { listShowroomThemes } from "@/src/lib/themes/registry";
 import type { ThemeId, ThemeOverrides } from "@/src/lib/themes/types";
 
 type PublicPageThemePickerProps = {
@@ -30,15 +30,15 @@ export default function PublicPageThemePicker({
   onResetOverrides,
   onThemeApplied,
 }: PublicPageThemePickerProps) {
-  const themes = useMemo(() => listThemes(), []);
+  const themes = useMemo(() => listShowroomThemes(), []);
 
   return (
     <div className="space-y-4">
       <p className="max-w-2xl text-sm text-zg-text-muted">
-        La structure de la page (réservation, menu, galerie) reste identique — seul le rendu visuel change.
+        Choisissez l&apos;ambiance de votre page de conversion. Chaque template optimise le parcours mobile vers la réservation.
       </p>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {themes.map((t) => (
           <ThemeCard
             key={t.id}

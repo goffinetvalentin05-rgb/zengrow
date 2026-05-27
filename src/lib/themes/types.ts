@@ -1,4 +1,10 @@
-export type ThemeId = "default" | "premium-dark" | "premium-elegant";
+export type ThemeId =
+  | "default"
+  | "premium-dark"
+  | "premium-elegant"
+  | "elegant-light"
+  | "social-bold"
+  | "minimal-chic";
 
 export type ColorTokens = {
   bg: string;

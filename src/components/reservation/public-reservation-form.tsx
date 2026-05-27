@@ -82,12 +82,8 @@ import {
   PremiumDarkMasonryGallery,
   PremiumDarkNav,
 } from "@/src/lib/themes/premium-dark/components";
-import { ShowroomHero } from "@/src/components/reservation/showroom/showroom-hero";
-import { ShowroomGallery } from "@/src/components/reservation/showroom/showroom-gallery";
-import { ShowroomHighlights } from "@/src/components/reservation/showroom/showroom-trust";
-import { ShowroomMenu } from "@/src/components/reservation/showroom/showroom-menu";
-import { ShowroomPractical } from "@/src/components/reservation/showroom/showroom-practical";
-import { ShowroomFinalCta } from "@/src/components/reservation/showroom/showroom-final-cta";
+import { ShowroomConversionPage } from "@/src/components/reservation/showroom/showroom-conversion-page";
+import { normalizeShowroomTemplateId } from "@/src/lib/showroom/templates";
 import { ShowroomReservationDrawer } from "@/src/components/reservation/showroom/showroom-reservation-drawer";
 import { ShowroomReservationHeader } from "@/src/components/reservation/showroom/showroom-reservation-header";
 
@@ -987,7 +983,7 @@ export default function PublicReservationForm({
   const isLandingPage =
     forceLandingExperience === true ||
     isSocialShowroomFlow(effectiveConfig.conversion.structureTemplate);
-  const useConversionHero = isLandingPage && !previewMode;
+  const showroomTemplateId = normalizeShowroomTemplateId(visualThemeId);
   const conversionCta = ctaFlags(
     effectiveConfig.conversion,
     isLandingPage ? "social_showroom" : effectiveConfig.conversion.structureTemplate,
@@ -1090,30 +1086,43 @@ export default function PublicReservationForm({
       ) : null}
 
       {!dedicatedReservationPage && isLandingPage ? (
-        <ShowroomHero
+        <ShowroomConversionPage
+          templateId={showroomTemplateId}
           coverImageUrl={coverImageUrl}
           logoUrl={logoUrl}
           restaurantName={restaurantName}
-          emotionalHeadline={showroomHeroCopy.headline}
-          emotionalSubtitle={showroomHeroCopy.subtitle}
+          tagline={taglineText || showroomHeroCopy.headline}
+          description={descriptionText}
           cuisineType={cuisineType}
           city={city}
-          openStatus={openStatus}
+          address={restaurantAddress}
+          phone={restaurantPhone}
           hoursSummary={showroomHoursSummary}
           ctaLabel={ctaLabel}
-          secondaryLabel={secondaryLabel}
-          secondaryHref={menuHref}
-          showSecondary={
-            useConversionHero
-              ? true
-              : Boolean(menuHref || effectiveConfig.hero.secondaryCtaEnabled)
-          }
-          onReserve={handleReserve}
-          reserveHref={
-            useConversionHero && restaurantSlug ? `/r/${restaurantSlug}/reserver` : undefined
-          }
-          conversionScreen={useConversionHero}
+          secondaryMenuLabel={secondaryLabel}
+          menuHref={menuHref}
+          galleryImages={galleryImageUrls}
+          highlights={activeHighlights}
+          menuOffers={menuOffers}
+          menuEnabled={blockEnabled("menu")}
+          galleryEnabled={blockEnabled("gallery")}
+          ambianceEnabled={blockEnabled("about")}
+          highlightsEnabled={blockEnabled("highlights") || blockEnabled("trust")}
+          credibility={credibilityData}
+          showRating={effectiveConfig.blockContent.reviews.showRating}
+          instagramUrl={instagramUrl}
+          facebookUrl={facebookUrl}
+          tiktokUrl={tiktokUrl}
+          websiteUrl={websiteUrl}
+          googleMapsUrl={googleMapsUrl}
+          showPoweredBy
+          showHours={practicalDisplay?.showHours ?? showPublicOpeningHours}
+          showAddress={practicalDisplay?.showAddress ?? showPublicAddress}
+          showPhone={practicalDisplay?.showPhone ?? showPublicPhone}
+          restaurantSlug={restaurantSlug}
+          useDedicatedReservePage={!previewMode}
           previewMode={previewMode}
+          onReserve={handleReserve}
         />
       ) : usePremiumChrome ? (
         <>
@@ -2006,58 +2015,6 @@ export default function PublicReservationForm({
           </div>
         ) : null}
       </div>
-
-      {!dedicatedReservationPage && isLandingPage ? (
-        <>
-          <ShowroomHighlights highlights={activeHighlights} />
-          {blockEnabled("gallery") && showroomGalleryImages.length > 0 ? (
-            <ShowroomGallery
-              images={showroomGalleryImages}
-              title={resolvedSectionContent.gallery?.titleIfNoInstagram ?? "L'ambiance"}
-              eyebrow={resolvedSectionContent.gallery?.eyebrow ?? "Galerie"}
-              tagline={taglineText || publicPageDescription?.trim() || undefined}
-            />
-          ) : null}
-          {(menuOffers.length > 0 || menuHref) && blockEnabled("menu") ? (
-            <ShowroomMenu
-              offers={menuOffers}
-              menuHref={menuHref}
-              menuPdfLabel={menuPdfLinkLabel}
-              title={resolvedSectionContent.menu_offers?.title ?? "À la carte"}
-              eyebrow={resolvedSectionContent.menu_offers?.eyebrow ?? "Le menu"}
-              onReserve={handleReserve}
-            />
-          ) : null}
-          <ShowroomPractical
-            address={restaurantAddress}
-            phone={restaurantPhone}
-            email={restaurantEmail}
-            websiteUrl={websiteUrl}
-            openingHoursLines={openingHoursLines}
-            googleMapsUrl={googleMapsUrl}
-            instagramUrl={instagramUrl}
-            facebookUrl={facebookUrl}
-            showAddress={practicalDisplay?.showAddress}
-            showPhone={practicalDisplay?.showPhone}
-            showEmail={practicalDisplay?.showEmail}
-            showWebsite={practicalDisplay?.showWebsite}
-            showHours={practicalDisplay?.showHours}
-            showInstagram={practicalDisplay?.showInstagram}
-            showFacebook={practicalDisplay?.showFacebook}
-            directionsLabel={resolvedSectionContent.practical?.directionsLabel ?? "Itinéraire"}
-          />
-          {blockEnabled("final_cta") && reservationEnabled ? (
-            <ShowroomFinalCta
-              title={effectiveConfig.blockContent.finalCta.title || "Votre table vous attend"}
-              subtitle={
-                effectiveConfig.blockContent.finalCta.subtitle || "Réservez en quelques clics — confirmation rapide."
-              }
-              buttonLabel={effectiveConfig.blockContent.finalCta.button || ctaLabel}
-              onReserve={handleReserve}
-            />
-          ) : null}
-        </>
-      ) : null}
 
       <StickyReserveBar
         label={ctaLabel}

@@ -35,7 +35,7 @@ export const premiumDarkDesignTokens: DesignTokens = {
 export const premiumDarkTheme: ThemeDefinition = {
   id: "premium-dark",
   name: "Premium Dark",
-  description: "Ambiance gastronomique cinématographique — sombre, or, typographie éditoriale.",
+  description: "Sombre, gastronomique et luxe — photos fortes, typographie élégante.",
   previewImage: "/themes/premium-dark/preview.webp",
   tokens: premiumDarkDesignTokens,
 };

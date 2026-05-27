@@ -67,18 +67,18 @@ export function resolvePublicTheme(
   const resolvedFonts = resolveThemeFonts(id, overrides.fonts);
   const mergedTokens = mergeDesignTokens(base.tokens, overrides, resolvedFonts);
 
-  if (id === "default") {
-    const cssVarOverrides =
-      overrides.colors || overrides.fonts
-        ? {
-            ...designTokensToCssVars(mergedTokens),
-            ...resolvedFonts.cssVarDefinitions,
-          }
-        : undefined;
+  const isShowroomTheme =
+    id !== "default" &&
+    (id === "premium-dark" ||
+      id === "premium-elegant" ||
+      id === "elegant-light" ||
+      id === "social-bold" ||
+      id === "minimal-chic");
 
+  if (id === "default" && !overrides.colors && !overrides.fonts) {
     return {
       id: "default",
-      cssVarOverrides,
+      cssVarOverrides: undefined,
       googleFontsUrl: resolvedFonts.googleFontsUrl,
       showGrain: false,
       showVignette: false,
@@ -97,6 +97,6 @@ export function resolvePublicTheme(
     googleFontsUrl: resolvedFonts.googleFontsUrl,
     showGrain: mergedTokens.effects.grain,
     showVignette: mergedTokens.effects.vignette,
-    isPremiumLayout: true,
+    isPremiumLayout: isShowroomTheme || id !== "default",
   };
 }
