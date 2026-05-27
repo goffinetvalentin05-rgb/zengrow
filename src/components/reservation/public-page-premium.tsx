@@ -2493,16 +2493,12 @@ export function StickyReserveBar({
         type="button"
         onClick={onClick}
         className={cn(
-          "zg-showroom-sticky-cta__button relative flex min-h-[50px] items-center justify-center rounded-full px-8 text-[13px] font-semibold tracking-[0.06em] transition active:scale-[0.98]",
-          "mx-auto w-full max-w-md shadow-[0_8px_32px_-8px_rgba(0,0,0,0.35)]",
-          "md:mx-0 md:w-auto md:min-w-[220px] md:max-w-none md:px-10 md:text-sm",
+          "zg-showroom-cta-primary zg-showroom-sticky-cta__button",
+          "mx-auto w-full max-w-[17.5rem]",
+          "md:max-w-none md:min-w-[220px]",
         )}
-        style={{
-          backgroundColor: "color-mix(in srgb, var(--button-bg) 92%, transparent)",
-          color: "var(--button-text)",
-        }}
       >
-        {label}
+        <span className="zg-showroom-cta-primary__label">{label}</span>
       </button>
     </div>
   );

@@ -1,10 +1,10 @@
 "use client";
 
-import { MapPin } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import { Instagram, Facebook, Globe } from "lucide-react";
 import { SHOWROOM_PRODUCT_NAME } from "@/src/lib/showroom/branding";
 
-/** Infos pratiques compactes + réseaux + mention ZenGrow */
+/** Pied de page compact — intégré au hero, style glass ZenGrow */
 export function ShowroomCompactEssentials({
   hoursSummary,
   city,
@@ -15,6 +15,7 @@ export function ShowroomCompactEssentials({
   tiktokUrl,
   websiteUrl,
   showPoweredBy = true,
+  embedded = false,
 }: {
   hoursSummary?: string | null;
   city?: string | null;
@@ -25,6 +26,8 @@ export function ShowroomCompactEssentials({
   tiktokUrl?: string | null;
   websiteUrl?: string | null;
   showPoweredBy?: boolean;
+  /** Rendu dans le hero (fond transparent) */
+  embedded?: boolean;
 }) {
   const hours = hoursSummary?.trim();
   const place = city?.trim() || address?.trim();
@@ -40,37 +43,44 @@ export function ShowroomCompactEssentials({
   if (!hasEssentials) return null;
 
   return (
-    <section className="zg-showroom-essentials px-5 py-8 sm:px-6 sm:py-10">
-      <div className="mx-auto flex max-w-md flex-col items-center gap-5 text-center">
-        {hours ? (
-          <p className="text-[13px] leading-relaxed opacity-70" style={{ color: "var(--body-text)" }}>
-            {hours}
-          </p>
-        ) : null}
-
-        {place ? (
-          <p className="flex flex-wrap items-center justify-center gap-1.5 text-[13px] opacity-75" style={{ color: "var(--body-text)" }}>
-            <span>{place}</span>
-            {maps ? (
-              <>
-                <span className="opacity-40">·</span>
-                <a
-                  href={maps}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 font-semibold underline-offset-2 hover:underline"
-                  style={{ color: "var(--accent-color)" }}
-                >
-                  <MapPin className="h-3.5 w-3.5" aria-hidden />
-                  Voir l&apos;itinéraire
-                </a>
-              </>
+    <div
+      className={embedded ? "zg-showroom-essentials zg-showroom-essentials--embedded" : "zg-showroom-essentials"}
+    >
+      <div className="zg-showroom-essentials-inner">
+        {(hours || place) ? (
+          <div className="zg-showroom-essentials-line">
+            {hours ? (
+              <span className="zg-showroom-essentials-chip">
+                <Clock className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+                {hours}
+              </span>
             ) : null}
-          </p>
+            {place ? (
+              <span className="zg-showroom-essentials-chip">
+                {maps ? (
+                  <a
+                    href={maps}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 transition hover:opacity-90"
+                  >
+                    <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+                    <span>{place}</span>
+                    <span className="opacity-60">· Itinéraire</span>
+                  </a>
+                ) : (
+                  <>
+                    <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+                    {place}
+                  </>
+                )}
+              </span>
+            ) : null}
+          </div>
         ) : null}
 
         {socials.length > 0 ? (
-          <div className="flex flex-wrap justify-center gap-2.5">
+          <div className="zg-showroom-essentials-socials">
             {socials.map((s) => {
               const Icon = s.icon;
               return (
@@ -79,10 +89,10 @@ export function ShowroomCompactEssentials({
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--body-text)_10%,transparent)] transition hover:border-[color-mix(in_srgb,var(--accent-color)_35%,transparent)]"
+                  className="zg-showroom-essentials-social"
                   aria-label={s.label}
                 >
-                  <Icon className="h-4 w-4" style={{ color: "var(--accent-color)" }} />
+                  <Icon className="h-3.5 w-3.5" aria-hidden />
                 </a>
               );
             })}
@@ -90,11 +100,11 @@ export function ShowroomCompactEssentials({
         ) : null}
 
         {showPoweredBy ? (
-          <p className="text-[10px] font-medium tracking-[0.22em] uppercase opacity-30" style={{ color: "var(--body-text)" }}>
+          <p className="zg-showroom-essentials-powered">
             Propulsé par {SHOWROOM_PRODUCT_NAME}
           </p>
         ) : null}
       </div>
-    </section>
+    </div>
   );
 }

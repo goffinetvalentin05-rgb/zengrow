@@ -14,6 +14,7 @@ export type ShowroomConversionPageProps = {
   cuisineType?: string | null;
   city?: string | null;
   hoursSummary?: string | null;
+  address?: string | null;
   ctaLabel: string;
   menuLabel?: string;
   menuHref?: string | null;
@@ -27,13 +28,12 @@ export type ShowroomConversionPageProps = {
   googleMapsUrl?: string | null;
   showPoweredBy?: boolean;
   previewMode?: boolean;
-  /** Toujours drawer / modale — jamais de lien direct vers le formulaire inline */
   onReserve: () => void;
 };
 
 /**
- * Page Showroom — structure fixe courte orientée conversion.
- * Hero + infos compactes uniquement. Pas de sections de site web.
+ * Page Showroom — hero unique plein écran + pied intégré.
+ * Pas de sections scrollables : conversion immédiate.
  */
 export function ShowroomConversionPage({
   templateId,
@@ -44,6 +44,7 @@ export function ShowroomConversionPage({
   cuisineType,
   city,
   hoursSummary,
+  address,
   ctaLabel,
   menuLabel = "Voir le menu",
   menuHref,
@@ -63,37 +64,40 @@ export function ShowroomConversionPage({
   const rating = credibility?.googleRating ?? null;
   const reviewCount = credibility?.reviewCount ?? null;
 
-  return (
-    <>
-      <ShowroomHero
-        coverImageUrl={coverImageUrl}
-        logoUrl={logoUrl}
-        restaurantName={restaurantName}
-        tagline={tagline}
-        cuisineType={cuisineType}
-        city={city}
-        googleRating={rating}
-        reviewCount={reviewCount}
-        showRating={showRating}
-        ctaLabel={ctaLabel}
-        menuLabel={menuLabel}
-        menuHref={menuHref}
-        showMenu={menuEnabled && Boolean(menuHref?.trim())}
-        onReserve={onReserve}
-        previewMode={previewMode}
-        templateMode={template.mode}
-      />
+  const essentials = (
+    <ShowroomCompactEssentials
+      hoursSummary={hoursSummary}
+      city={city}
+      address={address}
+      googleMapsUrl={googleMapsUrl}
+      instagramUrl={instagramUrl}
+      facebookUrl={facebookUrl}
+      tiktokUrl={tiktokUrl}
+      websiteUrl={websiteUrl}
+      showPoweredBy={showPoweredBy}
+      embedded
+    />
+  );
 
-      <ShowroomCompactEssentials
-        hoursSummary={hoursSummary}
-        city={city}
-        googleMapsUrl={googleMapsUrl}
-        instagramUrl={instagramUrl}
-        facebookUrl={facebookUrl}
-        tiktokUrl={tiktokUrl}
-        websiteUrl={websiteUrl}
-        showPoweredBy={showPoweredBy}
-      />
-    </>
+  return (
+    <ShowroomHero
+      coverImageUrl={coverImageUrl}
+      logoUrl={logoUrl}
+      restaurantName={restaurantName}
+      tagline={tagline}
+      cuisineType={cuisineType}
+      city={city}
+      googleRating={rating}
+      reviewCount={reviewCount}
+      showRating={showRating}
+      ctaLabel={ctaLabel}
+      menuLabel={menuLabel}
+      menuHref={menuHref}
+      showMenu={menuEnabled && Boolean(menuHref?.trim())}
+      onReserve={onReserve}
+      previewMode={previewMode}
+      templateMode={template.mode}
+      footerSlot={essentials}
+    />
   );
 }
