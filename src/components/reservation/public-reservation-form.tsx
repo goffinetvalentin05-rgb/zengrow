@@ -1092,22 +1092,13 @@ export default function PublicReservationForm({
           logoUrl={logoUrl}
           restaurantName={restaurantName}
           tagline={taglineText || showroomHeroCopy.headline}
-          description={descriptionText}
           cuisineType={cuisineType}
           city={city}
-          address={restaurantAddress}
-          phone={restaurantPhone}
           hoursSummary={showroomHoursSummary}
           ctaLabel={ctaLabel}
-          secondaryMenuLabel={secondaryLabel}
+          menuLabel={secondaryLabel}
           menuHref={menuHref}
-          galleryImages={galleryImageUrls}
-          highlights={activeHighlights}
-          menuOffers={menuOffers}
-          menuEnabled={blockEnabled("menu")}
-          galleryEnabled={blockEnabled("gallery")}
-          ambianceEnabled={blockEnabled("about")}
-          highlightsEnabled={blockEnabled("highlights") || blockEnabled("trust")}
+          menuEnabled={Boolean(menuHref?.trim())}
           credibility={credibilityData}
           showRating={effectiveConfig.blockContent.reviews.showRating}
           instagramUrl={instagramUrl}
@@ -1116,11 +1107,6 @@ export default function PublicReservationForm({
           websiteUrl={websiteUrl}
           googleMapsUrl={googleMapsUrl}
           showPoweredBy
-          showHours={practicalDisplay?.showHours ?? showPublicOpeningHours}
-          showAddress={practicalDisplay?.showAddress ?? showPublicAddress}
-          showPhone={practicalDisplay?.showPhone ?? showPublicPhone}
-          restaurantSlug={restaurantSlug}
-          useDedicatedReservePage={!previewMode}
           previewMode={previewMode}
           onReserve={handleReserve}
         />

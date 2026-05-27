@@ -28,7 +28,16 @@ import {
   FileText,
   Layers,
   Palette,
+  CalendarCheck,
+  MapPin,
 } from "lucide-react";
+import {
+  ShowroomActionsFields,
+  ShowroomLogoHeroFields,
+  ShowroomPracticalFields,
+  ShowroomPublicationFields,
+  ShowroomRatingFields,
+} from "@/src/components/dashboard/public-page/showroom-dashboard-fields";
 import { createClient } from "@/src/lib/supabase/client";
 import { isGiftCardsEnabled } from "@/src/lib/config/features";
 import {
@@ -382,6 +391,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     },
     ref,
   ) {
+    const showroomMode = hideZoneNav;
     const supabase = createClient();
     const showToast = useDashboardToast();
 
@@ -470,11 +480,11 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
     const [address, setAddress] = useState(initial.address);
     const [phone, setPhone] = useState(initial.phone);
     const [email, setEmail] = useState(initial.email);
-    const [websiteUrl] = useState(initial.websiteUrl);
+    const [websiteUrl, setWebsiteUrl] = useState(initial.websiteUrl);
     const [googleMapsUrl, setGoogleMapsUrl] = useState(initial.googleMapsUrl);
-    const [instagramUrl] = useState(initial.instagramUrl);
-    const [facebookUrl] = useState(initial.facebookUrl);
-    const [tiktokUrl] = useState(initial.tiktokUrl);
+    const [instagramUrl, setInstagramUrl] = useState(initial.instagramUrl);
+    const [facebookUrl, setFacebookUrl] = useState(initial.facebookUrl);
+    const [tiktokUrl, setTiktokUrl] = useState(initial.tiktokUrl);
 
     const [primaryColor, setPrimaryColor] = useState(initial.primaryColor || DEFAULT_PRIMARY);
     const [secondaryColor, setSecondaryColor] = useState(initial.secondaryColor || DEFAULT_SECONDARY);
@@ -1350,8 +1360,12 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
         <CustomizationZone
           id="zone-theme"
           icon={Palette}
-          title="Personnalisez l'expérience"
-          description="Template de conversion, couleurs et typographie."
+          title={showroomMode ? "Apparence" : "Personnalisez l'expérience"}
+          description={
+            showroomMode
+              ? "Template, couleurs principales et typographie."
+              : "Template de conversion, couleurs et typographie."
+          }
         >
           <PublicPageThemePicker
             publicUrl={publicLinkBase}
@@ -1369,62 +1383,102 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
               markDirty();
             }}
           />
+          {showroomMode ? (
+            <div className="mt-6 border-t border-zg-border/60 pt-6">
+              <PublicPageIdentitySection
+                themeId={themeId}
+                overrides={themeOverrides}
+                onOverridesChange={(next) => {
+                  setThemeOverrides(next);
+                  markDirty();
+                }}
+                legacyAccentColor={accentColor}
+                onLegacyAccentChange={(hex) => {
+                  setAccentColor(hex);
+                  setSecondaryColor(hex);
+                  setEditorConfig((c) =>
+                    parseEditorConfig({
+                      ...c,
+                      appearance: { ...c.appearance, accentColor: hex, secondaryColor: hex },
+                    }),
+                  );
+                  markDirty();
+                }}
+                logoUrl={logoUrl}
+                isUploadingLogo={isUploadingLogo}
+                onLogoUpload={(e) => void handleFileUpload(e, "logo")}
+                onLogoRemove={() => {
+                  void tryRemoveRestaurantPublicObject(supabase, logoUrl);
+                  setLogoUrl("");
+                  markDirty();
+                }}
+              />
+            </div>
+          ) : null}
         </CustomizationZone>
 
-        <CustomizationZone
-          id="zone-identite"
-          icon={Sparkles}
-          title="Présentez votre restaurant"
-          description="Nom, slogan, logo et identité visuelle."
-        >
-          <PublicPageIdentitySection
-            themeId={themeId}
-            overrides={themeOverrides}
-            onOverridesChange={(next) => {
-              setThemeOverrides(next);
-              markDirty();
-            }}
-            legacyAccentColor={accentColor}
-            onLegacyAccentChange={(hex) => {
-              setAccentColor(hex);
-              setSecondaryColor(hex);
-              setEditorConfig((c) =>
-                parseEditorConfig({
-                  ...c,
-                  appearance: { ...c.appearance, accentColor: hex, secondaryColor: hex },
-                }),
-              );
-              markDirty();
-            }}
-            logoUrl={logoUrl}
-            isUploadingLogo={isUploadingLogo}
-            onLogoUpload={(e) => void handleFileUpload(e, "logo")}
-            onLogoRemove={() => {
-              void tryRemoveRestaurantPublicObject(supabase, logoUrl);
-              setLogoUrl("");
-              markDirty();
-            }}
-          />
-        </CustomizationZone>
+        {!showroomMode ? (
+          <CustomizationZone
+            id="zone-identite"
+            icon={Sparkles}
+            title="Présentez votre restaurant"
+            description="Nom, slogan, logo et identité visuelle."
+          >
+            <PublicPageIdentitySection
+              themeId={themeId}
+              overrides={themeOverrides}
+              onOverridesChange={(next) => {
+                setThemeOverrides(next);
+                markDirty();
+              }}
+              legacyAccentColor={accentColor}
+              onLegacyAccentChange={(hex) => {
+                setAccentColor(hex);
+                setSecondaryColor(hex);
+                setEditorConfig((c) =>
+                  parseEditorConfig({
+                    ...c,
+                    appearance: { ...c.appearance, accentColor: hex, secondaryColor: hex },
+                  }),
+                );
+                markDirty();
+              }}
+              logoUrl={logoUrl}
+              isUploadingLogo={isUploadingLogo}
+              onLogoUpload={(e) => void handleFileUpload(e, "logo")}
+              onLogoRemove={() => {
+                void tryRemoveRestaurantPublicObject(supabase, logoUrl);
+                setLogoUrl("");
+                markDirty();
+              }}
+            />
+          </CustomizationZone>
+        ) : null}
 
-        <CustomizationZone
-          id="zone-sections"
-          icon={Layers}
-          title="Réservation"
-          description="Bouton principal, sections visibles et parcours de réservation."
-        >
-          <PageSectionsStructureCard
-            themeId={themeId}
-            pageSectionStructure={pageSectionStructure}
-            setPageSectionStructure={handleSectionStructureChange}
-          />
-        </CustomizationZone>
+        {!showroomMode ? (
+          <CustomizationZone
+            id="zone-sections"
+            icon={Layers}
+            title="Réservation"
+            description="Bouton principal, sections visibles et parcours de réservation."
+          >
+            <PageSectionsStructureCard
+              themeId={themeId}
+              pageSectionStructure={pageSectionStructure}
+              setPageSectionStructure={handleSectionStructureChange}
+            />
+          </CustomizationZone>
+        ) : null}
 
         <CustomizationZone
           id="zone-contenu"
-          icon={FileText}
-          title="Donnez envie de réserver"
-          description="Photo principale, galerie, texte d'ambiance et menu."
+          icon={Sparkles}
+          title={showroomMode ? "Contenu principal" : "Donnez envie de réserver"}
+          description={
+            showroomMode
+              ? "Logo, image hero, identité et note Google."
+              : "Photo principale, galerie, texte d'ambiance et menu."
+          }
           className="space-y-8 !p-0 !border-0 !bg-transparent shadow-none"
         >
         <div className="space-y-8">
@@ -1487,131 +1541,245 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                 placeholder={defaultHeroSubtitle(cuisineType, city, ambiance)}
               />
             </div>
-            <div className="md:col-span-2">
-              <label className="dashboard-field-label">Petite description</label>
-              <FieldHint>Présentez votre concept en 2 ou 3 phrases — pas plus.</FieldHint>
-              <Textarea
-                className="mt-2 min-h-24"
-                maxLength={MAX_DESCRIPTION_CHARS}
-                value={shortDescription}
-                onChange={(e) => {
-                  setShortDescription(e.target.value);
-                  setEditorConfig((c) =>
-                    parseEditorConfig({
-                      ...c,
-                      premium: {
-                        ...c.premium,
-                        concept: { ...c.premium.concept, body: e.target.value },
-                      },
-                    }),
-                  );
-                  markDirty();
-                }}
-                placeholder="Cuisine maison, ambiance chaleureuse, produits de saison."
-              />
-              <p className="mt-1 text-xs text-zg-text-muted">
-                {shortDescription.length}/{MAX_DESCRIPTION_CHARS}
-              </p>
-            </div>
+            {!showroomMode ? (
+              <div className="md:col-span-2">
+                <label className="dashboard-field-label">Petite description</label>
+                <FieldHint>Présentez votre concept en 2 ou 3 phrases — pas plus.</FieldHint>
+                <Textarea
+                  className="mt-2 min-h-24"
+                  maxLength={MAX_DESCRIPTION_CHARS}
+                  value={shortDescription}
+                  onChange={(e) => {
+                    setShortDescription(e.target.value);
+                    setEditorConfig((c) =>
+                      parseEditorConfig({
+                        ...c,
+                        premium: {
+                          ...c.premium,
+                          concept: { ...c.premium.concept, body: e.target.value },
+                        },
+                      }),
+                    );
+                    markDirty();
+                  }}
+                  placeholder="Cuisine maison, ambiance chaleureuse, produits de saison."
+                />
+                <p className="mt-1 text-xs text-zg-text-muted">
+                  {shortDescription.length}/{MAX_DESCRIPTION_CHARS}
+                </p>
+              </div>
+            ) : null}
           </div>
 
-          <div className="mt-6">
-            <div className="rounded-2xl border border-zg-border bg-zg-surface/60 p-4">
-              <label className="dashboard-field-label">Image principale (hero)</label>
-              <FieldHint>
-                Utilisez une photo nette et lumineuse pour donner envie de réserver.
-              </FieldHint>
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
-                  <Upload className="h-4 w-4" />
-                  {coverImageUrl ? "Remplacer" : "Importer une photo"}
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
-                    className="hidden"
-                    onChange={(e) => handleFileUpload(e, "cover")}
-                  />
-                </label>
-                {coverImageUrl ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-h-9"
-                    onClick={() => {
-                      void tryRemoveRestaurantPublicObject(supabase, coverImageUrl);
-                      setCoverImageUrl("");
+          {showroomMode ? (
+            <>
+              <ShowroomLogoHeroFields
+                coverImageUrl={coverImageUrl}
+                isUploadingCover={isUploadingCover}
+                onCoverUpload={(e) => void handleFileUpload(e, "cover")}
+                onCoverRemove={() => {
+                  void tryRemoveRestaurantPublicObject(supabase, coverImageUrl);
+                  setCoverImageUrl("");
+                  markDirty();
+                }}
+              />
+              <div className="mt-6 border-t border-zg-border/60 pt-6">
+                <p className="mb-3 text-sm font-semibold text-zg-fg">Crédibilité Google</p>
+                <ShowroomRatingFields
+                  editorConfig={editorConfig}
+                  setEditorConfig={setEditorConfig}
+                  markDirty={markDirty}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mt-6">
+                <div className="rounded-2xl border border-zg-border bg-zg-surface/60 p-4">
+                  <label className="dashboard-field-label">Image principale (hero)</label>
+                  <FieldHint>
+                    Utilisez une photo nette et lumineuse pour donner envie de réserver.
+                  </FieldHint>
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zg-border bg-zg-surface px-3 py-2 text-sm font-medium hover:border-zg-accent/60">
+                      <Upload className="h-4 w-4" />
+                      {coverImageUrl ? "Remplacer" : "Importer une photo"}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                        className="hidden"
+                        onChange={(e) => handleFileUpload(e, "cover")}
+                      />
+                    </label>
+                    {coverImageUrl ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="min-h-9"
+                        onClick={() => {
+                          void tryRemoveRestaurantPublicObject(supabase, coverImageUrl);
+                          setCoverImageUrl("");
+                          markDirty();
+                        }}
+                      >
+                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                        Retirer
+                      </Button>
+                    ) : null}
+                    {isUploadingCover ? <span className="text-xs text-zg-muted">Envoi…</span> : null}
+                  </div>
+                  <div className="relative mt-3 aspect-[16/9] w-full overflow-hidden rounded-xl border border-zg-border bg-zg-surface">
+                    {coverImageUrl ? (
+                      <Image
+                        src={coverImageUrl}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        unoptimized
+                        sizes="400px"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <ImageIcon className="h-10 w-10 text-zg-muted" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <SectionDisplayToggles
+                className="mt-6 border-t border-zg-border/60 pt-6"
+                display={heroDisplayResolved}
+                options={HERO_DISPLAY_TOGGLE_OPTIONS}
+                availability={{
+                  showCoverImage: Boolean(coverImageUrl.trim()),
+                  showLogo: Boolean(logoUrl.trim()),
+                  showBadge: Boolean(editorConfig.hero.badgeText?.trim()),
+                  showPhone: Boolean(phone.trim()),
+                  showSecondaryCta: editorConfig.hero.secondaryCtaEnabled,
+                }}
+                onChange={(key, value) => {
+                  setEditorConfig((c) => parseEditorConfig(patchHeroDisplay(c, key, value)));
+                  markDirty();
+                  showToast({ message: "Affichage mis à jour", icon: CheckCircle2 });
+                }}
+              />
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                {themeId === "default" ? (
+                  <ColorField
+                    label="Couleur principale"
+                    hint="Utilisée pour les titres sur la page publique (thème classique)."
+                    value={primaryColor}
+                    onChange={(v) => {
+                      setPrimaryColor(v);
+                      setEditorConfig((c) =>
+                        parseEditorConfig({
+                          ...c,
+                          appearance: { ...c.appearance, primaryColor: v },
+                        }),
+                      );
                       markDirty();
                     }}
-                  >
-                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                    Retirer
-                  </Button>
-                ) : null}
-                {isUploadingCover ? <span className="text-xs text-zg-muted">Envoi…</span> : null}
-              </div>
-              <div className="relative mt-3 aspect-[16/9] w-full overflow-hidden rounded-xl border border-zg-border bg-zg-surface">
-                {coverImageUrl ? (
-                  <Image
-                    src={coverImageUrl}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    unoptimized
-                    sizes="400px"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <ImageIcon className="h-10 w-10 text-zg-muted" />
-                  </div>
+                  <p className="md:col-span-2 rounded-lg border border-zg-border/80 bg-zg-surface-elevated/50 px-3 py-2 text-xs text-zg-text-muted">
+                    Les couleurs d&apos;accent et de fond se règlent dans la zone <strong>Identité</strong> ci-dessus.
+                  </p>
                 )}
               </div>
-            </div>
+            </>
+          )}
+        </StepCard>
 
-          </div>
-
-          <SectionDisplayToggles
-            className="mt-6 border-t border-zg-border/60 pt-6"
-            display={heroDisplayResolved}
-            options={HERO_DISPLAY_TOGGLE_OPTIONS}
-            availability={{
-              showCoverImage: Boolean(coverImageUrl.trim()),
-              showLogo: Boolean(logoUrl.trim()),
-              showBadge: Boolean(editorConfig.hero.badgeText?.trim()),
-              showPhone: Boolean(phone.trim()),
-              showSecondaryCta: editorConfig.hero.secondaryCtaEnabled,
-            }}
-            onChange={(key, value) => {
-              setEditorConfig((c) => parseEditorConfig(patchHeroDisplay(c, key, value)));
-              markDirty();
-              showToast({ message: "Affichage mis à jour", icon: CheckCircle2 });
-            }}
-          />
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {themeId === "default" ? (
-              <ColorField
-                label="Couleur principale"
-                hint="Utilisée pour les titres sur la page publique (thème classique)."
-                value={primaryColor}
-                onChange={(v) => {
-                  setPrimaryColor(v);
+        {showroomMode ? (
+          <>
+            <CustomizationZone
+              id="zone-actions"
+              icon={CalendarCheck}
+              title="Actions"
+              description="Bouton de réservation, menu et réseaux sociaux."
+            >
+              <ShowroomActionsFields
+                ctaLabel={ctaLabel}
+                onCtaLabelChange={setCtaLabel}
+                menuMode={menuMode}
+                menuUrl={menuUrl}
+                onMenuModeChange={setMenuMode}
+                onMenuUrlChange={setMenuUrl}
+                menuEnabled={editorConfig.hero.secondaryCtaEnabled}
+                onMenuEnabledChange={(v) => {
                   setEditorConfig((c) =>
                     parseEditorConfig({
                       ...c,
-                      appearance: { ...c.appearance, primaryColor: v },
+                      hero: { ...c.hero, secondaryCtaEnabled: v },
                     }),
                   );
+                }}
+                onMenuPdfUpload={handleMenuPdfUpload}
+                isUploadingMenuPdf={isUploadingMenuPdf}
+                instagramUrl={instagramUrl}
+                onInstagramChange={setInstagramUrl}
+                facebookUrl={facebookUrl}
+                onFacebookChange={setFacebookUrl}
+                tiktokUrl={tiktokUrl}
+                onTiktokChange={setTiktokUrl}
+                websiteUrl={websiteUrl}
+                onWebsiteChange={setWebsiteUrl}
+                markDirty={markDirty}
+              />
+            </CustomizationZone>
+
+            <CustomizationZone
+              id="zone-infos"
+              icon={MapPin}
+              title="Infos pratiques"
+              description="Horaires, adresse et itinéraire — affichage compact."
+            >
+              <ShowroomPracticalFields
+                address={address}
+                onAddressChange={setAddress}
+                phone={phone}
+                onPhoneChange={setPhone}
+                googleMapsUrl={googleMapsUrl}
+                onGoogleMapsChange={setGoogleMapsUrl}
+                openingHours={initial.openingHours}
+                markDirty={markDirty}
+              />
+            </CustomizationZone>
+
+            <CustomizationZone
+              id="zone-publication-slug"
+              icon={Sparkles}
+              title="Lien public"
+              description="URL partageable pour Instagram, TikTok et QR code."
+              className="scroll-mt-24"
+            >
+              <ShowroomPublicationFields
+                slug={slug}
+                onSlugChange={(v) => {
+                  setSlug(v);
                   markDirty();
                 }}
+                publicPath={publicPath}
+                onCopyLink={async () => {
+                  try {
+                    await navigator.clipboard.writeText(publicPath);
+                    onMessage?.("Lien copié.");
+                  } catch {
+                    onMessage?.("Impossible de copier.");
+                  }
+                }}
+                onOpenPreview={() => {
+                  document.getElementById("zone-publication")?.scrollIntoView({ behavior: "smooth" });
+                }}
               />
-            ) : (
-              <p className="md:col-span-2 rounded-lg border border-zg-border/80 bg-zg-surface-elevated/50 px-3 py-2 text-xs text-zg-text-muted">
-                Les couleurs d&apos;accent et de fond se règlent dans la zone <strong>Identité</strong> ci-dessus.
-              </p>
-            )}
-          </div>
-        </StepCard>
+            </CustomizationZone>
+          </>
+        ) : null}
 
+        {!showroomMode ? (
+        <>
         {/* ============================================================
             ÉTAPE 2 — TEXTES DES SECTIONS
             ============================================================ */}
@@ -3224,6 +3392,8 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
             </div>
           </div>
         </StepCard>
+        </>
+        ) : null}
         </div>
         </CustomizationZone>
       </div>

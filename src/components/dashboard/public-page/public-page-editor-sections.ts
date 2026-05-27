@@ -1,11 +1,11 @@
 import type { LucideIcon } from "lucide-react";
-import { FileText, Layers, Palette, Rocket, Sparkles } from "lucide-react";
+import { CalendarCheck, FileText, MapPin, Palette, Rocket, Sparkles } from "lucide-react";
 
 export type PublicPageEditorSectionId =
-  | "zone-identite"
   | "zone-theme"
   | "zone-contenu"
-  | "zone-sections"
+  | "zone-actions"
+  | "zone-infos"
   | "zone-publication";
 
 export type PublicPageEditorSection = {
@@ -15,36 +15,36 @@ export type PublicPageEditorSection = {
   icon: LucideIcon;
 };
 
-/** Navigation éditeur Showroom — wording orienté marketing */
+/** Navigation éditeur Showroom — configuration simple, pas de sections de site web */
 export const PUBLIC_PAGE_EDITOR_SECTIONS: PublicPageEditorSection[] = [
   {
-    id: "zone-identite",
-    label: "Présentez votre restaurant",
-    description: "Nom, slogan, ville, contact et lien public",
-    icon: Sparkles,
-  },
-  {
     id: "zone-theme",
-    label: "Personnalisez l'expérience",
+    label: "Apparence",
     description: "Template, couleurs et typographie",
     icon: Palette,
   },
   {
     id: "zone-contenu",
-    label: "Donnez envie de réserver",
-    description: "Photos, ambiance et menu",
-    icon: FileText,
+    label: "Contenu principal",
+    description: "Logo, image hero, nom et crédibilité",
+    icon: Sparkles,
   },
   {
-    id: "zone-sections",
-    label: "Réservation",
-    description: "Bouton principal, sections et parcours client",
-    icon: Layers,
+    id: "zone-actions",
+    label: "Actions",
+    description: "Réservation, menu et réseaux sociaux",
+    icon: CalendarCheck,
+  },
+  {
+    id: "zone-infos",
+    label: "Infos pratiques",
+    description: "Horaires, adresse et itinéraire",
+    icon: MapPin,
   },
   {
     id: "zone-publication",
     label: "Publication",
-    description: "Aperçu mobile, lien et mise en ligne",
+    description: "Aperçu, lien et mise en ligne",
     icon: Rocket,
   },
 ];

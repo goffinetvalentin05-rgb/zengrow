@@ -641,10 +641,61 @@ body {
   text-underline-offset: 3px;
 }
 
-[data-showroom-flow="true"] .zg-showroom-primary-cta-wrap {
-  margin-top: -1.25rem;
-  position: relative;
-  z-index: 2;
+.zg-showroom-hero-primary-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 58px;
+  padding: 1rem 1.75rem;
+  border-radius: 1rem;
+  border: none;
+  background: var(--button-bg);
+  color: var(--button-text);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-align: center;
+  box-shadow:
+    0 4px 32px color-mix(in srgb, var(--button-bg) 42%, transparent),
+    0 0 64px color-mix(in srgb, var(--button-bg) 28%, transparent);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .zg-showroom-hero-primary-cta {
+    animation: zg-showroom-cta-pulse 3.5s ease-in-out infinite;
+  }
+}
+
+.zg-showroom-hero-primary-cta:hover {
+  transform: scale(1.02);
+  filter: brightness(1.05);
+}
+
+.zg-showroom-hero-menu-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, white 75%, var(--button-bg));
+  text-underline-offset: 4px;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.zg-showroom-hero-menu-link:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+[data-showroom-flow="true"] {
+  --page-bg: var(--page-bg, #06040f);
+}
+
+[data-showroom-flow="true"] .zg-showroom-essentials {
+  border-top: 1px solid color-mix(in srgb, var(--body-text) 6%, transparent);
 }
 
 /* Hero affiche premium — CTA capsule luxe, intégré à l’image */

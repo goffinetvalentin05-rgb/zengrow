@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Star } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
+/** Hero Showroom — centré, immersif, CTA principal intégré */
 export function ShowroomHero({
   coverImageUrl,
   logoUrl,
@@ -11,10 +13,15 @@ export function ShowroomHero({
   tagline,
   cuisineType,
   city,
-  address,
   googleRating,
   reviewCount,
   showRating = true,
+  ctaLabel,
+  menuLabel = "Voir le menu",
+  menuHref,
+  showMenu = true,
+  onReserve,
+  reserveHref,
   previewMode = false,
   templateMode = "dark",
 }: {
@@ -24,10 +31,15 @@ export function ShowroomHero({
   tagline?: string | null;
   cuisineType?: string | null;
   city?: string | null;
-  address?: string | null;
   googleRating?: number | null;
   reviewCount?: number | null;
   showRating?: boolean;
+  ctaLabel: string;
+  menuLabel?: string;
+  menuHref?: string | null;
+  showMenu?: boolean;
+  onReserve: () => void;
+  reserveHref?: string | null;
   previewMode?: boolean;
   templateMode?: "dark" | "light";
 }) {
@@ -36,17 +48,40 @@ export function ShowroomHero({
   const metaParts = [cuisineType?.trim(), city?.trim()].filter(Boolean);
   const metaLine = metaParts.length > 0 ? metaParts.join(" · ") : null;
   const subtitle = tagline?.trim();
-  const locationLine = address?.trim() || city?.trim() || null;
   const hasRating =
     showRating && typeof googleRating === "number" && googleRating >= 1 && reviewCount && reviewCount > 0;
   const isLight = templateMode === "light";
+  const menuVisible = showMenu && (menuHref?.trim() || menuLabel);
+
+  const primaryCtaClass = "zg-showroom-hero-primary-cta w-full max-w-sm";
+
+  const primaryCta = reserveHref?.trim() ? (
+    <Link href={reserveHref.trim()} className={primaryCtaClass}>
+      {ctaLabel}
+    </Link>
+  ) : (
+    <button type="button" onClick={onReserve} className={primaryCtaClass}>
+      {ctaLabel}
+    </button>
+  );
+
+  const menuLink = menuHref?.trim() ? (
+    <a
+      href={menuHref.trim()}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="zg-showroom-hero-menu-link mt-4 inline-block"
+    >
+      {menuLabel}
+    </a>
+  ) : null;
 
   return (
     <section
       id="accueil"
       className={cn(
         "zg-showroom-hero-immersive relative flex w-full flex-col overflow-hidden",
-        previewMode ? "min-h-[min(72vh,640px)]" : "min-h-[min(88vh,820px)]",
+        previewMode ? "min-h-[min(100dvh,720px)]" : "min-h-[100dvh] min-h-dvh",
       )}
     >
       {cover ? (
@@ -56,7 +91,7 @@ export function ShowroomHero({
             alt=""
             fill
             priority
-            className="object-cover zg-public-hero-media scale-[1.03]"
+            className="object-cover zg-public-hero-media scale-[1.05]"
             sizes="100vw"
             unoptimized
           />
@@ -73,39 +108,36 @@ export function ShowroomHero({
         />
       )}
 
+      <div className={cn("pointer-events-none absolute inset-0", isLight ? "bg-black/25" : "bg-black/45")} aria-hidden />
       <div
-        className={cn("pointer-events-none absolute inset-0", isLight ? "bg-black/20" : "bg-black/40")}
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/85"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/65 via-black/40 to-black/88"
         aria-hidden
       />
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 100% 80% at 50% 100%, color-mix(in srgb, var(--button-bg) 12%, transparent) 0%, transparent 55%)",
+            "radial-gradient(ellipse 90% 70% at 50% 85%, color-mix(in srgb, var(--button-bg) 18%, transparent) 0%, transparent 60%)",
         }}
         aria-hidden
       />
 
       <div
         className={cn(
-          "relative z-[1] flex min-h-[inherit] flex-1 flex-col justify-end",
-          previewMode ? "min-h-[min(72vh,640px)]" : "min-h-[min(88vh,820px)]",
+          "relative z-[1] flex min-h-[inherit] flex-1 flex-col items-center justify-center px-5 text-center",
+          "pt-[max(3rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))]",
         )}
       >
-        <div className="mx-auto w-full max-w-lg px-5 pb-8 pt-[max(3.5rem,env(safe-area-inset-top))] sm:max-w-xl sm:px-6 sm:pb-10 md:max-w-2xl">
+        <div className="flex w-full max-w-md flex-col items-center">
           {logoUrl?.trim() ? (
-            <div className="relative mb-5 h-10 w-32 sm:h-11 sm:w-36">
+            <div className="relative mb-6 h-11 w-36 sm:h-12 sm:w-40">
               <Image
                 src={logoUrl.trim()}
                 alt=""
                 fill
-                className="object-contain object-left"
-                style={{ filter: "drop-shadow(0 8px 28px rgba(0,0,0,0.45))" }}
-                sizes="144px"
+                className="object-contain object-center"
+                style={{ filter: "drop-shadow(0 10px 32px rgba(0,0,0,0.5))" }}
+                sizes="160px"
                 priority
                 unoptimized
               />
@@ -114,7 +146,7 @@ export function ShowroomHero({
 
           {name ? (
             <h1
-              className="text-balance max-w-[20rem] text-[clamp(2.35rem,10.5vw,3.65rem)] font-semibold leading-[1.02] tracking-[-0.03em] text-white sm:max-w-none"
+              className="text-balance text-[clamp(2.25rem,11vw,3.5rem)] font-semibold leading-[1.02] tracking-[-0.03em] text-white"
               style={{ fontFamily: "var(--heading-font), Georgia, serif" }}
             >
               {name}
@@ -123,7 +155,7 @@ export function ShowroomHero({
 
           {metaLine ? (
             <p
-              className="mt-3 text-[clamp(0.9rem,3vw,1.05rem)] font-medium tracking-wide text-white/80"
+              className="mt-3 text-[clamp(0.9rem,3.2vw,1.05rem)] font-medium tracking-wide text-white/82"
               style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
             >
               {metaLine}
@@ -131,7 +163,7 @@ export function ShowroomHero({
           ) : null}
 
           {hasRating ? (
-            <p className="mt-3 inline-flex items-center gap-2 text-[14px] text-white/90">
+            <p className="mt-3 inline-flex items-center justify-center gap-2 text-[14px] text-white/90">
               <span className="flex items-center gap-0.5" aria-hidden>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
@@ -152,16 +184,16 @@ export function ShowroomHero({
 
           {subtitle && subtitle.toLowerCase() !== name.toLowerCase() ? (
             <p
-              className="mt-4 max-w-md text-pretty text-[15px] font-light leading-relaxed text-white/72 sm:text-base"
+              className="mt-4 max-w-sm text-pretty text-[15px] font-light leading-relaxed text-white/68"
               style={{ fontFamily: "var(--body-font), system-ui, sans-serif" }}
             >
               {subtitle}
             </p>
           ) : null}
 
-          {locationLine ? (
-            <p className="mt-3 text-[13px] text-white/55">{locationLine}</p>
-          ) : null}
+          <div className="mt-8 w-full px-1 sm:mt-10">{primaryCta}</div>
+
+          {menuVisible ? menuLink : null}
         </div>
       </div>
 

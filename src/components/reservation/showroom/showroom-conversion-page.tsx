@@ -1,16 +1,9 @@
 "use client";
 
 import type { CredibilityContent } from "@/src/lib/public-page/premium-content";
-import type { MenuOfferItem } from "@/src/lib/public-page/premium-content";
 import { getShowroomTemplate } from "@/src/lib/showroom/templates";
 import { ShowroomHero } from "@/src/components/reservation/showroom/showroom-hero";
-import { ShowroomPrimaryCta } from "@/src/components/reservation/showroom/showroom-primary-cta";
-import { ShowroomQuickInfo } from "@/src/components/reservation/showroom/showroom-quick-info";
-import { ShowroomAmbiance } from "@/src/components/reservation/showroom/showroom-ambiance";
-import { ShowroomGallery } from "@/src/components/reservation/showroom/showroom-gallery";
-import { ShowroomMenu } from "@/src/components/reservation/showroom/showroom-menu";
-import { ShowroomHighlights } from "@/src/components/reservation/showroom/showroom-trust";
-import { ShowroomFooter } from "@/src/components/reservation/showroom/showroom-footer";
+import { ShowroomCompactEssentials } from "@/src/components/reservation/showroom/showroom-compact-essentials";
 
 export type ShowroomConversionPageProps = {
   templateId: string;
@@ -18,22 +11,13 @@ export type ShowroomConversionPageProps = {
   logoUrl?: string | null;
   restaurantName: string;
   tagline?: string | null;
-  description?: string | null;
   cuisineType?: string | null;
   city?: string | null;
-  address?: string | null;
-  phone?: string | null;
   hoursSummary?: string | null;
   ctaLabel: string;
-  secondaryMenuLabel?: string;
+  menuLabel?: string;
   menuHref?: string | null;
-  galleryImages: string[];
-  highlights?: string[];
-  menuOffers?: MenuOfferItem[];
   menuEnabled?: boolean;
-  galleryEnabled?: boolean;
-  ambianceEnabled?: boolean;
-  highlightsEnabled?: boolean;
   credibility?: CredibilityContent;
   showRating?: boolean;
   instagramUrl?: string | null;
@@ -42,37 +26,28 @@ export type ShowroomConversionPageProps = {
   websiteUrl?: string | null;
   googleMapsUrl?: string | null;
   showPoweredBy?: boolean;
-  showHours?: boolean;
-  showAddress?: boolean;
-  showPhone?: boolean;
-  restaurantSlug?: string | null;
-  useDedicatedReservePage?: boolean;
   previewMode?: boolean;
+  /** Toujours drawer / modale — jamais de lien direct vers le formulaire inline */
   onReserve: () => void;
 };
 
+/**
+ * Page Showroom — structure fixe courte orientée conversion.
+ * Hero + infos compactes uniquement. Pas de sections de site web.
+ */
 export function ShowroomConversionPage({
   templateId,
   coverImageUrl,
   logoUrl,
   restaurantName,
   tagline,
-  description,
   cuisineType,
   city,
-  address,
-  phone,
   hoursSummary,
   ctaLabel,
-  secondaryMenuLabel = "Voir le menu",
+  menuLabel = "Voir le menu",
   menuHref,
-  galleryImages,
-  highlights = [],
-  menuOffers = [],
   menuEnabled = true,
-  galleryEnabled = true,
-  ambianceEnabled = true,
-  highlightsEnabled = true,
   credibility,
   showRating = true,
   instagramUrl,
@@ -81,29 +56,10 @@ export function ShowroomConversionPage({
   websiteUrl,
   googleMapsUrl,
   showPoweredBy = true,
-  showHours = true,
-  showAddress = true,
-  showPhone = true,
-  restaurantSlug,
-  useDedicatedReservePage = true,
   previewMode = false,
   onReserve,
 }: ShowroomConversionPageProps) {
   const template = getShowroomTemplate(templateId);
-  const reserveHref =
-    useDedicatedReservePage && restaurantSlug && !previewMode
-      ? `/r/${restaurantSlug}/reserver`
-      : undefined;
-
-  const scrollToMenu = () => {
-    document.getElementById("menu")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const ambianceText =
-    description?.trim() ||
-    tagline?.trim() ||
-    "";
-
   const rating = credibility?.googleRating ?? null;
   const reviewCount = credibility?.reviewCount ?? null;
 
@@ -116,62 +72,22 @@ export function ShowroomConversionPage({
         tagline={tagline}
         cuisineType={cuisineType}
         city={city}
-        address={address}
         googleRating={rating}
         reviewCount={reviewCount}
         showRating={showRating}
+        ctaLabel={ctaLabel}
+        menuLabel={menuLabel}
+        menuHref={menuHref}
+        showMenu={menuEnabled && Boolean(menuHref?.trim())}
+        onReserve={onReserve}
         previewMode={previewMode}
         templateMode={template.mode}
       />
 
-      <ShowroomPrimaryCta
-        label={ctaLabel}
-        onReserve={onReserve}
-        reserveHref={reserveHref}
-      />
-
-      <ShowroomQuickInfo
+      <ShowroomCompactEssentials
         hoursSummary={hoursSummary}
-        menuLabel={secondaryMenuLabel}
-        menuHref={menuHref}
-        onMenuClick={menuHref ? undefined : scrollToMenu}
-        address={address}
         city={city}
-        phone={phone}
         googleMapsUrl={googleMapsUrl}
-        instagramUrl={instagramUrl}
-        facebookUrl={facebookUrl}
-        tiktokUrl={tiktokUrl}
-        websiteUrl={websiteUrl}
-        showHours={showHours}
-        showMenu={menuEnabled}
-        showAddress={showAddress}
-        showPhone={showPhone}
-      />
-
-      {highlightsEnabled && highlights.length > 0 ? (
-        <ShowroomHighlights highlights={highlights} />
-      ) : null}
-
-      {ambianceEnabled && ambianceText ? (
-        <ShowroomAmbiance body={ambianceText} />
-      ) : null}
-
-      {galleryEnabled && galleryImages.length > 0 ? (
-        <ShowroomGallery images={galleryImages} />
-      ) : null}
-
-      {menuEnabled && (menuOffers.length > 0 || menuHref) ? (
-        <ShowroomMenu
-          offers={menuOffers}
-          menuHref={menuHref}
-          menuPdfLabel={secondaryMenuLabel}
-          onReserve={onReserve}
-        />
-      ) : null}
-
-      <ShowroomFooter
-        address={address || city}
         instagramUrl={instagramUrl}
         facebookUrl={facebookUrl}
         tiktokUrl={tiktokUrl}

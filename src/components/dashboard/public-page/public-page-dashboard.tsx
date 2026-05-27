@@ -171,7 +171,7 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
           <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-xl space-y-1.5">
               <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-zg-accent">
-                Conversion sociale
+                Page de conversion
               </p>
               <h2 className="text-xl font-bold tracking-tight text-zg-fg sm:text-2xl">
                 {SHOWROOM_PRODUCT_NAME}
@@ -181,7 +181,7 @@ export default function PublicPageDashboard({ initial, publicLink }: PublicPageD
             <div className="flex items-center gap-2 text-zg-text-muted">
               <Instagram className="h-5 w-5 shrink-0 text-zg-accent" aria-hidden />
               <p className="text-xs leading-snug sm:max-w-[200px]">
-                Pensé pour Instagram, TikTok et le lien en bio — pas un site web classique.
+                Une page courte qui donne envie de réserver — pas un site internet complet.
               </p>
             </div>
           </div>
