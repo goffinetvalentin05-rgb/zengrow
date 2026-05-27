@@ -2486,7 +2486,7 @@ export function StickyReserveBar({
       aria-hidden={!showBar}
     >
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-t from-[var(--page-bg)] to-transparent md:hidden"
+        className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-t from-[#06040f] to-transparent md:hidden"
         aria-hidden
       />
       <button

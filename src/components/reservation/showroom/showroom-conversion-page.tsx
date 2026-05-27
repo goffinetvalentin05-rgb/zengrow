@@ -26,15 +26,11 @@ export type ShowroomConversionPageProps = {
   tiktokUrl?: string | null;
   websiteUrl?: string | null;
   googleMapsUrl?: string | null;
-  showPoweredBy?: boolean;
   previewMode?: boolean;
   onReserve: () => void;
 };
 
-/**
- * Page Showroom — hero unique plein écran + pied intégré.
- * Pas de sections scrollables : conversion immédiate.
- */
+/** Page Showroom — une seule vue plein écran, sans sections ni footer */
 export function ShowroomConversionPage({
   templateId,
   coverImageUrl,
@@ -56,28 +52,12 @@ export function ShowroomConversionPage({
   tiktokUrl,
   websiteUrl,
   googleMapsUrl,
-  showPoweredBy = true,
   previewMode = false,
   onReserve,
 }: ShowroomConversionPageProps) {
   const template = getShowroomTemplate(templateId);
   const rating = credibility?.googleRating ?? null;
   const reviewCount = credibility?.reviewCount ?? null;
-
-  const essentials = (
-    <ShowroomCompactEssentials
-      hoursSummary={hoursSummary}
-      city={city}
-      address={address}
-      googleMapsUrl={googleMapsUrl}
-      instagramUrl={instagramUrl}
-      facebookUrl={facebookUrl}
-      tiktokUrl={tiktokUrl}
-      websiteUrl={websiteUrl}
-      showPoweredBy={showPoweredBy}
-      embedded
-    />
-  );
 
   return (
     <ShowroomHero
@@ -97,7 +77,18 @@ export function ShowroomConversionPage({
       onReserve={onReserve}
       previewMode={previewMode}
       templateMode={template.mode}
-      footerSlot={essentials}
+      essentialsSlot={
+        <ShowroomCompactEssentials
+          hoursSummary={hoursSummary}
+          city={city}
+          address={address}
+          googleMapsUrl={googleMapsUrl}
+          instagramUrl={instagramUrl}
+          facebookUrl={facebookUrl}
+          tiktokUrl={tiktokUrl}
+          websiteUrl={websiteUrl}
+        />
+      }
     />
   );
 }

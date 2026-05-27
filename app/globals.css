@@ -453,10 +453,10 @@ body {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    color-mix(in srgb, var(--page-bg) 88%, transparent) 28%,
-    color-mix(in srgb, var(--page-bg) 98%, transparent) 100%
+    rgb(6 4 15 / 0.75) 35%,
+    rgb(6 4 15 / 0.95) 100%
   );
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(12px);
 }
 
 @media (min-width: 768px) {
@@ -469,7 +469,8 @@ body {
 /* Parcours showroom : landing conversion dark premium */
 [data-showroom-flow="true"] {
   --showroom-glow: color-mix(in srgb, var(--button-bg, #ff5722) 40%, transparent);
-  background-color: var(--page-bg);
+  --page-bg: #06040f;
+  background-color: #06040f !important;
 }
 
 [data-showroom-flow="true"] section,
@@ -583,10 +584,8 @@ body {
 /* —— Showroom conversion premium (langage ZenGrow) —— */
 
 [data-showroom-flow="true"] {
-  --page-bg: #06040f;
   --showroom-violet: #7c5cff;
   --showroom-violet-glow: rgb(124 92 255 / 0.45);
-  background-color: var(--page-bg);
 }
 
 .zg-showroom-hero {
@@ -643,38 +642,22 @@ body {
   );
 }
 
-/* Stack central — centrage parfait */
+/* Stack central — sans carte, contenu sur l’image */
 .zg-showroom-hero-stack {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   width: 100%;
-  max-width: 22.5rem;
+  max-width: 20rem;
   margin-inline: auto;
   text-align: center;
-  padding: 1.75rem 1.25rem 2rem;
-  border-radius: 1.5rem;
-  border: 1px solid rgb(255 255 255 / 0.06);
-  background: linear-gradient(
-    165deg,
-    rgb(255 255 255 / 0.07) 0%,
-    rgb(255 255 255 / 0.02) 45%,
-    rgb(124 92 255 / 0.04) 100%
-  );
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  backdrop-filter: blur(20px) saturate(140%);
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.04) inset,
-    0 32px 64px -32px rgb(0 0 0 / 0.75),
-    0 0 80px -24px var(--showroom-violet-glow);
 }
 
 .zg-showroom-hero-logo {
   display: flex;
   justify-content: center;
-  margin-bottom: 1.5rem;
-  filter: drop-shadow(0 12px 36px rgb(0 0 0 / 0.45));
+  margin-bottom: 1.25rem;
+  filter: drop-shadow(0 8px 28px rgb(0 0 0 / 0.5));
 }
 
 .zg-showroom-hero-title {
@@ -700,8 +683,16 @@ body {
   color: rgb(255 255 255 / 0.72);
 }
 
+.zg-showroom-proof-line {
+  margin: 0.625rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgb(255 255 255 / 0.55);
+}
+
 .zg-showroom-hero-proof {
-  margin-top: 1rem;
+  margin-top: 0.625rem;
 }
 
 .zg-showroom-hero-tagline {
@@ -715,27 +706,14 @@ body {
   text-wrap: pretty;
 }
 
-/* Actions — CTA centré, hiérarchie dominante */
+/* Actions — CTA centré */
 .zg-showroom-hero-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  margin-top: 1.75rem;
-  gap: 0;
-}
-
-.zg-showroom-hero-cta-wrap {
-  display: flex;
-  width: 100%;
-  justify-content: center;
-}
-
-.zg-showroom-hero-menu-wrap {
-  display: flex;
-  width: 100%;
-  justify-content: center;
-  margin-top: 0.75rem;
+  margin-top: 1.5rem;
+  gap: 0.75rem;
 }
 
 /* CTA principal — pill + glow ZenGrow */
@@ -743,10 +721,12 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: auto;
+  min-width: min(100%, 16.5rem);
   max-width: 17.5rem;
-  min-height: 3.375rem;
+  min-height: 3.25rem;
   margin-inline: auto;
+  padding-inline: 2rem;
   padding: 0.875rem 1.75rem;
   border: none;
   border-radius: 9999px;
@@ -793,178 +773,66 @@ body {
   filter: brightness(0.98);
 }
 
-.zg-showroom-cta-primary__label {
-  display: block;
-  width: 100%;
-  text-align: center;
-}
-
-/* CTA secondaire — ghost pill */
-.zg-showroom-cta-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.5rem;
-  padding: 0.5rem 1.25rem;
-  border-radius: 9999px;
-  border: 1px solid rgb(255 255 255 / 0.18);
-  background: rgb(255 255 255 / 0.05);
-  color: rgb(255 255 255 / 0.88);
+/* Lien menu secondaire */
+.zg-showroom-cta-menu-link {
   font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  transition:
-    border-color 0.25s ease,
-    background 0.25s ease,
-    color 0.25s ease;
-}
-
-.zg-showroom-cta-ghost:hover {
-  border-color: rgb(255 255 255 / 0.32);
-  background: rgb(255 255 255 / 0.1);
-  color: #fff;
-}
-
-/* Social proof — pills premium */
-.zg-showroom-proof {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.zg-showroom-proof-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 9999px;
-  border: 1px solid rgb(255 255 255 / 0.12);
-  background: rgb(255 255 255 / 0.06);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgb(255 255 255 / 0.85);
-}
-
-.zg-showroom-proof-pill--score {
-  border-color: rgb(124 92 255 / 0.35);
-  background: rgb(124 92 255 / 0.14);
-  color: #e9e0ff;
-}
-
-.zg-showroom-proof-score {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: none;
-  font-variant-numeric: tabular-nums;
-}
-
-.zg-showroom-proof-slash {
-  font-size: 0.625rem;
   font-weight: 500;
-  opacity: 0.65;
-  text-transform: none;
-}
-
-.zg-showroom-proof-pill--label {
+  letter-spacing: 0.03em;
   color: rgb(255 255 255 / 0.72);
-  text-transform: none;
-  letter-spacing: 0.02em;
-  font-size: 0.6875rem;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
 }
 
-/* Pied intégré au hero */
-.zg-showroom-hero-footer {
+.zg-showroom-cta-menu-link:hover {
+  color: rgb(255 255 255 / 0.95);
+  text-decoration: underline;
+}
+
+/* Infos discrètes sous les CTA */
+.zg-showroom-hero-essentials-slot {
   width: 100%;
-  max-width: 28rem;
-  margin-inline: auto;
+  margin-top: 1.75rem;
 }
 
-.zg-showroom-essentials--embedded {
-  padding: 0;
-  background: transparent;
-  border: none;
-}
-
-.zg-showroom-essentials-inner {
+.zg-showroom-essentials {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  text-align: center;
+  gap: 0.35rem;
+  width: 100%;
 }
 
-.zg-showroom-essentials-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.zg-showroom-essentials-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: 9999px;
-  border: 1px solid rgb(255 255 255 / 0.08);
-  background: rgb(0 0 0 / 0.2);
+.zg-showroom-essentials-text {
+  margin: 0;
+  max-width: 18rem;
   font-size: 0.75rem;
-  font-weight: 500;
-  color: rgb(255 255 255 / 0.72);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgb(255 255 255 / 0.48);
 }
 
-.zg-showroom-essentials-chip a {
-  color: inherit;
+.zg-showroom-essentials-link {
+  color: rgb(255 255 255 / 0.62);
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
 }
 
-.zg-showroom-essentials-socials {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
+.zg-showroom-essentials-link:hover {
+  color: rgb(255 255 255 / 0.88);
 }
 
-.zg-showroom-essentials-social {
-  display: inline-flex;
-  height: 2.25rem;
-  width: 2.25rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  border: 1px solid rgb(255 255 255 / 0.1);
-  background: rgb(255 255 255 / 0.04);
-  color: rgb(255 255 255 / 0.8);
-  transition:
-    border-color 0.25s ease,
-    background 0.25s ease,
-    box-shadow 0.25s ease;
+.zg-showroom-essentials-sep {
+  color: rgb(255 255 255 / 0.35);
 }
 
-.zg-showroom-essentials-social:hover {
-  border-color: rgb(124 92 255 / 0.4);
-  background: rgb(124 92 255 / 0.12);
-  box-shadow: 0 0 20px -4px rgb(124 92 255 / 0.35);
+[data-showroom-flow="true"] {
+  min-height: 100dvh;
+  background-color: #06040f !important;
 }
 
-.zg-showroom-essentials-powered {
-  margin: 0.25rem 0 0;
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgb(255 255 255 / 0.28);
+[data-showroom-flow="true"] #accueil {
+  min-height: 100dvh;
+  min-height: 100dvh;
 }
 
 /* Hero affiche premium — CTA capsule luxe, intégré à l’image */

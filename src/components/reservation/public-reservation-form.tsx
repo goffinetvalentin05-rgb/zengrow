@@ -879,8 +879,9 @@ export default function PublicReservationForm({
   const showroomHoursSummary = useMemo(() => {
     const lines = openingHoursLines.filter(Boolean);
     if (lines.length === 0) return null;
-    const joined = lines.slice(0, 2).join(" • ");
-    return joined.length > 80 ? `${joined.slice(0, 77).trimEnd()}…` : joined;
+    const compact = lines[0]?.trim() ?? "";
+    if (!compact) return null;
+    return compact.length > 72 ? `${compact.slice(0, 69).trimEnd()}…` : compact;
   }, [openingHoursLines]);
 
   const legacyContactHints = useMemo(
@@ -1062,7 +1063,8 @@ export default function PublicReservationForm({
         dedicatedReservationPage && "zg-public-reservation-route flex flex-col",
         !previewMode &&
           !dedicatedReservationPage &&
-          (isLandingPage || conversionCta.showSticky) &&
+          !isLandingPage &&
+          (conversionCta.showSticky) &&
           reservationEnabled &&
           blockEnabled("reservation") &&
           "pb-[5.25rem]",
@@ -1070,8 +1072,8 @@ export default function PublicReservationForm({
       data-showroom-flow={isLandingPage ? "true" : undefined}
       style={{
         ...cssVars,
-        backgroundColor: "var(--page-bg)",
-        color: "var(--body-text)",
+        backgroundColor: isLandingPage ? "#06040f" : "var(--page-bg)",
+        color: isLandingPage ? "#f4f0ff" : "var(--body-text)",
         fontFamily: "var(--body-font), system-ui, sans-serif",
       }}
     >
@@ -1106,7 +1108,6 @@ export default function PublicReservationForm({
           tiktokUrl={tiktokUrl}
           websiteUrl={websiteUrl}
           googleMapsUrl={googleMapsUrl}
-          showPoweredBy
           previewMode={previewMode}
           onReserve={handleReserve}
         />
