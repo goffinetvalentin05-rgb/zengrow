@@ -751,8 +751,17 @@ body {
   color: rgb(255 255 255 / 0.72);
 }
 
+.zg-showroom-hero-trust-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 1.25rem;
+}
+
 .zg-showroom-hero-proof {
-  margin-top: 1.125rem;
+  margin-top: 0;
 }
 
 .zg-showroom-proof-badge {
@@ -771,18 +780,83 @@ body {
   backdrop-filter: blur(8px);
 }
 
-.zg-showroom-trust-line {
-  margin: 0.75rem 0 0;
-  max-width: 20rem;
-  font-size: 0.75rem;
+.zg-showroom-availability-badge {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem 0.35rem;
+  max-width: 18rem;
+  padding: 0.38rem 0.8rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  background: rgb(0 0 0 / 0.28);
+  font-size: 0.6875rem;
   font-weight: 500;
-  color: rgb(255 255 255 / 0.58);
-  line-height: 1.45;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  color: rgb(255 255 255 / 0.78);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
-.zg-showroom-hero-trust-footer {
-  margin-top: 1rem;
-  width: 100%;
+.zg-showroom-availability-badge__headline {
+  color: rgb(255 255 255 / 0.9);
+  font-weight: 600;
+}
+
+.zg-showroom-availability-badge__sep {
+  color: rgb(255 255 255 / 0.4);
+  font-weight: 400;
+}
+
+.zg-showroom-availability-badge__time {
+  color: rgb(255 255 255 / 0.72);
+  font-variant-numeric: tabular-nums;
+}
+
+.zg-showroom-social-icons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+}
+
+.zg-showroom-social-icons__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  background: rgb(0 0 0 / 0.22);
+  color: rgb(255 255 255 / 0.72);
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.zg-showroom-social-icons__link:hover {
+  border-color: color-mix(in srgb, var(--button-bg) 45%, rgb(255 255 255 / 0.25));
+  background: rgb(0 0 0 / 0.38);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.zg-showroom-social-icons__link:active {
+  transform: translateY(0);
+}
+
+.zg-showroom-social-icons__icon {
+  width: 0.9375rem;
+  height: 0.9375rem;
+  stroke-width: 1.75;
 }
 
 /* CTA principal — pill + glow ZenGrow */
@@ -845,7 +919,7 @@ body {
 /* Lien menu secondaire */
 .zg-showroom-cta-menu-link {
   display: inline-block;
-  margin-top: 0.875rem;
+  margin-top: 0.75rem;
   font-size: 0.8125rem;
   font-weight: 500;
   letter-spacing: 0.03em;

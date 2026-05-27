@@ -1,5 +1,8 @@
 import type { OpeningHours } from "@/src/lib/utils";
-import { tonightServiceLabel } from "@/src/lib/public-page/opening-status";
+import {
+  resolveShowroomAvailability,
+  type ShowroomAvailability,
+} from "@/src/lib/public-page/showroom-availability";
 
 const DEFAULT_CTA_REASSURANCE = "Réservation en moins de 30 secondes";
 
@@ -54,16 +57,13 @@ export function resolveCtaReassurance(preBookingMessage?: string | null): string
   return DEFAULT_CTA_REASSURANCE;
 }
 
-export function resolveShowroomTrustLine(input: {
+export function resolveShowroomAvailabilityDisplay(input: {
   openingHours?: OpeningHours | null;
-  city?: string | null;
   reservationEnabled?: boolean;
-}): { tonightLabel: string | null; locationLabel: string | null } {
-  const tonight =
-    tonightServiceLabel(input.openingHours) ??
-    (input.reservationEnabled ? "Réservations disponibles aujourd'hui" : null);
-  const location = input.city?.trim() || null;
-  return { tonightLabel: tonight, locationLabel: location };
+}): ShowroomAvailability | null {
+  return resolveShowroomAvailability(input.openingHours, {
+    reservationEnabled: input.reservationEnabled,
+  });
 }
 
 function looksAdministrative(text: string): boolean {

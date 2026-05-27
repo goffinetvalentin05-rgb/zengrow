@@ -1,13 +1,15 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/src/lib/utils";
+import type { ShowroomAvailability } from "@/src/lib/public-page/showroom-availability";
 import { ShowroomSocialProof } from "@/src/components/reservation/showroom/showroom-social-proof";
+import { ShowroomAvailabilityBadge } from "@/src/components/reservation/showroom/showroom-availability-badge";
+import { ShowroomSocialIcons } from "@/src/components/reservation/showroom/showroom-social-icons";
 
 /**
- * Hero Showroom — scénario conversion : accroche → CTA → preuve → urgence
+ * Hero Showroom — scénario conversion : accroche → CTA → preuve → disponibilité → réseaux
  */
 export function ShowroomHero({
   coverImageUrl,
@@ -23,12 +25,14 @@ export function ShowroomHero({
   menuLabel = "Voir le menu",
   menuHref,
   showMenu = true,
-  tonightLabel,
-  locationLabel,
+  availability,
+  instagramUrl,
+  facebookUrl,
+  tiktokUrl,
+  websiteUrl,
   onReserve,
   reserveHref,
   previewMode = false,
-  trustFooter,
 }: {
   coverImageUrl?: string | null;
   logoUrl?: string | null;
@@ -43,12 +47,14 @@ export function ShowroomHero({
   menuLabel?: string;
   menuHref?: string | null;
   showMenu?: boolean;
-  tonightLabel?: string | null;
-  locationLabel?: string | null;
+  availability?: ShowroomAvailability | null;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
+  tiktokUrl?: string | null;
+  websiteUrl?: string | null;
   onReserve: () => void;
   reserveHref?: string | null;
   previewMode?: boolean;
-  trustFooter?: ReactNode;
 }) {
   const cover = coverImageUrl?.trim() || null;
   const name = restaurantName.trim();
@@ -57,7 +63,12 @@ export function ShowroomHero({
   const hasRating =
     showRating && typeof googleRating === "number" && googleRating >= 1 && reviewCount && reviewCount > 0;
   const menuVisible = showMenu && menuHref?.trim();
-  const trustLine = [tonightLabel?.trim(), locationLabel?.trim()].filter(Boolean).join(" · ");
+  const hasTrustStack =
+    hasRating ||
+    Boolean(availability?.headline) ||
+    Boolean(
+      instagramUrl?.trim() || facebookUrl?.trim() || tiktokUrl?.trim() || websiteUrl?.trim(),
+    );
 
   const primaryCta = reserveHref?.trim() ? (
     <Link href={reserveHref.trim()} className="zg-showroom-cta-primary">
@@ -155,17 +166,28 @@ export function ShowroomHero({
             </a>
           ) : null}
 
-          {hasRating ? (
-            <ShowroomSocialProof
-              googleRating={googleRating!}
-              reviewCount={reviewCount!}
-              className="zg-showroom-hero-proof"
-            />
+          {hasTrustStack ? (
+            <div className="zg-showroom-hero-trust-stack">
+              {hasRating ? (
+                <ShowroomSocialProof
+                  googleRating={googleRating!}
+                  reviewCount={reviewCount!}
+                  className="zg-showroom-hero-proof"
+                />
+              ) : null}
+
+              {availability?.headline ? (
+                <ShowroomAvailabilityBadge availability={availability} />
+              ) : null}
+
+              <ShowroomSocialIcons
+                instagramUrl={instagramUrl}
+                facebookUrl={facebookUrl}
+                tiktokUrl={tiktokUrl}
+                websiteUrl={websiteUrl}
+              />
+            </div>
           ) : null}
-
-          {trustLine ? <p className="zg-showroom-trust-line">{trustLine}</p> : null}
-
-          {trustFooter ? <div className="zg-showroom-hero-trust-footer">{trustFooter}</div> : null}
         </div>
       </div>
 
