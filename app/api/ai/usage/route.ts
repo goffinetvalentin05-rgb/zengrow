@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/src/lib/supabase/server";
-import { countAIUsageThisMonth, getAIMonthlyLimit } from "@/src/lib/ai/usage";
+import { countAIUsageThisMonth, resolveAIUsageQuota } from "@/src/lib/ai/usage";
 import { getAuthenticatedUser, verifyRestaurantAccess } from "@/src/lib/ai/route-auth";
+import { createClient } from "@/src/lib/supabase/server";
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -23,7 +23,18 @@ export async function GET(request: Request) {
   if (restaurantError) return restaurantError;
 
   const used = await countAIUsageThisMonth(supabase, restaurant!.id);
-  const limit = getAIMonthlyLimit(restaurant!.subscription_status, restaurant!.subscription_plan);
+  const { limit, canAccess, isFounder, tier } = resolveAIUsageQuota(
+    restaurant!.subscription_status,
+    restaurant!.subscription_plan,
+    user!.email,
+  );
 
-  return NextResponse.json({ used, limit, remaining: Math.max(0, limit - used) });
+  return NextResponse.json({
+    used,
+    limit,
+    remaining: Math.max(0, limit - used),
+    canAccess,
+    isFounder,
+    tier,
+  });
 }

@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-type AIUsageState = {
+export type AIUsageState = {
   used: number;
   limit: number;
   remaining: number;
+  canAccess: boolean;
+  isFounder: boolean;
+  tier?: string;
 };
 
 export function useAIUsage(restaurantId: string) {
@@ -27,7 +30,14 @@ export function useAIUsage(restaurantId: string) {
         setError(data.error ?? "Impossible de charger l'usage IA.");
         return;
       }
-      setUsage({ used: data.used, limit: data.limit, remaining: data.remaining });
+      setUsage({
+        used: data.used,
+        limit: data.limit,
+        remaining: data.remaining,
+        canAccess: data.canAccess ?? data.limit > 0,
+        isFounder: data.isFounder ?? false,
+        tier: data.tier,
+      });
     } catch {
       setError("Impossible de charger l'usage IA.");
     } finally {

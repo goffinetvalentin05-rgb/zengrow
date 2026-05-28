@@ -83,7 +83,12 @@ export default function ReviewAutomationPanel({
   const router = useRouter();
   const supabase = createClient();
   const { usage, refresh: refreshAiUsage } = useAIUsage(enableAiImprove ? restaurantId : "");
-  const aiAtLimit = enableAiImprove && usage != null && usage.used >= usage.limit;
+  const aiAtLimit =
+    enableAiImprove &&
+    usage != null &&
+    usage.canAccess !== false &&
+    usage.limit > 0 &&
+    usage.used >= usage.limit;
   const [isEnabled, setIsEnabled] = useState(initialSettings.is_enabled);
   const [channel] = useState<"email">("email");
   const [delayMinutes, setDelayMinutes] = useState(initialSettings.delay_minutes);

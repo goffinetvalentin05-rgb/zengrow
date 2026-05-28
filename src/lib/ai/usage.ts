@@ -1,16 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AIFeature, AIPlanTier } from "@/src/lib/ai/types";
-import { AIAccessDeniedError, canAccessAI } from "@/src/lib/ai/access";
+import type { AIFeature } from "@/src/lib/ai/types";
+import { AIAccessDeniedError } from "@/src/lib/ai/access";
+import { getAIUsageLimit } from "@/src/lib/ai/limits";
 import type { SubscriptionPlan, SubscriptionStatus } from "@/src/lib/subscription";
-import { startOfBusinessYmdAsUtcIso } from "@/src/lib/date/business-calendar";
-import { monthBoundsInBusinessTz } from "@/src/lib/date/business-calendar";
-
-export const AI_MONTHLY_LIMITS: Record<AIPlanTier, number> = {
-  trial: 10,
-  basic: 30,
-  pro: 150,
-  premium: 500,
-};
+import { startOfBusinessYmdAsUtcIso, monthBoundsInBusinessTz } from "@/src/lib/date/business-calendar";
 
 export class AIUsageLimitError extends Error {
   constructor(
@@ -19,33 +12,6 @@ export class AIUsageLimitError extends Error {
     super(message);
     this.name = "AIUsageLimitError";
   }
-}
-
-export function resolveAIPlanTier(
-  subscriptionStatus: SubscriptionStatus,
-  subscriptionPlan: SubscriptionPlan,
-): AIPlanTier {
-  if (subscriptionStatus === "trial") {
-    return "trial";
-  }
-  if (subscriptionPlan === "pro") {
-    return "pro";
-  }
-  if (subscriptionPlan === "starter") {
-    return "basic";
-  }
-  return "basic";
-}
-
-export function getAIMonthlyLimit(
-  subscriptionStatus: SubscriptionStatus,
-  subscriptionPlan: SubscriptionPlan,
-) {
-  if (!canAccessAI(subscriptionPlan, subscriptionStatus)) {
-    return 0;
-  }
-  const tier = resolveAIPlanTier(subscriptionStatus, subscriptionPlan);
-  return AI_MONTHLY_LIMITS[tier];
 }
 
 function currentMonthStartIso() {
@@ -69,25 +35,41 @@ export async function countAIUsageThisMonth(supabase: SupabaseClient, restaurant
   return count ?? 0;
 }
 
+export function resolveAIUsageQuota(
+  subscriptionStatus: SubscriptionStatus,
+  subscriptionPlan: SubscriptionPlan | string | null | undefined,
+  userEmail?: string | null,
+) {
+  const { limit, canAccess, isFounder, tier } = getAIUsageLimit({
+    plan: subscriptionPlan,
+    status: subscriptionStatus,
+    userEmail,
+  });
+
+  return { limit, canAccess, isFounder, tier };
+}
+
 export async function checkAIUsageLimit(
   supabase: SupabaseClient,
   restaurantId: string,
   subscriptionStatus: SubscriptionStatus,
-  subscriptionPlan: SubscriptionPlan,
+  subscriptionPlan: SubscriptionPlan | string | null | undefined,
+  userEmail?: string | null,
   _feature?: AIFeature,
 ) {
-  if (!canAccessAI(subscriptionPlan, subscriptionStatus)) {
+  const { limit, canAccess } = resolveAIUsageQuota(subscriptionStatus, subscriptionPlan, userEmail);
+
+  if (!canAccess) {
     throw new AIAccessDeniedError();
   }
 
-  const limit = getAIMonthlyLimit(subscriptionStatus, subscriptionPlan);
   const used = await countAIUsageThisMonth(supabase, restaurantId);
 
-  if (used >= limit) {
+  if (limit > 0 && used >= limit) {
     throw new AIUsageLimitError();
   }
 
-  return { used, limit, remaining: limit - used };
+  return { used, limit, remaining: Math.max(0, limit - used) };
 }
 
 type LogAIUsageParams = {

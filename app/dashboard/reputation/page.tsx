@@ -4,7 +4,7 @@ import { mapFeedbackRow, type FeedbackRowDb } from "@/src/components/dashboard/f
 import { computeFeedbackKpis } from "@/src/components/dashboard/feedbacks/utils/feedback-kpis";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 import { requireRestaurantSession } from "@/src/lib/auth";
-import { canAccessAI } from "@/src/lib/ai/access";
+import { getAIUsageLimit } from "@/src/lib/ai/limits";
 import {
   endOfBusinessYmdAsUtcIso,
   monthBoundsInBusinessTz,
@@ -29,10 +29,13 @@ const DEFAULT_REVIEW_AUTOMATION = {
 
 export default async function DashboardReputationPage() {
   const supabase = await createClient();
-  const { restaurant, access } = await requireRestaurantSession();
-  const canUseAI =
-    access.isOwnerDev ||
-    canAccessAI(restaurant.subscription_plan, restaurant.subscription_status);
+  const { restaurant, user } = await requireRestaurantSession();
+  const aiQuota = getAIUsageLimit({
+    plan: restaurant.subscription_plan,
+    status: restaurant.subscription_status,
+    userEmail: user.email,
+  });
+  const canUseAI = aiQuota.canAccess;
 
   const now = new Date();
   const currentMonth = monthBoundsInBusinessTz(now);

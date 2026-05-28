@@ -1,4 +1,5 @@
 import type { SubscriptionPlan, SubscriptionStatus } from "@/src/lib/subscription";
+import { getAIUsageLimit } from "@/src/lib/ai/limits";
 
 export class AIAccessDeniedError extends Error {
   constructor(
@@ -9,19 +10,20 @@ export class AIAccessDeniedError extends Error {
   }
 }
 
-/** IA texte : Pro actif ou période d'essai. Pas disponible sur Starter (49 CHF). */
 export function canAccessAI(
-  plan: SubscriptionPlan,
+  plan: SubscriptionPlan | string | null | undefined,
   status: SubscriptionStatus,
+  userEmail?: string | null,
 ): boolean {
-  if (status === "trial") {
-    return true;
-  }
-  return plan === "pro";
+  return getAIUsageLimit({ plan, status, userEmail }).canAccess;
 }
 
-export function assertAIAccess(plan: SubscriptionPlan, status: SubscriptionStatus) {
-  if (!canAccessAI(plan, status)) {
+export function assertAIAccess(
+  plan: SubscriptionPlan | string | null | undefined,
+  status: SubscriptionStatus,
+  userEmail?: string | null,
+) {
+  if (!canAccessAI(plan, status, userEmail)) {
     throw new AIAccessDeniedError();
   }
 }

@@ -67,7 +67,13 @@ export default function ReputationPage({
       />
 
       {canUseAI ? (
-        <AIUsageCounter used={usage?.used ?? 0} limit={usage?.limit ?? 0} loading={loading} />
+        <AIUsageCounter
+          used={usage?.used ?? 0}
+          limit={usage?.limit ?? 0}
+          loading={loading}
+          canAccess={usage?.canAccess ?? true}
+          isFounder={usage?.isFounder ?? false}
+        />
       ) : (
         <p className="rounded-xl border border-zg-border bg-zg-surface-elevated px-4 py-3 text-sm text-zg-text-muted">
           Les outils IA sont inclus dans le plan Pro (69 CHF/mois). Votre plan Starter inclut les demandes

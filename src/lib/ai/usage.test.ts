@@ -1,37 +1,29 @@
 import { describe, expect, it } from "vitest";
-import {
-  AI_MONTHLY_LIMITS,
-  AIUsageLimitError,
-  getAIMonthlyLimit,
-  resolveAIPlanTier,
-} from "@/src/lib/ai/usage";
+import { resolveAIUsageQuota } from "@/src/lib/ai/usage";
+import { AI_LIMIT_FOUNDER, AI_LIMIT_GROWTH, AI_LIMIT_PRO } from "@/src/lib/ai/limits";
 
-describe("resolveAIPlanTier", () => {
-  it("maps trial status to trial tier", () => {
-    expect(resolveAIPlanTier("trial", null)).toBe("trial");
-    expect(resolveAIPlanTier("trial", "pro")).toBe("trial");
+describe("resolveAIUsageQuota", () => {
+  it("founder gets 10000", () => {
+    const q = resolveAIUsageQuota("active", "starter", "goffinetvalentin05@gmail.com");
+    expect(q.limit).toBe(AI_LIMIT_FOUNDER);
+    expect(q.canAccess).toBe(true);
+    expect(q.isFounder).toBe(true);
   });
 
-  it("maps starter to basic", () => {
-    expect(resolveAIPlanTier("active", "starter")).toBe("basic");
+  it("starter active gets 0", () => {
+    const q = resolveAIUsageQuota("active", "starter");
+    expect(q.limit).toBe(0);
+    expect(q.canAccess).toBe(false);
   });
 
-  it("maps pro to pro", () => {
-    expect(resolveAIPlanTier("active", "pro")).toBe("pro");
+  it("pro active gets 150", () => {
+    const q = resolveAIUsageQuota("active", "pro");
+    expect(q.limit).toBe(AI_LIMIT_PRO);
+    expect(q.canAccess).toBe(true);
   });
-});
 
-describe("getAIMonthlyLimit", () => {
-  it("returns limits per tier", () => {
-    expect(getAIMonthlyLimit("trial", null)).toBe(AI_MONTHLY_LIMITS.trial);
-    expect(getAIMonthlyLimit("active", "starter")).toBe(0);
-    expect(getAIMonthlyLimit("active", "pro")).toBe(AI_MONTHLY_LIMITS.pro);
-  });
-});
-
-describe("AIUsageLimitError", () => {
-  it("has a user-friendly default message", () => {
-    const err = new AIUsageLimitError();
-    expect(err.message).toContain("limite IA mensuelle");
+  it("growth gets 500", () => {
+    const q = resolveAIUsageQuota("active", "growth");
+    expect(q.limit).toBe(AI_LIMIT_GROWTH);
   });
 });

@@ -6,11 +6,20 @@ type AIUsageCounterProps = {
   used: number;
   limit: number;
   loading?: boolean;
+  canAccess?: boolean;
+  isFounder?: boolean;
   className?: string;
 };
 
-export default function AIUsageCounter({ used, limit, loading, className }: AIUsageCounterProps) {
-  const atLimit = used >= limit;
+export default function AIUsageCounter({
+  used,
+  limit,
+  loading,
+  canAccess = true,
+  isFounder = false,
+  className,
+}: AIUsageCounterProps) {
+  const atLimit = canAccess && limit > 0 && used >= limit;
 
   return (
     <p
@@ -23,6 +32,15 @@ export default function AIUsageCounter({ used, limit, loading, className }: AIUs
     >
       {loading ? (
         "Chargement de l'usage IA…"
+      ) : isFounder ? (
+        <>
+          Accès fondateur : IA activée
+          <span className="mt-1 block text-zg-text-muted">
+            Utilisations IA ce mois-ci : {used} / {limit}
+          </span>
+        </>
+      ) : !canAccess || limit === 0 ? (
+        "Les outils IA sont disponibles avec le plan Pro (69 CHF/mois)."
       ) : (
         <>
           Utilisations IA ce mois-ci : {used} / {limit}

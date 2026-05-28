@@ -24,7 +24,11 @@ export default function GoogleReviewTab({ restaurantId, usage, onUsageRefresh }:
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const atLimit = usage != null && usage.used >= usage.limit;
+  const atLimit =
+    usage != null &&
+    usage.canAccess !== false &&
+    usage.limit > 0 &&
+    usage.used >= usage.limit;
 
   async function generate(regenerate = false) {
     if (!reviewText.trim()) {

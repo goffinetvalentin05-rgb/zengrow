@@ -126,12 +126,13 @@ export async function runAIGeneration({
   generate,
 }: RunAIGenerationParams) {
   assertOpenAIConfigured();
-  assertAIAccess(restaurant.subscription_plan, restaurant.subscription_status);
+  assertAIAccess(restaurant.subscription_plan, restaurant.subscription_status, user.email);
   await checkAIUsageLimit(
     supabase,
     restaurant.id,
     restaurant.subscription_status,
     restaurant.subscription_plan,
+    user.email,
     feature,
   );
 
