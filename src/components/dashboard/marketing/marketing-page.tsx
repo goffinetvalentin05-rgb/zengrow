@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { MarketingProvider } from "@/src/components/dashboard/marketing/context/marketing-provider";
 import { useMarketing } from "@/src/components/dashboard/marketing/context/use-marketing";
+import MarketingAICreateSection from "@/src/components/dashboard/marketing/ai/marketing-ai-create-section";
+import MarketingAICampaignModal from "@/src/components/dashboard/marketing/ai/marketing-ai-campaign-modal";
 import CampaignCreateForm from "@/src/components/dashboard/marketing/create/campaign-create-form";
 import CampaignDetailModal from "@/src/components/dashboard/marketing/detail/campaign-detail-modal";
 import MarketingEmptyState from "@/src/components/dashboard/marketing/empty/marketing-empty-state";
@@ -13,9 +16,16 @@ import MarketingToolbar from "@/src/components/dashboard/marketing/toolbar/marke
 import type { MarketingPageProps } from "@/src/components/dashboard/marketing/types";
 import ToastInline from "@/src/components/ui/toast-inline";
 
-function MarketingPageContent() {
-  const { showCreateForm, createMessage, campaigns } = useMarketing();
+function MarketingPageContent({
+  restaurantId,
+  canUseAI,
+}: {
+  restaurantId: string;
+  canUseAI: boolean;
+}) {
+  const { showCreateForm, createMessage, campaigns, setCreateMessage } = useMarketing();
   const hasCampaigns = campaigns.length > 0;
+  const [aiModalOpen, setAiModalOpen] = useState(false);
 
   return (
     <section className="w-full min-w-0 space-y-6 pb-[max(1rem,env(safe-area-inset-bottom))] md:space-y-10 lg:space-y-12">
@@ -30,6 +40,14 @@ function MarketingPageContent() {
 
       {showCreateForm ? <CampaignCreateForm /> : null}
 
+      <MarketingAICreateSection canUseAI={canUseAI} onOpen={() => setAiModalOpen(true)} />
+      <MarketingAICampaignModal
+        open={aiModalOpen}
+        restaurantId={restaurantId}
+        onClose={() => setAiModalOpen(false)}
+        onSuccess={(message) => setCreateMessage(message)}
+      />
+
       {hasCampaigns ? (
         <div className="space-y-6 md:space-y-8 lg:space-y-10">
           <MarketingKpiCards />
@@ -40,7 +58,9 @@ function MarketingPageContent() {
           </div>
         </div>
       ) : (
-        <MarketingEmptyState />
+        <div className="space-y-6">
+          <MarketingEmptyState />
+        </div>
       )}
 
       <CampaignDetailModal />
@@ -51,7 +71,7 @@ function MarketingPageContent() {
 export default function MarketingPage(props: MarketingPageProps) {
   return (
     <MarketingProvider {...props}>
-      <MarketingPageContent />
+      <MarketingPageContent restaurantId={props.restaurantId} canUseAI={props.canUseAI} />
     </MarketingProvider>
   );
 }

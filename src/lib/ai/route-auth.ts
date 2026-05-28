@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { AIAccessDeniedError, assertAIAccess } from "@/src/lib/ai/access";
 import { AIConfigurationError, assertOpenAIConfigured } from "@/src/lib/ai/openai";
 import { AIUsageLimitError, checkAIUsageLimit, logAIUsage } from "@/src/lib/ai/usage";
 import type { AIFeature } from "@/src/lib/ai/types";
@@ -81,6 +82,10 @@ export function truncateInput(value: string, max: number) {
 }
 
 export function aiErrorResponse(error: unknown) {
+  if (error instanceof AIAccessDeniedError) {
+    return NextResponse.json({ error: error.message }, { status: 403 });
+  }
+
   if (error instanceof AIConfigurationError) {
     return NextResponse.json(
       { error: "Le service IA n'est pas disponible pour le moment. Réessayez plus tard." },
@@ -121,6 +126,7 @@ export async function runAIGeneration({
   generate,
 }: RunAIGenerationParams) {
   assertOpenAIConfigured();
+  assertAIAccess(restaurant.subscription_plan, restaurant.subscription_status);
   await checkAIUsageLimit(
     supabase,
     restaurant.id,

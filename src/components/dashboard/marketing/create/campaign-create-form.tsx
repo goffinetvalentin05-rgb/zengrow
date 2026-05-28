@@ -33,6 +33,34 @@ export default function CampaignCreateForm() {
     ? getCampaignTemplate(createDraft.templateId)?.title
     : null;
 
+  async function handleSaveDraft() {
+    if (!name.trim() || !subject.trim() || !content.trim()) {
+      setCreateMessage("Veuillez remplir le nom, le sujet et le contenu.");
+      return;
+    }
+
+    setSubmitting(true);
+    setCreateMessage(null);
+
+    const response = await fetch("/api/marketing/campaigns", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, subject, content, imageUrl, saveAsDraft: true }),
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as { error?: string };
+    if (!response.ok) {
+      setCreateMessage(payload.error ?? "Impossible d'enregistrer le brouillon.");
+      setSubmitting(false);
+      return;
+    }
+
+    setCreateMessage("Campagne enregistrée en brouillon.");
+    closeCreateForm();
+    setSubmitting(false);
+    router.refresh();
+  }
+
   async function handleCreateCampaign() {
     if (!name.trim() || !subject.trim() || !content.trim()) {
       setCreateMessage("Veuillez remplir le nom, le sujet et le contenu.");
@@ -129,7 +157,8 @@ export default function CampaignCreateForm() {
             <option value="all_customers">Tous les clients</option>
             <option value="visited_last_30_days">Clients venus ces 30 derniers jours</option>
             <option value="visited_last_90_days">Clients venus ces 90 derniers jours</option>
-            <option value="visited_more_than_3_times">Clients venus plus de 3 fois</option>
+            <option value="visited_more_than_3_times">Clients fidèles (plus de 3 visites)</option>
+            <option value="inactive_30_days">Clients inactifs depuis 30 jours</option>
           </Select>
           <p className="mt-1.5 text-xs text-zg-muted">
             Segments avancés (VIP, inactifs, anniversaires) — bientôt disponibles.
@@ -140,7 +169,10 @@ export default function CampaignCreateForm() {
           <Button type="button" onClick={handleCreateCampaign} disabled={submitting}>
             {submitting ? "Envoi…" : "Envoyer"}
           </Button>
-          <Button type="button" variant="secondary" onClick={closeCreateForm} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={() => void handleSaveDraft()} disabled={submitting}>
+            {submitting ? "Enregistrement…" : "Enregistrer en brouillon"}
+          </Button>
+          <Button type="button" variant="ghost" onClick={closeCreateForm} disabled={submitting}>
             Fermer
           </Button>
         </div>

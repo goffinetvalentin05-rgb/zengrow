@@ -14,7 +14,10 @@ export function useAIUsage(restaurantId: string) {
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!restaurantId) return;
+    if (!restaurantId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -33,8 +36,13 @@ export function useAIUsage(restaurantId: string) {
   }, [restaurantId]);
 
   useEffect(() => {
+    if (!restaurantId) {
+      setLoading(false);
+      setUsage(null);
+      return;
+    }
     void refresh();
-  }, [refresh]);
+  }, [refresh, restaurantId]);
 
   return { usage, loading, error, refresh };
 }

@@ -20,8 +20,7 @@ import {
   Settings,
   Users,
   X,
-  MessageSquare,
-  Sparkles,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
@@ -50,8 +49,7 @@ const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
-  { href: "/dashboard/feedbacks", label: "Feedbacks", icon: MessageSquare },
-  { href: "/dashboard/ai", label: "IA & Réputation", icon: Sparkles },
+  { href: "/dashboard/reputation", label: "Avis & réputation", icon: Star },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
   { href: "/dashboard/public-page", label: "Showroom", icon: Globe2 },
   // GIFT_CARDS feature flag — réactivable

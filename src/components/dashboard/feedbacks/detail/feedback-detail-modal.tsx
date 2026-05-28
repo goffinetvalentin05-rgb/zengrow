@@ -22,6 +22,7 @@ export default function FeedbackDetailModal() {
     closeFeedbackDetail,
     restaurantId,
     restaurantName,
+    canUseAI,
     updateFeedbackAiAnalysis,
     markFeedbackRead,
     markFeedbackUnread,
@@ -133,6 +134,7 @@ export default function FeedbackDetailModal() {
             <FeedbackAIAnalysisSection
               feedbackId={selectedFeedback.id}
               restaurantId={restaurantId}
+              canUseAI={canUseAI}
               feedbackText={selectedFeedback.message}
               rating={selectedFeedback.rating}
               initialAnalysis={selectedFeedback.ai_analysis}

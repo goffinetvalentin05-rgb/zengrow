@@ -56,5 +56,7 @@ export type MarketingPageProps = {
   kpis: MarketingKpis;
   recipientsByCampaignId: Record<string, CampaignRecipientDetail[]>;
   brand: MarketingBrandContext;
+  restaurantId: string;
+  canUseAI: boolean;
   initialOpenCampaignId?: string | null;
 };

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AIFeature, AIPlanTier } from "@/src/lib/ai/types";
+import { AIAccessDeniedError, canAccessAI } from "@/src/lib/ai/access";
 import type { SubscriptionPlan, SubscriptionStatus } from "@/src/lib/subscription";
 import { startOfBusinessYmdAsUtcIso } from "@/src/lib/date/business-calendar";
 import { monthBoundsInBusinessTz } from "@/src/lib/date/business-calendar";
@@ -40,6 +41,9 @@ export function getAIMonthlyLimit(
   subscriptionStatus: SubscriptionStatus,
   subscriptionPlan: SubscriptionPlan,
 ) {
+  if (!canAccessAI(subscriptionPlan, subscriptionStatus)) {
+    return 0;
+  }
   const tier = resolveAIPlanTier(subscriptionStatus, subscriptionPlan);
   return AI_MONTHLY_LIMITS[tier];
 }
@@ -72,6 +76,10 @@ export async function checkAIUsageLimit(
   subscriptionPlan: SubscriptionPlan,
   _feature?: AIFeature,
 ) {
+  if (!canAccessAI(subscriptionPlan, subscriptionStatus)) {
+    throw new AIAccessDeniedError();
+  }
+
   const limit = getAIMonthlyLimit(subscriptionStatus, subscriptionPlan);
   const used = await countAIUsageThisMonth(supabase, restaurantId);
 

@@ -7,29 +7,19 @@ import {
 import { expireTrialIfNeeded } from "@/src/lib/subscription";
 import { createClient } from "@/src/lib/supabase/server";
 
-type CreateCampaignPayload = {
-  name?: string;
-  subject?: string;
-  content?: string;
-  imageUrl?: string;
+type SendPayload = {
   audience?: unknown;
-  saveAsDraft?: boolean;
 };
 
-export async function POST(request: Request) {
-  const payload = (await request.json().catch(() => ({}))) as CreateCampaignPayload;
-  const name = (payload.name ?? "").trim();
-  const subject = (payload.subject ?? "").trim();
-  const content = (payload.content ?? "").trim();
-  const imageUrl = (payload.imageUrl ?? "").trim() || null;
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const { id: campaignId } = await context.params;
+  const payload = (await request.json().catch(() => ({}))) as SendPayload;
   const audience = payload.audience;
-  const saveAsDraft = payload.saveAsDraft === true;
 
-  if (!name || !subject || !content) {
-    return NextResponse.json({ error: "Nom, sujet et contenu requis." }, { status: 400 });
-  }
-
-  if (!saveAsDraft && !isMarketingAudienceFilter(audience)) {
+  if (!isMarketingAudienceFilter(audience)) {
     return NextResponse.json({ error: "Audience invalide." }, { status: 400 });
   }
 
@@ -55,7 +45,7 @@ export async function POST(request: Request) {
 
   const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);
   if (isRestaurantExpiredForUser(user.email, syncedRestaurant)) {
-    return NextResponse.json({ error: "Abonnement expiré. Mettez à jour votre formule." }, { status: 402 });
+    return NextResponse.json({ error: "Abonnement expiré." }, { status: 402 });
   }
 
   if (
@@ -66,30 +56,22 @@ export async function POST(request: Request) {
       syncedRestaurant.subscription_status,
     )
   ) {
-    return NextResponse.json({ error: "Le plan Pro est requis pour les campagnes marketing." }, { status: 403 });
+    return NextResponse.json({ error: "Le plan Pro est requis." }, { status: 403 });
   }
 
-  const { data: campaign, error: campaignInsertError } = await supabase
+  const { data: campaign, error: campaignError } = await supabase
     .from("email_campaigns")
-    .insert({
-      restaurant_id: syncedRestaurant.id,
-      name,
-      subject,
-      content,
-      image_url: imageUrl,
-    })
-    .select("id")
-    .single();
+    .select("id, name, subject, content, image_url, sent_at")
+    .eq("id", campaignId)
+    .eq("restaurant_id", syncedRestaurant.id)
+    .maybeSingle();
 
-  if (campaignInsertError || !campaign) {
-    return NextResponse.json(
-      { error: campaignInsertError?.message ?? "Impossible de créer la campagne." },
-      { status: 500 },
-    );
+  if (campaignError || !campaign) {
+    return NextResponse.json({ error: "Campagne introuvable." }, { status: 404 });
   }
 
-  if (saveAsDraft) {
-    return NextResponse.json({ ok: true, campaignId: campaign.id, status: "draft" });
+  if (campaign.sent_at) {
+    return NextResponse.json({ error: "Cette campagne a déjà été envoyée." }, { status: 400 });
   }
 
   try {
@@ -98,21 +80,15 @@ export async function POST(request: Request) {
       supabase,
       campaignId: campaign.id,
       restaurant: syncedRestaurant,
-      subject,
-      content,
-      imageUrl,
-      audience: audience as Parameters<typeof sendMarketingCampaign>[0]["audience"],
+      subject: campaign.subject,
+      content: campaign.content,
+      imageUrl: campaign.image_url,
+      audience,
       requestOrigin: origin,
     });
 
-    return NextResponse.json({
-      ok: true,
-      campaignId: campaign.id,
-      status: "sent",
-      ...result,
-    });
+    return NextResponse.json({ ok: true, campaignId: campaign.id, ...result });
   } catch (error) {
-    await supabase.from("email_campaigns").delete().eq("id", campaign.id);
     const message = error instanceof Error ? error.message : "Envoi impossible.";
     return NextResponse.json({ error: message }, { status: 400 });
   }

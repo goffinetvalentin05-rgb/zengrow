@@ -24,7 +24,7 @@ describe("resolveAIPlanTier", () => {
 describe("getAIMonthlyLimit", () => {
   it("returns limits per tier", () => {
     expect(getAIMonthlyLimit("trial", null)).toBe(AI_MONTHLY_LIMITS.trial);
-    expect(getAIMonthlyLimit("active", "starter")).toBe(AI_MONTHLY_LIMITS.basic);
+    expect(getAIMonthlyLimit("active", "starter")).toBe(0);
     expect(getAIMonthlyLimit("active", "pro")).toBe(AI_MONTHLY_LIMITS.pro);
   });
 });

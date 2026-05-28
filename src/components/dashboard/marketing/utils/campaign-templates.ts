@@ -5,7 +5,8 @@ export type CampaignAudienceFilter =
   | "all_customers"
   | "visited_last_30_days"
   | "visited_last_90_days"
-  | "visited_more_than_3_times";
+  | "visited_more_than_3_times"
+  | "inactive_30_days";
 
 export type CampaignTemplateId = "special-evening" | "birthday" | "reactivation";
 

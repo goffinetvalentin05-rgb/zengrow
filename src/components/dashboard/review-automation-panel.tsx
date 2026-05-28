@@ -23,6 +23,9 @@ import { cn } from "@/src/lib/utils";
 type ReviewAutomationPanelProps = {
   restaurantId: string;
   restaurantName?: string;
+  /** Afficher l'amélioration IA du modèle d'e-mail (page Avis & réputation). */
+  enableAiImprove?: boolean;
+  canUseAI?: boolean;
   /** Page dédiée (historique + config) ou intégration Paramètres (accordéons). */
   layout?: "page" | "settings";
   initialSettings: {
@@ -71,14 +74,16 @@ const channelOptions = [
 export default function ReviewAutomationPanel({
   restaurantId,
   restaurantName = "Votre restaurant",
+  enableAiImprove = false,
+  canUseAI = true,
   layout = "page",
   initialSettings,
   initialFeedback,
 }: ReviewAutomationPanelProps) {
   const router = useRouter();
   const supabase = createClient();
-  const { usage, refresh: refreshAiUsage } = useAIUsage(restaurantId);
-  const aiAtLimit = usage != null && usage.used >= usage.limit;
+  const { usage, refresh: refreshAiUsage } = useAIUsage(enableAiImprove ? restaurantId : "");
+  const aiAtLimit = enableAiImprove && usage != null && usage.used >= usage.limit;
   const [isEnabled, setIsEnabled] = useState(initialSettings.is_enabled);
   const [channel] = useState<"email">("email");
   const [delayMinutes, setDelayMinutes] = useState(initialSettings.delay_minutes);
@@ -289,19 +294,27 @@ export default function ReviewAutomationPanel({
               </p>
             </div>
 
-            <ImproveReviewEmailSection
-              restaurantId={restaurantId}
-              restaurantName={restaurantName}
-              currentSubject={emailSubject}
-              currentBody={emailMessage}
-              atLimit={aiAtLimit}
-              onUsageRefresh={() => void refreshAiUsage()}
-              onApply={(subject, body) => {
-                setEmailSubject(subject);
-                setEmailMessage(body);
-                setMessage("Modèle IA appliqué. Enregistrez pour sauvegarder.");
-              }}
-            />
+            {enableAiImprove ? (
+              canUseAI ? (
+                <ImproveReviewEmailSection
+                  restaurantId={restaurantId}
+                  restaurantName={restaurantName}
+                  currentSubject={emailSubject}
+                  currentBody={emailMessage}
+                  atLimit={aiAtLimit}
+                  onUsageRefresh={() => void refreshAiUsage()}
+                  onApply={(subject, body) => {
+                    setEmailSubject(subject);
+                    setEmailMessage(body);
+                    setMessage("Modèle IA appliqué. Enregistrez pour sauvegarder.");
+                  }}
+                />
+              ) : (
+                <p className="rounded-xl border border-zg-border bg-zg-surface-elevated px-4 py-3 text-sm text-zg-text-muted">
+                  L&apos;amélioration IA est disponible avec le plan Pro (69 CHF/mois).
+                </p>
+              )
+            ) : null}
 
             <div className="grid gap-4 md:grid-cols-3">
               <div>
@@ -517,19 +530,27 @@ export default function ReviewAutomationPanel({
                     <p className="mt-1.5 text-xs text-[var(--muted-foreground)]">Variable : {"{{restaurant_name}}"}</p>
                   </div>
 
-                  <ImproveReviewEmailSection
-                    restaurantId={restaurantId}
-                    restaurantName={restaurantName}
-                    currentSubject={emailSubject}
-                    currentBody={emailMessage}
-                    atLimit={aiAtLimit}
-                    onUsageRefresh={() => void refreshAiUsage()}
-                    onApply={(subject, body) => {
-                      setEmailSubject(subject);
-                      setEmailMessage(body);
-                      setMessage("Modèle IA appliqué. Enregistrez pour sauvegarder.");
-                    }}
-                  />
+                  {enableAiImprove ? (
+                    canUseAI ? (
+                      <ImproveReviewEmailSection
+                        restaurantId={restaurantId}
+                        restaurantName={restaurantName}
+                        currentSubject={emailSubject}
+                        currentBody={emailMessage}
+                        atLimit={aiAtLimit}
+                        onUsageRefresh={() => void refreshAiUsage()}
+                        onApply={(subject, body) => {
+                          setEmailSubject(subject);
+                          setEmailMessage(body);
+                          setMessage("Modèle IA appliqué. Enregistrez pour sauvegarder.");
+                        }}
+                      />
+                    ) : (
+                      <p className="rounded-xl border border-zg-border bg-zg-surface-elevated px-4 py-3 text-sm text-zg-text-muted">
+                        L&apos;amélioration IA est disponible avec le plan Pro (69 CHF/mois).
+                      </p>
+                    )
+                  ) : null}
 
                   <div className="grid gap-4 md:grid-cols-3">
                     <div>

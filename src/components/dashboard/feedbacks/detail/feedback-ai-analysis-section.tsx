@@ -22,6 +22,7 @@ const URGENCY_LABELS: Record<PrivateFeedbackAIAnalysis["urgency"], string> = {
 type FeedbackAIAnalysisSectionProps = {
   feedbackId: string;
   restaurantId: string;
+  canUseAI?: boolean;
   feedbackText: string | null;
   rating: number;
   initialAnalysis: PrivateFeedbackAIAnalysis | null;
@@ -31,6 +32,7 @@ type FeedbackAIAnalysisSectionProps = {
 export default function FeedbackAIAnalysisSection({
   feedbackId,
   restaurantId,
+  canUseAI = false,
   feedbackText,
   rating,
   initialAnalysis,
@@ -78,6 +80,16 @@ export default function FeedbackAIAnalysisSection({
     } finally {
       setLoading(false);
     }
+  }
+
+  if (!canUseAI) {
+    return (
+      <FeedbackDetailSection title="Analyse IA">
+        <p className="text-sm text-zg-text-muted">
+          L&apos;analyse IA des retours privés est disponible avec le plan Pro (69 CHF/mois).
+        </p>
+      </FeedbackDetailSection>
+    );
   }
 
   return (

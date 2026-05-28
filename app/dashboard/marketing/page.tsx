@@ -5,6 +5,7 @@ import { buildRecipientsByCampaignId } from "@/src/components/dashboard/marketin
 import { mapCampaignRows } from "@/src/components/dashboard/marketing/utils/map-campaign-row";
 import { computeMarketingKpis } from "@/src/components/dashboard/marketing/utils/marketing-kpis";
 import { requireRestaurantSession } from "@/src/lib/auth";
+import { canAccessAI } from "@/src/lib/ai/access";
 import { createClient } from "@/src/lib/supabase/server";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
@@ -23,6 +24,8 @@ export default async function DashboardMarketingPage({ searchParams }: Dashboard
   const supabase = await createClient();
   const { restaurant, access } = await requireRestaurantSession();
   const hasMarketingAccess = access.canUseProFeatures;
+  const canUseAI =
+    access.isOwnerDev || canAccessAI(restaurant.subscription_plan, restaurant.subscription_status);
 
   if (!hasMarketingAccess) {
     return (
@@ -115,6 +118,8 @@ export default async function DashboardMarketingPage({ searchParams }: Dashboard
         kpis={kpis}
         recipientsByCampaignId={recipientsByCampaignId}
         brand={brand}
+        restaurantId={restaurant.id}
+        canUseAI={canUseAI}
         initialOpenCampaignId={initialOpenCampaignId}
       />
     </DashboardContent>

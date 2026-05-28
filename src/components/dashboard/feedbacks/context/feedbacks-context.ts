@@ -16,6 +16,7 @@ export type FeedbacksContextValue = {
   kpis: FeedbackKpis;
   restaurantId: string;
   restaurantName: string;
+  canUseAI: boolean;
   filters: FeedbackFilters;
   setFilters: Dispatch<SetStateAction<FeedbackFilters>>;
   filterPills: FeedbackFilterPill[];

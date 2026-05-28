@@ -36,6 +36,7 @@ export type FeedbacksPageProps = {
   kpis: FeedbackKpis;
   restaurantId: string;
   restaurantName: string;
+  canUseAI?: boolean;
   servedReservationsThisMonth: number;
   kpiMonthBounds: FeedbacksKpiMonthBounds;
 };

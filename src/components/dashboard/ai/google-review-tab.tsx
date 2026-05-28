@@ -141,7 +141,7 @@ export default function GoogleReviewTab({ restaurantId, usage, onUsageRefresh }:
             <p className="text-xs font-semibold uppercase tracking-wide text-zg-fg-muted">Réponse</p>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-zg-fg">{reply}</p>
             <div className="flex flex-wrap gap-2">
-              <CopyTextButton text={reply} />
+              <CopyTextButton text={reply} label="Copier la réponse" />
               <Button
                 type="button"
                 variant="ghost"
