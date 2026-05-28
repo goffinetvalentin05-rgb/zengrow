@@ -7,6 +7,7 @@ import FeedbackDetailClientSection from "@/src/components/dashboard/feedbacks/de
 import FeedbackDetailInternalNote from "@/src/components/dashboard/feedbacks/detail/feedback-detail-internal-note";
 import FeedbackDetailRatingSection from "@/src/components/dashboard/feedbacks/detail/feedback-detail-rating-section";
 import FeedbackDetailReplySection from "@/src/components/dashboard/feedbacks/detail/feedback-detail-reply-section";
+import FeedbackAIAnalysisSection from "@/src/components/dashboard/feedbacks/detail/feedback-ai-analysis-section";
 import FeedbackDetailSection from "@/src/components/dashboard/feedbacks/detail/feedback-detail-section";
 import { useFeedbacks } from "@/src/components/dashboard/feedbacks/context/use-feedbacks";
 import { buildFeedbackMetaLine } from "@/src/components/dashboard/feedbacks/utils/format-feedback-meta";
@@ -19,7 +20,9 @@ export default function FeedbackDetailModal() {
   const {
     selectedFeedback,
     closeFeedbackDetail,
+    restaurantId,
     restaurantName,
+    updateFeedbackAiAnalysis,
     markFeedbackRead,
     markFeedbackUnread,
     markFeedbackSavingId,
@@ -126,6 +129,15 @@ export default function FeedbackDetailModal() {
             ) : null}
 
             <FeedbackDetailReplySection feedback={selectedFeedback} restaurantName={restaurantName} />
+
+            <FeedbackAIAnalysisSection
+              feedbackId={selectedFeedback.id}
+              restaurantId={restaurantId}
+              feedbackText={selectedFeedback.message}
+              rating={selectedFeedback.rating}
+              initialAnalysis={selectedFeedback.ai_analysis}
+              onAnalysisSaved={(analysis) => updateFeedbackAiAnalysis(selectedFeedback.id, analysis)}
+            />
 
             <FeedbackDetailInternalNote feedbackId={selectedFeedback.id} />
           </div>

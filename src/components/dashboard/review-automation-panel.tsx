@@ -15,11 +15,14 @@ import Textarea from "@/src/components/ui/textarea";
 import PanelToggle from "@/src/components/ui/panel-toggle";
 import ToastInline from "@/src/components/ui/toast-inline";
 import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-accordion";
+import ImproveReviewEmailSection from "@/src/components/dashboard/ai/improve-review-email-section";
+import { useAIUsage } from "@/src/components/dashboard/ai/use-ai-usage";
 import { createClient } from "@/src/lib/supabase/client";
 import { cn } from "@/src/lib/utils";
 
 type ReviewAutomationPanelProps = {
   restaurantId: string;
+  restaurantName?: string;
   /** Page dédiée (historique + config) ou intégration Paramètres (accordéons). */
   layout?: "page" | "settings";
   initialSettings: {
@@ -67,12 +70,15 @@ const channelOptions = [
 
 export default function ReviewAutomationPanel({
   restaurantId,
+  restaurantName = "Votre restaurant",
   layout = "page",
   initialSettings,
   initialFeedback,
 }: ReviewAutomationPanelProps) {
   const router = useRouter();
   const supabase = createClient();
+  const { usage, refresh: refreshAiUsage } = useAIUsage(restaurantId);
+  const aiAtLimit = usage != null && usage.used >= usage.limit;
   const [isEnabled, setIsEnabled] = useState(initialSettings.is_enabled);
   const [channel] = useState<"email">("email");
   const [delayMinutes, setDelayMinutes] = useState(initialSettings.delay_minutes);
@@ -282,6 +288,20 @@ export default function ReviewAutomationPanel({
                 Tu peux t&apos;inspirer de : {"{prenom}"}, {"{nom_resto}"}, {"{lien_avis}"} — le moteur actuel remplace surtout {"{{restaurant_name}}"} dans les modèles existants.
               </p>
             </div>
+
+            <ImproveReviewEmailSection
+              restaurantId={restaurantId}
+              restaurantName={restaurantName}
+              currentSubject={emailSubject}
+              currentBody={emailMessage}
+              atLimit={aiAtLimit}
+              onUsageRefresh={() => void refreshAiUsage()}
+              onApply={(subject, body) => {
+                setEmailSubject(subject);
+                setEmailMessage(body);
+                setMessage("Modèle IA appliqué. Enregistrez pour sauvegarder.");
+              }}
+            />
 
             <div className="grid gap-4 md:grid-cols-3">
               <div>
@@ -496,6 +516,20 @@ export default function ReviewAutomationPanel({
                     <Textarea className="mt-2 min-h-32" value={emailMessage} onChange={(event) => setEmailMessage(event.target.value)} />
                     <p className="mt-1.5 text-xs text-[var(--muted-foreground)]">Variable : {"{{restaurant_name}}"}</p>
                   </div>
+
+                  <ImproveReviewEmailSection
+                    restaurantId={restaurantId}
+                    restaurantName={restaurantName}
+                    currentSubject={emailSubject}
+                    currentBody={emailMessage}
+                    atLimit={aiAtLimit}
+                    onUsageRefresh={() => void refreshAiUsage()}
+                    onApply={(subject, body) => {
+                      setEmailSubject(subject);
+                      setEmailMessage(body);
+                      setMessage("Modèle IA appliqué. Enregistrez pour sauvegarder.");
+                    }}
+                  />
 
                   <div className="grid gap-4 md:grid-cols-3">
                     <div>

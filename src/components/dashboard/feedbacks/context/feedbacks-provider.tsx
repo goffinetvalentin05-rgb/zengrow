@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { FeedbacksContext } from "@/src/components/dashboard/feedbacks/context/feedbacks-context";
 import type { FeedbacksPageProps } from "@/src/components/dashboard/feedbacks/types";
+import type { PrivateFeedbackAIAnalysis } from "@/src/lib/ai/types";
 import {
   buildFeedbackFilterPills,
   clearFeedbackFilterKey,
@@ -28,6 +29,7 @@ type FeedbacksProviderProps = FeedbacksPageProps & {
 
 export function FeedbacksProvider({
   feedbacks: initialFeedbacks,
+  restaurantId,
   restaurantName,
   servedReservationsThisMonth,
   kpiMonthBounds,
@@ -192,11 +194,21 @@ export function FeedbacksProvider({
     [noteDrafts, showToast],
   );
 
+  const updateFeedbackAiAnalysis = useCallback(
+    (feedbackId: string, analysis: PrivateFeedbackAIAnalysis) => {
+      setFeedbackRecords((prev) =>
+        prev.map((row) => (row.id === feedbackId ? { ...row, ai_analysis: analysis } : row)),
+      );
+    },
+    [],
+  );
+
   const value = useMemo(
     () => ({
       feedbacks: feedbackRecords,
       filteredFeedbacks,
       kpis,
+      restaurantId,
       restaurantName,
       filters,
       setFilters,
@@ -215,11 +227,13 @@ export function FeedbacksProvider({
       setNoteDrafts,
       noteSavingId,
       saveFeedbackNote,
+      updateFeedbackAiAnalysis,
     }),
     [
       feedbackRecords,
       filteredFeedbacks,
       kpis,
+      restaurantId,
       restaurantName,
       filters,
       filterPills,
@@ -236,6 +250,7 @@ export function FeedbacksProvider({
       noteDrafts,
       noteSavingId,
       saveFeedbackNote,
+      updateFeedbackAiAnalysis,
     ],
   );
 

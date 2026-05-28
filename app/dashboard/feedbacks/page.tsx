@@ -39,6 +39,7 @@ export default async function DashboardFeedbacksPage() {
         responded_at,
         read_at,
         internal_note,
+        ai_analysis,
         reservation_id,
         reservation:reservations (
           reservation_date,
@@ -77,6 +78,7 @@ export default async function DashboardFeedbacksPage() {
       <FeedbacksPage
         feedbacks={feedbacks}
         kpis={kpis}
+        restaurantId={restaurant.id}
         restaurantName={restaurant.name}
         servedReservationsThisMonth={servedCount}
         kpiMonthBounds={{

@@ -1,4 +1,5 @@
 import type { FeedbackKpis } from "@/src/components/dashboard/feedbacks/utils/feedback-kpis";
+import type { PrivateFeedbackAIAnalysis } from "@/src/lib/ai/types";
 
 export type FeedbackRatingCriteria = {
   cuisine?: number;
@@ -20,6 +21,7 @@ export type FeedbackRecord = {
   reservation_date: string | null;
   customer_id: string | null;
   guests: number | null;
+  ai_analysis: PrivateFeedbackAIAnalysis | null;
 };
 
 export type FeedbacksKpiMonthBounds = {
@@ -32,6 +34,7 @@ export type FeedbacksKpiMonthBounds = {
 export type FeedbacksPageProps = {
   feedbacks: FeedbackRecord[];
   kpis: FeedbackKpis;
+  restaurantId: string;
   restaurantName: string;
   servedReservationsThisMonth: number;
   kpiMonthBounds: FeedbacksKpiMonthBounds;

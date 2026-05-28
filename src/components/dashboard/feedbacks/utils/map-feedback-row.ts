@@ -1,4 +1,5 @@
 import type { FeedbackRecord, FeedbackRatingCriteria } from "@/src/components/dashboard/feedbacks/types";
+import type { PrivateFeedbackAIAnalysis } from "@/src/lib/ai/types";
 
 type ReservationEmbed = {
   reservation_date: string;
@@ -16,6 +17,7 @@ export type FeedbackRowDb = {
   responded_at: string | null;
   read_at: string | null;
   internal_note: string | null;
+  ai_analysis?: unknown;
   rating_criteria?: unknown;
   reservation_id: string;
   reservation: ReservationEmbed | ReservationEmbed[] | null;
@@ -29,6 +31,13 @@ function parseRatingCriteria(raw: unknown): FeedbackRatingCriteria | null {
   const ambiance = typeof o.ambiance === "number" ? o.ambiance : undefined;
   if (cuisine == null && service == null && ambiance == null) return null;
   return { cuisine, service, ambiance };
+}
+
+function parseAiAnalysis(raw: unknown): PrivateFeedbackAIAnalysis | null {
+  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.summary !== "string" || typeof o.suggestedReply !== "string") return null;
+  return raw as PrivateFeedbackAIAnalysis;
 }
 
 export function mapFeedbackRow(row: FeedbackRowDb): FeedbackRecord {
@@ -48,5 +57,6 @@ export function mapFeedbackRow(row: FeedbackRowDb): FeedbackRecord {
     reservation_date: reservation?.reservation_date ?? null,
     customer_id: reservation?.customer_id ?? null,
     guests: reservation?.guests ?? null,
+    ai_analysis: parseAiAnalysis(row.ai_analysis),
   };
 }

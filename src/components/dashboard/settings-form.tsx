@@ -835,6 +835,7 @@ export default function SettingsForm({
             <ReviewAutomationPanel
               layout="settings"
               restaurantId={restaurant.id}
+              restaurantName={restaurant.name}
               initialSettings={{
                 ...reviewAutomation,
                 channel: "email",

@@ -19,6 +19,7 @@ const baseFeedback = (overrides: Partial<FeedbackRecord>): FeedbackRecord => ({
   reservation_date: "2026-05-10",
   customer_id: null,
   guests: 2,
+  ai_analysis: null,
   ...overrides,
 });
 

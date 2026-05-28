@@ -8,11 +8,13 @@ import type {
   FeedbackFilters,
 } from "@/src/components/dashboard/feedbacks/utils/feedback-filters";
 import type { FeedbackKpis } from "@/src/components/dashboard/feedbacks/utils/feedback-kpis";
+import type { PrivateFeedbackAIAnalysis } from "@/src/lib/ai/types";
 
 export type FeedbacksContextValue = {
   feedbacks: FeedbackRecord[];
   filteredFeedbacks: FeedbackRecord[];
   kpis: FeedbackKpis;
+  restaurantId: string;
   restaurantName: string;
   filters: FeedbackFilters;
   setFilters: Dispatch<SetStateAction<FeedbackFilters>>;
@@ -31,6 +33,7 @@ export type FeedbacksContextValue = {
   setNoteDrafts: Dispatch<SetStateAction<Record<string, string>>>;
   noteSavingId: string | null;
   saveFeedbackNote: (feedbackId: string) => Promise<void>;
+  updateFeedbackAiAnalysis: (feedbackId: string, analysis: PrivateFeedbackAIAnalysis) => void;
 };
 
 export const FeedbacksContext = createContext<FeedbacksContextValue | null>(null);
