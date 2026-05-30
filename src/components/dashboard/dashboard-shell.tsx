@@ -107,23 +107,8 @@ function DashboardShellInner({
           className={cn(fontClassName, "relative min-h-screen bg-zg-app font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}
         >
           <AppAmbientBackground />
-          <AnimatePresence>
-            {mobileNavOpen ? (
-              <motion.button
-                key="dashboard-nav-overlay"
-                type="button"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={overlayTransition}
-                className="zg-dashboard-mobile-overlay fixed inset-0 z-40 md:hidden"
-                aria-label="Fermer le menu de navigation"
-                onClick={() => setMobileNavOpen(false)}
-              />
-            ) : null}
-          </AnimatePresence>
 
-          <div className="relative z-10 flex min-h-screen">
+          <div className="relative flex min-h-screen">
             <DashboardSidebar
               reservationLink={publicLink}
               subscriptionPlan={subscriptionPlan}
@@ -132,7 +117,7 @@ function DashboardShellInner({
               onNavigate={() => setMobileNavOpen(false)}
             />
 
-            <div className="flex min-w-0 flex-1 flex-col">
+            <div className="relative z-0 flex min-w-0 flex-1 flex-col">
               <DashboardTopBar
                 publicLink={publicLink}
                 restaurantName={restaurantName}
@@ -145,6 +130,22 @@ function DashboardShellInner({
               <main className="flex-1 overflow-x-hidden px-4 pb-6 pt-8 md:px-8 md:pb-8 md:pt-10">{children}</main>
             </div>
           </div>
+
+          <AnimatePresence>
+            {mobileNavOpen ? (
+              <motion.button
+                key="dashboard-nav-overlay"
+                type="button"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={overlayTransition}
+                className="zg-dashboard-mobile-overlay pointer-events-auto fixed inset-0 z-40 md:hidden"
+                aria-label="Fermer le menu de navigation"
+                onClick={() => setMobileNavOpen(false)}
+              />
+            ) : null}
+          </AnimatePresence>
         </div>
         </NotificationProvider>
       </DashboardTitleProvider>

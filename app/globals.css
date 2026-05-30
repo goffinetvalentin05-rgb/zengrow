@@ -526,6 +526,8 @@ body {
     background-color: var(--zg-sidebar-bg);
     filter: none;
     isolation: isolate;
+    pointer-events: auto;
+    z-index: 60;
   }
 
   .zg-dashboard-mobile-sidebar * {
