@@ -116,10 +116,7 @@ function DashboardShellInner({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={overlayTransition}
-                className={cn(
-                  "fixed inset-0 z-40 backdrop-blur-sm md:hidden",
-                  resolvedTheme === "light" ? "bg-black/30" : "bg-black/50",
-                )}
+                className="zg-dashboard-mobile-overlay fixed inset-0 z-40 md:hidden"
                 aria-label="Fermer le menu de navigation"
                 onClick={() => setMobileNavOpen(false)}
               />

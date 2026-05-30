@@ -173,7 +173,7 @@ export default function DashboardSidebar({
       {tipPortal}
       <motion.aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col border-r border-zg-sidebar-border bg-zg-sidebar-bg/95 backdrop-blur-xl md:static md:z-0",
+          "zg-dashboard-mobile-sidebar fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col border-r border-zg-sidebar-border bg-zg-sidebar-bg md:static md:z-0 md:bg-zg-sidebar-bg/95 md:backdrop-blur-xl",
         )}
         initial={false}
         animate={animate}

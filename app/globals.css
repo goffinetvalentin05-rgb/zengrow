@@ -512,6 +512,28 @@ body {
   font-weight: 700;
 }
 
+/* Menu mobile dashboard — overlay sombre sans blur (Safari iOS floute le panneau si backdrop-filter + transform) */
+@media (max-width: 767px) {
+  .zg-dashboard-mobile-overlay {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: rgba(0, 0, 0, 0.45);
+  }
+
+  .zg-dashboard-mobile-sidebar {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: var(--zg-sidebar-bg);
+    filter: none;
+    isolation: isolate;
+  }
+
+  .zg-dashboard-mobile-sidebar * {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
 .zg-dashboard-backdrop {
   pointer-events: none;
   position: fixed;
