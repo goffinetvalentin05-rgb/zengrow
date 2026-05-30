@@ -42,7 +42,7 @@ export function SettingsAccordion({
         onClick={() => setOpen((v) => !v)}
         className={cn(
           "flex w-full items-center justify-between gap-3 p-4 text-left transition-colors duration-200 ease-out",
-          "hover:bg-[#1F1A15]",
+          "hover:bg-zg-card-hover",
         )}
       >
         <span className="min-w-0">

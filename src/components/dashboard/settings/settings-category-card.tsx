@@ -32,7 +32,7 @@ export function SettingsCategoryCard({
       <header className="mb-6 flex items-start gap-4">
         <span
           className={cn(
-            "flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl border border-white/5",
+            "flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl border border-zg-border",
             iconWrapClassName,
           )}
         >

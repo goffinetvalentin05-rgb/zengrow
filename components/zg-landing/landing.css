@@ -1,12 +1,23 @@
 /* ZenGrow Landing v3 — dark premium violet / bleu */
 
-body:has(.zg-landing) {
+body:has(.zg-landing[data-landing-canvas="light"]) {
+  background: #f8f8fb;
+  color: #111827;
+}
+
+body:has(.zg-landing[data-landing-canvas="dark"]),
+body:has(.zg-landing:not([data-landing-canvas])) {
   background: #06040f;
   color: #f4f0ff;
 }
 
 .zg-landing {
   --zg-bg: #06040f;
+  --zg-landing-orb-violet: rgb(124 92 255 / 0.35);
+  --zg-landing-orb-cyan: rgb(56 189 248 / 0.22);
+  --zg-landing-orb-magenta: rgb(192 38 211 / 0.18);
+  --zg-landing-top-glow: rgb(124 92 255 / 0.12);
+  --zg-landing-grid-line: rgb(255 255 255 / 0.02);
   --zg-bg-elevated: #0c0818;
   --zg-fg: #f4f0ff;
   --zg-muted: #9b8fb8;
@@ -32,9 +43,534 @@ body:has(.zg-landing) {
   --border: rgb(255 255 255 / 0.08);
 }
 
-.zg-landing__main {
+/* Fond clair — aligné dashboard (#F8F8FB), cartes blanches, textes foncés */
+.zg-landing[data-landing-canvas="light"] {
+  --zg-bg: #f8f8fb;
+  --zg-bg-elevated: #ffffff;
+  --zg-fg: #111827;
+  --zg-muted: #6b7280;
+  --zg-glass: #ffffff;
+  --zg-glass-border: #e5e7eb;
+  --zg-glow: rgb(124 92 255 / 0.22);
+  --zg-landing-orb-violet: rgb(124 92 255 / 0.16);
+  --zg-landing-orb-cyan: rgb(99 102 241 / 0.1);
+  --zg-landing-orb-magenta: rgb(139 92 246 / 0.08);
+  --zg-landing-top-glow: rgb(124 92 255 / 0.12);
+  --zg-landing-grid-line: rgb(124 92 255 / 0.06);
+  --zg-chrome-violet: #7c5cff;
+  --zg-chrome-violet-soft: #c4b5fd;
+  --border: #e5e7eb;
+  color: var(--zg-fg);
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-landing-bg {
+  opacity: 1;
+}
+
+/* Ambiances de section — halo violet navbar */
+.zg-landing[data-landing-canvas="light"] .zg-section-ambient > div {
+  background: radial-gradient(
+    circle,
+    rgb(124 92 255 / 0.14) 0%,
+    rgb(124 92 255 / 0.05) 45%,
+    transparent 72%
+  ) !important;
+}
+
+/* Textes clairs : uniquement le contenu principal (pas header / footer) */
+.zg-landing[data-landing-canvas="light"] main .zg-title-mega,
+.zg-landing[data-landing-canvas="light"] main .zg-title-hero,
+.zg-landing[data-landing-canvas="light"] main .zg-title-xl,
+.zg-landing[data-landing-canvas="light"] main .zg-title-lg,
+.zg-landing[data-landing-canvas="light"] main .zg-display,
+.zg-landing[data-landing-canvas="light"] main .text-white {
+  color: #111827;
+}
+
+.zg-landing[data-landing-canvas="light"] main .text-white\/90,
+.zg-landing[data-landing-canvas="light"] main .text-white\/80,
+.zg-landing[data-landing-canvas="light"] main .text-white\/70,
+.zg-landing[data-landing-canvas="light"] main .text-white\/60,
+.zg-landing[data-landing-canvas="light"] main .text-white\/50 {
+  color: #374151;
+}
+
+.zg-landing[data-landing-canvas="light"] main [class*="text-[#9b8fb8]"],
+.zg-landing[data-landing-canvas="light"] main [class*="text-[#c4b5fd]"] {
+  color: #6b7280 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] main .text-violet-200\/95 {
+  color: #5b3fd4 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-gradient-text {
+  background: linear-gradient(135deg, #111827 0%, #6d28d9 42%, #0369a1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-hero-pill {
+  border-color: #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-hero-pill--accent,
+.zg-landing[data-landing-canvas="light"] .zg-badge {
+  border-color: rgb(124 92 255 / 0.25);
+  background: rgb(124 92 255 / 0.08);
+  color: #5b3fd4;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-glass {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  box-shadow:
+    0 1px 2px rgba(17, 24, 39, 0.04),
+    0 8px 24px -12px rgba(17, 24, 39, 0.08);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-glass--featured {
+  border-color: rgb(124 92 255 / 0.28);
+  box-shadow:
+    0 1px 2px rgba(17, 24, 39, 0.04),
+    0 12px 32px -16px rgb(124 92 255 / 0.16);
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-glass--glow {
+  border-color: rgb(124 92 255 / 0.32);
+  box-shadow:
+    0 1px 2px rgba(17, 24, 39, 0.04),
+    0 0 48px -8px rgb(124 92 255 / 0.2);
+}
+
+/*
+ * Navbar & footer en fond clair : même chrome violet que le thème sombre
+ * (fond opaque — évite le gris dû au blur sur fond blanc).
+ */
+.zg-landing[data-landing-canvas="light"] .zg-nav-shell {
+  background: linear-gradient(
+    145deg,
+    #1e1238 0%,
+    #140c28 42%,
+    #0c0618 100%
+  );
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-color: rgb(124 92 255 / 0.32);
+  box-shadow:
+    0 20px 50px -20px rgb(0 0 0 / 0.55),
+    0 0 48px -12px rgb(124 92 255 / 0.42),
+    inset 0 1px 0 rgb(196 181 253 / 0.14);
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-nav-shell--scrolled {
+  background: linear-gradient(145deg, #22143f 0%, #0e081c 100%);
+  border-color: rgb(124 92 255 / 0.45);
+  box-shadow:
+    0 20px 50px -20px rgb(0 0 0 / 0.6),
+    0 0 56px -8px rgb(124 92 255 / 0.5),
+    inset 0 1px 0 rgb(196 181 253 / 0.18);
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-nav-shell a:not([class*="bg-"]) {
+  color: rgb(196 181 253 / 0.95) !important;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-nav-shell a:not([class*="bg-"]):hover {
+  color: #ffffff !important;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-nav-shell .zg-btn-ghost {
+  border-color: rgb(255 255 255 / 0.14);
+  background: rgb(255 255 255 / 0.05);
+  color: rgb(255 255 255 / 0.92);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-nav-shell .zg-btn-ghost:hover {
+  border-color: rgb(124 92 255 / 0.55);
+  background: rgb(124 92 255 / 0.14);
+  box-shadow: 0 0 24px rgb(124 92 255 / 0.28);
+  color: #ffffff;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-nav-shell > button[type="button"] {
+  border-color: rgb(255 255 255 / 0.12);
+  color: #ffffff;
+}
+
+.zg-landing[data-landing-canvas="light"] header > .zg-container > .zg-glass {
+  background: linear-gradient(160deg, #1a1030 0%, #0c0618 100%);
+  border-color: rgb(124 92 255 / 0.28);
+  box-shadow:
+    0 24px 48px -20px rgb(0 0 0 / 0.55),
+    0 0 40px -16px rgb(124 92 255 / 0.35);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.zg-landing[data-landing-canvas="light"] header > .zg-container > .zg-glass a {
+  color: rgb(196 181 253 / 0.95) !important;
+}
+
+.zg-landing[data-landing-canvas="light"] header > .zg-container > .zg-glass a:hover {
+  color: #ffffff !important;
+}
+
+.zg-landing[data-landing-canvas="light"] footer {
+  background: linear-gradient(180deg, #120a22 0%, #06040f 100%) !important;
+  border-top-color: rgb(124 92 255 / 0.28) !important;
+  --zg-footer-watermark-opacity: 0.06;
+}
+
+.zg-landing[data-landing-canvas="light"] footer [class*="text-[#9b8fb8]"] {
+  color: #9b8fb8 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] footer [class*="text-[#c4b5fd]"] {
+  color: #c4b5fd !important;
+}
+
+.zg-landing[data-landing-canvas="light"] footer [class*="text-violet-300"] {
+  color: rgb(196 181 253 / 0.85) !important;
+}
+
+.zg-landing[data-landing-canvas="light"] footer a:hover,
+.zg-landing[data-landing-canvas="light"] footer .hover\:text-white:hover {
+  color: #ffffff !important;
+}
+
+.zg-landing[data-landing-canvas="light"] footer .border-white\/\[0\.06\] {
+  border-color: rgb(124 92 255 / 0.18) !important;
+}
+
+.zg-landing[data-landing-canvas="light"] footer .zg-btn-ghost {
+  border-color: rgb(255 255 255 / 0.14);
+  background: rgb(255 255 255 / 0.04);
+  color: rgb(255 255 255 / 0.9);
+}
+
+.zg-landing[data-landing-canvas="light"] footer .zg-btn-ghost:hover {
+  border-color: rgb(124 92 255 / 0.5);
+  background: rgb(124 92 255 / 0.12);
+  box-shadow: 0 0 24px rgb(124 92 255 / 0.22);
+  color: #ffffff;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-btn-ghost {
+  border-color: #e5e7eb;
+  color: #374151;
+  background: #ffffff;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-btn-ghost:hover {
+  border-color: rgb(124 92 255 / 0.35);
+  background: rgb(124 92 255 / 0.06);
+  color: #111827;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-lead,
+.zg-landing[data-landing-canvas="light"] .zg-hero-sub {
+  color: var(--zg-muted);
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-step-line,
+.zg-landing[data-landing-canvas="light"] .zg-workflow-line {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(124 92 255 / 0.55) 8%,
+    rgb(99 102 241 / 0.5) 50%,
+    rgb(124 92 255 / 0.55) 92%,
+    transparent
+  );
+  box-shadow: 0 0 28px rgb(124 92 255 / 0.28);
+}
+
+/* Workflow — icônes & mini-cartes en violet marque */
+.zg-landing[data-landing-canvas="light"] .zg-workflow-step-icon {
+  border: 1px solid rgb(124 92 255 / 0.38);
+  background: linear-gradient(145deg, rgb(124 92 255 / 0.18) 0%, rgb(124 92 255 / 0.08) 100%);
+  color: #6d28d9;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.6) inset,
+    0 4px 16px rgb(124 92 255 / 0.2);
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-workflow-step-title {
+  color: #111827;
+}
+
+/* Mini-UI & démos — fond violet navbar (toutes sections) */
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui,
+.zg-landing[data-landing-canvas="light"] main .zgpd-mini {
+  border: 1px solid rgb(124 92 255 / 0.28);
+  background: linear-gradient(165deg, #22143f 0%, #140c28 48%, #0c0618 100%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    0 4px 20px rgb(30 18 56 / 0.2),
+    0 0 24px -8px rgb(124 92 255 / 0.25);
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .text-white,
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .font-medium.text-white,
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .font-semibold.text-white,
+.zg-landing[data-landing-canvas="light"] main .zgpd-mini .text-white,
+.zg-landing[data-landing-canvas="light"] main .zgpd-cal-count,
+.zg-landing[data-landing-canvas="light"] main .zgpd-cal-head strong,
+.zg-landing[data-landing-canvas="light"] main .zgpd-compose-text,
+.zg-landing[data-landing-canvas="light"] main .zgpd-rating {
+  color: #f4f0ff !important;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .text-violet-300,
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui [class*="text-violet"],
+.zg-landing[data-landing-canvas="light"] main .zgpd-send-pill,
+.zg-landing[data-landing-canvas="light"] main .zgpd-camp-chip {
+  color: #c4b5fd !important;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .text-emerald-300 {
+  color: #6ee7b7 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .text-red-200,
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .text-red-300 {
+  color: #fca5a5 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .text-amber-200 {
+  color: #fcd34d !important;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui [class*="text-[#9b8fb8]"],
+.zg-landing[data-landing-canvas="light"] main .zgpd-cal-foot span,
+.zg-landing[data-landing-canvas="light"] main .zgpd-client-name,
+.zg-landing[data-landing-canvas="light"] main .zgpd-step-label {
+  color: #9b8fb8 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui.border-violet-400\/30,
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui.border-emerald-400\/25 {
+  border-color: rgb(167 139 250 / 0.4) !important;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui.border-emerald-400\/25,
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .border-emerald-400\/25 {
+  border-color: rgb(52 211 153 / 0.35) !important;
+  background: linear-gradient(165deg, #0f2922 0%, #0c0618 100%) !important;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .border-red-400\/30,
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .bg-red-500\/10 {
+  border-color: rgb(248 113 113 / 0.35) !important;
+  background: rgb(127 29 29 / 0.35) !important;
+}
+
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .border-white\/10,
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .bg-white\/5,
+.zg-landing[data-landing-canvas="light"] main .zg-mini-ui .bg-white\/10 {
+  border-color: rgb(124 92 255 / 0.2) !important;
+  background: rgb(124 92 255 / 0.1) !important;
+}
+
+/* Section Problème */
+.zg-landing[data-landing-canvas="light"] .zg-pain-grid .zg-glass--problem {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  box-shadow:
+    0 1px 2px rgba(17, 24, 39, 0.04),
+    0 12px 32px -16px rgb(124 92 255 / 0.1);
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-pain-grid h3 {
+  color: #111827;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-pain-grid [class*="text-[#c4b5fd]"] {
+  color: #6d28d9 !important;
+}
+
+/* Section IA */
+.zg-landing[data-landing-canvas="light"] .zg-ai-prompt {
+  border-color: #e5e7eb;
+  background: #ffffff;
+  color: #4b5563;
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-ai-prompt:hover,
+.zg-landing[data-landing-canvas="light"] .zg-ai-prompt--active {
+  border-color: rgb(124 92 255 / 0.42);
+  background: linear-gradient(145deg, rgb(124 92 255 / 0.12) 0%, rgb(124 92 255 / 0.05) 100%);
+  box-shadow: 0 0 24px rgb(124 92 255 / 0.15);
+  color: #5b3fd4;
+}
+
+.zg-landing[data-landing-canvas="light"] #ia .border-b.border-white\/8 {
+  border-color: #e5e7eb !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #ia .font-semibold.text-white {
+  color: #111827 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #ia .space-y-3 > .rounded-xl.border.border-white\/8 {
+  border-color: #e5e7eb !important;
+  background: #f8f8fb !important;
+  color: #6b7280 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #ia .space-y-3 > .rounded-xl.border.border-cyan-400\/25 {
+  border-color: rgb(124 92 255 / 0.3) !important;
+  background: linear-gradient(165deg, #22143f 0%, #140c28 100%) !important;
+  color: #f4f0ff !important;
+}
+
+/* Section Tarifs */
+.zg-landing[data-landing-canvas="light"] #tarifs .text-violet-200\/90 {
+  color: #6d28d9 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs .zg-display.text-white,
+.zg-landing[data-landing-canvas="light"] #tarifs .text-white,
+.zg-landing[data-landing-canvas="light"] #tarifs .text-white\/90 {
+  color: #111827 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs [class*="text-[#9b8fb8]"] {
+  color: #6b7280 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs .text-violet-100 {
+  color: #5b3fd4 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs .border-violet-400\/35.bg-violet-500\/20 {
+  border-color: rgb(124 92 255 / 0.35) !important;
+  background: rgb(124 92 255 / 0.1) !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs ul li > span.rounded-full {
+  background: linear-gradient(145deg, #7c5cff 0%, #6366f1 100%) !important;
+  box-shadow: 0 2px 10px rgb(124 92 255 / 0.35);
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs ul li svg {
+  color: #ffffff !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs .border-t {
+  border-color: #e5e7eb !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs .zg-btn-ghost {
+  border-color: rgb(124 92 255 / 0.35) !important;
+  background: #ffffff !important;
+  color: #5b3fd4 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs .zg-btn-ghost:hover {
+  border-color: rgb(124 92 255 / 0.5) !important;
+  background: rgb(124 92 255 / 0.06) !important;
+  color: #6d28d9 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs .zg-pricing-glow {
+  opacity: 0.55;
+}
+
+.zg-landing[data-landing-canvas="light"] #tarifs .zg-pricing-card-inner {
+  box-shadow: 0 0 80px -16px rgb(124 92 255 / 0.45);
+}
+
+/* Section FAQ */
+.zg-landing[data-landing-canvas="light"] #faq .zg-faq-item.border-white\/6 {
+  border-color: #e5e7eb !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #faq .group.flex.w-full {
+  color: #111827 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #faq .group svg {
+  color: #7c5cff !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #faq [class*="text-[#9b8fb8]"] {
+  color: #6b7280 !important;
+}
+
+.zg-landing[data-landing-canvas="light"] #faq .zg-faq-item:hover {
+  background: rgb(124 92 255 / 0.06);
+}
+
+.zg-landing[data-landing-canvas="light"] #faq .zg-faq-item[data-state="open"] {
+  background: rgb(124 92 255 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(124 92 255 / 0.2);
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-float-card {
+  filter: drop-shadow(0 20px 48px rgba(124, 92, 255, 0.22));
+}
+
+.zg-landing[data-landing-canvas="light"] .zg-glass-interactive:hover {
+  box-shadow:
+    0 1px 2px rgba(17, 24, 39, 0.04),
+    0 16px 40px -12px rgba(124, 92, 255, 0.18);
+}
+
+.zg-landing-bg__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.zg-landing-bg__orb--violet {
+  width: min(70vw, 520px);
+  height: min(70vw, 520px);
+  left: -10%;
+  top: -15%;
+  background: radial-gradient(circle, var(--zg-landing-orb-violet) 0%, transparent 70%);
+}
+
+.zg-landing-bg__orb--cyan {
+  width: min(55vw, 420px);
+  height: min(55vw, 420px);
+  right: -8%;
+  top: 20%;
+  background: radial-gradient(circle, var(--zg-landing-orb-cyan) 0%, transparent 72%);
+}
+
+.zg-landing-bg__orb--magenta {
+  width: min(60vw, 480px);
+  height: min(60vw, 480px);
+  left: 30%;
+  bottom: -20%;
+  background: radial-gradient(circle, var(--zg-landing-orb-magenta) 0%, transparent 70%);
+}
+
+.zg-landing-bg__top-glow {
+  background: radial-gradient(ellipse 90% 55% at 50% -5%, var(--zg-landing-top-glow), transparent 55%);
+}
+
+.zg-landing-bg__grid {
+  background-image:
+    linear-gradient(var(--zg-landing-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--zg-landing-grid-line) 1px, transparent 1px);
+}
+
+.zg-landing__main,
+.zg-landing > footer {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .zg-container {

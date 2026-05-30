@@ -1,8 +1,15 @@
 import { zgBody } from "@/components/zg-landing/fonts";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import DashboardShell from "@/src/components/dashboard/dashboard-shell";
 import { requireRestaurantSession } from "@/src/lib/auth";
 import type { EffectiveAccess } from "@/src/lib/access";
+import {
+  DASHBOARD_THEME_COOKIE,
+  isDashboardThemePreference,
+  resolveDashboardCanvas,
+  resolveDashboardTheme,
+  type DashboardThemePreference,
+} from "@/src/lib/dashboard/theme";
 
 function initialsFromUser(meta: Record<string, unknown> | undefined, email: string | undefined) {
   const name = typeof meta?.full_name === "string" ? meta.full_name.trim() : "";
@@ -31,6 +38,17 @@ function roleLabelFromAccess(access: EffectiveAccess) {
   return "Plan Starter";
 }
 
+function initialDashboardThemeFromCookie(cookieValue: string | undefined) {
+  const preference: DashboardThemePreference = isDashboardThemePreference(cookieValue)
+    ? cookieValue
+    : "dark";
+  return {
+    preference,
+    resolvedTheme: resolveDashboardTheme(preference),
+    resolvedCanvas: resolveDashboardCanvas(preference, true),
+  };
+}
+
 export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -47,8 +65,19 @@ export default async function DashboardLayout({
   const userAvatarUrl =
     typeof meta?.avatar_url === "string" && meta.avatar_url.length > 0 ? meta.avatar_url : null;
 
+  const cookieStore = await cookies();
+  const themeCookie = cookieStore.get(DASHBOARD_THEME_COOKIE)?.value;
+  const {
+    preference: initialThemePreference,
+    resolvedTheme: initialResolvedTheme,
+    resolvedCanvas: initialResolvedCanvas,
+  } = initialDashboardThemeFromCookie(themeCookie);
+
   return (
     <DashboardShell
+      initialThemePreference={initialThemePreference}
+      initialResolvedTheme={initialResolvedTheme}
+      initialResolvedCanvas={initialResolvedCanvas}
       fontClassName={zgBody.className}
       restaurantId={restaurant.id}
       publicLink={publicLink}

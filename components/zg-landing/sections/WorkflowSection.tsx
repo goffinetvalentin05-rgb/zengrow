@@ -57,10 +57,10 @@ export function WorkflowSection() {
                   depth
                   className="relative flex h-full flex-col items-center p-4 text-center lg:p-5"
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/20 text-violet-200 ring-1 ring-violet-400/25">
-                    <step.icon className="h-5 w-5" />
+                  <span className="zg-workflow-step-icon flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/20 text-violet-200 ring-1 ring-violet-400/25">
+                    <step.icon className="h-5 w-5" strokeWidth={2} aria-hidden />
                   </span>
-                  <p className="zg-display mt-3 text-sm font-bold text-white">{step.label}</p>
+                  <p className="zg-workflow-step-title zg-display mt-3 text-sm font-bold text-white">{step.label}</p>
                   <p className="mt-1 text-[11px] text-[#9b8fb8]">{step.detail}</p>
                   {step.ui ? <div className="mt-3 w-full">{step.ui}</div> : null}
                 </PremiumCard>

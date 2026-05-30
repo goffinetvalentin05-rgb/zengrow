@@ -90,28 +90,233 @@ html:has(.zg-public-r-root) {
   --zg-premium: #a78bfa;
   --zg-premium-soft-bg: rgba(167, 139, 250, 0.12);
   --zg-neutral-badge-bg: rgba(255, 255, 255, 0.06);
+  --zg-sidebar-hover: rgb(255 255 255 / 0.05);
   --zg-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Dashboard — thème clair (interface connectée uniquement, via data-dashboard-theme sur le shell) */
+[data-dashboard-theme="light"] {
+  --background: #f8f8fb;
+  --background-elevated: #ffffff;
+  --foreground: #111827;
+  --surface: #ffffff;
+  --surface-card: #ffffff;
+  --surface-muted: #f3f4f6;
+  --border: #e5e7eb;
+  --border-soft: #e5e7eb;
+  --primary: #7c5cff;
+  --primary-hover: #6d4df5;
+  --primary-muted: rgba(124, 92, 255, 0.1);
+  --primary-foreground: #ffffff;
+  --muted-foreground: #6b7280;
+  --accent-amber: #d97706;
+  --accent-amber-soft: rgba(217, 119, 6, 0.1);
+  --badge-sand-bg: #f3f4f6;
+  --badge-sand-text: #4b5563;
+  --danger-bg: rgba(239, 68, 68, 0.08);
+  --danger-text: #dc2626;
+  --focus-ring: 0 0 0 3px rgba(124, 92, 255, 0.22);
 
-  /* Auth + surfaces marketing alignées landing v3 */
-  --color-landing-bg: #06040f;
-  --color-landing-section: #0c0818;
-  --color-landing-card: #120e1a;
-  --color-landing-border: rgb(255 255 255 / 0.1);
-  --color-landing-fg: #f4f0ff;
-  --color-landing-muted: #9b8fb8;
-  --color-landing-accent: #7c5cff;
-  --color-landing-accent-soft: #a78bfa;
-  --color-landing-glow: rgb(124 92 255 / 0.45);
-  --color-landing-cyan: #38bdf8;
-  --font-landing-serif: var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
+  --zg-app: #f8f8fb;
+  --zg-sidebar-bg: #ffffff;
+  --zg-sidebar-border: #e5e7eb;
+  --zg-on-dark: #111827;
+  --zg-on-dark-muted: #6b7280;
+  --zg-canvas: #f8f8fb;
+  --zg-canvas-mid: #f3f4f6;
+  --zg-fg: #111827;
+  --zg-text-secondary: #374151;
+  --zg-muted: #9ca3af;
+  --zg-text-muted: #6b7280;
+  --zg-fg-muted: #6b7280;
+  --zg-text-placeholder: #9ca3af;
+  --zg-teal: #7c5cff;
+  --zg-accent: #7c5cff;
+  --zg-accent-hover: #6d4df5;
+  --zg-mint: #0ea5e9;
+  --zg-cyan: #0ea5e9;
+  --zg-magenta: #a21caf;
+  --zg-border: #e5e7eb;
+  --zg-border-strong: #d1d5db;
+  --zg-border-hover: rgba(124, 92, 255, 0.35);
+  --zg-border-accent: rgba(124, 92, 255, 0.28);
+  --zg-border-focus: #7c5cff;
+  --zg-surface: #ffffff;
+  --zg-surface-elevated: #ffffff;
+  --zg-surface-soft: #f3f4f6;
+  --zg-card-hover: #f3f4f6;
+  --zg-highlight: rgba(124, 92, 255, 0.08);
+  --zg-accent-soft-bg: rgba(124, 92, 255, 0.1);
+  --zg-accent-soft-text: #5b3fd4;
+  --zg-glow-from: rgba(124, 92, 255, 0.08);
+  --zg-glow-via: rgba(14, 165, 233, 0.06);
+  --zg-glow-magenta: rgba(162, 28, 175, 0.04);
+  --zg-shadow-card:
+    0 1px 2px rgba(17, 24, 39, 0.04),
+    0 8px 24px -12px rgba(17, 24, 39, 0.08);
+  --zg-shadow-card-soft: 0 1px 2px rgba(17, 24, 39, 0.04);
+  --zg-shadow-sidebar: 0 4px 24px -8px rgba(17, 24, 39, 0.08);
+  --zg-success: #059669;
+  --zg-success-soft-bg: rgba(5, 150, 105, 0.1);
+  --zg-warning: #d97706;
+  --zg-warning-soft-bg: rgba(217, 119, 6, 0.1);
+  --zg-danger: #dc2626;
+  --zg-danger-soft-bg: rgba(220, 38, 38, 0.08);
+  --zg-info: #0284c7;
+  --zg-info-soft-bg: rgba(2, 132, 199, 0.1);
+  --zg-premium: #7c3aed;
+  --zg-premium-soft-bg: rgba(124, 58, 237, 0.1);
+  --zg-neutral-badge-bg: #f3f4f6;
+  --zg-sidebar-hover: rgb(17 24 39 / 0.04);
 
+  /* Relie les utilitaires Tailwind (var(--color-zg-*)) aux tokens du thème clair */
+  --color-zg-app: var(--zg-app);
+  --color-zg-sidebar-bg: var(--zg-sidebar-bg);
+  --color-zg-sidebar-border: var(--zg-sidebar-border);
+  --color-zg-on-dark: var(--zg-on-dark);
+  --color-zg-on-dark-muted: var(--zg-on-dark-muted);
+  --color-zg-canvas: var(--zg-canvas);
+  --color-zg-canvas-mid: var(--zg-canvas-mid);
+  --color-zg-fg: var(--zg-fg);
+  --color-zg-text-secondary: var(--zg-text-secondary);
+  --color-zg-muted: var(--zg-muted);
+  --color-zg-text-muted: var(--zg-text-muted);
+  --color-zg-fg-muted: var(--zg-fg-muted);
+  --color-zg-teal: var(--zg-teal);
+  --color-zg-accent: var(--zg-accent);
+  --color-zg-accent-hover: var(--zg-accent-hover);
+  --color-zg-mint: var(--zg-mint);
+  --color-zg-border: var(--zg-border);
+  --color-zg-border-strong: var(--zg-border-strong);
+  --color-zg-border-hover: var(--zg-border-hover);
+  --color-zg-border-accent: var(--zg-border-accent);
+  --color-zg-border-focus: var(--zg-border-focus);
+  --color-zg-surface: var(--zg-surface);
+  --color-zg-surface-elevated: var(--zg-surface-elevated);
+  --color-zg-surface-soft: var(--zg-surface-soft);
+  --color-zg-card-hover: var(--zg-card-hover);
+  --color-zg-highlight: var(--zg-highlight);
+  --color-zg-accent-soft-bg: var(--zg-accent-soft-bg);
+  --color-zg-accent-soft-text: var(--zg-accent-soft-text);
+  --color-zg-success: var(--zg-success);
+  --color-zg-success-soft-bg: var(--zg-success-soft-bg);
+  --color-zg-warning: var(--zg-warning);
+  --color-zg-warning-soft-bg: var(--zg-warning-soft-bg);
+  --color-zg-danger: var(--zg-danger);
+  --color-zg-danger-soft-bg: var(--zg-danger-soft-bg);
+  --color-zg-info: var(--zg-info);
+  --color-zg-info-soft-bg: var(--zg-info-soft-bg);
+  --color-zg-premium: var(--zg-premium);
+  --color-zg-premium-soft-bg: var(--zg-premium-soft-bg);
+  --color-zg-text-placeholder: var(--zg-text-placeholder);
+  --color-zg-neutral-badge-bg: var(--zg-neutral-badge-bg);
+  --shadow-zg-card: var(--zg-shadow-card);
+  --shadow-zg-soft: var(--zg-shadow-card-soft);
+  --shadow-zg-sidebar: var(--zg-shadow-sidebar);
+
+  color-scheme: light;
+}
+
+[data-dashboard-theme="light"] ::selection {
+  background: rgba(124, 92, 255, 0.18);
+  color: #111827;
+}
+
+[data-dashboard-theme="light"] .zg-premium-card {
+  background: #ffffff;
+  border-color: var(--zg-border);
+  box-shadow: var(--zg-shadow-card);
+  backdrop-filter: none;
+}
+
+[data-dashboard-theme="light"] .zg-bg-grid {
+  background-image:
+    linear-gradient(rgb(17 24 39 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(17 24 39 / 0.03) 1px, transparent 1px);
+}
+
+[data-dashboard-theme="light"] .zg-app-backdrop .zg-dashboard-backdrop__glow-a,
+[data-dashboard-theme="light"] .zg-app-backdrop .zg-dashboard-backdrop__glow-b,
+[data-dashboard-theme="light"] .zg-app-backdrop .zg-dashboard-backdrop__glow-c {
+  opacity: 0.2;
+}
+
+/* Mode auto : fond clair uniquement, UI sombre inchangée */
+[data-dashboard-theme="dark"][data-dashboard-canvas="light"] {
+  --zg-app: #f8f8fb;
+  --zg-canvas: #f8f8fb;
+  --zg-canvas-mid: #f3f4f6;
+  --color-zg-app: var(--zg-app);
+  --color-zg-canvas: var(--zg-canvas);
+  --color-zg-canvas-mid: var(--zg-canvas-mid);
+}
+
+[data-dashboard-theme="dark"][data-dashboard-canvas="light"] .zg-app-backdrop .zg-dashboard-backdrop__glow-a,
+[data-dashboard-theme="dark"][data-dashboard-canvas="light"] .zg-app-backdrop .zg-dashboard-backdrop__glow-b,
+[data-dashboard-theme="dark"][data-dashboard-canvas="light"] .zg-app-backdrop .zg-dashboard-backdrop__glow-c {
+  opacity: 0.22;
+}
+
+[data-dashboard-theme="dark"][data-dashboard-canvas="light"] .zg-bg-grid {
+  background-image:
+    linear-gradient(rgb(17 24 39 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(17 24 39 / 0.03) 1px, transparent 1px);
+}
+
+[data-dashboard-theme="dark"] {
+  --color-zg-app: var(--zg-app);
+  --color-zg-sidebar-bg: var(--zg-sidebar-bg);
+  --color-zg-sidebar-border: var(--zg-sidebar-border);
+  --color-zg-on-dark: var(--zg-on-dark);
+  --color-zg-on-dark-muted: var(--zg-on-dark-muted);
+  --color-zg-canvas: var(--zg-canvas);
+  --color-zg-canvas-mid: var(--zg-canvas-mid);
+  --color-zg-fg: var(--zg-fg);
+  --color-zg-text-secondary: var(--zg-text-secondary);
+  --color-zg-muted: var(--zg-muted);
+  --color-zg-text-muted: var(--zg-text-muted);
+  --color-zg-fg-muted: var(--zg-fg-muted);
+  --color-zg-teal: var(--zg-teal);
+  --color-zg-accent: var(--zg-accent);
+  --color-zg-accent-hover: var(--zg-accent-hover);
+  --color-zg-mint: var(--zg-mint);
+  --color-zg-border: var(--zg-border);
+  --color-zg-border-strong: var(--zg-border-strong);
+  --color-zg-border-hover: var(--zg-border-hover);
+  --color-zg-border-accent: var(--zg-border-accent);
+  --color-zg-border-focus: var(--zg-border-focus);
+  --color-zg-surface: var(--zg-surface);
+  --color-zg-surface-elevated: var(--zg-surface-elevated);
+  --color-zg-surface-soft: var(--zg-surface-soft);
+  --color-zg-card-hover: var(--zg-card-hover);
+  --color-zg-highlight: var(--zg-highlight);
+  --color-zg-accent-soft-bg: var(--zg-accent-soft-bg);
+  --color-zg-accent-soft-text: var(--zg-accent-soft-text);
+  --color-zg-success: var(--zg-success);
+  --color-zg-success-soft-bg: var(--zg-success-soft-bg);
+  --color-zg-warning: var(--zg-warning);
+  --color-zg-warning-soft-bg: var(--zg-warning-soft-bg);
+  --color-zg-danger: var(--zg-danger);
+  --color-zg-danger-soft-bg: var(--zg-danger-soft-bg);
+  --color-zg-info: var(--zg-info);
+  --color-zg-info-soft-bg: var(--zg-info-soft-bg);
+  --color-zg-premium: var(--zg-premium);
+  --color-zg-premium-soft-bg: var(--zg-premium-soft-bg);
+  --color-zg-text-placeholder: var(--zg-text-placeholder);
+  --color-zg-neutral-badge-bg: var(--zg-neutral-badge-bg);
+  --shadow-zg-card: var(--zg-shadow-card);
+  --shadow-zg-soft: var(--zg-shadow-card-soft);
+  --shadow-zg-sidebar: var(--zg-shadow-sidebar);
+
+  color-scheme: dark;
+}
+
+/*
+ * Tokens dashboard : @theme (sans inline) pour que bg-zg-* / text-zg-* utilisent
+ * var(--color-zg-*) modifiables au runtime (thème clair/sombre).
+ * @theme inline fige les hex au build — incompatible avec data-dashboard-theme.
+ */
+@theme {
   --color-zg-app: var(--zg-app);
   --color-zg-sidebar-bg: var(--zg-sidebar-bg);
   --color-zg-sidebar-border: var(--zg-sidebar-border);
@@ -156,6 +361,26 @@ html:has(.zg-public-r-root) {
   --shadow-zg-card: var(--zg-shadow-card);
   --shadow-zg-soft: var(--zg-shadow-card-soft);
   --shadow-zg-sidebar: var(--zg-shadow-sidebar);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Auth + surfaces marketing alignées landing v3 */
+  --color-landing-bg: #06040f;
+  --color-landing-section: #0c0818;
+  --color-landing-card: #120e1a;
+  --color-landing-border: rgb(255 255 255 / 0.1);
+  --color-landing-fg: #f4f0ff;
+  --color-landing-muted: #9b8fb8;
+  --color-landing-accent: #7c5cff;
+  --color-landing-accent-soft: #a78bfa;
+  --color-landing-glow: rgb(124 92 255 / 0.45);
+  --color-landing-cyan: #38bdf8;
+  --font-landing-serif: var(--font-instrument-serif), ui-serif, Georgia, "Times New Roman", serif;
 }
 
 body {

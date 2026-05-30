@@ -19,6 +19,7 @@ import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
 import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-accordion";
 import { SettingsCategoryCard } from "@/src/components/dashboard/settings/settings-category-card";
+import { DashboardThemeToggle } from "@/src/components/dashboard/dashboard-theme-toggle";
 import { cn, type OpeningHours } from "@/src/lib/utils";
 import AvailabilityEditor from "@/src/components/dashboard/availability-editor";
 import BillingPlans from "@/src/components/dashboard/billing-plans";
@@ -874,11 +875,16 @@ export default function SettingsForm({
               </div>
             </div>
           </SettingsAccordion>
-          <SettingsAccordion title="Préférences">
-            <div>
-              <label className="dashboard-field-label">Langue</label>
-              <Input readOnly value="Français" className="mt-2 max-w-sm" />
+          <SettingsAccordion title="Préférences" defaultOpen>
+            <div className="space-y-6">
+              <div>
+                <label className="dashboard-field-label">Langue</label>
+                <Input readOnly value="Français" className="mt-2 max-w-sm" />
+              </div>
             </div>
+          </SettingsAccordion>
+          <SettingsAccordion title="Apparence" defaultOpen>
+            <DashboardThemeToggle />
           </SettingsAccordion>
           <SettingsAccordion title="Zone de danger" danger>
             <p className="text-sm text-zg-muted">

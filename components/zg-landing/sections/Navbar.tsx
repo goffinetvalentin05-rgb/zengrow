@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/src/lib/utils";
+import { LandingCanvasToggle } from "@/components/zg-landing/landing-canvas-toggle";
 import { Container, GhostButton } from "../ui";
 
 const LINKS = [
@@ -57,7 +58,8 @@ export function Navbar() {
             ))}
           </ul>
 
-          <div className="hidden md:block">
+          <div className="hidden items-center gap-3 md:flex">
+            <LandingCanvasToggle compact />
             <GhostButton href="/login" className="!min-h-10 !px-5 !text-sm">
               Connexion
             </GhostButton>
@@ -87,6 +89,9 @@ export function Navbar() {
                   </a>
                 </li>
               ))}
+              <li className="flex justify-center py-2">
+                <LandingCanvasToggle />
+              </li>
               <li className="pt-2">
                 <GhostButton href="/login" className="w-full justify-center">
                   Connexion

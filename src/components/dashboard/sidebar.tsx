@@ -28,6 +28,8 @@ import { cn } from "@/src/lib/utils";
 import { buttonClassName } from "@/src/components/ui/button";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import CompactProUpsell from "@/src/components/dashboard/sidebar/compact-pro-upsell";
+import { DashboardThemeToggle } from "@/src/components/dashboard/dashboard-theme-toggle";
+import { useDashboardTheme } from "@/src/components/dashboard/dashboard-theme-provider";
 import { useIsMdUp } from "@/src/hooks/use-is-md-up";
 
 const STORAGE_KEY = "zengrow_dashboard_sidebar_collapsed";
@@ -71,6 +73,7 @@ export default function DashboardSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const showToast = useDashboardToast();
+  const { resolvedTheme } = useDashboardTheme();
   const isMdUp = useIsMdUp();
   const hasProMarketingAccess = subscriptionStatus === "trial" || subscriptionPlan === "pro";
   const showProUpsell = subscriptionPlan === "starter" && subscriptionStatus !== "trial";
@@ -155,7 +158,8 @@ export default function DashboardSidebar({
       ? createPortal(
           <span
             role="tooltip"
-            className="pointer-events-none fixed z-[9999] -translate-y-1/2 whitespace-nowrap rounded-lg border border-zg-border bg-zg-surface-elevated px-2.5 py-1.5 text-sm text-zg-on-dark shadow-lg shadow-black/25"
+            data-dashboard-theme={resolvedTheme}
+            className="pointer-events-none fixed z-[9999] -translate-y-1/2 whitespace-nowrap rounded-lg border border-zg-border bg-zg-surface-elevated px-2.5 py-1.5 text-sm text-zg-on-dark shadow-lg shadow-black/10"
             style={{ left: hoverTip.x, top: hoverTip.y }}
           >
             {hoverTip.text}
@@ -179,7 +183,7 @@ export default function DashboardSidebar({
           <button
             type="button"
             onClick={onNavigate}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-zg-on-dark-muted transition-colors duration-200 ease-out hover:bg-white/5 hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-zg-on-dark-muted transition-colors duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
             aria-label="Fermer le menu de navigation"
           >
             <X className="h-5 w-5" strokeWidth={2} aria-hidden />
@@ -212,7 +216,7 @@ export default function DashboardSidebar({
               <button
                 type="button"
                 onClick={() => persistCollapsed(true)}
-                className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zg-on-dark-muted transition-colors duration-200 ease-out hover:bg-white/5 hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg md:inline-flex"
+                className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zg-on-dark-muted transition-colors duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg md:inline-flex"
                 aria-label="Réduire la barre latérale"
               >
                 <PanelLeftClose className="h-5 w-5" strokeWidth={2} aria-hidden />
@@ -223,7 +227,7 @@ export default function DashboardSidebar({
               <button
                 type="button"
                 onClick={() => persistCollapsed(false)}
-                className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zg-on-dark-muted transition-colors duration-200 ease-out hover:bg-white/5 hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg md:inline-flex"
+                className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zg-on-dark-muted transition-colors duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg md:inline-flex"
                 aria-label="Développer la barre latérale"
               >
                 <PanelLeftOpen className="h-5 w-5" strokeWidth={2} aria-hidden />
@@ -285,6 +289,13 @@ export default function DashboardSidebar({
             <>
               {showProUpsell ? <CompactProUpsell onNavigate={onNavigate} /> : null}
 
+              <div className="min-w-0 rounded-xl border border-zg-sidebar-border bg-zg-surface/50 p-2">
+                <p className="mb-1.5 px-0.5 text-[10px] font-semibold uppercase tracking-wider text-zg-on-dark-muted">
+                  Thème
+                </p>
+                <DashboardThemeToggle variant="sidebar" />
+              </div>
+
               <div className="rounded-xl px-1">
                 <div className="flex items-center gap-2">
                   <p className="min-w-0 flex-1 truncate text-xs text-zg-on-dark-muted" title={reservationLink}>
@@ -293,7 +304,7 @@ export default function DashboardSidebar({
                   <button
                     type="button"
                     onClick={handleCopy}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zg-on-dark-muted transition-all duration-200 ease-out hover:bg-white/5 hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zg-on-dark-muted transition-all duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
                     aria-label="Copier le lien public"
                   >
                     <Copy className="h-4 w-4" strokeWidth={2} />
@@ -317,11 +328,12 @@ export default function DashboardSidebar({
             </>
           ) : (
             <>
+              <DashboardThemeToggle variant="sidebarCompact" />
               <button
                 type="button"
                 onClick={handleCopy}
                 {...bindHoverTip("Copier le lien public")}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-zg-on-dark-muted transition-all duration-200 ease-out hover:bg-white/5 hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-zg-on-dark-muted transition-all duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
                 aria-label="Copier le lien public"
               >
                 <Copy className="h-4 w-4" strokeWidth={2} />
@@ -329,7 +341,7 @@ export default function DashboardSidebar({
               <button
                 type="button"
                 {...bindHoverTip("Déconnexion")}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-zg-on-dark-muted transition-all duration-200 ease-out hover:bg-white/5 hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-zg-on-dark-muted transition-all duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
                 aria-label="Déconnexion"
                 onClick={handleLogout}
               >
@@ -378,10 +390,10 @@ function NavItem({
         className={cn(
           "relative mx-auto flex h-11 w-11 items-center justify-center rounded-xl text-sm font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg",
           locked
-            ? "text-zg-on-dark-muted/80 hover:bg-white/[0.04] hover:text-zg-on-dark"
+            ? "text-zg-on-dark-muted/80 hover:bg-zg-sidebar-hover hover:text-zg-on-dark"
             : active
               ? "bg-gradient-to-br from-[#7c5cff] to-[#6366f1] text-white shadow-[0_0_24px_-8px_rgba(124,92,255,0.55)]"
-              : "text-zg-on-dark-muted hover:bg-white/5 hover:text-zg-on-dark",
+              : "text-zg-on-dark-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark",
         )}
         aria-label={label}
       >
@@ -392,7 +404,7 @@ function NavItem({
           aria-hidden
         />
         {locked ? (
-          <span className="absolute -bottom-1 -right-1 rounded bg-white/10 px-1 py-px text-[8px] font-bold uppercase text-zg-on-dark-muted ring-1 ring-zg-border">
+          <span className="absolute -bottom-1 -right-1 rounded bg-zg-neutral-badge-bg px-1 py-px text-[8px] font-bold uppercase text-zg-on-dark-muted ring-1 ring-zg-border">
             P
           </span>
         ) : null}
@@ -407,10 +419,10 @@ function NavItem({
       className={cn(
         "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg",
         locked
-          ? "text-zg-on-dark-muted/80 hover:bg-white/[0.04] hover:text-zg-on-dark"
+          ? "text-zg-on-dark-muted/80 hover:bg-zg-sidebar-hover hover:text-zg-on-dark"
           : active
             ? "bg-gradient-to-br from-[#7c5cff] to-[#6366f1] text-white shadow-[0_0_24px_-8px_rgba(124,92,255,0.55)]"
-            : "text-zg-on-dark-muted hover:bg-white/5 hover:text-zg-on-dark",
+            : "text-zg-on-dark-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark",
       )}
     >
       <Icon
@@ -421,7 +433,7 @@ function NavItem({
       />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {locked ? (
-        <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-on-dark-muted">
+        <span className="shrink-0 rounded-full bg-zg-neutral-badge-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zg-on-dark-muted">
           Pro
         </span>
       ) : null}

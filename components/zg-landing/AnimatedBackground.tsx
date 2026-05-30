@@ -1,46 +1,11 @@
-"use client";
-
 export function AnimatedBackground() {
   return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
-      <div
-        className="zg-bg-orb"
-        style={{
-          width: "min(70vw, 520px)",
-          height: "min(70vw, 520px)",
-          left: "-10%",
-          top: "-15%",
-          background: "radial-gradient(circle, rgb(124 92 255 / 0.35) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        className="zg-bg-orb"
-        style={{
-          width: "min(55vw, 420px)",
-          height: "min(55vw, 420px)",
-          right: "-8%",
-          top: "20%",
-          background: "radial-gradient(circle, rgb(56 189 248 / 0.22) 0%, transparent 72%)",
-        }}
-      />
-      <div
-        className="zg-bg-orb"
-        style={{
-          width: "min(60vw, 480px)",
-          height: "min(60vw, 480px)",
-          left: "30%",
-          bottom: "-20%",
-          background: "radial-gradient(circle, rgb(192 38 211 / 0.18) 0%, transparent 70%)",
-        }}
-      />
-      <div className="zg-bg-grid" />
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 90% 55% at 50% -5%, rgb(124 92 255 / 0.12), transparent 55%)",
-        }}
-      />
+    <div className="zg-landing-bg pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
+      <div className="zg-landing-bg__orb zg-landing-bg__orb--violet zg-bg-orb" />
+      <div className="zg-landing-bg__orb zg-landing-bg__orb--cyan zg-bg-orb" />
+      <div className="zg-landing-bg__orb zg-landing-bg__orb--magenta zg-bg-orb" />
+      <div className="zg-bg-grid zg-landing-bg__grid" />
+      <div className="zg-landing-bg__top-glow absolute inset-0" />
     </div>
   );
 }
