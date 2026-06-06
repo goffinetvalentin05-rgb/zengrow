@@ -10,7 +10,6 @@ import { Container, GhostButton } from "../ui";
 
 const LINKS = [
   { href: "#workflow", label: "Comment ça marche" },
-  { href: "#plateforme", label: "Plateforme" },
   { href: "#tarifs", label: "Tarifs" },
 ];
 
@@ -34,13 +33,13 @@ export function Navbar() {
             scrolled && "zg-nav-shell--scrolled",
           )}
         >
-          <Link href="/" className="flex shrink-0 items-center" aria-label="ZenGrow — accueil">
+          <Link href="/" className="zg-nav-logo shrink-0" aria-label="ZenGrow — accueil">
             <Image
-              src="/logo-zengrow.png"
+              src="/zengrow-logo-blanc.png"
               alt="ZenGrow"
               width={1680}
               height={482}
-              className="h-7 w-auto sm:h-8 md:h-9"
+              className="zg-nav-logo__img"
               priority
             />
           </Link>

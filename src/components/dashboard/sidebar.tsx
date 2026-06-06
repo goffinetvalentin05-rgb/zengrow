@@ -4,16 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { isGiftCardsEnabled } from "@/src/lib/config/features";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Calendar,
-  Copy,
-  Gift,
   LayoutDashboard,
   LogOut,
-  Globe2,
   Megaphone,
   PanelLeftClose,
   PanelLeftOpen,
@@ -26,7 +21,6 @@ import {
 import { createClient } from "@/src/lib/supabase/client";
 import { cn } from "@/src/lib/utils";
 import { buttonClassName } from "@/src/components/ui/button";
-import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import CompactProUpsell from "@/src/components/dashboard/sidebar/compact-pro-upsell";
 import { DashboardThemeToggle } from "@/src/components/dashboard/dashboard-theme-toggle";
 import { useDashboardTheme } from "@/src/components/dashboard/dashboard-theme-provider";
@@ -40,7 +34,6 @@ const WIDTH_COLLAPSED = 72;
 const transitionSidebar = { type: "tween" as const, duration: 0.25, ease: [0, 0, 0.2, 1] as const };
 
 type DashboardSidebarProps = {
-  reservationLink: string;
   subscriptionPlan: "starter" | "pro" | null;
   subscriptionStatus: "trial" | "active" | "expired";
   mobileOpen?: boolean;
@@ -49,22 +42,15 @@ type DashboardSidebarProps = {
 
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/dashboard/reservations", label: "Réservations", icon: Calendar },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
-  { href: "/dashboard/reputation", label: "Avis & réputation", icon: Star },
-  { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, requiresPro: true },
-  { href: "/dashboard/public-page", label: "Showroom", icon: Globe2 },
-  // GIFT_CARDS feature flag — réactivable
-  ...(isGiftCardsEnabled()
-    ? [{ href: "/dashboard/gift-vouchers" as const, label: "Bons cadeaux", icon: Gift }]
-    : []),
+  { href: "/dashboard/marketing", label: "Relances IA", icon: Megaphone, requiresPro: true },
+  { href: "/dashboard/reputation", label: "Avis Google", icon: Star },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];
 
 type HoverTipState = { text: string; x: number; y: number } | null;
 
 export default function DashboardSidebar({
-  reservationLink,
   subscriptionPlan,
   subscriptionStatus,
   mobileOpen = false,
@@ -72,7 +58,6 @@ export default function DashboardSidebar({
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const showToast = useDashboardToast();
   const { resolvedTheme } = useDashboardTheme();
   const isMdUp = useIsMdUp();
   const hasProMarketingAccess = subscriptionStatus === "trial" || subscriptionPlan === "pro";
@@ -135,15 +120,6 @@ export default function DashboardSidebar({
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
-  }
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(reservationLink);
-      showToast({ message: "Lien showroom copié.", icon: Copy });
-    } catch {
-      showToast({ message: "Impossible de copier le lien.", icon: Copy });
-    }
   }
 
   const animate = useMemo(() => {
@@ -297,22 +273,6 @@ export default function DashboardSidebar({
                 <DashboardThemeToggle variant="sidebar" />
               </div>
 
-              <div className="rounded-xl px-1">
-                <div className="flex items-center gap-2">
-                  <p className="min-w-0 flex-1 truncate text-xs text-zg-on-dark-muted" title={reservationLink}>
-                    {reservationLink}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleCopy}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zg-on-dark-muted transition-all duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
-                    aria-label="Copier le lien public"
-                  >
-                    <Copy className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                </div>
-              </div>
-
               <button
                 type="button"
                 className={buttonClassName({
@@ -330,15 +290,6 @@ export default function DashboardSidebar({
           ) : (
             <>
               <DashboardThemeToggle variant="sidebarCompact" />
-              <button
-                type="button"
-                onClick={handleCopy}
-                {...bindHoverTip("Copier le lien public")}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-zg-on-dark-muted transition-all duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
-                aria-label="Copier le lien public"
-              >
-                <Copy className="h-4 w-4" strokeWidth={2} />
-              </button>
               <button
                 type="button"
                 {...bindHoverTip("Déconnexion")}

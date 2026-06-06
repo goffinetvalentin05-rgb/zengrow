@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { LandingPage } from "@/components/zg-landing/LandingPage";
 
 export const metadata: Metadata = {
-  title: "ZenGrow — Remplissez votre restaurant grâce à l'IA",
+  title: "ZenGrow — L'IA qui fait revenir vos clients",
   description:
-    "ZenGrow aide les restaurants à obtenir plus de réservations, faire revenir leurs clients et récolter plus d'avis Google grâce à une plateforme simple basée sur l'intelligence artificielle.",
+    "Ajoutez le numéro de vos clients. ZenGrow relance ceux qui ne seraient peut-être jamais revenus et récupère du chiffre d'affaires — sans effort.",
 };
 
 export default function Home() {

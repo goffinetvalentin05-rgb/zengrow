@@ -1,31 +1,23 @@
-import { ArrowRight, X } from "lucide-react";
+import { X } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { MiniChip } from "./visuals";
 
-/** Visiteur : découverte → abandon */
-export function ScenarioVisitorLost() {
+/** Client inactif : satisfait mais ne revient plus */
+export function ScenarioClientLost() {
   return (
     <div className="zg-mini-ui space-y-2 rounded-xl p-3">
-      <div className="flex flex-wrap gap-1.5">
-        {["Google", "Instagram", "Pub"].map((s) => (
-          <span
-            key={s}
-            className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-[#9b8fb8]"
-          >
-            {s}
-          </span>
-        ))}
-      </div>
-      <div className="flex items-center gap-2 text-[10px] text-[#9b8fb8]">
-        <span className="flex-1 truncate">Page restaurant</span>
-        <ArrowRight className="h-3 w-3 shrink-0" />
-        <span className="rounded border border-dashed border-white/20 px-2 py-1 text-white/50">
-          Réserver ?
+      <div className="flex items-center gap-2">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
+          T
         </span>
+        <div>
+          <p className="text-[11px] font-semibold text-white">Thomas B.</p>
+          <p className="text-[9px] text-[#9b8fb8]">Dernière visite · 45 j</p>
+        </div>
       </div>
       <div className="flex items-center justify-center gap-2 rounded-lg border border-red-400/30 bg-red-500/10 py-2">
         <X className="h-3.5 w-3.5 text-red-300" />
-        <span className="text-[10px] font-semibold text-red-200">Abandon</span>
+        <span className="text-[10px] font-semibold text-red-200">Ne revient plus</span>
       </div>
     </div>
   );
@@ -169,15 +161,15 @@ export function WorkflowStepUI({
   );
 }
 
-/** IA — carte campagne prête */
+/** IA — relance prête */
 export function AICampaignReadyCard() {
   return (
     <div className="zg-mini-ui mt-4 rounded-xl border border-emerald-400/25 bg-emerald-500/8 p-4">
       <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-        Campagne prête
+        Relance prête
       </p>
       <ul className="mt-2 space-y-1 text-xs text-white/90">
-        <li>8 clients ciblés</li>
+        <li>8 clients inactifs détectés</li>
         <li>Envoi proposé : jeudi 18h</li>
       </ul>
     </div>

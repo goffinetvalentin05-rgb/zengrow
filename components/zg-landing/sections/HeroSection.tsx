@@ -1,7 +1,7 @@
 "use client";
 
 import { ZenGrowHero } from "@/components/zg-landing/ZenGrowHero";
-import { Container, MegaTitle, PrimaryButton } from "../ui";
+import { Container, GhostButton, MegaTitle, PrimaryButton } from "../ui";
 
 export function HeroSection() {
   return (
@@ -10,19 +10,19 @@ export function HeroSection() {
         <Container>
           <div className="mx-auto max-w-4xl text-center">
             <MegaTitle as="h1" className="zg-title-hero">
-              Remplissez votre restaurant grâce à l&apos;IA.
+              L&apos;IA qui fait revenir vos clients.
             </MegaTitle>
             <p className="zg-hero-sub mx-auto mt-6 max-w-2xl">
-              Réservations, relances clients, campagnes marketing et avis Google
-              automatisés dans une seule plateforme pensée pour les restaurants.
+              Ajoutez simplement le numéro de vos clients. ZenGrow les relance automatiquement au bon
+              moment pour récupérer du chiffre d&apos;affaires que vous auriez pu perdre.
             </p>
-            <p className="mt-5 text-sm font-semibold tracking-[0.12em] text-violet-200/95 uppercase">
-              Attirer · Réserver · Relancer · Fidéliser
-            </p>
-            <div className="mt-9 flex justify-center">
+            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
               <PrimaryButton href="/signup" className="!min-h-14 !px-8 !text-base sm:!text-lg">
-                Essayer ZenGrow
+                Essai gratuit 7 jours
               </PrimaryButton>
+              <GhostButton href="#workflow" className="!min-h-14 !px-8 !text-base sm:!text-lg">
+                Voir comment ça fonctionne
+              </GhostButton>
             </div>
           </div>
         </Container>

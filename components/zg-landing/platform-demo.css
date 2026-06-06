@@ -639,3 +639,201 @@
 .zg-landing[data-landing-canvas="light"] .zgpd-camp-status {
   color: #f4f0ff;
 }
+
+/* —— How-it-works demos —— */
+.zgpd-mini-label {
+  margin-bottom: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(155 143 184 / 0.85);
+}
+
+.zgpd-client-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.zgpd-client-form-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgb(255 255 255 / 0.06);
+  background: rgb(255 255 255 / 0.02);
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s ease,
+    background 0.35s ease;
+}
+
+.zgpd-client-form-field--on {
+  opacity: 1;
+  transform: translateY(0);
+  border-color: rgb(124 92 255 / 0.28);
+  background: rgb(124 92 255 / 0.08);
+}
+
+.zgpd-client-form-field span {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--zgpd-muted);
+}
+
+.zgpd-client-form-field strong {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.zgpd-client-added {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px dashed rgb(255 255 255 / 0.1);
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.4s ease,
+    background 0.4s ease;
+}
+
+.zgpd-client-added--on {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  border-style: solid;
+  border-color: rgb(52 211 153 / 0.35);
+  background: rgb(52 211 153 / 0.08);
+}
+
+.zgpd-client-added-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.zgpd-client-added-meta {
+  margin-top: 0.1rem;
+  font-size: 0.68rem;
+  color: var(--zgpd-muted);
+}
+
+.zgpd-client-added-badge {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgb(110 231 183);
+}
+
+.zgpd-sms {
+  padding: 0.85rem 0.95rem;
+  border-radius: 1rem 1rem 1rem 0.35rem;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  background: rgb(255 255 255 / 0.04);
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.zgpd-sms--on {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.zgpd-sms-tag {
+  display: inline-block;
+  margin-bottom: 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(167 139 250 / 0.9);
+}
+
+.zgpd-sms-text {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: rgb(244 240 255 / 0.95);
+}
+
+.zgpd-google-link {
+  display: inline-flex;
+  margin-top: 0.75rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  background: rgb(255 255 255 / 0.05);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgb(196 181 253 / 0.55);
+  opacity: 0.5;
+  transform: scale(0.98);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.4s ease,
+    background 0.4s ease,
+    color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+.zgpd-google-link--on {
+  opacity: 1;
+  transform: scale(1);
+  border-color: rgb(124 92 255 / 0.45);
+  background: rgb(124 92 255 / 0.18);
+  color: #fff;
+  box-shadow: 0 0 24px -8px var(--zgpd-glow);
+}
+
+.zgpd-sms-status {
+  margin-top: 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(110 231 183);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+.zgpd-sms-status--on {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.zgpd-return-note {
+  margin-top: 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgb(52 211 153 / 0.2);
+  background: rgb(52 211 153 / 0.06);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(110 231 183);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease;
+}
+
+.zgpd-return-note--on {
+  opacity: 1;
+  transform: translateY(0);
+}

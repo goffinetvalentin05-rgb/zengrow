@@ -458,7 +458,7 @@ export function ZenGrowHero() {
               <span ref={counterRef} className="cal-count-num">
                 0
               </span>
-              <span>réservations ce mois</span>
+              <span>clients qui reviennent</span>
             </div>
             <span className="tag">Auto · IA</span>
           </div>

@@ -7,24 +7,24 @@ import { ScrollReveal } from "../ScrollReveal";
 
 const FAQ = [
   {
-    q: "Est-ce que ZenGrow est seulement un outil de réservation ?",
-    a: "Non. ZenGrow inclut la réservation, mais aide aussi à relancer les clients, créer des campagnes et automatiser les avis Google.",
+    q: "ZenGrow, c'est quoi exactement ?",
+    a: "Un outil simple qui fait revenir vos clients : vous ajoutez leurs numéros, ZenGrow demande des avis Google et relance automatiquement ceux qui ne reviennent plus.",
   },
   {
     q: "Comment l'IA aide concrètement ?",
-    a: "Elle propose qui relancer, quoi envoyer et quelles actions lancer pour remplir plus régulièrement.",
+    a: "Elle détecte les clients qui ne reviennent plus, rédige les messages de relance et programme les demandes d'avis Google — au bon moment, sans effort de votre part.",
   },
   {
     q: "Est-ce que je garde le contrôle ?",
-    a: "Oui. L'IA propose, vous validez et modifiez les messages.",
+    a: "Oui. L'IA propose, vous validez et modifiez les messages avant envoi.",
   },
   {
     q: "Mes clients doivent-ils télécharger une application ?",
-    a: "Non. Ils utilisent un simple lien.",
+    a: "Non. Ils reçoivent un simple SMS avec un lien.",
   },
   {
     q: "Est-ce compliqué à mettre en place ?",
-    a: "Non. La plateforme est pensée pour être simple et guidée.",
+    a: "Non. Ajoutez un numéro de client, c'est tout. ZenGrow s'occupe du reste.",
   },
 ];
 

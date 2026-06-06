@@ -31,14 +31,13 @@ export const ZENGROW_PLAN_CATALOG: readonly PlanCatalogItem[] = [
     featured: false,
     landingHeadline: "Pour démarrer",
     landingDescription:
-      "Une page de réservation claire pour présenter votre restaurant et recevoir vos premières réservations en ligne.",
+      "Base clients, demandes d'avis Google automatiques et relances essentielles pour ne plus perdre vos visiteurs.",
     features: [
-      "Réservations en ligne",
-      "Gestion des disponibilités",
-      "Page de réservation personnalisable",
-      "Demandes d'avis Google automatiques",
-      "Feedback privé clients",
       "Base clients",
+      "Demandes d'avis Google automatiques",
+      "Relances clients automatiques",
+      "Feedback privé clients",
+      "Suivi des clients inactifs",
     ],
   },
   {
@@ -52,12 +51,12 @@ export const ZENGROW_PLAN_CATALOG: readonly PlanCatalogItem[] = [
     badge: "Le plus choisi",
     landingHeadline: "Pour faire revenir vos clients",
     landingDescription:
-      "Réservations, base clients, relances IA, campagnes marketing et avis Google.",
+      "Relances IA avancées, segmentation et stats pour maximiser le retour de vos clients existants.",
     features: [
       "Tout le plan Starter",
-      "Campagnes e-mail marketing",
+      "Relances IA personnalisées",
       "Segmentation clients",
-      "Stats clients",
+      "Stats de fidélisation",
       "Export clients",
     ],
   },

@@ -6,22 +6,22 @@ import {
   SectionAmbient,
 } from "../ui";
 import {
+  ScenarioClientLost,
   ScenarioClientNoFollowup,
   ScenarioReviewMissed,
-  ScenarioVisitorLost,
 } from "../scenarios";
 import { ScrollReveal } from "../ScrollReveal";
 
 const SCENARIOS = [
   {
-    title: "Visiteur intéressé",
-    caption: "Il découvre votre restaurant, mais ne réserve pas.",
-    visual: <ScenarioVisitorLost />,
-  },
-  {
     title: "Client venu une fois",
     caption: "Il repart satisfait, puis vous oublie.",
     visual: <ScenarioClientNoFollowup />,
+  },
+  {
+    title: "Client qui s'éloigne",
+    caption: "Il n'est pas revenu depuis des semaines — et personne ne le relance.",
+    visual: <ScenarioClientLost />,
   },
   {
     title: "Avis oublié",
@@ -37,8 +37,8 @@ export function ProblemSection() {
       <Container>
         <ScrollReveal>
           <BlockHeader
-            title="Trop de clients passent entre les mailles."
-            subtitle="Entre les visiteurs qui ne réservent pas, les clients non relancés et les avis oubliés, un restaurant perd souvent des opportunités sans s'en rendre compte."
+            title="Trop de clients ne reviennent jamais."
+            subtitle="Entre les clients oubliés, les relances manquées et les avis non collectés, un restaurant perd du chiffre d'affaires sans même s'en rendre compte."
           />
         </ScrollReveal>
 

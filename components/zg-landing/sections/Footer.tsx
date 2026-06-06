@@ -4,7 +4,6 @@ import { Container, GhostButton, PrimaryButton } from "../ui";
 
 const PRODUCT_LINKS = [
   { href: "#workflow", label: "Comment ça marche" },
-  { href: "#plateforme", label: "Plateforme" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
 ] as const;
@@ -28,7 +27,7 @@ export function Footer() {
           <div className="lg:col-span-4">
             <Link href="/" className="inline-flex shrink-0" aria-label="ZenGrow — accueil">
               <Image
-                src="/logo-zengrow.png"
+                src="/zengrow-logo-blanc.png"
                 alt="ZenGrow"
                 width={1680}
                 height={482}
@@ -36,8 +35,8 @@ export function Footer() {
               />
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#9b8fb8]">
-              La plateforme IA pour remplir votre restaurant : réservations, relances clients, marketing
-              et avis Google — depuis un seul espace.
+              L&apos;IA qui fait revenir vos clients : avis Google automatiques et relances
+              intelligentes pour récupérer du chiffre d&apos;affaires.
             </p>
             <p className="mt-3 text-xs font-medium tracking-wide text-violet-300/80">
               Conçu pour les restaurants en Suisse
@@ -94,7 +93,7 @@ export function Footer() {
 
           <div className="flex flex-col justify-center gap-3 lg:col-span-3 lg:items-end">
             <PrimaryButton href="/signup" className="!min-h-11 w-full justify-center lg:w-auto">
-              Essayer ZenGrow
+              Essai gratuit 7 jours
             </PrimaryButton>
             <GhostButton href="/login" className="!min-h-10 w-full justify-center lg:w-auto">
               Connexion
@@ -107,7 +106,7 @@ export function Footer() {
             © {year} ZenGrow. Tous droits réservés.
           </p>
           <p className="text-center text-xs text-[#9b8fb8]/60">
-            14 jours d&apos;essai gratuit · Sans carte bancaire pour démarrer
+            7 jours d&apos;essai gratuit · Sans carte bancaire
           </p>
         </div>
       </Container>

@@ -9,13 +9,13 @@ import { ScrollReveal } from "../ScrollReveal";
 
 export function PlatformSection() {
   return (
-    <Section id="plateforme" className="relative overflow-hidden">
+    <Section id="workflow" className="relative overflow-hidden">
       <SectionAmbient variant="cyan" />
       <Container>
         <ScrollReveal>
           <BlockHeader
-            title="Tout ce qu'il faut pour remplir plus régulièrement."
-            subtitle="Une plateforme simple pour gérer les réservations, relancer les clients, lancer des campagnes et développer vos avis Google."
+            title="Comment ZenGrow fait revenir vos clients"
+            subtitle="Ajoutez vos clients. ZenGrow s'occupe automatiquement des avis Google et des relances."
           />
         </ScrollReveal>
 

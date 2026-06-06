@@ -1,37 +1,36 @@
 "use client";
 
-import {
-  Calendar,
-  Database,
-  Globe,
-  MessageSquare,
-  RefreshCw,
-  Sparkles,
-} from "lucide-react";
+import { RefreshCw, Sparkles, Star, UserPlus } from "lucide-react";
 import { BlockHeader, Container, PremiumCard, Section, SectionAmbient } from "../ui";
 import { WorkflowStepUI } from "../scenarios";
 import { ScrollReveal } from "../ScrollReveal";
 
 const STEPS = [
-  { icon: Globe, label: "Visiteur", detail: "Découverte", ui: null },
-  { icon: Calendar, label: "Réservation", detail: "Réservation reçue", ui: (
-    <WorkflowStepUI label="Réservation" detail="Table confirmée" />
-  ) },
-  { icon: Database, label: "Base client", detail: "Client ajouté", ui: (
-    <WorkflowStepUI label="Fiche" detail="Historique enrichi" />
-  ) },
-  { icon: Sparkles, label: "Suggestion IA", detail: "Action IA proposée", ui: (
-    <WorkflowStepUI label="IA" detail="Relance suggérée" variant="ai" />
-  ), featured: true },
-  { icon: MessageSquare, label: "Campagne / Avis", detail: "Message prêt", ui: (
-    <div className="zg-mini-ui space-y-2 rounded-xl p-2 text-left">
-      <WorkflowStepUI label="Message" detail="Prêt à valider" variant="ai" />
-      <WorkflowStepUI label="Avis" detail="Avis demandé" />
-    </div>
-  ) },
-  { icon: RefreshCw, label: "Retour", detail: "Client qui revient", ui: (
-    <WorkflowStepUI label="Résultat" detail="Nouvelle réservation" variant="success" />
-  ) },
+  {
+    icon: UserPlus,
+    label: "Ajoutez le client",
+    detail: "Numéro enregistré",
+    ui: <WorkflowStepUI label="Client" detail="+41 79 ••• •• 42" />,
+  },
+  {
+    icon: Star,
+    label: "Avis Google",
+    detail: "Demande automatique après visite",
+    ui: <WorkflowStepUI label="Avis" detail="SMS envoyé" />,
+  },
+  {
+    icon: Sparkles,
+    label: "Relance automatique",
+    detail: "Client inactif détecté",
+    ui: <WorkflowStepUI label="IA" detail="Relance suggérée" variant="ai" />,
+    featured: true,
+  },
+  {
+    icon: RefreshCw,
+    label: "Le client revient",
+    detail: "Client de retour",
+    ui: <WorkflowStepUI label="Résultat" detail="Nouvelle visite" variant="success" />,
+  },
 ];
 
 export function WorkflowSection() {
@@ -41,14 +40,14 @@ export function WorkflowSection() {
       <Container>
         <ScrollReveal>
           <BlockHeader
-            title="ZenGrow transforme chaque interaction en action."
-            subtitle="La plateforme capte les réservations, construit votre base clients et utilise l'IA pour proposer les bonnes actions au bon moment."
+            title="Comment ça fonctionne"
+            subtitle="Quatre étapes simples. ZenGrow s'occupe du reste — automatiquement."
           />
         </ScrollReveal>
 
         <div className="zg-workflow-track relative mt-16">
           <div className="zg-workflow-line hidden lg:block" aria-hidden />
-          <div className="flex gap-4 overflow-x-auto pb-4 lg:grid lg:grid-cols-6 lg:gap-3 lg:overflow-visible lg:pb-0">
+          <div className="flex gap-4 overflow-x-auto pb-4 lg:grid lg:grid-cols-4 lg:gap-3 lg:overflow-visible lg:pb-0">
             {STEPS.map((step, i) => (
               <ScrollReveal key={step.label} delay={i * 0.05} className="min-w-[200px] shrink-0 lg:min-w-0">
                 <PremiumCard

@@ -1,14 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { Menu } from "lucide-react";
 import NotificationBell from "@/src/components/dashboard/notifications/notification-bell";
 import { cn } from "@/src/lib/utils";
-import { buttonClassName } from "@/src/components/ui/button";
 
 type DashboardTopBarProps = {
-  publicLink: string;
-  restaurantName: string;
   userDisplayName: string;
   userRoleLabel: string;
   userInitials: string;
@@ -17,16 +13,12 @@ type DashboardTopBarProps = {
 };
 
 export default function DashboardTopBar({
-  publicLink: _publicLink,
-  restaurantName: _restaurantName,
   userDisplayName,
   userRoleLabel,
   userInitials,
   userAvatarUrl,
   onOpenMobileNav,
 }: DashboardTopBarProps) {
-  void _publicLink;
-  void _restaurantName;
   const initials = (userInitials || "?").slice(0, 2).toUpperCase();
 
   return (
@@ -70,17 +62,6 @@ export default function DashboardTopBar({
             <p className="truncate text-xs text-zg-text-muted">{userRoleLabel}</p>
           </div>
         </div>
-
-        <Link
-          href="/dashboard/public-page"
-          className={buttonClassName({
-            variant: "secondary",
-            size: "sm",
-            className: "hidden lg:inline-flex shrink-0",
-          })}
-        >
-          Showroom
-        </Link>
       </div>
     </header>
   );

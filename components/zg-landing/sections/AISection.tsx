@@ -8,20 +8,20 @@ import { ScrollReveal } from "../ScrollReveal";
 
 const PROMPTS = [
   {
-    user: "Je veux remplir mardi soir.",
-    ai: "Action proposée : campagne ciblée sur 18 clients du quartier avec créneau mardi 19h–21h et message court d'invitation.",
+    user: "Quels clients n'ont pas remis pied chez nous ?",
+    ai: "12 clients inactifs depuis plus de 30 jours. Relance personnalisée proposée pour 8 d'entre eux — message prêt à valider.",
   },
   {
-    user: "Quels clients relancer cette semaine ?",
-    ai: "Action proposée : relancer les clients venus dans les 45 derniers jours avec un message personnalisé et lien de réservation.",
+    user: "Demande un avis aux clients d'hier soir.",
+    ai: "7 visites éligibles. Séquence automatique post-repas proposée pour demain 10h — lien Google inclus.",
   },
   {
-    user: "Prépare une campagne pour le nouveau menu.",
-    ai: "Brouillon prêt pour votre base fidèle : objet, texte court et bouton « Réserver » — à valider avant envoi.",
+    user: "Prépare une relance pour les clients inactifs.",
+    ai: "Message personnalisé rédigé pour Marie, Thomas et 6 autres clients. Envoi proposé jeudi 18h.",
   },
   {
-    user: "Demande un avis aux clients récents.",
-    ai: "12 visites éligibles depuis lundi. Séquence automatique post-repas proposée pour jeudi 10h.",
+    user: "Combien de clients suis-je en train de perdre ?",
+    ai: "23 clients n'ont pas visité depuis 45 jours. Relance automatique activable en un clic pour récupérer ce chiffre d'affaires.",
   },
 ];
 
@@ -35,8 +35,8 @@ export function AISection() {
       <Container>
         <ScrollReveal>
           <BlockHeader
-            title="Une IA qui propose des actions concrètes."
-            subtitle="Pas besoin de savoir faire du marketing. ZenGrow vous aide à savoir quoi envoyer, à qui, et quand."
+            title="Une IA qui fait revenir vos clients."
+            subtitle="Pas besoin d'être expert en fidélisation. ZenGrow détecte qui relancer, rédige le message et automatise les avis Google."
           />
         </ScrollReveal>
 

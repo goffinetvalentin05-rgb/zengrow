@@ -23,8 +23,6 @@ type DashboardShellProps = {
   children: React.ReactNode;
   fontClassName: string;
   restaurantId: string;
-  publicLink: string;
-  restaurantName: string;
   userDisplayName: string;
   userRoleLabel: string;
   userInitials: string;
@@ -40,8 +38,6 @@ export default function DashboardShell({
   children,
   fontClassName,
   restaurantId,
-  publicLink,
-  restaurantName,
   userDisplayName,
   userRoleLabel,
   userInitials,
@@ -61,8 +57,6 @@ export default function DashboardShell({
       <DashboardShellInner
         fontClassName={fontClassName}
         restaurantId={restaurantId}
-        publicLink={publicLink}
-        restaurantName={restaurantName}
         userDisplayName={userDisplayName}
         userRoleLabel={userRoleLabel}
         userInitials={userInitials}
@@ -80,8 +74,6 @@ function DashboardShellInner({
   children,
   fontClassName,
   restaurantId,
-  publicLink,
-  restaurantName,
   userDisplayName,
   userRoleLabel,
   userInitials,
@@ -110,7 +102,6 @@ function DashboardShellInner({
 
           <div className="relative flex min-h-screen">
             <DashboardSidebar
-              reservationLink={publicLink}
               subscriptionPlan={subscriptionPlan}
               subscriptionStatus={subscriptionStatus}
               mobileOpen={mobileNavOpen}
@@ -119,8 +110,6 @@ function DashboardShellInner({
 
             <div className="relative z-0 flex min-w-0 flex-1 flex-col">
               <DashboardTopBar
-                publicLink={publicLink}
-                restaurantName={restaurantName}
                 userDisplayName={userDisplayName}
                 userRoleLabel={userRoleLabel}
                 userInitials={userInitials}

@@ -62,8 +62,8 @@ export default function ReputationPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Avis & réputation"
-        subtitle="Demandes d'avis, retours privés et réponses Google — au même endroit."
+        title="Avis Google"
+        subtitle="Collectez des avis, suivez les retours privés et gérez vos réponses Google."
       />
 
       {canUseAI ? (

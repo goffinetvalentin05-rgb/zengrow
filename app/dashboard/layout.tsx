@@ -1,5 +1,5 @@
 import { zgBody } from "@/components/zg-landing/fonts";
-import { headers, cookies } from "next/headers";
+import { cookies } from "next/headers";
 import DashboardShell from "@/src/components/dashboard/dashboard-shell";
 import { requireRestaurantSession } from "@/src/lib/auth";
 import type { EffectiveAccess } from "@/src/lib/access";
@@ -53,11 +53,6 @@ export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const { restaurant, access, user } = await requireRestaurantSession();
-  const headerList = await headers();
-  const host = headerList.get("host");
-  const protocol = headerList.get("x-forwarded-proto") ?? "http";
-  const origin = host ? `${protocol}://${host}` : "";
-  const publicLink = origin ? `${origin}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
   const meta = user.user_metadata as Record<string, unknown> | undefined;
   const userInitials = initialsFromUser(meta, user.email ?? undefined);
   const userDisplayName = displayNameFromUser(meta, user.email ?? undefined);
@@ -80,8 +75,6 @@ export default async function DashboardLayout({
       initialResolvedCanvas={initialResolvedCanvas}
       fontClassName={zgBody.className}
       restaurantId={restaurant.id}
-      publicLink={publicLink}
-      restaurantName={restaurant.name}
       userDisplayName={userDisplayName}
       userRoleLabel={userRoleLabel}
       userInitials={userInitials}
