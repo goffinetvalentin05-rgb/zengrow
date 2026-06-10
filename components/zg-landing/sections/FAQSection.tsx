@@ -2,62 +2,68 @@
 
 import * as Accordion from "@radix-ui/react-accordion";
 import { ChevronDown } from "lucide-react";
-import { BlockHeader, Container, PremiumCard, Section } from "../ui";
+import { Container, Section } from "../ui";
 import { ScrollReveal } from "../ScrollReveal";
 
 const FAQ = [
   {
     q: "ZenGrow, c'est quoi exactement ?",
-    a: "Un outil simple qui fait revenir vos clients : vous ajoutez leurs numéros, ZenGrow demande des avis Google et relance automatiquement ceux qui ne reviennent plus.",
+    a: "Un outil simple qui automatise le retour de vos clients récurrents : vous ajoutez un client et une fréquence, ZenGrow le recontacte au bon moment pour planifier le prochain rendez-vous.",
   },
   {
-    q: "Comment l'IA aide concrètement ?",
-    a: "Elle détecte les clients qui ne reviennent plus, rédige les messages de relance et programme les demandes d'avis Google — au bon moment, sans effort de votre part.",
+    q: "Est-ce un CRM ou un logiciel de gestion ?",
+    a: "Non. ZenGrow ne remplace pas votre CRM ni votre logiciel métier. Il fait une seule chose : automatiser les relances et la prise de rendez-vous pour vos clients récurrents.",
   },
   {
-    q: "Est-ce que je garde le contrôle ?",
-    a: "Oui. L'IA propose, vous validez et modifiez les messages avant envoi.",
+    q: "Comment le client prend-il rendez-vous ?",
+    a: "Il reçoit un SMS au bon moment avec un lien pour choisir un créneau disponible. Une fois confirmé, le rendez-vous apparaît dans votre agenda.",
   },
   {
     q: "Mes clients doivent-ils télécharger une application ?",
-    a: "Non. Ils reçoivent un simple SMS avec un lien.",
+    a: "Non. Tout se fait par SMS et navigateur web, sans installation.",
   },
   {
     q: "Est-ce compliqué à mettre en place ?",
-    a: "Non. Ajoutez un numéro de client, c'est tout. ZenGrow s'occupe du reste.",
+    a: "Non. Ajoutez vos clients avec leur fréquence de retour, c'est tout. La configuration prend quelques minutes.",
+  },
+  {
+    q: "Pour quels métiers ZenGrow est-il adapté ?",
+    a: "Tout métier où les clients doivent revenir régulièrement : piscinistes, chauffagistes, installateurs, dentistes, techniciens de maintenance, etc.",
   },
 ];
 
 export function FAQSection() {
   return (
-    <Section id="faq" className="!pb-16">
+    <Section id="faq" className="zg-zone-end !pb-20">
       <Container>
         <ScrollReveal>
-          <BlockHeader title="Questions fréquentes" />
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="zg-title-section">Questions fréquentes</h2>
+          </div>
         </ScrollReveal>
 
         <ScrollReveal delay={0.06}>
-          <PremiumCard className="mx-auto mt-10 max-w-xl p-1">
-            <Accordion.Root type="single" collapsible>
+          <div className="zg-cta-glass mx-auto mt-10 max-w-2xl !rounded-2xl">
+            <Accordion.Root type="single" collapsible className="relative p-1">
               {FAQ.map((item) => (
                 <Accordion.Item
                   key={item.q}
                   value={item.q}
-                  className="zg-faq-item border-b border-white/6 px-4 last:border-0"
+                  className="border-b border-white/8 px-4 last:border-0"
                 >
                   <Accordion.Header>
-                    <Accordion.Trigger className="group flex w-full items-center justify-between gap-3 py-3.5 text-left text-sm font-semibold text-white">
+                    <Accordion.Trigger className="group flex w-full items-center justify-between gap-3 py-4 text-left text-sm font-semibold text-white">
                       {item.q}
-                      <ChevronDown className="h-4 w-4 shrink-0 text-[#9b8fb8] transition group-data-[state=open]:rotate-180" />
+                      <ChevronDown className="h-4 w-4 shrink-0 text-sky-300 transition group-data-[state=open]:rotate-180" />
                     </Accordion.Trigger>
                   </Accordion.Header>
                   <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                    <p className="pb-3 text-sm text-[#9b8fb8]">{item.a}</p>
+                    <p className="pb-4 text-sm leading-relaxed text-slate-400">{item.a}</p>
                   </Accordion.Content>
                 </Accordion.Item>
               ))}
             </Accordion.Root>
-          </PremiumCard>
+          </div>
         </ScrollReveal>
       </Container>
     </Section>

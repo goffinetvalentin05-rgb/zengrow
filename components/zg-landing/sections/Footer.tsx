@@ -1,28 +1,29 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Container, GhostButton, PrimaryButton } from "../ui";
+import { Container } from "../ui";
 
 const PRODUCT_LINKS = [
-  { href: "#workflow", label: "Comment ça marche" },
+  { href: "#workflow", label: "Fonctionnalités" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
 ] as const;
 
-const ACCOUNT_LINKS = [
-  { href: "/signup", label: "Créer un compte" },
-  { href: "/login", label: "Connexion" },
+const RESOURCE_LINKS = [
+  { href: "#", label: "Blog" },
+  { href: "#workflow", label: "Démo" },
+  { href: "mailto:contact@zengrow.ch", label: "Contact" },
+] as const;
+
+const LEGAL_LINKS = [
+  { href: "/conditions", label: "Conditions d'utilisation" },
+  { href: "/confidentialite", label: "Confidentialité" },
+  { href: "/mentions-legales", label: "Mentions légales" },
 ] as const;
 
 export function Footer() {
-  const year = new Date().getFullYear();
-
   return (
-    <footer className="relative overflow-hidden border-t border-white/[0.06] bg-[#06040f]/80 pt-14 backdrop-blur-sm">
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent"
-        aria-hidden
-      />
-      <Container className="pb-8">
+    <footer className="zg-footer-v4 relative z-[1]">
+      <Container className="pb-0">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           <div className="lg:col-span-4">
             <Link href="/" className="inline-flex shrink-0" aria-label="ZenGrow — accueil">
@@ -34,86 +35,58 @@ export function Footer() {
                 className="h-9 w-auto sm:h-10"
               />
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#9b8fb8]">
-              L&apos;IA qui fait revenir vos clients : avis Google automatiques et relances
-              intelligentes pour récupérer du chiffre d&apos;affaires.
-            </p>
-            <p className="mt-3 text-xs font-medium tracking-wide text-violet-300/80">
-              Conçu pour les restaurants en Suisse
+            <p className="zg-footer-v4__tagline">
+              Votre travail est terminé. Le nôtre commence.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-5 lg:col-start-6">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#c4b5fd]">Produit</p>
+              <p className="zg-footer-v4__heading">Produit</p>
               <ul className="mt-4 space-y-2.5">
                 {PRODUCT_LINKS.map((link) => (
                   <li key={link.href}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-[#9b8fb8] transition hover:text-white"
-                    >
-                      {link.label}
-                    </a>
+                    <a href={link.href}>{link.label}</a>
                   </li>
                 ))}
               </ul>
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#c4b5fd]">Compte</p>
+              <p className="zg-footer-v4__heading">Ressources</p>
               <ul className="mt-4 space-y-2.5">
-                {ACCOUNT_LINKS.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-[#9b8fb8] transition hover:text-white"
-                    >
-                      {link.label}
-                    </Link>
+                {RESOURCE_LINKS.map((link) => (
+                  <li key={link.label}>
+                    <a href={link.href}>{link.label}</a>
                   </li>
                 ))}
               </ul>
             </div>
 
             <div className="col-span-2 sm:col-span-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#c4b5fd]">Contact</p>
+              <p className="zg-footer-v4__heading">Légal</p>
               <ul className="mt-4 space-y-2.5">
-                <li>
-                  <a
-                    href="mailto:contact@zengrow.ch"
-                    className="text-sm text-[#9b8fb8] transition hover:text-white"
-                  >
-                    contact@zengrow.ch
-                  </a>
-                </li>
+                {LEGAL_LINKS.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href}>{link.label}</Link>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
 
-          <div className="flex flex-col justify-center gap-3 lg:col-span-3 lg:items-end">
-            <PrimaryButton href="/signup" className="!min-h-11 w-full justify-center lg:w-auto">
-              Essai gratuit 7 jours
-            </PrimaryButton>
-            <GhostButton href="/login" className="!min-h-10 w-full justify-center lg:w-auto">
-              Connexion
-            </GhostButton>
+          <div className="lg:col-span-3">
+            <p className="zg-footer-v4__heading">Contact</p>
+            <p className="zg-footer-v4__contact">
+              <a href="mailto:contact@zengrow.ch">contact@zengrow.ch</a>
+            </p>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/[0.06] pt-8 md:flex-row">
-          <p className="text-center text-xs text-[#9b8fb8]/80 md:text-left">
-            © {year} ZenGrow. Tous droits réservés.
-          </p>
-          <p className="text-center text-xs text-[#9b8fb8]/60">
-            7 jours d&apos;essai gratuit · Sans carte bancaire
-          </p>
+        <div className="zg-footer-v4__bottom">
+          © 2026 ZenGrow. Tous droits réservés.
         </div>
       </Container>
-
-      <div className="zg-footer-watermark" aria-hidden>
-        <span className="zg-footer-watermark__text">ZENGROW</span>
-      </div>
     </footer>
   );
 }

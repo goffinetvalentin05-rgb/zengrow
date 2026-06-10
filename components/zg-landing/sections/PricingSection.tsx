@@ -1,35 +1,28 @@
 import { Check } from "lucide-react";
-import {
-  BlockHeader,
-  Container,
-  PrimaryButton,
-  Section,
-  SectionAmbient,
-} from "../ui";
+import { Container, PrimaryButton, Section } from "../ui";
 import { ScrollReveal } from "../ScrollReveal";
 
-const LANDING_TRIAL_DAYS = 7;
+const LANDING_TRIAL_DAYS = 14;
 
 const OUTCOMES = [
-  "Ajoutez vos clients",
-  "ZenGrow demande automatiquement les avis Google",
-  "ZenGrow relance les clients inactifs",
-  "Plus de clients qui reviennent",
-  "Plus de chiffre d'affaires potentiel",
+  "Ajoutez vos clients une fois",
+  "Définissez la fréquence de retour",
+  "Relances automatiques par SMS",
+  "Le client choisit son créneau",
+  "Rendez-vous confirmé dans votre agenda",
 ] as const;
 
 export function PricingSection() {
   return (
-    <Section id="tarifs" className="relative overflow-hidden">
-      <SectionAmbient />
+    <Section id="tarifs" className="zg-zone-glass">
       <Container>
         <ScrollReveal>
           <div className="mx-auto max-w-2xl text-center">
-            <BlockHeader
-              className="zg-pricing-header max-w-xl"
-              title="Un client qui revient peut suffire."
-              subtitle="À 29 CHF/mois, ZenGrow peut être rentabilisé dès qu'un client revient grâce à une relance automatique."
-            />
+            <h2 className="zg-title-section">Un client qui revient peut suffire.</h2>
+            <p className="zg-section-sub mt-4">
+              À 29 CHF/mois, ZenGrow se rentabilise dès qu&apos;un client revient grâce à une
+              relance automatique.
+            </p>
           </div>
         </ScrollReveal>
 
@@ -45,7 +38,9 @@ export function PricingSection() {
                   <div className="zg-pricing-card-mesh" aria-hidden />
                   <div className="zg-pricing-card-shine" aria-hidden />
                   <div className="zg-pricing-card-body">
-                    <p className="zg-pricing-tagline">L&apos;IA qui fait revenir vos clients.</p>
+                    <p className="zg-pricing-tagline">
+                      Automatisez le retour de vos clients récurrents.
+                    </p>
 
                     <div className="zg-pricing-price-row">
                       <p className="zg-display zg-pricing-price">

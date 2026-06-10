@@ -5,12 +5,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/src/lib/utils";
-import { LandingCanvasToggle } from "@/components/zg-landing/landing-canvas-toggle";
-import { Container, GhostButton } from "../ui";
+import { Container, GhostButton, PrimaryButton } from "../ui";
 
 const LINKS = [
-  { href: "#workflow", label: "Comment ça marche" },
+  { href: "#workflow", label: "Fonctionnalités" },
+  { href: "#pour-qui", label: "Pour qui ?" },
   { href: "#tarifs", label: "Tarifs" },
+  { href: "#faq", label: "FAQ" },
 ];
 
 export function Navbar() {
@@ -44,12 +45,12 @@ export function Navbar() {
             />
           </Link>
 
-          <ul className="hidden items-center gap-8 md:flex">
+          <ul className="hidden items-center gap-7 lg:flex">
             {LINKS.map((l) => (
               <li key={l.href}>
                 <a
                   href={l.href}
-                  className="text-sm font-medium text-[#c4b5fd]/90 transition hover:text-white"
+                  className="text-sm font-medium text-sky-200/80 transition hover:text-white"
                 >
                   {l.label}
                 </a>
@@ -58,10 +59,12 @@ export function Navbar() {
           </ul>
 
           <div className="hidden items-center gap-3 md:flex">
-            <LandingCanvasToggle compact />
             <GhostButton href="/login" className="!min-h-10 !px-5 !text-sm">
               Connexion
             </GhostButton>
+            <PrimaryButton href="/signup" className="!min-h-10 !px-5 !text-sm">
+              Essayer gratuitement
+            </PrimaryButton>
           </div>
 
           <button
@@ -88,13 +91,15 @@ export function Navbar() {
                   </a>
                 </li>
               ))}
-              <li className="flex justify-center py-2">
-                <LandingCanvasToggle />
-              </li>
               <li className="pt-2">
                 <GhostButton href="/login" className="w-full justify-center">
                   Connexion
                 </GhostButton>
+              </li>
+              <li>
+                <PrimaryButton href="/signup" className="w-full justify-center">
+                  Essayer gratuitement
+                </PrimaryButton>
               </li>
             </ul>
           </div>

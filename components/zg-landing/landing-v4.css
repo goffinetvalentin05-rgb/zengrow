@@ -1,0 +1,706 @@
+/* ZenGrow Landing v4 */
+
+.zg-landing--v4 {
+  position: relative;
+  background: transparent !important;
+  color: #f8fafc;
+  --zg-accent: #2563eb;
+}
+
+body:has(.zg-landing--v4) {
+  background: #030818;
+}
+
+/* ── Fond fixe = référence utilisateur (bleu nuit → blanc tôt) ── */
+.zg-landing-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* gradient remplacé par mesh glass — voir landing-glass-3d.css */
+.zg-landing-bg__gradient {
+  display: none;
+}
+
+.zg-landing-bg__mesh {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.45;
+}
+
+.zg-landing-bg__mesh--1 {
+  width: 55vw;
+  height: 45vh;
+  top: -8%;
+  left: 15%;
+  background: radial-gradient(circle, rgb(37 99 235 / 0.55), transparent 70%);
+}
+
+.zg-landing-bg__mesh--2 {
+  width: 40vw;
+  height: 35vh;
+  top: 28%;
+  right: -5%;
+  background: radial-gradient(circle, rgb(96 165 250 / 0.35), transparent 70%);
+}
+
+.zg-landing-bg__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.zg-landing__main,
+.zg-landing > footer,
+.zg-landing > header {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Zones texte ── */
+.zg-zone-hero,
+.zg-zone-dark {
+  color: #f8fafc;
+}
+
+.zg-zone-hero .zg-title-mega,
+.zg-zone-dark .zg-title-mega {
+  color: #fff;
+}
+
+.zg-zone-light {
+  color: #111827;
+}
+
+.zg-zone-light .zg-title-section {
+  color: #111827;
+}
+
+.zg-zone-light .zg-section-sub {
+  color: #6b7280;
+}
+
+.zg-zone-end {
+  color: #e2e8f0;
+}
+
+.zg-zone-end .zg-title-section {
+  color: #fff;
+}
+
+/* ── Typo ── */
+.zg-title-section {
+  font-family: var(--font-zg-display);
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.zg-section-sub {
+  margin-top: 1rem;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  max-width: 36rem;
+  text-wrap: balance;
+}
+
+.zg-gradient-text {
+  background: linear-gradient(90deg, #ffffff 20%, #93c5fd 60%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.zg-hero-sub {
+  color: rgb(219 234 254 / 0.92);
+}
+
+.zg-hero-note {
+  margin-top: 1.25rem;
+  font-size: 0.8125rem;
+  color: rgb(191 219 254 / 0.7);
+  max-width: 32rem;
+  margin-inline: auto;
+}
+
+/* ── Boutons & nav ── */
+.zg-landing--v4 .zg-btn-primary {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb 50%, #3b82f6);
+  box-shadow: 0 4px 24px rgb(37 99 235 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.15);
+}
+
+.zg-landing--v4 .zg-nav-shell {
+  background: rgb(3 8 24 / 0.55);
+  border-color: rgb(255 255 255 / 0.1);
+  backdrop-filter: blur(20px);
+}
+
+.zg-landing--v4 .zg-badge {
+  border-color: rgb(147 197 253 / 0.35);
+  background: rgb(37 99 235 / 0.2);
+  color: #dbeafe;
+}
+
+.zg-btn-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.zg-btn-play__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.08);
+}
+
+/* ── Bento cards (réf. premium) ── */
+.zg-bento-row {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+}
+
+@media (min-width: 768px) {
+  .zg-bento-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.zg-bento-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.75rem;
+  background: #ffffff;
+  border: 1px solid rgb(0 0 0 / 0.04);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.03),
+    0 16px 48px -12px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+
+.zg-bento-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.03),
+    0 28px 64px -16px rgb(37 99 235 / 0.14);
+}
+
+.zg-bento-card--featured {
+  border-color: rgb(37 99 235 / 0.15);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.03),
+    0 20px 56px -12px rgb(37 99 235 / 0.18);
+}
+
+.zg-bento-card__body {
+  padding: 1.375rem 1.5rem 1.625rem;
+}
+
+.zg-bento-card__title {
+  font-family: var(--font-zg-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.zg-bento-card__text {
+  margin-top: 0.375rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #6b7280;
+}
+
+/* Visuels bento */
+.zg-bento-visual {
+  position: relative;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+  overflow: hidden;
+}
+
+.zg-bento-visual--time .zg-bento-visual__ripple {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgb(37 99 235 / 0.12);
+}
+
+.zg-bento-visual__ripple--1 { width: 48px; height: 48px; }
+.zg-bento-visual__ripple--2 { width: 88px; height: 88px; opacity: 0.7; }
+.zg-bento-visual__ripple--3 { width: 128px; height: 128px; opacity: 0.4; }
+
+.zg-bento-visual__icon-ring {
+  position: relative;
+  z-index: 1;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  background: #111827;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.2);
+}
+
+.zg-bento-visual--repeat .zg-bento-visual__bubble {
+  position: absolute;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  font-size: 0.6875rem;
+  color: #6b7280;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.06);
+}
+
+.zg-bento-visual__bubble--1 { top: 28%; left: 18%; transform: rotate(-4deg); }
+.zg-bento-visual__bubble--2 { top: 42%; right: 16%; transform: rotate(3deg); z-index: 2; }
+.zg-bento-visual__bubble--3 { bottom: 22%; left: 28%; transform: rotate(-2deg); opacity: 0.75; }
+
+.zg-bento-visual--auto .zg-bento-visual__bolt {
+  position: relative;
+  z-index: 1;
+  color: #111827;
+  filter: drop-shadow(0 8px 16px rgb(0 0 0 / 0.15));
+}
+
+.zg-bento-visual__bolt-glow {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(37 99 235 / 0.2), transparent 70%);
+}
+
+/* Steps bento */
+.zg-bento-card--step {
+  position: relative;
+}
+
+.zg-bento-card__step-num {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  font-family: var(--font-zg-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: rgb(37 99 235 / 0.08);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.zg-step-visual {
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #f9fafb, #f3f4f6);
+}
+
+.zg-step-visual--add {
+  gap: 0.75rem;
+}
+
+.zg-step-visual__card-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
+}
+
+.zg-step-visual__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: #22c55e;
+}
+
+.zg-step-visual__plus {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: #111827;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 300;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.15);
+}
+
+.zg-step-odometer {
+  display: flex;
+  gap: 0.2rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 9999px;
+  background: #111827;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.2);
+}
+
+.zg-step-odometer span {
+  width: 1.5rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-zg-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: rgb(255 255 255 / 0.25);
+  border-radius: 0.3rem;
+}
+
+.zg-step-odometer__active {
+  color: #fff !important;
+  background: rgb(37 99 235 / 0.4);
+}
+
+.zg-step-visual__caption {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.zg-step-visual--wait {
+  flex-direction: column;
+}
+
+.zg-step-visual__cal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+  padding: 0.625rem;
+  border-radius: 0.875rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.08);
+  font-size: 0.625rem;
+  color: #9ca3af;
+}
+
+.zg-step-visual__cal span {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+}
+
+.zg-step-visual__cal .is-event {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgb(37 99 235 / 0.35);
+}
+
+/* ── Métiers ── */
+.zg-trades-bento {
+  display: grid;
+  gap: 1rem;
+  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+}
+
+@media (min-width: 640px) {
+  .zg-trades-bento { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .zg-trades-bento {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .zg-trades-bento > :nth-child(1),
+  .zg-trades-bento > :nth-child(2),
+  .zg-trades-bento > :nth-child(3) { grid-column: span 2; }
+  .zg-trades-bento > :nth-child(4) { grid-column: span 3; }
+  .zg-trades-bento > :nth-child(5) { grid-column: span 3; }
+}
+
+.zg-trade-tile {
+  padding: 0;
+  overflow: hidden;
+}
+
+.zg-trade-tile__visual {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  background: linear-gradient(180deg, #f9fafb, #f3f4f6);
+}
+
+.zg-trade-tile__body {
+  padding: 1.125rem 1.25rem 1.375rem;
+}
+
+.zg-trade-tile__title {
+  font-family: var(--font-zg-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.zg-trade-tile__text {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.45;
+}
+
+/* ── Bénéfices marquee ── */
+.zg-benefits-marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+.zg-benefits-marquee__track {
+  display: flex;
+  gap: 0.875rem;
+  width: max-content;
+  animation: zg-marquee 26s linear infinite;
+}
+
+@keyframes zg-marquee {
+  to { transform: translateX(-50%); }
+}
+
+.zg-benefit-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid rgb(0 0 0 / 0.06);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.06);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.zg-benefit-chip svg { color: #2563eb; }
+
+/* ── ChatGPT ── */
+.zg-chatgpt-wrap {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  padding: clamp(1.75rem, 4vw, 2.5rem);
+  border-radius: 1.75rem;
+  background: #fff;
+  border: 1px solid rgb(0 0 0 / 0.05);
+  box-shadow: 0 24px 64px -20px rgb(0 0 0 / 0.12);
+}
+
+.zg-chatgpt-wrap__inner {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .zg-chatgpt-wrap__inner {
+    grid-template-columns: 1fr 1.15fr auto;
+    align-items: center;
+  }
+}
+
+.zg-chatgpt-wrap__title {
+  font-family: var(--font-zg-display);
+  font-size: clamp(1.375rem, 3vw, 1.75rem);
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.03em;
+}
+
+.zg-chatgpt-wrap__text {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.zg-chatgpt-bubble {
+  padding: 1rem 1.125rem;
+  border-radius: 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: #4b5563;
+}
+
+.zg-btn-chatgpt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 9999px;
+  background: #111827;
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+  transition: transform 0.25s ease;
+}
+
+.zg-btn-chatgpt:hover { transform: translateY(-2px); }
+
+/* ── CTA glass (réf. dark premium) ── */
+.zg-cta-glass {
+  position: relative;
+  border-radius: 1.75rem;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  background: linear-gradient(
+    160deg,
+    rgb(255 255 255 / 0.1) 0%,
+    rgb(255 255 255 / 0.04) 100%
+  );
+  backdrop-filter: blur(24px);
+  overflow: hidden;
+  box-shadow:
+    0 32px 80px -24px rgb(0 0 0 / 0.5),
+    inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+.zg-cta-glass__glow {
+  position: absolute;
+  bottom: -40%;
+  left: 10%;
+  right: 10%;
+  height: 60%;
+  background: radial-gradient(ellipse, rgb(37 99 235 / 0.45), transparent 70%);
+  pointer-events: none;
+}
+
+.zg-cta-glass__inner {
+  position: relative;
+  display: grid;
+  gap: 2rem;
+  padding: clamp(2rem, 5vw, 3rem);
+}
+
+@media (min-width: 1024px) {
+  .zg-cta-glass__inner {
+    grid-template-columns: 1.4fr auto;
+    align-items: center;
+  }
+}
+
+.zg-cta-glass__title {
+  font-family: var(--font-zg-display);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  color: #fff;
+}
+
+.zg-cta-glass__text {
+  margin-top: 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgb(191 219 254 / 0.85);
+  max-width: 32rem;
+}
+
+.zg-cta-glass__trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-top: 1.25rem;
+  list-style: none;
+  padding: 0;
+}
+
+.zg-cta-glass__trust li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgb(148 163 184 / 0.9);
+}
+
+.zg-cta-glass__trust svg { color: #4ade80; }
+
+.zg-cta-glass__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 220px;
+}
+
+/* ── Footer ── */
+.zg-footer-v4 {
+  background: transparent;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+  color: rgb(148 163 184 / 0.9);
+  padding-top: clamp(3rem, 6vw, 4.5rem);
+}
+
+.zg-footer-v4__tagline {
+  margin-top: 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: rgb(148 163 184 / 0.75);
+  max-width: 16rem;
+}
+
+.zg-footer-v4__heading {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(148 163 184 / 0.65);
+}
+
+.zg-footer-v4 a {
+  font-size: 0.875rem;
+  color: rgb(148 163 184 / 0.85);
+  transition: color 0.2s;
+}
+
+.zg-footer-v4 a:hover { color: #93c5fd; }
+
+.zg-footer-v4__bottom {
+  margin-top: 3rem;
+  padding-block: 1.5rem;
+  border-top: 1px solid rgb(255 255 255 / 0.06);
+  text-align: center;
+  font-size: 0.8125rem;
+  color: rgb(100 116 139 / 0.75);
+}
+
+.zg-footer-v4__contact {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zg-benefits-marquee__track { animation: none; }
+}

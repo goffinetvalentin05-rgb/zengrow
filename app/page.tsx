@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { LandingPage } from "@/components/zg-landing/LandingPage";
 
 export const metadata: Metadata = {
-  title: "ZenGrow — L'IA qui fait revenir vos clients",
+  title: "ZenGrow — Vos clients reviennent automatiquement",
   description:
-    "Ajoutez le numéro de vos clients. ZenGrow relance ceux qui ne seraient peut-être jamais revenus et récupère du chiffre d'affaires — sans effort.",
+    "Automatisez le retour de vos clients récurrents. Ajoutez vos clients une fois, ZenGrow les recontacte au bon moment pour planifier leur prochain rendez-vous.",
 };
 
 export default function Home() {
