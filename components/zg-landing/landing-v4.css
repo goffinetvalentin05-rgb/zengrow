@@ -5,18 +5,18 @@
   background: transparent !important;
   color: #f8fafc;
   --zg-accent: #2563eb;
+  isolation: isolate;
+  overflow-x: clip;
 }
 
+html:has(.zg-landing--v4),
 body:has(.zg-landing--v4) {
-  background: #030818;
+  background: #01040f;
 }
 
-/* ── Fond fixe = référence utilisateur (bleu nuit → blanc tôt) ── */
+/* Ancien fond fixe — désactivé (fond scrollable dans .zg-zone-hero) */
 .zg-landing-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+  display: none;
 }
 
 /* gradient remplacé par mesh glass — voir landing-glass-3d.css */
@@ -47,18 +47,18 @@ body:has(.zg-landing--v4) {
   background: radial-gradient(circle, rgb(96 165 250 / 0.35), transparent 70%);
 }
 
-.zg-landing-bg__grain {
-  position: absolute;
-  inset: 0;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+/* grain — voir hero-premium.css */
 
 .zg-landing__main,
 .zg-landing > footer,
 .zg-landing > header {
   position: relative;
   z-index: 1;
+}
+
+.zg-landing__main {
+  margin: 0;
+  padding: 0;
 }
 
 /* ── Zones texte ── */
@@ -111,40 +111,32 @@ body:has(.zg-landing--v4) {
 }
 
 .zg-gradient-text {
-  background: linear-gradient(90deg, #ffffff 20%, #93c5fd 60%, #60a5fa 100%);
+  background: linear-gradient(90deg, #e0f2fe 0%, #7dd3fc 50%, #22d3ee 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-.zg-hero-sub {
-  color: rgb(219 234 254 / 0.92);
-}
+/* Hero typo — détails dans hero-premium.css */
 
 .zg-hero-note {
   margin-top: 1.25rem;
   font-size: 0.8125rem;
-  color: rgb(191 219 254 / 0.7);
   max-width: 32rem;
   margin-inline: auto;
 }
 
 /* ── Boutons & nav ── */
 .zg-landing--v4 .zg-btn-primary {
-  background: linear-gradient(135deg, #1d4ed8, #2563eb 50%, #3b82f6);
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
   box-shadow: 0 4px 24px rgb(37 99 235 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.15);
 }
 
-.zg-landing--v4 .zg-nav-shell {
-  background: rgb(3 8 24 / 0.55);
-  border-color: rgb(255 255 255 / 0.1);
-  backdrop-filter: blur(20px);
-}
-
 .zg-landing--v4 .zg-badge {
-  border-color: rgb(147 197 253 / 0.35);
-  background: rgb(37 99 235 / 0.2);
-  color: #dbeafe;
+  border-color: rgb(59 130 246 / 0.35);
+  background: rgb(2 8 24 / 0.4);
+  color: #eff6ff;
+  backdrop-filter: blur(8px);
 }
 
 .zg-btn-play {

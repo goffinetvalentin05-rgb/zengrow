@@ -26,15 +26,19 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 pt-4 md:pt-5">
+    <header className="fixed inset-x-0 top-0 z-50 pt-4 md:pt-6">
       <Container>
         <nav
           className={cn(
-            "zg-nav-shell flex items-center justify-between gap-4 px-4 py-2.5 md:px-6",
-            scrolled && "zg-nav-shell--scrolled",
+            "zg-nav-capsule",
+            scrolled && "zg-nav-capsule--scrolled",
           )}
         >
-          <Link href="/" className="zg-nav-logo shrink-0" aria-label="ZenGrow — accueil">
+          <Link
+            href="/"
+            className="zg-nav-capsule__brand zg-nav-logo shrink-0"
+            aria-label="ZenGrow — accueil"
+          >
             <Image
               src="/zengrow-logo-blanc.png"
               alt="ZenGrow"
@@ -45,59 +49,56 @@ export function Navbar() {
             />
           </Link>
 
-          <ul className="hidden items-center gap-7 lg:flex">
+          <ul className="zg-nav-capsule__links hidden items-center gap-7 lg:flex">
             {LINKS.map((l) => (
               <li key={l.href}>
-                <a
-                  href={l.href}
-                  className="text-sm font-medium text-sky-200/80 transition hover:text-white"
-                >
+                <a href={l.href} className="zg-nav-capsule__link">
                   {l.label}
                 </a>
               </li>
             ))}
           </ul>
 
-          <div className="hidden items-center gap-3 md:flex">
-            <GhostButton href="/login" className="!min-h-10 !px-5 !text-sm">
+          <div className="zg-nav-capsule__actions hidden md:flex">
+            <GhostButton href="/login" className="!min-h-9 !px-3 !text-sm">
               Connexion
             </GhostButton>
-            <PrimaryButton href="/signup" className="!min-h-10 !px-5 !text-sm">
+            <PrimaryButton href="/signup" className="!min-h-9 !px-4 !text-sm">
               Essayer gratuitement
             </PrimaryButton>
           </div>
 
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white md:hidden"
+            className="zg-nav-capsule__menu flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/5 text-white md:hidden"
             aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
             onClick={() => setOpen((v) => !v)}
           >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </nav>
 
         {open ? (
-          <div className="zg-glass mt-3 rounded-2xl p-4 md:hidden">
-            <ul className="flex flex-col gap-3">
+          <div className="zg-nav-mobile mt-3 rounded-2xl border border-white/10 bg-[#020617]/90 p-4 backdrop-blur-xl md:hidden">
+            <ul className="flex flex-col gap-1">
               {LINKS.map((l) => (
                 <li key={l.href}>
                   <a
                     href={l.href}
-                    className="block py-2 text-sm font-medium text-white/90"
+                    className="block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-200/90 transition hover:bg-white/5 hover:text-white"
                     onClick={() => setOpen(false)}
                   >
                     {l.label}
                   </a>
                 </li>
               ))}
-              <li className="pt-2">
-                <GhostButton href="/login" className="w-full justify-center">
+              <li className="mt-2 border-t border-white/8 pt-3">
+                <GhostButton href="/login" className="w-full justify-center !min-h-10">
                   Connexion
                 </GhostButton>
               </li>
               <li>
-                <PrimaryButton href="/signup" className="w-full justify-center">
+                <PrimaryButton href="/signup" className="w-full justify-center !min-h-10">
                   Essayer gratuitement
                 </PrimaryButton>
               </li>

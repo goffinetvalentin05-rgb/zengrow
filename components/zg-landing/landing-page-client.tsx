@@ -12,15 +12,16 @@ import { Navbar } from "@/components/zg-landing/sections/Navbar";
 import { PricingSection } from "@/components/zg-landing/sections/PricingSection";
 import { ProblemSection } from "@/components/zg-landing/sections/ProblemSection";
 import { TradesSection } from "@/components/zg-landing/sections/TradesSection";
-import { AnimatedBackground } from "@/components/zg-landing/AnimatedBackground";
+import { PageBackground } from "@/components/zg-landing/PageBackground";
 import "@/components/zg-landing/landing.css";
 import "@/components/zg-landing/landing-v4.css";
 import "@/components/zg-landing/landing-glass-3d.css";
+import "@/components/zg-landing/hero-premium.css";
 
 export function LandingPageClient() {
   return (
     <div className={`zg-landing zg-landing--v4 ${zgDisplay.variable} ${zgBody.variable}`}>
-      <AnimatedBackground />
+      <PageBackground />
       <Navbar />
       <main className="zg-landing__main">
         <HeroSection />

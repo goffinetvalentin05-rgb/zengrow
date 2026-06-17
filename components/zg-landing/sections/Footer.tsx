@@ -22,7 +22,7 @@ const LEGAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="zg-footer-v4 relative z-[1]">
+    <footer className="zg-footer-v4 zg-footer-v4--light relative z-[1]">
       <Container className="pb-0">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           <div className="lg:col-span-4">

@@ -1,0 +1,674 @@
+/* Hero premium — fond scrollable, réf. SaaS bleu nuit / cyan */
+
+/* ── Fond global de page (scroll naturel, pas fixed) ── */
+html:has(.zg-landing--v4),
+body:has(.zg-landing--v4) {
+  background: #01040f;
+  margin: 0;
+}
+
+.zg-page-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.zg-page-bg__base {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 95% 55% at 50% 14%, rgb(34 211 238 / 0.2) 0%, transparent 58%),
+    radial-gradient(ellipse 70% 45% at 82% 20%, rgb(59 130 246 / 0.32) 0%, transparent 55%),
+    radial-gradient(ellipse 65% 50% at 12% 28%, rgb(37 99 235 / 0.22) 0%, transparent 58%),
+    radial-gradient(ellipse 80% 40% at 50% 72%, rgb(147 197 253 / 0.18) 0%, transparent 62%),
+    radial-gradient(ellipse 90% 50% at 50% 100%, rgb(56 189 248 / 0.12) 0%, transparent 55%),
+    linear-gradient(
+      180deg,
+      #01040f 0%,
+      #020617 4%,
+      #040d1f 9%,
+      #071428 14%,
+      #0c2347 20%,
+      #12325f 26%,
+      #1e40af 32%,
+      #2563eb 38%,
+      #3b82f6 44%,
+      #60a5fa 50%,
+      #93c5fd 56%,
+      #bfdbfe 62%,
+      #dbeafe 70%,
+      #d4e8f7 78%,
+      #c8e4f8 86%,
+      #b8dff5 93%,
+      #a8d8f2 100%
+    );
+}
+
+/* Rubans abstraits — inspiration courbes premium */
+.zg-page-bg__ribbon {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+.zg-page-bg__ribbon--swoop {
+  top: 6%;
+  left: -38%;
+  width: 165%;
+  height: 52%;
+  border-radius: 45% 55% 58% 42% / 48% 42% 58% 52%;
+  background: linear-gradient(
+    128deg,
+    rgb(34 211 238 / 0.32) 0%,
+    rgb(59 130 246 / 0.42) 22%,
+    rgb(37 99 235 / 0.22) 48%,
+    rgb(29 78 216 / 0.08) 68%,
+    transparent 82%
+  );
+  filter: blur(52px);
+  transform: rotate(-10deg);
+}
+
+.zg-page-bg__ribbon--right {
+  top: -4%;
+  right: -22%;
+  width: 58%;
+  height: 72%;
+  background: linear-gradient(
+    205deg,
+    rgb(96 165 250 / 0.3) 0%,
+    rgb(59 130 246 / 0.2) 35%,
+    rgb(37 99 235 / 0.1) 55%,
+    transparent 78%
+  );
+  filter: blur(48px);
+  transform: rotate(14deg);
+}
+
+.zg-page-bg__ribbon--mid {
+  top: 36%;
+  left: -12%;
+  width: 125%;
+  height: 38%;
+  border-radius: 50%;
+  background: linear-gradient(
+    95deg,
+    transparent 0%,
+    rgb(147 197 253 / 0.22) 28%,
+    rgb(186 230 253 / 0.16) 50%,
+    rgb(125 211 252 / 0.1) 68%,
+    transparent 88%
+  );
+  filter: blur(64px);
+}
+
+.zg-page-bg__ribbon--lower {
+  top: 58%;
+  right: -18%;
+  width: 70%;
+  height: 42%;
+  background: linear-gradient(
+    160deg,
+    rgb(59 130 246 / 0.14) 0%,
+    rgb(96 165 250 / 0.1) 40%,
+    transparent 72%
+  );
+  filter: blur(56px);
+  transform: rotate(-6deg);
+}
+
+.zg-page-bg__glow {
+  position: absolute;
+  pointer-events: none;
+}
+
+.zg-page-bg__glow--hero {
+  top: 0;
+  left: 50%;
+  width: min(100vw, 1200px);
+  height: 42%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse 75% 62% at 50% 28%,
+    rgb(8 20 50 / 0.45) 0%,
+    rgb(15 40 90 / 0.18) 42%,
+    transparent 74%
+  );
+  filter: blur(36px);
+}
+
+.zg-page-bg__glow--hero-cyan {
+  top: 8%;
+  right: -8%;
+  width: min(75vw, 920px);
+  height: min(55vh, 520px);
+  background: radial-gradient(
+    ellipse 68% 62% at 68% 32%,
+    rgb(34 211 238 / 0.48) 0%,
+    rgb(56 189 248 / 0.24) 32%,
+    rgb(37 99 235 / 0.1) 52%,
+    transparent 72%
+  );
+  filter: blur(50px);
+}
+
+.zg-page-bg__glow--mid {
+  top: 48%;
+  left: 50%;
+  width: min(95vw, 1100px);
+  height: 35%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse 85% 60% at 50% 50%,
+    rgb(219 234 254 / 0.35) 0%,
+    rgb(191 219 254 / 0.12) 45%,
+    transparent 72%
+  );
+  filter: blur(40px);
+}
+
+.zg-page-bg__glow--end {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 55%;
+  background: radial-gradient(
+    ellipse 100% 72% at 50% 100%,
+    rgb(56 189 248 / 0.16) 0%,
+    rgb(37 99 235 / 0.09) 38%,
+    transparent 72%
+  );
+}
+
+.zg-page-bg__glow--end-cyan {
+  bottom: -4%;
+  left: 50%;
+  width: min(92vw, 1150px);
+  height: 48%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse 82% 58% at 50% 88%,
+    rgb(125 211 252 / 0.22) 0%,
+    rgb(186 230 253 / 0.1) 42%,
+    transparent 74%
+  );
+  filter: blur(36px);
+}
+
+.zg-page-bg__overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(1 4 15 / 0.22) 0%, transparent 10%),
+    linear-gradient(180deg, transparent 58%, rgb(255 255 255 / 0.04) 72%, rgb(219 234 254 / 0.08) 100%);
+  pointer-events: none;
+}
+
+.zg-page-bg__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.028;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.zg-zone-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* Fond hero local masqué — continuité assurée par .zg-page-bg */
+.zg-hero-bg {
+  display: none;
+}
+
+/* ── Background hero (legacy, conservé pour structure) ── */
+.zg-hero-bg--legacy {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.zg-hero-bg__base {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #020617 0%,
+    #040d1f 8%,
+    #071428 16%,
+    #0c2347 28%,
+    #12325f 38%,
+    #1e40af 48%,
+    #1d4ed8 56%,
+    #2563eb 64%,
+    #1e3a8a 72%,
+    #3b6fa8 80%,
+    #7eb8e8 88%,
+    #c8e4f8 94%,
+    #f0f7fc 98%,
+    #f8fafc 100%
+  );
+}
+
+.zg-hero-bg__glow {
+  position: absolute;
+  pointer-events: none;
+}
+
+.zg-hero-bg__glow--tr {
+  width: min(72vw, 900px);
+  height: min(58vh, 560px);
+  top: -8%;
+  right: -12%;
+  background: radial-gradient(
+    ellipse 68% 62% at 68% 32%,
+    rgb(34 211 238 / 0.55) 0%,
+    rgb(56 189 248 / 0.28) 32%,
+    rgb(37 99 235 / 0.12) 52%,
+    transparent 72%
+  );
+  filter: blur(48px);
+}
+
+.zg-hero-bg__glow--bl {
+  width: min(85vw, 1000px);
+  height: min(50vh, 480px);
+  bottom: 8%;
+  left: -28%;
+  background: radial-gradient(
+    ellipse 70% 58% at 38% 62%,
+    rgb(34 211 238 / 0.32) 0%,
+    rgb(59 130 246 / 0.16) 38%,
+    transparent 70%
+  );
+  filter: blur(56px);
+}
+
+.zg-hero-bg__glow--center {
+  width: 100%;
+  height: 55%;
+  top: 18%;
+  left: 0;
+  background: radial-gradient(
+    ellipse 78% 58% at 50% 38%,
+    rgb(8 20 50 / 0.5) 0%,
+    rgb(15 40 90 / 0.22) 42%,
+    transparent 74%
+  );
+  filter: blur(40px);
+}
+
+.zg-hero-bg__glow--fade {
+  inset: auto 0 0;
+  height: 38%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgb(240 249 255 / 0.35) 45%,
+    rgb(248 250 252 / 0.85) 100%
+  );
+}
+
+.zg-hero-bg__swoosh {
+  position: absolute;
+  bottom: 14%;
+  left: -8%;
+  width: 72%;
+  height: 42%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse 100% 55% at 30% 70%,
+    rgb(34 211 238 / 0.22) 0%,
+    rgb(59 130 246 / 0.1) 40%,
+    transparent 68%
+  );
+  filter: blur(36px);
+  transform: rotate(-8deg);
+}
+
+.zg-hero-bg__orbit {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgb(34 211 238 / 0.08);
+  pointer-events: none;
+}
+
+.zg-hero-bg__orbit--1 {
+  width: min(120vw, 1400px);
+  height: min(70vw, 800px);
+  top: 8%;
+  left: 50%;
+  transform: translateX(-42%) rotate(-12deg);
+  opacity: 0.55;
+}
+
+.zg-hero-bg__orbit--2 {
+  width: min(95vw, 1100px);
+  height: min(55vw, 620px);
+  top: 22%;
+  left: 50%;
+  transform: translateX(-55%) rotate(6deg);
+  border-color: rgb(96 165 250 / 0.06);
+  opacity: 0.45;
+}
+
+.zg-hero-bg__stars span {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgb(186 230 253 / 0.7);
+  box-shadow: 0 0 6px rgb(34 211 238 / 0.5);
+}
+
+.zg-hero-bg__stars span:nth-child(1) { top: 18%; left: 22%; opacity: 0.5; }
+.zg-hero-bg__stars span:nth-child(2) { top: 28%; right: 18%; opacity: 0.7; width: 3px; height: 3px; }
+.zg-hero-bg__stars span:nth-child(3) { top: 42%; left: 12%; opacity: 0.35; }
+.zg-hero-bg__stars span:nth-child(4) { top: 35%; right: 32%; opacity: 0.45; }
+.zg-hero-bg__stars span:nth-child(5) { top: 52%; left: 38%; opacity: 0.3; }
+.zg-hero-bg__stars span:nth-child(6) { top: 24%; left: 58%; opacity: 0.55; }
+
+.zg-hero-bg__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.032;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Hero copy ── */
+.zg-hero-copy {
+  position: relative;
+  isolation: isolate;
+}
+
+.zg-hero-copy::before {
+  content: "";
+  position: absolute;
+  inset: -3rem -2rem;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 2.5rem;
+  background: radial-gradient(
+    ellipse 88% 75% at 50% 42%,
+    rgb(2 8 24 / 0.55) 0%,
+    rgb(8 22 55 / 0.28) 40%,
+    transparent 76%
+  );
+  filter: blur(32px);
+}
+
+.zg-zone-hero .zg-title-hero {
+  color: #fff;
+  font-size: clamp(2.5rem, 7.5vw, 4.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.05em;
+  text-shadow:
+    0 2px 4px rgb(2 8 24 / 0.45),
+    0 8px 40px rgb(2 8 24 / 0.35);
+}
+
+.zg-zone-hero .zg-gradient-text {
+  background: linear-gradient(90deg, #e0f2fe 0%, #7dd3fc 45%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 16px rgb(34 211 238 / 0.25));
+}
+
+.zg-hero-sub {
+  color: rgb(226 236 255 / 0.92);
+  text-shadow: 0 1px 16px rgb(2 8 24 / 0.35);
+  line-height: 1.65;
+}
+
+.zg-hero-note {
+  color: rgb(186 210 240 / 0.88);
+  text-shadow: 0 1px 10px rgb(2 8 24 / 0.2);
+}
+
+/* Badge hero */
+.zg-landing--v4 .zg-zone-hero .zg-badge {
+  border-color: rgb(59 130 246 / 0.35);
+  background: rgb(2 8 24 / 0.45);
+  color: rgb(219 234 254 / 0.95);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 24px rgb(37 99 235 / 0.12);
+}
+
+.zg-landing--v4 .zg-zone-hero .zg-badge-dot {
+  background: #38bdf8;
+  box-shadow: 0 0 10px rgb(34 211 238 / 0.8);
+}
+
+/* CTA hero */
+.zg-landing--v4 .zg-zone-hero .zg-btn-primary {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 48%, #1d4ed8 100%);
+  border: 1px solid rgb(147 197 253 / 0.2);
+  box-shadow:
+    0 4px 28px rgb(37 99 235 / 0.55),
+    0 0 48px -8px rgb(34 211 238 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+
+.zg-landing--v4 .zg-zone-hero .zg-btn-primary:hover {
+  box-shadow:
+    0 8px 36px rgb(37 99 235 / 0.6),
+    0 0 56px -4px rgb(34 211 238 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.22);
+  transform: translateY(-1px);
+}
+
+.zg-landing--v4 .zg-zone-hero .zg-btn-ghost {
+  border-color: rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.06);
+  color: rgb(248 250 252 / 0.95);
+  backdrop-filter: blur(8px);
+}
+
+.zg-landing--v4 .zg-zone-hero .zg-btn-ghost:hover {
+  border-color: rgb(186 230 253 / 0.45);
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+.zg-landing--v4 .zg-zone-hero .zg-btn-play__icon {
+  border-color: rgb(255 255 255 / 0.28);
+  background: rgb(255 255 255 / 0.1);
+}
+
+/* Workflow — lisible sur fond clair en bas du hero */
+.zg-zone-hero .zg-loop-node__num {
+  border-color: rgb(37 99 235 / 0.22);
+  background: rgb(255 255 255 / 0.75);
+  color: #2563eb;
+  box-shadow: 0 2px 8px rgb(37 99 235 / 0.1);
+}
+
+.zg-zone-hero .zg-loop-node__label {
+  color: rgb(71 85 105 / 0.9);
+}
+
+.zg-zone-hero .zg-loop-node--active .zg-loop-node__num {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #fff;
+  border-color: transparent;
+}
+
+.zg-zone-hero .zg-loop-ribbon__line {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(37 99 235 / 0.2) 10%,
+    rgb(37 99 235 / 0.2) 90%,
+    transparent
+  ) !important;
+}
+
+/* ── Navbar capsule ── */
+.zg-nav-capsule {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 56rem;
+  margin-inline: auto;
+  padding: 0.5rem 0.75rem 0.5rem 1rem;
+  border-radius: 9999px;
+  background: rgb(2 6 23 / 0.62);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  box-shadow:
+    0 16px 48px -12px rgb(0 0 0 / 0.55),
+    0 0 40px -16px rgb(37 99 235 / 0.2),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.zg-nav-capsule--scrolled {
+  background: rgb(2 6 23 / 0.82);
+  border-color: rgb(255 255 255 / 0.14);
+  box-shadow:
+    0 20px 56px -16px rgb(0 0 0 / 0.65),
+    0 0 48px -12px rgb(37 99 235 / 0.25),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+.zg-nav-capsule__brand {
+  justify-self: start;
+}
+
+.zg-nav-capsule__links {
+  justify-self: center;
+}
+
+.zg-nav-capsule__actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.zg-nav-capsule__link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(203 213 225 / 0.85);
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.zg-nav-capsule__link:hover {
+  color: #fff;
+}
+
+.zg-nav-capsule .zg-btn-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: rgb(226 232 240 / 0.9);
+  box-shadow: none;
+  padding-inline: 0.75rem;
+}
+
+.zg-nav-capsule .zg-btn-ghost:hover {
+  background: rgb(255 255 255 / 0.06);
+  border-color: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+.zg-nav-capsule .zg-btn-primary {
+  padding-inline: 1rem;
+  font-size: 0.8125rem;
+  min-height: 2.25rem;
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  box-shadow: 0 4px 16px rgb(37 99 235 / 0.4);
+}
+
+.zg-nav-capsule .zg-btn-primary svg {
+  display: none;
+}
+
+.zg-nav-capsule__menu {
+  justify-self: end;
+  grid-column: 3;
+}
+
+@media (max-width: 1023px) {
+  .zg-nav-capsule {
+    grid-template-columns: 1fr auto;
+  }
+
+  .zg-nav-capsule__links {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zg-nav-capsule {
+    transition: none;
+  }
+}
+
+/* ── Bas de page : FAQ + footer sur fond bleuté ── */
+.zg-zone-end--light {
+  color: #334155;
+}
+
+.zg-zone-end--light .zg-zone-end__title,
+.zg-zone-end--light .zg-title-section {
+  color: #0f172a;
+}
+
+.zg-faq-card {
+  border-radius: 1.25rem;
+  border: 1px solid rgb(37 99 235 / 0.12);
+  background: rgb(255 255 255 / 0.82);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 4px 24px -8px rgb(37 99 235 / 0.1),
+    0 1px 2px rgb(15 23 42 / 0.04);
+}
+
+.zg-footer-v4--light {
+  border-top-color: rgb(37 99 235 / 0.14);
+  color: #475569;
+}
+
+.zg-footer-v4--light .zg-footer-v4__tagline {
+  color: #64748b;
+}
+
+.zg-footer-v4--light .zg-footer-v4__heading {
+  color: #64748b;
+}
+
+.zg-footer-v4--light a {
+  color: #475569;
+}
+
+.zg-footer-v4--light a:hover {
+  color: #2563eb;
+}
+
+.zg-footer-v4--light .zg-footer-v4__bottom {
+  border-top-color: rgb(37 99 235 / 0.12);
+  color: #94a3b8;
+}
+
+.zg-footer-v4--light .zg-footer-v4__contact a {
+  color: #334155;
+}
+
+.zg-footer-v4--light img {
+  filter: brightness(0) saturate(100%) invert(10%) sepia(18%) saturate(3200%) hue-rotate(196deg) brightness(92%);
+}

@@ -1,118 +1,23 @@
 /* Glass 3D — fond + cartes perspective (réf. premium) */
 
 body:has(.zg-landing--v4) {
-  background: #5eb0f8;
+  background: #01040f;
 }
 
-/* ── Fond mesh aurora (réf. soft blur) ── */
-.zg-landing-bg__base {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    #5eb0f8 0%,
-    #6bb8fa 18%,
-    #8ec9fb 38%,
-    #b4dcfc 55%,
-    #6a9fd4 72%,
-    #2a5299 88%,
-    #0c2860 100%
-  );
-}
-
-.zg-landing-bg__blob {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  will-change: transform;
-}
-
-.zg-landing-bg__blob--sky {
-  width: 120%;
-  height: 55%;
-  top: -18%;
-  left: -10%;
-  background: radial-gradient(
-    ellipse 70% 80% at 50% 60%,
-    rgb(147 197 253 / 0.9) 0%,
-    rgb(96 165 250 / 0.5) 35%,
-    transparent 70%
-  );
-  filter: blur(48px);
-}
-
-.zg-landing-bg__blob--white {
-  width: 85%;
-  height: 65%;
-  top: 22%;
-  left: -18%;
-  background: radial-gradient(
-    ellipse 55% 60% at 40% 45%,
-    rgb(255 255 255 / 0.97) 0%,
-    rgb(255 255 255 / 0.75) 18%,
-    rgb(224 242 254 / 0.45) 40%,
-    transparent 68%
-  );
-  filter: blur(56px);
-  animation: zg-aurora-drift 14s ease-in-out infinite alternate;
-}
-
-.zg-landing-bg__blob--cyan {
-  width: 70%;
-  height: 50%;
-  top: 38%;
-  left: 5%;
-  background: radial-gradient(
-    ellipse 60% 55% at 50% 50%,
-    rgb(186 230 253 / 0.85) 0%,
-    rgb(125 211 252 / 0.35) 45%,
-    transparent 72%
-  );
-  filter: blur(64px);
-  animation: zg-aurora-drift 18s ease-in-out infinite alternate-reverse;
-}
-
-.zg-landing-bg__blob--cobalt {
-  width: 75%;
-  height: 58%;
-  top: 18%;
-  right: -22%;
-  background: radial-gradient(
-    ellipse 55% 55% at 55% 45%,
-    rgb(37 99 235 / 0.75) 0%,
-    rgb(59 130 246 / 0.45) 30%,
-    rgb(96 165 250 / 0.15) 55%,
-    transparent 72%
-  );
-  filter: blur(72px);
-  animation: zg-aurora-drift 16s ease-in-out 2s infinite alternate;
-}
-
-.zg-landing-bg__blob--navy {
-  width: 110%;
-  height: 45%;
-  bottom: -12%;
-  left: -5%;
-  background: radial-gradient(
-    ellipse 80% 70% at 50% 100%,
-    rgb(12 40 96 / 0.95) 0%,
-    rgb(30 64 120 / 0.65) 35%,
-    rgb(42 90 150 / 0.2) 60%,
-    transparent 78%
-  );
-  filter: blur(40px);
-}
-
-@keyframes zg-aurora-drift {
-  from { transform: translate(0, 0) scale(1); }
-  to { transform: translate(3%, -2%) scale(1.04); }
+/* Fond hero — voir hero-premium.css */
+.zg-landing-bg,
+.zg-landing-bg__base,
+.zg-landing-bg__glow,
+.zg-landing-bg__grain {
+  display: none;
 }
 
 /* Legacy — masqué */
 .zg-landing-bg__mesh,
 .zg-landing-bg__grid,
 .zg-landing-bg__vignette,
-.zg-landing-bg__gradient {
+.zg-landing-bg__gradient,
+.zg-landing-bg__blob {
   display: none;
 }
 
@@ -538,12 +443,6 @@ body:has(.zg-landing--v4) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .zg-landing-bg__blob--white,
-  .zg-landing-bg__blob--cyan,
-  .zg-landing-bg__blob--cobalt {
-    animation: none;
-  }
-
   .zg-g3d-waveform span {
     animation: none;
   }

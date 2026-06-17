@@ -1455,37 +1455,39 @@ body:has(.zg-landing:not([data-landing-canvas])) {
 
 .zg-nav-logo {
   display: flex;
-  height: 2.5rem;
+  height: 2rem;
   align-items: center;
   overflow: visible;
-  margin-right: clamp(2.75rem, 10vw, 5.5rem);
+  margin-right: 0;
 }
 
 .zg-nav-logo__img {
-  height: 2.5rem;
+  height: 2rem;
   width: auto;
   max-width: none;
-  transform: scale(2.15);
+  transform: scale(1.85);
   transform-origin: left center;
 }
 
 @media (min-width: 640px) {
   .zg-nav-logo {
-    margin-right: clamp(3.25rem, 11vw, 6.25rem);
+    height: 2.125rem;
   }
 
   .zg-nav-logo__img {
-    transform: scale(2.35);
+    height: 2.125rem;
+    transform: scale(2);
   }
 }
 
 @media (min-width: 768px) {
   .zg-nav-logo {
-    margin-right: clamp(3.75rem, 12vw, 7rem);
+    height: 2.25rem;
   }
 
   .zg-nav-logo__img {
-    transform: scale(2.55);
+    height: 2.25rem;
+    transform: scale(2.1);
   }
 }
 
