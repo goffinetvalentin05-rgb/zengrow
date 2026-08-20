@@ -32,19 +32,12 @@ export function getSocialProofBadge(
   return `+${count} profils de style découverts aujourd’hui`;
 }
 
-export const PRICING = {
-  currency: "CHF",
-  styleProfile: 7.9,
-  bundle: 12.9,
-  fitChecksIncluded: 10,
-} as const;
-
 export const CTA = {
   primary: "Découvrir mon style",
   primaryArrow: "Découvrir mon style →",
-  profile: "Découvrir mon Style Profile →",
-  pack: "Choisir le pack complet",
   finePrint: "Analyse unique · Sans abonnement",
+  noSubscription: "Sans abonnement",
+  paywallNote: "Résultat complet payant après l’analyse.",
 } as const;
 
 export const IMAGES = {
@@ -93,36 +86,6 @@ export const DEMO_PROFILE = {
   ],
 } as const;
 
-export const PRICING_OFFERS = [
-  {
-    id: "profile",
-    featured: false,
-    plan: "Style Profile",
-    price: PRICING.styleProfile,
-    cta: CTA.primary,
-    features: [
-      "Analyse personnalisée",
-      "Meilleur style",
-      "Style secondaire",
-      "Palette de couleurs",
-      "Looks générés",
-      "Style Profile sauvegardé",
-      "Aucun abonnement",
-    ],
-  },
-  {
-    id: "bundle",
-    featured: true,
-    plan: "Style Profile + FitCheck",
-    price: PRICING.bundle,
-    cta: CTA.pack,
-    features: [
-      "Tout le Style Profile",
-      `${PRICING.fitChecksIncluded} FitChecks pour vérifier un vêtement avant l’achat`,
-    ],
-  },
-] as const;
-
 export const HOW_IT_WORKS = [
   {
     step: "01",
@@ -163,7 +126,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Est-ce un abonnement ?",
-    a: "Non. Vous payez une fois pour votre Style Profile. Aucun abonnement.",
+    a: "Non. Aucun abonnement. Le résultat complet se débloque après l’analyse.",
   },
   {
     q: "Mes photos sont-elles privées ?",
@@ -181,6 +144,3 @@ export const NAV_LINKS = [
   { href: "#faq", label: "FAQ" },
 ] as const;
 
-export function formatPrice(value: number) {
-  return `${value.toFixed(2).replace(".", ",")}\u00a0${PRICING.currency}`;
-}

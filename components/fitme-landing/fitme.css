@@ -1646,125 +1646,20 @@ body:has(.fitme) {
   50% { opacity: 0.45; transform: scale(0.82); }
 }
 
-/* ——— Offer: pricing + FAQ + final CTA ——— */
+/* ——— Offer: FAQ + final CTA ——— */
 .fitme-offer {
   position: relative;
   padding-top: 4.5rem;
   padding-bottom: 0;
 }
 
-.fitme-offer .fitme-h2 {
-  max-width: 12em;
-  line-height: 1.04;
-  text-wrap: balance;
-}
-
-.fitme-pricing {
-  display: grid;
-  gap: 1rem;
-  margin-top: 2.35rem;
-}
-
-.fitme-price-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  padding: 1.7rem 1.4rem 1.5rem;
-  border: 1px solid var(--fitme-line);
-  border-radius: calc(var(--fitme-radius) + 0.2rem);
-  background: var(--fitme-paper);
-  box-shadow: 0 18px 40px -32px rgba(28, 18, 10, 0.18);
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease, border-color 0.4s ease;
-}
-
-.fitme-price-card.is-featured {
-  border-color: rgba(196, 40, 20, 0.28);
-  background:
-    linear-gradient(180deg, #fff8f2 0%, #fffdf8 42%);
-  box-shadow: 0 24px 50px -30px rgba(196, 40, 20, 0.28);
-}
-
-.fitme-price-card__tag {
-  align-self: start;
-  margin: 0 0 0.8rem;
-  padding: 0.22rem 0.55rem;
-  border-radius: 999px;
-  background: rgba(196, 40, 20, 0.1);
-  color: #c42814;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.fitme-price-card__plan {
-  max-width: 12em;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  text-wrap: pretty;
-}
-
-.fitme-price-card.is-featured .fitme-price-card__plan {
-  color: #c42814;
-}
-
-.fitme-price-card__amount {
-  margin: 0.7rem 0 1.1rem;
-  font-family: var(--font-fitme-display);
-  font-size: clamp(2.5rem, 8vw, 3.35rem);
-  font-weight: 800;
-  letter-spacing: -0.05em;
-  line-height: 1;
-}
-
-.fitme-price-card ul {
-  flex: 1;
-  margin: 0 0 1.45rem;
-  padding: 0;
-  list-style: none;
-}
-
-.fitme-price-card li {
-  position: relative;
-  padding-left: 1.15rem;
-  margin-top: 0.55rem;
-  color: var(--fitme-ink-soft);
-  text-wrap: pretty;
-}
-
-.fitme-price-card li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.55em;
-  width: 0.35rem;
-  height: 0.35rem;
-  border-radius: 999px;
-  background: var(--fitme-line-strong);
-}
-
-.fitme-price-card.is-featured li::before {
-  background: #e45a22;
-}
-
-.fitme-price-card .fitme-cta {
-  align-self: start;
-}
-
-.fitme-price-card .fitme-cta--ghost {
-  border: 1px solid var(--fitme-line);
-}
-
 .fitme-offer__faq {
-  margin-top: 4.5rem;
-  padding-bottom: 1.5rem;
+  padding-bottom: 1.75rem;
 }
 
-.fitme-offer__faq h3 {
+.fitme-offer__faq h2 {
   font-family: var(--font-fitme-display);
-  font-size: clamp(1.6rem, 4vw, 2.15rem);
+  font-size: clamp(1.7rem, 4.2vw, 2.35rem);
   font-weight: 800;
   letter-spacing: -0.04em;
 }
@@ -1906,23 +1801,24 @@ body:has(.fitme) {
   z-index: 2;
 }
 
-.fitme-final__eyebrow {
-  max-width: 16em;
-  margin-inline: auto;
-  font-size: 1.02rem;
-  line-height: 1.45;
-  text-wrap: pretty;
-  color: rgba(255, 246, 236, 0.78);
-}
-
 .fitme-final__title {
-  margin: 0.9rem auto 1.7rem;
+  max-width: 13.5em;
+  margin: 0 auto 1.05rem;
   font-family: var(--font-fitme-display);
-  font-size: clamp(2.5rem, 10vw, 5.4rem);
+  font-size: clamp(1.9rem, 6vw, 3.25rem);
   font-weight: 800;
   letter-spacing: -0.05em;
-  line-height: 0.94;
+  line-height: 1.04;
   text-wrap: balance;
+}
+
+.fitme-final__lead {
+  max-width: 32rem;
+  margin: 0 auto 1.7rem;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+  color: rgba(255, 246, 236, 0.78);
 }
 
 .fitme-cta--on-warm {
@@ -1941,6 +1837,13 @@ body:has(.fitme) {
 .fitme-final .fitme-fine {
   margin-top: 0.95rem;
   color: rgba(255, 246, 236, 0.62);
+}
+
+.fitme-final__note {
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: rgba(255, 246, 236, 0.46);
 }
 
 @keyframes fitme-report-glow {
@@ -2103,7 +2006,11 @@ body:has(.fitme) {
   }
 
   .fitme-final__title {
-    font-size: clamp(2.35rem, 12vw, 3.4rem);
+    font-size: clamp(1.75rem, 8.4vw, 2.35rem);
+  }
+
+  .fitme-final__lead {
+    font-size: 0.98rem;
   }
 }
 
@@ -2231,21 +2138,6 @@ body:has(.fitme) {
 
   .fitme-fitcheck__pair {
     min-width: 18rem;
-  }
-
-  .fitme-pricing {
-    grid-template-columns: 1fr 1fr;
-    align-items: stretch;
-    gap: 1.15rem;
-  }
-
-  .fitme-price-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 24px 48px -28px rgba(196, 40, 20, 0.28);
-  }
-
-  .fitme-price-card.is-featured:hover {
-    border-color: rgba(196, 40, 20, 0.42);
   }
 
   .fitme-scan {
