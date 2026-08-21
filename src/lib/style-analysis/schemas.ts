@@ -28,16 +28,11 @@ export const stylePreferencesSchema = z.object({
   firstName: z.string().trim().max(60).optional().nullable(),
   presentation: z.enum(["femme", "homme", "neutre"]).optional().nullable(),
   ageRange: z.enum(["18-24", "25-34", "35-44", "45-54", "55+"]).optional().nullable(),
-  universes: z.array(z.string()).max(6).default([]),
+  universes: z.array(z.string().min(1).max(40)).max(3).default([]),
   goal: z.string().max(80).optional().nullable(),
 });
 
 export type StylePreferences = z.infer<typeof stylePreferencesSchema>;
-
-export const onboardingAboutSchema = z.object({
-  firstName: z.string().trim().max(60).optional().nullable(),
-  presentation: z.enum(["femme", "homme", "neutre"]).optional().nullable(),
-});
 
 export const createAnalysisSchema = z.object({
   preferences: stylePreferencesSchema.optional(),
@@ -56,5 +51,9 @@ export const confirmImagesSchema = z.object({
 });
 
 export const checkoutSchema = z.object({
+  analysisId: z.string().uuid(),
+});
+
+export const startAnalysisSchema = z.object({
   analysisId: z.string().uuid(),
 });

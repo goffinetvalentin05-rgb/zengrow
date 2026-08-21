@@ -22,6 +22,7 @@ export type StyleAnalysisRow = {
   preview_data: unknown;
   error_message: string | null;
   looks_job_started_at: string | null;
+  ai_provider?: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
@@ -37,6 +38,17 @@ export async function getLatestAnalysis(userId: string): Promise<StyleAnalysisRo
     .limit(1)
     .maybeSingle();
   return (data as StyleAnalysisRow | null) ?? null;
+}
+
+export async function getUserAnalyses(userId: string, limit = 20): Promise<StyleAnalysisRow[]> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("style_analyses")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data as StyleAnalysisRow[] | null) ?? [];
 }
 
 export async function getAnalysisForUser(analysisId: string, userId: string): Promise<StyleAnalysisRow | null> {
@@ -77,7 +89,7 @@ export function resolveFitmePath(analysis: StyleAnalysisRow | null): string {
   }
 
   if (analysis.status === "completed" && analysis.is_unlocked && analysis.payment_status === "paid") {
-    return "/style-profile";
+    return `/style-profile/${analysis.id}`;
   }
 
   return `/analysis/${analysis.id}/preview`;

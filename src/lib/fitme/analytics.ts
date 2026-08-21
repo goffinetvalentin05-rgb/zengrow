@@ -5,6 +5,7 @@ export type FitmeEventName =
   | "photos_uploaded"
   | "analysis_started"
   | "analysis_completed"
+  | "preview_viewed"
   | "paywall_viewed"
   | "checkout_started"
   | "payment_completed"

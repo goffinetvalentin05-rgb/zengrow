@@ -2,9 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { FitmeFlowShell } from "@/components/fitme-app/FitmeAppShell";
+import { FitmeErrorState } from "@/components/fitme-app/FitmeErrorState";
 import { compressImageFile } from "@/components/fitme-app/compress-image";
 import { IMAGES } from "@/components/fitme-landing/config";
+import { apiJson } from "@/src/lib/fitme/client-api";
 import { trackFitmeEvent } from "@/src/lib/fitme/analytics";
 import {
   ACCEPTED_IMAGE_TYPES,
@@ -12,11 +15,20 @@ import {
   PHOTO_SLOTS,
   STYLE_GOALS,
   STYLE_UNIVERSES,
+  SURPRISE_UNIVERSE,
+  sourceStoragePath,
 } from "@/src/lib/fitme/constants";
 import { createClient } from "@/src/lib/supabase/client";
 
 type SlotKey = (typeof PHOTO_SLOTS)[number]["key"];
-type SlotFile = { file: File; preview: string } | null;
+type Screen = "photos" | "universes" | "goals" | "recap";
+type SlotState = {
+  file: File | null;
+  preview: string | null;
+  uploading: boolean;
+  uploaded: boolean;
+  storagePath: string | null;
+};
 
 const UNIVERSE_IMAGES: Record<string, string> = {
   "clean-minimal": IMAGES.cleanMinimal,
@@ -31,38 +43,115 @@ function isAccepted(file: File) {
   return (ACCEPTED_IMAGE_TYPES as readonly string[]).includes(file.type) && file.size <= MAX_SOURCE_IMAGE_BYTES;
 }
 
-export function OnboardingClient({
-  firstName,
-}: {
-  firstName: string | null;
-}) {
+function emptySlots(): Record<SlotKey, SlotState> {
+  return {
+    portrait: { file: null, preview: null, uploading: false, uploaded: false, storagePath: null },
+    full_body: { file: null, preview: null, uploading: false, uploaded: false, storagePath: null },
+    extra: { file: null, preview: null, uploading: false, uploaded: false, storagePath: null },
+    extra2: { file: null, preview: null, uploading: false, uploaded: false, storagePath: null },
+  };
+}
+
+const SCREEN_STEP: Record<Screen, number> = {
+  photos: 1,
+  universes: 2,
+  goals: 2,
+  recap: 3,
+};
+
+export function OnboardingClient({ firstName }: { firstName: string | null }) {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const reduce = useReducedMotion();
+  const [screen, setScreen] = useState<Screen>("photos");
   const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [name, setName] = useState(firstName ?? "");
-  const [presentation, setPresentation] = useState<"femme" | "homme" | "neutre" | "">("");
-  const [files, setFiles] = useState<Record<SlotKey, SlotFile>>({
-    portrait: null,
-    full_body: null,
-    extra: null,
-    extra2: null,
-  });
+  const [files, setFiles] = useState<Record<SlotKey, SlotState>>(emptySlots);
   const [universes, setUniverses] = useState<string[]>([]);
-  const [goal, setGoal] = useState<string>("");
+  const [goal, setGoal] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     trackFitmeEvent("onboarding_started");
-    void fetch("/api/style/analyses", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
-      .then((response) => response.json())
-      .then((data: { analysisId?: string }) => {
-        if (data.analysisId) setAnalysisId(data.analysisId);
+    void apiJson<{ analysisId: string }>("/api/style-analysis/create", {
+      method: "POST",
+      body: "{}",
+    })
+      .then(async (data) => {
+        setAnalysisId(data.analysisId);
+        const status = await apiJson<{
+          analysis?: { photos?: { type: string; url: string; storagePath: string }[] };
+        }>(`/api/style-analysis/${data.analysisId}/status`);
+        const photos = status.analysis?.photos ?? [];
+        if (!photos.length) return;
+        setFiles((current) => {
+          const next = { ...current };
+          const extras = photos.filter((photo) => photo.type === "extra");
+          for (const slot of PHOTO_SLOTS) {
+            const match =
+              slot.type === "extra"
+                ? extras[slot.key === "extra2" ? 1 : 0]
+                : photos.find((photo) => photo.type === slot.type);
+            if (match) {
+              next[slot.key] = {
+                file: null,
+                preview: match.url,
+                uploading: false,
+                uploaded: true,
+                storagePath: match.storagePath,
+              };
+            }
+          }
+          return next;
+        });
       })
       .catch(() => setError("Impossible de préparer votre analyse."));
   }, []);
 
-  const canPhotos = Boolean(files.portrait && files.full_body && files.extra);
+  const canPhotos = Boolean(
+    (files.portrait.preview || files.portrait.file) &&
+      (files.full_body.preview || files.full_body.file) &&
+      (files.extra.preview || files.extra.file),
+  );
+
+  async function persistPhotos(id: string, nextFiles: Record<SlotKey, SlotState>) {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setSessionExpired(true);
+      throw new Error("Session expirée.");
+    }
+
+    const payload: { type: "portrait" | "full_body" | "extra"; storagePath: string }[] = [];
+    for (const slot of PHOTO_SLOTS) {
+      const current = nextFiles[slot.key];
+      if (!current.file && !current.uploaded) continue;
+      const storagePath = current.file
+        ? sourceStoragePath(user.id, id, slot.fileStem)
+        : current.storagePath ?? sourceStoragePath(user.id, id, slot.fileStem);
+      if (current.file) {
+        const { error: uploadError } = await supabase.storage.from("style-inputs").upload(storagePath, current.file, {
+          upsert: true,
+          contentType: current.file.type || "image/jpeg",
+        });
+        if (uploadError) throw new Error("L’envoi d’une photo a échoué.");
+      }
+      payload.push({ type: slot.type, storagePath });
+    }
+
+    if (payload.length < 2) return;
+    const hasPortrait = payload.some((image) => image.type === "portrait");
+    const hasFullBody = payload.some((image) => image.type === "full_body");
+    if (!hasPortrait || !hasFullBody) return;
+    await apiJson(`/api/style-analysis/${id}/photos`, {
+      method: "POST",
+      body: JSON.stringify({ images: payload }),
+    });
+    trackFitmeEvent("photos_uploaded");
+  }
 
   async function assignFile(key: SlotKey, file: File | undefined) {
     if (!file) return;
@@ -71,246 +160,271 @@ export function OnboardingClient({
       return;
     }
     setError(null);
-    const compressed = await compressImageFile(file);
+    setFiles((current) => ({ ...current, [key]: { ...current[key], uploading: true } }));
+    try {
+      const compressed = await compressImageFile(file);
+      const preview = URL.createObjectURL(compressed);
+      const next = {
+        ...files,
+        [key]: { file: compressed, preview, uploading: false, uploaded: false, storagePath: null },
+      };
+      setFiles(next);
+      if (analysisId) {
+        setFiles((current) => ({ ...current, [key]: { ...current[key], uploading: true } }));
+        await persistPhotos(analysisId, next);
+        setFiles((current) => ({
+          ...current,
+          [key]: {
+            file: compressed,
+            preview,
+            uploading: false,
+            uploaded: true,
+            storagePath: current[key].storagePath,
+          },
+        }));
+      }
+    } catch (err) {
+      setFiles((current) => ({ ...current, [key]: { ...current[key], uploading: false } }));
+      setError(err instanceof Error ? err.message : "L’envoi d’une photo a échoué.");
+    }
+  }
+
+  function clearSlot(key: SlotKey) {
     setFiles((current) => {
-      if (current[key]?.preview) URL.revokeObjectURL(current[key]!.preview);
-      return { ...current, [key]: { file: compressed, preview: URL.createObjectURL(compressed) } };
+      if (current[key].preview?.startsWith("blob:")) URL.revokeObjectURL(current[key].preview!);
+      return { ...current, [key]: { file: null, preview: null, uploading: false, uploaded: false, storagePath: null } };
     });
   }
 
   function toggleUniverse(id: string) {
-    if (id === "surprise") {
-      setUniverses(["surprise"]);
+    if (id === SURPRISE_UNIVERSE.id) {
+      setUniverses([SURPRISE_UNIVERSE.id]);
       return;
     }
     setUniverses((current) => {
-      const next = current.filter((item) => item !== "surprise");
-      return next.includes(id) ? next.filter((item) => item !== id) : [...next, id];
+      const next = current.filter((item) => item !== SURPRISE_UNIVERSE.id);
+      if (next.includes(id)) return next.filter((item) => item !== id);
+      if (next.length >= 3) return next;
+      return [...next, id];
     });
   }
 
-  async function savePreferences(id: string) {
-    await fetch(`/api/style/analyses/${id}/preferences`, {
+  async function submit() {
+    if (!analysisId) throw new Error("Analyse introuvable.");
+    await persistPhotos(analysisId, files);
+    await apiJson(`/api/style-analysis/${analysisId}/preferences`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         firstName: name.trim() || null,
-        presentation: presentation || null,
         universes,
         goal: goal || null,
       }),
     });
-  }
-
-  async function uploadAndStart() {
-    if (!analysisId) throw new Error("Analyse introuvable.");
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error("Session expirée. Reconnectez-vous.");
-
-    const payload: { type: "portrait" | "full_body" | "extra"; storagePath: string }[] = [];
-    let extraIndex = 0;
-    for (const slot of PHOTO_SLOTS) {
-      const current = files[slot.key];
-      if (!current) {
-        if (slot.required) throw new Error("Ajoutez encore une photo.");
-        continue;
-      }
-      extraIndex += slot.type === "extra" ? 1 : 0;
-      const nameOnDisk =
-        slot.type === "portrait"
-          ? "original-1.jpg"
-          : slot.type === "full_body"
-            ? "original-2.jpg"
-            : `original-${2 + extraIndex}.jpg`;
-      const storagePath = `${user.id}/${analysisId}/${nameOnDisk}`;
-      const { error: uploadError } = await supabase.storage.from("style-inputs").upload(storagePath, current.file, {
-        upsert: true,
-        contentType: current.file.type,
-      });
-      if (uploadError) throw new Error("L’envoi d’une photo a échoué.");
-      payload.push({ type: slot.type, storagePath });
-    }
-
-    const confirm = await fetch(`/api/style/analyses/${analysisId}/images`, {
+    await apiJson("/api/style-analysis/start", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ images: payload }),
+      body: JSON.stringify({ analysisId }),
     });
-    if (!confirm.ok) {
-      const data = (await confirm.json().catch(() => ({}))) as { error?: string };
-      throw new Error(data.error ?? "Impossible d’enregistrer les photos.");
-    }
-    trackFitmeEvent("photos_uploaded");
-
-    await savePreferences(analysisId);
-
-    const started = await fetch(`/api/style/analyses/${analysisId}/start`, { method: "POST" });
-    if (!started.ok) {
-      const data = (await started.json().catch(() => ({}))) as { error?: string };
-      throw new Error(data.error ?? "Impossible de lancer l’analyse.");
-    }
     trackFitmeEvent("analysis_started");
     router.push(`/analysis/${analysisId}`);
   }
 
-  const examples = useMemo(
-    () => [
-      { src: IMAGES.original, label: "Portrait net" },
-      { src: IMAGES.smartCasual, label: "Plein pied" },
-    ],
-    [],
-  );
+  const selectedUniverseNames = useMemo(() => {
+    if (universes.includes(SURPRISE_UNIVERSE.id) || universes.length === 0) {
+      return [SURPRISE_UNIVERSE.name];
+    }
+    return STYLE_UNIVERSES.filter((item) => universes.includes(item.id)).map((item) => item.name);
+  }, [universes]);
+
+  const goalLabel = STYLE_GOALS.find((item) => item.id === goal)?.label ?? "À découvrir";
+
+  if (sessionExpired) {
+    return (
+      <FitmeFlowShell step={1}>
+        <FitmeErrorState
+          title="Session expirée."
+          message="Reconnectez-vous pour continuer votre Style Profile."
+          actionLabel="Se connecter"
+          href="/login?next=/onboarding"
+        />
+      </FitmeFlowShell>
+    );
+  }
+
+  const variants = reduce
+    ? undefined
+    : {
+        initial: { opacity: 0, x: 28 },
+        animate: { opacity: 1, x: 0 },
+        exit: { opacity: 0, x: -18 },
+      };
 
   return (
-    <FitmeFlowShell step={step}>
-      {step === 1 ? (
-        <>
-          <p className="fitme-eyebrow">Étape 01</p>
-          <h1>Commençons par vous.</h1>
-          <p className="fitme-lead">Quelques informations nous permettent de personnaliser votre Style Profile.</p>
-          <div className="fitme-field">
-            <label htmlFor="first-name">Prénom (optionnel)</label>
-            <input id="first-name" className="fitme-input" value={name} onChange={(event) => setName(event.target.value)} />
-          </div>
-          <div className="fitme-field">
-            <span>Présentation souhaitée</span>
-            <div className="fitme-choice-grid">
-              {(["femme", "homme", "neutre"] as const).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={presentation === value ? "fitme-choice is-on" : "fitme-choice"}
-                  onClick={() => setPresentation(value)}
-                >
-                  <strong>{value === "neutre" ? "Peu importe" : value[0]!.toUpperCase() + value.slice(1)}</strong>
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      ) : null}
-
-      {step === 2 ? (
-        <>
-          <p className="fitme-eyebrow">Étape 02</p>
-          <h1>Ajoutez quelques photos de vous.</h1>
-          <p className="fitme-lead">Un portrait, un plein pied, et une photo de plus. Lumière naturelle si possible.</p>
-          <div className="fitme-photos">
-            {PHOTO_SLOTS.map((slot) => (
-              <label
-                key={slot.key}
-                className="fitme-photo-slot"
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  void assignFile(slot.key, event.dataTransfer.files[0]);
-                }}
-              >
-                {files[slot.key] ? (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={files[slot.key]!.preview} alt="" />
-                    <button
-                      type="button"
-                      className="fitme-photo-slot__remove"
-                      onClick={(event) => {
+    <FitmeFlowShell step={SCREEN_STEP[screen]}>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={screen}
+          initial={variants?.initial}
+          animate={variants?.animate ?? { opacity: 1 }}
+          exit={variants?.exit}
+          transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {screen === "photos" ? (
+            <>
+              <p className="fitme-eyebrow">01 Photos</p>
+              <h1>Montrez-nous simplement qui vous êtes.</h1>
+              <p className="fitme-lead">Quelques photos suffisent pour construire votre Style Profile.</p>
+              <div className="fitme-photos">
+                {PHOTO_SLOTS.map((slot) => {
+                  const current = files[slot.key];
+                  return (
+                    <label
+                      key={slot.key}
+                      className={`fitme-photo-slot ${current.uploaded ? "is-ready" : ""} ${current.uploading ? "is-busy" : ""}`}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => {
                         event.preventDefault();
-                        if (files[slot.key]?.preview) URL.revokeObjectURL(files[slot.key]!.preview);
-                        setFiles((current) => ({ ...current, [slot.key]: null }));
+                        void assignFile(slot.key, event.dataTransfer.files[0]);
                       }}
                     >
-                      Remplacer
-                    </button>
-                  </>
-                ) : (
-                  <div className="fitme-photo-slot__empty">
-                    <strong>{slot.title}</strong>
-                    <small>{slot.hint}</small>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  capture={slot.type === "portrait" ? "user" : undefined}
-                  onChange={(event) => void assignFile(slot.key, event.target.files?.[0])}
-                />
-              </label>
-            ))}
-          </div>
-          <ul className="fitme-tips">
-            <li>Lumière naturelle si possible</li>
-            <li>Visage visible, sans filtre lourd</li>
-            <li>Photo récente, plein pied pour au moins une image</li>
-          </ul>
-          <div className="fitme-look-grid" style={{ marginTop: "1rem" }}>
-            {examples.map((example) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={example.label} src={example.src} alt={example.label} />
-            ))}
-          </div>
-        </>
-      ) : null}
+                      {current.preview ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={current.preview} alt="" />
+                          <span className="fitme-photo-slot__badge">
+                            {current.uploading ? "Envoi…" : current.uploaded ? "Ajoutée" : "Prête"}
+                          </span>
+                          <button
+                            type="button"
+                            className="fitme-photo-slot__remove"
+                            onClick={(event) => {
+                              event.preventDefault();
+                              clearSlot(slot.key);
+                            }}
+                          >
+                            Supprimer
+                          </button>
+                        </>
+                      ) : (
+                        <div className="fitme-photo-slot__empty">
+                          <strong>{slot.title}</strong>
+                          <small>{slot.hint}</small>
+                          <em>{slot.required ? "Galerie ou appareil" : "Optionnelle"}</em>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        capture={slot.type === "portrait" ? "user" : undefined}
+                        onChange={(event) => void assignFile(slot.key, event.target.files?.[0])}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+              <ul className="fitme-tips">
+                <li>Lumière naturelle</li>
+                <li>Visage visible</li>
+                <li>Pas de filtre lourd</li>
+                <li>Tenue normale</li>
+                <li>Au moins une photo plein pied</li>
+              </ul>
+            </>
+          ) : null}
 
-      {step === 3 ? (
-        <>
-          <p className="fitme-eyebrow">Étape 03</p>
-          <h1>Qu’est-ce qui vous attire ?</h1>
-          <p className="fitme-lead">Ces choix ne déterminent pas le résultat. Ils aident simplement à vous comprendre.</p>
-          <div className="fitme-choice-grid">
-            {STYLE_UNIVERSES.map((universe) => (
-              <button
-                key={universe.id}
-                type="button"
-                className={universes.includes(universe.id) ? "fitme-choice is-on" : "fitme-choice"}
-                onClick={() => toggleUniverse(universe.id)}
-              >
-                <span className="fitme-universe">
-                  {UNIVERSE_IMAGES[universe.id] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+          {screen === "universes" ? (
+            <>
+              <p className="fitme-eyebrow">02 Préférences</p>
+              <h1>Quels univers vous attirent ?</h1>
+              <p className="fitme-lead">Jusqu’à trois choix. Ils aident à vous comprendre, sans imposer le résultat.</p>
+              <div className="fitme-universe-grid">
+                {STYLE_UNIVERSES.map((universe) => (
+                  <button
+                    key={universe.id}
+                    type="button"
+                    className={universes.includes(universe.id) ? "fitme-universe-card is-on" : "fitme-universe-card"}
+                    onClick={() => toggleUniverse(universe.id)}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={UNIVERSE_IMAGES[universe.id]} alt="" />
-                  ) : (
-                    <span />
-                  )}
-                  <strong>{universe.name}</strong>
-                </span>
-              </button>
-            ))}
-          </div>
-        </>
-      ) : null}
-
-      {step === 4 ? (
-        <>
-          <p className="fitme-eyebrow">Étape 04</p>
-          <h1>Que recherchez-vous surtout ?</h1>
-          <p className="fitme-lead">Une seule intention suffit. Ensuite, on lance votre analyse.</p>
-          <div className="fitme-choice-grid">
-            {STYLE_GOALS.map((item) => (
+                    <strong>{universe.name}</strong>
+                  </button>
+                ))}
+              </div>
               <button
-                key={item.id}
                 type="button"
-                className={goal === item.id ? "fitme-choice is-on" : "fitme-choice"}
-                onClick={() => setGoal(item.id)}
+                className={universes.includes(SURPRISE_UNIVERSE.id) ? "fitme-choice is-on" : "fitme-choice"}
+                style={{ marginTop: "0.9rem" }}
+                onClick={() => toggleUniverse(SURPRISE_UNIVERSE.id)}
               >
-                <strong>{item.label}</strong>
+                <strong>{SURPRISE_UNIVERSE.name}</strong>
               </button>
-            ))}
-          </div>
-        </>
-      ) : null}
+            </>
+          ) : null}
+
+          {screen === "goals" ? (
+            <>
+              <p className="fitme-eyebrow">02 Préférences</p>
+              <h1>Qu’est-ce que vous cherchez surtout ?</h1>
+              <p className="fitme-lead">Une seule intention suffit.</p>
+              <div className="fitme-choice-grid">
+                {STYLE_GOALS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={goal === item.id ? "fitme-choice is-on" : "fitme-choice"}
+                    onClick={() => setGoal(item.id)}
+                  >
+                    <strong>{item.label}</strong>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          {screen === "recap" ? (
+            <>
+              <p className="fitme-eyebrow">03 Vérification</p>
+              <h1>Prêt pour votre analyse.</h1>
+              <p className="fitme-lead">Vérifiez vos photos et vos préférences, puis lancez votre Style Profile.</p>
+              <div className="fitme-recap-photos">
+                {PHOTO_SLOTS.filter((slot) => files[slot.key].preview).map((slot) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={slot.key} src={files[slot.key].preview!} alt={slot.title} />
+                ))}
+              </div>
+              <article className="fitme-account-card">
+                <p className="fitme-eyebrow">Univers</p>
+                <p>{selectedUniverseNames.join(" · ")}</p>
+                <p className="fitme-eyebrow" style={{ marginTop: "1rem" }}>
+                  Intention
+                </p>
+                <p>{goalLabel}</p>
+                <div className="fitme-field" style={{ marginTop: "1rem" }}>
+                  <label htmlFor="recap-name">Prénom (optionnel)</label>
+                  <input id="recap-name" className="fitme-input" value={name} onChange={(event) => setName(event.target.value)} />
+                </div>
+                <button type="button" className="fitme-cta fitme-cta--ghost" style={{ marginTop: "1rem" }} onClick={() => setScreen("photos")}>
+                  Modifier
+                </button>
+              </article>
+            </>
+          ) : null}
+        </motion.div>
+      </AnimatePresence>
 
       {error ? <p className="fitme-error">{error}</p> : null}
 
       <div className="fitme-sticky-cta">
-        {step > 1 ? (
+        {screen !== "photos" ? (
           <button
             type="button"
             className="fitme-cta fitme-cta--ghost fitme-cta--block"
             style={{ marginBottom: "0.55rem" }}
-            onClick={() => setStep((value) => value - 1)}
+            onClick={() => {
+              if (screen === "universes") setScreen("photos");
+              if (screen === "goals") setScreen("universes");
+              if (screen === "recap") setScreen("goals");
+            }}
           >
             Retour
           </button>
@@ -318,26 +432,34 @@ export function OnboardingClient({
         <button
           type="button"
           className="fitme-cta fitme-cta--block"
-          disabled={busy || (step === 2 && !canPhotos) || !analysisId}
+          disabled={busy || (screen === "photos" && !canPhotos) || !analysisId}
           onClick={() => {
-            if (step < 4) {
-              if (step === 2 && !canPhotos) {
-                setError("Ajoutez au moins un portrait, un plein pied et une photo supplémentaire.");
+            if (screen === "photos") {
+              if (!canPhotos) {
+                setError("Ajoutez un portrait, un plein pied et une photo supplémentaire.");
                 return;
               }
               setError(null);
-              setStep((value) => value + 1);
+              setScreen("universes");
+              return;
+            }
+            if (screen === "universes") {
+              setScreen("goals");
+              return;
+            }
+            if (screen === "goals") {
+              setScreen("recap");
               return;
             }
             setBusy(true);
-            void uploadAndStart()
+            void submit()
               .catch((err: unknown) => {
                 setError(err instanceof Error ? err.message : "Quelque chose n’a pas fonctionné.");
               })
               .finally(() => setBusy(false));
           }}
         >
-          {busy ? "Envoi…" : step === 4 ? "Lancer mon analyse" : "Continuer"}
+          {busy ? "Création…" : screen === "recap" ? "Créer mon Style Profile" : "Continuer"}
         </button>
       </div>
     </FitmeFlowShell>

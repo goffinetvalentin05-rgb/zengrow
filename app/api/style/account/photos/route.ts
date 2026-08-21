@@ -6,11 +6,14 @@ import { removeUserStylePhotos } from "@/src/lib/fitme/storage";
 export async function POST() {
   const auth = await requireFitmeApiUser();
   if (auth.unauthorized) return auth.unauthorized;
-  const user = auth.user;
   try {
-    await removeUserStylePhotos(user.id);
+    await removeUserStylePhotos(auth.user.id);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Impossible de supprimer les photos.", 500);
   }
+}
+
+export async function DELETE() {
+  return POST();
 }

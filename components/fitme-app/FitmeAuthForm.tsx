@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import { PRODUCT } from "@/components/fitme-landing/config";
 import { FitmeAppShell } from "@/components/fitme-app/FitmeAppShell";
 import { authErrorMessageFr } from "@/src/lib/auth-error-fr";
@@ -20,10 +21,12 @@ export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
   const next = search.get("next") || "/start";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
+  const reduce = useReducedMotion();
 
   useEffect(() => {
     void supabase.auth.getUser().then(({ data }) => {
@@ -52,7 +55,10 @@ export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
       const { data, error: signupError } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: googleRedirect() },
+        options: {
+          emailRedirectTo: googleRedirect(),
+          data: firstName.trim() ? { first_name: firstName.trim() } : undefined,
+        },
       });
       if (signupError) {
         setError(authErrorMessageFr(signupError, signupError.message));
@@ -88,16 +94,34 @@ export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
         </Link>
       }
     >
-      <div className="fitme-auth">
+      <motion.div
+        className="fitme-auth"
+        initial={reduce ? false : { opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="fitme-auth-light" aria-hidden />
         <p className="fitme-eyebrow">{PRODUCT.name}</p>
-        <h1>{mode === "login" ? "Bon retour." : "Créer un compte."}</h1>
+        <h1>{mode === "login" ? "Retrouvez votre Style Profile." : "Votre style commence ici."}</h1>
         <p className="fitme-lead">
           {mode === "login"
-            ? "Connectez-vous pour retrouver votre Style Profile."
-            : "Quelques secondes suffisent. Ensuite, on s’occupe de votre style."}
+            ? "Connectez-vous pour continuer exactement là où vous vous êtes arrêté."
+            : "Quelques photos. Une analyse. Ce qui vous va réellement."}
         </p>
 
         <form onSubmit={handleSubmit} className="fitme-field" style={{ marginTop: "1.6rem" }}>
+          {mode === "signup" ? (
+            <>
+              <label htmlFor="first-name">Prénom (optionnel)</label>
+              <input
+                id="first-name"
+                className="fitme-input"
+                autoComplete="given-name"
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+              />
+            </>
+          ) : null}
           <label htmlFor="email">E-mail</label>
           <input
             id="email"
@@ -138,7 +162,7 @@ export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
 
         {error ? <p className="fitme-error">{error}</p> : null}
         {info ? <p className="fitme-note">{info}</p> : null}
-      </div>
+      </motion.div>
     </FitmeAppShell>
   );
 }

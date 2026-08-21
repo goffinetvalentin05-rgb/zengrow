@@ -12,6 +12,7 @@ type AnalysisRow = {
   error_message: string | null;
   created_at: string;
   primary_style: string | null;
+  ai_provider?: string | null;
 };
 
 type PaymentRow = {
@@ -26,10 +27,11 @@ type PaymentRow = {
 export function AdminStyleClient() {
   const [analyses, setAnalyses] = useState<AnalysisRow[]>([]);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const [provider, setProvider] = useState("mock");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetch("/api/style/admin").then(async (response) => {
+    void fetch("/api/admin/fitme").then(async (response) => {
       const data = await response.json();
       if (!response.ok) {
         setError(data.error ?? "Accès refusé.");
@@ -37,21 +39,24 @@ export function AdminStyleClient() {
       }
       setAnalyses(data.analyses ?? []);
       setPayments(data.payments ?? []);
+      setProvider(data.provider ?? "mock");
     });
   }, []);
 
   return (
     <FitmeAppShell>
       <section className="fitme-flow" style={{ width: "min(52rem, calc(100% - 2rem))" }}>
-        <p className="fitme-eyebrow">Admin</p>
-        <h1>Analyses & paiements</h1>
+        <p className="fitme-eyebrow">Admin FITME</p>
+        <h1>Analyses</h1>
+        <p className="fitme-fine">Provider: {provider}</p>
         {error ? <p className="fitme-error">{error}</p> : null}
 
         <article className="fitme-admin">
-          <p className="fitme-eyebrow">Analyses</p>
           {analyses.map((row) => (
-            <p key={row.id} className="fitme-fine" style={{ marginTop: "0.55rem" }}>
-              {row.status} · {row.payment_status} · {row.primary_style ?? "—"} · {row.error_message ?? ""} · {row.id}
+            <p key={row.id} className="fitme-fine" style={{ marginTop: "0.7rem" }}>
+              {row.id.slice(0, 8)} · {row.user_id.slice(0, 8)} · {row.status} · {row.payment_status} ·{" "}
+              {row.ai_provider ?? provider} · {new Date(row.created_at).toLocaleString("fr-CH")} ·{" "}
+              {row.error_message ?? "—"}
             </p>
           ))}
         </article>

@@ -1,40 +1,68 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
 import { FitmeAppShell } from "@/components/fitme-app/FitmeAppShell";
+import { FitmeErrorState } from "@/components/fitme-app/FitmeErrorState";
 import { trackFitmeEvent } from "@/src/lib/fitme/analytics";
+import { apiJson } from "@/src/lib/fitme/client-api";
 import type { UnlockedStyleProfile } from "@/src/lib/style-analysis/serialize";
 
-export function StyleProfileClient({ analysisId }: { analysisId: string }) {
+function ScoreBadge({ score }: { score: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const reduce = useReducedMotion();
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    if (!inView || reduce) return;
+    const start = performance.now();
+    const frame = (now: number) => {
+      const progress = Math.min(1, (now - start) / 900);
+      setValue(Math.round(score * progress));
+      if (progress < 1) requestAnimationFrame(frame);
+    };
+    const id = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(id);
+  }, [inView, reduce, score]);
+
+  return (
+    <span ref={ref} className="fitme-report__badge">
+      {reduce || !inView ? score : value}% MATCH
+    </span>
+  );
+}
+
+export function StyleProfileClient({
+  analysisId,
+  firstName,
+}: {
+  analysisId: string;
+  firstName?: string | null;
+}) {
   const [profile, setProfile] = useState<UnlockedStyleProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openLook, setOpenLook] = useState<string | null>(null);
+  const reduce = useReducedMotion();
 
   useEffect(() => {
     trackFitmeEvent("style_profile_viewed");
-    void fetch(`/api/style/analyses/${analysisId}?view=full`)
-      .then(async (response) => {
-        const data = await response.json();
-        if (response.status === 403) {
+    void apiJson<{ profile: UnlockedStyleProfile }>(`/api/style-analysis/${analysisId}/result`)
+      .then((data) => setProfile(data.profile))
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.message.includes("débloqué")) {
           window.location.href = `/analysis/${analysisId}/preview`;
           return;
         }
-        if (!response.ok) throw new Error(data.error ?? "Impossible de charger le Style Profile.");
-        setProfile(data.profile as UnlockedStyleProfile);
-      })
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : "Erreur"));
+        setError(err instanceof Error ? err.message : "Impossible de charger le Style Profile.");
+      });
   }, [analysisId]);
 
   if (error) {
     return (
       <FitmeAppShell>
-        <section className="fitme-flow">
-          <h1>Votre Style Profile</h1>
-          <p className="fitme-error">{error}</p>
-          <button type="button" className="fitme-cta" onClick={() => window.location.reload()}>
-            Réessayer
-          </button>
-        </section>
+        <FitmeErrorState title="Style Profile indisponible." message={error} onAction={() => window.location.reload()} />
       </FitmeAppShell>
     );
   }
@@ -50,15 +78,24 @@ export function StyleProfileClient({ analysisId }: { analysisId: string }) {
   }
 
   const cover = profile.looks[0]?.url;
+  const hello = firstName || profile.firstName;
+
+  async function downloadLook(url: string, index: number) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const href = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = href;
+    link.download = `fitme-look-${index + 1}.jpg`;
+    link.click();
+    URL.revokeObjectURL(href);
+  }
 
   return (
     <FitmeAppShell>
-      <section className="fitme-flow" style={{ width: "min(40rem, calc(100% - 2rem))" }}>
+      <section className="fitme-flow fitme-profile-page">
         <p className="fitme-eyebrow">Votre Style Profile</p>
-        <h1>Votre Style Profile</h1>
-        <p className="fitme-fine">
-          Créé le {new Date(profile.createdAt).toLocaleDateString("fr-CH")}
-        </p>
+        <h1>{hello ? `${hello}, voici votre style.` : "Votre Style Profile"}</h1>
 
         <article className="fitme-report is-in" style={{ marginTop: "1.4rem" }}>
           <div className="fitme-report__glow" aria-hidden />
@@ -75,36 +112,46 @@ export function StyleProfileClient({ analysisId }: { analysisId: string }) {
             <div className="fitme-report__lead">
               <p>Top style</p>
               <strong>{profile.primaryStyle.name}</strong>
-              <span className="fitme-report__badge">{Math.round(profile.primaryStyle.score)} — match visuel</span>
+              <ScoreBadge score={Math.round(profile.primaryStyle.score)} />
               <em>{profile.primaryStyle.reason}</em>
             </div>
           </div>
 
           <div className="fitme-report__palette">
             <div>
-              <p>Style secondaire</p>
-              <strong className="fitme-display" style={{ fontSize: "1.6rem" }}>
+              <p>Secondary</p>
+              <strong className="fitme-display" style={{ fontSize: "1.7rem" }}>
                 {profile.secondaryStyle.name}
               </strong>
+              <ScoreBadge score={Math.round(profile.secondaryStyle.score)} />
               <p className="fitme-lead">{profile.secondaryStyle.reason}</p>
             </div>
           </div>
 
           <div className="fitme-report__palette">
             <div>
-              <p>Your colors</p>
-              <ul className="fitme-swatches">
-                {profile.bestColors.map((color) => (
-                  <li key={color.hex}>
+              <p>Vos couleurs.</p>
+              <p className="fitme-lead" style={{ marginTop: "0.4rem" }}>
+                Ces teintes fonctionnent particulièrement bien avec votre contraste visuel.
+              </p>
+              <ul className="fitme-report__swatches">
+                {profile.bestColors.map((color, index) => (
+                  <motion.li
+                    key={color.hex}
+                    initial={reduce ? false : { opacity: 0, y: 8 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.08 }}
+                  >
                     <i style={{ background: color.hex }} />
                     {color.name}
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
             </div>
             <div>
-              <p>Colors to use less</p>
-              <ul className="fitme-swatches">
+              <p>Moins flatteuses</p>
+              <ul className="fitme-report__swatches is-avoid">
                 {profile.lessFlatteringColors.map((color) => (
                   <li key={color.hex}>
                     <i style={{ background: color.hex }} />
@@ -116,22 +163,44 @@ export function StyleProfileClient({ analysisId }: { analysisId: string }) {
           </div>
 
           <div className="fitme-report__looks-wrap">
-            <p>Your looks</p>
-            <div className="fitme-look-grid">
-              {profile.looks.map((look) => (
-                <button key={look.id} type="button" onClick={() => setOpenLook(look.url)}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={look.url} alt={look.style} />
-                </button>
+            <p>Vos looks.</p>
+            <div className="fitme-looks-carousel">
+              {profile.looks.map((look, index) => (
+                <figure key={look.id}>
+                  <button type="button" onClick={() => setOpenLook(look.url)}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={look.url} alt={look.style} />
+                  </button>
+                  <figcaption>{look.style}</figcaption>
+                  <button type="button" className="fitme-look-download" onClick={() => void downloadLook(look.url, index)}>
+                    Télécharger
+                  </button>
+                </figure>
               ))}
             </div>
           </div>
 
           <ul className="fitme-tips">
-            {profile.notes.map((note) => (
+            {profile.notes.slice(0, 4).map((note) => (
               <li key={note}>{note}</li>
             ))}
           </ul>
+        </article>
+
+        <article className="fitme-share-card">
+          <p className="fitme-eyebrow">Partager</p>
+          <h2>Partager mon Style Profile</h2>
+          <button type="button" className="fitme-cta fitme-cta--ghost" disabled>
+            Bientôt
+          </button>
+        </article>
+
+        <article className="fitme-fitcheck">
+          <div className="fitme-fitcheck__copy">
+            <p>FitCheck</p>
+            <strong>Vous hésitez avant d’acheter ?</strong>
+            <span>Vérifiez bientôt si un vêtement correspond à votre Style Profile.</span>
+          </div>
         </article>
       </section>
 

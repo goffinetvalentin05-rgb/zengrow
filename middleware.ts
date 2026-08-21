@@ -9,6 +9,7 @@ const FITME_PROTECTED = [
   "/account",
   "/payment",
   "/admin/style",
+  "/admin/fitme",
 ];
 
 function isFitmeProtected(pathname: string) {
@@ -108,5 +109,7 @@ export const config = {
     "/payment/:path*",
     "/admin/style",
     "/admin/style/:path*",
+    "/admin/fitme",
+    "/admin/fitme/:path*",
   ],
 };

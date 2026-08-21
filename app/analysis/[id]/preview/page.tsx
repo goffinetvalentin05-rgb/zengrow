@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { PreviewClient } from "@/components/fitme-app/PreviewClient";
 import { PAYWALL_STATUSES } from "@/src/lib/fitme/constants";
@@ -14,5 +15,9 @@ export default async function PreviewPage({ params }: { params: Promise<{ id: st
     redirect(resolveFitmePath(analysis));
   }
 
-  return <PreviewClient analysisId={id} />;
+  return (
+    <Suspense>
+      <PreviewClient analysisId={id} />
+    </Suspense>
+  );
 }

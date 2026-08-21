@@ -11,11 +11,6 @@ import type {
   StyleAIProvider,
 } from "@/src/lib/ai/style-provider";
 
-const UNIVERSE_FALLBACK = [
-  { name: "Clean Minimal", hex: "#E8DFD0" },
-  { name: "Smart Casual", hex: "#1F3347" },
-];
-
 function pickPrimary(universes: string[]) {
   const first = universes.find((item) => item !== "surprise");
   if (first === "old-money") return { name: "Old Money", score: 91 };
@@ -23,17 +18,17 @@ function pickPrimary(universes: string[]) {
   if (first === "smart-casual") return { name: "Smart Casual", score: 92 };
   if (first === "relaxed") return { name: "Relaxed", score: 89 };
   if (first === "workwear") return { name: "Workwear", score: 88 };
-  return { name: "Clean Minimal", score: 93 };
+  return { name: "Clean Minimal", score: 94 };
 }
 
 function mockResult(input: AnalyzeStyleProfileInput): StyleAnalysisResult {
   const primary = pickPrimary(input.preferences.universes);
   const secondary =
     primary.name === "Clean Minimal"
-      ? { name: "Smart Casual", score: 86 }
+      ? { name: "Smart Casual", score: 88 }
       : { name: "Clean Minimal", score: 84 };
 
-  const parsed = styleAnalysisResultSchema.parse({
+  return styleAnalysisResultSchema.parse({
     primaryStyle: {
       name: primary.name,
       score: primary.score,
@@ -43,8 +38,7 @@ function mockResult(input: AnalyzeStyleProfileInput): StyleAnalysisResult {
     secondaryStyle: {
       name: secondary.name,
       score: secondary.score,
-      reason:
-        "Un second univers qui fonctionne bien visuellement et reste facile à porter au quotidien.",
+      reason: "Un second univers qui fonctionne bien visuellement et reste facile à porter au quotidien.",
     },
     bestColors: [
       { name: "Cream", hex: "#E8DFD0", reason: "Éclaire le teint sans durcir le contraste." },
@@ -60,27 +54,30 @@ function mockResult(input: AnalyzeStyleProfileInput): StyleAnalysisResult {
       { name: "Acid yellow", hex: "#E8E04A", reason: "Attire l’œil au détriment de l’équilibre." },
     ],
     notes: [
-      "Privilégiez des volumes nets et des matières mates plutôt que des pièces trop chargées.",
-      "Une base neutre (crème, marine, charcoal) simplifie vos looks tout en restant précise.",
-      "Gardez un seul point d’accent (couleur ou accessoire) pour rester cohérent.",
-      "Les coupes qui suivent votre silhouette, sans l’exagérer, vous mettent particulièrement en valeur.",
-    ],
+      "Privilégiez les neutres chauds plutôt que des pièces trop chargées.",
+      "Gardez vos tenues peu chargées : un seul point d’accent suffit.",
+      "Le contraste moyen fonctionne particulièrement bien avec votre profil visuel.",
+      "Smart casual fonctionne bien comme alternative, surtout en journée.",
+    ].slice(0, 4),
   });
+}
 
-  void UNIVERSE_FALLBACK;
-  return parsed;
+async function pause(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function createMockStyleProvider(): StyleAIProvider {
   return {
     id: "mock",
     async analyzeStyleProfile(input) {
+      await pause(1200);
       return mockResult(input);
     },
     async generateStyleLook(input: GenerateStyleLookInput): Promise<GeneratedLook> {
+      await pause(700);
       return {
-        label: input.label,
-        style: input.style,
+        label: `${input.targetStyle} — look ${input.lookIndex}`,
+        style: input.targetStyle,
         bytes: input.sourceImage.bytes,
         mimeType: input.sourceImage.mimeType || "image/jpeg",
       };

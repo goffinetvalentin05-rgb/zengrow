@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fitmeBody, fitmeDisplay } from "@/components/fitme-landing/fonts";
 import { PRODUCT, ROUTES } from "@/components/fitme-landing/config";
+import { ONBOARDING_STEPS } from "@/src/lib/fitme/constants";
 import "@/components/fitme-landing/fitme.css";
 import "./fitme-app.css";
 
@@ -13,6 +14,7 @@ export function FitmeAppShell({
 }) {
   return (
     <div className={`fitme fitme-app ${fitmeDisplay.variable} ${fitmeBody.variable}`}>
+      <div className="fitme-app-glow" aria-hidden />
       <header className="fitme-app-bar">
         <Link href={ROUTES.home} className="fitme-wordmark">
           {PRODUCT.name}
@@ -31,7 +33,7 @@ export function FitmeAppShell({
 export function FitmeFlowShell({
   children,
   step,
-  total = 4,
+  total = 3,
 }: {
   children: React.ReactNode;
   step: number;
@@ -39,12 +41,13 @@ export function FitmeFlowShell({
 }) {
   return (
     <div className={`fitme fitme-app ${fitmeDisplay.variable} ${fitmeBody.variable}`}>
+      <div className="fitme-app-glow" aria-hidden />
       <header className="fitme-app-bar">
         <Link href={ROUTES.home} className="fitme-wordmark">
           {PRODUCT.name}
         </Link>
         <span className="fitme-app-bar__link">
-          {step}/{total}
+          {String(step).padStart(2, "0")} {ONBOARDING_STEPS[step - 1]?.label ?? ""}
         </span>
       </header>
       <div className="fitme-progress" aria-hidden>

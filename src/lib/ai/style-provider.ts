@@ -28,16 +28,23 @@ export type AnalyzeStyleProfileInput = {
 
 export type GenerateStyleLookInput = {
   sourceImage: StyleImageInput;
-  style: string;
-  colorPalette: { name: string; hex: string }[];
-  label: string;
+  targetStyle: string;
+  colorProfile: { name: string; hex: string; reason?: string }[];
+  lookIndex: number;
 };
 
-export type StyleAIProvider = {
-  id: "openai" | "mock";
+export type StyleAnalysisProvider = {
   analyzeStyleProfile(input: AnalyzeStyleProfileInput): Promise<StyleAnalysisResult>;
+};
+
+export type StyleImageProvider = {
   generateStyleLook(input: GenerateStyleLookInput): Promise<GeneratedLook>;
 };
+
+export type StyleAIProvider = StyleAnalysisProvider &
+  StyleImageProvider & {
+    id: "openai" | "mock";
+  };
 
 export function getStyleAIProvider(): StyleAIProvider {
   const forced = process.env.STYLE_AI_PROVIDER?.trim().toLowerCase();

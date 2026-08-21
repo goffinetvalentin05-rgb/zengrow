@@ -11,6 +11,9 @@ export type AnalysisPublicStatus = {
   errorMessage: string | null;
   createdAt: string;
   completedAt: string | null;
+  portraitUrl: string | null;
+  photos: { type: string; url: string; storagePath: string }[];
+  looksGeneratedCount: number;
 };
 
 export type AnalysisPreview = AnalysisPublicStatus & {
@@ -18,10 +21,14 @@ export type AnalysisPreview = AnalysisPublicStatus & {
   secondaryIdentified: boolean;
   paletteReady: boolean;
   looksPending: boolean;
+  revealedColors: { hex: string }[];
+  lockedColorSlots: number;
+  lookSlots: number;
   priceLabel: string;
 };
 
 export type UnlockedStyleProfile = AnalysisPublicStatus & {
+  firstName: string | null;
   primaryStyle: StyleAnalysisResult["primaryStyle"];
   secondaryStyle: StyleAnalysisResult["secondaryStyle"];
   bestColors: StyleAnalysisResult["bestColors"];
@@ -30,7 +37,14 @@ export type UnlockedStyleProfile = AnalysisPublicStatus & {
   looks: { id: string; style: string; url: string }[];
 };
 
-export function toPublicStatus(row: StyleAnalysisRow): AnalysisPublicStatus {
+export function toPublicStatus(
+  row: StyleAnalysisRow,
+  extras?: {
+    portraitUrl?: string | null;
+    photos?: AnalysisPublicStatus["photos"];
+    looksGeneratedCount?: number;
+  },
+): AnalysisPublicStatus {
   return {
     id: row.id,
     status: row.status,
@@ -39,21 +53,35 @@ export function toPublicStatus(row: StyleAnalysisRow): AnalysisPublicStatus {
     errorMessage: row.status === "failed" ? row.error_message : null,
     createdAt: row.created_at,
     completedAt: row.completed_at,
+    portraitUrl: extras?.portraitUrl ?? null,
+    photos: extras?.photos ?? [],
+    looksGeneratedCount: extras?.looksGeneratedCount ?? 0,
   };
 }
 
-export function toPreview(row: StyleAnalysisRow): AnalysisPreview {
+export function toPreview(
+  row: StyleAnalysisRow,
+  extras?: {
+    portraitUrl?: string | null;
+    photos?: AnalysisPublicStatus["photos"];
+  },
+): AnalysisPreview {
+  const result = parseStoredResult(row);
+  const revealedColors = (result?.bestColors ?? []).slice(0, 2).map((color) => ({ hex: color.hex }));
   return {
-    ...toPublicStatus(row),
-    primaryIdentified: true,
-    secondaryIdentified: true,
-    paletteReady: true,
+    ...toPublicStatus(row, extras),
+    primaryIdentified: Boolean(result) || row.status === "preview_ready" || row.status === "awaiting_payment",
+    secondaryIdentified: Boolean(result) || row.status === "preview_ready" || row.status === "awaiting_payment",
+    paletteReady: Boolean(result) || row.status === "preview_ready" || row.status === "awaiting_payment",
     looksPending: true,
+    revealedColors,
+    lockedColorSlots: Math.max(0, 6 - revealedColors.length),
+    lookSlots: 3,
     priceLabel: STYLE_PROFILE_PRICE.label,
   };
 }
 
-export function parseStoredResult(row: StyleAnalysisRow): StyleAnalysisResult | null {
+export function parseStoredResult(row: Pick<StyleAnalysisRow, "style_notes">): StyleAnalysisResult | null {
   const notesPayload = row.style_notes as { result?: unknown; notes?: unknown } | null;
   if (notesPayload && typeof notesPayload === "object" && "result" in notesPayload) {
     const fromFull = styleAnalysisResultSchema.safeParse(notesPayload.result);
@@ -62,6 +90,17 @@ export function parseStoredResult(row: StyleAnalysisRow): StyleAnalysisResult | 
   return null;
 }
 
-export function isFullyUnlockedProfile(row: StyleAnalysisRow) {
+export function isFullyUnlockedProfile(row: Pick<StyleAnalysisRow, "is_unlocked" | "payment_status" | "status">) {
   return row.is_unlocked === true && row.payment_status === "paid" && row.status === "completed";
+}
+
+export function previewLeaksResult(payload: unknown) {
+  const text = JSON.stringify(payload).toLowerCase();
+  return (
+    text.includes("primarystyle") ||
+    text.includes("secondarystyle") ||
+    text.includes("bestcolors") ||
+    text.includes("stylenotes") ||
+    text.includes("lessflattering")
+  );
 }
