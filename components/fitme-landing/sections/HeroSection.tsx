@@ -13,9 +13,8 @@ export function HeroSection() {
           {getSocialProofBadge()}
         </p>
         <h1 className="fitme-hero__title">
-          <span className="fitme-hero__line">Le style que vous&nbsp;aimez</span>
-          <span className="fitme-hero__line">n’est pas forcément</span>
-          <span className="fitme-hero__line">celui qui vous va.</span>
+          <span className="fitme-hero__line">Ce qui va aux autres</span>
+          <span className="fitme-hero__line">ne vous va pas forcément.</span>
         </h1>
         <p className="fitme-hero__lead">
           Découvrez les styles et les couleurs qui vous mettent vraiment en valeur.

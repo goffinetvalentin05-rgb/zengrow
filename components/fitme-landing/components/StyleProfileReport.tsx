@@ -68,11 +68,11 @@ export function StyleProfileReport() {
         <div className="fitme-report__hero">
           <Rise active={active} delay={0.22} className="fitme-report__cover">
             <Image
-              src={IMAGES.cleanMinimal}
+              src={IMAGES.profileClean}
               alt={`${DEMO_PROFILE.topStyle} — look principal`}
-              width={640}
-              height={800}
-              sizes="(max-width: 768px) 92vw, 420px"
+              width={720}
+              height={960}
+              sizes="(max-width: 768px) 92vw, 380px"
             />
           </Rise>
 
@@ -82,7 +82,7 @@ export function StyleProfileReport() {
             <span className="fitme-report__badge">{DEMO_PROFILE.topMatch}% match</span>
             <em>{DEMO_PROFILE.topNote}</em>
             <small>
-              Secondary · {DEMO_PROFILE.secondaryStyle} {DEMO_PROFILE.secondaryMatch}%
+              Secondary · {DEMO_PROFILE.secondaryStyle} · {DEMO_PROFILE.secondaryMatch}%
             </small>
           </Rise>
         </div>
@@ -123,7 +123,7 @@ export function StyleProfileReport() {
         </Rise>
 
         <div className="fitme-report__looks-wrap">
-          <p>Your looks</p>
+          <p>Votre style, sous plusieurs angles</p>
           <div className="fitme-report__looks">
             {DEMO_PROFILE.looks.map((look, index) => (
               <motion.figure
@@ -132,7 +132,7 @@ export function StyleProfileReport() {
                 animate={active ? { opacity: 1, y: 0 } : undefined}
                 transition={{ duration: 0.5, delay: 1.18 + index * 0.09, ease }}
               >
-                <Image src={look.src} alt={look.label} width={280} height={360} />
+                <Image src={look.src} alt={look.label} width={480} height={640} />
                 <figcaption>{look.label}</figcaption>
               </motion.figure>
             ))}

@@ -20,7 +20,7 @@ export const SEO = {
   title: `${PRODUCT.name} — Découvrez le style qui vous va vraiment`,
   description:
     "Découvrez les styles et les couleurs qui vous mettent réellement en valeur. Visualisez plusieurs looks directement sur vous.",
-  ogImage: "/fitme/hero-fashion-scan.png",
+  ogImage: "/fitme/hero-flock-desktop.png",
 } as const;
 
 /** Placeholder until a live counter exists. Keep this the single source of truth. */
@@ -54,10 +54,16 @@ export const IMAGES = {
   colorLess: "/fitme/portrait-color-less.png",
   fitcheckBuy: "/fitme/fitcheck-jacket.png",
   fitcheckSkip: "/fitme/fitcheck-skip-shirt.png",
+  profileClean: "/fitme/profile-vibe-clean-minimal.png",
+  profileSmart: "/fitme/profile-vibe-smart-casual.png",
+  profileOldMoney: "/fitme/profile-vibe-old-money.png",
+  profileStreet: "/fitme/profile-vibe-streetwear.png",
   campaignDesktop: "/fitme/campaign-hero-desktop.png",
   campaignMobile: "/fitme/campaign-hero-mobile.png",
   heroEditorial: "/fitme/hero-editorial.png",
   heroScan: "/fitme/hero-fashion-scan.png",
+  heroFitmeDesktop: "/fitme/hero-flock-desktop.png",
+  heroFitmeMobile: "/fitme/hero-flock-mobile.png",
 } as const;
 
 export const BEST_COLORS = [
@@ -82,10 +88,10 @@ export const DEMO_PROFILE = {
   secondaryStyle: "Smart Casual",
   secondaryMatch: 88,
   looks: [
-    { src: IMAGES.cleanMinimal, label: "Clean Minimal" },
-    { src: IMAGES.smartCasual, label: "Smart Casual" },
-    { src: IMAGES.oldMoney, label: "Old Money" },
-    { src: IMAGES.streetwear, label: "Streetwear" },
+    { src: IMAGES.profileClean, label: "Clean Minimal" },
+    { src: IMAGES.profileSmart, label: "Smart Casual" },
+    { src: IMAGES.profileOldMoney, label: "Old Money" },
+    { src: IMAGES.profileStreet, label: "Streetwear" },
   ],
 } as const;
 

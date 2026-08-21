@@ -44,7 +44,9 @@ export function OfferSection() {
 
       <div className="fitme-final">
         <div className="fitme-final__wash" aria-hidden />
+        <div className="fitme-final__vignette" aria-hidden />
         <div className="fitme-final__grain" aria-hidden />
+        <div className="fitme-final__fade" aria-hidden />
         <Container>
           <motion.div
             className="fitme-final__copy"
@@ -60,7 +62,7 @@ export function OfferSection() {
               Créez votre Style Profile et découvrez les univers et les couleurs
               qui vous mettent le plus en valeur.
             </p>
-            <CtaButton className="fitme-cta--on-warm">{CTA.primaryArrow}</CtaButton>
+            <CtaButton className="fitme-cta--on-dark">{CTA.primary}</CtaButton>
             <p className="fitme-fine">{CTA.noSubscription}</p>
             <p className="fitme-final__note">{CTA.paywallNote}</p>
           </motion.div>
