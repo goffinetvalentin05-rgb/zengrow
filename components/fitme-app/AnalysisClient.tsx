@@ -20,6 +20,9 @@ type StatusPayload = {
   };
 };
 
+const POLL_MS = 2000;
+const STUCK_MS = 190_000;
+
 function stageFromStatus(status: string, startedAt: number) {
   if (status === "queued") return 0;
   if (status === "analyzing") {
@@ -32,86 +35,129 @@ function stageFromStatus(status: string, startedAt: number) {
   return 3;
 }
 
+function isTerminalPreview(status: string) {
+  return status === "preview_ready" || status === "awaiting_payment";
+}
+
+function isTerminalPaid(status: string) {
+  return status === "paid" || status === "generating_looks" || status === "completed";
+}
+
 export function AnalysisClient({ analysisId }: { analysisId: string }) {
   const router = useRouter();
   const reduce = useReducedMotion();
   const [status, setStatus] = useState("queued");
   const [error, setError] = useState<string | null>(null);
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
-  const [startedAt] = useState(() => Date.now());
+  const [startedAt, setStartedAt] = useState(() => Date.now());
+  const [runId, setRunId] = useState(0);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    let interval: number | undefined;
     let launched = false;
+    let reclaimed = false;
+    const effectStarted = Date.now();
 
-    async function poll() {
+    async function poll(): Promise<"stop" | "poll"> {
       try {
         const data = await apiJson<StatusPayload>(`/api/style-analysis/${analysisId}/status`);
-        if (cancelled) return;
+        if (cancelled) return "stop";
         const current = data.analysis?.status ?? "queued";
         setStatus(current);
         if (data.analysis?.portraitUrl) setPortraitUrl(data.analysis.portraitUrl);
         if (data.analysis?.errorMessage) setError(data.analysis.errorMessage);
 
-        if (!launched && (current === "queued" || current === "failed")) {
+        if (isTerminalPreview(current)) {
+          trackFitmeEvent("analysis_completed");
+          router.replace(`/analysis/${analysisId}/preview`);
+          return "stop";
+        }
+        if (isTerminalPaid(current)) {
+          router.replace(
+            current === "completed" && data.analysis?.isUnlocked
+              ? `/style-profile/${analysisId}`
+              : `/payment/success?analysis_id=${analysisId}`,
+          );
+          return "stop";
+        }
+        if (current === "failed") {
+          return "stop";
+        }
+        if (
+          (current === "queued" || current === "analyzing") &&
+          Date.now() - effectStarted > STUCK_MS
+        ) {
+          return "stop";
+        }
+
+        if (!launched) {
           launched = true;
           void fetch("/api/style-analysis/start", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ analysisId }),
           });
+        } else if (
+          !reclaimed &&
+          (current === "queued" || current === "analyzing") &&
+          Date.now() - effectStarted > 92_000
+        ) {
+          reclaimed = true;
+          void fetch("/api/style-analysis/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ analysisId }),
+          });
         }
-
-        if (current === "preview_ready" || current === "awaiting_payment") {
-          trackFitmeEvent("analysis_completed");
-          router.replace(`/analysis/${analysisId}/preview`);
-          return;
-        }
-        if (current === "paid" || current === "generating_looks" || current === "completed") {
-          router.replace(
-            current === "completed" && data.analysis?.isUnlocked
-              ? `/style-profile/${analysisId}`
-              : `/payment/success?analysis_id=${analysisId}`,
-          );
-        }
+        return "poll";
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : "Impossible de suivre l’analyse.");
+        return "poll";
       }
     }
 
-    void poll();
-    const interval = window.setInterval(() => {
-      void poll();
-      setTick((value) => value + 1);
-    }, 2200);
+    void poll().then((state) => {
+      if (cancelled || state === "stop") return;
+      interval = window.setInterval(() => {
+        void poll().then((next) => {
+          if (next === "stop" && interval) window.clearInterval(interval);
+        });
+        setTick((value) => value + 1);
+      }, POLL_MS);
+    });
+
     return () => {
       cancelled = true;
-      window.clearInterval(interval);
+      if (interval) window.clearInterval(interval);
     };
-  }, [analysisId, router]);
+  }, [analysisId, router, runId]);
 
+  const stuck = (status === "queued" || status === "analyzing") && Date.now() - startedAt > STUCK_MS;
   const stage = stageFromStatus(status, startedAt);
   const label = status === "failed" ? "On n’a pas réussi à terminer votre analyse." : ANALYSIS_STAGE_COPY[stage];
   const chips = useMemo(() => STYLE_UNIVERSES.slice(0, 4 + (tick % 3)), [tick]);
 
-  async function retry() {
+  function retry() {
     setError(null);
     setStatus("queued");
-    await fetch("/api/style-analysis/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ analysisId }),
-    });
+    setStartedAt(Date.now());
+    setRunId((value) => value + 1);
   }
 
-  if (status === "failed") {
+  if (status === "failed" || stuck) {
     return (
       <FitmeAppShell>
         <FitmeErrorState
           title="On n’a pas réussi à terminer votre analyse."
-          message={error ?? "Réessayez. Vos photos sont toujours là."}
-          onAction={() => void retry()}
+          message={
+            stuck
+              ? "L’analyse a pris trop de temps. Réessayez."
+              : (error ?? "Réessayez. Vos photos sont toujours là.")
+          }
+          actionLabel="Réessayer l’analyse"
+          onAction={() => retry()}
         />
       </FitmeAppShell>
     );

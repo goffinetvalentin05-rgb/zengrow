@@ -11,7 +11,7 @@ import type {
   StyleImageInput,
 } from "@/src/lib/ai/style-provider";
 
-const VISION_TIMEOUT_MS = 90_000;
+const VISION_TIMEOUT_MS = 75_000;
 const IMAGE_TIMEOUT_MS = 90_000;
 const MAX_VISION_IMAGES = 4;
 
@@ -182,7 +182,7 @@ export function createOpenAIStyleProvider(): StyleAIProvider {
               { role: "user", content: userContent },
             ],
           },
-          { timeout: VISION_TIMEOUT_MS, maxRetries: 0 },
+          { timeout: VISION_TIMEOUT_MS, maxRetries: 0, signal: AbortSignal.timeout(VISION_TIMEOUT_MS) },
         );
         raw = completion.choices[0]?.message?.content?.trim() || "";
         if (!raw) throw new StyleAIError("invalid_json", "Réponse IA vide.");
@@ -227,7 +227,7 @@ export function createOpenAIStyleProvider(): StyleAIProvider {
                 },
               ],
             },
-            { timeout: VISION_TIMEOUT_MS, maxRetries: 0 },
+            { timeout: VISION_TIMEOUT_MS, maxRetries: 0, signal: AbortSignal.timeout(VISION_TIMEOUT_MS) },
           );
           const repaired = repair.choices[0]?.message?.content?.trim() || "";
           if (!repaired) throw new StyleAIError("invalid_json", "Correction JSON vide.");

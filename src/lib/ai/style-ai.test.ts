@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { classifyStyleAIError, StyleAIError } from "@/src/lib/ai/style-ai-errors";
 import { getStyleImageModel, getStyleVisionModel } from "@/src/lib/ai/openai";
 import { isFitmeDevUnlockEnabled } from "@/src/lib/fitme/dev-unlock";
-import { pickLookReferences } from "@/src/lib/style-analysis/pipeline";
+import { pickLookReferences, ANALYSIS_JOB_TIMEOUT_MS } from "@/src/lib/style-analysis/pipeline";
 
 describe("classifyStyleAIError", () => {
   it("keeps StyleAIError codes", () => {
@@ -43,6 +43,12 @@ describe("isFitmeDevUnlockEnabled", () => {
 
   it("is enabled in local development", () => {
     expect(isFitmeDevUnlockEnabled({ NODE_ENV: "development" })).toBe(true);
+  });
+});
+
+describe("analysis job timeout", () => {
+  it("caps the pre-payment pipeline at 90 seconds", () => {
+    expect(ANALYSIS_JOB_TIMEOUT_MS).toBe(90_000);
   });
 });
 

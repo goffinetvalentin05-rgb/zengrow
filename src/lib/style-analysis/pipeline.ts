@@ -8,15 +8,37 @@ import { styleAnalysisResultSchema, stylePreferencesSchema, type StyleAnalysisRe
 import { parseStoredResult } from "@/src/lib/style-analysis/serialize";
 
 const SOURCE_TYPES = ["portrait", "full_body", "extra"] as const;
+export const ANALYSIS_JOB_TIMEOUT_MS = 90_000;
+const ANALYZING_STALE_MS = 90_000;
+
+function logAnalysis(step: string, payload: Record<string, unknown>) {
+  console.info(`[fitme-analysis] ${step}`, payload);
+}
+
+function isStale(updatedAt: string, staleMs = ANALYZING_STALE_MS) {
+  return Date.now() - new Date(updatedAt).getTime() > staleMs;
+}
+
+async function withDeadline<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(new StyleAIError("timeout", `Analysis deadline exceeded after ${ms}ms`));
+        }, ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 function mimeFromPath(path: string) {
   if (path.endsWith(".png")) return "image/png";
   if (path.endsWith(".webp")) return "image/webp";
   return "image/jpeg";
-}
-
-function isStale(updatedAt: string, minutes = 4) {
-  return Date.now() - new Date(updatedAt).getTime() > minutes * 60 * 1000;
 }
 
 async function downloadSourceImages(analysis: StyleAnalysisRow): Promise<StyleImageInput[]> {
@@ -72,7 +94,7 @@ export function pickLookReferences(images: StyleImageInput[]) {
 
 async function persistAnalysisResult(analysisId: string, result: StyleAnalysisResult, providerId: string) {
   const admin = createAdminClient();
-  await admin
+  const { error } = await admin
     .from("style_analyses")
     .update({
       primary_style: result.primaryStyle.name,
@@ -98,6 +120,9 @@ async function persistAnalysisResult(analysisId: string, result: StyleAnalysisRe
       ai_provider: providerId,
     })
     .eq("id", analysisId);
+  if (error) {
+    throw new StyleAIError("unknown", error.message);
+  }
 }
 
 async function markFailed(analysisId: string, error: unknown) {
@@ -132,7 +157,7 @@ async function claimTextAnalysis(analysisId: string) {
   if (row.status === "analyzing" && !stale) return { row, claimed: false };
 
   const allowed = stale ? ["uploaded", "queued", "failed", "analyzing"] : ["uploaded", "queued", "failed"];
-  const { data: claimed } = await admin
+  const { data: claimed, error } = await admin
     .from("style_analyses")
     .update({ status: "analyzing", error_message: null })
     .eq("id", analysisId)
@@ -140,34 +165,113 @@ async function claimTextAnalysis(analysisId: string) {
     .select("*")
     .maybeSingle();
 
+  if (error) {
+    throw new StyleAIError("unknown", error.message);
+  }
+
   return { row: (claimed as StyleAnalysisRow | null) ?? row, claimed: Boolean(claimed) };
 }
 
 export async function analyzeStyleProfileJob(analysisId: string) {
-  const { row, claimed } = await claimTextAnalysis(analysisId);
-  if (!claimed) {
-    return {
-      ok: true as const,
-      alreadyComplete: ["preview_ready", "awaiting_payment", "paid", "generating_looks", "completed"].includes(
-        row.status,
-      ),
-    };
+  const started = Date.now();
+  if (process.env.NODE_ENV !== "production") {
+    logAnalysis("start", {
+      analysisId,
+      STYLE_AI_PROVIDER: process.env.STYLE_AI_PROVIDER ?? "mock",
+      STYLE_VISION_MODEL: process.env.STYLE_VISION_MODEL?.trim() || "gpt-4o",
+    });
+  } else {
+    logAnalysis("start", { analysisId });
   }
 
   try {
-    const images = await downloadSourceImages(row);
-    const preferences = stylePreferencesSchema.catch({ universes: [] }).parse(row.preferences ?? {});
-    const provider = getStyleAIProvider();
-    const result = styleAnalysisResultSchema.parse(
-      await provider.analyzeStyleProfile({
-        images,
-        preferences,
-      }),
+    const { row, claimed } = await claimTextAnalysis(analysisId);
+    if (!claimed) {
+      logAnalysis("start", {
+        analysisId,
+        status: row.status,
+        skipped: true,
+        durationMs: Date.now() - started,
+      });
+      return {
+        ok: true as const,
+        alreadyComplete: ["preview_ready", "awaiting_payment", "paid", "generating_looks", "completed"].includes(
+          row.status,
+        ),
+      };
+    }
+
+    await withDeadline(
+      (async () => {
+        const images = await downloadSourceImages(row);
+        logAnalysis("photos_loaded", {
+          analysisId,
+          status: "analyzing",
+          durationMs: Date.now() - started,
+        });
+
+        const preferences = stylePreferencesSchema.catch({ universes: [] }).parse(row.preferences ?? {});
+        const provider = getStyleAIProvider();
+
+        logAnalysis("vision_start", {
+          analysisId,
+          status: "analyzing",
+          provider: provider.id,
+          durationMs: Date.now() - started,
+        });
+
+        let parsed;
+        try {
+          parsed = styleAnalysisResultSchema.parse(
+            await provider.analyzeStyleProfile({
+              images,
+              preferences,
+            }),
+          );
+        } catch (error) {
+          logAnalysis("vision_failed", {
+            analysisId,
+            status: "analyzing",
+            durationMs: Date.now() - started,
+            code: classifyStyleAIError(error).code,
+          });
+          throw error;
+        }
+
+        logAnalysis("vision_success", {
+          analysisId,
+          status: "analyzing",
+          provider: provider.id,
+          durationMs: Date.now() - started,
+        });
+        logAnalysis("result_validated", {
+          analysisId,
+          status: "analyzing",
+          durationMs: Date.now() - started,
+        });
+        logAnalysis("db_update_preview_ready", {
+          analysisId,
+          status: "analyzing",
+          durationMs: Date.now() - started,
+        });
+        await persistAnalysisResult(analysisId, parsed, provider.id);
+        logAnalysis("completed", {
+          analysisId,
+          status: "preview_ready",
+          durationMs: Date.now() - started,
+        });
+      })(),
+      ANALYSIS_JOB_TIMEOUT_MS,
     );
-    await persistAnalysisResult(analysisId, result, provider.id);
     return { ok: true as const, alreadyComplete: false };
   } catch (error) {
     const classified = await markFailed(analysisId, error);
+    logAnalysis("completed", {
+      analysisId,
+      status: "failed",
+      durationMs: Date.now() - started,
+      code: classified.code,
+    });
     return { ok: false as const, error: classified.user };
   }
 }

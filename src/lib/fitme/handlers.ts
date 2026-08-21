@@ -79,6 +79,11 @@ export async function handleCreateAnalysis(request: Request) {
   return NextResponse.json({ analysisId: data.id, resumed: false, status: "draft" });
 }
 
+function continueStyleAnalysis(analysisId: string) {
+  const job = analyzeStyleProfileJob(analysisId);
+  after(() => job);
+}
+
 export async function handleStartAnalysis(request: Request, analysisId?: string) {
   const auth = await requireFitmeApiUser();
   if (auth.unauthorized) return auth.unauthorized;
@@ -95,9 +100,7 @@ export async function handleStartAnalysis(request: Request, analysisId?: string)
   if (!analysis) return jsonError("Analyse introuvable.", 404);
 
   if (["analyzing", "queued"].includes(analysis.status)) {
-    after(() => {
-      void analyzeStyleProfileJob(id);
-    });
+    continueStyleAnalysis(id);
     return NextResponse.json({ ok: true, status: analysis.status, alreadyStarted: true });
   }
   if (["preview_ready", "awaiting_payment", "paid", "generating_looks", "completed"].includes(analysis.status)) {
@@ -114,9 +117,7 @@ export async function handleStartAnalysis(request: Request, analysisId?: string)
   await admin.from("style_analyses").update({ status: "queued" }).eq("id", id).eq("user_id", user.id);
   await admin.from("profiles").update({ onboarding_completed: true }).eq("id", user.id);
 
-  after(() => {
-    void analyzeStyleProfileJob(id);
-  });
+  continueStyleAnalysis(id);
 
   return NextResponse.json({ ok: true, status: "queued" });
 }
