@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/src/lib/utils";
 import { CTA, ROUTES } from "./config";
+import { trackFitmeEvent } from "@/src/lib/fitme/analytics";
 
 export function Container({
   className,
@@ -60,7 +61,7 @@ export function ScrollReveal({
 }
 
 export function CtaButton({
-  href = ROUTES.discover,
+  href = ROUTES.start,
   children = CTA.primaryArrow,
   className,
   compact = false,
@@ -75,6 +76,11 @@ export function CtaButton({
   return (
     <Link
       href={href}
+      onClick={() => {
+        if (href === ROUTES.start) {
+          trackFitmeEvent("landing_cta_clicked");
+        }
+      }}
       className={cn(
         "fitme-cta",
         compact && "fitme-cta--compact",

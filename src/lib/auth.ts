@@ -25,7 +25,7 @@ export async function requireUser() {
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user) {
-    redirect("/login");
+    redirect("/pro/login");
   }
 
   return data.user;
@@ -50,7 +50,7 @@ export async function requireRestaurantSession(): Promise<RestaurantSession> {
     .maybeSingle();
 
   if (!restaurant) {
-    redirect("/signup");
+    redirect("/pro/signup");
   }
 
   const syncedRestaurant = await expireTrialIfNeeded(supabase, restaurant);

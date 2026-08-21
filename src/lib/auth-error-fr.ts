@@ -8,6 +8,9 @@ export function authErrorMessageFr(error: AuthError | null | undefined, fallback
   const code = error.code ?? "";
   const msg = error.message.toLowerCase();
 
+  if (code === "invalid_credentials" || msg.includes("invalid login") || msg.includes("invalid credentials")) {
+    return "E-mail ou mot de passe incorrect.";
+  }
   if (code === "over_email_send_rate_limit" || msg.includes("rate limit") || msg.includes("too many")) {
     return "Trop de demandes. Patientez quelques minutes avant de réessayer.";
   }

@@ -5,8 +5,10 @@ export const PRODUCT = {
 
 export const ROUTES = {
   home: "/",
-  discover: "/discover",
+  discover: "/start",
+  start: "/start",
   login: "/login",
+  signup: "/signup",
   privacy: "/confidentialite",
   terms: "/conditions",
   contact: "mailto:hello@fitme.ch",

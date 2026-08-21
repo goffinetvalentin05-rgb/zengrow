@@ -867,7 +867,7 @@ export default function SettingsForm({
                   className="min-h-11"
                   onClick={async () => {
                     await supabase.auth.signOut();
-                    router.push("/login");
+                    router.push("/pro/login");
                   }}
                 >
                   Se déconnecter

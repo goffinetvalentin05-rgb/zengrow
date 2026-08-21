@@ -2,6 +2,19 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isOwnerEmail } from "@/src/lib/access";
 
+const FITME_PROTECTED = [
+  "/onboarding",
+  "/analysis",
+  "/style-profile",
+  "/account",
+  "/payment",
+  "/admin/style",
+];
+
+function isFitmeProtected(pathname: string) {
+  return FITME_PROTECTED.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+}
+
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
     request: {
@@ -32,11 +45,27 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  const pathname = request.nextUrl.pathname;
+  const isRestaurantPath = pathname.startsWith("/dashboard") || pathname === "/billing" || pathname.startsWith("/billing/");
+
+  if (isFitmeProtected(pathname)) {
+    if (!user) {
+      const signup = new URL("/signup", request.url);
+      signup.searchParams.set("next", pathname);
+      return NextResponse.redirect(signup);
+    }
+    return response;
   }
 
-  const isBillingPage = request.nextUrl.pathname.startsWith("/billing");
+  if (!isRestaurantPath) {
+    return response;
+  }
+
+  if (!user) {
+    return NextResponse.redirect(new URL("/pro/login", request.url));
+  }
+
+  const isBillingPage = pathname.startsWith("/billing");
 
   const { data: restaurant } = await supabase
     .from("restaurants")
@@ -66,5 +95,18 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/billing"],
+  matcher: [
+    "/dashboard/:path*",
+    "/billing",
+    "/onboarding",
+    "/onboarding/:path*",
+    "/analysis/:path*",
+    "/style-profile",
+    "/style-profile/:path*",
+    "/account",
+    "/account/:path*",
+    "/payment/:path*",
+    "/admin/style",
+    "/admin/style/:path*",
+  ],
 };
