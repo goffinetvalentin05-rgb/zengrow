@@ -11,8 +11,10 @@ export function HeroBackdrop() {
 
   useEffect(() => {
     const stage = stageRef.current;
-    const hero = stage?.closest(".fitme-hero");
-    if (!stage || !hero || reduce) return;
+    if (!stage || reduce) return;
+
+    const hero = stage.closest(".fitme-hero");
+    if (!(hero instanceof HTMLElement)) return;
 
     const finePointer = window.matchMedia("(pointer: fine)");
     if (!finePointer.matches) return;
@@ -27,10 +29,12 @@ export function HeroBackdrop() {
       stage.style.setProperty("--hy", targetY.toFixed(3));
     };
 
-    const onMove = (event: PointerEvent) => {
+    const onMove = (event: Event) => {
+      if (!("clientX" in event) || !("clientY" in event)) return;
+      const { clientX, clientY } = event as MouseEvent;
       const rect = hero.getBoundingClientRect();
-      targetX = (event.clientX - rect.left) / rect.width - 0.5;
-      targetY = (event.clientY - rect.top) / rect.height - 0.5;
+      targetX = (clientX - rect.left) / rect.width - 0.5;
+      targetY = (clientY - rect.top) / rect.height - 0.5;
       if (!frame) frame = window.requestAnimationFrame(apply);
     };
 
