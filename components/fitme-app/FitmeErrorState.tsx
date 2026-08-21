@@ -19,7 +19,7 @@ export function FitmeErrorState({
   const reduce = useReducedMotion();
 
   return (
-    <motion.section
+    <motion.article
       className="fitme-error-screen"
       initial={reduce ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -37,6 +37,6 @@ export function FitmeErrorState({
           {actionLabel}
         </button>
       )}
-    </motion.section>
+    </motion.article>
   );
 }

@@ -15,6 +15,7 @@ export function FitmeAppShell({
   return (
     <div className={`fitme fitme-app ${fitmeDisplay.variable} ${fitmeBody.variable}`}>
       <div className="fitme-app-glow" aria-hidden />
+      <div className="fitme-app-glow fitme-app-glow--left" aria-hidden />
       <header className="fitme-app-bar">
         <Link href={ROUTES.home} className="fitme-wordmark">
           {PRODUCT.name}
@@ -42,12 +43,14 @@ export function FitmeFlowShell({
   return (
     <div className={`fitme fitme-app ${fitmeDisplay.variable} ${fitmeBody.variable}`}>
       <div className="fitme-app-glow" aria-hidden />
+      <div className="fitme-app-glow fitme-app-glow--left" aria-hidden />
       <header className="fitme-app-bar">
         <Link href={ROUTES.home} className="fitme-wordmark">
           {PRODUCT.name}
         </Link>
-        <span className="fitme-app-bar__link">
-          {String(step).padStart(2, "0")} {ONBOARDING_STEPS[step - 1]?.label ?? ""}
+        <span className="fitme-step-label">
+          <em>{String(step).padStart(2, "0")}</em>
+          {ONBOARDING_STEPS[step - 1]?.label ?? ""}
         </span>
       </header>
       <div className="fitme-progress" aria-hidden>
@@ -55,6 +58,13 @@ export function FitmeFlowShell({
           <i key={index} className={index < step ? "is-on" : undefined} />
         ))}
       </div>
+      <ol className="fitme-progress-legend">
+        {ONBOARDING_STEPS.map((item, index) => (
+          <li key={item.id} className={index < step ? "is-on" : undefined}>
+            {item.label}
+          </li>
+        ))}
+      </ol>
       <main className="fitme-flow">{children}</main>
     </div>
   );

@@ -16,7 +16,10 @@ function ScoreBadge({ score }: { score: number }) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    if (!inView || reduce) return;
+    if (!inView || reduce) {
+      if (inView) setValue(score);
+      return;
+    }
     const start = performance.now();
     const frame = (now: number) => {
       const progress = Math.min(1, (now - start) / 900);
@@ -29,8 +32,23 @@ function ScoreBadge({ score }: { score: number }) {
 
   return (
     <span ref={ref} className="fitme-report__badge">
-      {reduce || !inView ? score : value}% MATCH
+      {reduce || !inView ? score : value}%
     </span>
+  );
+}
+
+function RevealSection({ children, className }: { children: React.ReactNode; className?: string }) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      className={className}
+      initial={reduce ? false : { opacity: 0, y: 22 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-48px" }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -70,8 +88,14 @@ export function StyleProfileClient({
   if (!profile) {
     return (
       <FitmeAppShell>
-        <section className="fitme-flow">
-          <p className="fitme-lead">Chargement de votre Style Profile…</p>
+        <section className="fitme-flow fitme-profile-page">
+          <p className="fitme-eyebrow">Style Profile</p>
+          <div className="fitme-skeleton" style={{ width: "70%", height: "2.2rem" }} />
+          <div className="fitme-skeleton" style={{ width: "92%", marginTop: "1.1rem" }} />
+          <div className="fitme-skeleton" style={{ width: "64%" }} />
+          <div className="fitme-loading-line" aria-hidden>
+            <span />
+          </div>
         </section>
       </FitmeAppShell>
     );
@@ -95,44 +119,47 @@ export function StyleProfileClient({
     <FitmeAppShell>
       <section className="fitme-flow fitme-profile-page">
         <p className="fitme-eyebrow">Votre Style Profile</p>
-        <h1>{hello ? `${hello}, voici votre style.` : "Votre Style Profile"}</h1>
+        <h1>{hello ? `${hello}, voici ce qui vous va.` : "Votre Style Profile"}</h1>
+        <p className="fitme-lead">Un rapport personnel : vos univers, vos couleurs, vos looks.</p>
 
-        <article className="fitme-report is-in" style={{ marginTop: "1.4rem" }}>
+        <article className="fitme-report is-in" style={{ marginTop: "1.55rem" }}>
           <div className="fitme-report__glow" aria-hidden />
-          <header className="fitme-report__head">
-            <p>Top style</p>
-          </header>
-          <div className="fitme-report__hero">
-            {cover ? (
-              <div className="fitme-report__cover">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={cover} alt={profile.primaryStyle.name} />
-              </div>
-            ) : null}
-            <div className="fitme-report__lead">
+          <RevealSection>
+            <header className="fitme-report__head">
               <p>Top style</p>
-              <strong>{profile.primaryStyle.name}</strong>
-              <ScoreBadge score={Math.round(profile.primaryStyle.score)} />
-              <em>{profile.primaryStyle.reason}</em>
+            </header>
+            <div className="fitme-report__hero">
+              {cover ? (
+                <div className="fitme-report__cover">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={cover} alt={profile.primaryStyle.name} />
+                </div>
+              ) : null}
+              <div className="fitme-report__lead">
+                <p>Style principal</p>
+                <strong>{profile.primaryStyle.name}</strong>
+                <ScoreBadge score={Math.round(profile.primaryStyle.score)} />
+                <em>{profile.primaryStyle.reason}</em>
+              </div>
             </div>
-          </div>
+          </RevealSection>
 
-          <div className="fitme-report__palette">
+          <RevealSection className="fitme-report__palette">
             <div>
-              <p>Secondary</p>
+              <p>Style secondaire</p>
               <strong className="fitme-display" style={{ fontSize: "1.7rem" }}>
                 {profile.secondaryStyle.name}
               </strong>
               <ScoreBadge score={Math.round(profile.secondaryStyle.score)} />
               <p className="fitme-lead">{profile.secondaryStyle.reason}</p>
             </div>
-          </div>
+          </RevealSection>
 
-          <div className="fitme-report__palette">
+          <RevealSection className="fitme-report__palette">
             <div>
-              <p>Vos couleurs.</p>
+              <p>Couleurs qui vous vont</p>
               <p className="fitme-lead" style={{ marginTop: "0.4rem" }}>
-                Ces teintes fonctionnent particulièrement bien avec votre contraste visuel.
+                Ces teintes travaillent avec votre contraste, plutôt que contre lui.
               </p>
               <ul className="fitme-report__swatches">
                 {profile.bestColors.map((color, index) => (
@@ -150,7 +177,7 @@ export function StyleProfileClient({
               </ul>
             </div>
             <div>
-              <p>Moins flatteuses</p>
+              <p>Couleurs à éviter</p>
               <ul className="fitme-report__swatches is-avoid">
                 {profile.lessFlatteringColors.map((color) => (
                   <li key={color.hex}>
@@ -160,10 +187,10 @@ export function StyleProfileClient({
                 ))}
               </ul>
             </div>
-          </div>
+          </RevealSection>
 
-          <div className="fitme-report__looks-wrap">
-            <p>Vos looks.</p>
+          <RevealSection className="fitme-report__looks-wrap">
+            <p>Vos looks</p>
             <div className="fitme-looks-carousel">
               {profile.looks.map((look, index) => (
                 <figure key={look.id}>
@@ -178,30 +205,42 @@ export function StyleProfileClient({
                 </figure>
               ))}
             </div>
-          </div>
+          </RevealSection>
 
-          <ul className="fitme-tips">
-            {profile.notes.slice(0, 4).map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
+          {profile.notes.length ? (
+            <RevealSection>
+              <p className="fitme-eyebrow" style={{ marginTop: "1.4rem" }}>
+                Notes
+              </p>
+              <ul className="fitme-tips">
+                {profile.notes.slice(0, 4).map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </RevealSection>
+          ) : null}
         </article>
 
-        <article className="fitme-share-card">
-          <p className="fitme-eyebrow">Partager</p>
-          <h2>Partager mon Style Profile</h2>
-          <button type="button" className="fitme-cta fitme-cta--ghost" disabled>
-            Bientôt
-          </button>
-        </article>
+        <RevealSection>
+          <article className="fitme-share-card">
+            <p className="fitme-eyebrow">Partager</p>
+            <h2>Partager mon Style Profile</h2>
+            <p className="fitme-lead">Bientôt disponible, sans exposer vos photos sources.</p>
+            <button type="button" className="fitme-cta fitme-cta--ghost" disabled>
+              Bientôt
+            </button>
+          </article>
+        </RevealSection>
 
-        <article className="fitme-fitcheck">
-          <div className="fitme-fitcheck__copy">
-            <p>FitCheck</p>
-            <strong>Vous hésitez avant d’acheter ?</strong>
-            <span>Vérifiez bientôt si un vêtement correspond à votre Style Profile.</span>
-          </div>
-        </article>
+        <RevealSection>
+          <article className="fitme-fitcheck">
+            <div className="fitme-fitcheck__copy">
+              <p>FitCheck</p>
+              <strong>Vous hésitez avant d’acheter ?</strong>
+              <span>Vérifiez bientôt si un vêtement correspond à votre Style Profile.</span>
+            </div>
+          </article>
+        </RevealSection>
       </section>
 
       {openLook ? (

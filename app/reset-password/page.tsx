@@ -92,53 +92,69 @@ export default function FitmeResetPasswordPage() {
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="fitme-auth-light" aria-hidden />
-        <p className="fitme-eyebrow">{PRODUCT.name}</p>
-        <h1>Nouveau mot de passe</h1>
-        <p className="fitme-lead">Choisissez un mot de passe, puis reconnectez-vous.</p>
+        <div className="fitme-auth-card">
+          <p className="fitme-eyebrow">{PRODUCT.name}</p>
+          <h1>Nouveau mot de passe</h1>
+          <p className="fitme-lead">Choisissez un mot de passe, puis reconnectez-vous pour continuer.</p>
 
-        {phase === "checking" ? <p className="fitme-note">Vérification du lien…</p> : null}
+          {phase === "checking" ? (
+            <>
+              <p className="fitme-note">Vérification du lien…</p>
+              <div className="fitme-loading-line" aria-hidden>
+                <span />
+              </div>
+            </>
+          ) : null}
 
-        {phase === "invalid" ? (
-          <>
-            <p className="fitme-error">Ce lien est invalide ou a expiré.</p>
-            <Link href="/forgot-password" className="fitme-cta fitme-cta--block" style={{ marginTop: "1.2rem" }}>
-              Demander un nouveau lien
-            </Link>
-          </>
-        ) : null}
+          {phase === "invalid" ? (
+            <>
+              <p className="fitme-error">Ce lien est invalide ou a expiré. Demandez-en un nouveau, c’est immédiat.</p>
+              <Link href="/forgot-password" className="fitme-cta fitme-cta--block" style={{ marginTop: "1.2rem" }}>
+                Demander un nouveau lien
+              </Link>
+            </>
+          ) : null}
 
-        {phase === "ready" && !success ? (
-          <form onSubmit={handleSubmit} className="fitme-field" style={{ marginTop: "1.4rem" }}>
-            <label htmlFor="new-password">Nouveau mot de passe</label>
-            <input
-              id="new-password"
-              className="fitme-input"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={MIN_LENGTH}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-            <label htmlFor="confirm-password">Confirmer le mot de passe</label>
-            <input
-              id="confirm-password"
-              className="fitme-input"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={MIN_LENGTH}
-              value={confirm}
-              onChange={(event) => setConfirm(event.target.value)}
-            />
-            <button className="fitme-cta fitme-cta--block" type="submit" disabled={loading}>
-              {loading ? "Enregistrement…" : "Enregistrer"}
-            </button>
-          </form>
-        ) : null}
+          {phase === "ready" && !success ? (
+            <form onSubmit={handleSubmit} className="fitme-field" style={{ marginTop: "1.4rem" }}>
+              <label htmlFor="new-password">Nouveau mot de passe</label>
+              <input
+                id="new-password"
+                className="fitme-input"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={MIN_LENGTH}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+              <label htmlFor="confirm-password">Confirmer le mot de passe</label>
+              <input
+                id="confirm-password"
+                className="fitme-input"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={MIN_LENGTH}
+                value={confirm}
+                onChange={(event) => setConfirm(event.target.value)}
+              />
+              <button className="fitme-cta fitme-cta--block" type="submit" disabled={loading}>
+                {loading ? "Enregistrement…" : "Enregistrer"}
+              </button>
+            </form>
+          ) : null}
 
-        {success ? <p className="fitme-note">Mot de passe mis à jour. Redirection vers la connexion…</p> : null}
-        {error ? <p className="fitme-error">{error}</p> : null}
+          {success ? (
+            <>
+              <div className="fitme-check" aria-hidden>
+                <i />
+              </div>
+              <p className="fitme-success">Mot de passe mis à jour. Redirection vers la connexion…</p>
+            </>
+          ) : null}
+          {error ? <p className="fitme-error">{error}</p> : null}
+        </div>
       </motion.div>
     </FitmeAppShell>
   );

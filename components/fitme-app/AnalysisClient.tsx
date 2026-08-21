@@ -119,10 +119,19 @@ export function AnalysisClient({ analysisId }: { analysisId: string }) {
 
   return (
     <FitmeAppShell>
-      <section className="fitme-flow fitme-analysis-page">
+      <motion.section
+        className="fitme-flow fitme-analysis-page"
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      >
         <p className="fitme-eyebrow">Analyse</p>
         <h1>Votre style se dessine.</h1>
         <p className="fitme-lead">{label}</p>
+
+        <div className="fitme-loading-line" aria-hidden>
+          <span />
+        </div>
 
         <div className="fitme-scan-stage">
           <div className="fitme-scan is-scanning">
@@ -150,6 +159,17 @@ export function AnalysisClient({ analysisId }: { analysisId: string }) {
           </div>
         </div>
 
+        <ol className="fitme-stage-list">
+          {ANALYSIS_STAGE_COPY.map((item, index) => (
+            <li
+              key={item}
+              className={index < stage ? "is-done" : index === stage ? "is-current" : undefined}
+            >
+              {item.replace("…", "")}
+            </li>
+          ))}
+        </ol>
+
         <ul className="fitme-scan-chips" aria-hidden>
           {chips.map((item, index) => (
             <motion.li
@@ -164,7 +184,7 @@ export function AnalysisClient({ analysisId }: { analysisId: string }) {
         </ul>
 
         <p className="fitme-fine">Vous pouvez quitter cette page. L’analyse continue.</p>
-      </section>
+      </motion.section>
     </FitmeAppShell>
   );
 }

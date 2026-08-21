@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FitmeAppShell } from "@/components/fitme-app/FitmeAppShell";
+import { FitmeReveal } from "@/components/fitme-app/FitmeReveal";
 import { createClient } from "@/src/lib/supabase/client";
 import { resolveFitmePath } from "@/src/lib/fitme/routing";
 
@@ -46,6 +47,16 @@ function actionFor(card: AccountAnalysisCard) {
   if (["draft", "uploaded"].includes(card.status)) return { href: path, label: "Continuer" };
   if (card.status === "completed" && card.isUnlocked) return { href: path, label: "Voir mon Style Profile" };
   return { href: path, label: "Continuer" };
+}
+
+function statusLabel(card: AccountAnalysisCard) {
+  if (card.primaryStyle) return card.primaryStyle;
+  if (["preview_ready", "awaiting_payment"].includes(card.status)) return "Prêt à débloquer";
+  if (["paid", "generating_looks"].includes(card.status)) return "Looks en cours";
+  if (["queued", "analyzing"].includes(card.status)) return "Analyse en cours";
+  if (["draft", "uploaded"].includes(card.status)) return "À reprendre";
+  if (card.status === "failed") return "À relancer";
+  return "Analyse en cours";
 }
 
 export function AccountClient({ firstName, email, analyses }: Props) {
@@ -96,59 +107,71 @@ export function AccountClient({ firstName, email, analyses }: Props) {
       }
     >
       <section className="fitme-flow">
-        <p className="fitme-eyebrow">Compte</p>
-        <h1>Bonjour {hello}</h1>
-        <p className="fitme-lead">{email}</p>
+        <FitmeReveal>
+          <p className="fitme-eyebrow">Compte</p>
+          <h1>Bonjour {hello}</h1>
+          <p className="fitme-lead">{email}</p>
+        </FitmeReveal>
 
-        {analyses.length ? (
-          analyses.map((card) => {
-            const action = actionFor(card);
-            return (
-              <article key={card.id} className="fitme-account-card">
-                <p className="fitme-eyebrow">Style Profile</p>
-                <p className="fitme-display" style={{ fontSize: "1.6rem", marginTop: "0.4rem" }}>
-                  {card.primaryStyle ??
-                    (["preview_ready", "awaiting_payment"].includes(card.status)
-                      ? "Prêt à débloquer"
-                      : "Analyse en cours")}
-                </p>
-                <p className="fitme-fine">
-                  {new Date(card.createdAt).toLocaleDateString("fr-CH")}
-                </p>
-                <div style={{ marginTop: "1rem" }}>
-                  <Link href={action.href} className="fitme-cta fitme-cta--block">
-                    {action.label}
-                  </Link>
-                </div>
-              </article>
-            );
-          })
-        ) : (
+        <FitmeReveal delay={0.08}>
+          <p className="fitme-eyebrow" style={{ marginTop: "1.8rem" }}>
+            Analyses
+          </p>
+          {analyses.length ? (
+            <div className="fitme-account-grid">
+              {analyses.map((card) => {
+                const action = actionFor(card);
+                return (
+                  <article key={card.id} className="fitme-account-card">
+                    <p className="fitme-eyebrow">Style Profile</p>
+                    <p className="fitme-display" style={{ fontSize: "1.55rem", marginTop: "0.4rem" }}>
+                      {statusLabel(card)}
+                    </p>
+                    <p className="fitme-fine">{new Date(card.createdAt).toLocaleDateString("fr-CH")}</p>
+                    <div style={{ marginTop: "1rem" }}>
+                      <Link href={action.href} className="fitme-cta fitme-cta--block">
+                        {action.label}
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <article className="fitme-account-card">
+              <p className="fitme-lead">Aucun Style Profile pour le moment. Quelques photos suffisent pour commencer.</p>
+              <Link href="/start" className="fitme-cta fitme-cta--block" style={{ marginTop: "1rem" }}>
+                Découvrir mon style
+              </Link>
+            </article>
+          )}
+        </FitmeReveal>
+
+        <FitmeReveal delay={0.14}>
           <article className="fitme-account-card">
-            <p className="fitme-lead">Aucun Style Profile pour le moment.</p>
-            <Link href="/start" className="fitme-cta fitme-cta--block" style={{ marginTop: "1rem" }}>
-              Découvrir mon style
-            </Link>
+            <p className="fitme-eyebrow">Confidentialité</p>
+            <p className="fitme-lead">Vos photos restent privées. Vous pouvez les supprimer à tout moment.</p>
+            <button type="button" className="fitme-cta fitme-cta--ghost" disabled={busy} onClick={() => void deletePhotos()}>
+              {busy ? "Suppression…" : "Supprimer mes photos"}
+            </button>
+            {message ? <p className="fitme-success">{message}</p> : null}
           </article>
-        )}
+        </FitmeReveal>
 
-        <article className="fitme-account-card">
-          <p className="fitme-eyebrow">Paramètres</p>
-          <p className="fitme-lead">Vos photos restent privées. Vous pouvez les supprimer à tout moment.</p>
-          <button type="button" className="fitme-cta fitme-cta--ghost" disabled={busy} onClick={() => void deletePhotos()}>
-            {busy ? "Suppression…" : "Supprimer mes photos"}
-          </button>
-          <button
-            type="button"
-            className="fitme-cta fitme-cta--ghost"
-            style={{ marginTop: "0.7rem" }}
-            disabled={busy}
-            onClick={() => void deleteAccount()}
-          >
-            Supprimer mon compte
-          </button>
-          {message ? <p className="fitme-note">{message}</p> : null}
-        </article>
+        <FitmeReveal delay={0.18}>
+          <article className="fitme-account-card">
+            <p className="fitme-eyebrow fitme-danger">Zone sensible</p>
+            <p className="fitme-lead">La suppression du compte est définitive.</p>
+            <button
+              type="button"
+              className="fitme-cta fitme-cta--ghost"
+              disabled={busy}
+              onClick={() => void deleteAccount()}
+            >
+              Supprimer mon compte
+            </button>
+          </article>
+        </FitmeReveal>
       </section>
     </FitmeAppShell>
   );

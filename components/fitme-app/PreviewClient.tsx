@@ -55,12 +55,15 @@ export function PreviewClient({ analysisId }: { analysisId: string }) {
   return (
     <FitmeAppShell>
       <section className="fitme-flow fitme-preview-page">
-        <p className="fitme-eyebrow">Style Profile</p>
-        <h1>Votre Style Profile est prêt.</h1>
-        <p className="fitme-lead">Une révélation partielle. Le détail complet se débloque ensuite.</p>
+        <p className="fitme-eyebrow">Aperçu</p>
+        <h1>Votre Style Profile est presque prêt.</h1>
+        <p className="fitme-lead">
+          Voici une révélation partielle. Les styles, la palette complète et vos looks restent protégés jusqu’au
+          déblocage.
+        </p>
 
         {canceled ? (
-          <p className="fitme-note">Paiement annulé. Votre aperçu est toujours là, rien n’a été débité.</p>
+          <p className="fitme-note">Paiement annulé. Rien n’a été débité. Votre aperçu est toujours là.</p>
         ) : null}
 
         <div className="fitme-locked-block">
@@ -101,12 +104,6 @@ export function PreviewClient({ analysisId }: { analysisId: string }) {
           ))}
         </div>
 
-        <ul className="fitme-tips">
-          <li>✓ 2 styles identifiés</li>
-          <li>✓ votre palette est prête</li>
-          <li>✓ vos looks personnalisés seront générés après déblocage</li>
-        </ul>
-
         <motion.article
           className="fitme-paywall"
           initial={reduce ? false : { opacity: 0, y: 18 }}
@@ -114,16 +111,17 @@ export function PreviewClient({ analysisId }: { analysisId: string }) {
           transition={{ delay: 0.15, duration: 0.5 }}
         >
           <p className="fitme-eyebrow">Paiement unique · Sans abonnement</p>
-          <h2>Débloquez votre Style Profile.</h2>
-          <p className="fitme-lead">Découvrez vos styles, votre palette et vos looks personnalisés.</p>
+          <h2>Débloquez le rapport complet.</h2>
+          <p className="fitme-lead">
+            Style principal, style secondaire, couleurs qui vous vont, looks générés sur vous — et un profil
+            sauvegardé.
+          </p>
           <p className="fitme-price">{preview?.priceLabel ?? "7,90 CHF"}</p>
-          <ul className="fitme-tips" style={{ border: 0, background: "transparent", padding: 0 }}>
-            <li>Style principal</li>
-            <li>Style secondaire</li>
-            <li>Palette</li>
-            <li>Conseils</li>
-            <li>3 looks générés sur vous</li>
-            <li>Profil sauvegardé</li>
+          <ul className="fitme-benefit-list">
+            <li>Top style et style secondaire</li>
+            <li>Couleurs qui flattent — et celles à éviter</li>
+            <li>Trois looks personnalisés</li>
+            <li>Style Profile enregistré dans votre compte</li>
           </ul>
         </motion.article>
 
@@ -133,6 +131,7 @@ export function PreviewClient({ analysisId }: { analysisId: string }) {
           <button type="button" className="fitme-cta fitme-cta--block" disabled={busy} onClick={() => void checkout()}>
             {busy ? "Redirection…" : "Débloquer mon Style Profile"}
           </button>
+          <p className="fitme-fine">Paiement unique. Aucun abonnement.</p>
         </div>
       </section>
     </FitmeAppShell>

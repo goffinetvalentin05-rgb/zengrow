@@ -23,8 +23,8 @@ export function PaymentSuccessClient() {
   const search = useSearchParams();
   const analysisId = search.get("analysis_id");
   const reduce = useReducedMotion();
-  const [title, setTitle] = useState("Votre profil est débloqué.");
-  const [message, setMessage] = useState("Nous créons maintenant vos looks personnalisés.");
+  const [title, setTitle] = useState("C’est débloqué.");
+  const [message, setMessage] = useState("Votre profil est en train d’être finalisé. Nous composons vos looks.");
   const [count, setCount] = useState(0);
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -63,8 +63,8 @@ export function PaymentSuccessClient() {
         }
 
         if (data.analysis?.isUnlocked) {
-          setTitle("Votre profil est débloqué.");
-          setMessage("Nous créons maintenant vos looks personnalisés.");
+          setTitle("C’est débloqué.");
+          setMessage("Votre profil est en train d’être finalisé. Nous composons vos looks.");
         } else if (attempts > 8) {
           setMessage("Nous confirmons encore votre paiement…");
         }
@@ -116,7 +116,16 @@ export function PaymentSuccessClient() {
 
   return (
     <FitmeAppShell>
-      <section className="fitme-flow" style={{ textAlign: "center" }}>
+      <motion.section
+        className="fitme-flow"
+        style={{ textAlign: "center" }}
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="fitme-check" aria-hidden>
+          <i />
+        </div>
         <p className="fitme-eyebrow">Style Profile</p>
         <h1>{title}</h1>
         <p className="fitme-lead">{message}</p>
@@ -145,9 +154,9 @@ export function PaymentSuccessClient() {
             Voir mon Style Profile
           </button>
         ) : (
-          <p className="fitme-fine">Cela ne prend que quelques instants.</p>
+          <p className="fitme-fine">Encore un instant. Rien n’est perdu si vous quittez cette page.</p>
         )}
-      </section>
+      </motion.section>
     </FitmeAppShell>
   );
 }

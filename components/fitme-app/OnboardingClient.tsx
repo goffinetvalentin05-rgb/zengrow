@@ -272,7 +272,9 @@ export function OnboardingClient({ firstName }: { firstName: string | null }) {
             <>
               <p className="fitme-eyebrow">01 Photos</p>
               <h1>Montrez-nous simplement qui vous êtes.</h1>
-              <p className="fitme-lead">Quelques photos suffisent pour construire votre Style Profile.</p>
+              <p className="fitme-lead">
+                Portrait, plein pied, une photo de plus. Lumière naturelle, visage visible, tenue habituelle.
+              </p>
               <div className="fitme-photos">
                 {PHOTO_SLOTS.map((slot) => {
                   const current = files[slot.key];
@@ -306,6 +308,7 @@ export function OnboardingClient({ firstName }: { firstName: string | null }) {
                         </>
                       ) : (
                         <div className="fitme-photo-slot__empty">
+                          <span className="fitme-photo-mark" aria-hidden />
                           <strong>{slot.title}</strong>
                           <small>{slot.hint}</small>
                           <em>{slot.required ? "Galerie ou appareil" : "Optionnelle"}</em>
@@ -335,7 +338,9 @@ export function OnboardingClient({ firstName }: { firstName: string | null }) {
             <>
               <p className="fitme-eyebrow">02 Préférences</p>
               <h1>Quels univers vous attirent ?</h1>
-              <p className="fitme-lead">Jusqu’à trois choix. Ils aident à vous comprendre, sans imposer le résultat.</p>
+              <p className="fitme-lead">
+                Jusqu’à trois choix. Ils orientent l’analyse, sans figer le résultat.
+              </p>
               <div className="fitme-universe-grid">
                 {STYLE_UNIVERSES.map((universe) => (
                   <button
@@ -365,7 +370,7 @@ export function OnboardingClient({ firstName }: { firstName: string | null }) {
             <>
               <p className="fitme-eyebrow">02 Préférences</p>
               <h1>Qu’est-ce que vous cherchez surtout ?</h1>
-              <p className="fitme-lead">Une seule intention suffit.</p>
+              <p className="fitme-lead">Une intention nette. Le reste, l’analyse le précise.</p>
               <div className="fitme-choice-grid">
                 {STYLE_GOALS.map((item) => (
                   <button
@@ -384,8 +389,8 @@ export function OnboardingClient({ firstName }: { firstName: string | null }) {
           {screen === "recap" ? (
             <>
               <p className="fitme-eyebrow">03 Vérification</p>
-              <h1>Prêt pour votre analyse.</h1>
-              <p className="fitme-lead">Vérifiez vos photos et vos préférences, puis lancez votre Style Profile.</p>
+              <h1>Tout est en place.</h1>
+              <p className="fitme-lead">Vérifiez vos photos et vos préférences, puis lancez l’analyse.</p>
               <div className="fitme-recap-photos">
                 {PHOTO_SLOTS.filter((slot) => files[slot.key].preview).map((slot) => (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -459,7 +464,7 @@ export function OnboardingClient({ firstName }: { firstName: string | null }) {
               .finally(() => setBusy(false));
           }}
         >
-          {busy ? "Création…" : screen === "recap" ? "Créer mon Style Profile" : "Continuer"}
+          {busy ? "Lancement…" : screen === "recap" ? "Lancer mon analyse" : "Continuer"}
         </button>
       </div>
     </FitmeFlowShell>
