@@ -1,26 +1,11 @@
-import Image from "next/image";
-import { CTA, IMAGES, getSocialProofBadge } from "../config";
+import { CTA, getSocialProofBadge } from "../config";
 import { CtaButton } from "../ui";
+import { HeroBackdrop } from "../components/HeroBackdrop";
 
 export function HeroSection() {
   return (
     <section className="fitme-hero">
-      <div className="fitme-hero__stage" aria-hidden>
-        <Image
-          className="fitme-hero__photo"
-          src={IMAGES.heroEditorial}
-          alt=""
-          fill
-          priority
-          quality={75}
-          sizes="100vw"
-        />
-        <div className="fitme-hero__bloom" />
-        <div className="fitme-hero__wash" />
-        <div className="fitme-hero__shade" />
-        <div className="fitme-hero__grain" />
-        <div className="fitme-hero__veil" />
-      </div>
+      <HeroBackdrop />
 
       <div className="fitme-hero__copy">
         <p className="fitme-pill">

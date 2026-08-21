@@ -20,7 +20,7 @@ export const SEO = {
   title: `${PRODUCT.name} — Découvrez le style qui vous va vraiment`,
   description:
     "Découvrez les styles et les couleurs qui vous mettent réellement en valeur. Visualisez plusieurs looks directement sur vous.",
-  ogImage: "/fitme/hero-editorial.png",
+  ogImage: "/fitme/hero-fashion-scan.png",
 } as const;
 
 /** Placeholder until a live counter exists. Keep this the single source of truth. */
@@ -57,6 +57,7 @@ export const IMAGES = {
   campaignDesktop: "/fitme/campaign-hero-desktop.png",
   campaignMobile: "/fitme/campaign-hero-mobile.png",
   heroEditorial: "/fitme/hero-editorial.png",
+  heroScan: "/fitme/hero-fashion-scan.png",
 } as const;
 
 export const BEST_COLORS = [
