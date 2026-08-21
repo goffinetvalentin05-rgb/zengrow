@@ -8,21 +8,20 @@ import { PRODUCT } from "@/components/fitme-landing/config";
 import { FitmeAppShell } from "@/components/fitme-app/FitmeAppShell";
 import { authErrorMessageFr } from "@/src/lib/auth-error-fr";
 import { trackFitmeEvent } from "@/src/lib/fitme/analytics";
+import { getAuthCallbackUrl } from "@/src/lib/fitme/oauth";
 import { createClient } from "@/src/lib/supabase/client";
-
-function googleRedirect() {
-  const origin = window.location.origin;
-  return `${origin}/auth/callback?next=/start`;
-}
 
 export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const search = useSearchParams();
   const next = search.get("next") || "/start";
+  const oauthQueryError = search.get("error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    oauthQueryError === "oauth" ? "Connexion Google impossible. Réessayez ou utilisez votre e-mail." : null,
+  );
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
@@ -36,12 +35,32 @@ export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
 
   async function handleGoogle() {
     setError(null);
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: googleRedirect() },
-    });
-    if (oauthError) {
-      setError("Google n’est pas encore disponible. Utilisez e-mail et mot de passe.");
+    setLoading(true);
+    try {
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: getAuthCallbackUrl(),
+          skipBrowserRedirect: true,
+        },
+      });
+      if (oauthError || !data.url) {
+        setError("Connexion Google impossible. Réessayez ou utilisez votre e-mail.");
+        setLoading(false);
+        return;
+      }
+      try {
+        if (window.top && window.top !== window) {
+          window.top.location.assign(data.url);
+          return;
+        }
+      } catch {
+        // iframe cross-origin : on reste sur la fenêtre courante
+      }
+      window.location.assign(data.url);
+    } catch {
+      setError("Connexion Google impossible. Réessayez ou utilisez votre e-mail.");
+      setLoading(false);
     }
   }
 
@@ -56,7 +75,7 @@ export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
         email,
         password,
         options: {
-          emailRedirectTo: googleRedirect(),
+          emailRedirectTo: getAuthCallbackUrl(),
           data: firstName.trim() ? { first_name: firstName.trim() } : undefined,
         },
       });
@@ -156,8 +175,8 @@ export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
         </form>
 
         <div className="fitme-divider">ou</div>
-        <button type="button" className="fitme-cta fitme-cta--ghost fitme-cta--block" onClick={handleGoogle}>
-          Continuer avec Google
+        <button type="button" className="fitme-cta fitme-cta--ghost fitme-cta--block" disabled={loading} onClick={() => void handleGoogle()}>
+          {loading ? "Redirection…" : "Continuer avec Google"}
         </button>
 
         {error ? <p className="fitme-error">{error}</p> : null}
