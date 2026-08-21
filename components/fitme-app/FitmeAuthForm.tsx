@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { PRODUCT } from "@/components/fitme-landing/config";
 import { FitmeAppShell } from "@/components/fitme-app/FitmeAppShell";
@@ -11,98 +11,84 @@ import { trackFitmeEvent } from "@/src/lib/fitme/analytics";
 import { getAuthCallbackUrl } from "@/src/lib/fitme/oauth";
 import { createClient } from "@/src/lib/supabase/client";
 
+const MIN_PASSWORD = 6;
+
 export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
-  const search = useSearchParams();
-  const next = search.get("next") || "/start";
-  const oauthQueryError = search.get("error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [error, setError] = useState<string | null>(
-    oauthQueryError === "oauth" ? "Connexion Google impossible. Réessayez ou utilisez votre e-mail." : null,
-  );
-  const [info, setInfo] = useState<string | null>(null);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [confirmEmailSent, setConfirmEmailSent] = useState(false);
   const supabase = createClient();
   const reduce = useReducedMotion();
 
   useEffect(() => {
     void supabase.auth.getUser().then(({ data }) => {
-      if (data.user) router.replace(next);
+      if (data.user) router.replace("/start");
     });
-  }, [next, router, supabase]);
-
-  async function handleGoogle() {
-    setError(null);
-    setLoading(true);
-    try {
-      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: getAuthCallbackUrl(),
-          skipBrowserRedirect: true,
-        },
-      });
-      if (oauthError || !data.url) {
-        setError("Connexion Google impossible. Réessayez ou utilisez votre e-mail.");
-        setLoading(false);
-        return;
-      }
-      try {
-        if (window.top && window.top !== window) {
-          window.top.location.assign(data.url);
-          return;
-        }
-      } catch {
-        // iframe cross-origin : on reste sur la fenêtre courante
-      }
-      window.location.assign(data.url);
-    } catch {
-      setError("Connexion Google impossible. Réessayez ou utilisez votre e-mail.");
-      setLoading(false);
-    }
-  }
+  }, [router, supabase]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
-    setInfo(null);
+
+    if (!email.trim() || !email.includes("@")) {
+      setError("Adresse e-mail invalide.");
+      return;
+    }
+    if (password.length < MIN_PASSWORD) {
+      setError(`Le mot de passe doit contenir au moins ${MIN_PASSWORD} caractères.`);
+      return;
+    }
+    if (mode === "signup" && password !== confirmPassword) {
+      setError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
     setLoading(true);
 
-    if (mode === "signup") {
-      const { data, error: signupError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: getAuthCallbackUrl(),
-          data: firstName.trim() ? { first_name: firstName.trim() } : undefined,
-        },
-      });
-      if (signupError) {
-        setError(authErrorMessageFr(signupError, signupError.message));
-        setLoading(false);
+    try {
+      if (mode === "signup") {
+        const { data, error: signupError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            emailRedirectTo: getAuthCallbackUrl(),
+          },
+        });
+        if (signupError) {
+          setError(authErrorMessageFr(signupError, "Impossible de créer le compte. Réessayez."));
+          setLoading(false);
+          return;
+        }
+        if (!data.session) {
+          setConfirmEmailSent(true);
+          setLoading(false);
+          return;
+        }
+        trackFitmeEvent("signup_completed");
+        router.push("/start");
+        router.refresh();
         return;
       }
-      if (!data.session) {
-        setInfo("Compte créé. Confirmez votre e-mail puis reconnectez-vous.");
-        setLoading(false);
-        return;
-      }
-      trackFitmeEvent("signup_completed");
-      router.push(next);
-      router.refresh();
-      return;
-    }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    if (signInError) {
-      setError(authErrorMessageFr(signInError, "E-mail ou mot de passe incorrect."));
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (signInError) {
+        setError(authErrorMessageFr(signInError, "E-mail ou mot de passe incorrect."));
+        setLoading(false);
+        return;
+      }
+      router.push("/start");
+      router.refresh();
+    } catch {
+      setError("Connexion impossible. Vérifiez votre réseau et réessayez.");
       setLoading(false);
-      return;
     }
-    router.push(next);
-    router.refresh();
   }
 
   return (
@@ -121,66 +107,96 @@ export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
       >
         <div className="fitme-auth-light" aria-hidden />
         <p className="fitme-eyebrow">{PRODUCT.name}</p>
-        <h1>{mode === "login" ? "Retrouvez votre Style Profile." : "Votre style commence ici."}</h1>
-        <p className="fitme-lead">
-          {mode === "login"
-            ? "Connectez-vous pour continuer exactement là où vous vous êtes arrêté."
-            : "Quelques photos. Une analyse. Ce qui vous va réellement."}
-        </p>
 
-        <form onSubmit={handleSubmit} className="fitme-field" style={{ marginTop: "1.6rem" }}>
-          {mode === "signup" ? (
-            <>
-              <label htmlFor="first-name">Prénom (optionnel)</label>
-              <input
-                id="first-name"
-                className="fitme-input"
-                autoComplete="given-name"
-                value={firstName}
-                onChange={(event) => setFirstName(event.target.value)}
-              />
-            </>
-          ) : null}
-          <label htmlFor="email">E-mail</label>
-          <input
-            id="email"
-            className="fitme-input"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-          <label htmlFor="password">Mot de passe</label>
-          <input
-            id="password"
-            className="fitme-input"
-            type="password"
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-            required
-            minLength={6}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-          {mode === "login" ? (
-            <p style={{ marginTop: "-0.2rem" }}>
-              <Link href="/forgot-password" className="fitme-app-bar__link">
-                Mot de passe oublié ?
-              </Link>
+        {confirmEmailSent ? (
+          <>
+            <h1>Vérifiez votre e-mail.</h1>
+            <p className="fitme-lead">
+              Un lien de confirmation a été envoyé à <strong>{email.trim()}</strong>. Ouvrez-le, puis reconnectez-vous.
             </p>
-          ) : null}
-          <button className="fitme-cta fitme-cta--block" type="submit" disabled={loading} style={{ marginTop: "0.6rem" }}>
-            {loading ? "Un instant…" : mode === "login" ? "Se connecter" : "Créer mon compte"}
-          </button>
-        </form>
+            <p className="fitme-note">Pensez à regarder vos spams si vous ne le voyez pas.</p>
+            <Link href="/login" className="fitme-cta fitme-cta--block" style={{ marginTop: "1.4rem" }}>
+              Se connecter
+            </Link>
+          </>
+        ) : (
+          <>
+            <h1>{mode === "login" ? "Retrouvez votre Style Profile." : "Votre style commence ici."}</h1>
+            <p className="fitme-lead">
+              {mode === "login"
+                ? "Connectez-vous pour continuer exactement là où vous vous êtes arrêté."
+                : "Quelques photos. Une analyse. Ce qui vous va réellement."}
+            </p>
 
-        <div className="fitme-divider">ou</div>
-        <button type="button" className="fitme-cta fitme-cta--ghost fitme-cta--block" disabled={loading} onClick={() => void handleGoogle()}>
-          {loading ? "Redirection…" : "Continuer avec Google"}
-        </button>
+            <form onSubmit={handleSubmit} className="fitme-field" style={{ marginTop: "1.6rem" }}>
+              <label htmlFor="email">E-mail</label>
+              <input
+                id="email"
+                className="fitme-input"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+              <label htmlFor="password">Mot de passe</label>
+              <input
+                id="password"
+                className="fitme-input"
+                type="password"
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                required
+                minLength={MIN_PASSWORD}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+              {mode === "signup" ? (
+                <>
+                  <label htmlFor="confirm-password">Confirmer le mot de passe</label>
+                  <input
+                    id="confirm-password"
+                    className="fitme-input"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    minLength={MIN_PASSWORD}
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                  />
+                </>
+              ) : (
+                <p style={{ marginTop: "-0.2rem" }}>
+                  <Link href="/forgot-password" className="fitme-app-bar__link">
+                    Mot de passe oublié ?
+                  </Link>
+                </p>
+              )}
+              <button className="fitme-cta fitme-cta--block" type="submit" disabled={loading} style={{ marginTop: "0.6rem" }}>
+                {loading ? "Un instant…" : mode === "login" ? "Se connecter" : "Créer mon compte"}
+              </button>
+            </form>
 
-        {error ? <p className="fitme-error">{error}</p> : null}
-        {info ? <p className="fitme-note">{info}</p> : null}
+            {error ? <p className="fitme-error">{error}</p> : null}
+
+            <p className="fitme-fine" style={{ marginTop: "1.4rem" }}>
+              {mode === "login" ? (
+                <>
+                  Pas encore de compte ?{" "}
+                  <Link href="/signup" className="fitme-app-bar__link">
+                    Créer mon compte
+                  </Link>
+                </>
+              ) : (
+                <>
+                  Déjà un compte ?{" "}
+                  <Link href="/login" className="fitme-app-bar__link">
+                    Se connecter
+                  </Link>
+                </>
+              )}
+            </p>
+          </>
+        )}
       </motion.div>
     </FitmeAppShell>
   );

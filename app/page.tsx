@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { LandingPage } from "@/components/fitme-landing/LandingPage";
 import { PRODUCT, SEO } from "@/components/fitme-landing/config";
 
@@ -32,6 +33,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string; error?: string }>;
+}) {
+  const params = await searchParams;
+  if (params.code) {
+    redirect(`/auth/callback?code=${encodeURIComponent(params.code)}`);
+  }
+  if (params.error) {
+    redirect("/login?error=oauth");
+  }
   return <LandingPage />;
 }

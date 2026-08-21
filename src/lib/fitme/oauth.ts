@@ -6,11 +6,40 @@ export function safeAuthNextPath(value: string | null | undefined): string {
   return value;
 }
 
-/** Browser: current origin. Server: NEXT_PUBLIC_SITE_URL, else localhost. */
+export function logFitmeOAuth(event: string, data?: Record<string, unknown>) {
+  if (process.env.NODE_ENV === "production") return;
+  console.info("[fitme-oauth]", event, data ?? {});
+}
+
+/**
+ * Unique URL de retour OAuth.
+ * Local (next dev) : toujours http://localhost:3000/auth/callback
+ * Prod : NEXT_PUBLIC_SITE_URL, sinon origin navigateur.
+ */
 export function getAuthCallbackUrl(): string {
-  if (typeof window !== "undefined") {
+  if (process.env.NODE_ENV !== "production") {
+    return "http://localhost:3000/auth/callback";
+  }
+
+  const site = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
+  if (site) return `${site}/auth/callback`;
+
+  if (typeof window !== "undefined" && window.location?.origin) {
     return `${window.location.origin}/auth/callback`;
   }
-  const site = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  return `${site || "http://localhost:3000"}/auth/callback`;
+
+  return "http://localhost:3000/auth/callback";
+}
+
+export function describeAuthorizeUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    return {
+      host: parsed.host,
+      pathname: parsed.pathname,
+      redirect_to: parsed.searchParams.get("redirect_to"),
+    };
+  } catch {
+    return { host: null, pathname: null, redirect_to: null };
+  }
 }
