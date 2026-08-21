@@ -55,7 +55,7 @@ export async function createStyleProfileCheckout(input: {
           unit_amount: STYLE_PROFILE_PRICE.amount,
           product_data: {
             name: "Style Profile",
-            description: "Styles, palette personnelle et looks sauvegardés.",
+            description: "Styles, palette personnelle et look recommandé.",
           },
         },
       },

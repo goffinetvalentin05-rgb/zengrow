@@ -11,12 +11,22 @@ const result = styleAnalysisResultSchema.parse({
     { name: "Cream", hex: "#E8DFD0", reason: "Éclaire." },
     { name: "Navy", hex: "#1F3347", reason: "Profondeur." },
     { name: "Olive", hex: "#6B6A43", reason: "Chaleur." },
+    { name: "Charcoal", hex: "#2C2C2C", reason: "Structure." },
+    { name: "Taupe", hex: "#8A7A6B", reason: "Neutre." },
+    { name: "Burgundy", hex: "#6E2F3C", reason: "Accent." },
   ],
   lessFlatteringColors: [
     { name: "Fuchsia", hex: "#E23CA0", reason: "Trop vif." },
     { name: "Ice blue", hex: "#9BB7D4", reason: "Trop froid." },
+    { name: "Acid yellow", hex: "#E8E04A", reason: "Déséquilibre." },
   ],
   notes: ["Privilégiez les neutres chauds.", "Gardez vos tenues peu chargées.", "Le contraste moyen fonctionne bien."],
+  summary: "Un fil rouge Clean Minimal, net, portable, et facile à répéter.",
+  strengths: ["Lignes nettes", "Neutres structurants"],
+  stylingNotes: ["Privilégiez les neutres chauds.", "Gardez vos tenues peu chargées.", "Le contraste moyen fonctionne bien."],
+  recommendedPieces: ["Chemise oxford", "Chino droit", "Manteau navy"],
+  avoidOrLimit: ["Logos trop visibles", "Néons"],
+  confidence: 91,
 });
 
 function row(overrides: Partial<StyleAnalysisRow> = {}): StyleAnalysisRow {
@@ -44,17 +54,23 @@ function row(overrides: Partial<StyleAnalysisRow> = {}): StyleAnalysisRow {
 }
 
 describe("FITME preview serialization", () => {
-  it("does not leak style names or full palette payload", () => {
+  it("exposes a teaser without leaking the full result", () => {
     const preview = toPreview(row());
-    expect(preview.revealedColors).toHaveLength(2);
+    expect(preview.primaryStyleName).toBe("Clean Minimal");
+    expect(preview.primaryStyleScore).toBe(94);
+    expect(preview.secondaryStyleName).toBe("Smart Casual");
+    expect(preview.confidence).toBe(91);
+    expect(preview.teaserSummary).toBeTruthy();
+    expect(preview.revealedColors).toHaveLength(3);
     expect(preview.revealedColors[0]?.hex).toBe("#E8DFD0");
     expect(previewLeaksResult(preview)).toBe(false);
-    expect(JSON.stringify(preview)).not.toContain("Clean Minimal");
-    expect(JSON.stringify(preview)).not.toContain("Smart Casual");
+    expect(JSON.stringify(preview)).not.toContain("recommendedPieces");
+    expect(JSON.stringify(preview)).not.toContain("Fuchsia");
   });
 
   it("parses stored analysis result", () => {
     expect(parseStoredResult(row())?.primaryStyle.name).toBe("Clean Minimal");
+    expect(parseStoredResult(row())?.secondaryStyle.name).toBe("Smart Casual");
   });
 });
 

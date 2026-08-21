@@ -7,7 +7,7 @@ function resumeTitle(status: string | null) {
   if (["draft", "uploaded"].includes(status)) return "Reprendre";
   if (["queued", "analyzing"].includes(status)) return "Analyse en cours";
   if (["preview_ready", "awaiting_payment"].includes(status)) return "Aperçu prêt";
-  if (["paid", "generating_looks"].includes(status)) return "Looks en cours";
+  if (["paid", "generating_looks"].includes(status)) return "Look en cours";
   if (status === "completed") return "Votre Style Profile";
   if (status === "failed") return "Reprendre";
   return "Continuer";
@@ -18,7 +18,7 @@ function resumeCta(status: string | null) {
   if (["draft", "uploaded"].includes(status)) return "Reprendre là où je me suis arrêté";
   if (["queued", "analyzing"].includes(status)) return "Voir l’analyse en cours";
   if (["preview_ready", "awaiting_payment"].includes(status)) return "Débloquer mon Style Profile";
-  if (["paid", "generating_looks"].includes(status)) return "Voir mes looks";
+  if (["paid", "generating_looks"].includes(status)) return "Voir mon look";
   if (status === "completed") return "Ouvrir mon Style Profile";
   if (status === "failed") return "Reprendre mon analyse";
   return "Continuer";
@@ -29,7 +29,7 @@ function resumeHint(status: string | null) {
   if (["draft", "uploaded"].includes(status)) return "Vos photos sont enregistrées. Il reste peu.";
   if (["queued", "analyzing"].includes(status)) return "L’analyse de vos photos est en cours.";
   if (["preview_ready", "awaiting_payment"].includes(status)) return "L’aperçu est prêt. Un paiement unique débloque tout.";
-  if (["paid", "generating_looks"].includes(status)) return "Vos looks personnalisés sont en cours de création.";
+  if (["paid", "generating_looks"].includes(status)) return "Votre look recommandé est en cours de création.";
   if (status === "completed") return "Votre Style Profile vous attend.";
   return "Reprenez exactement à la bonne étape.";
 }
@@ -67,7 +67,7 @@ export function StartClient({
           <h1>{signedIn && hello ? `${hello}, votre style vous attend.` : "Découvrez ce qui vous va vraiment."}</h1>
           <p className="fitme-lead">
             Quelques photos suffisent. FITME identifie les univers et les couleurs qui vous mettent particulièrement en
-            valeur — puis compose vos looks.
+            valeur — puis crée votre look recommandé.
           </p>
         </FitmeReveal>
 
@@ -84,8 +84,8 @@ export function StartClient({
           </article>
           <article>
             <span>03</span>
-            <strong>Vos looks</strong>
-            <p>Des propositions concrètes, sur vous.</p>
+            <strong>Votre look</strong>
+            <p>Une image de référence, générée sur vous.</p>
           </article>
         </FitmeReveal>
 

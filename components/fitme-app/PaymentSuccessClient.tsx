@@ -24,7 +24,7 @@ export function PaymentSuccessClient() {
   const analysisId = search.get("analysis_id");
   const reduce = useReducedMotion();
   const [title, setTitle] = useState("C’est débloqué.");
-  const [message, setMessage] = useState("Votre profil est en train d’être finalisé. Nous composons vos looks.");
+  const [message, setMessage] = useState("Votre profil est en train d’être finalisé. Nous composons votre look recommandé.");
   const [count, setCount] = useState(0);
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -49,7 +49,7 @@ export function PaymentSuccessClient() {
         if (status === "completed" && data.analysis?.isUnlocked) {
           trackFitmeEvent("payment_completed");
           setTitle("Votre Style Profile est prêt.");
-          setMessage("Vos looks sont générés. Vous pouvez les découvrir maintenant.");
+          setMessage("Votre look recommandé est prêt. Vous pouvez le découvrir maintenant.");
           setReady(true);
           window.setTimeout(() => router.replace(`/style-profile/${analysisId}`), 2800);
           return "done";
@@ -64,7 +64,7 @@ export function PaymentSuccessClient() {
 
         if (data.analysis?.isUnlocked) {
           setTitle("C’est débloqué.");
-          setMessage("Votre profil est en train d’être finalisé. Nous composons vos looks.");
+          setMessage("Votre profil est en train d’être finalisé. Nous composons votre look recommandé.");
         } else if (attempts > 8) {
           setMessage("Nous confirmons encore votre paiement…");
         }
@@ -103,7 +103,7 @@ export function PaymentSuccessClient() {
     return (
       <FitmeAppShell>
         <FitmeErrorState
-          title="On n’a pas réussi à générer vos looks."
+          title="On n’a pas réussi à générer votre look."
           message="Votre paiement est bien enregistré. Réessayez la génération."
           onAction={() => {
             setFailed(false);
@@ -131,22 +131,19 @@ export function PaymentSuccessClient() {
         <p className="fitme-lead">{message}</p>
 
         <div className="fitme-look-fill">
-          {[0, 1, 2].map((index) => (
-            <motion.article
-              key={index}
-              className={count > index ? "is-filled" : ""}
-              initial={reduce ? false : { opacity: 0.4, y: 10 }}
-              animate={{ opacity: count > index || ready ? 1 : 0.55, y: 0 }}
-            >
-              {portraitUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={portraitUrl} alt="" />
-              ) : (
-                <span />
-              )}
-              <p>{count > index ? `Look ${index + 1}` : "En cours"}</p>
-            </motion.article>
-          ))}
+          <motion.article
+            className={count > 0 ? "is-filled" : ""}
+            initial={reduce ? false : { opacity: 0.4, y: 10 }}
+            animate={{ opacity: count > 0 || ready ? 1 : 0.55, y: 0 }}
+          >
+            {portraitUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={portraitUrl} alt="" />
+            ) : (
+              <span />
+            )}
+            <p>{count > 0 || ready ? "Look recommandé" : "En cours"}</p>
+          </motion.article>
         </div>
 
         {ready ? (

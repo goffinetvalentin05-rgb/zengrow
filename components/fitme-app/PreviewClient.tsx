@@ -58,8 +58,7 @@ export function PreviewClient({ analysisId }: { analysisId: string }) {
         <p className="fitme-eyebrow">Aperçu</p>
         <h1>Votre Style Profile est presque prêt.</h1>
         <p className="fitme-lead">
-          Voici une révélation partielle. Les styles, la palette complète et vos looks restent protégés jusqu’au
-          déblocage.
+          Voici une révélation partielle. L’image finale et le rapport complet restent protégés jusqu’au déblocage.
         </p>
 
         {canceled ? (
@@ -68,11 +67,18 @@ export function PreviewClient({ analysisId }: { analysisId: string }) {
 
         <div className="fitme-locked-block">
           <p className="fitme-eyebrow">Style principal</p>
-          <p className="fitme-locked-name">████████</p>
+          <p className="fitme-locked-name">{preview?.primaryStyleName ?? "████████"}</p>
+          {preview?.primaryStyleScore != null ? (
+            <p className="fitme-lead" style={{ marginTop: "0.35rem" }}>
+              Affinité {preview.primaryStyleScore}%
+              {preview.confidence != null ? ` · confiance ${preview.confidence}%` : ""}
+            </p>
+          ) : null}
         </div>
+        {preview?.teaserSummary ? <p className="fitme-lead">{preview.teaserSummary}</p> : null}
         <div className="fitme-locked-block">
           <p className="fitme-eyebrow">Style secondaire</p>
-          <p className="fitme-locked-name is-small">████████</p>
+          <p className="fitme-locked-name is-small">{preview?.secondaryStyleName ?? "████████"}</p>
         </div>
 
         <div className="fitme-preview-palette">
@@ -92,16 +98,14 @@ export function PreviewClient({ analysisId }: { analysisId: string }) {
         </div>
 
         <div className="fitme-locked-looks">
-          {Array.from({ length: preview?.lookSlots ?? 3 }, (_, index) => (
-            <article key={index} className="fitme-locked-look">
-              {preview?.portraitUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={preview.portraitUrl} alt="" />
-              ) : (
-                <span />
-              )}
-            </article>
-          ))}
+          <article className="fitme-locked-look">
+            {preview?.portraitUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview.portraitUrl} alt="" />
+            ) : (
+              <span />
+            )}
+          </article>
         </div>
 
         <motion.article
@@ -113,19 +117,42 @@ export function PreviewClient({ analysisId }: { analysisId: string }) {
           <p className="fitme-eyebrow">Paiement unique · Sans abonnement</p>
           <h2>Débloquez le rapport complet.</h2>
           <p className="fitme-lead">
-            Style principal, style secondaire, couleurs qui vous vont, looks générés sur vous — et un profil
-            sauvegardé.
+            Style principal, style secondaire, couleurs qui vous vont, et votre look recommandé — sauvegardés dans
+            votre profil.
           </p>
           <p className="fitme-price">{preview?.priceLabel ?? "7,90 CHF"}</p>
           <ul className="fitme-benefit-list">
             <li>Top style et style secondaire</li>
             <li>Couleurs qui flattent — et celles à éviter</li>
-            <li>Trois looks personnalisés</li>
+            <li>Votre look recommandé, généré sur vous</li>
             <li>Style Profile enregistré dans votre compte</li>
           </ul>
         </motion.article>
 
         {error ? <p className="fitme-error">{error}</p> : null}
+
+        {process.env.NODE_ENV === "development" ? (
+          <p className="fitme-fine">
+            <button
+              type="button"
+              className="fitme-cta fitme-cta--ghost"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                void apiJson<{ redirect: string }>(`/api/style-analysis/${analysisId}/dev-unlock`, { method: "POST" })
+                  .then((data) => {
+                    window.location.href = data.redirect;
+                  })
+                  .catch((err: unknown) => {
+                    setError(err instanceof Error ? err.message : "Déblocage local impossible.");
+                    setBusy(false);
+                  });
+              }}
+            >
+              Tester sans Stripe (dev)
+            </button>
+          </p>
+        ) : null}
 
         <div className="fitme-sticky-cta">
           <button type="button" className="fitme-cta fitme-cta--block" disabled={busy} onClick={() => void checkout()}>

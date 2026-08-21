@@ -1,6 +1,6 @@
 import { handleConfirmPayment } from "@/src/lib/fitme/handlers";
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 type Params = { params: Promise<{ id: string }> };
 

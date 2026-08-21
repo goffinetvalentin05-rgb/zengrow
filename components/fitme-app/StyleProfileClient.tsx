@@ -16,10 +16,7 @@ function ScoreBadge({ score }: { score: number }) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    if (!inView || reduce) {
-      if (inView) setValue(score);
-      return;
-    }
+    if (!inView || reduce) return;
     const start = performance.now();
     const frame = (now: number) => {
       const progress = Math.min(1, (now - start) / 900);
@@ -61,7 +58,7 @@ export function StyleProfileClient({
 }) {
   const [profile, setProfile] = useState<UnlockedStyleProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [openLook, setOpenLook] = useState<string | null>(null);
+  const [openImage, setOpenImage] = useState<string | null>(null);
   const reduce = useReducedMotion();
 
   useEffect(() => {
@@ -101,16 +98,15 @@ export function StyleProfileClient({
     );
   }
 
-  const cover = profile.looks[0]?.url;
   const hello = firstName || profile.firstName;
 
-  async function downloadLook(url: string, index: number) {
+  async function downloadImage(url: string) {
     const response = await fetch(url);
     const blob = await response.blob();
     const href = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = href;
-    link.download = `fitme-look-${index + 1}.jpg`;
+    link.download = "fitme-look-recommande.jpg";
     link.click();
     URL.revokeObjectURL(href);
   }
@@ -120,7 +116,8 @@ export function StyleProfileClient({
       <section className="fitme-flow fitme-profile-page">
         <p className="fitme-eyebrow">Votre Style Profile</p>
         <h1>{hello ? `${hello}, voici ce qui vous va.` : "Votre Style Profile"}</h1>
-        <p className="fitme-lead">Un rapport personnel : vos univers, vos couleurs, vos looks.</p>
+        <p className="fitme-lead">Un rapport personnel : vos univers, vos couleurs, votre look recommandé.</p>
+        {profile.summary ? <p className="fitme-lead">{profile.summary}</p> : null}
 
         <article className="fitme-report is-in" style={{ marginTop: "1.55rem" }}>
           <div className="fitme-report__glow" aria-hidden />
@@ -129,12 +126,6 @@ export function StyleProfileClient({
               <p>Top style</p>
             </header>
             <div className="fitme-report__hero">
-              {cover ? (
-                <div className="fitme-report__cover">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cover} alt={profile.primaryStyle.name} />
-                </div>
-              ) : null}
               <div className="fitme-report__lead">
                 <p>Style principal</p>
                 <strong>{profile.primaryStyle.name}</strong>
@@ -189,23 +180,45 @@ export function StyleProfileClient({
             </div>
           </RevealSection>
 
-          <RevealSection className="fitme-report__looks-wrap">
-            <p>Vos looks</p>
-            <div className="fitme-looks-carousel">
-              {profile.looks.map((look, index) => (
-                <figure key={look.id}>
-                  <button type="button" onClick={() => setOpenLook(look.url)}>
+          {profile.generatedImage ? (
+            <RevealSection className="fitme-report__looks-wrap">
+              <p>Votre look recommandé</p>
+              <div className="fitme-looks-carousel">
+                <figure>
+                  <button type="button" onClick={() => setOpenImage(profile.generatedImage!.url)}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={look.url} alt={look.style} />
+                    <img src={profile.generatedImage.url} alt={profile.generatedImage.title} />
                   </button>
-                  <figcaption>{look.style}</figcaption>
-                  <button type="button" className="fitme-look-download" onClick={() => void downloadLook(look.url, index)}>
+                  <figcaption>
+                    {profile.generatedImage.title}
+                    {profile.generatedImage.description ? (
+                      <span className="fitme-lead">{profile.generatedImage.description}</span>
+                    ) : null}
+                  </figcaption>
+                  <button
+                    type="button"
+                    className="fitme-look-download"
+                    onClick={() => void downloadImage(profile.generatedImage!.url)}
+                  >
                     Télécharger
                   </button>
                 </figure>
-              ))}
-            </div>
-          </RevealSection>
+              </div>
+            </RevealSection>
+          ) : null}
+
+          {profile.recommendedPieces.length ? (
+            <RevealSection>
+              <p className="fitme-eyebrow" style={{ marginTop: "1.4rem" }}>
+                Pièces à privilégier
+              </p>
+              <ul className="fitme-tips">
+                {profile.recommendedPieces.map((piece) => (
+                  <li key={piece}>{piece}</li>
+                ))}
+              </ul>
+            </RevealSection>
+          ) : null}
 
           {profile.notes.length ? (
             <RevealSection>
@@ -243,10 +256,10 @@ export function StyleProfileClient({
         </RevealSection>
       </section>
 
-      {openLook ? (
-        <button type="button" className="fitme-lightbox" onClick={() => setOpenLook(null)}>
+      {openImage ? (
+        <button type="button" className="fitme-lightbox" onClick={() => setOpenImage(null)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={openLook} alt="" />
+          <img src={openImage} alt="" />
         </button>
       ) : null}
     </FitmeAppShell>

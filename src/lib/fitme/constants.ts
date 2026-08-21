@@ -90,7 +90,7 @@ export const ANALYSIS_STATUS_COPY: Record<string, string> = {
   preview_ready: "Votre Style Profile est prêt.",
   awaiting_payment: "Votre Style Profile est prêt.",
   paid: "Votre profil est débloqué.",
-  generating_looks: "Nous créons maintenant vos looks personnalisés.",
+  generating_looks: "Nous créons maintenant votre look recommandé.",
   completed: "Votre Style Profile est prêt.",
   failed: "On n’a pas réussi à terminer votre analyse.",
 };

@@ -127,7 +127,7 @@ export function FitmeAuthForm({ mode }: { mode: "login" | "signup" }) {
               <p className="fitme-lead">
                 {mode === "login"
                   ? "Reconnectez-vous pour reprendre votre Style Profile, exactement où vous l’avez laissé."
-                  : "Un compte discret, pour sauvegarder votre analyse et vos looks."}
+                  : "Un compte discret, pour sauvegarder votre analyse et votre look."}
               </p>
 
               <form onSubmit={handleSubmit} className="fitme-field" style={{ marginTop: "1.55rem" }}>

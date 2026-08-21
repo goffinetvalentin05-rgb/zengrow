@@ -1,6 +1,7 @@
 import { after, NextResponse } from "next/server";
 import { ensureProfile, requireFitmeApiUser } from "@/src/lib/fitme/auth";
 import { createStyleProfileCheckout, unlockStyleAnalysisFromStripe } from "@/src/lib/fitme/checkout";
+import { isFitmeDevUnlockEnabled, unlockStyleAnalysisForLocalTest } from "@/src/lib/fitme/dev-unlock";
 import { PAYWALL_STATUSES } from "@/src/lib/fitme/constants";
 import { jsonError, parseJson, readJson } from "@/src/lib/fitme/http";
 import { getAnalysisForUser, getLatestAnalysis } from "@/src/lib/fitme/routing";
@@ -18,6 +19,7 @@ import {
 import { analyzeStyleProfileJob, generateStyleLooks, runClaimedLookGeneration } from "@/src/lib/style-analysis/pipeline";
 import {
   isFullyUnlockedProfile,
+  parseStoredGeneratedImage,
   parseStoredResult,
   toPreview,
   toPublicStatus,
@@ -102,7 +104,7 @@ export async function handleStartAnalysis(request: Request, analysisId?: string)
     return NextResponse.json({ ok: true, status: analysis.status, alreadyStarted: true });
   }
   if (analysis.status === "failed" && analysis.payment_status === "paid") {
-    return jsonError("L’analyse est déjà payée. Reprenez la génération des looks.", 409);
+    return jsonError("L’analyse est déjà payée. Reprenez la génération de votre look.", 409);
   }
   if (!["uploaded", "failed"].includes(analysis.status)) {
     return jsonError("Ajoutez d’abord vos photos pour lancer l’analyse.", 409);
@@ -154,22 +156,29 @@ export async function handleGetResult(analysisId: string) {
 
   const extras = await statusExtras(analysisId);
   const admin = createAdminClient();
-  const { data: looks } = await admin
+  const { data: generatedRows } = await admin
     .from("style_analysis_images")
     .select("id, generated_style, storage_path")
     .eq("analysis_id", analysis.id)
     .eq("is_generated", true)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .limit(1);
 
-  const signedLooks = [];
-  for (const look of looks ?? []) {
-    const signed = await createSignedResultUrl(look.storage_path);
+  const meta = parseStoredGeneratedImage(analysis);
+  const row = generatedRows?.[0] ?? null;
+  let generatedImage = null;
+  if (row) {
+    const signed = await createSignedResultUrl(row.storage_path);
     if (signed) {
-      signedLooks.push({
-        id: look.id as string,
-        style: (look.generated_style as string) ?? result.primaryStyle.name,
+      generatedImage = {
+        id: row.id as string,
         url: signed,
-      });
+        title: meta?.title ?? "Votre look recommandé",
+        style: meta?.style ?? ((row.generated_style as string) || result.primaryStyle.name),
+        description: meta?.description ?? "",
+        pieces: meta?.pieces ?? [],
+        colors: meta?.colors ?? [],
+      };
     }
   }
 
@@ -184,7 +193,13 @@ export async function handleGetResult(analysisId: string) {
       bestColors: result.bestColors,
       lessFlatteringColors: result.lessFlatteringColors,
       notes: result.notes.slice(0, 4),
-      looks: signedLooks,
+      summary: result.summary,
+      strengths: result.strengths,
+      stylingNotes: result.stylingNotes,
+      recommendedPieces: result.recommendedPieces,
+      avoidOrLimit: result.avoidOrLimit,
+      confidence: result.confidence,
+      generatedImage,
     },
   });
 }
@@ -387,6 +402,39 @@ export async function handleConfirmPayment(analysisId: string) {
     ok: true,
     paid: true,
     generating: result.shouldGenerateLooks || analysis.status === "generating_looks" || analysis.status === "paid",
+  });
+}
+
+export async function handleDevUnlock(analysisId: string) {
+  if (!isFitmeDevUnlockEnabled()) {
+    return jsonError("Non disponible.", 404);
+  }
+
+  const auth = await requireFitmeApiUser();
+  if (auth.unauthorized) return auth.unauthorized;
+
+  const analysis = await getAnalysisForUser(analysisId, auth.user.id);
+  if (!analysis) return jsonError("Analyse introuvable.", 404);
+
+  const result = await unlockStyleAnalysisForLocalTest({
+    userId: auth.user.id,
+    analysisId,
+  });
+
+  if (!result.ok) return jsonError(result.error, 409);
+
+  if (result.shouldGenerateLooks) {
+    after(() => {
+      void runClaimedLookGeneration(analysisId);
+    });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    paid: true,
+    alreadyPaid: result.alreadyPaid,
+    status: result.status,
+    redirect: `/payment/success?analysis_id=${analysisId}`,
   });
 }
 

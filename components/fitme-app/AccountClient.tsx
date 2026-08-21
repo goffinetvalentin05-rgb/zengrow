@@ -52,7 +52,7 @@ function actionFor(card: AccountAnalysisCard) {
 function statusLabel(card: AccountAnalysisCard) {
   if (card.primaryStyle) return card.primaryStyle;
   if (["preview_ready", "awaiting_payment"].includes(card.status)) return "Prêt à débloquer";
-  if (["paid", "generating_looks"].includes(card.status)) return "Looks en cours";
+  if (["paid", "generating_looks"].includes(card.status)) return "Look en cours";
   if (["queued", "analyzing"].includes(card.status)) return "Analyse en cours";
   if (["draft", "uploaded"].includes(card.status)) return "À reprendre";
   if (card.status === "failed") return "À relancer";

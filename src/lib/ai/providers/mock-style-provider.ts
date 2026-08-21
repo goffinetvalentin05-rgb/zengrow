@@ -1,13 +1,13 @@
 /**
  * Mock isolé : simule le workflow en deux temps.
  * - analyzeStyleProfile : appelé AVANT paiement
- * - generateStyleLook : appelé UNIQUEMENT après webhook / paiement confirmé
+ * - generateFinalLook : appelé UNIQUEMENT après webhook / paiement confirmé
  */
 import { styleAnalysisResultSchema, type StyleAnalysisResult } from "@/src/lib/style-analysis/schemas";
 import type {
   AnalyzeStyleProfileInput,
-  GenerateStyleLookInput,
-  GeneratedLook,
+  GenerateFinalLookInput,
+  GeneratedImage,
   StyleAIProvider,
 } from "@/src/lib/ai/style-provider";
 
@@ -18,6 +18,10 @@ function pickPrimary(universes: string[]) {
   if (first === "smart-casual") return { name: "Smart Casual", score: 92 };
   if (first === "relaxed") return { name: "Relaxed", score: 89 };
   if (first === "workwear") return { name: "Workwear", score: 88 };
+  if (first === "contemporary") return { name: "Contemporary", score: 90 };
+  if (first === "classic") return { name: "Classic", score: 91 };
+  if (first === "sporty") return { name: "Sporty", score: 88 };
+  if (first === "elevated-casual") return { name: "Elevated Casual", score: 90 };
   return { name: "Clean Minimal", score: 94 };
 }
 
@@ -27,6 +31,8 @@ function mockResult(input: AnalyzeStyleProfileInput): StyleAnalysisResult {
     primary.name === "Clean Minimal"
       ? { name: "Smart Casual", score: 88 }
       : { name: "Clean Minimal", score: 84 };
+  const firstName = input.preferences.firstName?.trim();
+  const who = firstName ? firstName : "vous";
 
   return styleAnalysisResultSchema.parse({
     primaryStyle: {
@@ -58,7 +64,32 @@ function mockResult(input: AnalyzeStyleProfileInput): StyleAnalysisResult {
       "Gardez vos tenues peu chargées : un seul point d’accent suffit.",
       "Le contraste moyen fonctionne particulièrement bien avec votre profil visuel.",
       "Smart casual fonctionne bien comme alternative, surtout en journée.",
-    ].slice(0, 4),
+    ],
+    summary: `${who === "vous" ? "Votre" : `Pour ${who}, le`} fil rouge est ${primary.name} : des lignes nettes, une palette calme, et des pièces que vous pouvez répéter sans effort.`,
+    strengths: [
+      "Allure lisible dès qu’on simplifie les volumes.",
+      "Les neutres structurés mettent particulièrement en valeur le visage.",
+      "Un second registre plus décontracté reste très portable.",
+    ],
+    stylingNotes: [
+      "Privilégiez les neutres chauds plutôt que des pièces trop chargées.",
+      "Gardez vos tenues peu chargées : un seul point d’accent suffit.",
+      "Le contraste moyen fonctionne particulièrement bien avec votre profil visuel.",
+      "Smart casual fonctionne bien comme alternative, surtout en journée.",
+    ],
+    recommendedPieces: [
+      "Chemise oxford écrue",
+      "Pantalon chino droit",
+      "Manteau navy épuré",
+      "Baskets cuir minimal",
+      "Ceinture cuir fine",
+    ],
+    avoidOrLimit: [
+      "Logos trop visibles",
+      "Coupes trop larges sur toute la tenue",
+      "Néons et pastels froids en pièce principale",
+    ],
+    confidence: 86,
   });
 }
 
@@ -73,11 +104,14 @@ export function createMockStyleProvider(): StyleAIProvider {
       await pause(1200);
       return mockResult(input);
     },
-    async generateStyleLook(input: GenerateStyleLookInput): Promise<GeneratedLook> {
+    async generateFinalLook(input: GenerateFinalLookInput): Promise<GeneratedImage> {
       await pause(700);
       return {
-        label: `${input.targetStyle} — look ${input.lookIndex}`,
-        style: input.targetStyle,
+        title: "Votre look recommandé",
+        style: input.primaryStyle,
+        description: `${input.primaryStyle} en direction principale, avec une touche ${input.secondaryStyle}.`,
+        pieces: input.recommendedPieces?.slice(0, 4) ?? ["Chemise structurée", "Pantalon droit", "Manteau épuré"],
+        colors: input.colorProfile.slice(0, 4).map((color) => color.hex),
         bytes: input.sourceImage.bytes,
         mimeType: input.sourceImage.mimeType || "image/jpeg",
       };

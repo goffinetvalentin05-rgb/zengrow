@@ -1,12 +1,11 @@
 import { createAdminClient } from "@/src/lib/supabase/admin";
 import { getStyleAIProvider } from "@/src/lib/ai/style-provider";
 import type { StyleImageInput } from "@/src/lib/ai/style-provider";
+import { classifyStyleAIError, StyleAIError } from "@/src/lib/ai/style-ai-errors";
 import { STYLE_INPUTS_BUCKET, STYLE_RESULTS_BUCKET } from "@/src/lib/fitme/constants";
-import { withLimitedRetry } from "@/src/lib/fitme/retry";
 import type { StyleAnalysisRow } from "@/src/lib/fitme/routing";
-import { styleAnalysisResultSchema, stylePreferencesSchema } from "@/src/lib/style-analysis/schemas";
+import { styleAnalysisResultSchema, stylePreferencesSchema, type StyleAnalysisResult } from "@/src/lib/style-analysis/schemas";
 import { parseStoredResult } from "@/src/lib/style-analysis/serialize";
-import type { StyleAnalysisResult } from "@/src/lib/style-analysis/schemas";
 
 const SOURCE_TYPES = ["portrait", "full_body", "extra"] as const;
 
@@ -30,7 +29,7 @@ async function downloadSourceImages(analysis: StyleAnalysisRow): Promise<StyleIm
     .order("created_at", { ascending: true });
 
   if (error || !rows?.length) {
-    throw new Error("Photos introuvables.");
+    throw new StyleAIError("no_photos", "Photos introuvables.");
   }
 
   const images: StyleImageInput[] = [];
@@ -38,7 +37,7 @@ async function downloadSourceImages(analysis: StyleAnalysisRow): Promise<StyleIm
     if (!SOURCE_TYPES.includes(row.type as (typeof SOURCE_TYPES)[number])) continue;
     const { data, error: downloadError } = await admin.storage.from(STYLE_INPUTS_BUCKET).download(row.storage_path);
     if (downloadError || !data) {
-      throw new Error("Une photo n’a pas pu être lue.");
+      throw new StyleAIError("no_photos", "Une photo n’a pas pu être lue.");
     }
     const bytes = Buffer.from(await data.arrayBuffer());
     images.push({
@@ -50,7 +49,7 @@ async function downloadSourceImages(analysis: StyleAnalysisRow): Promise<StyleIm
   }
 
   if (images.length < 2) {
-    throw new Error("Ajoutez au moins un portrait et une photo plein pied.");
+    throw new StyleAIError("no_photos", "Ajoutez au moins un portrait et une photo plein pied.");
   }
 
   return images;
@@ -58,6 +57,17 @@ async function downloadSourceImages(analysis: StyleAnalysisRow): Promise<StyleIm
 
 function pickLookSource(images: StyleImageInput[]) {
   return images.find((image) => image.type === "full_body") ?? images[0];
+}
+
+export function pickLookReferences(images: StyleImageInput[]) {
+  const source = pickLookSource(images);
+  const portrait = images.find((image) => image.type === "portrait");
+  const extra = images.find((image) => image.type === "extra");
+  const references: StyleImageInput[] = [];
+  if (source) references.push(source);
+  if (portrait && portrait.filename !== source?.filename) references.push(portrait);
+  if (extra && !references.some((image) => image.filename === extra.filename)) references.push(extra);
+  return { source: source ?? images[0], references: references.slice(0, 3) };
 }
 
 async function persistAnalysisResult(analysisId: string, result: StyleAnalysisResult, providerId: string) {
@@ -81,7 +91,7 @@ async function persistAnalysisResult(analysisId: string, result: StyleAnalysisRe
         primaryIdentified: true,
         secondaryIdentified: true,
         paletteReady: true,
-        looksPending: true,
+        imagePending: true,
       },
       status: "preview_ready",
       error_message: null,
@@ -90,15 +100,22 @@ async function persistAnalysisResult(analysisId: string, result: StyleAnalysisRe
     .eq("id", analysisId);
 }
 
-async function markFailed(analysisId: string, message: string) {
+async function markFailed(analysisId: string, error: unknown) {
+  const classified = classifyStyleAIError(error);
+  console.error("[fitme-ai]", {
+    type: "job_failed",
+    code: classified.code,
+    technical: classified.technical.slice(0, 400),
+  });
   const admin = createAdminClient();
   await admin
     .from("style_analyses")
     .update({
       status: "failed",
-      error_message: message,
+      error_message: classified.user,
     })
     .eq("id", analysisId);
+  return classified;
 }
 
 async function claimTextAnalysis(analysisId: string) {
@@ -150,12 +167,8 @@ export async function analyzeStyleProfileJob(analysisId: string) {
     await persistAnalysisResult(analysisId, result, provider.id);
     return { ok: true as const, alreadyComplete: false };
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Quelque chose n’a pas fonctionné pendant la création de votre profil.";
-    await markFailed(analysisId, message);
-    return { ok: false as const, error: message };
+    const classified = await markFailed(analysisId, error);
+    return { ok: false as const, error: classified.user };
   }
 }
 
@@ -254,46 +267,39 @@ export async function runClaimedLookGeneration(analysisId: string) {
 
   try {
     const result = parseStoredResult(fresh);
-    if (!result) throw new Error("Résultat d’analyse introuvable.");
+    if (!result) throw new StyleAIError("invalid_json", "Résultat d’analyse introuvable.");
 
     const images = await downloadSourceImages(fresh);
-    const source = pickLookSource(images);
+    const { source, references } = pickLookReferences(images);
     const provider = getStyleAIProvider();
-    const looks = [
-      { style: result.primaryStyle.name, lookIndex: 1 },
-      { style: result.primaryStyle.name, lookIndex: 2 },
-      { style: result.secondaryStyle.name, lookIndex: 3 },
-    ];
 
     await admin.from("style_analysis_images").delete().eq("analysis_id", analysisId).eq("is_generated", true);
 
-    for (const look of looks) {
-      const generated = await withLimitedRetry(() =>
-        provider.generateStyleLook({
-          sourceImage: source,
-          targetStyle: look.style,
-          colorProfile: result.bestColors,
-          lookIndex: look.lookIndex,
-        }),
-      );
-      const ext = generated.mimeType.includes("png") ? "png" : "jpg";
-      const storagePath = `${fresh.user_id}/${analysisId}/look-${look.lookIndex}.${ext}`;
-      const { error: uploadError } = await admin.storage.from(STYLE_RESULTS_BUCKET).upload(storagePath, generated.bytes, {
-        contentType: generated.mimeType,
-        upsert: true,
-      });
-      if (uploadError) throw new Error("Impossible d’enregistrer un look généré.");
+    const generated = await provider.generateFinalLook({
+      sourceImage: source,
+      referenceImages: references,
+      primaryStyle: result.primaryStyle.name,
+      secondaryStyle: result.secondaryStyle.name,
+      colorProfile: result.bestColors,
+      recommendedPieces: result.recommendedPieces,
+    });
+    const ext = generated.mimeType.includes("png") ? "png" : "jpg";
+    const storagePath = `${fresh.user_id}/${analysisId}/final-look.${ext}`;
+    const { error: uploadError } = await admin.storage.from(STYLE_RESULTS_BUCKET).upload(storagePath, generated.bytes, {
+      contentType: generated.mimeType,
+      upsert: true,
+    });
+    if (uploadError) throw new StyleAIError("storage_failed", uploadError.message);
 
-      const { error: insertError } = await admin.from("style_analysis_images").insert({
-        analysis_id: analysisId,
-        user_id: fresh.user_id,
-        type: "generated",
-        storage_path: storagePath,
-        generated_style: look.style,
-        is_generated: true,
-      });
-      if (insertError) throw new Error(insertError.message);
-    }
+    const { error: insertError } = await admin.from("style_analysis_images").insert({
+      analysis_id: analysisId,
+      user_id: fresh.user_id,
+      type: "generated",
+      storage_path: storagePath,
+      generated_style: generated.style,
+      is_generated: true,
+    });
+    if (insertError) throw new StyleAIError("storage_failed", insertError.message);
 
     await admin
       .from("style_analyses")
@@ -301,19 +307,30 @@ export async function runClaimedLookGeneration(analysisId: string) {
         status: "completed",
         completed_at: new Date().toISOString(),
         error_message: null,
+        style_notes: {
+          result,
+          notes: result.notes,
+          generatedImage: {
+            title: generated.title,
+            style: generated.style,
+            description: generated.description,
+            pieces: generated.pieces,
+            colors: generated.colors,
+            storagePath,
+          },
+        },
         preview_data: {
           primaryIdentified: true,
           secondaryIdentified: true,
           paletteReady: true,
-          looksPending: false,
+          imagePending: false,
         },
       })
       .eq("id", analysisId);
 
     return { ok: true as const, alreadyComplete: false };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "La génération des looks a échoué.";
-    await markFailed(analysisId, message);
-    return { ok: false as const, error: message };
+    const classified = await markFailed(analysisId, error);
+    return { ok: false as const, error: classified.user };
   }
 }

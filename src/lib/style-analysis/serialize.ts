@@ -1,7 +1,7 @@
 import { STYLE_PROFILE_PRICE } from "@/src/lib/fitme/constants";
 import type { StyleAnalysisRow } from "@/src/lib/fitme/routing";
-import type { StyleAnalysisResult } from "@/src/lib/style-analysis/schemas";
-import { styleAnalysisResultSchema } from "@/src/lib/style-analysis/schemas";
+import type { GeneratedImageMeta, StyleAnalysisResult } from "@/src/lib/style-analysis/schemas";
+import { generatedImageMetaSchema, styleAnalysisResultSchema } from "@/src/lib/style-analysis/schemas";
 
 export type AnalysisPublicStatus = {
   id: string;
@@ -20,11 +20,25 @@ export type AnalysisPreview = AnalysisPublicStatus & {
   primaryIdentified: boolean;
   secondaryIdentified: boolean;
   paletteReady: boolean;
-  looksPending: boolean;
+  imagePending: boolean;
+  primaryStyleName: string | null;
+  primaryStyleScore: number | null;
+  secondaryStyleName: string | null;
+  confidence: number | null;
+  teaserSummary: string | null;
   revealedColors: { hex: string }[];
   lockedColorSlots: number;
-  lookSlots: number;
   priceLabel: string;
+};
+
+export type UnlockedGeneratedImage = {
+  id: string;
+  url: string;
+  title: string;
+  style: string;
+  description: string;
+  pieces: string[];
+  colors: string[];
 };
 
 export type UnlockedStyleProfile = AnalysisPublicStatus & {
@@ -34,7 +48,13 @@ export type UnlockedStyleProfile = AnalysisPublicStatus & {
   bestColors: StyleAnalysisResult["bestColors"];
   lessFlatteringColors: StyleAnalysisResult["lessFlatteringColors"];
   notes: string[];
-  looks: { id: string; style: string; url: string }[];
+  summary: string;
+  strengths: string[];
+  stylingNotes: string[];
+  recommendedPieces: string[];
+  avoidOrLimit: string[];
+  confidence: number;
+  generatedImage: UnlockedGeneratedImage | null;
 };
 
 export function toPublicStatus(
@@ -59,6 +79,13 @@ export function toPublicStatus(
   };
 }
 
+function teaserSummary(summary: string | undefined) {
+  if (!summary) return null;
+  const trimmed = summary.trim();
+  if (trimmed.length <= 160) return trimmed;
+  return `${trimmed.slice(0, 157).trimEnd()}…`;
+}
+
 export function toPreview(
   row: StyleAnalysisRow,
   extras?: {
@@ -67,16 +94,20 @@ export function toPreview(
   },
 ): AnalysisPreview {
   const result = parseStoredResult(row);
-  const revealedColors = (result?.bestColors ?? []).slice(0, 2).map((color) => ({ hex: color.hex }));
+  const revealedColors = (result?.bestColors ?? []).slice(0, 3).map((color) => ({ hex: color.hex }));
   return {
     ...toPublicStatus(row, extras),
     primaryIdentified: Boolean(result) || row.status === "preview_ready" || row.status === "awaiting_payment",
     secondaryIdentified: Boolean(result) || row.status === "preview_ready" || row.status === "awaiting_payment",
     paletteReady: Boolean(result) || row.status === "preview_ready" || row.status === "awaiting_payment",
-    looksPending: true,
+    imagePending: true,
+    primaryStyleName: result?.primaryStyle.name ?? null,
+    primaryStyleScore: result?.primaryStyle.score ?? null,
+    secondaryStyleName: result?.secondaryStyle.name ?? null,
+    confidence: result?.confidence ?? null,
+    teaserSummary: teaserSummary(result?.summary),
     revealedColors,
     lockedColorSlots: Math.max(0, 6 - revealedColors.length),
-    lookSlots: 3,
     priceLabel: STYLE_PROFILE_PRICE.label,
   };
 }
@@ -90,17 +121,39 @@ export function parseStoredResult(row: Pick<StyleAnalysisRow, "style_notes">): S
   return null;
 }
 
+export function parseStoredGeneratedImage(row: Pick<StyleAnalysisRow, "style_notes">): GeneratedImageMeta | null {
+  const notesPayload = row.style_notes as { generatedImage?: unknown; looks?: unknown } | null;
+  if (!notesPayload || typeof notesPayload !== "object") return null;
+
+  const direct = generatedImageMetaSchema.safeParse(notesPayload.generatedImage);
+  if (direct.success) return direct.data;
+
+  if (Array.isArray(notesPayload.looks) && notesPayload.looks[0]) {
+    const legacy = generatedImageMetaSchema.safeParse(notesPayload.looks[0]);
+    if (legacy.success) return legacy.data;
+  }
+
+  return null;
+}
+
 export function isFullyUnlockedProfile(row: Pick<StyleAnalysisRow, "is_unlocked" | "payment_status" | "status">) {
   return row.is_unlocked === true && row.payment_status === "paid" && row.status === "completed";
 }
 
 export function previewLeaksResult(payload: unknown) {
-  const text = JSON.stringify(payload).toLowerCase();
-  return (
-    text.includes("primarystyle") ||
-    text.includes("secondarystyle") ||
-    text.includes("bestcolors") ||
-    text.includes("stylenotes") ||
-    text.includes("lessflattering")
-  );
+  if (!payload || typeof payload !== "object") return false;
+  const record = payload as Record<string, unknown>;
+  const leakedKeys = [
+    "bestColors",
+    "lessFlatteringColors",
+    "stylingNotes",
+    "recommendedPieces",
+    "avoidOrLimit",
+    "lookBriefs",
+    "secondaryStyle",
+    "generatedImage",
+    "notes",
+    "strengths",
+  ];
+  return leakedKeys.some((key) => key in record);
 }
