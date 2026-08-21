@@ -41,8 +41,6 @@ export type StyleAIProvider = {
 
 export function getStyleAIProvider(): StyleAIProvider {
   const forced = process.env.STYLE_AI_PROVIDER?.trim().toLowerCase();
-  if (forced === "mock") return createMockStyleProvider();
   if (forced === "openai") return createOpenAIStyleProvider();
-  if (process.env.OPENAI_API_KEY?.trim()) return createOpenAIStyleProvider();
   return createMockStyleProvider();
 }

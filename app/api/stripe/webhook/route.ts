@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { getPlanFromPriceId, getStripeClient } from "@/src/lib/stripe";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
 
       if (analysisId) {
         const { unlockStyleAnalysisFromStripe } = await import("@/src/lib/fitme/checkout");
-        await unlockStyleAnalysisFromStripe({
+        const result = await unlockStyleAnalysisFromStripe({
           checkoutSessionId: session.id,
           paymentIntentId,
           userId,
@@ -85,6 +85,12 @@ export async function POST(request: Request) {
           amount: session.amount_total,
           currency: session.currency,
         });
+        if (result.shouldGenerateLooks) {
+          const { runClaimedLookGeneration } = await import("@/src/lib/style-analysis/pipeline");
+          after(() => {
+            void runClaimedLookGeneration(analysisId);
+          });
+        }
       }
 
       return NextResponse.json({ received: true });

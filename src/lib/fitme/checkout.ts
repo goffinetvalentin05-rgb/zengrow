@@ -1,6 +1,7 @@
 import { STYLE_PROFILE_PRICE, STYLE_PROFILE_PRODUCT } from "@/src/lib/fitme/constants";
 import { getStripeClient } from "@/src/lib/stripe";
 import { createAdminClient } from "@/src/lib/supabase/admin";
+import { claimLookGeneration } from "@/src/lib/style-analysis/pipeline";
 
 export async function createStyleProfileCheckout(input: {
   userId: string;
@@ -47,8 +48,14 @@ export async function createStyleProfileCheckout(input: {
   }
 
   const admin = createAdminClient();
-  await admin.from("style_analyses").update({ payment_status: "pending" }).eq("id", input.analysisId).eq("user_id", input.userId);
-  await admin.from("payments").insert({
+  await admin
+    .from("style_analyses")
+    .update({ payment_status: "pending", status: "awaiting_payment" })
+    .eq("id", input.analysisId)
+    .eq("user_id", input.userId)
+    .in("status", ["preview_ready", "awaiting_payment"]);
+
+  const { error } = await admin.from("payments").insert({
     user_id: input.userId,
     analysis_id: input.analysisId,
     stripe_checkout_session_id: session.id,
@@ -56,11 +63,10 @@ export async function createStyleProfileCheckout(input: {
     currency: STYLE_PROFILE_PRICE.currency,
     status: "pending",
     product_type: STYLE_PROFILE_PRODUCT,
-  }).then(({ error }) => {
-    if (error && !error.message.toLowerCase().includes("duplicate")) {
-      console.error("[fitme] payment row:", error.message);
-    }
   });
+  if (error && !error.message.toLowerCase().includes("duplicate")) {
+    console.error("[fitme] payment row:", error.message);
+  }
 
   return { url: session.url, sessionId: session.id };
 }
@@ -73,17 +79,18 @@ export async function unlockStyleAnalysisFromStripe(input: {
   amount?: number | null;
   currency?: string | null;
 }) {
-  if (!input.analysisId) return { ok: false as const, error: "analysis_id manquant" };
+  if (!input.analysisId) return { ok: false as const, error: "analysis_id manquant", shouldGenerateLooks: false };
 
   const admin = createAdminClient();
   const { data: analysis } = await admin
     .from("style_analyses")
-    .select("id, user_id")
+    .select("id, user_id, status, payment_status, is_unlocked")
     .eq("id", input.analysisId)
     .maybeSingle();
 
   const userId = input.userId ?? (analysis?.user_id as string | undefined) ?? null;
-  if (!userId) return { ok: false as const, error: "user_id manquant" };
+  if (!userId) return { ok: false as const, error: "user_id manquant", shouldGenerateLooks: false };
+
   const { data: existing } = await admin
     .from("payments")
     .select("id, status")
@@ -91,11 +98,12 @@ export async function unlockStyleAnalysisFromStripe(input: {
     .maybeSingle();
 
   if (existing?.status === "paid") {
-    await admin
-      .from("style_analyses")
-      .update({ payment_status: "paid", is_unlocked: true })
-      .eq("id", input.analysisId);
-    return { ok: true as const, idempotent: true };
+    const claimed = await claimLookGeneration(input.analysisId);
+    return {
+      ok: true as const,
+      idempotent: true,
+      shouldGenerateLooks: claimed.claimed,
+    };
   }
 
   if (existing?.id) {
@@ -124,6 +132,12 @@ export async function unlockStyleAnalysisFromStripe(input: {
     .update({ payment_status: "paid", is_unlocked: true })
     .eq("id", input.analysisId);
 
-  if (error) return { ok: false as const, error: error.message };
-  return { ok: true as const, idempotent: false };
+  if (error) return { ok: false as const, error: error.message, shouldGenerateLooks: false };
+
+  const claimed = await claimLookGeneration(input.analysisId);
+  return {
+    ok: true as const,
+    idempotent: false,
+    shouldGenerateLooks: claimed.claimed,
+  };
 }

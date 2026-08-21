@@ -11,7 +11,6 @@ const STAGE_COPY = [
   "Analyse de vos photos…",
   "Comparaison des univers…",
   "Création de votre palette…",
-  "Génération de vos looks…",
   "Votre Style Profile est presque prêt…",
 ];
 
@@ -53,14 +52,17 @@ export function AnalysisClient({ analysisId }: { analysisId: string }) {
         void fetch(`/api/style/analyses/${analysisId}/process`, { method: "POST" });
       }
 
-      if (current === "queued" || current === "analyzing" || current === "generating") {
-        // keep polling
-      }
-
-      if (current === "completed") {
+      if (current === "preview_ready" || current === "awaiting_payment") {
         trackFitmeEvent("analysis_completed");
-        const unlocked = data.analysis?.isUnlocked;
-        router.replace(unlocked ? "/style-profile" : `/analysis/${analysisId}/preview`);
+        router.replace(`/analysis/${analysisId}/preview`);
+        return;
+      }
+      if (current === "generating_looks" || current === "completed") {
+        router.replace(
+          current === "completed" && data.analysis?.isUnlocked
+            ? "/style-profile"
+            : `/payment/success?analysis_id=${analysisId}`,
+        );
       }
     }
 
@@ -77,7 +79,6 @@ export function AnalysisClient({ analysisId }: { analysisId: string }) {
 
   const label = useMemo(() => {
     if (status === "failed") return ANALYSIS_STATUS_COPY.failed;
-    if (status === "generating") return STAGE_COPY[3];
     if (status === "analyzing") return STAGE_COPY[Math.min(2, 1 + (tick % 2))];
     return STAGE_COPY[Math.min(tick % STAGE_COPY.length, STAGE_COPY.length - 1)];
   }, [status, tick]);

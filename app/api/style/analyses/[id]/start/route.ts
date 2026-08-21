@@ -17,14 +17,17 @@ export async function POST(_request: Request, { params }: Params) {
   const analysis = await getAnalysisForUser(id, user.id);
   if (!analysis) return jsonError("Analyse introuvable.", 404);
 
-  if (["analyzing", "generating", "queued"].includes(analysis.status)) {
+  if (["analyzing", "queued"].includes(analysis.status)) {
     after(() => {
       void createStyleAnalysis(id);
     });
     return NextResponse.json({ ok: true, status: analysis.status, alreadyStarted: true });
   }
-  if (analysis.status === "completed") {
-    return NextResponse.json({ ok: true, status: "completed", alreadyStarted: true });
+  if (["preview_ready", "awaiting_payment", "generating_looks", "completed"].includes(analysis.status)) {
+    return NextResponse.json({ ok: true, status: analysis.status, alreadyStarted: true });
+  }
+  if (analysis.status === "failed" && analysis.payment_status === "paid") {
+    return jsonError("L’analyse est déjà payée. Reprenez la génération des looks.", 409);
   }
   if (!["uploaded", "failed"].includes(analysis.status)) {
     return jsonError("Ajoutez d’abord vos photos pour lancer l’analyse.", 409);

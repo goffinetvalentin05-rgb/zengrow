@@ -23,11 +23,14 @@ function destination(card: Props["card"]) {
   if (["draft", "uploaded"].includes(card.status)) {
     return { href: "/onboarding", label: "Continuer mon analyse" };
   }
-  if (["queued", "analyzing", "generating", "failed"].includes(card.status)) {
+  if (["queued", "analyzing"].includes(card.status) || (card.status === "failed" && !card.isUnlocked)) {
     return { href: `/analysis/${card.id}`, label: "Continuer mon analyse" };
   }
-  if (card.status === "completed" && !card.isUnlocked) {
+  if (["preview_ready", "awaiting_payment"].includes(card.status)) {
     return { href: `/analysis/${card.id}/preview`, label: "Voir mon aperçu" };
+  }
+  if (card.status === "generating_looks" || (card.status === "failed" && card.isUnlocked)) {
+    return { href: `/payment/success?analysis_id=${card.id}`, label: "Voir mes looks" };
   }
   return { href: "/style-profile", label: "Voir mon Style Profile" };
 }
@@ -76,7 +79,10 @@ export function AccountClient({ firstName, email, card }: Props) {
           {card ? (
             <>
               <p className="fitme-display" style={{ fontSize: "1.6rem", marginTop: "0.4rem" }}>
-                {card.primaryStyle ?? (card.status === "completed" ? "Prêt à débloquer" : "Analyse en cours")}
+                {card.primaryStyle ??
+                  (["preview_ready", "awaiting_payment"].includes(card.status)
+                    ? "Prêt à débloquer"
+                    : "Analyse en cours")}
               </p>
               <p className="fitme-fine">
                 {new Date(card.createdAt).toLocaleDateString("fr-CH")} · {card.status}

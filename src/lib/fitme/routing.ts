@@ -1,5 +1,10 @@
 import { createAdminClient } from "@/src/lib/supabase/admin";
-import { IN_PROGRESS_STATUSES, RESUMABLE_DRAFT_STATUSES } from "@/src/lib/fitme/constants";
+import {
+  ANALYSIS_IN_PROGRESS_STATUSES,
+  LOOKS_IN_PROGRESS_STATUSES,
+  PAYWALL_STATUSES,
+  RESUMABLE_DRAFT_STATUSES,
+} from "@/src/lib/fitme/constants";
 
 export type StyleAnalysisRow = {
   id: string;
@@ -16,6 +21,7 @@ export type StyleAnalysisRow = {
   preferences: unknown;
   preview_data: unknown;
   error_message: string | null;
+  looks_job_started_at: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
@@ -51,21 +57,28 @@ export function resolveFitmePath(analysis: StyleAnalysisRow | null): string {
     return "/onboarding";
   }
 
-  if ((IN_PROGRESS_STATUSES as readonly string[]).includes(analysis.status)) {
+  if ((ANALYSIS_IN_PROGRESS_STATUSES as readonly string[]).includes(analysis.status)) {
     return `/analysis/${analysis.id}`;
   }
 
-  if (analysis.status === "failed") {
+  if (analysis.status === "failed" && analysis.payment_status !== "paid") {
     return `/analysis/${analysis.id}`;
+  }
+
+  if ((PAYWALL_STATUSES as readonly string[]).includes(analysis.status)) {
+    return `/analysis/${analysis.id}/preview`;
+  }
+
+  if (
+    (LOOKS_IN_PROGRESS_STATUSES as readonly string[]).includes(analysis.status) ||
+    (analysis.status === "failed" && analysis.payment_status === "paid")
+  ) {
+    return `/payment/success?analysis_id=${analysis.id}`;
   }
 
   if (analysis.status === "completed" && analysis.is_unlocked && analysis.payment_status === "paid") {
     return "/style-profile";
   }
 
-  if (analysis.status === "completed") {
-    return `/analysis/${analysis.id}/preview`;
-  }
-
-  return "/onboarding";
+  return `/analysis/${analysis.id}/preview`;
 }

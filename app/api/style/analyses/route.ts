@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   if (!parsed.ok) return jsonError(parsed.error);
 
   const latest = await getLatestAnalysis(user.id);
-  if (latest && ["queued", "analyzing", "generating"].includes(latest.status)) {
+  if (latest && ["queued", "analyzing", "generating_looks"].includes(latest.status)) {
     return NextResponse.json({ analysisId: latest.id, resumed: true });
   }
   if (latest && ["draft", "uploaded"].includes(latest.status)) {

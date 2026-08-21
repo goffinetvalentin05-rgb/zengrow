@@ -4,14 +4,20 @@ import type { StyleImageInput } from "@/src/lib/ai/style-provider";
 import { STYLE_INPUTS_BUCKET, STYLE_RESULTS_BUCKET } from "@/src/lib/fitme/constants";
 import type { StyleAnalysisRow } from "@/src/lib/fitme/routing";
 import { styleAnalysisResultSchema, stylePreferencesSchema } from "@/src/lib/style-analysis/schemas";
+import { parseStoredResult } from "@/src/lib/style-analysis/serialize";
 import type { StyleAnalysisResult } from "@/src/lib/style-analysis/schemas";
 
 const SOURCE_TYPES = ["portrait", "full_body", "extra"] as const;
+const LOOK_CLAIM_STATUSES = ["preview_ready", "awaiting_payment", "failed"] as const;
 
 function mimeFromPath(path: string) {
   if (path.endsWith(".png")) return "image/png";
   if (path.endsWith(".webp")) return "image/webp";
   return "image/jpeg";
+}
+
+function isStale(updatedAt: string, minutes = 4) {
+  return Date.now() - new Date(updatedAt).getTime() > minutes * 60 * 1000;
 }
 
 async function downloadSourceImages(analysis: StyleAnalysisRow): Promise<StyleImageInput[]> {
@@ -54,7 +60,7 @@ function pickLookSource(images: StyleImageInput[]) {
   return images.find((image) => image.type === "full_body") ?? images[0];
 }
 
-async function persistResult(analysisId: string, result: StyleAnalysisResult, looksCount: number) {
+async function persistAnalysisResult(analysisId: string, result: StyleAnalysisResult) {
   const admin = createAdminClient();
   await admin
     .from("style_analyses")
@@ -72,12 +78,12 @@ async function persistResult(analysisId: string, result: StyleAnalysisResult, lo
         notes: result.notes,
       },
       preview_data: {
-        stylesIdentified: 2,
-        colorsSelected: result.bestColors.length + result.lessFlatteringColors.length,
-        looksGenerated: looksCount,
+        primaryIdentified: true,
+        secondaryIdentified: true,
+        paletteReady: true,
+        looksPending: true,
       },
-      status: "completed",
-      completed_at: new Date().toISOString(),
+      status: "preview_ready",
       error_message: null,
     })
     .eq("id", analysisId);
@@ -94,30 +100,20 @@ async function markFailed(analysisId: string, message: string) {
     .eq("id", analysisId);
 }
 
-async function claimAnalysis(analysisId: string) {
+async function claimTextAnalysis(analysisId: string) {
   const admin = createAdminClient();
-  const { data } = await admin
-    .from("style_analyses")
-    .select("*")
-    .eq("id", analysisId)
-    .maybeSingle();
-
+  const { data } = await admin.from("style_analyses").select("*").eq("id", analysisId).maybeSingle();
   const row = data as StyleAnalysisRow | null;
   if (!row) throw new Error("Analyse introuvable.");
-  if (row.status === "completed") return { row, claimed: false };
-  const stale =
-    (row.status === "analyzing" || row.status === "generating") &&
-    Date.now() - new Date(row.updated_at).getTime() > 4 * 60 * 1000;
 
-  if ((row.status === "analyzing" || row.status === "generating") && !stale) {
+  if (["preview_ready", "awaiting_payment", "generating_looks", "completed"].includes(row.status)) {
     return { row, claimed: false };
   }
 
-  if (!["uploaded", "queued", "failed", "analyzing", "generating"].includes(row.status)) {
-    throw new Error("Cette analyse ne peut pas encore être lancée.");
-  }
+  const stale = row.status === "analyzing" && isStale(row.updated_at);
+  if (row.status === "analyzing" && !stale) return { row, claimed: false };
 
-  const allowed = stale ? ["uploaded", "queued", "failed", "analyzing", "generating"] : ["uploaded", "queued", "failed"];
+  const allowed = stale ? ["uploaded", "queued", "failed", "analyzing"] : ["uploaded", "queued", "failed"];
   const { data: claimed } = await admin
     .from("style_analyses")
     .update({ status: "analyzing", error_message: null })
@@ -130,30 +126,128 @@ async function claimAnalysis(analysisId: string) {
 }
 
 export async function createStyleAnalysis(analysisId: string) {
-  const admin = createAdminClient();
-  const { row, claimed } = await claimAnalysis(analysisId);
+  const { row, claimed } = await claimTextAnalysis(analysisId);
   if (!claimed) {
-    if (row.status === "completed") return { ok: true as const, alreadyComplete: true };
-    return { ok: true as const, alreadyComplete: false };
+    return { ok: true as const, alreadyComplete: ["preview_ready", "awaiting_payment", "generating_looks", "completed"].includes(row.status) };
   }
 
   try {
     const images = await downloadSourceImages(row);
     const preferences = stylePreferencesSchema.catch({ universes: [] }).parse(row.preferences ?? {});
     const provider = getStyleAIProvider();
-
-    await admin.from("style_analyses").update({ status: "analyzing" }).eq("id", analysisId);
-
     const result = styleAnalysisResultSchema.parse(
       await provider.analyzeStyleProfile({
         images,
         preferences,
       }),
     );
+    await persistAnalysisResult(analysisId, result);
+    return { ok: true as const, alreadyComplete: false };
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Quelque chose n’a pas fonctionné pendant la création de votre profil.";
+    await markFailed(analysisId, message);
+    return { ok: false as const, error: message };
+  }
+}
 
-    await admin.from("style_analyses").update({ status: "generating" }).eq("id", analysisId);
+export async function claimLookGeneration(analysisId: string) {
+  const admin = createAdminClient();
+  const { data } = await admin.from("style_analyses").select("*").eq("id", analysisId).maybeSingle();
+  const row = data as StyleAnalysisRow | null;
+  if (!row) return { claimed: false as const, row: null, reason: "missing" as const };
 
+  if (row.payment_status !== "paid" || !row.is_unlocked) {
+    return { claimed: false as const, row, reason: "unpaid" as const };
+  }
+  if (row.status === "completed") {
+    return { claimed: false as const, row, reason: "completed" as const };
+  }
+
+  const staleLooks = row.status === "generating_looks" && isStale(row.updated_at);
+  if (row.status === "generating_looks" && !staleLooks) {
+    return { claimed: false as const, row, reason: "in_progress" as const };
+  }
+
+  const allowed = staleLooks
+    ? [...LOOK_CLAIM_STATUSES, "generating_looks"]
+    : [...LOOK_CLAIM_STATUSES];
+
+  const { data: claimed } = await admin
+    .from("style_analyses")
+    .update({ status: "generating_looks", error_message: null, looks_job_started_at: null })
+    .eq("id", analysisId)
+    .eq("payment_status", "paid")
+    .eq("is_unlocked", true)
+    .in("status", allowed)
+    .select("*")
+    .maybeSingle();
+
+  if (!claimed) {
+    return { claimed: false as const, row, reason: "in_progress" as const };
+  }
+
+  return { claimed: true as const, row: claimed as StyleAnalysisRow, reason: "claimed" as const };
+}
+
+export async function generateStyleLooks(analysisId: string) {
+  const claimed = await claimLookGeneration(analysisId);
+  if (!claimed.claimed) {
+    if (claimed.reason === "completed") return { ok: true as const, alreadyComplete: true };
+    if (claimed.reason === "in_progress") return { ok: true as const, alreadyComplete: false };
+    if (claimed.reason === "unpaid") return { ok: false as const, error: "Paiement non confirmé." };
+    return { ok: false as const, error: "Analyse introuvable." };
+  }
+
+  return runClaimedLookGeneration(claimed.row.id);
+}
+
+export async function runClaimedLookGeneration(analysisId: string) {
+  const admin = createAdminClient();
+  const staleCutoff = new Date(Date.now() - 4 * 60 * 1000).toISOString();
+
+  const takeJob = async () => {
+    const { data: fresh } = await admin
+      .from("style_analyses")
+      .update({ looks_job_started_at: new Date().toISOString() })
+      .eq("id", analysisId)
+      .eq("status", "generating_looks")
+      .eq("payment_status", "paid")
+      .eq("is_unlocked", true)
+      .is("looks_job_started_at", null)
+      .select("*")
+      .maybeSingle();
+    if (fresh) return fresh as StyleAnalysisRow;
+
+    const { data: stale } = await admin
+      .from("style_analyses")
+      .update({ looks_job_started_at: new Date().toISOString() })
+      .eq("id", analysisId)
+      .eq("status", "generating_looks")
+      .eq("payment_status", "paid")
+      .eq("is_unlocked", true)
+      .lt("looks_job_started_at", staleCutoff)
+      .select("*")
+      .maybeSingle();
+    return (stale as StyleAnalysisRow | null) ?? null;
+  };
+
+  const row = await takeJob();
+  if (!row) {
+    const { data: current } = await admin.from("style_analyses").select("status").eq("id", analysisId).maybeSingle();
+    if (current?.status === "completed") return { ok: true as const, alreadyComplete: true };
+    return { ok: true as const, alreadyComplete: false };
+  }
+
+  try {
+    const result = parseStoredResult(row);
+    if (!result) throw new Error("Résultat d’analyse introuvable.");
+
+    const images = await downloadSourceImages(row);
     const source = pickLookSource(images);
+    const provider = getStyleAIProvider();
     const looks = [
       { label: `${result.primaryStyle.name} — look 1`, style: result.primaryStyle.name },
       { label: `${result.primaryStyle.name} — look 2`, style: result.primaryStyle.name },
@@ -188,13 +282,25 @@ export async function createStyleAnalysis(analysisId: string) {
       if (insertError) throw new Error(insertError.message);
     }
 
-    await persistResult(analysisId, result, looks.length);
+    await admin
+      .from("style_analyses")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        error_message: null,
+        preview_data: {
+          primaryIdentified: true,
+          secondaryIdentified: true,
+          paletteReady: true,
+          looksPending: false,
+        },
+      })
+      .eq("id", analysisId);
+
     return { ok: true as const, alreadyComplete: false };
   } catch (error) {
     const message =
-      error instanceof Error
-        ? error.message
-        : "Quelque chose n’a pas fonctionné pendant la création de votre profil.";
+      error instanceof Error ? error.message : "La génération des looks a échoué.";
     await markFailed(analysisId, message);
     return { ok: false as const, error: message };
   }

@@ -63,9 +63,10 @@ export function PreviewClient({ analysisId }: { analysisId: string }) {
         </p>
 
         <ul className="fitme-tips">
-          <li>✓ {preview?.stylesIdentified ?? 2} styles identifiés</li>
-          <li>✓ {preview?.colorsSelected ?? 6} couleurs sélectionnées</li>
-          <li>✓ {preview?.looksGenerated ?? 3} looks générés</li>
+          <li>✓ Votre style principal a été identifié</li>
+          <li>✓ Votre style secondaire a été identifié</li>
+          <li>✓ Votre palette personnelle est prête</li>
+          <li>✓ Vos looks personnalisés seront générés après déblocage</li>
         </ul>
 
         <article className="fitme-paywall">

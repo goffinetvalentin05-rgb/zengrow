@@ -1,5 +1,9 @@
-import type { StyleAnalysisResult } from "@/src/lib/style-analysis/schemas";
-import { styleAnalysisResultSchema } from "@/src/lib/style-analysis/schemas";
+/**
+ * Mock isolé : simule le workflow en deux temps.
+ * - analyzeStyleProfile : appelé AVANT paiement
+ * - generateStyleLook : appelé UNIQUEMENT après webhook / paiement confirmé
+ */
+import { styleAnalysisResultSchema, type StyleAnalysisResult } from "@/src/lib/style-analysis/schemas";
 import type {
   AnalyzeStyleProfileInput,
   GenerateStyleLookInput,

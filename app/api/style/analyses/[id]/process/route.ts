@@ -16,8 +16,11 @@ export async function POST(_request: Request, { params }: Params) {
   const analysis = await getAnalysisForUser(id, user.id);
   if (!analysis) return jsonError("Analyse introuvable.", 404);
 
-  if (analysis.status === "completed") {
-    return NextResponse.json({ ok: true, status: "completed" });
+  if (["preview_ready", "awaiting_payment", "generating_looks", "completed"].includes(analysis.status)) {
+    return NextResponse.json({ ok: true, status: analysis.status });
+  }
+  if (analysis.payment_status === "paid") {
+    return jsonError("Paiement confirmé. La génération des looks se lance automatiquement.", 409);
   }
 
   const result = await createStyleAnalysis(id);

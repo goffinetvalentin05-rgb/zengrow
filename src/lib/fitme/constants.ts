@@ -66,10 +66,14 @@ export const PHOTO_SLOTS = [
 export const ANALYSIS_STATUS_COPY: Record<string, string> = {
   queued: "Analyse de vos photos…",
   analyzing: "Comparaison des univers…",
-  generating: "Génération de vos looks…",
-  completed: "Votre Style Profile est presque prêt…",
+  preview_ready: "Votre Style Profile est prêt.",
+  awaiting_payment: "Votre Style Profile est prêt.",
+  generating_looks: "Génération de vos looks…",
+  completed: "Votre Style Profile est prêt.",
   failed: "Quelque chose n’a pas fonctionné.",
 };
 
-export const IN_PROGRESS_STATUSES = ["queued", "analyzing", "generating"] as const;
+export const ANALYSIS_IN_PROGRESS_STATUSES = ["queued", "analyzing"] as const;
+export const PAYWALL_STATUSES = ["preview_ready", "awaiting_payment"] as const;
+export const LOOKS_IN_PROGRESS_STATUSES = ["generating_looks"] as const;
 export const RESUMABLE_DRAFT_STATUSES = ["draft", "uploaded"] as const;

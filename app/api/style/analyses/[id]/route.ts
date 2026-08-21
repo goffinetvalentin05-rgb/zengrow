@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { requireFitmeApiUser } from "@/src/lib/fitme/auth";
 import { jsonError } from "@/src/lib/fitme/http";
 import { getAnalysisForUser } from "@/src/lib/fitme/routing";
-import { isActuallyUnlocked, parseStoredResult, toPreview, toPublicStatus } from "@/src/lib/style-analysis/serialize";
+import { isFullyUnlockedProfile, parseStoredResult, toPreview, toPublicStatus } from "@/src/lib/style-analysis/serialize";
+import { PAYWALL_STATUSES } from "@/src/lib/fitme/constants";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 import { createSignedResultUrl } from "@/src/lib/fitme/storage";
 
@@ -20,17 +21,14 @@ export async function GET(request: Request, { params }: Params) {
   const view = url.searchParams.get("view") ?? "status";
 
   if (view === "preview") {
-    const admin = createAdminClient();
-    const { count } = await admin
-      .from("style_analysis_images")
-      .select("id", { count: "exact", head: true })
-      .eq("analysis_id", analysis.id)
-      .eq("is_generated", true);
-    return NextResponse.json({ preview: toPreview(analysis, count ?? 0) });
+    if (!(PAYWALL_STATUSES as readonly string[]).includes(analysis.status) && analysis.status !== "failed") {
+      return jsonError("L’aperçu n’est pas disponible.", 409);
+    }
+    return NextResponse.json({ preview: toPreview(analysis) });
   }
 
   if (view === "full") {
-    if (!isActuallyUnlocked(analysis)) {
+    if (!isFullyUnlockedProfile(analysis)) {
       return jsonError("Le Style Profile n’est pas encore débloqué.", 403);
     }
     const result = parseStoredResult(analysis);

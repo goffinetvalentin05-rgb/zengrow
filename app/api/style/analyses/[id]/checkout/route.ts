@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireFitmeApiUser } from "@/src/lib/fitme/auth";
 import { createStyleProfileCheckout } from "@/src/lib/fitme/checkout";
+import { PAYWALL_STATUSES } from "@/src/lib/fitme/constants";
 import { jsonError } from "@/src/lib/fitme/http";
 import { getAnalysisForUser } from "@/src/lib/fitme/routing";
 
@@ -14,11 +15,16 @@ export async function POST(request: Request, { params }: Params) {
   const analysis = await getAnalysisForUser(id, user.id);
   if (!analysis) return jsonError("Analyse introuvable.", 404);
 
-  if (analysis.status !== "completed") {
-    return jsonError("L’analyse n’est pas encore prête.", 409);
-  }
   if (analysis.is_unlocked && analysis.payment_status === "paid") {
-    return NextResponse.json({ url: `/style-profile`, alreadyPaid: true });
+    const path =
+      analysis.status === "completed"
+        ? "/style-profile"
+        : `/payment/success?analysis_id=${analysis.id}`;
+    return NextResponse.json({ url: path, alreadyPaid: true });
+  }
+
+  if (!(PAYWALL_STATUSES as readonly string[]).includes(analysis.status)) {
+    return jsonError("L’analyse n’est pas encore prête.", 409);
   }
 
   try {

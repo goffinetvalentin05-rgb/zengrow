@@ -27,11 +27,22 @@ create table if not exists public.style_analyses (
   preferences jsonb,
   preview_data jsonb,
   error_message text,
+  looks_job_started_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   completed_at timestamptz,
   constraint style_analyses_status_check check (
-    status in ('draft', 'uploaded', 'queued', 'analyzing', 'generating', 'completed', 'failed')
+    status in (
+      'draft',
+      'uploaded',
+      'queued',
+      'analyzing',
+      'preview_ready',
+      'awaiting_payment',
+      'generating_looks',
+      'completed',
+      'failed'
+    )
   ),
   constraint style_analyses_payment_check check (
     payment_status in ('unpaid', 'pending', 'paid', 'refunded')
@@ -162,6 +173,7 @@ begin
   new.preview_data := old.preview_data;
   new.completed_at := old.completed_at;
   new.error_message := old.error_message;
+  new.looks_job_started_at := old.looks_job_started_at;
 
   if old.status not in ('draft', 'uploaded') then
     new.status := old.status;
@@ -220,8 +232,8 @@ drop policy if exists "style_analyses_update_own_draft" on public.style_analyses
 create policy "style_analyses_update_own_draft"
 on public.style_analyses for update
 to authenticated
-using (user_id = auth.uid())
-with check (user_id = auth.uid());
+using (user_id = auth.uid() and status in ('draft', 'uploaded'))
+with check (user_id = auth.uid() and status in ('draft', 'uploaded'));
 
 drop policy if exists "style_analysis_images_select_own" on public.style_analysis_images;
 create policy "style_analysis_images_select_own"
@@ -267,15 +279,8 @@ grant select (
   updated_at,
   completed_at
 ) on public.style_analyses to authenticated;
-grant insert (
-  id,
-  user_id,
-  status,
-  preferences
-) on public.style_analyses to authenticated;
 grant update (
   preferences,
-  status,
   updated_at
 ) on public.style_analyses to authenticated;
 
@@ -289,7 +294,8 @@ revoke all on public.fit_checks from anon, authenticated;
 grant select on public.fit_checks to authenticated;
 
 revoke all on public.profiles from anon, authenticated;
-grant select, insert, update on public.profiles to authenticated;
+grant select, insert on public.profiles to authenticated;
+grant update (email, first_name, onboarding_completed, updated_at) on public.profiles to authenticated;
 
 grant all on public.profiles to service_role;
 grant all on public.style_analyses to service_role;
@@ -346,6 +352,9 @@ using (
   bucket_id = 'style-inputs'
   and (storage.foldername(name))[1] = auth.uid()::text
 );
+
+-- style-results: aucune policy authenticated/anon.
+-- Lecture et écriture uniquement via la clé service_role (pipeline serveur).
 
 -- Backfill profiles for existing auth users
 insert into public.profiles (id, email)
