@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
@@ -15,10 +15,11 @@ const SPIN_PHRASES = [
   "une vente chez votre concurrent.",
 ] as const;
 
-const LONGEST_PHRASE = "une vente chez votre concurrent.";
-
 function HeroSpin({ reduce }: { reduce: boolean }) {
   const [index, setIndex] = useState(0);
+  const [width, setWidth] = useState<number | null>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const phrase = SPIN_PHRASES[index];
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -27,21 +28,38 @@ function HeroSpin({ reduce }: { reduce: boolean }) {
     return () => window.clearInterval(id);
   }, []);
 
-  const phrase = SPIN_PHRASES[index];
+  useLayoutEffect(() => {
+    const el = measureRef.current;
+    if (!el) return;
+
+    const update = () => setWidth(Math.ceil(el.scrollWidth) + 4);
+    update();
+
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [phrase]);
 
   return (
-    <span className="go-hero__spin">
-      <span className="go-hero__spin-sizer" aria-hidden>
-        {LONGEST_PHRASE}
+    <span
+      className="go-hero__spin"
+      style={{
+        width: width ?? "fit-content",
+        maxWidth: "100%",
+        transition: reduce || width === null ? "none" : "width 0.42s cubic-bezier(0.22, 1, 0.36, 1)",
+      }}
+    >
+      <span ref={measureRef} className="go-hero__spin-sizer" aria-hidden>
+        {phrase}
       </span>
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={phrase}
           className="go-hero__spin-text"
-          initial={reduce ? false : { opacity: 0, y: "40%" }}
+          initial={reduce ? false : { opacity: 0, y: "36%" }}
           animate={{ opacity: 1, y: "0%" }}
-          exit={reduce ? undefined : { opacity: 0, y: "-40%" }}
-          transition={{ duration: reduce ? 0 : 0.42, ease }}
+          exit={reduce ? undefined : { opacity: 0, y: "-36%" }}
+          transition={{ duration: reduce ? 0 : 0.36, ease }}
         >
           {phrase}
         </motion.span>
@@ -55,6 +73,23 @@ export function Hero() {
 
   return (
     <section id="produit" className="go-hero">
+      <div className="go-hero__atmosphere" aria-hidden>
+        <span className="go-hero__glow go-hero__glow--tr" />
+        <span className="go-hero__glow go-hero__glow--tl" />
+        <span className="go-hero__glow go-hero__glow--bl" />
+        <span className="go-hero__glow go-hero__glow--mid" />
+        <span className="go-hero__glow go-hero__glow--core" />
+        <span className="go-hero__stroke go-hero__stroke--a" />
+        <span className="go-hero__stroke go-hero__stroke--b" />
+        <span className="go-hero__stroke go-hero__stroke--c" />
+        <svg className="go-hero__waves" viewBox="0 0 1440 900" fill="none" preserveAspectRatio="none">
+          <path d="M-120 180C200 40 420 310 780 190C1080 90 1280 270 1560 150" />
+          <path d="M-60 390C240 250 500 530 840 380C1140 260 1340 490 1620 360" />
+          <path d="M-100 600C200 470 480 730 820 590C1160 460 1360 700 1640 560" />
+          <path d="M40 120C360 260 640 40 980 180C1220 280 1400 80 1680 200" />
+        </svg>
+      </div>
+
       <Container className="go-hero__container">
         <div className="go-hero__copy">
           <motion.h1
@@ -62,9 +97,9 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, ease }}
           >
-            <span className="go-hero__line">Ne laissez plus une intention d’offrir</span>
+            <span className="go-hero__line">Ne laissez plus une intention</span>
             <span className="go-hero__line go-hero__line--spin">
-              se transformer en
+              <span className="go-hero__lead-in">d’offrir se transformer en</span>
               <HeroSpin reduce={reduce} />
             </span>
           </motion.h1>

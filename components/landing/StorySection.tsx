@@ -33,9 +33,9 @@ const STEPS: StoryStep[] = [
   },
 ];
 
-const MUTED = [197, 193, 184] as const;
-const INK = [20, 20, 19] as const;
-const INK_EM = [10, 10, 9] as const;
+const MUTED = [157, 151, 181] as const;
+const INK = [255, 255, 255] as const;
+const INK_EM = [255, 255, 255] as const;
 
 function tokenize(text: string, highlights: string[]): Token[] {
   const ranges = highlights

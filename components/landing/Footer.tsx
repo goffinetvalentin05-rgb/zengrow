@@ -2,7 +2,6 @@
 
 import type { FormEvent } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import { BrandLogo } from "./BrandLogo";
 import { BRAND_NAME } from "./brand";
 import { FOOTER_COMPANY_LINKS, FOOTER_PRODUCT_LINKS, LEGAL_LINKS, ROUTES } from "./config";
@@ -18,7 +17,6 @@ function FooterNavLink({ href, label }: { href: string; label: string }) {
 
 export function Footer() {
   const year = new Date().getFullYear();
-  const reduce = useReducedMotion();
 
   const onNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -35,19 +33,21 @@ export function Footer() {
             <p>Le système simple pour vendre et gérer vos bons cadeaux.</p>
           </div>
 
-          <nav aria-label="Produit">
-            <p className="go-footer__heading">Produit</p>
-            {FOOTER_PRODUCT_LINKS.map((link) => (
-              <FooterNavLink key={`${link.href}-${link.label}`} href={link.href} label={link.label} />
-            ))}
-          </nav>
+          <div className="go-footer__links">
+            <nav aria-label="Produit">
+              <p className="go-footer__heading">Produit</p>
+              {FOOTER_PRODUCT_LINKS.map((link) => (
+                <FooterNavLink key={`${link.href}-${link.label}`} href={link.href} label={link.label} />
+              ))}
+            </nav>
 
-          <nav aria-label="Entreprise">
-            <p className="go-footer__heading">Entreprise</p>
-            {FOOTER_COMPANY_LINKS.map((link) => (
-              <FooterNavLink key={link.href} href={link.href} label={link.label} />
-            ))}
-          </nav>
+            <nav aria-label="Entreprise">
+              <p className="go-footer__heading">Entreprise</p>
+              {FOOTER_COMPANY_LINKS.map((link) => (
+                <FooterNavLink key={link.href} href={link.href} label={link.label} />
+              ))}
+            </nav>
+          </div>
 
           <form className="go-footer__news" onSubmit={onNewsletterSubmit} noValidate>
             <p className="go-footer__heading">Restez au courant.</p>
@@ -69,19 +69,6 @@ export function Footer() {
         </div>
       </Container>
 
-      <div className="go-footer__mega-wrap">
-        <motion.div
-          className="go-footer__mega"
-          aria-hidden
-          initial={reduce ? false : { opacity: 0.18 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <BrandLogo className="go-footer__mega-img" decorative sizes="(max-width: 639px) 94vw, 92vw" />
-        </motion.div>
-      </div>
-
       <Container>
         <div className="go-footer__legal">
           <p>
@@ -96,6 +83,10 @@ export function Footer() {
           </nav>
         </div>
       </Container>
+
+      <div className="go-footer__mega-wrap" aria-hidden>
+        <p className="go-footer__mega-word">Zengrow</p>
+      </div>
     </footer>
   );
 }

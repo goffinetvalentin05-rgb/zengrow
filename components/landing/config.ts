@@ -38,6 +38,17 @@ export const NAV_LINKS = [
   { href: ROUTES.faq, label: "FAQ" },
 ] as const;
 
+export const MOBILE_NAV_PRIMARY = [
+  ...NAV_LINKS,
+  { href: ROUTES.contact, label: "Contact" },
+] as const;
+
+export const MOBILE_NAV_SECONDARY = [
+  { href: ROUTES.login, label: "Connexion" },
+  { href: ROUTES.terms, label: "Mentions légales" },
+  { href: ROUTES.privacy, label: "Confidentialité" },
+] as const;
+
 export const FOOTER_PRODUCT_LINKS = [
   { href: ROUTES.home, label: "Produit" },
   { href: ROUTES.faq, label: "Comment ça marche" },

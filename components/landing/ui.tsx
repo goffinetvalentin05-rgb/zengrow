@@ -80,11 +80,13 @@ export function CtaButton({
   children = CTA.primary,
   className,
   variant = "primary",
+  onClick,
 }: {
   href?: string;
   children?: React.ReactNode;
   className?: string;
   variant?: "primary" | "secondary" | "on-ink" | "accent";
+  onClick?: () => void;
 }) {
   const classNames = cn(
     "go-btn",
@@ -97,14 +99,14 @@ export function CtaButton({
 
   if (href.startsWith("#")) {
     return (
-      <a href={href} className={classNames}>
+      <a href={href} className={classNames} onClick={onClick}>
         {children}
       </a>
     );
   }
 
   return (
-    <Link href={href} className={classNames}>
+    <Link href={href} className={classNames} onClick={onClick}>
       {children}
     </Link>
   );
