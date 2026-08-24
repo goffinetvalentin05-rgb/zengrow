@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { PRODUCT } from "@/components/fitme-landing/config";
-import { FitmeShell } from "@/components/fitme-landing/FitmeShell";
-import { Container } from "@/components/fitme-landing/ui";
+import { PRODUCT } from "@/components/landing/config";
+import { LandingShell } from "@/components/landing/LandingShell";
+import { Container } from "@/components/landing/ui";
 
 export const metadata: Metadata = {
   title: { absolute: `Conditions d’utilisation — ${PRODUCT.name}` },
@@ -9,19 +9,17 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <FitmeShell>
+    <LandingShell>
       <Container>
-        <article className="fitme-legal">
+        <article className="go-legal">
           <h1>Conditions d’utilisation</h1>
           <p>
-            Cette page sera complétée avant le lancement public. Le Style Profile est un achat unique,
-            sans abonnement.
+            Cette page sera complétée avant le lancement public. L’accès au produit peut être
+            modifié jusqu’au lancement.
           </p>
-          <p>
-            Si vous avez une question, écrivez-nous via le lien Contact en bas de page.
-          </p>
+          <p>Si vous avez une question, utilisez les liens en bas de page.</p>
         </article>
       </Container>
-    </FitmeShell>
+    </LandingShell>
   );
 }
