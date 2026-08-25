@@ -25,7 +25,7 @@ export function CTA() {
             campagnes marketing et d&apos;un système pour récolter plus d&apos;avis Google.
           </p>
           <div className="mt-10 flex w-full max-w-md flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center">
-            <LandingPrimaryButton href="/signup">Commencer maintenant</LandingPrimaryButton>
+            <LandingPrimaryButton href="/pro/signup">Commencer maintenant</LandingPrimaryButton>
             <LandingSecondaryButton href="/#ia">Voir une démo</LandingSecondaryButton>
           </div>
           <p className="mt-6 text-xs text-[#8BA3C7]/90 sm:text-sm">

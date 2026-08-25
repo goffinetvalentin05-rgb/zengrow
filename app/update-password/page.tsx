@@ -136,10 +136,10 @@ export default function UpdatePasswordPage() {
               Ce lien est invalide ou a expiré. Demandez un nouveau lien de réinitialisation.
             </p>
             <div className="flex flex-col gap-2 text-sm">
-              <Link href="/forgot-password" className={authLinkClassName}>
+              <Link href="/pro/forgot-password" className={authLinkClassName}>
                 Demander un nouveau lien
               </Link>
-              <Link href="/login" className="text-white/45 transition hover:text-white/80">
+              <Link href="/pro/login" className="text-white/45 transition hover:text-white/80">
                 Retour à la connexion
               </Link>
             </div>
@@ -202,7 +202,7 @@ export default function UpdatePasswordPage() {
 
         {phase === "ready" ? (
           <p className="mt-6 text-sm text-white/45">
-            <Link href="/login" className={authLinkClassName}>
+            <Link href="/pro/login" className={authLinkClassName}>
               Retour à la connexion
             </Link>
           </p>

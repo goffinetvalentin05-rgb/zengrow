@@ -58,7 +58,7 @@ export function PricingSection() {
                       ))}
                     </ul>
 
-                    <PrimaryButton href="/signup" className="mt-8 w-full justify-center">
+                    <PrimaryButton href="/pro/signup" className="mt-8 w-full justify-center">
                       Essai gratuit {LANDING_TRIAL_DAYS} jours
                     </PrimaryButton>
 

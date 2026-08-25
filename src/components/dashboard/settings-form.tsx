@@ -7,9 +7,12 @@ import {
   Bell,
   CalendarCheck2,
   CreditCard,
+  Gift,
+  Globe,
   Star,
   Store,
   UserRound,
+  Wallet,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
@@ -19,6 +22,11 @@ import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
 import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-accordion";
 import { SettingsCategoryCard } from "@/src/components/dashboard/settings/settings-category-card";
+import {
+  parseSettingsSection,
+  SettingsSectionTabs,
+  type SettingsSectionId,
+} from "@/src/components/dashboard/settings/settings-section-tabs";
 import { DashboardThemeToggle } from "@/src/components/dashboard/dashboard-theme-toggle";
 import { cn, type OpeningHours } from "@/src/lib/utils";
 import AvailabilityEditor from "@/src/components/dashboard/availability-editor";
@@ -190,6 +198,9 @@ export default function SettingsForm({
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [activeSection, setActiveSection] = useState<SettingsSectionId>(() =>
+    parseSettingsSection(searchParams.get("section")),
+  );
   const availabilityAnchorRef = useRef<HTMLDivElement | null>(null);
   const googleReviewsAnchorRef = useRef<HTMLDivElement | null>(null);
   const [name, setName] = useState(restaurant.name);
@@ -375,6 +386,7 @@ export default function SettingsForm({
 
   useEffect(() => {
     const section = searchParams.get("section");
+    setActiveSection(parseSettingsSection(section));
     const anchor =
       section === "availability"
         ? availabilityAnchorRef
@@ -626,6 +638,10 @@ export default function SettingsForm({
   return (
     <>
       <form id="settings-main-form" onSubmit={handleSubmit} className="relative mx-auto max-w-5xl space-y-6 pb-28">
+        <SettingsSectionTabs value={activeSection} onChange={setActiveSection} />
+
+        {activeSection === "payments" ? (
+          <div className="space-y-6">
         <SettingsCategoryCard
           icon={CreditCard}
           iconWrapClassName="bg-[#A855F7]/15 text-[#A855F7]"
@@ -644,12 +660,42 @@ export default function SettingsForm({
 
         </SettingsCategoryCard>
 
+            <SettingsCategoryCard
+              icon={Wallet}
+              iconWrapClassName="bg-zg-accent/15 text-zg-accent"
+              iconClassName="text-zg-accent"
+              title="Paiements bons cadeaux"
+              subtitle="Encaissement des ventes de bons. Connexion réelle plus tard."
+            >
+              <SettingsAccordion title="Stripe" defaultOpen>
+                <div className="space-y-3">
+                  <p className="text-sm text-zg-text-muted">
+                    Les paiements des bons digitaux passeront par Stripe. Cette section est un aperçu
+                    d&apos;interface.
+                  </p>
+                  <div className="flex items-center justify-between rounded-xl border border-zg-border px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-zg-fg">Compte Stripe</p>
+                      <p className="text-xs text-zg-text-muted">Non connecté — aperçu uniquement</p>
+                    </div>
+                    <Button type="button" variant="secondary" size="sm" disabled>
+                      Connecter
+                    </Button>
+                  </div>
+                </div>
+              </SettingsAccordion>
+            </SettingsCategoryCard>
+          </div>
+        ) : null}
+
+        {activeSection === "establishment" ? (
+          <div className="space-y-6">
         <SettingsCategoryCard
           icon={Store}
           iconWrapClassName="bg-zg-accent/15 text-zg-accent"
           iconClassName="text-zg-accent"
-          title="Informations du restaurant"
-          subtitle="Identité, coordonnées et présentation de ton resto."
+          title="Informations de l'établissement"
+          subtitle="Identité, coordonnées et présentation."
         >
           <SettingsAccordion title="Identité">
             <div className="grid gap-4 md:grid-cols-2">
@@ -791,7 +837,11 @@ export default function SettingsForm({
             </SettingsAccordion>
           </SettingsCategoryCard>
         </div>
+          </div>
+        ) : null}
 
+        {activeSection === "notifications" ? (
+          <div className="space-y-6">
         <SettingsCategoryCard
           icon={Bell}
           iconWrapClassName="bg-[#F59E0B]/15 text-[#F59E0B]"
@@ -810,7 +860,7 @@ export default function SettingsForm({
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <span className="text-sm font-medium text-zg-fg">Demande d&apos;avis après la visite</span>
+                  <span className="text-sm font-medium text-zg-fg">Demande d&apos;avis après utilisation d&apos;un bon</span>
                   <p className="mt-1 text-xs text-zg-text-muted">
                     Configure le message et le délai dans la section « Avis Google » ci-dessous.
                   </p>
@@ -826,7 +876,7 @@ export default function SettingsForm({
           iconWrapClassName="bg-zg-warning-soft-bg text-zg-warning"
           iconClassName="text-zg-warning"
           title="Avis Google"
-          subtitle="Configure l'automatisation des demandes d'avis Google envoyées à tes clients après leur visite."
+          subtitle="Configure l'automatisation des demandes d'avis Google envoyées après l'utilisation d'un bon."
         >
           {reviewAutomationLoading || !reviewAutomation ? (
             <div className="rounded-2xl border border-dashed border-zg-border bg-zg-surface-soft/60 py-10 text-center text-sm text-zg-muted">
@@ -846,7 +896,10 @@ export default function SettingsForm({
           )}
         </SettingsCategoryCard>
         </div>
+          </div>
+        ) : null}
 
+        {activeSection === "establishment" ? (
         <SettingsCategoryCard
           icon={UserRound}
           iconWrapClassName="bg-[#22C55E]/15 text-[#22C55E]"
@@ -900,8 +953,91 @@ export default function SettingsForm({
             </Button>
           </SettingsAccordion>
         </SettingsCategoryCard>
+        ) : null}
+
+        {activeSection === "gift-cards" ? (
+          <SettingsCategoryCard
+            icon={Gift}
+            iconWrapClassName="bg-zg-accent/15 text-zg-accent"
+            iconClassName="text-zg-accent"
+            title="Bons cadeaux"
+            subtitle="Règles par défaut pour vos bons digitaux et papier."
+          >
+            <SettingsAccordion title="Valeurs par défaut" defaultOpen>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label">Validité par défaut</label>
+                  <Input readOnly value="12 mois" className="mt-1.5" />
+                </div>
+                <div>
+                  <label className="dashboard-field-label">Montants suggérés</label>
+                  <Input readOnly value="50 / 100 / 150 CHF" className="mt-1.5" />
+                </div>
+              </div>
+              <p className="mt-4 text-sm text-zg-text-muted">
+                Ces réglages seront branchés plus tard. Pour l&apos;instant, il s&apos;agit d&apos;un aperçu.
+              </p>
+            </SettingsAccordion>
+          </SettingsCategoryCard>
+        ) : null}
+
+        {activeSection === "sales-channels" ? (
+          <SettingsCategoryCard
+            icon={Globe}
+            iconWrapClassName="bg-[#3B82F6]/15 text-[#3B82F6]"
+            iconClassName="text-[#3B82F6]"
+            title="Canaux de vente"
+            subtitle="Où vos clients peuvent acheter un bon."
+          >
+            <SettingsAccordion title="Canaux" defaultOpen>
+              <ul className="space-y-3 text-sm text-zg-fg">
+                <li className="rounded-xl border border-zg-border px-4 py-3">
+                  <p className="font-medium">Lien de paiement public</p>
+                  <p className="mt-0.5 text-zg-text-muted">Page dédiée à l&apos;achat de bons — bientôt.</p>
+                </li>
+                <li className="rounded-xl border border-zg-border px-4 py-3">
+                  <p className="font-medium">Widget site</p>
+                  <p className="mt-0.5 text-zg-text-muted">Bouton ou encart à intégrer sur votre site.</p>
+                </li>
+                <li className="rounded-xl border border-zg-border px-4 py-3">
+                  <p className="font-medium">Vente sur place</p>
+                  <p className="mt-0.5 text-zg-text-muted">Création de bons papier depuis le dashboard.</p>
+                </li>
+              </ul>
+            </SettingsAccordion>
+          </SettingsCategoryCard>
+        ) : null}
+
+        {activeSection === "site-integration" ? (
+          <SettingsCategoryCard
+            icon={Globe}
+            iconWrapClassName="bg-zg-premium-soft-bg text-zg-premium"
+            iconClassName="text-zg-premium"
+            title="Intégration site"
+            subtitle="Ajoutez la vente de bons sur votre site ou votre page ZenGrow."
+          >
+            <SettingsAccordion title="Page publique" defaultOpen>
+              <p className="text-sm text-zg-text-muted">
+                Photos, hero, sections et publication :{" "}
+                <Link href="/dashboard/public-page" className="font-semibold text-zg-accent hover:underline">
+                  Gérer le showroom →
+                </Link>
+              </p>
+              <div className="mt-4 rounded-xl border border-dashed border-zg-border bg-zg-surface-elevated/40 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">
+                  Extrait d&apos;intégration
+                </p>
+                <p className="mt-2 font-mono text-xs text-zg-text-muted">
+                  {`<script src="https://zengrow.app/widget.js" data-slug="${slug}"></script>`}
+                </p>
+                <p className="mt-2 text-xs text-zg-text-muted">Aperçu uniquement — le widget n&apos;est pas encore actif.</p>
+              </div>
+            </SettingsAccordion>
+          </SettingsCategoryCard>
+        ) : null}
       </form>
 
+      {(activeSection === "establishment" || activeSection === "notifications") ? (
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-4 pt-10">
         <div className="pointer-events-auto flex w-full max-w-5xl items-center justify-between gap-4 rounded-2xl border border-zg-border bg-zg-surface/95 px-4 py-3 shadow-lg backdrop-blur-md">
           <p className="min-w-0 truncate text-sm text-zg-text-muted">
@@ -912,6 +1048,7 @@ export default function SettingsForm({
           </Button>
         </div>
       </div>
+      ) : null}
 
       {capacityConfirmOpen && pendingCapacityConfirm ? (
         <div

@@ -35,7 +35,7 @@ export function FinalCTASection() {
                 </ul>
               </div>
               <div className="zg-cta-glass__actions">
-                <PrimaryButton href="/signup" className="w-full justify-center !min-h-12">
+                <PrimaryButton href="/pro/signup" className="w-full justify-center !min-h-12">
                   Essayer gratuitement
                 </PrimaryButton>
                 <GhostButton href="#workflow" className="w-full justify-center !min-h-11">

@@ -13,7 +13,7 @@ export function CTASection() {
             campagnes marketing et d&apos;un système pour récolter plus d&apos;avis Google.
           </p>
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap">
-            <PrimaryButton href="/signup">Commencer maintenant</PrimaryButton>
+            <PrimaryButton href="/pro/signup">Commencer maintenant</PrimaryButton>
             <SecondaryButton href="#ia">Voir une démo</SecondaryButton>
           </div>
           <p className="mt-6 text-xs text-[#8BA3C7] sm:text-sm">

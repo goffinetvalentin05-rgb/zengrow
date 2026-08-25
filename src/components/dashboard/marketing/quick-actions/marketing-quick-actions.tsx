@@ -7,10 +7,10 @@ export default function MarketingQuickActions() {
     <section aria-labelledby="marketing-quick-actions-heading" className="space-y-4">
       <div>
         <h2 id="marketing-quick-actions-heading" className="text-base font-semibold text-zg-fg">
-          Actions rapides
+          Modèles de campagnes
         </h2>
         <p className="mt-1 text-sm text-zg-text-muted">
-          Lancez une campagne pré-remplie en un clic
+          Choisissez un modèle visuel, puis personnalisez avant l&apos;envoi
         </p>
       </div>
       <MarketingTemplateGrid />

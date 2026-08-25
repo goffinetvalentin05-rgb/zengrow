@@ -34,7 +34,7 @@ export default async function Home({
     redirect(`/auth/callback?code=${encodeURIComponent(params.code)}`);
   }
   if (params.error) {
-    redirect("/login?error=oauth");
+    redirect("/pro/login?error=oauth");
   }
   return <LandingPage />;
 }

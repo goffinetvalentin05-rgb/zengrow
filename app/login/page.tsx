@@ -1,10 +1,5 @@
-import { Suspense } from "react";
-import { FitmeAuthForm } from "@/components/fitme-app/FitmeAuthForm";
+import { redirect } from "next/navigation";
 
-export default function LoginPage() {
-  return (
-    <Suspense>
-      <FitmeAuthForm mode="login" />
-    </Suspense>
-  );
+export default function LoginRedirectPage() {
+  redirect("/pro/login");
 }

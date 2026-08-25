@@ -2,7 +2,9 @@
 
 import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { MailCheck, MessageSquareQuote, Percent } from "lucide-react";
 import PageHeader from "@/src/components/dashboard/page-header";
+import ReservationsKpiCard from "@/src/components/dashboard/reservations/header/reservations-kpi-card";
 import Tabs from "@/src/components/ui/tabs";
 import AIUsageCounter from "@/src/components/dashboard/ai/ai-usage-counter";
 import GoogleReviewTab from "@/src/components/dashboard/ai/google-review-tab";
@@ -63,8 +65,38 @@ export default function ReputationPage({
     <div className="space-y-6">
       <PageHeader
         title="Avis Google"
-        subtitle="Collectez des avis, suivez les retours privés et gérez vos réponses Google."
+        subtitle="Transformez les utilisations de bons en avis clients."
       />
+
+      <div
+        className="grid grid-cols-1 gap-4 sm:grid-cols-3"
+        aria-labelledby="reviews-kpi-heading"
+      >
+        <h2 id="reviews-kpi-heading" className="sr-only">
+          Indicateurs avis
+        </h2>
+        <ReservationsKpiCard
+          label="Avis demandés"
+          value={14}
+          subline="Après utilisation d’un bon"
+          icon={MailCheck}
+          dataTone="accent"
+        />
+        <ReservationsKpiCard
+          label="Avis reçus"
+          value={6}
+          subline="Sur Google"
+          icon={MessageSquareQuote}
+          dataTone="premium"
+        />
+        <ReservationsKpiCard
+          label="Taux de conversion"
+          value="43 %"
+          subline="Demandes → avis"
+          icon={Percent}
+          dataTone="success"
+        />
+      </div>
 
       {canUseAI ? (
         <AIUsageCounter

@@ -23,8 +23,7 @@ export default function MarketingEmptyState() {
             Lancez votre première campagne
           </h2>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-zg-text-muted sm:text-[0.9375rem]">
-            Envoyez un e-mail groupé à vos clients pour les inviter à un événement, proposer une
-            offre ou simplement leur faire plaisir.
+            Envoyez un e-mail groupé à vos acheteurs pour une offre, un événement ou une relance.
           </p>
           <Button
             type="button"

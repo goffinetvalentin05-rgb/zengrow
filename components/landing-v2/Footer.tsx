@@ -24,7 +24,7 @@ export function LandingFooter() {
               {l.label}
             </Link>
           ))}
-          <Link href="/login" className="hover:text-[#EEF6FF]">
+          <Link href="/pro/login" className="hover:text-[#EEF6FF]">
             Connexion
           </Link>
         </nav>

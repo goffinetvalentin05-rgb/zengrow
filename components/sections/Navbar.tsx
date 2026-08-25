@@ -64,13 +64,13 @@ export function Navbar() {
 
           <div className="relative z-[1] ml-auto flex items-center gap-1 sm:gap-2">
             <Link
-              href="/login"
+              href="/pro/login"
               className="hidden rounded-full px-3 py-2 text-sm text-[#EEF6FF] transition hover:text-[#5EB3FF] sm:inline-block"
             >
               Connexion
             </Link>
             <Link
-              href="/signup"
+              href="/pro/signup"
               className="hidden rounded-full bg-[#2B8CFF] px-4 py-2 text-sm font-medium text-white shadow-[0_0_24px_rgba(43,140,255,0.32)] transition hover:bg-[#5EB3FF] hover:shadow-[0_0_36px_rgba(43,140,255,0.45)] sm:inline-flex sm:px-5"
             >
               Commencer
@@ -111,14 +111,14 @@ export function Navbar() {
               </ul>
               <div className="mt-3 flex flex-col gap-2 border-t border-[rgba(255,255,255,0.06)] pt-3">
                 <Link
-                  href="/login"
+                  href="/pro/login"
                   className="rounded-xl px-3 py-2.5 text-center text-sm text-[#EEF6FF]"
                   onClick={() => setOpen(false)}
                 >
                   Connexion
                 </Link>
                 <Link
-                  href="/signup"
+                  href="/pro/signup"
                   className="rounded-full bg-[#2B8CFF] px-5 py-2.5 text-center text-sm font-medium text-white shadow-[0_0_24px_rgba(43,140,255,0.28)]"
                   onClick={() => setOpen(false)}
                 >

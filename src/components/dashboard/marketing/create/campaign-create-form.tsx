@@ -154,11 +154,11 @@ export default function CampaignCreateForm() {
         <div>
           <label className="dashboard-field-label">Destinataires</label>
           <Select value={audience} onChange={(event) => setAudience(event.target.value as CampaignAudienceFilter)}>
-            <option value="all_customers">Tous les clients</option>
-            <option value="visited_last_30_days">Clients venus ces 30 derniers jours</option>
-            <option value="visited_last_90_days">Clients venus ces 90 derniers jours</option>
-            <option value="visited_more_than_3_times">Clients fidèles (plus de 3 visites)</option>
-            <option value="inactive_30_days">Clients inactifs depuis 30 jours</option>
+            <option value="all_customers">Tous les acheteurs</option>
+            <option value="visited_last_30_days">Acheteurs des 30 derniers jours</option>
+            <option value="visited_last_90_days">Acheteurs des 90 derniers jours</option>
+            <option value="visited_more_than_3_times">Acheteurs réguliers (plus de 3 bons)</option>
+            <option value="inactive_30_days">Anciens acheteurs (30 jours)</option>
           </Select>
           <p className="mt-1.5 text-xs text-zg-muted">
             Segments avancés (VIP, inactifs, anniversaires) — bientôt disponibles.

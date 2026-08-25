@@ -27,7 +27,7 @@ export function HeroSection() {
               </p>
 
               <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-                <PrimaryButton href="/signup" className="!min-h-14 !px-8 !text-base sm:!text-lg">
+                <PrimaryButton href="/pro/signup" className="!min-h-14 !px-8 !text-base sm:!text-lg">
                   Essayer gratuitement
                 </PrimaryButton>
                 <GhostButton

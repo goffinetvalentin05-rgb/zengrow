@@ -11,14 +11,6 @@ export function getOpenAIModel() {
   return process.env.OPENAI_MODEL?.trim() || "gpt-5.4-mini";
 }
 
-export function getStyleVisionModel() {
-  return process.env.STYLE_VISION_MODEL?.trim() || "gpt-4o";
-}
-
-export function getStyleImageModel() {
-  return process.env.STYLE_IMAGE_MODEL?.trim() || "gpt-image-1";
-}
-
 export function getOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {

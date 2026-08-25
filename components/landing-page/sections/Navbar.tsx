@@ -59,7 +59,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <PrimaryButton href="/signup" className="min-h-10 px-5 text-sm" showArrow>
+          <PrimaryButton href="/pro/signup" className="min-h-10 px-5 text-sm" showArrow>
             Commencer maintenant
           </PrimaryButton>
         </div>
@@ -89,7 +89,7 @@ export function Navbar() {
               </a>
             ))}
             <div className="mt-4 pt-4">
-              <PrimaryButton href="/signup" className="w-full justify-center" showArrow onClick={() => setOpen(false)}>
+              <PrimaryButton href="/pro/signup" className="w-full justify-center" showArrow onClick={() => setOpen(false)}>
                 Commencer maintenant
               </PrimaryButton>
             </div>

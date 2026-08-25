@@ -45,21 +45,21 @@ type RecipientOption = {
 };
 
 const RECIPIENT_OPTIONS: RecipientOption[] = [
-  { id: "all_customers", label: "Tous les clients", description: "Tous les contacts avec e-mail enregistré." },
+  { id: "all_customers", label: "Tous les acheteurs", description: "Tous les contacts avec e-mail enregistré." },
   {
     id: "visited_last_30_days",
-    label: "Clients venus récemment",
-    description: "Visite dans les 30 derniers jours.",
+    label: "Acheteurs récents",
+    description: "Achat dans les 30 derniers jours.",
   },
   {
     id: "inactive_30_days",
-    label: "Clients inactifs depuis 30 jours",
-    description: "Aucune visite depuis plus de 30 jours.",
+    label: "Anciens acheteurs",
+    description: "Aucun achat depuis plus de 30 jours.",
   },
   {
     id: "visited_more_than_3_times",
-    label: "Clients fidèles",
-    description: "Plus de 3 visites enregistrées.",
+    label: "Acheteurs réguliers",
+    description: "Plus de 3 bons achetés.",
   },
   {
     id: "manual",

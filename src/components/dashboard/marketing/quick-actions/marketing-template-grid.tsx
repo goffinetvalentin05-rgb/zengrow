@@ -1,6 +1,6 @@
 "use client";
 
-import MarketingTemplateCard from "@/src/components/dashboard/marketing/quick-actions/marketing-template-card";
+import CampaignTemplateCard from "@/src/components/dashboard/marketing/quick-actions/campaign-template-card";
 import { useMarketing } from "@/src/components/dashboard/marketing/context/use-marketing";
 import { CAMPAIGN_TEMPLATES } from "@/src/components/dashboard/marketing/utils/campaign-templates";
 import { cn } from "@/src/lib/utils";
@@ -20,7 +20,7 @@ export default function MarketingTemplateGrid({ className }: MarketingTemplateGr
       )}
     >
       {CAMPAIGN_TEMPLATES.map((template) => (
-        <MarketingTemplateCard
+        <CampaignTemplateCard
           key={template.id}
           template={template}
           onCreate={() => openCreateFormWithTemplate(template.id)}

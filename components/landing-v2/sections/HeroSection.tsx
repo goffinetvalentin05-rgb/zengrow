@@ -43,7 +43,7 @@ export function HeroSection() {
           </p>
 
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-            <PrimaryButton href="/signup">Commencer maintenant</PrimaryButton>
+            <PrimaryButton href="/pro/signup">Commencer maintenant</PrimaryButton>
             <SecondaryButton href="#ia">Voir une démo</SecondaryButton>
           </div>
 

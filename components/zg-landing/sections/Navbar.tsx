@@ -60,10 +60,10 @@ export function Navbar() {
           </ul>
 
           <div className="zg-nav-capsule__actions hidden md:flex">
-            <GhostButton href="/login" className="!min-h-9 !px-3 !text-sm">
+            <GhostButton href="/pro/login" className="!min-h-9 !px-3 !text-sm">
               Connexion
             </GhostButton>
-            <PrimaryButton href="/signup" className="!min-h-9 !px-4 !text-sm">
+            <PrimaryButton href="/pro/signup" className="!min-h-9 !px-4 !text-sm">
               Essayer gratuitement
             </PrimaryButton>
           </div>
@@ -93,12 +93,12 @@ export function Navbar() {
                 </li>
               ))}
               <li className="mt-2 border-t border-white/8 pt-3">
-                <GhostButton href="/login" className="w-full justify-center !min-h-10">
+                <GhostButton href="/pro/login" className="w-full justify-center !min-h-10">
                   Connexion
                 </GhostButton>
               </li>
               <li>
-                <PrimaryButton href="/signup" className="w-full justify-center !min-h-10">
+                <PrimaryButton href="/pro/signup" className="w-full justify-center !min-h-10">
                   Essayer gratuitement
                 </PrimaryButton>
               </li>

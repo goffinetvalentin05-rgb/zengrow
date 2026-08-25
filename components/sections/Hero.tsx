@@ -48,7 +48,7 @@ function HeroCopy() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.22 }}
       >
-        <LandingPrimaryButton href="/signup">Commencer maintenant</LandingPrimaryButton>
+        <LandingPrimaryButton href="/pro/signup">Commencer maintenant</LandingPrimaryButton>
         <LandingSecondaryButton href="/#ia">Voir une démo</LandingSecondaryButton>
       </motion.div>
 

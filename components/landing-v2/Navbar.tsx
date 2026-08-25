@@ -44,11 +44,11 @@ export function LandingNavbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link href="/login" className="text-sm text-[#EEF6FF] hover:text-[#5EB3FF]">
+          <Link href="/pro/login" className="text-sm text-[#EEF6FF] hover:text-[#5EB3FF]">
             Connexion
           </Link>
           <Link
-            href="/signup"
+            href="/pro/signup"
             className="rounded-full bg-[#2B8CFF] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_24px_rgba(43,140,255,0.35)] hover:bg-[#5EB3FF]"
           >
             Commencer
@@ -84,13 +84,13 @@ export function LandingNavbar() {
               </li>
             ))}
             <li className="mt-2 border-t border-[rgba(255,255,255,0.06)] pt-2">
-              <Link href="/login" className="block px-3 py-2.5 text-sm text-[#EEF6FF]" onClick={() => setOpen(false)}>
+              <Link href="/pro/login" className="block px-3 py-2.5 text-sm text-[#EEF6FF]" onClick={() => setOpen(false)}>
                 Connexion
               </Link>
             </li>
             <li>
               <Link
-                href="/signup"
+                href="/pro/signup"
                 className="mt-1 block rounded-full bg-[#2B8CFF] px-3 py-2.5 text-center text-sm font-semibold text-white"
                 onClick={() => setOpen(false)}
               >

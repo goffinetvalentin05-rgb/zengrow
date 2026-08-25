@@ -120,13 +120,13 @@ function Navbar() {
 
         <div className="relative z-10 ml-auto flex items-center gap-2 sm:gap-3">
           <Link
-            href="/login"
+            href="/pro/login"
             className="hidden rounded-full px-3 py-2 text-[13px] font-medium text-[var(--np-muted)] transition hover:text-[var(--np-fg)] sm:inline"
           >
             Connexion
           </Link>
           <Link
-            href="/signup"
+            href="/pro/signup"
             className="hidden items-center gap-1 rounded-full bg-[var(--np-accent)] px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_10px_30px_-8px_var(--np-glow)] transition hover:bg-[var(--np-accent-hover)] sm:inline-flex"
           >
             Essai gratuit
@@ -156,7 +156,7 @@ function Navbar() {
             </a>
           ))}
           <Link
-            href="/signup"
+            href="/pro/signup"
             onClick={() => setOpen(false)}
             className="mt-2 flex justify-center rounded-full bg-[var(--np-accent)] py-3 text-sm font-semibold text-white"
           >
@@ -561,7 +561,7 @@ function OrbitSection() {
             Rejoignez les restaurateurs qui centralisent page, réservations et marketing.
           </p>
           <Link
-            href="/signup"
+            href="/pro/signup"
             className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--np-accent)] px-8 py-4 text-[14px] font-semibold text-white shadow-[0_14px_40px_-10px_var(--np-glow)] transition hover:bg-[var(--np-accent-hover)]"
           >
             Essai gratuit
@@ -677,7 +677,7 @@ function SectionPricing() {
                 ))}
               </ul>
               <Link
-                href="/signup"
+                href="/pro/signup"
                 className={`mt-10 flex w-full items-center justify-center gap-2 rounded-full py-4 text-[14px] font-semibold transition ${
                   p.highlight
                     ? "bg-[var(--np-accent)] text-white shadow-[0_12px_36px_-10px_var(--np-glow)] hover:bg-[var(--np-accent-hover)]"
@@ -727,7 +727,7 @@ function Footer() {
               {l.label}
             </a>
           ))}
-          <Link href="/login" className="transition hover:text-[var(--np-fg)]">
+          <Link href="/pro/login" className="transition hover:text-[var(--np-fg)]">
             Connexion
           </Link>
         </nav>

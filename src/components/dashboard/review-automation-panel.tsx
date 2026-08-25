@@ -249,13 +249,13 @@ export default function ReviewAutomationPanel({
           </div>
         </SettingsAccordion>
 
-        <SettingsAccordion title="E-mail automatique post-visite">
+        <SettingsAccordion title="E-mail automatique après utilisation">
           <div className="flex flex-col gap-4">
             <PanelToggle
               checked={isEnabled}
               onChange={handleAutomationToggle}
               title="Envoi automatique activé"
-              description="Les clients reçoivent un e-mail après leur visite pour collecter un retour puis un lien vers Google."
+              description="Les clients reçoivent un e-mail après l’utilisation d’un bon pour laisser un avis Google."
               disabled={savingToggle || saving}
             />
             {savingToggle ? <p className="text-xs font-medium text-zg-muted">Enregistrement…</p> : null}
@@ -266,7 +266,7 @@ export default function ReviewAutomationPanel({
             ) : null}
 
             <div>
-              <label className="dashboard-field-label">Délai d&apos;envoi après la visite (heures)</label>
+              <label className="dashboard-field-label">Délai d&apos;envoi après utilisation (heures)</label>
               <Input
                 type="number"
                 className="mt-2 max-w-[200px]"
@@ -428,7 +428,7 @@ export default function ReviewAutomationPanel({
                 checked={isEnabled}
                 onChange={handleAutomationToggle}
                 title="Automatisation active"
-                description="Les clients reçoivent un message après leur visite."
+                description="Les clients reçoivent un message après l’utilisation d’un bon."
                 disabled={savingToggle || saving}
               />
               {savingToggle ? <p className="mt-2 text-xs font-medium text-zg-muted">Enregistrement…</p> : null}
@@ -489,7 +489,7 @@ export default function ReviewAutomationPanel({
                     </div>
                   </div>
                   <div>
-                    <label className="dashboard-field-label">Délai après visite</label>
+                    <label className="dashboard-field-label">Délai d&apos;envoi après utilisation</label>
                     <Select
                       className="mt-2"
                       value={String(delayMinutes)}

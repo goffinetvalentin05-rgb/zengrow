@@ -2,20 +2,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isOwnerEmail } from "@/src/lib/access";
 
-const FITME_PROTECTED = [
-  "/onboarding",
-  "/analysis",
-  "/style-profile",
-  "/account",
-  "/payment",
-  "/admin/style",
-  "/admin/fitme",
-];
-
-function isFitmeProtected(pathname: string) {
-  return FITME_PROTECTED.some((path) => pathname === path || pathname.startsWith(`${path}/`));
-}
-
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
     request: {
@@ -48,15 +34,6 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const isRestaurantPath = pathname.startsWith("/dashboard") || pathname === "/billing" || pathname.startsWith("/billing/");
-
-  if (isFitmeProtected(pathname)) {
-    if (!user) {
-      const signup = new URL("/signup", request.url);
-      signup.searchParams.set("next", pathname);
-      return NextResponse.redirect(signup);
-    }
-    return response;
-  }
 
   if (!isRestaurantPath) {
     return response;
@@ -96,20 +73,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/billing",
-    "/onboarding",
-    "/onboarding/:path*",
-    "/analysis/:path*",
-    "/style-profile",
-    "/style-profile/:path*",
-    "/account",
-    "/account/:path*",
-    "/payment/:path*",
-    "/admin/style",
-    "/admin/style/:path*",
-    "/admin/fitme",
-    "/admin/fitme/:path*",
-  ],
+  matcher: ["/dashboard/:path*", "/billing"],
 };

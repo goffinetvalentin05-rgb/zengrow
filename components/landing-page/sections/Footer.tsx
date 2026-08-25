@@ -6,7 +6,7 @@ const FOOTER_LINKS = [
   { href: "#comment-ca-marche", label: "Comment ça marche" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
-  { href: "/login", label: "Connexion" },
+  { href: "/pro/login", label: "Connexion" },
 ] as const;
 
 export function Footer() {

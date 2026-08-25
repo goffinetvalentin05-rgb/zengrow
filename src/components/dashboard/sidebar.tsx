@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
+  Gift,
   LayoutDashboard,
   LogOut,
   Megaphone,
@@ -42,8 +43,9 @@ type DashboardSidebarProps = {
 
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { href: "/dashboard/gift-vouchers", label: "Bons cadeaux", icon: Gift },
   { href: "/dashboard/customers", label: "Clients", icon: Users },
-  { href: "/dashboard/marketing", label: "Relances IA", icon: Megaphone, requiresPro: true },
+  { href: "/dashboard/marketing", label: "Campagnes IA", icon: Megaphone, requiresPro: true },
   { href: "/dashboard/reputation", label: "Avis Google", icon: Star },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];

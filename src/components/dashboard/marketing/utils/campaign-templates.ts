@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Cake, PartyPopper, Sparkles } from "lucide-react";
+import { CalendarDays, Gift, PartyPopper, Snowflake, Sparkles, UtensilsCrossed } from "lucide-react";
 
 export type CampaignAudienceFilter =
   | "all_customers"
@@ -8,7 +8,13 @@ export type CampaignAudienceFilter =
   | "visited_more_than_3_times"
   | "inactive_30_days";
 
-export type CampaignTemplateId = "special-evening" | "birthday" | "reactivation";
+export type CampaignTemplateId =
+  | "seasonal-promo"
+  | "holidays"
+  | "new-menu"
+  | "special-offer"
+  | "event"
+  | "reactivate-buyers";
 
 export type CampaignTemplate = {
   id: CampaignTemplateId;
@@ -25,57 +31,111 @@ export type CampaignTemplate = {
 
 export const CAMPAIGN_TEMPLATES: readonly CampaignTemplate[] = [
   {
-    id: "special-evening",
-    icon: PartyPopper,
-    title: "Soirée spéciale",
-    description: "Invitez vos clients à un événement",
+    id: "seasonal-promo",
+    icon: Sparkles,
+    title: "Promotion saisonnière",
+    description: "Mettez en avant une offre liée à la saison en cours.",
     draft: {
-      name: "Soirée spéciale",
-      subject: "Une soirée exceptionnelle vous attend",
+      name: "Promotion saisonnière",
+      subject: "Une offre de saison vous attend",
       content: `Bonjour,
 
-Nous organisons une soirée spéciale et serions ravis de vous compter parmi nos invités.
+La saison change et nous avons préparé une offre spéciale pour vous.
 
-Réservez votre table dès maintenant pour ne pas manquer cet événement.
+Profitez-en pour offrir ou utiliser un bon cadeau chez nous.
+
+À bientôt,`,
+      audience: "all_customers",
+    },
+  },
+  {
+    id: "holidays",
+    icon: Snowflake,
+    title: "Noël / fêtes",
+    description: "Proposez vos bons cadeaux pour les fêtes de fin d’année.",
+    draft: {
+      name: "Noël / fêtes",
+      subject: "Offrez un moment unique pour les fêtes",
+      content: `Bonjour,
+
+Les fêtes approchent. Offrez un bon cadeau et faites plaisir à vos proches.
+
+Nous nous occupons du reste.
+
+Joyeuses fêtes,`,
+      audience: "all_customers",
+    },
+  },
+  {
+    id: "new-menu",
+    icon: UtensilsCrossed,
+    title: "Nouveau menu",
+    description: "Annoncez une nouveauté à vos acheteurs.",
+    draft: {
+      name: "Nouveau menu",
+      subject: "Notre nouveauté est arrivée",
+      content: `Bonjour,
+
+Nous avons le plaisir de vous présenter une nouveauté.
+
+Venez la découvrir, éventuellement avec un bon cadeau.
+
+À très bientôt,`,
+      audience: "visited_last_90_days",
+    },
+  },
+  {
+    id: "special-offer",
+    icon: Gift,
+    title: "Offre spéciale",
+    description: "Créez une campagne courte pour une offre limitée.",
+    draft: {
+      name: "Offre spéciale",
+      subject: "Une offre spéciale rien que pour vous",
+      content: `Bonjour,
+
+Nous avons une offre limitée dans le temps, pensée pour nos acheteurs.
+
+Profitez-en avant qu’elle ne se termine.
+
+À bientôt,`,
+      audience: "all_customers",
+    },
+  },
+  {
+    id: "event",
+    icon: PartyPopper,
+    title: "Événement",
+    description: "Invitez votre base clients à un événement.",
+    draft: {
+      name: "Événement",
+      subject: "Un événement à ne pas manquer",
+      content: `Bonjour,
+
+Nous organisons un événement et serions ravis de vous y retrouver.
+
+Réservez votre place dès maintenant.
 
 À très bientôt,`,
       audience: "all_customers",
     },
   },
   {
-    id: "birthday",
-    icon: Cake,
-    title: "Rappel anniversaire",
-    description: "Souhaitez les anniversaires de vos habitués",
+    id: "reactivate-buyers",
+    icon: CalendarDays,
+    title: "Relance anciens acheteurs",
+    description: "Rappelez-vous aux personnes qui n’ont pas racheté récemment.",
     draft: {
-      name: "Rappel anniversaire",
-      subject: "Joyeux anniversaire — une attention vous attend",
+      name: "Relance anciens acheteurs",
+      subject: "Vos bons cadeaux vous manquent ?",
       content: `Bonjour,
 
-C'est bientôt votre anniversaire et nous aimerions vous gâter pour l'occasion.
+Cela fait un moment que nous ne vous avons pas vu.
 
-Passez nous voir cette semaine : une petite surprise vous attend à table.
-
-Joyeux anniversaire,`,
-      audience: "visited_more_than_3_times",
-    },
-  },
-  {
-    id: "reactivation",
-    icon: Sparkles,
-    title: "Réactivation",
-    description: "Faites revenir vos clients inactifs",
-    draft: {
-      name: "Réactivation clients",
-      subject: "Vous nous manquez — revenez nous voir",
-      content: `Bonjour,
-
-Cela fait un moment que nous ne vous avons pas vu et votre table nous manque.
-
-Revenez nous rendre visite prochainement : nous serons heureux de vous accueillir à nouveau.
+Offrez à nouveau un bon cadeau, ou utilisez celui que vous avez déjà.
 
 À bientôt,`,
-      audience: "all_customers",
+      audience: "inactive_30_days",
     },
   },
 ] as const;

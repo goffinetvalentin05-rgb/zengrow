@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getPlanFromPriceId, getStripeClient } from "@/src/lib/stripe";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 
@@ -68,34 +68,6 @@ export async function POST(request: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const productType = session.metadata?.product_type;
-
-    if (productType === "style_profile") {
-      const analysisId = session.metadata?.analysis_id ?? session.client_reference_id ?? null;
-      const userId = session.metadata?.user_id ?? null;
-      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : null;
-
-      if (analysisId) {
-        const { unlockStyleAnalysisFromStripe } = await import("@/src/lib/fitme/checkout");
-        const result = await unlockStyleAnalysisFromStripe({
-          checkoutSessionId: session.id,
-          paymentIntentId,
-          userId,
-          analysisId,
-          amount: session.amount_total,
-          currency: session.currency,
-        });
-        if (result.shouldGenerateLooks) {
-          const { runClaimedLookGeneration } = await import("@/src/lib/style-analysis/pipeline");
-          after(() => {
-            void runClaimedLookGeneration(analysisId);
-          });
-        }
-      }
-
-      return NextResponse.json({ received: true });
-    }
-
     const subscriptionId = typeof session.subscription === "string" ? session.subscription : null;
     const customerId = typeof session.customer === "string" ? session.customer : null;
     const restaurantId = session.metadata?.restaurant_id ?? session.client_reference_id ?? null;

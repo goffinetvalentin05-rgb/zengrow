@@ -36,7 +36,7 @@ export function HeroSection() {
 
         <ScrollReveal delay={0.15}>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-            <PrimaryButton href="/signup" showArrow>
+            <PrimaryButton href="/pro/signup" showArrow>
               Commencer maintenant
             </PrimaryButton>
             <SecondaryButton href="#fonctionnalites">Voir une démo</SecondaryButton>

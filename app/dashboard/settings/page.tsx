@@ -155,7 +155,7 @@ export default async function DashboardSettingsPage() {
       <div className="space-y-10">
         <PageHeader
           title="Paramètres"
-          subtitle="Facturation, réservations, notifications et compte."
+          subtitle="Établissement, bons cadeaux, paiements et canaux de vente."
           titleClassName="text-3xl font-bold tracking-tight"
           subtitleClassName="text-sm text-zg-text-muted"
         />

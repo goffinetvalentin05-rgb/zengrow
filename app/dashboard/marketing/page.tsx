@@ -35,8 +35,8 @@ export default async function DashboardMarketingPage({ searchParams }: Dashboard
       <DashboardContent>
         <section className="relative space-y-6">
           <PageHeader
-            title="Relances IA"
-            subtitle="Gérez les messages automatiques envoyés à vos clients inactifs"
+            title="Campagnes IA"
+            subtitle="Créez des campagnes personnalisées pour vos acheteurs."
           />
 
           <div className="relative min-h-[min(70vh,560px)] overflow-hidden rounded-2xl border border-zg-border bg-zg-surface transition-all duration-200 ease-out">

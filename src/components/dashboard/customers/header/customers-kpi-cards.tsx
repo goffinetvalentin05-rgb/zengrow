@@ -30,14 +30,14 @@ export default function CustomersKpiCards() {
         dataTone="accent"
       />
       <ReservationsKpiCard
-        label="Clients fidèles"
+        label="Opt-in marketing"
         value={kpis.loyalClients}
         subline={formatLoyalPercentSubline(kpis.loyalPercent)}
         icon={Heart}
         dataTone="premium"
       />
       <ReservationsKpiCard
-        label="Réservations totales"
+        label="Bons achetés"
         value={kpis.totalReservations}
         subline={formatAvgVisitsSubline(kpis.avgVisitsPerClient)}
         icon={CalendarDays}

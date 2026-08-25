@@ -9,11 +9,11 @@ export default function MarketingHeader() {
 
   return (
     <PageHeader
-      title="Relances IA"
-      subtitle="Gérez les messages automatiques envoyés à vos clients inactifs"
+      title="Campagnes IA"
+      subtitle="Créez des campagnes personnalisées pour vos acheteurs."
       primaryAction={{
         kind: "button",
-        label: showCreateForm ? "Annuler" : "Nouvelle relance",
+        label: showCreateForm ? "Annuler" : "Nouvelle campagne",
         icon: <Sparkles className="h-4 w-4" strokeWidth={2} aria-hidden />,
         onClick: showCreateForm ? closeCreateForm : openCreateForm,
       }}

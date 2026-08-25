@@ -15,11 +15,11 @@ export default function MarketingAICreateSection({ canUseAI, onOpen }: Marketing
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-[#a78bfa]" strokeWidth={2} />
-          Créer une campagne avec l&apos;IA
+          Créez une campagne avec l&apos;IA
         </CardTitle>
         <CardDescription>
           Décrivez votre offre, votre événement ou votre message. ZenGrow génère une campagne prête à
-          envoyer.
+          envoyer à votre base clients.
         </CardDescription>
       </CardHeader>
       <CardContent>

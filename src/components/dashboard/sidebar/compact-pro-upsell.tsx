@@ -24,7 +24,7 @@ export default function CompactProUpsell({ onNavigate }: CompactProUpsellProps) 
       <Sparkles className="h-4 w-4 shrink-0 text-zg-accent" strokeWidth={1.85} aria-hidden />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium leading-tight text-zg-on-dark">Passer au Pro</p>
-        <p className="text-xs leading-snug text-zg-on-dark-muted">Relances IA & analytics</p>
+        <p className="text-xs leading-snug text-zg-on-dark-muted">Campagnes IA & analytics</p>
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-zg-on-dark-muted" strokeWidth={2} aria-hidden />
     </Link>
