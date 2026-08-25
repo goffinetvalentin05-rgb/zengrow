@@ -3,7 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["passkit-generator", "@react-pdf/renderer", "sharp"],
   outputFileTracingIncludes: {
-    "/api/gift-vouchers/[id]/pdf": ["./public/fonts/gift-voucher/**/*"],
+    "/api/gift-vouchers/[id]/pdf": [
+      "./public/fonts/gift-voucher/**/*",
+      "./src/lib/gift-vouchers/pdf/fonts/**/*",
+    ],
   },
   images: {
     remotePatterns: [
