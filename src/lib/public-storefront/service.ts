@@ -43,7 +43,7 @@ export async function loadStorefrontIdentity(
     supabase
       .from("restaurants")
       .select(
-        "id, name, slug, phone, email, address, city, cuisine_type, logo_url, banner_url, primary_color, public_display_name, public_tagline, public_description, google_maps_url",
+        "id, name, slug, phone, email, address, city, cuisine_type, logo_url, banner_url, primary_color, public_display_name, public_tagline, public_description, google_maps_url, tiktok_url",
       )
       .eq("id", restaurantId)
       .maybeSingle(),
@@ -85,6 +85,7 @@ export async function loadStorefrontIdentity(
     primaryColor: normalizeHexColor((restaurant.primary_color as string | null) ?? "", DEFAULT_PRIMARY),
     instagramUrl: (settingsRecord.instagram_url as string | null) ?? null,
     facebookUrl: (settingsRecord.facebook_url as string | null) ?? null,
+    tiktokUrl: (restaurantRecord.tiktok_url as string | null) ?? null,
     googleMapsUrl: (restaurantRecord.google_maps_url as string | null) ?? null,
     openingHours: (settingsRecord.opening_hours as OpeningHours | null) ?? getDefaultOpeningHours(),
     galleryUrls: (settingsRecord.gallery_image_urls as string[] | null) ?? [],
@@ -164,7 +165,7 @@ export async function loadDesignerState(
 
 export function parseDesignerPayload(payload: unknown): StorefrontConfig {
   try {
-    return parseStorefrontConfig(sanitizeStorefrontPayload(payload));
+    return parseStorefrontConfig(hydrateStorefrontConfig(sanitizeStorefrontPayload(payload), defaultStorefrontConfig()));
   } catch (error) {
     if (error instanceof ZodError) {
       throw new StorefrontServiceError("Configuration invalide. Vérifiez les champs du concepteur.", 400);
@@ -234,7 +235,6 @@ export async function publishStorefrontConfig(
     .from("restaurant_settings")
     .update({
       cover_image_url: draft.hero.coverImageUrl || null,
-      gallery_image_urls: draft.gallery.images,
     })
     .eq("restaurant_id", restaurantId);
 

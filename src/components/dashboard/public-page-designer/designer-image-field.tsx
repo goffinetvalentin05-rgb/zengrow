@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Trash2 } from "lucide-react";
 import Button from "@/src/components/ui/button";
-import { coverCropRect } from "@/src/lib/gift-vouchers/offers/crop-banner";
 import {
   imageExtensionForUpload,
   tryRemoveRestaurantPublicObject,
@@ -19,7 +18,9 @@ type DesignerImageFieldProps = {
   onChange: (url: string) => void;
   folder: RestaurantAssetFolder;
   label: string;
-  ratio?: number;
+  focalX?: number;
+  focalY?: number;
+  onFocalChange?: (focalX: number, focalY: number) => void;
 };
 
 export default function DesignerImageField({
@@ -28,9 +29,12 @@ export default function DesignerImageField({
   onChange,
   folder,
   label,
-  ratio = 16 / 10,
+  focalX = 0.5,
+  focalY = 0.5,
+  onFocalChange,
 }: DesignerImageFieldProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const dragRef = useRef<{ x: number; y: number; focalX: number; focalY: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,13 +50,13 @@ export default function DesignerImageField({
     setError(null);
     setBusy(true);
     try {
-      const cropped = await cropToCover(file, ratio);
       const supabase = createClient();
-      const uploaded = await uploadRestaurantPublicAsset(supabase, restaurantId, folder, cropped, {
-        extension: imageExtensionForUpload(cropped),
+      const uploaded = await uploadRestaurantPublicAsset(supabase, restaurantId, folder, file, {
+        extension: imageExtensionForUpload(file),
       });
       if (value) await tryRemoveRestaurantPublicObject(supabase, value);
       onChange(uploaded.publicUrl);
+      onFocalChange?.(0.5, 0.5);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Import impossible.");
     } finally {
@@ -75,9 +79,35 @@ export default function DesignerImageField({
     <div className="space-y-2">
       <p className="text-xs font-semibold text-zg-fg">{label}</p>
       {value ? (
-        <div className="relative overflow-hidden rounded-xl border border-zg-border">
+        <div
+          className="relative overflow-hidden rounded-xl border border-zg-border"
+          onPointerDown={(event) => {
+            if (!onFocalChange) return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            dragRef.current = { x: event.clientX, y: event.clientY, focalX, focalY };
+          }}
+          onPointerMove={(event) => {
+            const drag = dragRef.current;
+            if (!drag || !onFocalChange) return;
+            const box = event.currentTarget.getBoundingClientRect();
+            const dx = (event.clientX - drag.x) / box.width;
+            const dy = (event.clientY - drag.y) / box.height;
+            onFocalChange(Math.min(1, Math.max(0, drag.focalX - dx)), Math.min(1, Math.max(0, drag.focalY - dy)));
+          }}
+          onPointerUp={() => {
+            dragRef.current = null;
+          }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="" className="aspect-[16/10] w-full object-cover" />
+          <img
+            src={value}
+            alt=""
+            className="aspect-[16/10] w-full object-cover"
+            style={{ objectPosition: `${Math.round(focalX * 100)}% ${Math.round(focalY * 100)}%` }}
+          />
+          {onFocalChange ? (
+            <p className="absolute bottom-1.5 left-1.5 rounded bg-black/55 px-1.5 py-0.5 text-[10px] text-white">Glisser pour le point focal</p>
+          ) : null}
         </div>
       ) : (
         <button
@@ -104,20 +134,4 @@ export default function DesignerImageField({
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => void onFile(e)} />
     </div>
   );
-}
-
-async function cropToCover(file: File, ratio: number): Promise<File> {
-  const bitmap = await createImageBitmap(file);
-  const rect = coverCropRect(bitmap.width, bitmap.height, ratio, 0.5, 0.5);
-  const width = 1600;
-  const height = Math.round(width / ratio);
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return file;
-  ctx.drawImage(bitmap, rect.sx, rect.sy, rect.sw, rect.sh, 0, 0, width, height);
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.88));
-  if (!blob) return file;
-  return new File([blob], "cover.jpg", { type: "image/jpeg" });
 }

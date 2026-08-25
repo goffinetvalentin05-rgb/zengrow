@@ -35,6 +35,7 @@ export async function loadPublishedStorefront(slug: string): Promise<PublishedSt
     primaryColor: restaurant.primary_color,
     instagramUrl: settings?.instagram_url,
     facebookUrl: settings?.facebook_url,
+    tiktokUrl: restaurant.tiktok_url,
     googleMapsUrl: restaurant.google_maps_url,
     openingHours: settings?.opening_hours,
     galleryUrls: settings?.gallery_image_urls,

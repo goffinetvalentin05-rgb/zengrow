@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: PublicReservationPageProps): 
   const title = config.hero.title.trim() || identity.displayName;
   const description =
     config.hero.subtitle.trim() ||
-    config.about.body.trim().slice(0, 160) ||
+    config.offers.subtitle.trim() ||
     `Bons cadeaux ${identity.displayName}`;
   const ogImage = config.hero.coverImageUrl || identity.coverUrl || identity.logoUrl || undefined;
 

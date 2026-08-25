@@ -13,11 +13,6 @@ export function plainText(value: unknown, max: number): string {
   return stripHtml(value).replace(/\s+/g, " ").trim().slice(0, max);
 }
 
-export function multilinePlainText(value: unknown, max: number): string {
-  if (typeof value !== "string") return "";
-  return stripHtml(value).replace(/\r\n/g, "\n").trim().slice(0, max);
-}
-
 export function sanitizeStoredUrl(value: unknown): string {
   if (typeof value !== "string") return "";
   const trimmed = value.trim();
@@ -36,18 +31,14 @@ export function sanitizeStorefrontPayload(raw: unknown): unknown {
   const style = isRecord(input.style) ? input.style : {};
   const hero = isRecord(input.hero) ? input.hero : {};
   const offers = isRecord(input.offers) ? input.offers : {};
-  const about = isRecord(input.about) ? input.about : {};
-  const gallery = isRecord(input.gallery) ? input.gallery : {};
   const footer = isRecord(input.footer) ? input.footer : {};
 
   return {
-    ...input,
+    schemaVersion: 2,
+    presetId: input.presetId ?? null,
     style: {
       ...style,
-      secondaryColor:
-        typeof style.secondaryColor === "string" && style.secondaryColor.trim() === ""
-          ? null
-          : style.secondaryColor,
+      accentColor: emptyToNullish(style.accentColor) ?? style.secondaryColor,
     },
     hero: {
       ...hero,
@@ -62,24 +53,16 @@ export function sanitizeStorefrontPayload(raw: unknown): unknown {
       subtitle: plainText(offers.subtitle, 280),
       customButtonText: plainText(offers.customButtonText, 40),
     },
-    about: {
-      ...about,
-      title: plainText(about.title, 120),
-      body: multilinePlainText(about.body, 4000),
-      imageUrl: sanitizeStoredUrl(about.imageUrl),
-    },
-    gallery: {
-      ...gallery,
-      images: Array.isArray(gallery.images)
-        ? gallery.images.map((url) => sanitizeStoredUrl(url)).filter(Boolean).slice(0, 8)
-        : [],
-    },
     footer: {
       ...footer,
-      text: plainText(footer.text, 280),
       showPoweredBy: true,
     },
   };
+}
+
+function emptyToNullish(value: unknown): unknown {
+  if (typeof value === "string" && value.trim() === "") return undefined;
+  return value;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

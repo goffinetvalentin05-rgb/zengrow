@@ -1,14 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Clock, Gift, Mail, MapPin, Phone, Globe } from "lucide-react";
+import { Gift } from "lucide-react";
 import type { PublicGiftVoucherOffer } from "@/src/lib/gift-vouchers/offers/types";
 import { googleFontsHref, getFontDescriptor } from "@/src/lib/public-page-fonts";
+import { FONT_PAIRINGS } from "@/src/lib/public-storefront/defaults";
 import { storefrontButtonTextColor } from "@/src/lib/public-storefront/contrast";
 import type { StorefrontIdentity } from "@/src/lib/public-storefront/identity";
-import type { StorefrontConfig, StorefrontSectionId } from "@/src/lib/public-storefront/schema";
+import { offerGridClass, offerSectionMaxWidth } from "@/src/lib/public-storefront/offer-layout";
+import type { StorefrontConfig } from "@/src/lib/public-storefront/schema";
 import { cn } from "@/src/lib/utils";
 import StorefrontOfferModal, { offerPriceLabel } from "@/src/components/public-storefront/storefront-offer-modal";
+import { StorefrontGlyph } from "@/src/components/public-storefront/storefront-icons";
+import { storefrontFooterLinks } from "@/src/lib/public-storefront/footer-links";
 
 export type PublicStorefrontPageProps = {
   config: StorefrontConfig;
@@ -18,22 +22,15 @@ export type PublicStorefrontPageProps = {
   draftBanner?: boolean;
 };
 
-const CTA_HREF: Record<StorefrontConfig["hero"]["ctaTarget"], string> = {
-  offers: "#bons-cadeaux",
-  about: "#a-propos",
-  contact: "#coordonnees",
-  hours: "#horaires",
-  map: "#carte",
-};
-
-const OFFER_BUTTON: Record<Exclude<StorefrontConfig["offers"]["buttonPreset"], "custom">, { monetary: string; experience: string }> = {
-  offrir: { monetary: "Offrir", experience: "Offrir" },
+const BUTTON_COPY = {
+  offrir: { monetary: "Offrir", experience: "Offrir cette expérience" },
   decouvrir: { monetary: "Découvrir", experience: "Découvrir" },
   choisir: { monetary: "Choisir ce bon", experience: "Offrir cette expérience" },
-};
+} as const;
 
 export function storefrontFontsHref(config: StorefrontConfig): string | null {
-  return googleFontsHref([config.style.font]);
+  const pair = FONT_PAIRINGS[config.style.fontPairing];
+  return googleFontsHref([pair.heading, pair.body]);
 }
 
 export default function PublicStorefrontPage({
@@ -44,9 +41,10 @@ export default function PublicStorefrontPage({
   draftBanner = false,
 }: PublicStorefrontPageProps) {
   const [selected, setSelected] = useState<PublicGiftVoucherOffer | null | undefined>(undefined);
-  const tokens = useMemo(() => storefrontTokens(config), [config]);
-  const font = getFontDescriptor(config.style.font);
-  const enabled = (id: StorefrontSectionId) => config.sections.find((section) => section.id === id)?.enabled !== false;
+  const tokens = useMemo(() => tokensFrom(config), [config]);
+  const pair = FONT_PAIRINGS[config.style.fontPairing];
+  const heading = getFontDescriptor(pair.heading);
+  const body = getFontDescriptor(pair.body);
 
   return (
     <div
@@ -54,13 +52,15 @@ export default function PublicStorefrontPage({
       style={{
         backgroundColor: tokens.bg,
         color: tokens.text,
-        fontFamily: font ? `${font.family}, ${font.fallback}` : "system-ui, sans-serif",
+        fontFamily: body ? `${body.family}, ${body.fallback}` : "system-ui, sans-serif",
         ["--sf-bg" as string]: tokens.bg,
         ["--sf-text" as string]: tokens.text,
+        ["--sf-muted" as string]: tokens.muted,
         ["--sf-heading" as string]: tokens.text,
         ["--sf-primary" as string]: tokens.primary,
+        ["--sf-accent" as string]: tokens.accent,
         ["--sf-button-text" as string]: tokens.buttonText,
-        ["--sf-font" as string]: font ? `${font.family}, ${font.fallback}` : "system-ui, sans-serif",
+        ["--sf-heading-font" as string]: heading ? `${heading.family}, ${heading.fallback}` : "Georgia, serif",
         ["--sf-radius" as string]: tokens.radius,
       }}
     >
@@ -69,52 +69,9 @@ export default function PublicStorefrontPage({
           Aperçu du brouillon — non visible publiquement
         </div>
       ) : null}
-
-      <div className="flex flex-col">
-        {config.sections.map((section) => {
-          if (!section.enabled) return null;
-          if (section.id === "hero") {
-            return <HeroSection key={section.id} config={config} identity={identity} tokens={tokens} />;
-          }
-          if (section.id === "offers") {
-            return (
-              <OffersSection
-                key={section.id}
-                config={config}
-                offers={offers}
-                tokens={tokens}
-                onSelect={(offer) => setSelected(offer)}
-              />
-            );
-          }
-          if (section.id === "about") {
-            return <AboutSection key={section.id} config={config} tokens={tokens} />;
-          }
-          if (section.id === "gallery" && config.gallery.images.length > 0) {
-            return <GallerySection key={section.id} images={config.gallery.images} tokens={tokens} />;
-          }
-          if (section.id === "practical") {
-            return <PracticalSection key={section.id} config={config} identity={identity} tokens={tokens} />;
-          }
-          if (section.id === "hours") {
-            return <HoursSection key={section.id} identity={identity} tokens={tokens} />;
-          }
-          if (section.id === "contact") {
-            return <ContactSection key={section.id} identity={identity} tokens={tokens} />;
-          }
-          if (section.id === "social") {
-            return <SocialSection key={section.id} identity={identity} tokens={tokens} />;
-          }
-          if (section.id === "map") {
-            return <MapSection key={section.id} identity={identity} tokens={tokens} />;
-          }
-          if (section.id === "footer") {
-            return <FooterSection key={section.id} config={config} identity={identity} tokens={tokens} />;
-          }
-          return null;
-        })}
-      </div>
-
+      <HeroBlock config={config} identity={identity} tokens={tokens} />
+      <OffersBlock config={config} offers={offers} tokens={tokens} onSelect={setSelected} />
+      <FooterBlock config={config} identity={identity} tokens={tokens} />
       {selected !== undefined ? (
         <StorefrontOfferModal
           restaurantSlug={identity.slug}
@@ -124,93 +81,146 @@ export default function PublicStorefrontPage({
           onClose={() => setSelected(undefined)}
         />
       ) : null}
-
-      {!enabled("footer") ? (
-        <p className="px-4 py-6 text-center text-[11px] opacity-50">Propulsé par ZenGrow</p>
-      ) : null}
     </div>
   );
 }
 
-type Tokens = ReturnType<typeof storefrontTokens>;
+type Tokens = ReturnType<typeof tokensFrom>;
 
-function storefrontTokens(config: StorefrontConfig) {
+function tokensFrom(config: StorefrontConfig) {
   return {
     bg: config.style.backgroundColor,
     text: config.style.textColor,
+    muted: config.style.mutedTextColor,
     primary: config.style.primaryColor,
-    secondary: config.style.secondaryColor,
+    accent: config.style.accentColor,
     buttonText: storefrontButtonTextColor(config.style.primaryColor),
-    radius:
-      config.style.buttonStyle === "pill" ? "999px" : config.style.buttonStyle === "rounded" ? "16px" : "10px",
-    maxW:
-      config.style.contentWidth === "narrow" ? "42rem" : config.style.contentWidth === "wide" ? "70rem" : "58rem",
-    py: config.style.spacing === "compact" ? "3rem" : config.style.spacing === "relaxed" ? "6rem" : "4.5rem",
-    cardShadow:
-      config.style.cardStyle === "shadow"
-        ? "0 18px 50px -28px rgba(0,0,0,0.35)"
-        : "none",
-    cardBorder:
-      config.style.cardStyle === "minimal"
-        ? "transparent"
-        : "color-mix(in srgb, var(--sf-text) 12%, var(--sf-bg))",
+    radius: config.style.radius === "pill" ? "999px" : config.style.radius === "rounded" ? "16px" : "10px",
+    cardRadius: config.style.radius === "pill" ? "24px" : config.style.radius === "rounded" ? "18px" : "12px",
   };
 }
 
-function Shell({ tokens, className, id, children }: { tokens: Tokens; className?: string; id?: string; children: React.ReactNode }) {
-  return (
-    <section id={id} className={cn("w-full scroll-mt-24", className)} style={{ paddingTop: tokens.py, paddingBottom: tokens.py }}>
-      <div className="mx-auto w-full px-4 sm:px-6" style={{ maxWidth: tokens.maxW }}>
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function HeroSection({ config, identity, tokens }: { config: StorefrontConfig; identity: StorefrontIdentity; tokens: Tokens }) {
+function HeroBlock({ config, identity, tokens }: { config: StorefrontConfig; identity: StorefrontIdentity; tokens: Tokens }) {
   const hero = config.hero;
-  const height = hero.coverHeight === "tall" ? "min-h-[72vh]" : hero.coverHeight === "compact" ? "min-h-[42vh]" : "min-h-[56vh]";
+  const height =
+    hero.height === "immersive" || hero.layout === "immersive"
+      ? "min-h-[88vh]"
+      : hero.height === "compact"
+        ? "min-h-[38vh]"
+        : "min-h-[54vh]";
   const align = hero.align === "center" ? "items-center text-center" : "items-start text-left";
-  const overlay = hero.overlayEnabled ? hero.overlayOpacity / 100 : 0;
+  const logoH = hero.logoSize === "sm" ? "h-10 w-10" : hero.logoSize === "lg" ? "h-20 w-20" : "h-14 w-14";
+  const pad = hero.padding === "compact" ? "py-10" : hero.padding === "relaxed" ? "py-20" : "py-14";
+  const textColor = hero.textColor || (hero.layout === "split" || hero.layout === "minimal" ? tokens.text : "#FFFFFF");
+  const objectPos = `${Math.round(hero.focalX * 100)}% ${Math.round(hero.focalY * 100)}%`;
+  const frame = hero.frame === "rounded" ? "overflow-hidden sm:mx-4 sm:mt-4 sm:rounded-[28px]" : "";
+
+  const cta = hero.ctaVisible ? (
+    <a
+      href="#bons-cadeaux"
+      className="inline-flex min-h-11 items-center justify-center px-6 text-sm font-semibold transition hover:opacity-90"
+      style={ctaStyle(hero.ctaStyle, tokens, textColor)}
+    >
+      {hero.ctaText.trim() || "Offrir un bon cadeau"}
+    </a>
+  ) : null;
+
+  const copy = (
+    <div className={cn("flex max-w-xl flex-col gap-4", align)} style={{ color: textColor }}>
+      {hero.showLogo && identity.logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={identity.logoUrl} alt="" className={cn(logoH, "rounded-2xl object-cover ring-1 ring-black/10")} />
+      ) : null}
+      <h1
+        className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl"
+        style={{ fontFamily: "var(--sf-heading-font)" }}
+      >
+        {hero.title.trim() || identity.displayName}
+      </h1>
+      {hero.subtitle.trim() ? <p className="text-pretty text-base opacity-90 sm:text-lg">{hero.subtitle}</p> : null}
+      {cta}
+    </div>
+  );
+
+  if (hero.layout === "split") {
+    return (
+      <header id="accueil" className={cn("mx-auto grid items-center gap-8 px-4 sm:px-6 lg:grid-cols-2", pad, frame)} style={{ maxWidth: "70rem" }}>
+        {copy}
+        <div className="relative aspect-[4/5] min-h-[280px] overflow-hidden sm:aspect-[5/6]" style={{ borderRadius: tokens.cardRadius }}>
+          <HeroMedia hero={hero} tokens={tokens} objectPos={objectPos} />
+        </div>
+      </header>
+    );
+  }
+
+  if (hero.layout === "minimal") {
+    return (
+      <header id="accueil" className={cn("relative px-4", pad, frame)} style={minimalBackground(hero, tokens)}>
+        <div className={cn("mx-auto flex flex-col gap-6", align)} style={{ maxWidth: "42rem" }}>
+          {copy}
+          {hero.background !== "solid" && hero.coverImageUrl ? (
+            <div className="relative mx-auto aspect-[16/10] w-full max-w-md overflow-hidden" style={{ borderRadius: tokens.cardRadius }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={hero.coverImageUrl} alt="" className="h-full w-full object-cover" style={{ objectPosition: objectPos }} />
+            </div>
+          ) : null}
+        </div>
+      </header>
+    );
+  }
 
   return (
-    <header id="accueil" className={cn("relative isolate overflow-hidden", height)}>
-      {hero.coverImageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={hero.coverImageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      ) : (
-        <div className="absolute inset-0" style={{ backgroundColor: "color-mix(in srgb, var(--sf-primary) 18%, var(--sf-bg))" }} />
-      )}
-      {overlay > 0 ? <div className="absolute inset-0 bg-black" style={{ opacity: overlay }} aria-hidden /> : null}
-      <div className={cn("relative z-[1] mx-auto flex h-full w-full flex-col justify-end gap-4 px-4 py-12 sm:px-6 sm:py-16", align)} style={{ maxWidth: tokens.maxW }}>
-        {hero.showLogo && identity.logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={identity.logoUrl} alt="" className="h-14 w-14 rounded-2xl object-cover ring-1 ring-white/30" />
-        ) : null}
-        {(hero.showCategory && identity.category) || (hero.showAddress && identity.address) ? (
-          <p className="text-xs font-medium uppercase tracking-[0.22em] text-white/80">
-            {[hero.showCategory ? identity.category : null, hero.showAddress ? identity.address : null].filter(Boolean).join(" · ")}
-          </p>
-        ) : null}
-        <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl" style={{ fontFamily: "var(--sf-font)" }}>
-          {hero.title.trim() || identity.displayName}
-        </h1>
-        {hero.subtitle.trim() ? <p className="max-w-xl text-pretty text-base text-white/85 sm:text-lg">{hero.subtitle}</p> : null}
-        {hero.ctaVisible ? (
-          <a
-            href={CTA_HREF[hero.ctaTarget]}
-            className="inline-flex min-h-11 items-center justify-center px-6 text-sm font-semibold"
-            style={{ borderRadius: tokens.radius, backgroundColor: tokens.primary, color: tokens.buttonText }}
-          >
-            {hero.ctaText.trim() || "Offrir un bon cadeau"}
-          </a>
-        ) : null}
+    <header id="accueil" className={cn("relative isolate overflow-hidden", height, frame)}>
+      <HeroMedia hero={hero} tokens={tokens} objectPos={objectPos} />
+      {hero.overlayOpacity > 0 && hero.background !== "solid" ? (
+        <div className="absolute inset-0 bg-black" style={{ opacity: hero.overlayOpacity / 100 }} aria-hidden />
+      ) : null}
+      <div className={cn("relative z-[1] mx-auto flex h-full w-full flex-col justify-end px-4 sm:px-6", pad, align, hero.layout === "immersive" ? "justify-end" : "justify-center")} style={{ maxWidth: "58rem" }}>
+        {copy}
       </div>
     </header>
   );
 }
 
-function OffersSection({
+function HeroMedia({ hero, tokens, objectPos }: { hero: StorefrontConfig["hero"]; tokens: Tokens; objectPos: string }) {
+  if (hero.background === "solid" || (!hero.coverImageUrl && hero.background !== "gradient")) {
+    return <div className="absolute inset-0" style={{ backgroundColor: tokens.primary }} />;
+  }
+  if (hero.background === "gradient" && !hero.coverImageUrl) {
+    return (
+      <div
+        className="absolute inset-0"
+        style={{ background: `linear-gradient(160deg, ${tokens.bg} 0%, color-mix(in srgb, ${tokens.primary} 28%, ${tokens.bg}) 100%)` }}
+      />
+    );
+  }
+  if (!hero.coverImageUrl) {
+    return <div className="absolute inset-0" style={{ backgroundColor: "color-mix(in srgb, var(--sf-primary) 18%, var(--sf-bg))" }} />;
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={hero.coverImageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: objectPos }} />
+  );
+}
+
+function minimalBackground(hero: StorefrontConfig["hero"], tokens: Tokens): React.CSSProperties {
+  if (hero.background === "gradient") {
+    return { background: `linear-gradient(165deg, ${tokens.bg} 0%, color-mix(in srgb, ${tokens.primary} 16%, ${tokens.bg}) 100%)` };
+  }
+  return { backgroundColor: tokens.bg };
+}
+
+function ctaStyle(style: StorefrontConfig["hero"]["ctaStyle"], tokens: Tokens, textColor: string): React.CSSProperties {
+  if (style === "outline") {
+    return { borderRadius: tokens.radius, border: `1px solid ${textColor}`, color: textColor, backgroundColor: "transparent" };
+  }
+  if (style === "soft") {
+    return { borderRadius: tokens.radius, backgroundColor: "color-mix(in srgb, white 18%, transparent)", color: textColor };
+  }
+  return { borderRadius: tokens.radius, backgroundColor: tokens.primary, color: tokens.buttonText };
+}
+
+function OffersBlock({
   config,
   offers,
   tokens,
@@ -221,272 +231,216 @@ function OffersSection({
   tokens: Tokens;
   onSelect: (offer: PublicGiftVoucherOffer | null) => void;
 }) {
-  const cols = config.offers.columns;
-  const grid =
-    config.offers.layout === "list"
-      ? "grid-cols-1"
-      : cols === 3
-        ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-        : cols === 1
-          ? "grid-cols-1"
-          : "grid-cols-1 sm:grid-cols-2";
-  const ratio = config.offers.imageRatio === "1/1" ? "aspect-square" : config.offers.imageRatio === "4/3" ? "aspect-[4/3]" : "aspect-[16/10]";
-  const buttonLabel = (offer: PublicGiftVoucherOffer) => {
-    if (config.offers.buttonPreset === "custom" && config.offers.customButtonText.trim()) {
-      return config.offers.customButtonText.trim();
-    }
-    const preset = OFFER_BUTTON[config.offers.buttonPreset === "custom" ? "choisir" : config.offers.buttonPreset];
-    return offer.kind === "experience" ? preset.experience : preset.monetary;
-  };
+  const pad = config.offers.paddingY === "compact" ? "py-10" : config.offers.paddingY === "relaxed" ? "py-16" : "py-12";
+  const align = config.offers.align === "center" ? "text-center mx-auto" : "text-left";
+  const maxWidth = offerSectionMaxWidth(offers.length, config.offers.maxWidth);
+  const titleSize = config.offers.titleSize === "lg" ? "text-2xl sm:text-3xl" : config.offers.titleSize === "sm" ? "text-lg" : "text-xl sm:text-2xl";
 
   return (
-    <Shell tokens={tokens} id="bons-cadeaux">
-      <div className="mb-8">
-        <h2 className="text-3xl font-semibold tracking-tight" style={{ color: "var(--sf-heading)" }}>
-          {config.offers.title.trim() || "Bons cadeaux"}
-        </h2>
-        {config.offers.subtitle.trim() ? <p className="mt-2 max-w-2xl text-base opacity-80">{config.offers.subtitle}</p> : null}
-      </div>
-      {offers.length === 0 ? (
-        <p className="text-sm opacity-70">Les offres publiées dans Mes offres apparaîtront ici.</p>
-      ) : (
-        <div className={cn("grid gap-5", grid)}>
-          {offers.map((offer) => {
-            const horizontal = config.offers.cardOrientation === "horizontal";
-            return (
-              <article
-                key={offer.id}
-                className={cn("overflow-hidden bg-[color-mix(in_srgb,var(--sf-text)_3%,var(--sf-bg))]", horizontal && "sm:flex")}
-                style={{
-                  borderRadius: tokens.radius === "999px" ? "24px" : tokens.radius,
-                  border: `1px solid ${tokens.cardBorder}`,
-                  boxShadow: tokens.cardShadow,
-                }}
-              >
-                <div className={cn("relative overflow-hidden", ratio, horizontal && "sm:aspect-auto sm:w-48 sm:shrink-0")}>
-                  {offer.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={offer.imageUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full min-h-[140px] items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, var(--sf-primary) 14%, var(--sf-bg))" }}>
-                      <Gift className="h-10 w-10 opacity-40" style={{ color: "var(--sf-primary)" }} />
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-1 flex-col p-4">
-                  <h3 className="text-lg font-semibold" style={{ color: "var(--sf-heading)" }}>
-                    {offer.title}
-                  </h3>
-                  {config.offers.showDescription && offer.shortDescription ? (
-                    <p className="mt-1 line-clamp-2 text-sm opacity-80">{offer.shortDescription}</p>
-                  ) : null}
-                  {config.offers.showPrice ? (
-                    <p className="mt-3 text-sm font-semibold" style={{ color: "var(--sf-primary)" }}>
-                      {offerPriceLabel(offer)}
-                    </p>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => onSelect(offer)}
-                    className="mt-4 inline-flex min-h-11 w-full items-center justify-center px-4 text-sm font-semibold"
-                    style={{ borderRadius: tokens.radius, backgroundColor: tokens.primary, color: tokens.buttonText }}
-                  >
-                    {buttonLabel(offer)}
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
-    </Shell>
-  );
-}
-
-function AboutSection({ config, tokens }: { config: StorefrontConfig; tokens: Tokens }) {
-  const placement = config.about.imagePlacement;
-  const showImage = placement !== "none" && Boolean(config.about.imageUrl);
-  return (
-    <Shell tokens={tokens} id="a-propos">
-      <div className={cn("grid gap-8", showImage && "md:grid-cols-2 md:items-center")}>
-        {showImage && placement === "left" ? <AboutImage url={config.about.imageUrl} tokens={tokens} /> : null}
-        <div>
-          <h2 className="text-3xl font-semibold tracking-tight" style={{ color: "var(--sf-heading)" }}>
-            {config.about.title.trim() || "À propos"}
+    <section
+      id="bons-cadeaux"
+      className={cn("scroll-mt-24 px-4 sm:px-6", pad)}
+      style={{ backgroundColor: config.offers.backgroundColor || "transparent" }}
+    >
+      <div className="mx-auto w-full" style={{ maxWidth }}>
+        <div className={cn("mb-8 max-w-2xl", align)}>
+          <h2 className={cn("font-semibold tracking-tight", titleSize)} style={{ fontFamily: "var(--sf-heading-font)", color: "var(--sf-heading)" }}>
+            {config.offers.title.trim() || "Bons cadeaux"}
           </h2>
-          {config.about.body.trim() ? (
-            <p className="mt-4 whitespace-pre-line text-base leading-relaxed opacity-85">{config.about.body}</p>
-          ) : (
-            <p className="mt-4 text-sm opacity-60">Ajoutez un texte dans le concepteur.</p>
-          )}
+          {config.offers.subtitle.trim() ? <p className="mt-2 text-sm sm:text-base" style={{ color: "var(--sf-muted)" }}>{config.offers.subtitle}</p> : null}
         </div>
-        {showImage && placement === "right" ? <AboutImage url={config.about.imageUrl} tokens={tokens} /> : null}
+        {offers.length === 0 ? (
+          <p className="text-sm" style={{ color: "var(--sf-muted)" }}>Les offres publiées dans Mes offres apparaîtront ici.</p>
+        ) : (
+          <div className={cn("grid gap-5", offerGridClass(offers.length, config.offers.columns))}>
+            {offers.map((offer) => (
+              <OfferCard key={offer.id} offer={offer} config={config} tokens={tokens} onSelect={onSelect} />
+            ))}
+          </div>
+        )}
       </div>
-    </Shell>
+    </section>
   );
 }
 
-function AboutImage({ url, tokens }: { url: string; tokens: Tokens }) {
-  return (
-    <div className="relative aspect-[4/3] overflow-hidden" style={{ borderRadius: tokens.radius === "999px" ? "24px" : tokens.radius }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={url} alt="" className="h-full w-full object-cover" />
+function OfferCard({
+  offer,
+  config,
+  tokens,
+  onSelect,
+}: {
+  offer: PublicGiftVoucherOffer;
+  config: StorefrontConfig;
+  tokens: Tokens;
+  onSelect: (offer: PublicGiftVoucherOffer) => void;
+}) {
+  const style = config.offers.cardStyle;
+  const ratio = config.offers.imageRatio === "1/1" ? "aspect-square" : config.offers.imageRatio === "4/3" ? "aspect-[4/3]" : "aspect-[16/10]";
+  const titleSize = config.offers.titleSize === "lg" ? "text-2xl" : config.offers.titleSize === "sm" ? "text-base" : "text-lg";
+  const label = offerButtonLabel(config, offer);
+  const experience = offer.kind === "experience";
+
+  const media = offer.imageUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={offer.imageUrl} alt="" className="h-full w-full object-cover" />
+  ) : (
+    <div className="flex h-full min-h-[160px] items-center justify-center" style={{ backgroundColor: "color-mix(in srgb, var(--sf-primary) 14%, var(--sf-bg))" }}>
+      <Gift className="h-10 w-10 opacity-40" style={{ color: "var(--sf-primary)" }} />
     </div>
   );
-}
 
-function GallerySection({ images, tokens }: { images: string[]; tokens: Tokens }) {
+  const price = config.offers.showPrice ? (
+    <p className={cn("font-semibold", experience ? "text-sm opacity-80" : "text-base")} style={{ color: experience ? "var(--sf-muted)" : "var(--sf-accent)" }}>
+      {offerPriceLabel(offer)}
+    </p>
+  ) : null;
+
+  const desc = config.offers.showDescription && offer.shortDescription ? (
+    <p className="mt-1 line-clamp-2 text-sm" style={{ color: "var(--sf-muted)" }}>{offer.shortDescription}</p>
+  ) : null;
+
+  const monetaryNote = offer.kind === "monetary" ? (
+    <p className="mt-1 text-[11px]" style={{ color: "var(--sf-muted)" }}>Utilisable en plusieurs fois</p>
+  ) : null;
+
+  const button = (
+    <button
+      type="button"
+      onClick={() => onSelect(offer)}
+      className="mt-4 inline-flex min-h-11 w-full items-center justify-center px-4 text-sm font-semibold transition hover:opacity-90"
+      style={offerButtonStyle(config.offers.buttonStyle, tokens)}
+    >
+      {label}
+    </button>
+  );
+
+  if (style === "immersive") {
+    return (
+      <article className="relative min-h-[340px] overflow-hidden" style={{ borderRadius: tokens.cardRadius }}>
+        <div className="absolute inset-0">{media}</div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+        <div className="relative z-[1] flex min-h-[340px] flex-col justify-end p-5 text-white">
+          <h3 className={cn("font-semibold", titleSize)} style={{ fontFamily: "var(--sf-heading-font)" }}>{offer.title}</h3>
+          {desc}
+          {price}
+          {monetaryNote}
+          {button}
+        </div>
+      </article>
+    );
+  }
+
+  if (style === "horizontal") {
+    return (
+      <article
+        className="flex overflow-hidden"
+        style={{ borderRadius: tokens.cardRadius, border: "1px solid color-mix(in srgb, var(--sf-text) 10%, transparent)" }}
+      >
+        <div className="relative w-[42%] min-w-[8.5rem] overflow-hidden">{media}</div>
+        <div className="flex min-w-0 flex-1 flex-col justify-center p-4">
+          <h3 className={cn("font-semibold", titleSize)} style={{ fontFamily: "var(--sf-heading-font)" }}>{offer.title}</h3>
+          {desc}
+          {price}
+          {monetaryNote}
+          {button}
+        </div>
+      </article>
+    );
+  }
+
+  const padding = style === "premium" ? "p-5 pt-4" : style === "minimal" ? "pt-4" : "p-4";
+  const border = style === "minimal" ? "none" : "1px solid color-mix(in srgb, var(--sf-text) 10%, transparent)";
+  const imageRadius = style === "premium" || style === "minimal" ? tokens.cardRadius : undefined;
+
   return (
-    <Shell tokens={tokens} id="galerie">
-      <h2 className="mb-6 text-3xl font-semibold tracking-tight" style={{ color: "var(--sf-heading)" }}>
-        Galerie
-      </h2>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {images.map((url) => (
-          <div key={url} className="relative aspect-[4/3] overflow-hidden" style={{ borderRadius: tokens.radius === "999px" ? "20px" : tokens.radius }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt="" className="h-full w-full object-cover" />
-          </div>
-        ))}
+    <article className="overflow-hidden" style={{ borderRadius: tokens.cardRadius, border, boxShadow: style === "classic" ? "0 16px 40px -28px rgba(0,0,0,.28)" : "none" }}>
+      <div className={cn("relative overflow-hidden", ratio)} style={{ borderRadius: imageRadius }}>{media}</div>
+      <div className={padding}>
+        <h3 className={cn("font-semibold", titleSize)} style={{ fontFamily: "var(--sf-heading-font)" }}>{offer.title}</h3>
+        {desc}
+        <div className={cn("mt-3", experience && "opacity-90")}>{price}</div>
+        {monetaryNote}
+        {button}
       </div>
-    </Shell>
+    </article>
   );
 }
 
-function PracticalSection({ config, identity, tokens }: { config: StorefrontConfig; identity: StorefrontIdentity; tokens: Tokens }) {
-  const rows: { icon: typeof MapPin; label: string; href?: string }[] = [];
-  if (config.practical.showAddress && identity.address) rows.push({ icon: MapPin, label: identity.address, href: identity.googleMapsUrl || undefined });
-  if (config.practical.showPhone && identity.phone) rows.push({ icon: Phone, label: identity.phone, href: `tel:${identity.phone}` });
-  if (config.practical.showEmail && identity.email) rows.push({ icon: Mail, label: identity.email, href: `mailto:${identity.email}` });
-  if (config.practical.showWebsite && identity.websiteUrl) rows.push({ icon: Globe, label: identity.websiteUrl.replace(/^https?:\/\//, ""), href: identity.websiteUrl });
-  if (config.practical.showInstagram && identity.instagramUrl) rows.push({ icon: Globe, label: "Instagram", href: identity.instagramUrl });
-  if (config.practical.showFacebook && identity.facebookUrl) rows.push({ icon: Globe, label: "Facebook", href: identity.facebookUrl });
-  if (config.practical.showHours) rows.push({ icon: Clock, label: identity.hoursLines.filter((line) => !line.includes("Fermé")).slice(0, 3).join(" · ") || identity.hoursLines[0] || "" });
-  if (rows.length === 0) return null;
-  return (
-    <Shell tokens={tokens} id="infos">
-      <h2 className="mb-6 text-3xl font-semibold tracking-tight" style={{ color: "var(--sf-heading)" }}>
-        Informations pratiques
-      </h2>
-      <ul className="space-y-3 text-sm">
-        {rows.map((row) => (
-          <li key={row.label} className="flex items-start gap-3">
-            <row.icon className="mt-0.5 h-4 w-4 shrink-0 opacity-70" />
-            {row.href ? (
-              <a href={row.href} className="underline-offset-2 hover:underline" target={row.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
-                {row.label}
-              </a>
-            ) : (
-              <span>{row.label}</span>
-            )}
-          </li>
-        ))}
-      </ul>
-    </Shell>
-  );
+function offerButtonLabel(config: StorefrontConfig, offer: PublicGiftVoucherOffer): string {
+  if (config.offers.buttonPreset === "custom" && config.offers.customButtonText.trim()) return config.offers.customButtonText.trim();
+  if (offer.kind === "experience") return "Offrir cette expérience";
+  const preset = config.offers.buttonPreset === "custom" ? "choisir" : config.offers.buttonPreset;
+  return BUTTON_COPY[preset].monetary;
 }
 
-function HoursSection({ identity, tokens }: { identity: StorefrontIdentity; tokens: Tokens }) {
-  return (
-    <Shell tokens={tokens} id="horaires">
-      <h2 className="mb-6 text-3xl font-semibold tracking-tight" style={{ color: "var(--sf-heading)" }}>
-        Horaires
-      </h2>
-      <ul className="space-y-2 text-sm">
-        {identity.hoursLines.map((line) => (
-          <li key={line} className="flex justify-between gap-6 border-b py-2 last:border-b-0" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 10%, transparent)" }}>
-            {line}
-          </li>
-        ))}
-      </ul>
-    </Shell>
-  );
+function offerButtonStyle(style: StorefrontConfig["offers"]["buttonStyle"], tokens: Tokens): React.CSSProperties {
+  if (style === "outline") {
+    return { borderRadius: tokens.radius, border: "1px solid var(--sf-primary)", color: "var(--sf-primary)", background: "transparent" };
+  }
+  if (style === "subtle") {
+    return { borderRadius: tokens.radius, backgroundColor: "color-mix(in srgb, var(--sf-primary) 12%, transparent)", color: "var(--sf-primary)" };
+  }
+  return { borderRadius: tokens.radius, backgroundColor: tokens.primary, color: tokens.buttonText };
 }
 
-function ContactSection({ identity, tokens }: { identity: StorefrontIdentity; tokens: Tokens }) {
-  const items = [
-    identity.phone ? { label: identity.phone, href: `tel:${identity.phone}` } : null,
-    identity.email ? { label: identity.email, href: `mailto:${identity.email}` } : null,
-    identity.websiteUrl ? { label: identity.websiteUrl.replace(/^https?:\/\//, ""), href: identity.websiteUrl } : null,
-  ].filter(Boolean) as { label: string; href: string }[];
-  if (items.length === 0) return null;
-  return (
-    <Shell tokens={tokens} id="coordonnees">
-      <h2 className="mb-6 text-3xl font-semibold tracking-tight" style={{ color: "var(--sf-heading)" }}>
-        Coordonnées
-      </h2>
-      <ul className="space-y-2 text-sm">
-        {items.map((item) => (
-          <li key={item.href}>
-            <a href={item.href} className="hover:underline" target={item.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
-              {item.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </Shell>
-  );
-}
+function FooterBlock({ config, identity, tokens }: { config: StorefrontConfig; identity: StorefrontIdentity; tokens: Tokens }) {
+  const footer = config.footer;
+  const dark = footer.theme === "dark";
+  const bg = footer.backgroundColor || (dark ? "#171412" : "color-mix(in srgb, var(--sf-text) 4%, var(--sf-bg))");
+  const color = footer.textColor || (dark ? "#F5F0EA" : tokens.text);
+  const pad = footer.spacing === "compact" ? "py-8" : "py-10";
+  const align = footer.align === "center" ? "items-center text-center" : "items-start text-left";
+  const links = storefrontFooterLinks({
+    instagramUrl: identity.instagramUrl,
+    facebookUrl: identity.facebookUrl,
+    tiktokUrl: identity.tiktokUrl,
+    websiteUrl: identity.websiteUrl,
+    phone: identity.phone,
+    email: identity.email,
+    showSocial: footer.showSocial,
+    showWebsite: footer.showWebsite && footer.showContact,
+    showPhone: footer.showPhone && footer.showContact,
+    showEmail: footer.showEmail && footer.showContact,
+  });
+  const address = footer.showContact && footer.showAddress ? identity.address : "";
 
-function SocialSection({ identity, tokens }: { identity: StorefrontIdentity; tokens: Tokens }) {
-  const links = [
-    identity.instagramUrl ? { label: "Instagram", href: identity.instagramUrl } : null,
-    identity.facebookUrl ? { label: "Facebook", href: identity.facebookUrl } : null,
-  ].filter(Boolean) as { label: string; href: string }[];
-  if (links.length === 0) return null;
   return (
-    <Shell tokens={tokens} id="reseaux">
-      <h2 className="mb-6 text-3xl font-semibold tracking-tight" style={{ color: "var(--sf-heading)" }}>
-        Réseaux sociaux
-      </h2>
-      <div className="flex flex-wrap gap-3">
-        {links.map((link) => (
-          <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className="text-sm font-medium hover:underline">
-            {link.label}
-          </a>
-        ))}
-      </div>
-    </Shell>
-  );
-}
-
-function MapSection({ identity, tokens }: { identity: StorefrontIdentity; tokens: Tokens }) {
-  if (!identity.address && !identity.googleMapsUrl) return null;
-  return (
-    <Shell tokens={tokens} id="carte">
-      <h2 className="mb-6 text-3xl font-semibold tracking-tight" style={{ color: "var(--sf-heading)" }}>
-        Adresse
-      </h2>
-      {identity.address ? <p className="text-sm opacity-85">{identity.address}</p> : null}
-      {identity.googleMapsUrl ? (
-        <a href={identity.googleMapsUrl} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-semibold hover:underline" style={{ color: "var(--sf-primary)" }}>
-          Voir sur la carte
-        </a>
-      ) : null}
-    </Shell>
-  );
-}
-
-function FooterSection({ config, identity, tokens }: { config: StorefrontConfig; identity: StorefrontIdentity; tokens: Tokens }) {
-  return (
-    <footer className="border-t px-4 py-10 sm:px-6" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 12%, transparent)" }}>
-      <div className="mx-auto flex flex-col gap-4" style={{ maxWidth: tokens.maxW }}>
-        {config.footer.showLogo && identity.logoUrl ? (
+    <footer className={cn("mt-2 border-t px-4 sm:px-6", pad)} style={{ backgroundColor: bg, color, borderColor: "color-mix(in srgb, currentColor 12%, transparent)" }}>
+      <div className={cn("mx-auto flex max-w-3xl flex-col gap-4", align)}>
+        {footer.showLogo && identity.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={identity.logoUrl} alt="" className="h-10 w-10 rounded-xl object-cover" />
         ) : null}
         <p className="text-sm font-semibold">{identity.displayName}</p>
-        {config.footer.text.trim() ? <p className="text-sm opacity-75">{config.footer.text}</p> : null}
-        {config.footer.showContact ? (
-          <p className="text-xs opacity-70">{[identity.address, identity.phone, identity.email].filter(Boolean).join(" · ")}</p>
+        {address ? <p className="text-xs opacity-75">{address}</p> : null}
+        {links.length > 0 ? (
+          <ul className="flex flex-wrap gap-2">
+            {links.map((link) => (
+              <li key={link.id}>
+                <a
+                  href={link.href}
+                  target={link.href.startsWith("http") ? "_blank" : undefined}
+                  rel={link.href.startsWith("http") ? "noreferrer" : undefined}
+                  aria-label={link.label}
+                  className="inline-flex h-10 w-10 items-center justify-center transition hover:opacity-80"
+                  style={iconChipStyle(footer.iconStyle, color)}
+                >
+                  <StorefrontGlyph id={link.id} />
+                </a>
+              </li>
+            ))}
+          </ul>
         ) : null}
-        {config.footer.showSocial ? (
-          <p className="text-xs opacity-70">
-            {[identity.instagramUrl ? "Instagram" : null, identity.facebookUrl ? "Facebook" : null].filter(Boolean).join(" · ")}
-          </p>
-        ) : null}
-        {config.footer.showPoweredBy ? <p className="pt-2 text-[11px] opacity-40">Propulsé par ZenGrow</p> : null}
+        {footer.showPoweredBy ? <p className="pt-1 text-[11px] opacity-45">Propulsé par ZenGrow</p> : null}
       </div>
     </footer>
   );
+}
+
+function iconChipStyle(style: StorefrontConfig["footer"]["iconStyle"], color: string): React.CSSProperties {
+  if (style === "plain") return { color };
+  if (style === "rounded") {
+    return { color, borderRadius: "10px", backgroundColor: "color-mix(in srgb, currentColor 10%, transparent)" };
+  }
+  return { color, borderRadius: "999px", backgroundColor: "color-mix(in srgb, currentColor 10%, transparent)" };
 }

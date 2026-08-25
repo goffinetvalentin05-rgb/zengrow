@@ -58,7 +58,7 @@ export default function DesignerPreview({ config, identity, offers, device, onDe
           className={cn(
             "mx-auto overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm",
             FRAME[device],
-            device !== "desktop" && "min-h-[640px]",
+            device !== "desktop" && "min-h-[520px]",
           )}
         >
           <div className="flex h-8 items-center gap-1.5 border-b border-black/10 bg-neutral-100 px-3">
@@ -67,7 +67,7 @@ export default function DesignerPreview({ config, identity, offers, device, onDe
             <span className="h-2.5 w-2.5 rounded-full bg-neutral-300" />
             <span className="ml-2 truncate font-mono text-[10px] text-neutral-500">/r/{identity.slug}</span>
           </div>
-          <div className={cn("overflow-y-auto", device === "desktop" ? "max-h-[calc(100dvh-220px)]" : "h-[640px]")}>
+          <div className={cn("overflow-y-auto", device === "desktop" ? "max-h-[calc(100dvh-200px)]" : "max-h-[70vh]")}>
             <PublicStorefrontPage config={config} identity={identity} offers={offers} previewMode draftBanner />
           </div>
         </div>

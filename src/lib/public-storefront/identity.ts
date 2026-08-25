@@ -19,6 +19,7 @@ export type StorefrontIdentity = {
   primaryColor: string;
   instagramUrl: string;
   facebookUrl: string;
+  tiktokUrl: string;
   googleMapsUrl: string;
   openingHours: OpeningHours;
   hoursLines: string[];
@@ -50,6 +51,7 @@ export function identityFromRows(input: {
   primaryColor?: string | null;
   instagramUrl?: string | null;
   facebookUrl?: string | null;
+  tiktokUrl?: string | null;
   googleMapsUrl?: string | null;
   openingHours?: OpeningHours | null;
   galleryUrls?: string[] | null;
@@ -74,6 +76,7 @@ export function identityFromRows(input: {
     primaryColor: normalizeHexColor(input.primaryColor ?? "", DEFAULT_PRIMARY),
     instagramUrl: input.instagramUrl?.trim() || "",
     facebookUrl: input.facebookUrl?.trim() || "",
+    tiktokUrl: input.tiktokUrl?.trim() || "",
     googleMapsUrl: input.googleMapsUrl?.trim() || mapsSearchUrl(address) || "",
     openingHours: hours,
     hoursLines: formatOpeningHoursLines(hours),

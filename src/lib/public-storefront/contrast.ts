@@ -8,13 +8,18 @@ export type StorefrontContrastWarning = {
 
 export function storefrontContrastWarnings(config: StorefrontConfig): StorefrontContrastWarning[] {
   const warnings: StorefrontContrastWarning[] = [];
-  const { textColor, backgroundColor, primaryColor } = config.style;
-  const textRatio = contrastRatio(textColor, backgroundColor);
+  const { textColor, mutedTextColor, backgroundColor, primaryColor, accentColor } = config.style;
 
   if (!meetsContrastAA(textColor, backgroundColor, 4.5)) {
     warnings.push({
       id: "text-on-bg",
-      message: `Le texte et le fond contrastent trop peu${textRatio ? ` (${textRatio.toFixed(1)}:1)` : ""}. Visez au moins 4,5:1.`,
+      message: "Le texte principal et le fond contrastent trop peu. Visez au moins 4,5:1.",
+    });
+  }
+  if (!meetsContrastAA(mutedTextColor, backgroundColor, 3)) {
+    warnings.push({
+      id: "muted-on-bg",
+      message: "Le texte secondaire risque d’être difficile à lire.",
     });
   }
 
@@ -26,11 +31,11 @@ export function storefrontContrastWarnings(config: StorefrontConfig): Storefront
     });
   }
 
-  const accentRatio = contrastRatio(primaryColor, backgroundColor);
+  const accentRatio = contrastRatio(accentColor, backgroundColor);
   if (accentRatio != null && accentRatio < 3) {
     warnings.push({
       id: "accent-on-bg",
-      message: "La couleur principale se distingue peu du fond. Les boutons et liens seront difficiles à voir.",
+      message: "La couleur d’accent se distingue peu du fond.",
     });
   }
 

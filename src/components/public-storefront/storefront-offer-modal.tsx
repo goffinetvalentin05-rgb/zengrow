@@ -97,7 +97,7 @@ export default function StorefrontOfferModal({
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] opacity-60">Bon cadeau</p>
-            <h3 className="mt-1 text-xl font-semibold" style={{ color: "var(--sf-heading)", fontFamily: "var(--sf-font)" }}>
+            <h3 className="mt-1 text-xl font-semibold" style={{ color: "var(--sf-heading)", fontFamily: "var(--sf-heading-font)" }}>
               {done ? "Demande envoyée" : offer?.title ?? "Offrir un bon"}
             </h3>
           </div>
