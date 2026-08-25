@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
       "./public/fonts/gift-voucher/**/*",
       "./src/lib/gift-vouchers/pdf/fonts/**/*",
     ],
+    "/api/gift-voucher-offers/[id]/preview-pdf": [
+      "./public/fonts/gift-voucher/**/*",
+      "./src/lib/gift-vouchers/pdf/fonts/**/*",
+    ],
   },
   images: {
     remotePatterns: [

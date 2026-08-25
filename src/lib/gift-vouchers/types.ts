@@ -1,3 +1,5 @@
+import type { GiftVoucherOfferKind } from "@/src/lib/gift-vouchers/offers/types";
+
 export const GIFT_VOUCHER_TYPES = ["digital", "paper"] as const;
 export const GIFT_VOUCHER_STATUSES = ["draft", "active", "used", "expired", "disabled"] as const;
 export const GIFT_VOUCHER_TRANSACTION_TYPES = [
@@ -37,6 +39,15 @@ export type GiftVoucher = {
   createdBy: string | null;
   publicToken: string;
   metadata: Record<string, unknown>;
+  offerId: string | null;
+  offerKind: GiftVoucherOfferKind;
+  offerTitleSnapshot: string | null;
+  offerDescriptionSnapshot: string | null;
+  offerImageUrlSnapshot: string | null;
+  offerTermsSnapshot: string | null;
+  offerExperienceLabelSnapshot: string | null;
+  offerPartySizeSnapshot: number | null;
+  salePriceCents: number | null;
 };
 
 export type GiftVoucherTransaction = {
@@ -55,7 +66,8 @@ export type GiftVoucherTransaction = {
 
 export type CreateGiftVoucherInput = {
   type: GiftVoucherType;
-  amount: number;
+  offerId?: string;
+  amount?: number;
   buyerName?: string;
   buyerEmail?: string;
   buyerPhone?: string;

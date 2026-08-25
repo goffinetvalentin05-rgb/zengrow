@@ -7,6 +7,7 @@ import DashboardPortal from "@/src/components/dashboard/ui/dashboard-portal";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import type { GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
+import { isExperienceGiftCard } from "@/src/components/dashboard/gift-cards/types";
 import {
   formatAmountInput,
   formatChf,
@@ -342,7 +343,7 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
     if (!voucher) return;
     setError(null);
     setAmount("");
-    setPhase("amount");
+    setPhase(isExperienceGiftCard(voucher) ? "confirm" : "amount");
   }
 
   function goToConfirm() {
@@ -359,11 +360,16 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
 
   async function confirmRedeem() {
     if (!voucher || validatingRef.current) return;
-    const validated = validateAmountInput(amount, voucher.balanceChf);
-    if ("error" in validated) {
-      setError(validated.error);
-      setPhase("amount");
-      return;
+    const experience = isExperienceGiftCard(voucher);
+    let used = voucher.balanceChf;
+    if (!experience) {
+      const validated = validateAmountInput(amount, voucher.balanceChf);
+      if ("error" in validated) {
+        setError(validated.error);
+        setPhase("amount");
+        return;
+      }
+      used = validated.amount;
     }
     validatingRef.current = true;
     setValidating(true);
@@ -372,7 +378,11 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
       const response = await fetch("/api/gift-vouchers/redeem", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voucherId: voucher.id, amount: validated.amount }),
+        body: JSON.stringify(
+          experience
+            ? { voucherId: voucher.id, consumeAll: true }
+            : { voucherId: voucher.id, amount: used },
+        ),
       });
       const payload = (await response.json().catch(() => null)) as {
         voucher?: GiftCardRecord;
@@ -392,10 +402,10 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
           return;
         }
         setError(message);
-        setPhase("amount");
+        setPhase(experience ? "confirm" : "amount");
         return;
       }
-      setUsedAmountChf(validated.amount);
+      setUsedAmountChf(used);
       setVoucher(payload.voucher);
       setPhase("success");
       await onRedeemed?.(payload.voucher);
@@ -534,7 +544,7 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wider text-white/55">Offre</p>
                         <h3 className="mt-1 text-xl font-semibold">
-                          {voucher.message?.trim() || "Bon cadeau"}
+                          {voucher.offerTitle?.trim() || voucher.experienceLabel?.trim() || voucher.message?.trim() || "Bon cadeau"}
                         </h3>
                         <p className="mt-1 font-mono text-xs tracking-wide text-white/55">{voucher.code}</p>
                       </div>
@@ -555,7 +565,7 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
                       <p className="mt-4 text-sm font-medium text-red-200">Ce bon a expiré.</p>
                     ) : null}
 
-                    {canUse && phase === "amount" ? (
+                    {canUse && phase === "amount" && !isExperienceGiftCard(voucher) ? (
                       <div className="mt-5 space-y-3 border-t border-white/10 pt-5">
                         <label htmlFor="scan-redeem-amount" className="text-sm font-medium text-white">
                           Montant à utiliser
@@ -610,7 +620,13 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
                       </div>
                     ) : null}
 
-                    {canUse && phase === "confirm" && parsedAmount != null && remainingAfter != null ? (
+                    {canUse && phase === "confirm" && isExperienceGiftCard(voucher) ? (
+                      <p className="mt-5 border-t border-white/10 pt-5 text-sm text-white/80">
+                        Cette prestation sera validée en une fois. Aucun montant partiel n’est proposé.
+                      </p>
+                    ) : null}
+
+                    {canUse && phase === "confirm" && parsedAmount != null && remainingAfter != null && !isExperienceGiftCard(voucher) ? (
                       <div className="mt-5 space-y-2 border-t border-white/10 pt-5 text-sm">
                         <div className="flex justify-between gap-3 py-1">
                           <span className="text-white/60">Crédit actuel</span>
@@ -678,7 +694,7 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
                     disabled={busy}
                     onClick={goToAmount}
                   >
-                    Utiliser ce bon
+                    {isExperienceGiftCard(voucher) ? "Valider cette prestation" : "Utiliser ce bon"}
                   </Button>
                 ) : null}
                 <button
@@ -722,22 +738,40 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
                   type="button"
                   size="lg"
                   className="min-h-12 w-full text-base"
-                  disabled={busy || !amountValid}
+                  disabled={busy || Boolean(voucher && !isExperienceGiftCard(voucher) && !amountValid)}
                   onClick={() => void confirmRedeem()}
                 >
-                  {validating ? "Validation…" : "Confirmer l’utilisation"}
+                  {validating
+                    ? "Validation…"
+                    : voucher && isExperienceGiftCard(voucher)
+                      ? "Valider cette prestation"
+                      : "Confirmer l’utilisation"}
                 </Button>
-                <button
-                  type="button"
-                  className="flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-medium text-white/70 hover:text-white"
-                  disabled={busy}
-                  onClick={() => {
-                    setError(null);
-                    setPhase("amount");
-                  }}
-                >
-                  Modifier le montant
-                </button>
+                {voucher && !isExperienceGiftCard(voucher) ? (
+                  <button
+                    type="button"
+                    className="flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-medium text-white/70 hover:text-white"
+                    disabled={busy}
+                    onClick={() => {
+                      setError(null);
+                      setPhase("amount");
+                    }}
+                  >
+                    Modifier le montant
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-medium text-white/70 hover:text-white"
+                    disabled={busy}
+                    onClick={() => {
+                      setError(null);
+                      setPhase("result");
+                    }}
+                  >
+                    Retour
+                  </button>
+                )}
               </div>
             ) : null}
 

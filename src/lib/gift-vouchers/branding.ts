@@ -7,6 +7,8 @@ import {
 } from "@/src/lib/gift-vouchers/defaults";
 import { isGiftVoucherExpired } from "@/src/lib/gift-vouchers/redeem";
 import { isPublicGiftVoucherStatus } from "@/src/lib/gift-vouchers/public-view";
+import type { GiftVoucherOfferKind } from "@/src/lib/gift-vouchers/offers/types";
+import { isGiftVoucherOfferKind } from "@/src/lib/gift-vouchers/offers/types";
 import type { GiftVoucherStatus } from "@/src/lib/gift-vouchers/types";
 
 export const DEFAULT_GIFT_VOUCHER_OFFER_TITLE = "Bon cadeau";
@@ -27,6 +29,10 @@ export type GiftVoucherPresentation = {
   message: string | null;
   publicToken: string;
   offerTitle: string;
+  offerKind: GiftVoucherOfferKind;
+  offerDescription: string | null;
+  experienceLabel: string | null;
+  partySize: number | null;
   restaurantName: string;
   restaurantLogoUrl: string | null;
   coverImageUrl: string | null;
@@ -50,6 +56,7 @@ export type GiftVoucherBrandingSettings = {
   includeBuyerOnPdf: boolean;
   defaultValidityMonths: number;
   suggestedAmounts: number[];
+  allowFreeAmount: boolean;
 };
 
 type VoucherCoreRow = {
@@ -65,6 +72,13 @@ type VoucherCoreRow = {
   buyer_name: string | null;
   message: string | null;
   public_token: string;
+  offer_kind?: string | null;
+  offer_title_snapshot?: string | null;
+  offer_description_snapshot?: string | null;
+  offer_image_url_snapshot?: string | null;
+  offer_terms_snapshot?: string | null;
+  offer_experience_label_snapshot?: string | null;
+  offer_party_size_snapshot?: number | null;
 };
 
 type RestaurantBrandingRow = {
@@ -91,16 +105,17 @@ type SettingsBrandingRow = {
   gift_voucher_include_buyer_on_pdf: boolean | null;
   gift_voucher_default_validity_months?: number | null;
   gift_voucher_suggested_amounts?: number[] | null;
+  gift_voucher_allow_free_amount?: boolean | null;
 };
 
 const VOUCHER_CORE_SELECT =
-  "id, restaurant_id, code, status, initial_amount_cents, remaining_amount_cents, currency, expires_at, recipient_name, buyer_name, message, public_token";
+  "id, restaurant_id, code, status, initial_amount_cents, remaining_amount_cents, currency, expires_at, recipient_name, buyer_name, message, public_token, offer_kind, offer_title_snapshot, offer_description_snapshot, offer_image_url_snapshot, offer_terms_snapshot, offer_experience_label_snapshot, offer_party_size_snapshot";
 
 const RESTAURANT_BRANDING_SELECT =
   "name, public_display_name, logo_url, public_accent_color, phone, email, address, banner_url";
 
 const SETTINGS_BASE_SELECT = "logo_url, cover_image_url, accent_color";
-const SETTINGS_BRANDING_SELECT = `${SETTINGS_BASE_SELECT}, gift_voucher_display_name, gift_voucher_offer_title, gift_voucher_accent_color, gift_voucher_cover_url, gift_voucher_terms, gift_voucher_footer, gift_voucher_include_buyer_on_pdf, gift_voucher_default_validity_months, gift_voucher_suggested_amounts`;
+const SETTINGS_BRANDING_SELECT = `${SETTINGS_BASE_SELECT}, gift_voucher_display_name, gift_voucher_offer_title, gift_voucher_accent_color, gift_voucher_cover_url, gift_voucher_terms, gift_voucher_footer, gift_voucher_include_buyer_on_pdf, gift_voucher_default_validity_months, gift_voucher_suggested_amounts, gift_voucher_allow_free_amount`;
 
 function firstNonEmpty(...values: Array<string | null | undefined>): string | null {
   for (const value of values) {
@@ -144,18 +159,31 @@ export function resolveGiftVoucherPresentation(
     message: voucher.message?.trim() || null,
     publicToken: voucher.public_token,
     offerTitle:
-      firstNonEmpty(settings?.gift_voucher_offer_title) ?? DEFAULT_GIFT_VOUCHER_OFFER_TITLE,
+      firstNonEmpty(voucher.offer_title_snapshot, settings?.gift_voucher_offer_title) ??
+      DEFAULT_GIFT_VOUCHER_OFFER_TITLE,
+    offerKind: isGiftVoucherOfferKind(voucher.offer_kind) ? voucher.offer_kind : "monetary",
+    offerDescription: firstNonEmpty(voucher.offer_description_snapshot),
+    experienceLabel: firstNonEmpty(voucher.offer_experience_label_snapshot, voucher.offer_title_snapshot),
+    partySize:
+      typeof voucher.offer_party_size_snapshot === "number" && voucher.offer_party_size_snapshot > 0
+        ? voucher.offer_party_size_snapshot
+        : null,
     restaurantName:
       firstNonEmpty(settings?.gift_voucher_display_name, restaurant?.public_display_name, restaurant?.name) ??
       "Établissement",
     restaurantLogoUrl: firstNonEmpty(settings?.logo_url, restaurant?.logo_url),
-    coverImageUrl: firstNonEmpty(settings?.gift_voucher_cover_url, settings?.cover_image_url, restaurant?.banner_url),
+    coverImageUrl: firstNonEmpty(
+      voucher.offer_image_url_snapshot,
+      settings?.gift_voucher_cover_url,
+      settings?.cover_image_url,
+      restaurant?.banner_url,
+    ),
     accentColor,
     foregroundColor: contrastingTextColor(accentColor),
     phone: restaurant?.phone?.trim() || null,
     email: restaurant?.email?.trim() || null,
     address: restaurant?.address?.trim() || null,
-    terms: firstNonEmpty(settings?.gift_voucher_terms) ?? DEFAULT_GIFT_VOUCHER_TERMS,
+    terms: firstNonEmpty(voucher.offer_terms_snapshot, settings?.gift_voucher_terms) ?? DEFAULT_GIFT_VOUCHER_TERMS,
     footer: firstNonEmpty(settings?.gift_voucher_footer, contactFooter(restaurant ?? {})),
     includeBuyerOnPdf: Boolean(settings?.gift_voucher_include_buyer_on_pdf),
   };
@@ -174,6 +202,7 @@ export function mapGiftVoucherSettingsRow(settings: SettingsBrandingRow | null):
       settings?.gift_voucher_default_validity_months ?? DEFAULT_GIFT_VOUCHER_VALIDITY_MONTHS,
     ),
     suggestedAmounts: parseSuggestedGiftVoucherAmounts(settings?.gift_voucher_suggested_amounts),
+    allowFreeAmount: settings?.gift_voucher_allow_free_amount !== false,
   };
 }
 
@@ -188,12 +217,21 @@ async function loadRestaurantBranding(
 
   let settings = (settingsResult.data as SettingsBrandingRow | null) ?? null;
   if (settingsResult.error) {
-    const fallback = await supabase
+    const withoutFree = await supabase
       .from("restaurant_settings")
-      .select(SETTINGS_BASE_SELECT)
+      .select(SETTINGS_BRANDING_SELECT.replace(", gift_voucher_allow_free_amount", ""))
       .eq("restaurant_id", restaurantId)
       .maybeSingle();
-    settings = (fallback.data as SettingsBrandingRow | null) ?? null;
+    if (!withoutFree.error) {
+      settings = (withoutFree.data as SettingsBrandingRow | null) ?? null;
+    } else {
+      const fallback = await supabase
+        .from("restaurant_settings")
+        .select(SETTINGS_BASE_SELECT)
+        .eq("restaurant_id", restaurantId)
+        .maybeSingle();
+      settings = (fallback.data as SettingsBrandingRow | null) ?? null;
+    }
   }
 
   return {
@@ -249,7 +287,65 @@ export async function loadGiftVoucherBrandingSettings(
   if (!full.error) {
     return mapGiftVoucherSettingsRow((full.data as SettingsBrandingRow | null) ?? null);
   }
+  const withoutFree = await supabase
+    .from("restaurant_settings")
+    .select(SETTINGS_BRANDING_SELECT.replace(", gift_voucher_allow_free_amount", ""))
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+  if (!withoutFree.error) {
+    return mapGiftVoucherSettingsRow((withoutFree.data as SettingsBrandingRow | null) ?? null);
+  }
   return mapGiftVoucherSettingsRow(null);
+}
+
+export async function loadGiftVoucherOfferPreviewPresentation(
+  supabase: SupabaseClient,
+  restaurantId: string,
+  offer: {
+    id: string;
+    title: string;
+    shortDescription: string | null;
+    detailedDescription: string | null;
+    imageUrl: string | null;
+    kind: "monetary" | "experience";
+    salePriceCents: number;
+    faceValueCents: number | null;
+    experienceLabel: string | null;
+    partySize: number | null;
+    terms: string | null;
+  },
+): Promise<GiftVoucherPresentation | null> {
+  const { restaurant, settings } = await loadRestaurantBranding(supabase, restaurantId);
+  const amount =
+    offer.kind === "monetary"
+      ? offer.faceValueCents && offer.faceValueCents > 0
+        ? offer.faceValueCents
+        : offer.salePriceCents
+      : offer.salePriceCents > 0
+        ? offer.salePriceCents
+        : 1;
+  const fake: VoucherCoreRow = {
+    id: offer.id,
+    restaurant_id: restaurantId,
+    code: "ZG-APER-CU00",
+    status: "active",
+    initial_amount_cents: amount,
+    remaining_amount_cents: amount,
+    currency: "CHF",
+    expires_at: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
+    recipient_name: "Bénéficiaire",
+    buyer_name: "Aperçu",
+    message: null,
+    public_token: "ab".repeat(32),
+    offer_kind: offer.kind,
+    offer_title_snapshot: offer.title,
+    offer_description_snapshot: offer.shortDescription || offer.detailedDescription,
+    offer_image_url_snapshot: offer.imageUrl,
+    offer_terms_snapshot: offer.terms,
+    offer_experience_label_snapshot: offer.experienceLabel || offer.title,
+    offer_party_size_snapshot: offer.partySize,
+  };
+  return resolveGiftVoucherPresentation(fake, restaurant, settings);
 }
 
 export function isGiftVoucherInactiveForPass(

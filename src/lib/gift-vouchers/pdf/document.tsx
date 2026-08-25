@@ -1,6 +1,7 @@
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { formatGiftVoucherDate } from "@/src/lib/gift-vouchers/map";
 import type { GiftVoucherPresentation } from "@/src/lib/gift-vouchers/branding";
+import { isExperienceOfferKind } from "@/src/lib/gift-vouchers/offers/types";
 import { formatCentsAsChfPdf, pdfSafeText } from "@/src/lib/gift-vouchers/pdf/text";
 
 export type GiftVoucherPdfDocumentProps = {
@@ -22,11 +23,23 @@ export function GiftVoucherPdfDocument({
 }: GiftVoucherPdfDocumentProps) {
   const styles = makeStyles(fontFamily);
   const initial = pdfSafeText(presentation.restaurantName.slice(0, 1).toUpperCase());
+  const experience = isExperienceOfferKind(presentation.offerKind);
+  const heading = pdfSafeText(
+    experience
+      ? presentation.experienceLabel || presentation.offerTitle
+      : presentation.offerTitle,
+  );
   const rows: Array<{ label: string; value: string }> = [
     { label: "Bénéficiaire", value: pdfSafeText(presentation.recipientName || "—") },
   ];
   if (presentation.includeBuyerOnPdf && presentation.buyerName) {
     rows.push({ label: "Offert par", value: pdfSafeText(presentation.buyerName) });
+  }
+  if (experience && presentation.partySize && presentation.partySize > 0) {
+    rows.push({
+      label: "Personnes",
+      value: presentation.partySize === 1 ? "1 personne" : `${presentation.partySize} personnes`,
+    });
   }
   rows.push(
     { label: "Expiration", value: pdfSafeText(formatGiftVoucherDate(presentation.expiresAt)) },
@@ -35,10 +48,10 @@ export function GiftVoucherPdfDocument({
 
   return (
     <Document
-      title={pdfSafeText(`${presentation.offerTitle} ${presentation.code}`)}
+      title={pdfSafeText(`${heading} ${presentation.code}`)}
       author={pdfSafeText(presentation.restaurantName)}
     >
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" wrap={false} style={styles.page}>
         <View style={styles.header}>
           {logoDataUrl ? (
             // eslint-disable-next-line jsx-a11y/alt-text
@@ -54,22 +67,31 @@ export function GiftVoucherPdfDocument({
           </View>
         </View>
 
-        <View style={[styles.coverWrap, { backgroundColor: presentation.accentColor }]}>
-          {coverDataUrl ? (
-            // eslint-disable-next-line jsx-a11y/alt-text
+        {coverDataUrl ? (
+          <View style={styles.coverWrap}>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image src={coverDataUrl} style={styles.cover} />
-          ) : (
+          </View>
+        ) : (
+          <View style={[styles.coverFallback, { backgroundColor: presentation.accentColor }]}>
             <Text style={{ color: presentation.foregroundColor, fontSize: 16, fontFamily, fontWeight: 600 }}>
-              {pdfSafeText(presentation.offerTitle)}
+              {heading}
             </Text>
-          )}
-        </View>
+          </View>
+        )}
 
-        <Text style={styles.kicker}>Bon cadeau</Text>
-        <Text style={styles.title}>{pdfSafeText(presentation.offerTitle)}</Text>
-        <Text style={[styles.amount, { color: presentation.accentColor }]}>
-          {formatCentsAsChfPdf(presentation.initialAmountCents)}
+        <Text style={[styles.kicker, { color: presentation.accentColor }]}>
+          {experience ? "Expérience" : "Bon cadeau"}
         </Text>
+        <Text style={styles.title}>{heading}</Text>
+        {experience && presentation.offerDescription ? (
+          <Text style={styles.description}>{pdfSafeText(presentation.offerDescription)}</Text>
+        ) : null}
+        {!experience ? (
+          <Text style={[styles.amount, { color: presentation.accentColor }]}>
+            {formatCentsAsChfPdf(presentation.initialAmountCents)}
+          </Text>
+        ) : null}
 
         <View style={styles.grid}>
           {rows.map((row) => (
@@ -90,7 +112,9 @@ export function GiftVoucherPdfDocument({
           <Text style={styles.code}>{pdfSafeText(presentation.code)}</Text>
           <Text style={styles.qrHint}>
             {pdfSafeText(
-              "Scannez ce QR pour consulter le solde et ajouter le bon à Apple Wallet. Il n’encaisse pas le bon.",
+              experience
+                ? "Scannez ce QR pour consulter le bon et l’ajouter à Apple Wallet. Il n’encaisse pas le bon."
+                : "Scannez ce QR pour consulter le solde et ajouter le bon à Apple Wallet. Il n’encaisse pas le bon.",
             )}
           </Text>
           <Text style={styles.qrHint}>{pdfSafeText(publicUrl)}</Text>
@@ -153,22 +177,31 @@ function makeStyles(fontFamily: string) {
     },
     coverWrap: {
       height: 210,
+      width: "100%",
+      borderRadius: 10,
+      overflow: "hidden",
+      marginBottom: 22,
+    },
+    cover: {
+      width: "100%",
+      height: 210,
+      objectFit: "cover",
+      objectPosition: "center",
+      borderRadius: 10,
+    },
+    coverFallback: {
+      height: 210,
+      width: "100%",
       borderRadius: 10,
       overflow: "hidden",
       marginBottom: 22,
       alignItems: "center",
       justifyContent: "center",
     },
-    cover: {
-      width: "100%",
-      height: "100%",
-      objectFit: "contain",
-    },
     kicker: {
       fontSize: 9,
       letterSpacing: 1.4,
       textTransform: "uppercase",
-      color: "#64748b",
       marginBottom: 4,
     },
     title: {
@@ -177,6 +210,12 @@ function makeStyles(fontFamily: string) {
       fontWeight: 600,
       color: "#0f172a",
       marginBottom: 6,
+    },
+    description: {
+      fontSize: 11,
+      lineHeight: 1.45,
+      color: "#334155",
+      marginBottom: 16,
     },
     amount: {
       fontSize: 28,

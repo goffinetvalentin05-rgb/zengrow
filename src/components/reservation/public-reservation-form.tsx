@@ -107,6 +107,7 @@ export type PublicReservationFormProps = {
   restaurantSlug: string;
   /** Montants CHF proposés sur le formulaire de demande de bon. */
   giftVoucherSuggestedAmounts?: number[];
+  giftVoucherOffers?: import("@/src/lib/gift-vouchers/offers/types").PublicGiftVoucherOffer[];
   restaurantName: string;
   heroTitle?: string | null;
   restaurantTagline?: string | null;
@@ -259,6 +260,7 @@ export default function PublicReservationForm({
   restaurantId,
   restaurantSlug = "",
   giftVoucherSuggestedAmounts,
+  giftVoucherOffers = [],
   restaurantName,
   heroTitle,
   restaurantTagline,
@@ -1990,6 +1992,7 @@ export default function PublicReservationForm({
               }}
               restaurantSlug={restaurantSlug}
               suggestedAmounts={giftVoucherSuggestedAmounts}
+              offers={giftVoucherOffers}
               previewMode={previewMode}
               surface={pageTheme.section("gift_vouchers")}
             />

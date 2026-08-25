@@ -1,4 +1,5 @@
 import { centsToChf } from "@/src/lib/gift-vouchers/money";
+import { isExperienceOfferKind } from "@/src/lib/gift-vouchers/offers/types";
 import { normalizeHexColor } from "@/src/lib/public-page/colors";
 import type { GiftVoucherPresentation } from "@/src/lib/gift-vouchers/branding";
 import { giftVoucherPublicUrl } from "@/src/lib/gift-vouchers/public-token";
@@ -77,15 +78,21 @@ export function buildAppleWalletPassModel(params: {
   const publicUrl = giftVoucherPublicUrl(presentation.publicToken, origin);
   const remaining = amountNumber(presentation.remainingAmountCents);
   const initial = amountNumber(presentation.initialAmountCents);
+  const experience = isExperienceOfferKind(presentation.offerKind);
+  const experienceTitle = presentation.experienceLabel || presentation.offerTitle;
 
-  const secondaryFields: AppleWalletPassField[] = [
-    {
-      key: "initial",
-      label: "Valeur",
-      value: initial,
-      currencyCode: presentation.currency || "CHF",
-    },
-  ];
+  const secondaryFields: AppleWalletPassField[] = experience
+    ? presentation.partySize && presentation.partySize > 0
+      ? [{ key: "party", label: "Personnes", value: String(presentation.partySize) }]
+      : []
+    : [
+        {
+          key: "initial",
+          label: "Valeur",
+          value: initial,
+          currencyCode: presentation.currency || "CHF",
+        },
+      ];
   if (presentation.recipientName) {
     secondaryFields.push({
       key: "recipient",
@@ -106,10 +113,19 @@ export function buildAppleWalletPassModel(params: {
   }
 
   const backFields: AppleWalletPassField[] = [
-    { key: "offer", label: "Offre", value: truncate(presentation.offerTitle, 120) },
+    { key: "offer", label: "Offre", value: truncate(experienceTitle, 120) },
     { key: "code", label: "Code du bon", value: presentation.code },
-    { key: "balanceInfo", label: "Solde", value: `${centsToChf(presentation.remainingAmountCents).toLocaleString("fr-CH")} ${presentation.currency}` },
   ];
+  if (!experience) {
+    backFields.push({
+      key: "balanceInfo",
+      label: "Solde",
+      value: `${centsToChf(presentation.remainingAmountCents).toLocaleString("fr-CH")} ${presentation.currency}`,
+    });
+  }
+  if (presentation.offerDescription) {
+    backFields.push({ key: "details", label: "Détail", value: truncate(presentation.offerDescription, 500) });
+  }
   if (presentation.terms) {
     backFields.push({ key: "terms", label: "Conditions", value: truncate(presentation.terms, 2000) });
   }
@@ -124,7 +140,7 @@ export function buildAppleWalletPassModel(params: {
 
   return {
     serialNumber: presentation.voucherId,
-    description: truncate(presentation.offerTitle, 80) || "Bon cadeau",
+    description: truncate(experienceTitle, 80) || "Bon cadeau",
     organizationName: truncate(presentation.restaurantName, 80),
     logoText: truncate(presentation.restaurantName, 30),
     backgroundColor: hexToPassRgb(presentation.accentColor),
@@ -143,15 +159,23 @@ export function buildAppleWalletPassModel(params: {
         value: presentation.code,
       },
     ],
-    primaryFields: [
-      {
-        key: "balance",
-        label: "Solde",
-        value: remaining,
-        currencyCode: presentation.currency || "CHF",
-        changeMessage: "Nouveau solde : %@",
-      },
-    ],
+    primaryFields: experience
+      ? [
+          {
+            key: "experience",
+            label: "Prestation",
+            value: truncate(experienceTitle, 80),
+          },
+        ]
+      : [
+          {
+            key: "balance",
+            label: "Solde",
+            value: remaining,
+            currencyCode: presentation.currency || "CHF",
+            changeMessage: "Nouveau solde : %@",
+          },
+        ],
     secondaryFields,
     auxiliaryFields,
     backFields,

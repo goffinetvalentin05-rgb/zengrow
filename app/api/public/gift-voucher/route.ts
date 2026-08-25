@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     message?: string;
     beneficiary?: string;
     occasion?: string;
+    offerId?: string;
   };
 
   const slug = (body.slug ?? "").trim().toLowerCase();
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
       p_message: (body.message ?? "").trim() || null,
       p_beneficiary: (body.beneficiary ?? "").trim() || null,
       p_occasion: (body.occasion ?? "").trim() || null,
+      p_offer_id: body.offerId?.trim() || null,
     });
 
     if (error) {

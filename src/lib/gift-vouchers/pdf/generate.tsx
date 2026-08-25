@@ -4,6 +4,7 @@ import { Font, renderToBuffer } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { fetchImageBuffer } from "@/src/lib/gift-vouchers/assets";
 import type { GiftVoucherPresentation } from "@/src/lib/gift-vouchers/branding";
+import { cropPdfCoverImage } from "@/src/lib/gift-vouchers/pdf/cover";
 import { GiftVoucherPdfDocument } from "@/src/lib/gift-vouchers/pdf/document";
 import { giftVoucherPublicUrl } from "@/src/lib/gift-vouchers/public-token";
 import { GiftVoucherServiceError } from "@/src/lib/gift-vouchers/service";
@@ -74,6 +75,14 @@ async function fetchPdfImageDataUrl(url: string | null): Promise<string | null> 
   return imageDataUrl(buffer);
 }
 
+async function fetchPdfCoverDataUrl(url: string | null): Promise<string | null> {
+  const buffer = await fetchImageBuffer(url);
+  if (!buffer) return null;
+  const cropped = await cropPdfCoverImage(buffer);
+  if (cropped) return imageDataUrl(cropped);
+  return imageDataUrl(buffer);
+}
+
 export async function generateGiftVoucherPdf(params: {
   presentation: GiftVoucherPresentation;
   origin: string;
@@ -83,7 +92,7 @@ export async function generateGiftVoucherPdf(params: {
     const publicUrl = giftVoucherPublicUrl(params.presentation.publicToken, params.origin);
     const [logoDataUrl, coverDataUrl, qrDataUrl] = await Promise.all([
       fetchPdfImageDataUrl(params.presentation.restaurantLogoUrl),
-      fetchPdfImageDataUrl(params.presentation.coverImageUrl),
+      fetchPdfCoverDataUrl(params.presentation.coverImageUrl),
       QRCode.toDataURL(publicUrl, {
         margin: 1,
         width: 512,

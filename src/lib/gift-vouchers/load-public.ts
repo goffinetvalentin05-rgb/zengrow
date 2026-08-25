@@ -1,5 +1,6 @@
 import { createClient } from "@/src/lib/supabase/server";
 import { normalizeGiftVoucherPublicToken } from "@/src/lib/gift-vouchers/public-token";
+import { isGiftVoucherOfferKind } from "@/src/lib/gift-vouchers/offers/types";
 import {
   isPublicGiftVoucherStatus,
   type PublicGiftVoucherView,
@@ -15,6 +16,13 @@ type PublicRpcRow = {
   recipient_name: string | null;
   restaurant_name: string | null;
   restaurant_logo_url: string | null;
+  offer_kind?: string | null;
+  offer_title?: string | null;
+  offer_description?: string | null;
+  offer_image_url?: string | null;
+  offer_experience_label?: string | null;
+  offer_party_size?: number | null;
+  message?: string | null;
 };
 
 export async function loadPublicGiftVoucherByToken(
@@ -47,5 +55,12 @@ export async function loadPublicGiftVoucherByToken(
     restaurantName: row.restaurant_name?.trim() || "Établissement",
     restaurantLogoUrl: row.restaurant_logo_url?.trim() || null,
     publicToken: token,
+    offerKind: isGiftVoucherOfferKind(row.offer_kind) ? row.offer_kind : "monetary",
+    offerTitle: row.offer_title?.trim() || null,
+    offerDescription: row.offer_description?.trim() || null,
+    offerImageUrl: row.offer_image_url?.trim() || null,
+    experienceLabel: row.offer_experience_label?.trim() || null,
+    partySize: row.offer_party_size ?? null,
+    message: row.message?.trim() || null,
   };
 }

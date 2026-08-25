@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle2, ScanLine, X } from "lucide-react";
 import GiftCardStatusBadge from "@/src/components/dashboard/gift-cards/gift-card-status-badge";
 import type { GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
+import { isExperienceGiftCard } from "@/src/components/dashboard/gift-cards/types";
 import { useDialogFocusTrap } from "@/src/components/dashboard/reservations/hooks/use-dialog-focus-trap";
 import DashboardPortal from "@/src/components/dashboard/ui/dashboard-portal";
 import Button from "@/src/components/ui/button";
@@ -43,14 +44,31 @@ function VoucherPreview({ card }: { card: GiftCardRecord }) {
         <GiftCardStatusBadge status={card.status} />
       </div>
       <dl className="mt-3 space-y-2 text-sm">
-        <div className="flex justify-between gap-3">
-          <dt className="text-zg-text-muted">Montant initial</dt>
-          <dd className="font-medium text-zg-fg">{formatChf(card.amountChf)}</dd>
-        </div>
-        <div className="flex justify-between gap-3">
-          <dt className="text-zg-text-muted">Solde restant</dt>
-          <dd className="text-base font-semibold text-zg-fg">{formatChf(card.balanceChf)}</dd>
-        </div>
+        {card.offerTitle ? (
+          <div className="flex justify-between gap-3">
+            <dt className="text-zg-text-muted">Offre</dt>
+            <dd className="max-w-[60%] text-right font-medium break-words text-zg-fg">{card.offerTitle}</dd>
+          </div>
+        ) : null}
+        {isExperienceGiftCard(card) ? (
+          <div className="flex justify-between gap-3">
+            <dt className="text-zg-text-muted">Prestation</dt>
+            <dd className="max-w-[60%] text-right font-medium break-words text-zg-fg">
+              {card.experienceLabel || card.offerTitle || "À valider en une fois"}
+            </dd>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between gap-3">
+              <dt className="text-zg-text-muted">Montant initial</dt>
+              <dd className="font-medium text-zg-fg">{formatChf(card.amountChf)}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-zg-text-muted">Solde restant</dt>
+              <dd className="text-base font-semibold text-zg-fg">{formatChf(card.balanceChf)}</dd>
+            </div>
+          </>
+        )}
         <div className="flex justify-between gap-3">
           <dt className="text-zg-text-muted">Acheteur</dt>
           <dd className="max-w-[60%] text-right font-medium break-words text-zg-fg">{card.buyerName}</dd>
@@ -102,7 +120,7 @@ export default function RedeemGiftVoucherModal({
         remainingAmountCents: Math.round(nextVoucher.balanceChf * 100),
         expiresAt: nextVoucher.expiresAt ?? null,
       });
-      setStep("amount");
+      setStep(isExperienceGiftCard(nextVoucher) ? "confirm" : "amount");
       setBlockError(block ? redeemErrorMessage(block) : null);
     } else {
       setStep("code");
@@ -155,7 +173,7 @@ export default function RedeemGiftVoucherModal({
         return;
       }
       setVoucher(payload.voucher);
-      setStep("amount");
+      setStep(isExperienceGiftCard(payload.voucher) ? "confirm" : "amount");
       setAmount("");
       setBlockError(payload.redeemable ? null : (payload.error ?? "Impossible d’utiliser ce bon."));
     } catch {
@@ -179,11 +197,16 @@ export default function RedeemGiftVoucherModal({
 
   async function confirmRedeem() {
     if (!voucher || busy) return;
-    const validated = validateAmountInput(amount, voucher.balanceChf);
-    if ("error" in validated) {
-      setFormError(validated.error);
-      setStep("amount");
-      return;
+    const experience = isExperienceGiftCard(voucher);
+    let used = voucher.balanceChf;
+    if (!experience) {
+      const validated = validateAmountInput(amount, voucher.balanceChf);
+      if ("error" in validated) {
+        setFormError(validated.error);
+        setStep("amount");
+        return;
+      }
+      used = validated.amount;
     }
     setBusy(true);
     setFormError(null);
@@ -191,19 +214,19 @@ export default function RedeemGiftVoucherModal({
       const response = await fetch("/api/gift-vouchers/redeem", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          voucherId: voucher.id,
-          code: voucher.code,
-          amount: validated.amount,
-        }),
+        body: JSON.stringify(
+          experience
+            ? { voucherId: voucher.id, code: voucher.code, consumeAll: true }
+            : { voucherId: voucher.id, code: voucher.code, amount: used },
+        ),
       });
       const payload = (await response.json().catch(() => null)) as RedeemPayload | null;
       if (!response.ok || !payload?.voucher) {
         setFormError(payload?.error ?? "Impossible d’utiliser ce bon.");
-        setStep("amount");
+        setStep(experience ? "confirm" : "amount");
         return;
       }
-      setUsedAmountChf(validated.amount);
+      setUsedAmountChf(used);
       setVoucher(payload.voucher);
       setStep("success");
       await onRedeemed(payload.voucher);
@@ -326,7 +349,7 @@ export default function RedeemGiftVoucherModal({
                 <VoucherPreview card={voucher} />
                 {blockError ? <p className="text-sm font-medium text-zg-danger">{blockError}</p> : null}
 
-                {!blockError && step === "amount" ? (
+                {!blockError && step === "amount" && voucher && !isExperienceGiftCard(voucher) ? (
                   <div className="space-y-3">
                     <label htmlFor="redeem-amount" className="text-sm font-medium text-zg-fg">
                       Montant utilisé aujourd’hui
@@ -362,7 +385,13 @@ export default function RedeemGiftVoucherModal({
                   </div>
                 ) : null}
 
-                {!blockError && step === "confirm" && parsedAmount != null && remainingAfter != null ? (
+                {!blockError && step === "confirm" && voucher && isExperienceGiftCard(voucher) ? (
+                  <p className="text-sm text-zg-text-muted">
+                    Cette prestation sera validée en une fois. Aucun encaissement partiel n’est proposé.
+                  </p>
+                ) : null}
+
+                {!blockError && step === "confirm" && parsedAmount != null && remainingAfter != null && voucher && !isExperienceGiftCard(voucher) ? (
                   <div className="space-y-3">
                     <div className="rounded-2xl border border-zg-border bg-zg-surface-elevated/40 px-4 py-4 text-base">
                       <div className="flex justify-between gap-3 py-1.5">
@@ -443,23 +472,33 @@ export default function RedeemGiftVoucherModal({
                   type="button"
                   size="lg"
                   className="min-h-12 w-full text-base"
-                  disabled={busy}
+                  disabled={busy || Boolean(blockError)}
                   onClick={confirmRedeem}
                 >
-                  {busy ? "Validation…" : "Confirmer l’utilisation"}
+                  {busy
+                    ? "Validation…"
+                    : voucher && isExperienceGiftCard(voucher)
+                      ? "Valider cette prestation"
+                      : "Confirmer l’utilisation"}
                 </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-11 w-full"
-                  disabled={busy}
-                  onClick={() => {
-                    setFormError(null);
-                    setStep("amount");
-                  }}
-                >
-                  Modifier le montant
-                </Button>
+                {voucher && !isExperienceGiftCard(voucher) ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-11 w-full"
+                    disabled={busy}
+                    onClick={() => {
+                      setFormError(null);
+                      setStep("amount");
+                    }}
+                  >
+                    Modifier le montant
+                  </Button>
+                ) : (
+                  <Button type="button" variant="ghost" className="min-h-11 w-full" disabled={busy} onClick={() => resetState()}>
+                    Changer de code
+                  </Button>
+                )}
               </>
             ) : null}
           </footer>

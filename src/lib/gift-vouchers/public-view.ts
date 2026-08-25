@@ -1,3 +1,4 @@
+import type { GiftVoucherOfferKind } from "@/src/lib/gift-vouchers/offers/types";
 import type { GiftVoucherStatus } from "@/src/lib/gift-vouchers/types";
 
 export type PublicGiftVoucherView = {
@@ -11,6 +12,13 @@ export type PublicGiftVoucherView = {
   restaurantName: string;
   restaurantLogoUrl: string | null;
   publicToken: string;
+  offerKind: GiftVoucherOfferKind;
+  offerTitle: string | null;
+  offerDescription: string | null;
+  offerImageUrl: string | null;
+  experienceLabel: string | null;
+  partySize: number | null;
+  message: string | null;
 };
 
 export function publicStatusHeadline(status: GiftVoucherStatus): string | null {

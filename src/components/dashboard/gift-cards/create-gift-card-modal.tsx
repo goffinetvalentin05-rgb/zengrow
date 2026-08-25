@@ -16,6 +16,9 @@ import {
   DEFAULT_GIFT_VOUCHER_VALIDITY_MONTHS,
   defaultGiftVoucherExpiryDate,
 } from "@/src/lib/gift-vouchers/defaults";
+import { formatCentsAsChf } from "@/src/lib/gift-vouchers/money";
+import { offerKindLabel } from "@/src/lib/gift-vouchers/offers/map";
+import type { GiftVoucherOffer } from "@/src/lib/gift-vouchers/offers/types";
 
 type CreateGiftCardModalProps = {
   open: boolean;
@@ -43,32 +46,46 @@ const EMPTY_FORM: FormState = {
   generatePdf: true,
 };
 
+function offerPrice(offer: GiftVoucherOffer): string {
+  if (offer.kind === "monetary") return formatCentsAsChf(offer.faceValueCents ?? offer.salePriceCents);
+  return offer.salePriceCents > 0 ? formatCentsAsChf(offer.salePriceCents) : "Prestation";
+}
+
 export default function CreateGiftCardModal({ open, onClose, onCreated }: CreateGiftCardModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [step, setStep] = useState<"type" | "form">("type");
+  const [step, setStep] = useState<"offer" | "type" | "form">("offer");
   const [selectedType, setSelectedType] = useState<GiftCardType | null>(null);
+  const [selectedOfferId, setSelectedOfferId] = useState<string | "free" | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [suggestedAmounts, setSuggestedAmounts] = useState<number[]>([...DEFAULT_GIFT_VOUCHER_SUGGESTED_AMOUNTS]);
+  const [allowFreeAmount, setAllowFreeAmount] = useState(true);
+  const [offers, setOffers] = useState<GiftVoucherOffer[]>([]);
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     void (async () => {
       try {
-        const response = await fetch("/api/gift-vouchers/settings");
-        const payload = (await response.json().catch(() => null)) as {
+        const [settingsRes, offersRes] = await Promise.all([
+          fetch("/api/gift-vouchers/settings"),
+          fetch("/api/gift-voucher-offers"),
+        ]);
+        const settingsPayload = (await settingsRes.json().catch(() => null)) as {
           settings?: GiftVoucherBrandingSettings;
         } | null;
-        if (cancelled || !payload?.settings) return;
-        const amounts = payload.settings.suggestedAmounts;
-        const expiry = defaultGiftVoucherExpiryDate(payload.settings.defaultValidityMonths);
+        const offersPayload = (await offersRes.json().catch(() => null)) as { offers?: GiftVoucherOffer[] } | null;
+        if (cancelled) return;
+        const amounts = settingsPayload?.settings?.suggestedAmounts ?? [...DEFAULT_GIFT_VOUCHER_SUGGESTED_AMOUNTS];
+        const validity = settingsPayload?.settings?.defaultValidityMonths ?? DEFAULT_GIFT_VOUCHER_VALIDITY_MONTHS;
         setSuggestedAmounts(amounts);
+        setAllowFreeAmount(settingsPayload?.settings?.allowFreeAmount !== false);
+        setOffers((offersPayload?.offers ?? []).filter((offer) => offer.status === "active"));
         setForm((current) => ({
           ...current,
           amount: current.amount === EMPTY_FORM.amount ? String(amounts[1] ?? amounts[0] ?? 100) : current.amount,
-          expiresAt: current.expiresAt === EMPTY_FORM.expiresAt ? expiry : current.expiresAt,
+          expiresAt: current.expiresAt === EMPTY_FORM.expiresAt ? defaultGiftVoucherExpiryDate(validity) : current.expiresAt,
         }));
       } catch {
         /* conservation des valeurs par défaut */
@@ -79,10 +96,13 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
     };
   }, [open]);
 
+  const selectedOffer = offers.find((offer) => offer.id === selectedOfferId) ?? null;
+
   const resetAndClose = useCallback(() => {
     if (submitting) return;
-    setStep("type");
+    setStep("offer");
     setSelectedType(null);
+    setSelectedOfferId(null);
     setForm(EMPTY_FORM);
     setFormError(null);
     onClose();
@@ -110,6 +130,18 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
 
   if (!open) return null;
 
+  function chooseOffer(id: string | "free") {
+    setSelectedOfferId(id);
+    const offer = offers.find((item) => item.id === id);
+    if (offer) {
+      setForm((current) => ({
+        ...current,
+        expiresAt: defaultGiftVoucherExpiryDate(offer.validityMonths),
+      }));
+    }
+    setStep("type");
+  }
+
   function chooseType(type: GiftCardType) {
     setSelectedType(type);
     setStep("form");
@@ -121,27 +153,33 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
     setSubmitting(true);
     setFormError(null);
     try {
+      const body: Record<string, unknown> = {
+        type: selectedType,
+        buyerName: form.buyerName,
+        buyerEmail: form.buyerEmail,
+        recipientName: form.recipientName,
+        message: form.message,
+        expiresAt: form.expiresAt,
+        generatePdf: selectedType === "paper" ? form.generatePdf : undefined,
+      };
+      if (selectedOfferId && selectedOfferId !== "free") {
+        body.offerId = selectedOfferId;
+      } else {
+        body.amount = Number(form.amount);
+      }
       const response = await fetch("/api/gift-vouchers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: selectedType,
-          amount: Number(form.amount),
-          buyerName: form.buyerName,
-          buyerEmail: form.buyerEmail,
-          recipientName: form.recipientName,
-          message: form.message,
-          expiresAt: form.expiresAt,
-          generatePdf: selectedType === "paper" ? form.generatePdf : undefined,
-        }),
+        body: JSON.stringify(body),
       });
       const payload = (await response.json().catch(() => null)) as { error?: string } | null;
       if (!response.ok) {
         setFormError(payload?.error ?? "Impossible de créer le bon cadeau.");
         return;
       }
-      setStep("type");
+      setStep("offer");
       setSelectedType(null);
+      setSelectedOfferId(null);
       setForm(EMPTY_FORM);
       await onCreated();
     } catch {
@@ -150,6 +188,15 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
       setSubmitting(false);
     }
   }
+
+  const title =
+    step === "offer"
+      ? "Créer un bon"
+      : step === "type"
+        ? "Type de bon"
+        : selectedType === "paper"
+          ? "Bon papier"
+          : "Bon digital";
 
   return (
     <DashboardPortal>
@@ -172,12 +219,14 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
           <header className="flex items-start justify-between gap-3 border-b border-zg-border px-5 py-4">
             <div className="min-w-0">
               <h2 id="create-gift-card-title" className="text-lg font-semibold text-zg-fg">
-                {step === "type" ? "Créer un bon" : selectedType === "paper" ? "Bon papier" : "Bon digital"}
+                {title}
               </h2>
               <p className="mt-1 text-sm text-zg-text-muted">
-                {step === "type"
-                  ? "Quel type de bon souhaitez-vous créer ?"
-                  : "Le bon sera enregistré dans votre établissement."}
+                {step === "offer"
+                  ? "Choisissez une offre du catalogue, ou un montant libre."
+                  : step === "type"
+                    ? "Quel support souhaitez-vous créer ?"
+                    : "Le bon sera enregistré dans votre établissement."}
               </p>
             </div>
             <button
@@ -189,6 +238,52 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
               <X className="h-5 w-5" strokeWidth={2} />
             </button>
           </header>
+
+          {step === "offer" ? (
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5">
+              {offers.length === 0 ? (
+                <p className="text-sm text-zg-text-muted">
+                  Aucune offre active. Créez d’abord une offre, ou utilisez un montant libre.
+                </p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {offers.map((offer) => (
+                    <button
+                      key={offer.id}
+                      type="button"
+                      onClick={() => chooseOffer(offer.id)}
+                      className="overflow-hidden rounded-2xl border border-zg-border text-left hover:border-zg-accent/40"
+                    >
+                      {offer.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={offer.imageUrl} alt="" className="h-28 w-full object-cover" />
+                      ) : (
+                        <div className="flex h-28 items-center justify-center bg-zg-accent-soft-bg text-sm font-semibold text-zg-accent">
+                          {offerKindLabel(offer.kind)}
+                        </div>
+                      )}
+                      <div className="p-3">
+                        <p className="font-semibold text-zg-fg">{offer.title}</p>
+                        <p className="mt-1 text-sm text-zg-accent">{offerPrice(offer)}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {allowFreeAmount ? (
+                <button
+                  type="button"
+                  onClick={() => chooseOffer("free")}
+                  className="w-full rounded-2xl border border-dashed border-zg-border p-4 text-left hover:border-zg-accent/40"
+                >
+                  <p className="font-semibold text-zg-fg">Montant libre</p>
+                  <p className="mt-1 text-sm text-zg-text-muted">
+                    Utilise les montants proposés ({suggestedAmounts.join(" / ")} CHF), hors catalogue.
+                  </p>
+                </button>
+              ) : null}
+            </div>
+          ) : null}
 
           {step === "type" ? (
             <div className="grid gap-4 overflow-y-auto p-5 sm:grid-cols-2">
@@ -218,8 +313,15 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
                   Créez un bon physique tout en gardant son suivi dans ZenGrow.
                 </p>
               </button>
+              <div className="sm:col-span-2">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setStep("offer")}>
+                  Retour
+                </Button>
+              </div>
             </div>
-          ) : (
+          ) : null}
+
+          {step === "form" ? (
             <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
               <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
                 {formError ? (
@@ -227,38 +329,54 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
                     {formError}
                   </p>
                 ) : null}
-                <div>
-                  <label className="dashboard-field-label" htmlFor="gift-amount">
-                    Montant
-                  </label>
-                  <Input
-                    id="gift-amount"
-                    type="number"
-                    min={10}
-                    step={10}
-                    required
-                    value={form.amount}
-                    onChange={(event) => setForm((prev) => ({ ...prev, amount: event.target.value }))}
-                    className="mt-1.5"
-                  />
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {suggestedAmounts.map((amount) => (
-                      <button
-                        key={amount}
-                        type="button"
-                        onClick={() => setForm((prev) => ({ ...prev, amount: String(amount) }))}
-                        className={cn(
-                          "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
-                          form.amount === String(amount)
-                            ? "border-zg-accent bg-zg-accent/10 text-zg-accent"
-                            : "border-zg-border text-zg-text-muted hover:border-zg-accent/40",
-                        )}
-                      >
-                        {amount} CHF
-                      </button>
-                    ))}
+                {selectedOffer ? (
+                  <div className="flex gap-3 rounded-2xl border border-zg-border p-3">
+                    {selectedOffer.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={selectedOffer.imageUrl} alt="" className="h-16 w-20 rounded-xl object-cover" />
+                    ) : null}
+                    <div className="min-w-0">
+                      <p className="font-semibold text-zg-fg">{selectedOffer.title}</p>
+                      <p className="text-sm text-zg-accent">{offerPrice(selectedOffer)}</p>
+                      {selectedOffer.shortDescription ? (
+                        <p className="mt-1 line-clamp-2 text-sm text-zg-text-muted">{selectedOffer.shortDescription}</p>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <label className="dashboard-field-label" htmlFor="gift-amount">
+                      Montant
+                    </label>
+                    <Input
+                      id="gift-amount"
+                      type="number"
+                      min={10}
+                      step={10}
+                      required
+                      value={form.amount}
+                      onChange={(event) => setForm((prev) => ({ ...prev, amount: event.target.value }))}
+                      className="mt-1.5"
+                    />
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {suggestedAmounts.map((amount) => (
+                        <button
+                          key={amount}
+                          type="button"
+                          onClick={() => setForm((prev) => ({ ...prev, amount: String(amount) }))}
+                          className={cn(
+                            "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                            form.amount === String(amount)
+                              ? "border-zg-accent bg-zg-accent/10 text-zg-accent"
+                              : "border-zg-border text-zg-text-muted hover:border-zg-accent/40",
+                          )}
+                        >
+                          {amount} CHF
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="dashboard-field-label" htmlFor="gift-buyer-name">
@@ -345,7 +463,7 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
                 </Button>
               </footer>
             </form>
-          )}
+          ) : null}
         </div>
       </div>
     </DashboardPortal>

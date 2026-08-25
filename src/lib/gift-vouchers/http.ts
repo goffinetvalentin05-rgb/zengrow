@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GiftVoucherServiceError } from "@/src/lib/gift-vouchers/service";
+import { GiftVoucherServiceError } from "@/src/lib/gift-vouchers/errors";
 import { createClient } from "@/src/lib/supabase/server";
 
 export async function getGiftVoucherRequestContext() {

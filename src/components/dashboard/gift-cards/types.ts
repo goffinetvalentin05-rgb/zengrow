@@ -32,8 +32,18 @@ export type GiftCardRecord = {
   fullyUsedAt?: string | null;
   fullyUsedLabel?: string;
   qrPlaceholder: string;
+  offerKind: "monetary" | "experience";
+  offerTitle?: string | null;
+  offerImageUrl?: string | null;
+  offerDescription?: string | null;
+  experienceLabel?: string | null;
+  partySize?: number | null;
   usageHistory: GiftCardUsageEvent[];
 };
+
+export function isExperienceGiftCard(card: Pick<GiftCardRecord, "offerKind">): boolean {
+  return card.offerKind === "experience";
+}
 
 export type GiftCardTypeFilter = "all" | GiftCardType;
 

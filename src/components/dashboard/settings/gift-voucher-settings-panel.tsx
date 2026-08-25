@@ -49,6 +49,7 @@ function snapshotOf(state: {
   includeBuyer: boolean;
   validityMonths: number;
   suggestedAmounts: string;
+  allowFreeAmount: boolean;
 }) {
   return JSON.stringify(state);
 }
@@ -69,6 +70,7 @@ const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVouch
     const [includeBuyer, setIncludeBuyer] = useState(false);
     const [validityMonths, setValidityMonths] = useState(DEFAULT_GIFT_VOUCHER_VALIDITY_MONTHS);
     const [suggestedAmounts, setSuggestedAmounts] = useState("50, 100, 150");
+    const [allowFreeAmount, setAllowFreeAmount] = useState(true);
     const [savedSnapshot, setSavedSnapshot] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -86,6 +88,7 @@ const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVouch
       includeBuyer,
       validityMonths,
       suggestedAmounts,
+      allowFreeAmount,
     });
     const dirty = Boolean(savedSnapshot) && currentSnapshot !== savedSnapshot;
 
@@ -130,6 +133,7 @@ const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVouch
         includeBuyer: settings.includeBuyerOnPdf,
         validityMonths: settings.defaultValidityMonths,
         suggestedAmounts: settings.suggestedAmounts.join(", "),
+        allowFreeAmount: settings.allowFreeAmount !== false,
       };
       setVoucherName(next.voucherName);
       setOfferTitle(next.offerTitle);
@@ -140,6 +144,7 @@ const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVouch
       setIncludeBuyer(next.includeBuyer);
       setValidityMonths(next.validityMonths);
       setSuggestedAmounts(next.suggestedAmounts);
+      setAllowFreeAmount(next.allowFreeAmount);
       if (markSaved) setSavedSnapshot(snapshotOf(next));
     }
 
@@ -188,6 +193,7 @@ const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVouch
             includeBuyerOnPdf: includeBuyer,
             defaultValidityMonths: clampGiftVoucherValidityMonths(validityMonths),
             suggestedAmounts: parseSuggestedGiftVoucherAmounts(suggestedAmounts),
+            allowFreeAmount,
           }),
         });
         const payload = (await response.json().catch(() => null)) as {
@@ -218,6 +224,7 @@ const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVouch
       includeBuyer,
       validityMonths,
       suggestedAmounts,
+      allowFreeAmount,
     ]);
 
     useImperativeHandle(ref, () => ({ isDirty: () => dirty, save }), [dirty, save]);
@@ -259,9 +266,9 @@ const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVouch
           ) : (
             <div className="space-y-4">
               <p className="rounded-xl border border-zg-border bg-zg-surface-elevated/50 px-3 py-2 text-xs leading-relaxed text-zg-text-muted">
-                Logo, nom affiché, couverture, couleur, conditions et pied de page sont dynamiques : un changement
-                s’applique aussi aux anciens bons à l’affichage. Montant, solde, code et date d’expiration restent
-                ceux enregistrés à la création.
+                Logo, nom affiché et couleur restent dynamiques. Le titre, l’image et les conditions d’une offre
+                vendue sont figés sur le bon émis. La couverture ci-dessous sert de repli pour les bons sans image
+                d’offre.
               </p>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
@@ -415,8 +422,15 @@ const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVouch
                 onChange={(event) => setSuggestedAmounts(event.target.value)}
                 placeholder="50, 100, 150"
               />
-              <p className="mt-1.5 text-xs text-zg-text-muted">Aperçu : {amountsPreview} CHF</p>
+              <p className="mt-1.5 text-xs text-zg-text-muted">Aperçu : {amountsPreview} CHF — utilisés uniquement pour le montant libre.</p>
             </div>
+          </div>
+          <div className="mt-4">
+            <Toggle
+              checked={allowFreeAmount}
+              onChange={setAllowFreeAmount}
+              label="Autoriser la création d’un bon à montant libre"
+            />
           </div>
         </SettingsAccordion>
 

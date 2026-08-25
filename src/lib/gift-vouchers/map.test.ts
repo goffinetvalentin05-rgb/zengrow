@@ -27,6 +27,15 @@ const voucher: GiftVoucher = {
   createdBy: "user-1",
   publicToken: "a".repeat(64),
   metadata: {},
+  offerId: null,
+  offerKind: "monetary",
+  offerTitleSnapshot: null,
+  offerDescriptionSnapshot: null,
+  offerImageUrlSnapshot: null,
+  offerTermsSnapshot: null,
+  offerExperienceLabelSnapshot: null,
+  offerPartySizeSnapshot: null,
+  salePriceCents: null,
 };
 
 const issued: GiftVoucherTransaction = {

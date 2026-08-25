@@ -30,20 +30,15 @@ import type { GiftCardRecord } from "@/src/components/dashboard/gift-cards/types
 import { notifyGiftVoucherWalletPass } from "@/src/lib/gift-vouchers/wallet/notify";
 import { loadGiftVoucherBrandingSettings } from "@/src/lib/gift-vouchers/branding";
 import { defaultGiftVoucherExpiryDate } from "@/src/lib/gift-vouchers/defaults";
+import { GiftVoucherServiceError } from "@/src/lib/gift-vouchers/errors";
+import { issuanceAmountCents, snapshotFromOffer } from "@/src/lib/gift-vouchers/offers/map";
+import { getActiveGiftVoucherOffer } from "@/src/lib/gift-vouchers/offers/service";
 import { notifyGiftVoucherCreated, notifyGiftVoucherRedeemed } from "@/src/lib/notifications/gift-voucher";
+
+export { GiftVoucherServiceError };
 
 const CODE_ATTEMPTS = 6;
 const UNIQUE_VIOLATION = "23505";
-
-export class GiftVoucherServiceError extends Error {
-  constructor(
-    message: string,
-    public readonly status: number,
-  ) {
-    super(message);
-    this.name = "GiftVoucherServiceError";
-  }
-}
 
 function firstZodMessage(error: ZodError): string {
   return error.issues[0]?.message ?? "Données invalides.";
@@ -70,7 +65,10 @@ const VOUCHER_SELECT = `
   initial_amount_cents, remaining_amount_cents, currency,
   buyer_name, buyer_email, buyer_phone, recipient_name, recipient_email,
   message, expires_at, issued_at, fully_used_at, created_at, updated_at,
-  created_by, public_token, metadata
+  created_by, public_token, metadata,
+  offer_id, offer_kind, offer_title_snapshot, offer_description_snapshot,
+  offer_image_url_snapshot, offer_terms_snapshot, offer_experience_label_snapshot,
+  offer_party_size_snapshot, sale_price_cents
 `;
 
 const TRANSACTION_SELECT = `
@@ -320,8 +318,9 @@ export async function redeemGiftVoucher(
   }
 
   let amountCents: number;
-  if (input.consumeAll) {
-    amountCents = await loadRemainingCentsForRedeem(supabase, params.restaurantId, input);
+  const core = await loadVoucherRedeemCore(supabase, params.restaurantId, input);
+  if (core.offerKind === "experience" || input.consumeAll) {
+    amountCents = core.remaining;
   } else {
     try {
       amountCents = chfToCents(input.amount ?? 0);
@@ -369,14 +368,14 @@ export async function redeemGiftVoucher(
   return redeemed;
 }
 
-async function loadRemainingCentsForRedeem(
+async function loadVoucherRedeemCore(
   supabase: SupabaseClient,
   restaurantId: string,
   input: RedeemGiftVoucherInput,
-): Promise<number> {
+): Promise<{ remaining: number; status: GiftVoucher["status"]; expiresAt: string | null; offerKind: string | null }> {
   let query = supabase
     .from("gift_vouchers")
-    .select("remaining_amount_cents, status, expires_at")
+    .select("remaining_amount_cents, status, expires_at, offer_kind")
     .eq("restaurant_id", restaurantId);
 
   if (input.voucherId) {
@@ -404,7 +403,12 @@ async function loadRemainingCentsForRedeem(
   if (block) {
     throw new GiftVoucherServiceError(redeemErrorMessage(block), block === "not_found" ? 404 : 409);
   }
-  return remaining;
+  return {
+    remaining,
+    status: data.status as GiftVoucher["status"],
+    expiresAt: data.expires_at,
+    offerKind: typeof data.offer_kind === "string" ? data.offer_kind : null,
+  };
 }
 
 export async function createGiftVoucher(
@@ -425,11 +429,57 @@ export async function createGiftVoucher(
     throw new GiftVoucherServiceError("Données invalides.", 400);
   }
 
+  const branding = await loadGiftVoucherBrandingSettings(supabase, params.restaurantId);
+
   let amountCents: number;
-  try {
-    amountCents = chfToCents(input.amount);
-  } catch (error) {
-    throw new GiftVoucherServiceError(error instanceof Error ? error.message : "Montant invalide.", 400);
+  let offerSnapshot: {
+    offer_id: string | null;
+    offer_kind: "monetary" | "experience";
+    offer_title_snapshot: string | null;
+    offer_description_snapshot: string | null;
+    offer_image_url_snapshot: string | null;
+    offer_terms_snapshot: string | null;
+    offer_experience_label_snapshot: string | null;
+    offer_party_size_snapshot: number | null;
+    sale_price_cents: number | null;
+  } = {
+    offer_id: null,
+    offer_kind: "monetary",
+    offer_title_snapshot: null,
+    offer_description_snapshot: null,
+    offer_image_url_snapshot: null,
+    offer_terms_snapshot: null,
+    offer_experience_label_snapshot: null,
+    offer_party_size_snapshot: null,
+    sale_price_cents: null,
+  };
+  let validityMonths = branding.defaultValidityMonths;
+
+  if (input.offerId) {
+    const offer = await getActiveGiftVoucherOffer(supabase, params.restaurantId, input.offerId);
+    const snapshot = snapshotFromOffer(offer);
+    amountCents = issuanceAmountCents(offer);
+    validityMonths = offer.validityMonths;
+    offerSnapshot = {
+      offer_id: snapshot.offerId,
+      offer_kind: snapshot.offerKind,
+      offer_title_snapshot: snapshot.title,
+      offer_description_snapshot: snapshot.description,
+      offer_image_url_snapshot: snapshot.imageUrl,
+      offer_terms_snapshot: snapshot.terms,
+      offer_experience_label_snapshot: snapshot.experienceLabel,
+      offer_party_size_snapshot: snapshot.partySize,
+      sale_price_cents: snapshot.salePriceCents,
+    };
+  } else {
+    if (!branding.allowFreeAmount) {
+      throw new GiftVoucherServiceError("Choisissez une offre du catalogue.", 400);
+    }
+    try {
+      amountCents = chfToCents(input.amount ?? 0);
+    } catch (error) {
+      throw new GiftVoucherServiceError(error instanceof Error ? error.message : "Montant invalide.", 400);
+    }
   }
 
   const buyerCustomerId = await findOrCreateBuyerCustomer(supabase, params.restaurantId, input);
@@ -437,8 +487,7 @@ export async function createGiftVoucher(
   if (input.expiresAt) {
     expiresAt = new Date(`${input.expiresAt}T23:59:59.000Z`).toISOString();
   } else {
-    const branding = await loadGiftVoucherBrandingSettings(supabase, params.restaurantId);
-    expiresAt = new Date(`${defaultGiftVoucherExpiryDate(branding.defaultValidityMonths)}T23:59:59.000Z`).toISOString();
+    expiresAt = new Date(`${defaultGiftVoucherExpiryDate(validityMonths)}T23:59:59.000Z`).toISOString();
   }
   const metadata: Record<string, unknown> = {};
   if (input.generatePdf) metadata.generate_pdf = true;
@@ -469,6 +518,7 @@ export async function createGiftVoucher(
         expires_at: expiresAt,
         created_by: params.userId,
         metadata,
+        ...offerSnapshot,
       })
       .select(VOUCHER_SELECT)
       .single();

@@ -1,4 +1,5 @@
 import { centsToChf, formatChf } from "@/src/lib/gift-vouchers/money";
+import { isGiftVoucherOfferKind } from "@/src/lib/gift-vouchers/offers/types";
 import type {
   GiftVoucher,
   GiftVoucherStatus,
@@ -92,6 +93,15 @@ export type GiftVoucherRow = {
   created_by: string | null;
   public_token: string;
   metadata: unknown;
+  offer_id?: string | null;
+  offer_kind?: string | null;
+  offer_title_snapshot?: string | null;
+  offer_description_snapshot?: string | null;
+  offer_image_url_snapshot?: string | null;
+  offer_terms_snapshot?: string | null;
+  offer_experience_label_snapshot?: string | null;
+  offer_party_size_snapshot?: number | null;
+  sale_price_cents?: number | null;
 };
 
 export type GiftVoucherTransactionRow = {
@@ -142,6 +152,15 @@ export function mapGiftVoucherRow(row: GiftVoucherRow): GiftVoucher {
     createdBy: row.created_by,
     publicToken: row.public_token,
     metadata: asMetadata(row.metadata),
+    offerId: row.offer_id ?? null,
+    offerKind: isGiftVoucherOfferKind(row.offer_kind) ? row.offer_kind : "monetary",
+    offerTitleSnapshot: row.offer_title_snapshot?.trim() || null,
+    offerDescriptionSnapshot: row.offer_description_snapshot?.trim() || null,
+    offerImageUrlSnapshot: row.offer_image_url_snapshot?.trim() || null,
+    offerTermsSnapshot: row.offer_terms_snapshot?.trim() || null,
+    offerExperienceLabelSnapshot: row.offer_experience_label_snapshot?.trim() || null,
+    offerPartySizeSnapshot: row.offer_party_size_snapshot ?? null,
+    salePriceCents: row.sale_price_cents ?? null,
   };
 }
 
@@ -232,6 +251,12 @@ export function toGiftCardRecord(voucher: GiftVoucher, transactions: GiftVoucher
     fullyUsedAt: voucher.fullyUsedAt,
     fullyUsedLabel: formatGiftVoucherDateTime(voucher.fullyUsedAt),
     qrPlaceholder: `QR-${voucher.code}`,
+    offerKind: voucher.offerKind,
+    offerTitle: voucher.offerTitleSnapshot,
+    offerImageUrl: voucher.offerImageUrlSnapshot,
+    offerDescription: voucher.offerDescriptionSnapshot,
+    experienceLabel: voucher.offerExperienceLabelSnapshot,
+    partySize: voucher.offerPartySizeSnapshot,
     usageHistory: [...transactions]
       .sort((a, b) => {
         const byDate = b.createdAt.localeCompare(a.createdAt);

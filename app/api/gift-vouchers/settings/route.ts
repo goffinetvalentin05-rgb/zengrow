@@ -46,6 +46,9 @@ export async function PATCH(request: Request) {
     if (input.suggestedAmounts) {
       row.gift_voucher_suggested_amounts = input.suggestedAmounts;
     }
+    if (input.allowFreeAmount != null) {
+      row.gift_voucher_allow_free_amount = input.allowFreeAmount;
+    }
     const { error } = await ctx.supabase.from("restaurant_settings").upsert(row, { onConflict: "restaurant_id" });
     if (error) {
       throw new GiftVoucherServiceError("Impossible d’enregistrer la personnalisation des bons.", 500);

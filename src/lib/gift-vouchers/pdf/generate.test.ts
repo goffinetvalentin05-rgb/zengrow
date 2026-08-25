@@ -31,6 +31,10 @@ const presentation: GiftVoucherPresentation = {
   terms: DEFAULT_GIFT_VOUCHER_TERMS,
   footer: "Lausanne",
   includeBuyerOnPdf: true,
+  offerKind: "monetary",
+  offerDescription: null,
+  experienceLabel: null,
+  partySize: null,
 };
 
 describe("PDF A4 bon cadeau", () => {

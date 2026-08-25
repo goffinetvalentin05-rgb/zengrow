@@ -25,6 +25,7 @@ export default async function DashboardGiftVouchersPage({ searchParams }: Dashbo
   return (
     <DashboardContent>
       <GiftCardsPage
+        restaurantId={restaurant.id}
         initialCards={initialCards}
         initialRedeem={params.redeem === "1"}
         initialRedeemCode={params.code?.trim() ?? ""}

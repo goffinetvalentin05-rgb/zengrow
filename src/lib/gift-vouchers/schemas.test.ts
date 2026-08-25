@@ -11,6 +11,19 @@ describe("parseCreateGiftVoucherInput", () => {
     expect(parsed.amount).toBe(100);
   });
 
+  it("accepte une création depuis une offre sans montant client", () => {
+    const parsed = parseCreateGiftVoucherInput({
+      type: "digital",
+      offerId: "11111111-1111-4111-8111-111111111111",
+    });
+    expect(parsed.offerId).toBe("11111111-1111-4111-8111-111111111111");
+    expect(parsed.amount).toBeUndefined();
+  });
+
+  it("refuse une création sans offre ni montant", () => {
+    expect(() => parseCreateGiftVoucherInput({ type: "digital" })).toThrow();
+  });
+
   it("normalise les e-mails et ignore les champs vides", () => {
     const parsed = parseCreateGiftVoucherInput({
       type: "paper",

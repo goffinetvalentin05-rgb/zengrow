@@ -6,6 +6,7 @@ import { CheckCircle2, ScanLine } from "lucide-react";
 import CreateGiftCardModal from "@/src/components/dashboard/gift-cards/create-gift-card-modal";
 import GiftCardDetailDrawer from "@/src/components/dashboard/gift-cards/gift-card-detail-drawer";
 import GiftCardTable from "@/src/components/dashboard/gift-cards/gift-card-table";
+import GiftVoucherOffersSection from "@/src/components/dashboard/gift-cards/gift-voucher-offers-section";
 import RedeemGiftVoucherModal from "@/src/components/dashboard/gift-cards/redeem-gift-voucher-modal";
 import ScanGiftVoucherModal from "@/src/components/dashboard/gift-cards/scan-gift-voucher-modal";
 import type {
@@ -25,6 +26,7 @@ const FILTER_TABS: { id: GiftCardTypeFilter; label: string }[] = [
 ];
 
 type GiftCardsPageProps = {
+  restaurantId: string;
   initialCards: GiftCardRecord[];
   initialRedeem?: boolean;
   initialRedeemCode?: string;
@@ -33,6 +35,7 @@ type GiftCardsPageProps = {
 };
 
 export default function GiftCardsPage({
+  restaurantId,
   initialCards,
   initialRedeem = false,
   initialRedeemCode = "",
@@ -228,6 +231,8 @@ export default function GiftCardsPage({
           },
         ]}
       />
+
+      <GiftVoucherOffersSection restaurantId={restaurantId} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs

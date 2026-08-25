@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { cn } from "@/src/lib/utils";
+import { formatCentsAsChf } from "@/src/lib/gift-vouchers/money";
+import type { PublicGiftVoucherOffer } from "@/src/lib/gift-vouchers/offers/types";
 import type { SectionSurface } from "@/src/lib/public-page/theme";
 import { PublicPageSection } from "@/src/components/reservation/public-page-section";
 import type {
@@ -2029,6 +2031,7 @@ export function GiftVouchersSection({
   previewMode = false,
   surface,
   suggestedAmounts,
+  offers = [],
 }: {
   content: GiftVouchersSectionContent;
   surfaceCopy: GiftVouchersSectionCopy;
@@ -2036,6 +2039,7 @@ export function GiftVouchersSection({
   previewMode?: boolean;
   surface: SectionSurface;
   suggestedAmounts?: number[];
+  offers?: PublicGiftVoucherOffer[];
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -2049,26 +2053,44 @@ export function GiftVouchersSection({
   const [beneficiary, setBeneficiary] = useState("");
   const [occasion, setOccasion] = useState("");
   const [message, setMessage] = useState("");
+  const [selectedOffer, setSelectedOffer] = useState<PublicGiftVoucherOffer | null>(null);
 
   const title = content.title.trim() || (surfaceCopy.fallbackTitle ?? "").trim();
   const body = content.body.trim() || (surfaceCopy.fallbackBody ?? "").trim();
   const cta = content.ctaLabel.trim() || (surfaceCopy.fallbackCta ?? "").trim();
   const img = content.imageUrl.trim();
   const amountChoices = suggestedAmounts && suggestedAmounts.length > 0 ? suggestedAmounts : [50, 100, 150];
+  const hasOffers = offers.length > 0;
+
+  function openOffer(offer: PublicGiftVoucherOffer | null) {
+    setErr(null);
+    setSelectedOffer(offer);
+    if (offer) {
+      const cents = offer.kind === "monetary" ? offer.faceValueCents ?? offer.salePriceCents : offer.salePriceCents;
+      setAmount(cents > 0 ? String(Math.round(cents / 100)) : "");
+      setOccasion(offer.title);
+    }
+    setOpen(true);
+  }
+
+  function offerPrice(offer: PublicGiftVoucherOffer): string {
+    if (offer.kind === "monetary") return formatCentsAsChf(offer.faceValueCents ?? offer.salePriceCents);
+    return offer.salePriceCents > 0 ? formatCentsAsChf(offer.salePriceCents) : "Offrir";
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setErr(null);
     if (previewMode) {
-      setErr("Lâ€™envoi est dÃ©sactivÃ© dans lâ€™aperÃ§u du tableau de bord.");
+      setErr("L’envoi est désactivé dans l’aperçu du tableau de bord.");
       return;
     }
     if (!restaurantSlug.trim()) {
-      setErr("Impossible dâ€™envoyer la demande pour le moment.");
+      setErr("Impossible d’envoyer la demande pour le moment.");
       return;
     }
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      setErr("Merci de remplir au minimum prÃ©nom, nom et e-mail.");
+      setErr("Merci de remplir au minimum prénom, nom et e-mail.");
       return;
     }
     setBusy(true);
@@ -2084,13 +2106,14 @@ export function GiftVouchersSection({
           phone: phone.trim() || undefined,
           amount: amount.trim() || undefined,
           beneficiary: beneficiary.trim() || undefined,
-          occasion: occasion.trim() || undefined,
+          occasion: occasion.trim() || selectedOffer?.title || undefined,
           message: message.trim() || undefined,
+          offerId: selectedOffer?.id,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean };
       if (!res.ok || !data.ok) {
-        setErr(data.error ?? "Envoi impossible. RÃ©essayez plus tard.");
+        setErr(data.error ?? "Envoi impossible. Réessayez plus tard.");
         setBusy(false);
         return;
       }
@@ -2104,8 +2127,9 @@ export function GiftVouchersSection({
       setBeneficiary("");
       setOccasion("");
       setMessage("");
+      setSelectedOffer(null);
     } catch {
-      setErr("Erreur rÃ©seau. RÃ©essayez plus tard.");
+      setErr("Erreur réseau. Réessayez plus tard.");
     } finally {
       setBusy(false);
     }
@@ -2209,21 +2233,68 @@ export function GiftVouchersSection({
               {body}
             </p>
             <div className="mt-10">
-              <button
-                type="button"
-                onClick={() => {
-                  setErr(null);
-                  setOpen(true);
-                }}
-                className="inline-flex min-h-[56px] min-w-[220px] items-center justify-center px-10 text-[12px] font-semibold uppercase tracking-[0.22em] shadow-[0_28px_90px_-48px_rgba(0,0,0,0.55)] transition hover:brightness-[1.05] active:scale-[0.99]"
-                style={{
-                  borderRadius: "calc(var(--radius) + 2px)",
-                  backgroundColor: "var(--button-bg)",
-                  color: "var(--button-text)",
-                }}
-              >
-                {cta}
-              </button>
+              {hasOffers ? (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {offers.map((offer) => (
+                    <article
+                      key={offer.id}
+                      className="overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--accent-color)_18%,transparent)] bg-[color-mix(in_srgb,var(--body-text)_3%,var(--page-bg))]"
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden">
+                        {offer.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={offer.imageUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div
+                            className="flex h-full items-center justify-center"
+                            style={{ backgroundColor: "color-mix(in srgb, var(--accent-color) 16%, var(--page-bg))" }}
+                          >
+                            <Gift className="h-10 w-10 opacity-40" style={{ color: "var(--accent-color)" }} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h3 className="text-lg font-medium" style={{ color: "var(--heading-color)" }}>
+                          {offer.title}
+                        </h3>
+                        {offer.shortDescription ? (
+                          <p className="mt-1 line-clamp-2 text-sm" style={{ color: "var(--body-text)" }}>
+                            {offer.shortDescription}
+                          </p>
+                        ) : null}
+                        <p className="mt-3 text-sm font-semibold" style={{ color: "var(--accent-color)" }}>
+                          {offerPrice(offer)}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => openOffer(offer)}
+                          className="mt-4 inline-flex min-h-11 w-full items-center justify-center px-4 text-[11px] font-semibold uppercase tracking-[0.18em]"
+                          style={{
+                            borderRadius: "calc(var(--radius) + 2px)",
+                            backgroundColor: "var(--button-bg)",
+                            color: "var(--button-text)",
+                          }}
+                        >
+                          Offrir cette offre
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openOffer(null)}
+                  className="inline-flex min-h-[56px] min-w-[220px] items-center justify-center px-10 text-[12px] font-semibold uppercase tracking-[0.22em] shadow-[0_28px_90px_-48px_rgba(0,0,0,0.55)] transition hover:brightness-[1.05] active:scale-[0.99]"
+                  style={{
+                    borderRadius: "calc(var(--radius) + 2px)",
+                    backgroundColor: "var(--button-bg)",
+                    color: "var(--button-text)",
+                  }}
+                >
+                  {cta}
+                </button>
+              )}
             </div>
           </div>
         </div>

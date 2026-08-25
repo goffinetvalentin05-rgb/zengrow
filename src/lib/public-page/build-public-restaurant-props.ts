@@ -32,7 +32,7 @@ export type PublicRestaurantPageBundle = {
 };
 
 export function buildPublicRestaurantPageProps(loaded: LoadedPublicRestaurant): PublicRestaurantPageBundle {
-  const { restaurant, settings, documents, pageSectionRows } = loaded;
+  const { restaurant, settings, documents, pageSectionRows, giftVoucherOffers = [] } = loaded;
 
   const safeSettings: PublicSettingsRow = (settings as PublicSettingsRow | null) ?? {
     opening_hours: getDefaultOpeningHours(),
@@ -273,6 +273,7 @@ export function buildPublicRestaurantPageProps(loaded: LoadedPublicRestaurant): 
     terraceLabel: safeSettings.terrace_label,
     terraceCapacity: safeSettings.terrace_capacity,
     giftVoucherSuggestedAmounts: parseSuggestedGiftVoucherAmounts(safeSettings.gift_voucher_suggested_amounts),
+    giftVoucherOffers,
     sectionLayoutVariants,
     sectionContent,
   } satisfies PublicRestaurantPageBundle["formProps"];

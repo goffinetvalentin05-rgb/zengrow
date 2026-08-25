@@ -45,8 +45,16 @@ export default function GiftCardTable({ cards, onView }: GiftCardTableProps) {
           >
             <TableCell className="font-semibold tabular-nums">{card.code}</TableCell>
             <TableCell>{card.buyerName}</TableCell>
-            <TableCell className="tabular-nums">{formatChf(card.amountChf)}</TableCell>
-            <TableCell className="tabular-nums">{formatChf(card.balanceChf)}</TableCell>
+            <TableCell className="tabular-nums">
+              {card.offerKind === "experience" ? card.offerTitle || "Prestation" : formatChf(card.amountChf)}
+            </TableCell>
+            <TableCell className="tabular-nums">
+              {card.offerKind === "experience"
+                ? card.status === "used"
+                  ? "Utilisée"
+                  : "À valider"
+                : formatChf(card.balanceChf)}
+            </TableCell>
             <TableCell>
               <GiftCardTypeBadge type={card.type} />
             </TableCell>

@@ -8,6 +8,7 @@ import AddToAppleWalletBadge from "@/src/components/gift-vouchers/add-to-apple-w
 import Button from "@/src/components/ui/button";
 import { formatCentsAsChf } from "@/src/lib/gift-vouchers/money";
 import { formatGiftVoucherDate } from "@/src/lib/gift-vouchers/map";
+import { isExperienceOfferKind } from "@/src/lib/gift-vouchers/offers/types";
 import { giftVoucherPublicUrl } from "@/src/lib/gift-vouchers/public-token";
 import { canIssueAppleWalletPass } from "@/src/lib/gift-vouchers/wallet/eligibility";
 import { publicStatusHeadline, type PublicGiftVoucherView } from "@/src/lib/gift-vouchers/public-view";
@@ -24,6 +25,8 @@ export default function PublicGiftVoucherCard({ voucher, origin }: PublicGiftVou
   const showQr = voucher.status !== "draft";
   const canAddToWallet = canIssueAppleWalletPass(voucher);
   const fullyUsed = voucher.status === "used" || voucher.remainingAmountCents <= 0;
+  const experience = isExperienceOfferKind(voucher.offerKind);
+  const heading = voucher.experienceLabel || voucher.offerTitle || "Bon cadeau";
 
   async function shareOrCopy() {
     try {
@@ -49,6 +52,12 @@ export default function PublicGiftVoucherCard({ voucher, origin }: PublicGiftVou
 
   return (
     <article className="overflow-hidden rounded-3xl border border-zg-border bg-white shadow-[0_24px_60px_-28px_rgba(79,70,229,0.35)]">
+      {voucher.offerImageUrl ? (
+        <div className="relative aspect-[2.4/1] w-full overflow-hidden bg-zg-surface">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={voucher.offerImageUrl} alt="" className="h-full w-full object-cover" />
+        </div>
+      ) : null}
       <header className="border-b border-zg-border bg-zg-surface px-6 py-5">
         <div className="flex items-center gap-3">
           {voucher.restaurantLogoUrl ? (
@@ -64,7 +73,9 @@ export default function PublicGiftVoucherCard({ voucher, origin }: PublicGiftVou
             </div>
           )}
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">Bon cadeau</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">
+              {experience ? "Expérience" : "Bon cadeau"}
+            </p>
             <h1 className="truncate text-lg font-semibold text-zg-fg">{voucher.restaurantName}</h1>
           </div>
         </div>
@@ -79,7 +90,9 @@ export default function PublicGiftVoucherCard({ voucher, origin }: PublicGiftVou
 
         {fullyUsed ? (
           <p className="rounded-2xl border border-zg-border bg-zg-surface px-4 py-3 text-center text-sm text-zg-text-muted">
-            Le solde de ce bon est à {formatCentsAsChf(0)}. Il ne peut plus être ajouté à Apple Wallet.
+            {experience
+              ? "Cette prestation a déjà été utilisée."
+              : `Le solde de ce bon est à ${formatCentsAsChf(0)}. Il ne peut plus être ajouté à Apple Wallet.`}
           </p>
         ) : null}
 
@@ -98,13 +111,28 @@ export default function PublicGiftVoucherCard({ voucher, origin }: PublicGiftVou
 
         <dl className="space-y-3 rounded-2xl border border-zg-border bg-zg-surface px-4 py-4 text-sm">
           <div className="flex justify-between gap-3">
-            <dt className="text-zg-text-muted">Montant initial</dt>
-            <dd className="font-medium text-zg-fg">{formatCentsAsChf(voucher.initialAmountCents)}</dd>
+            <dt className="text-zg-text-muted">{experience ? "Prestation" : "Offre"}</dt>
+            <dd className="max-w-[60%] text-right font-medium break-words text-zg-fg">{heading}</dd>
           </div>
-          <div className="flex justify-between gap-3">
-            <dt className="text-zg-text-muted">Solde restant</dt>
-            <dd className="text-base font-semibold text-zg-fg">{formatCentsAsChf(voucher.remainingAmountCents)}</dd>
-          </div>
+          {experience ? (
+            voucher.partySize ? (
+              <div className="flex justify-between gap-3">
+                <dt className="text-zg-text-muted">Personnes</dt>
+                <dd className="font-medium text-zg-fg">{voucher.partySize}</dd>
+              </div>
+            ) : null
+          ) : (
+            <>
+              <div className="flex justify-between gap-3">
+                <dt className="text-zg-text-muted">Montant initial</dt>
+                <dd className="font-medium text-zg-fg">{formatCentsAsChf(voucher.initialAmountCents)}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-zg-text-muted">Solde restant</dt>
+                <dd className="text-base font-semibold text-zg-fg">{formatCentsAsChf(voucher.remainingAmountCents)}</dd>
+              </div>
+            </>
+          )}
           {voucher.recipientName?.trim() ? (
             <div className="flex justify-between gap-3">
               <dt className="text-zg-text-muted">Destinataire</dt>

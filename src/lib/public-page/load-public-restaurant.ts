@@ -1,5 +1,7 @@
 import { createClient } from "@/src/lib/supabase/server";
 import type { OpeningHours } from "@/src/lib/utils";
+import { GIFT_VOUCHER_OFFER_SELECT, mapGiftVoucherOfferRow, toPublicGiftVoucherOffer, type GiftVoucherOfferRow } from "@/src/lib/gift-vouchers/offers/map";
+import type { PublicGiftVoucherOffer } from "@/src/lib/gift-vouchers/offers/types";
 
 export type PublicRestaurantRow = {
   id: string;
@@ -245,10 +247,25 @@ export async function loadRestaurant(slug: string) {
     .select("section_type, sort_index, enabled, layout_variant, data")
     .eq("restaurant_id", restaurant.id);
 
+  let giftVoucherOffers: PublicGiftVoucherOffer[] = [];
+  const offersResult = await supabase
+    .from("gift_voucher_offers")
+    .select(GIFT_VOUCHER_OFFER_SELECT)
+    .eq("restaurant_id", restaurant.id)
+    .eq("status", "active")
+    .order("sort_index", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (!offersResult.error && offersResult.data) {
+    giftVoucherOffers = (offersResult.data as GiftVoucherOfferRow[]).map((row) =>
+      toPublicGiftVoucherOffer(mapGiftVoucherOfferRow(row)),
+    );
+  }
+
   return {
     restaurant,
     settings: (settings ?? null) as PublicSettingsRow | null,
     documents: documents ?? [],
     pageSectionRows: pageSectionRows ?? [],
+    giftVoucherOffers,
   };
 }

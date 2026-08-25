@@ -6,6 +6,7 @@ import GiftCardStatusBadge from "@/src/components/dashboard/gift-cards/gift-card
 import GiftCardTypeBadge from "@/src/components/dashboard/gift-cards/gift-card-type-badge";
 import GiftVoucherQr from "@/src/components/dashboard/gift-cards/gift-voucher-qr";
 import type { GiftCardDrawerAction, GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
+import { isExperienceGiftCard } from "@/src/components/dashboard/gift-cards/types";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import { formatChf } from "@/src/lib/gift-vouchers/money";
 import { giftVoucherPublicUrl } from "@/src/lib/gift-vouchers/public-token";
@@ -43,6 +44,12 @@ export default function GiftCardDetailDrawer({
   const [confirmRotate, setConfirmRotate] = useState(false);
   const open = card != null;
   const busy = busyAction != null;
+  const cardIdentity = card ? `${card.id}:${card.publicToken ?? ""}` : "";
+  const [seenCardIdentity, setSeenCardIdentity] = useState(cardIdentity);
+  if (seenCardIdentity !== cardIdentity) {
+    setSeenCardIdentity(cardIdentity);
+    setConfirmRotate(false);
+  }
 
   useDialogFocusTrap(open, panelRef);
 
@@ -63,10 +70,6 @@ export default function GiftCardDetailDrawer({
       document.body.style.overflow = prev;
     };
   }, [open]);
-
-  useEffect(() => {
-    setConfirmRotate(false);
-  }, [card?.id, card?.publicToken]);
 
   if (!card) return null;
 
@@ -134,8 +137,15 @@ export default function GiftCardDetailDrawer({
                 <DetailRow label="Email" value={card.buyerEmail.trim() || "—"} />
                 <DetailRow label="Destinataire" value={card.recipientName?.trim() || "Non renseigné"} />
                 <DetailRow label="Type" value={card.type === "digital" ? "Digital" : "Papier"} />
-                <DetailRow label="Montant initial" value={formatChf(card.amountChf)} />
-                <DetailRow label="Solde restant" value={formatChf(card.balanceChf)} />
+                {card.offerTitle ? <DetailRow label="Offre" value={card.offerTitle} /> : null}
+                {isExperienceGiftCard(card) ? (
+                  <DetailRow label="Prestation" value={card.experienceLabel || card.offerTitle || "Expérience"} />
+                ) : (
+                  <>
+                    <DetailRow label="Montant initial" value={formatChf(card.amountChf)} />
+                    <DetailRow label="Solde restant" value={formatChf(card.balanceChf)} />
+                  </>
+                )}
                 <DetailRow label="Date d'émission" value={card.purchasedLabel} />
                 <DetailRow label="Date d'expiration" value={card.expiresLabel} />
                 <DetailRow label="Message" value={card.message?.trim() || "—"} />

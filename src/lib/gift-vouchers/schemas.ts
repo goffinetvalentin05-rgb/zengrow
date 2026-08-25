@@ -21,6 +21,7 @@ export type GiftVoucherSettingsInput = {
   includeBuyerOnPdf?: boolean;
   defaultValidityMonths?: number;
   suggestedAmounts?: number[];
+  allowFreeAmount?: boolean;
 };
 
 function emptyToUndefined(value: unknown): unknown {
@@ -38,10 +39,15 @@ const optionalText = (max: number) => z.preprocess(emptyToUndefined, z.string().
 export const createGiftVoucherSchema = z
   .object({
     type: z.enum(["digital", "paper"]),
-    amount: z.coerce
-      .number()
-      .positive("Le montant doit être supérieur à 0.")
-      .max(10_000, "Le montant ne peut pas dépasser 10’000 CHF."),
+    offerId: z.preprocess(emptyToUndefined, z.string().uuid("Offre introuvable.").optional()),
+    amount: z.preprocess(
+      emptyToUndefined,
+      z.coerce
+        .number()
+        .positive("Le montant doit être supérieur à 0.")
+        .max(10_000, "Le montant ne peut pas dépasser 10’000 CHF.")
+        .optional(),
+    ),
     buyerName: optionalText(200),
     buyerEmail: optionalEmail,
     buyerPhone: optionalText(40),
@@ -52,6 +58,13 @@ export const createGiftVoucherSchema = z
     generatePdf: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
+    if (!data.offerId && data.amount == null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["amount"],
+        message: "Le montant doit être supérieur à 0.",
+      });
+    }
     if (!data.expiresAt) return;
     const expires = new Date(`${data.expiresAt}T23:59:59.000Z`);
     if (Number.isNaN(expires.getTime()) || expires.getTime() < Date.now()) {
@@ -193,6 +206,7 @@ export const giftVoucherSettingsSchema = z.object({
     if (value === undefined || value === null || value === "") return undefined;
     return parseSuggestedGiftVoucherAmounts(value);
   }, z.array(z.number().int().min(1).max(10_000)).min(1).max(8).optional()),
+  allowFreeAmount: z.boolean().optional(),
 });
 
 export function parseGiftVoucherSettingsInput(payload: unknown): GiftVoucherSettingsInput {
