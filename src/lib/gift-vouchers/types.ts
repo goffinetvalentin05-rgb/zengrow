@@ -71,5 +71,6 @@ export type GiftVoucherStatusAction = "disable" | "reactivate" | "mark_used" | "
 export type RedeemGiftVoucherInput = {
   code?: string;
   voucherId?: string;
-  amount: number;
+  amount?: number;
+  consumeAll?: boolean;
 };

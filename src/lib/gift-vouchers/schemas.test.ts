@@ -81,6 +81,15 @@ describe("parseRedeemGiftVoucherInput", () => {
     expect(() => parseRedeemGiftVoucherInput({ code: "ZG-8K4M-2P7Q", amount: 0 })).toThrow();
     expect(() => parseRedeemGiftVoucherInput({ amount: 20 })).toThrow();
   });
+
+  it("accepte une validation totale sans montant client", () => {
+    const parsed = parseRedeemGiftVoucherInput({
+      voucherId: "11111111-1111-4111-8111-111111111111",
+      consumeAll: true,
+    });
+    expect(parsed.consumeAll).toBe(true);
+    expect(parsed.amount).toBeUndefined();
+  });
 });
 
 describe("parseLookupGiftVoucherCode", () => {

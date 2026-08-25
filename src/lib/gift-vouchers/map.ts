@@ -19,6 +19,15 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("fr-CH", {
   year: "numeric",
 });
 
+const DATETIME_FORMATTER = new Intl.DateTimeFormat("fr-CH", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/Zurich",
+});
+
 function isGiftVoucherType(value: string): value is GiftVoucherType {
   return value === "digital" || value === "paper";
 }
@@ -50,6 +59,13 @@ export function formatGiftVoucherDate(iso: string | null): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
   return DATE_FORMATTER.format(date);
+}
+
+export function formatGiftVoucherDateTime(iso: string | null): string {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return DATETIME_FORMATTER.format(date);
 }
 
 export type GiftVoucherRow = {
@@ -177,7 +193,7 @@ export function mapTransactionToUsageEvent(tx: GiftVoucherTransaction): GiftCard
   const title = transactionTitle(tx.type);
   return {
     id: tx.id,
-    dateLabel: formatGiftVoucherDate(tx.createdAt),
+    dateLabel: tx.type === "redemption" ? formatGiftVoucherDateTime(tx.createdAt) : formatGiftVoucherDate(tx.createdAt),
     title,
     amountLabel: transactionAmountLabel(tx),
     amountUsedChf: tx.type === "redemption" ? centsToChf(tx.amountCents ?? 0) : 0,
@@ -213,6 +229,8 @@ export function toGiftCardRecord(voucher: GiftVoucher, transactions: GiftVoucher
     expiresAt: voucher.expiresAt,
     expiresLabel: formatGiftVoucherDate(voucher.expiresAt),
     publicToken: voucher.publicToken,
+    fullyUsedAt: voucher.fullyUsedAt,
+    fullyUsedLabel: formatGiftVoucherDateTime(voucher.fullyUsedAt),
     qrPlaceholder: `QR-${voucher.code}`,
     usageHistory: [...transactions]
       .sort((a, b) => {

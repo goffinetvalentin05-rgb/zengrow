@@ -40,7 +40,6 @@ export async function PATCH(request: Request, context: RouteContext) {
   try {
     const voucher = await updateGiftVoucherStatus(ctx.supabase, {
       restaurantId: ctx.restaurantId,
-      userId: ctx.userId,
       id,
       payload,
     });

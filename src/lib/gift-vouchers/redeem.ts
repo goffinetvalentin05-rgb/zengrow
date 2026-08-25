@@ -25,6 +25,12 @@ export function redeemErrorMessage(code: string): string {
   return "Impossible d’utiliser ce bon.";
 }
 
+export function scannerVoucherMessage(reason: RedeemBlockReason): string {
+  if (reason === "expired") return "Ce bon a expiré.";
+  if (reason === "used") return "Ce bon a déjà été utilisé.";
+  return redeemErrorMessage(reason);
+}
+
 export function isGiftVoucherExpired(expiresAt: string | null, now: Date = new Date()): boolean {
   if (!expiresAt) return false;
   const time = new Date(expiresAt).getTime();

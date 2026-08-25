@@ -247,12 +247,7 @@ export default function GiftCardsPage({
       <ScanGiftVoucherModal
         open={scanOpen}
         onClose={() => setScanOpen(false)}
-        onVoucherFound={({ voucher }) => {
-          setScanOpen(false);
-          setRedeemVoucher(voucher);
-          setRedeemCode(voucher.code);
-          setRedeemOpen(true);
-        }}
+        onRedeemed={handleRedeemed}
       />
     </section>
   );

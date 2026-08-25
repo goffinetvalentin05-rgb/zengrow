@@ -5,6 +5,7 @@ import {
   giftVoucherPublicUrl,
   isGiftVoucherPublicToken,
   parseGiftVoucherQrPayload,
+  resolveScannedGiftVoucherPayload,
 } from "@/src/lib/gift-vouchers/public-token";
 
 describe("generateGiftVoucherPublicToken", () => {
@@ -27,8 +28,10 @@ describe("parseGiftVoucherQrPayload", () => {
 
   it("extrait le token d’une URL /v/[token]", () => {
     expect(parseGiftVoucherQrPayload(`https://zengrow.ch/v/${token}`)).toBe(token);
+    expect(parseGiftVoucherQrPayload(`https://zengrow.ch/V/${token.toUpperCase()}`)).toBe(token);
     expect(parseGiftVoucherQrPayload(`https://zengrow.ch/v/${token}?x=1`)).toBe(token);
     expect(parseGiftVoucherQrPayload(`/v/${token}`)).toBe(token);
+    expect(parseGiftVoucherQrPayload(`https://zengrow.ch/dashboard/gift-vouchers?redeemToken=${token}`)).toBe(token);
   });
 
   it("accepte un token brut", () => {
@@ -40,6 +43,13 @@ describe("parseGiftVoucherQrPayload", () => {
     expect(parseGiftVoucherQrPayload("https://zengrow.ch/r/demo")).toBeNull();
     expect(parseGiftVoucherQrPayload("https://example.com/v/not-a-token")).toBeNull();
     expect(parseGiftVoucherQrPayload("")).toBeNull();
+  });
+
+  it("accepte aussi un code humain scanné", () => {
+    expect(resolveScannedGiftVoucherPayload("ZG-8K4M-2P7Q")).toEqual({
+      kind: "code",
+      value: "ZG-8K4M-2P7Q",
+    });
   });
 
   it("construit l’URL publique sans données sensibles", () => {

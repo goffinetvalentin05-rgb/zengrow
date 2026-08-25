@@ -29,6 +29,8 @@ export type GiftCardRecord = {
   expiresAt?: string | null;
   expiresLabel: string;
   publicToken: string;
+  fullyUsedAt?: string | null;
+  fullyUsedLabel?: string;
   qrPlaceholder: string;
   usageHistory: GiftCardUsageEvent[];
 };

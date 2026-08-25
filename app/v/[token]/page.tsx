@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import PublicGiftVoucherCard from "@/src/components/gift-vouchers/public-gift-voucher-card";
 import { loadPublicGiftVoucherByToken } from "@/src/lib/gift-vouchers/load-public";
 import { consumePublicVoucherRateLimit } from "@/src/lib/gift-vouchers/public-rate-limit";
+import { getRequestOrigin } from "@/src/lib/site-url";
 
 type PublicVoucherPageProps = {
   params: Promise<{ token: string }>;
@@ -28,6 +29,7 @@ function clientIp(headerList: Headers): string {
 export default async function PublicGiftVoucherPage({ params }: PublicVoucherPageProps) {
   const { token } = await params;
   const headerList = await headers();
+  const origin = getRequestOrigin(headerList);
   const allowed = consumePublicVoucherRateLimit(clientIp(headerList));
 
   if (!allowed) {
@@ -53,7 +55,7 @@ export default async function PublicGiftVoucherPage({ params }: PublicVoucherPag
 
   return (
     <PublicVoucherShell>
-      <PublicGiftVoucherCard voucher={voucher} />
+      <PublicGiftVoucherCard voucher={voucher} origin={origin} />
     </PublicVoucherShell>
   );
 }

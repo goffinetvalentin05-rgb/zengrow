@@ -9,7 +9,7 @@ import {
   type GiftVoucherTransactionRow,
 } from "@/src/lib/gift-vouchers/map";
 import { chfToCents } from "@/src/lib/gift-vouchers/money";
-import { generateGiftVoucherPublicToken } from "@/src/lib/gift-vouchers/public-token";
+import { generateGiftVoucherPublicToken, resolveScannedGiftVoucherPayload } from "@/src/lib/gift-vouchers/public-token";
 import { getRedeemBlockReason, redeemErrorMessage } from "@/src/lib/gift-vouchers/redeem";
 import {
   parseCreateGiftVoucherInput,
@@ -249,6 +249,21 @@ export async function lookupGiftVoucherByPublicToken(
   return toLookupResult(data as GiftVoucherWithTransactionsRow);
 }
 
+export async function lookupGiftVoucherFromScan(
+  supabase: SupabaseClient,
+  restaurantId: string,
+  raw: string,
+): Promise<GiftVoucherLookupResult> {
+  const resolved = resolveScannedGiftVoucherPayload(raw);
+  if (!resolved) {
+    throw new GiftVoucherServiceError("Ce QR code n’est pas un bon ZenGrow valide.", 400);
+  }
+  if (resolved.kind === "code") {
+    return lookupGiftVoucherByCode(supabase, restaurantId, { code: resolved.value });
+  }
+  return lookupGiftVoucherByPublicToken(supabase, restaurantId, { token: resolved.value });
+}
+
 function toLookupResult(row: GiftVoucherWithTransactionsRow): GiftVoucherLookupResult {
   const voucher = mapRowWithTransactions(row);
   const domain = mapGiftVoucherRow(row);
@@ -301,10 +316,14 @@ export async function redeemGiftVoucher(
   }
 
   let amountCents: number;
-  try {
-    amountCents = chfToCents(input.amount);
-  } catch (error) {
-    throw new GiftVoucherServiceError(error instanceof Error ? error.message : "Montant invalide.", 400);
+  if (input.consumeAll) {
+    amountCents = await loadRemainingCentsForRedeem(supabase, params.restaurantId, input);
+  } else {
+    try {
+      amountCents = chfToCents(input.amount ?? 0);
+    } catch (error) {
+      throw new GiftVoucherServiceError(error instanceof Error ? error.message : "Montant invalide.", 400);
+    }
   }
 
   const code = input.code ? (normalizeGiftVoucherCode(input.code) ?? input.code) : null;
@@ -331,6 +350,44 @@ export async function redeemGiftVoucher(
   }
 
   return getGiftVoucher(supabase, params.restaurantId, voucherId);
+}
+
+async function loadRemainingCentsForRedeem(
+  supabase: SupabaseClient,
+  restaurantId: string,
+  input: RedeemGiftVoucherInput,
+): Promise<number> {
+  let query = supabase
+    .from("gift_vouchers")
+    .select("remaining_amount_cents, status, expires_at")
+    .eq("restaurant_id", restaurantId);
+
+  if (input.voucherId) {
+    query = query.eq("id", input.voucherId);
+  } else if (input.code) {
+    query = query.eq("code", input.code);
+  } else {
+    throw new GiftVoucherServiceError("Ce bon n’existe pas.", 404);
+  }
+
+  const { data, error } = await query.maybeSingle();
+  if (error) {
+    throw new GiftVoucherServiceError(publicError(error, "Impossible d’utiliser ce bon."), 500);
+  }
+  if (!data) {
+    throw new GiftVoucherServiceError("Ce bon n’existe pas.", 404);
+  }
+
+  const remaining = Number(data.remaining_amount_cents);
+  const block = getRedeemBlockReason({
+    status: data.status as GiftVoucher["status"],
+    remainingAmountCents: remaining,
+    expiresAt: data.expires_at,
+  });
+  if (block) {
+    throw new GiftVoucherServiceError(redeemErrorMessage(block), block === "not_found" ? 404 : 409);
+  }
+  return remaining;
 }
 
 export async function createGiftVoucher(
@@ -430,7 +487,6 @@ export async function updateGiftVoucherStatus(
   supabase: SupabaseClient,
   params: {
     restaurantId: string;
-    userId: string;
     id: string;
     payload: unknown;
   },
@@ -470,8 +526,6 @@ export async function updateGiftVoucherStatus(
     const consumed = voucher.remainingAmountCents;
     await persistStatusChange(supabase, {
       voucher,
-      restaurantId: params.restaurantId,
-      userId: params.userId,
       nextStatus: next.status,
       remainingAmountCents: next.remainingAmountCents,
       fullyUsedAt: next.fullyUsedAt,
@@ -487,8 +541,6 @@ export async function updateGiftVoucherStatus(
     }
     await persistStatusChange(supabase, {
       voucher,
-      restaurantId: params.restaurantId,
-      userId: params.userId,
       nextStatus: "disabled",
       remainingAmountCents: voucher.remainingAmountCents,
       fullyUsedAt: voucher.fullyUsedAt,
@@ -505,8 +557,6 @@ export async function updateGiftVoucherStatus(
     const nextStatus = applyReactivate(voucher.remainingAmountCents);
     await persistStatusChange(supabase, {
       voucher,
-      restaurantId: params.restaurantId,
-      userId: params.userId,
       nextStatus,
       remainingAmountCents: voucher.remainingAmountCents,
       fullyUsedAt: nextStatus === "used" ? (voucher.fullyUsedAt ?? nowIso) : voucher.fullyUsedAt,
@@ -546,8 +596,6 @@ async function persistStatusChange(
   supabase: SupabaseClient,
   params: {
     voucher: GiftVoucher;
-    restaurantId: string;
-    userId: string;
     nextStatus: GiftVoucher["status"];
     remainingAmountCents: number;
     fullyUsedAt: string | null;
@@ -558,33 +606,25 @@ async function persistStatusChange(
     note: string;
   },
 ) {
-  const { error: updateError } = await supabase
-    .from("gift_vouchers")
-    .update({
-      status: params.nextStatus,
-      remaining_amount_cents: params.remainingAmountCents,
-      fully_used_at: params.fullyUsedAt,
-    })
-    .eq("id", params.voucher.id)
-    .eq("restaurant_id", params.restaurantId);
-
-  if (updateError) {
-    throw new GiftVoucherServiceError(publicError(updateError, "Impossible de mettre à jour ce bon."), 500);
-  }
-
-  const { error: txError } = await supabase.from("gift_voucher_transactions").insert({
-    voucher_id: params.voucher.id,
-    restaurant_id: params.restaurantId,
-    type: params.transactionType,
-    amount_cents: params.amountCents,
-    balance_before_cents: params.balanceBefore,
-    balance_after_cents: params.balanceAfter,
-    note: params.note,
-    created_by: params.userId,
+  const { data, error: rpcError } = await supabase.rpc("staff_update_gift_voucher", {
+    p_voucher_id: params.voucher.id,
+    p_status: params.nextStatus,
+    p_remaining_amount_cents: params.remainingAmountCents,
+    p_fully_used_at: params.fullyUsedAt,
+    p_tx_type: params.transactionType,
+    p_amount_cents: params.amountCents,
+    p_balance_before_cents: params.balanceBefore,
+    p_balance_after_cents: params.balanceAfter,
+    p_note: params.note,
   });
 
-  if (txError) {
-    throw new GiftVoucherServiceError(publicError(txError, "Statut mis à jour, mais l’historique n’a pas pu être enregistré."), 500);
+  if (rpcError) {
+    throw new GiftVoucherServiceError(publicError(rpcError, "Impossible de mettre à jour ce bon."), 500);
+  }
+
+  const result = (data ?? {}) as { ok?: boolean; error?: string };
+  if (!result.ok) {
+    throw new GiftVoucherServiceError("Impossible de mettre à jour ce bon.", 500);
   }
 }
 

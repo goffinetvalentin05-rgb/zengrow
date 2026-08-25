@@ -17,3 +17,12 @@ export function getPasswordRecoveryRedirectUrl(): string {
   const base = getPublicSiteUrl();
   return base ? `${base}/update-password` : "";
 }
+
+export function getRequestOrigin(headerList: Headers): string {
+  const fromEnv = getPublicSiteUrl();
+  if (fromEnv) return fromEnv;
+  const proto = headerList.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
+  const host =
+    headerList.get("x-forwarded-host")?.split(",")[0]?.trim() || headerList.get("host")?.trim() || "";
+  return host ? `${proto}://${host}` : "";
+}

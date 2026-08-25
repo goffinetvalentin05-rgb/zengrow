@@ -1,3 +1,4 @@
+import { normalizeGiftVoucherCode } from "@/src/lib/gift-vouchers/code";
 import { getPublicSiteUrl } from "@/src/lib/site-url";
 
 export const GIFT_VOUCHER_PUBLIC_TOKEN_BYTES = 32;
@@ -34,9 +35,9 @@ export function giftVoucherPublicUrl(token: string, origin: string = getPublicSi
   return `${base}${giftVoucherPublicPath(token)}`;
 }
 
-const PUBLIC_PATH_PATTERN = /\/v\/([0-9a-fA-F]{64})(?:\/)?(?:[?#].*)?$/;
+const PUBLIC_PATH_PATTERN = /\/v\/([0-9a-fA-F]{64})(?:\/)?(?:[?#].*)?$/i;
 
-/** Extrait un token depuis une URL /v/[token], un chemin, ou un token brut. */
+/** Extrait un token depuis une URL /v/[token], un chemin, un query redeemToken, ou un token brut. */
 export function parseGiftVoucherQrPayload(raw: string): string | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
@@ -47,9 +48,22 @@ export function parseGiftVoucherQrPayload(raw: string): string | null {
   return normalizeGiftVoucherPublicToken(trimmed);
 }
 
+export function resolveScannedGiftVoucherPayload(
+  raw: string,
+): { kind: "token"; value: string } | { kind: "code"; value: string } | null {
+  const token = parseGiftVoucherQrPayload(raw);
+  if (token) return { kind: "token", value: token };
+  const code = normalizeGiftVoucherCode(raw);
+  return code ? { kind: "code", value: code } : null;
+}
+
 function parseTokenFromMaybeUrl(value: string): string | null {
   try {
     const url = new URL(value);
+    const fromQuery =
+      normalizeGiftVoucherPublicToken(url.searchParams.get("redeemToken") ?? "") ||
+      normalizeGiftVoucherPublicToken(url.searchParams.get("token") ?? "");
+    if (fromQuery) return fromQuery;
     const match = url.pathname.match(PUBLIC_PATH_PATTERN);
     return match?.[1] ? normalizeGiftVoucherPublicToken(match[1]) : null;
   } catch {

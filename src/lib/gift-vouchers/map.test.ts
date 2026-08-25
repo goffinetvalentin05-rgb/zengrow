@@ -74,6 +74,16 @@ describe("gift voucher history mapping", () => {
     expect(record.publicToken).toHaveLength(64);
   });
 
+  it("affiche la date et l’heure d’utilisation", () => {
+    const record = toGiftCardRecord(
+      { ...voucher, status: "used", remainingAmountCents: 0, fullyUsedAt: "2026-08-25T13:37:00.000Z" },
+      [redemption],
+    );
+    expect(record.fullyUsedLabel).toMatch(/2026/);
+    expect(record.fullyUsedLabel).toMatch(/\d{2}:\d{2}/);
+    expect(record.usageHistory[0]?.dateLabel).toMatch(/\d{2}:\d{2}/);
+  });
+
   it("mappe une utilisation isolée", () => {
     const event = mapTransactionToUsageEvent(redemption);
     expect(event.title).toBe("Utilisation");

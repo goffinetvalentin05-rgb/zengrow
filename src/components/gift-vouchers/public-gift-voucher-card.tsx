@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Share2 } from "lucide-react";
 import GiftVoucherQr from "@/src/components/dashboard/gift-cards/gift-voucher-qr";
 import GiftCardStatusBadge from "@/src/components/dashboard/gift-cards/gift-card-status-badge";
@@ -12,18 +12,14 @@ import { publicStatusHeadline, type PublicGiftVoucherView } from "@/src/lib/gift
 
 type PublicGiftVoucherCardProps = {
   voucher: PublicGiftVoucherView;
+  origin?: string;
 };
 
-export default function PublicGiftVoucherCard({ voucher }: PublicGiftVoucherCardProps) {
-  const [canShare, setCanShare] = useState(false);
+export default function PublicGiftVoucherCard({ voucher, origin }: PublicGiftVoucherCardProps) {
   const [shareLabel, setShareLabel] = useState("Partager le bon");
-  const url = giftVoucherPublicUrl(voucher.publicToken);
+  const url = giftVoucherPublicUrl(voucher.publicToken, origin);
   const headline = publicStatusHeadline(voucher.status);
   const showQr = voucher.status !== "draft";
-
-  useEffect(() => {
-    setCanShare(typeof navigator.share === "function");
-  }, []);
 
   async function shareOrCopy() {
     try {
@@ -113,7 +109,7 @@ export default function PublicGiftVoucherCard({ voucher }: PublicGiftVoucherCard
 
         <Button type="button" variant="secondary" className="min-h-12 w-full" onClick={() => void shareOrCopy()}>
           <Share2 className="h-4 w-4" strokeWidth={2} aria-hidden />
-          {canShare ? shareLabel : shareLabel === "Partager le bon" ? "Copier le lien" : shareLabel}
+          {shareLabel}
         </Button>
       </div>
     </article>

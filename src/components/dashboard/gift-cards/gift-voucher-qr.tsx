@@ -19,7 +19,7 @@ export default function GiftVoucherQr({ value, size = 180, label, className }: G
           size={size}
           bgColor="#ffffff"
           fgColor="#111111"
-          level="M"
+          level="H"
           style={{ display: "block", width: size, height: size }}
         />
       </div>

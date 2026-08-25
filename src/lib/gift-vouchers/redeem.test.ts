@@ -4,6 +4,7 @@ import {
   canRedeem,
   getRedeemBlockReason,
   redeemErrorMessage,
+  scannerVoucherMessage,
 } from "@/src/lib/gift-vouchers/redeem";
 
 const NOW = new Date("2026-08-25T12:00:00.000Z");
@@ -75,5 +76,8 @@ describe("getRedeemBlockReason", () => {
     expect(redeemErrorMessage("used")).toBe("Ce bon a déjà été utilisé.");
     expect(redeemErrorMessage("expired")).toBe("Ce bon est expiré.");
     expect(redeemErrorMessage("disabled")).toBe("Ce bon est désactivé.");
+    expect(scannerVoucherMessage("expired")).toBe("Ce bon a expiré.");
+    expect(scannerVoucherMessage("used")).toBe("Ce bon a déjà été utilisé.");
+    expect(scannerVoucherMessage("not_found")).toBe("Ce bon n’existe pas.");
   });
 });
