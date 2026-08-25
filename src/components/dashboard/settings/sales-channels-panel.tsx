@@ -39,6 +39,11 @@ export function SalesChannelsPanel({ origin, slug }: SalesChannelsPanelProps) {
             Ouvrir
             <ExternalLink className="h-4 w-4" />
           </Button>
+          <Link href="/dashboard/public-page">
+            <Button type="button" variant="secondary" size="sm">
+              Personnaliser la page
+            </Button>
+          </Link>
         </div>
         {publicCopy.error ? <p className="mt-2 text-sm text-zg-danger">{publicCopy.error}</p> : null}
       </SettingsAccordion>

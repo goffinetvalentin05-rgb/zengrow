@@ -1,27 +1,27 @@
 import { headers } from "next/headers";
 import { requireRestaurantSession } from "@/src/lib/auth";
-import { loadDashboardPublicPage } from "@/src/lib/public-page/load-dashboard-public-page";
-import PublicPageDashboard from "@/src/components/dashboard/public-page/public-page-dashboard";
+import PublicPageDesigner from "@/src/components/dashboard/public-page-designer/public-page-designer";
+import { loadDesignerState } from "@/src/lib/public-storefront/service";
+import { createClient } from "@/src/lib/supabase/server";
 
 export default async function DashboardPublicPagePage() {
   const { restaurant } = await requireRestaurantSession();
+  const supabase = await createClient();
+  const state = await loadDesignerState(supabase, restaurant.id);
   const headerList = await headers();
   const host = headerList.get("host");
   const protocol = headerList.get("x-forwarded-proto") ?? "http";
-  const publicLink = host ? `${protocol}://${host}/r/${restaurant.slug}` : `/r/${restaurant.slug}`;
+  const publicUrl = host ? `${protocol}://${host}/r/${state.identity.slug}` : `/r/${state.identity.slug}`;
 
-  const { initial } = await loadDashboardPublicPage(
-    restaurant.id,
-    {
-      id: restaurant.id,
-      name: restaurant.name,
-      slug: restaurant.slug,
-      phone: restaurant.phone,
-      email: restaurant.email,
-      address: restaurant.address,
-    },
-    publicLink,
+  return (
+    <PublicPageDesigner
+      restaurantId={restaurant.id}
+      publicUrl={publicUrl}
+      identity={state.identity}
+      offers={state.offers}
+      initialDraft={state.draft}
+      initialPublished={state.published}
+      initialPublishedAt={state.publishedAt}
+    />
   );
-
-  return <PublicPageDashboard initial={initial} publicLink={publicLink} />;
 }

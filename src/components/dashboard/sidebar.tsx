@@ -17,6 +17,7 @@ import {
   Users,
   X,
   Star,
+  AppWindow,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
@@ -47,6 +48,7 @@ const navItems = [
   { href: "/dashboard/customers", label: "Clients", icon: Users },
   { href: "/dashboard/marketing", label: "Campagnes IA", icon: Megaphone, requiresPro: true },
   { href: "/dashboard/reputation", label: "Avis Google", icon: Star },
+  { href: "/dashboard/public-page", label: "Page publique", icon: AppWindow },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];
 
