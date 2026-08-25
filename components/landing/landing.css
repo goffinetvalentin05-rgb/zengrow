@@ -1,9 +1,14 @@
 .go {
-  --go-bg: #07050d;
-  --go-bg-2: #0d0a18;
-  --go-paper: #131022;
+  --go-bg: #05030a;
+  --go-bg-2: #0a0616;
+  --go-night-3: #130b26;
+  --go-violet-deep: #2f1d5b;
+  --go-violet-mid: #6e56cf;
+  --go-paper: #faf9fd;
+  --go-paper-2: #f6f3ff;
   --go-ink: #ffffff;
-  --go-ink-2: #cfcbe2;
+  --go-ink-2: #d7d2e5;
+  --go-ink-dark: #0d0c12;
   --go-muted: #9d97b5;
   --go-faint: #9d97b5;
   --go-line: rgba(255, 255, 255, 0.08);
@@ -12,7 +17,7 @@
   --go-accent-hover: #a78bfa;
   --go-accent-glow: #a78bfa;
   --go-accent-soft: rgba(111, 77, 255, 0.16);
-  --go-dark: #07050d;
+  --go-dark: #05030a;
   --go-shadow: 0 30px 60px -36px rgba(0, 0, 0, 0.55);
   --go-shadow-sm: 0 10px 30px -22px rgba(0, 0, 0, 0.4);
   --go-radius: 16px;
@@ -22,18 +27,29 @@
   --font-go: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-go-serif: var(--font-instrument-serif), "Iowan Old Style", Palatino, Georgia, serif;
 
+  position: relative;
   min-height: 100dvh;
   color: var(--go-ink);
-  background:
-    radial-gradient(circle at 20% 15%, rgba(111, 77, 255, 0.18), transparent 30%),
-    radial-gradient(circle at 80% 20%, rgba(167, 139, 250, 0.12), transparent 28%),
-    radial-gradient(circle at 50% 85%, rgba(111, 77, 255, 0.1), transparent 30%),
-    linear-gradient(180deg, #07050d 0%, #0d0a18 45%, #090710 100%);
+  background: #05030a;
   font-family: var(--font-go);
   font-size: 1.0625rem;
   line-height: 1.55;
-  overflow-x: visible;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
+}
+
+.go-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.014;
+  mix-blend-mode: overlay;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.75) 0.55px, transparent 0.55px),
+    radial-gradient(rgba(196, 181, 253, 0.4) 0.4px, transparent 0.4px);
+  background-size: 3px 3px, 5px 5px;
+  background-position: 0 0, 1.5px 1.2px;
 }
 
 .go img,
@@ -44,7 +60,7 @@
 
 html:has(.go),
 body:has(.go) {
-  background: #07050d;
+  background: #05030a;
   color: #ffffff;
   overflow-x: clip;
 }
@@ -59,8 +75,11 @@ body:has(.go) {
   margin-inline: auto;
 }
 
-.go > main {
-  overflow-x: visible;
+.go > main,
+.go > .go-close {
+  position: relative;
+  z-index: 2;
+  overflow-x: clip;
 }
 
 .go-section {
@@ -212,10 +231,15 @@ body:has(.go) {
 }
 
 .go-card {
-  background: var(--go-paper);
-  border: 1px solid var(--go-line);
+  background: rgba(19, 16, 34, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--go-radius);
   max-width: 100%;
+  box-shadow:
+    0 18px 40px -28px rgba(0, 0, 0, 0.55),
+    0 0 32px rgba(111, 77, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 /* ---------- Navbar ---------- */
@@ -233,6 +257,7 @@ body:has(.go) {
   pointer-events: none;
   background: none;
   border: 0;
+  overflow: visible;
 }
 
 .go-nav__shell,
@@ -404,20 +429,17 @@ body:has(.go) {
   box-shadow: 0 10px 28px -10px rgba(167, 139, 250, 0.45);
 }
 
-.go-nav__cta--mobile {
-  margin-left: auto;
-}
-
 .go-nav__burger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2.2rem;
   height: 2.2rem;
-  border: 0;
+  margin-left: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--go-ink);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
   cursor: pointer;
 }
 
@@ -444,15 +466,21 @@ body:has(.go) {
   flex-direction: column;
   gap: 0;
   width: 100%;
+  max-width: 100%;
   margin-top: 0.5rem;
-  padding: 0.45rem 0.4rem 0.75rem;
+  padding: 0.55rem 0.45rem 0.85rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: min(78svh, calc(100svh - 5.75rem));
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1.45rem;
-  background: #131022;
+  background: rgba(16, 12, 32, 0.92);
   box-shadow:
     0 22px 48px -24px rgba(0, 0, 0, 0.55),
-    0 0 28px rgba(111, 77, 255, 0.12),
+    0 0 36px rgba(111, 77, 255, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(22px) saturate(1.35);
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
 }
 
 .go-nav__drawer-group {
@@ -505,10 +533,11 @@ body:has(.go) {
 .go-nav__drawer-cta {
   width: calc(100% - 0.5rem) !important;
   min-height: 2.9rem !important;
-  margin: 0.55rem 0.25rem 0.1rem;
+  margin: 0.7rem 0.25rem 0.35rem;
   background: #6f4dff !important;
   color: #ffffff !important;
   font-size: 0.95rem !important;
+  box-shadow: 0 0 24px rgba(111, 77, 255, 0.28);
 }
 
 @media (min-width: 960px) {
@@ -557,11 +586,11 @@ body:has(.go) {
 /* ---------- Hero ---------- */
 
 .go-hero {
-  --go-hero-bg: #07050d;
-  --go-hero-lime: #6f4dff;
-  --go-hero-yellow: #a78bfa;
-  --go-hero-mid: #c4b5fd;
-  --go-hero-green: #4a2bff;
+  --go-hero-bg: #05030a;
+  --go-hero-lime: #6e56cf;
+  --go-hero-yellow: #bcaeff;
+  --go-hero-mid: #f6f3ff;
+  --go-hero-green: #6e56cf;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -570,12 +599,33 @@ body:has(.go) {
   overflow-x: clip;
   isolation: isolate;
   background:
-    radial-gradient(ellipse 78% 48% at 92% -8%, rgba(111, 77, 255, 0.22) 0%, transparent 58%),
-    radial-gradient(ellipse 70% 46% at 4% 102%, rgba(167, 139, 250, 0.12) 0%, transparent 62%),
-    radial-gradient(ellipse 56% 34% at 50% 32%, rgba(111, 77, 255, 0.16) 0%, transparent 72%),
-    radial-gradient(ellipse 40% 28% at 78% 62%, rgba(167, 139, 250, 0.08) 0%, transparent 70%),
-    var(--go-hero-bg);
+    radial-gradient(ellipse 86% 52% at 50% 34%, rgba(188, 174, 255, 0.42) 0%, rgba(110, 86, 207, 0.16) 46%, transparent 72%),
+    radial-gradient(ellipse 52% 34% at 50% 28%, rgba(246, 243, 255, 0.2) 0%, transparent 64%),
+    radial-gradient(ellipse 70% 42% at 108% -4%, rgba(110, 86, 207, 0.22) 0%, transparent 58%),
+    radial-gradient(ellipse 58% 38% at -8% 16%, rgba(47, 29, 91, 0.45) 0%, transparent 64%),
+    #05030a;
   scroll-margin-top: 5.75rem;
+}
+
+.go-hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 28%;
+  bottom: 0;
+  z-index: 0;
+  height: auto;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 3, 10, 0) 0%,
+    rgba(47, 29, 91, 0.22) 16%,
+    rgba(110, 86, 207, 0.34) 34%,
+    rgba(188, 174, 255, 0.48) 54%,
+    rgba(232, 226, 248, 0.78) 76%,
+    #faf9fd 100%
+  );
 }
 
 .go-hero__atmosphere {
@@ -594,52 +644,53 @@ body:has(.go) {
 }
 
 .go-hero__glow--tr {
-  top: -12%;
-  right: -8%;
-  width: min(52vw, 640px);
-  height: min(42vw, 520px);
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.28) 0%, rgba(111, 77, 255, 0.1) 46%, transparent 72%);
-  opacity: 0.7;
+  top: -14%;
+  right: -10%;
+  width: min(58vw, 680px);
+  height: min(44vw, 520px);
+  background: radial-gradient(circle, rgba(188, 174, 255, 0.32) 0%, rgba(110, 86, 207, 0.1) 46%, transparent 72%);
+  opacity: 0.65;
 }
 
 .go-hero__glow--tl {
-  top: 8%;
-  left: -12%;
-  width: min(38vw, 420px);
-  height: min(32vw, 360px);
-  background: radial-gradient(circle, rgba(111, 77, 255, 0.22) 0%, rgba(167, 139, 250, 0.08) 42%, transparent 70%);
-  opacity: 0.55;
+  top: 6%;
+  left: -14%;
+  width: min(42vw, 460px);
+  height: min(34vw, 380px);
+  background: radial-gradient(circle, rgba(110, 86, 207, 0.24) 0%, rgba(188, 174, 255, 0.1) 42%, transparent 70%);
+  opacity: 0.5;
 }
 
 .go-hero__glow--bl {
-  left: -10%;
-  bottom: 4%;
-  width: min(58vw, 720px);
-  height: min(46vw, 560px);
-  background: radial-gradient(circle, rgba(111, 77, 255, 0.2) 0%, rgba(167, 139, 250, 0.08) 48%, transparent 74%);
-  opacity: 0.75;
+  left: 50%;
+  bottom: -18%;
+  width: min(92vw, 980px);
+  height: min(48vw, 520px);
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse, rgba(246, 243, 255, 0.42) 0%, rgba(188, 174, 255, 0.18) 38%, transparent 72%);
+  opacity: 0.85;
 }
 
 .go-hero__glow--mid {
   left: 50%;
-  top: 28%;
-  width: min(46vw, 520px);
-  height: 240px;
+  top: 18%;
+  width: min(88vw, 1040px);
+  height: min(42vw, 460px);
   transform: translateX(-50%);
-  background: radial-gradient(ellipse, rgba(167, 139, 250, 0.18) 0%, rgba(111, 77, 255, 0.08) 42%, transparent 72%);
-  filter: blur(70px);
-  opacity: 0.55;
+  background: radial-gradient(ellipse, rgba(188, 174, 255, 0.38) 0%, rgba(246, 243, 255, 0.16) 42%, rgba(110, 86, 207, 0.1) 62%, transparent 76%);
+  filter: blur(88px);
+  opacity: 0.85;
 }
 
 .go-hero__glow--core {
   left: 50%;
-  top: 18%;
-  width: min(58vw, 720px);
-  height: 280px;
+  top: 14%;
+  width: min(64vw, 780px);
+  height: 320px;
   transform: translateX(-50%);
-  background: radial-gradient(ellipse, rgba(111, 77, 255, 0.22) 0%, rgba(167, 139, 250, 0.1) 38%, transparent 70%);
-  filter: blur(80px);
-  opacity: 0.42;
+  background: radial-gradient(ellipse, rgba(110, 86, 207, 0.3) 0%, rgba(188, 174, 255, 0.14) 42%, transparent 72%);
+  filter: blur(90px);
+  opacity: 0.55;
 }
 
 .go-hero__stroke {
@@ -746,7 +797,7 @@ body:has(.go) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.12em;
+  gap: 0.18em;
   margin: 0 auto;
   color: #ffffff;
   font-family: var(--font-go);
@@ -754,6 +805,30 @@ body:has(.go) {
   font-weight: 800;
   letter-spacing: -0.055em;
   line-height: 0.98;
+}
+
+.go-hero__static {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: 0.22em;
+  row-gap: 0.08em;
+  width: 100%;
+  max-width: 100%;
+}
+
+.go-hero__seg {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.go-hero__br {
+  display: none;
+  flex-basis: 100%;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
 }
 
 .go-hero__line {
@@ -818,6 +893,7 @@ body:has(.go) {
   padding: 0.18em 0.42em 0.2em;
   white-space: nowrap;
   line-height: 1;
+  color: #ffffff;
 }
 
 .go-br {
@@ -935,18 +1011,19 @@ body:has(.go) {
 .go-hero__halo {
   position: absolute;
   left: 50%;
-  top: 6%;
+  top: 4%;
   z-index: 0;
-  width: min(920px, 140%);
-  height: 100%;
+  width: min(1100px, 160%);
+  height: 110%;
   transform: translateX(-50%);
   pointer-events: none;
   background:
-    radial-gradient(ellipse 52% 48% at 50% 18%, rgba(111, 77, 255, 0.28) 0%, transparent 72%),
-    radial-gradient(ellipse 38% 42% at 64% 38%, rgba(167, 139, 250, 0.16) 0%, transparent 70%),
-    radial-gradient(ellipse 42% 40% at 34% 52%, rgba(111, 77, 255, 0.12) 0%, transparent 74%);
-  filter: blur(92px);
-  opacity: 0.8;
+    radial-gradient(ellipse 62% 42% at 50% 22%, rgba(188, 174, 255, 0.36) 0%, transparent 72%),
+    radial-gradient(ellipse 48% 36% at 50% 18%, rgba(246, 243, 255, 0.18) 0%, transparent 64%),
+    radial-gradient(ellipse 40% 38% at 62% 40%, rgba(110, 86, 207, 0.16) 0%, transparent 70%),
+    radial-gradient(ellipse 36% 32% at 38% 48%, rgba(188, 174, 255, 0.1) 0%, transparent 68%);
+  filter: blur(100px);
+  opacity: 0.9;
 }
 
 .go-hero__orb {
@@ -959,7 +1036,7 @@ body:has(.go) {
   border-radius: 50%;
   transform: translateX(-50%);
   pointer-events: none;
-  background: radial-gradient(circle, rgba(111, 77, 255, 0.22) 0%, rgba(167, 139, 250, 0.08) 46%, transparent 72%);
+  background: radial-gradient(circle, rgba(110, 86, 207, 0.2) 0%, rgba(188, 174, 255, 0.1) 46%, transparent 72%);
   filter: blur(42px);
   animation: go-hero-orb 16s ease-in-out infinite;
 }
@@ -998,35 +1075,202 @@ body:has(.go) {
   right: 0;
   bottom: 0;
   z-index: 2;
-  height: 12%;
+  height: 22%;
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(7, 5, 13, 0) 0%,
-    var(--go-bg-2) 100%
+    rgba(250, 249, 253, 0) 0%,
+    rgba(250, 249, 253, 0.55) 100%
   );
 }
 
-/* ---------- Story / section 2 ---------- */
+/* Light canvas: story + how + FAQ */
+.go-day {
+  --go-ink: #0d0c12;
+  --go-ink-2: rgba(13, 12, 18, 0.72);
+  --go-muted: rgba(13, 12, 18, 0.58);
+  --go-faint: rgba(13, 12, 18, 0.46);
+  --go-line: rgba(70, 40, 140, 0.08);
+  --go-line-strong: rgba(70, 40, 140, 0.14);
+  position: relative;
+  isolation: isolate;
+  color: #0d0c12;
+  background:
+    radial-gradient(ellipse 80% 36% at 12% 18%, rgba(188, 174, 255, 0.1), transparent 58%),
+    radial-gradient(ellipse 70% 32% at 88% 42%, rgba(246, 243, 255, 0.55), transparent 54%),
+    radial-gradient(ellipse 90% 34% at 50% 78%, rgba(188, 174, 255, 0.07), transparent 60%),
+    #faf9fd;
+}
+
+.go-day::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  z-index: 0;
+  width: 140%;
+  height: 42vh;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 88% 70% at 50% 0%,
+    rgba(246, 243, 255, 0.45) 0%,
+    rgba(188, 174, 255, 0.08) 46%,
+    transparent 74%
+  );
+  filter: blur(90px);
+  opacity: 0.7;
+}
+
+.go-day::after {
+  content: "";
+  position: absolute;
+  left: -16%;
+  top: 38%;
+  z-index: 0;
+  width: 70%;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.18), transparent);
+  transform: rotate(-8deg);
+}
 
 .go-story {
   position: relative;
+  isolation: isolate;
+  overflow: visible;
   background: transparent;
+  color: #0d0c12;
 }
 
 .go-story::before {
+  content: none;
+}
+
+.go-story::after {
   content: "";
   position: absolute;
-  inset: 0 0 auto;
+  left: 50%;
+  top: 12%;
   z-index: 0;
-  height: 7.5rem;
+  width: 120%;
+  height: 55%;
+  transform: translateX(-50%);
   pointer-events: none;
-  background: linear-gradient(180deg, var(--go-bg-2) 0%, var(--go-bg) 100%);
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 40%,
+    rgba(188, 174, 255, 0.1) 0%,
+    rgba(246, 243, 255, 0.2) 42%,
+    transparent 72%
+  );
+  filter: blur(80px);
+}
+
+.go-story__atmosphere {
+  position: absolute;
+  inset: 0 0 -8rem;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.go-story__glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.go-story__glow--a {
+  top: 8%;
+  left: -8%;
+  width: min(48vw, 520px);
+  height: min(38vw, 420px);
+  background: radial-gradient(circle, rgba(188, 174, 255, 0.18) 0%, transparent 70%);
+  opacity: 0.55;
+}
+
+.go-story__glow--b {
+  top: 42%;
+  right: -12%;
+  width: min(52vw, 560px);
+  height: min(42vw, 480px);
+  background: radial-gradient(circle, rgba(188, 174, 255, 0.12) 0%, transparent 72%);
+  opacity: 0.45;
+}
+
+.go-story__glow--c {
+  bottom: -8%;
+  left: 18%;
+  width: min(58vw, 620px);
+  height: min(42vw, 460px);
+  background: radial-gradient(circle, rgba(246, 243, 255, 0.5) 0%, rgba(188, 174, 255, 0.08) 48%, transparent 74%);
+  opacity: 0.4;
+}
+
+.go-story__glow--d {
+  top: 28%;
+  left: 42%;
+  width: min(36vw, 380px);
+  height: 180px;
+  background: radial-gradient(ellipse, rgba(188, 174, 255, 0.12) 0%, transparent 72%);
+  filter: blur(70px);
+  opacity: 0.4;
+}
+
+.go-story__stroke {
+  position: absolute;
+  height: 1px;
+  border-radius: 999px;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.go-story__stroke--a {
+  top: 22%;
+  left: -6%;
+  width: 58%;
+  background: linear-gradient(90deg, transparent, rgba(110, 86, 207, 0.16) 40%, transparent);
+  transform: rotate(-8deg);
+}
+
+.go-story__stroke--b {
+  bottom: 28%;
+  right: -10%;
+  width: 52%;
+  background: linear-gradient(90deg, transparent, rgba(188, 174, 255, 0.18) 48%, transparent);
+  transform: rotate(7deg);
+}
+
+.go-story__waves {
+  position: absolute;
+  inset: 0;
+  width: 140%;
+  height: 100%;
+  left: -20%;
+  opacity: 0.22;
+}
+
+.go-story__waves path {
+  fill: none;
+  stroke: rgba(110, 86, 207, 0.12);
+  stroke-width: 1.15;
+  vector-effect: non-scaling-stroke;
+}
+
+.go-story__waves path:nth-child(2) {
+  stroke: rgba(188, 174, 255, 0.14);
+}
+
+.go-story__waves path:nth-child(3) {
+  stroke: rgba(196, 181, 253, 0.12);
 }
 
 .go-story__track {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   height: 300vh;
 }
 
@@ -1037,9 +1281,27 @@ body:has(.go) {
   align-items: center;
   min-height: 100svh;
   height: 100svh;
+  overflow: visible;
+  background: transparent;
+}
+
+.go-story__sticky::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  height: 4.25rem;
+  pointer-events: none;
+  background: linear-gradient(180deg, #faf9fd 0%, transparent 100%);
+}
+
+.go-story__sticky::after {
+  content: none;
 }
 
 .go-story__frame {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: minmax(0, 0.3fr) minmax(0, 0.7fr);
   gap: 3.5rem 4.5rem;
@@ -1063,7 +1325,7 @@ body:has(.go) {
   height: 4.4rem;
   margin-top: 0.35rem;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(110, 86, 207, 0.14);
 }
 
 .go-story__rail-fill {
@@ -1101,7 +1363,7 @@ body:has(.go) {
 
 .go-story__kicker {
   margin: 0;
-  color: #ffffff;
+  color: #0d0c12;
   font-size: 1.15rem;
   font-weight: 500;
   letter-spacing: -0.03em;
@@ -1117,7 +1379,7 @@ body:has(.go) {
   grid-area: 1 / 1;
   margin: 0;
   max-width: 13.2em;
-  color: rgb(157, 151, 181);
+  color: rgb(154, 148, 172);
   font-size: clamp(2.1rem, 1.05rem + 2.45vw, 3.65rem);
   font-weight: 500;
   letter-spacing: -0.046em;
@@ -1131,7 +1393,7 @@ body:has(.go) {
 }
 
 .go-story__w {
-  color: rgb(157, 151, 181);
+  color: rgb(154, 148, 172);
 }
 
 .go-story__w--em {
@@ -1143,28 +1405,37 @@ body:has(.go) {
     height: 240vh;
   }
 
+  .go-story__sticky {
+    align-items: center;
+  }
+
   .go-story__frame {
     grid-template-columns: 1fr;
-    gap: 1.35rem;
+    gap: 1.05rem;
     align-content: center;
-    padding: 5rem 0 2.75rem;
+    padding: 4.75rem 0 3.25rem;
+  }
+
+  .go-story__left {
+    gap: 0.8rem;
+    align-items: center;
   }
 
   .go-story__copy {
-    max-width: none;
-    font-size: clamp(1.55rem, 1.05rem + 2.6vw, 2.15rem);
-    line-height: 1.32;
+    max-width: 22.75rem;
+    font-size: clamp(1.58rem, 1.05rem + 2.8vw, 2.2rem);
+    line-height: 1.3;
     letter-spacing: -0.038em;
   }
 
   .go-story__rail {
-    height: 3.1rem;
-    margin-top: 0.15rem;
+    height: 2.7rem;
+    margin-top: 0.1rem;
   }
 
   .go-story__count {
     font-size: 0.68rem;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.28rem;
   }
 
   .go-story__kicker {
@@ -1199,17 +1470,17 @@ body:has(.go) {
   .go-hero__glow--tr {
     width: min(58vw, 760px);
     height: min(46vw, 560px);
-    opacity: 0.95;
+    opacity: 0.62;
   }
 
   .go-hero__glow--tl {
     width: min(46vw, 560px);
     height: min(38vw, 440px);
-    opacity: 0.82;
+    opacity: 0.5;
   }
 
   .go-hero__glow--bl {
-    opacity: 0.95;
+    opacity: 0.8;
   }
 
   .go-hero__glow--mid {
@@ -1242,9 +1513,17 @@ body:has(.go) {
 
   .go-hero h1 {
     font-size: clamp(3.55rem, 1.9rem + 3vw, 5.15rem);
-    gap: 0.15em;
+    gap: 0.2em;
     letter-spacing: -0.048em;
     line-height: 1.04;
+  }
+
+  .go-hero__static {
+    row-gap: 0.12em;
+  }
+
+  .go-hero__br--d {
+    display: block;
   }
 
   .go-hero__line {
@@ -1312,8 +1591,8 @@ body:has(.go) {
 }
 
 @media (min-width: 1180px) {
-  .go-hero__line:not(.go-hero__line--spin) {
-    white-space: nowrap;
+  .go-hero__static {
+    max-width: none;
   }
 }
 
@@ -1340,20 +1619,37 @@ body:has(.go) {
 
 .go-how {
   position: relative;
-  padding: clamp(5.5rem, 9vw, 8.5rem) 0 clamp(5rem, 8vw, 7.5rem);
-  background: transparent;
+  isolation: isolate;
+  margin-top: 0;
+  padding: clamp(9rem, 14vw, 12.5rem) 0 clamp(5rem, 8vw, 7.5rem);
   overflow-x: clip;
+  overflow-y: visible;
+  scroll-margin-top: 5.5rem;
+  background: transparent;
+}
+
+.go-how::before {
+  content: none;
+}
+
+.go-how::after {
+  content: none;
+}
+
+.go-how > .go-container {
+  position: relative;
+  z-index: 1;
 }
 
 .go-how__head {
-  max-width: 38rem;
-  margin: 0 auto 3.5rem;
+  max-width: 40rem;
+  margin: 0 auto 4.25rem;
   text-align: center;
 }
 
 .go-how__label {
-  margin: 0 0 0.95rem;
-  color: #a78bfa;
+  margin: 0 0 1.05rem;
+  color: #6f4dff;
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -1361,24 +1657,26 @@ body:has(.go) {
 }
 
 .go-how__head h2 {
-  margin: 0;
-  color: #ffffff;
+  margin: 0 auto;
+  max-width: 18.5em;
+  color: #0d0c12;
   font-size: clamp(2rem, 1.15rem + 2.4vw, 3.25rem);
   font-weight: 600;
   letter-spacing: -0.05em;
   line-height: 1.08;
+  text-wrap: balance;
 }
 
 .go-how__lead {
-  margin: 1.1rem auto 0;
+  margin: 1.35rem auto 0;
   max-width: 34rem;
-  color: #9d97b5;
+  color: rgba(13, 12, 18, 0.58);
   font-size: 1.05rem;
   line-height: 1.65;
 }
 
 .go-how__carousel {
-  max-width: 66rem;
+  max-width: 64rem;
   margin: 0 auto;
   overflow-x: clip;
   outline: none;
@@ -1386,7 +1684,7 @@ body:has(.go) {
 
 .go-how__carousel:focus-visible {
   border-radius: 1.5rem;
-  box-shadow: 0 0 0 2px #07050d, 0 0 0 4px rgba(111, 77, 255, 0.55);
+  box-shadow: 0 0 0 2px #fcfbff, 0 0 0 4px rgba(111, 77, 255, 0.45);
 }
 
 .go-how__stage {
@@ -1434,47 +1732,49 @@ body:has(.go) {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  margin-top: 1.35rem;
+  margin-top: 1.85rem;
 }
 
 .go-how__dots {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 1.15rem;
+  gap: 1.55rem;
 }
 
 .go-how-dot {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.38rem;
-  min-width: 2rem;
-  padding: 0.1rem 0.15rem;
+  gap: 0.48rem;
+  min-width: 2.4rem;
+  padding: 0.2rem 0.2rem;
   border: 0;
   background: none;
-  color: #9d97b5;
+  color: rgba(13, 12, 18, 0.38);
   cursor: pointer;
 }
 
 .go-how-dot__label {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
   transition: color 0.25s var(--go-ease);
 }
 
 .go-how-dot.is-on {
-  color: #ffffff;
+  color: #0d0c12;
 }
 
 .go-how-dot.is-on .go-how-dot__label {
-  box-shadow: 0 2px 0 0 #6f4dff;
+  color: #6f4dff;
+  text-shadow: none;
 }
 
 .go-how-dot:hover .go-how-dot__label {
-  color: #ffffff;
+  color: #0d0c12;
 }
 
 .go-how-dot:focus-visible {
@@ -1485,22 +1785,22 @@ body:has(.go) {
 
 .go-how-dot__track {
   display: block;
-  width: 1.55rem;
+  width: 1.85rem;
   height: 2px;
   overflow: hidden;
   border-radius: 99px;
-  background: transparent;
+  background: rgba(70, 40, 140, 0.12);
 }
 
 .go-how-dot.is-on .go-how-dot__track {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(111, 77, 255, 0.22);
 }
 
 .go-how-dot__fill {
   display: block;
   width: 100%;
   height: 100%;
-  background: #6f4dff;
+  background: linear-gradient(90deg, #6f4dff, #c4b5fd);
   transform: scaleX(0);
   transform-origin: left center;
   animation: go-how-progress 2.8s linear forwards;
@@ -1513,38 +1813,35 @@ body:has(.go) {
 .go-how-card {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: 1.25rem 1.5rem;
-  min-height: 22rem;
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  gap: 1.75rem 2.5rem;
+  align-items: center;
+  min-height: 26.5rem;
   height: 100%;
-  padding: 1.6rem 1.55rem 1.45rem;
+  padding: 2.9rem 3rem 2.7rem 3rem;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 1.35rem;
-  background: linear-gradient(180deg, rgba(24, 20, 40, 0.92), rgba(16, 13, 28, 0.92));
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(70, 40, 140, 0.08);
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(ellipse 56% 80% at 82% 50%, rgba(167, 139, 250, 0.1), transparent 68%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(252, 251, 255, 0.82));
+  box-shadow:
+    0 22px 56px -32px rgba(45, 23, 103, 0.18),
+    0 8px 28px -20px rgba(111, 77, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   transition:
     box-shadow 0.35s var(--go-ease),
     border-color 0.35s var(--go-ease);
 }
 
 .go-how-card:hover {
-  border-color: rgba(167, 139, 250, 0.22);
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.4), 0 0 28px rgba(111, 77, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.go-how-card__num {
-  position: absolute;
-  top: 0.35rem;
-  left: 0.85rem;
-  z-index: 0;
-  color: rgba(167, 139, 250, 0.22);
-  font-size: clamp(4.4rem, 8vw, 6.4rem);
-  font-weight: 600;
-  letter-spacing: -0.08em;
-  line-height: 0.82;
-  pointer-events: none;
-  animation: go-how-num 8s ease-in-out infinite;
+  border-color: rgba(70, 40, 140, 0.16);
+  box-shadow:
+    0 18px 48px -28px rgba(45, 23, 103, 0.22),
+    0 0 28px rgba(111, 77, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .go-how-card__copy {
@@ -1552,22 +1849,39 @@ body:has(.go) {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   justify-content: center;
   min-width: 0;
-  padding-top: 1.6rem;
+  padding: 0.4rem 0.4rem 0.4rem 0.1rem;
+}
+
+.go-how-card__num {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: max-content;
+  margin: 0 0 -0.46em -0.05em;
+  color: rgba(167, 139, 250, 0.32);
+  font-size: clamp(4.3rem, 5.8vw, 5.5rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.08em;
+  line-height: 0.76;
+  pointer-events: none;
+  animation: go-how-num 8s ease-in-out infinite;
 }
 
 .go-how-card__icon {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.15rem;
-  height: 2.15rem;
-  margin-bottom: 0.95rem;
-  border-radius: 0.7rem;
-  background: rgba(111, 77, 255, 0.16);
-  color: #c4b5fd;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-bottom: 1.05rem;
+  border-radius: 0.75rem;
+  background: rgba(111, 77, 255, 0.12);
+  color: #6f4dff;
 }
 
 .go-how-card__icon svg {
@@ -1576,20 +1890,24 @@ body:has(.go) {
 }
 
 .go-how-card h3 {
+  position: relative;
+  z-index: 1;
   margin: 0;
-  color: #ffffff;
-  font-size: 1.2rem;
+  color: #0d0c12;
+  font-size: clamp(1.22rem, 0.9rem + 0.7vw, 1.42rem);
   font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.25;
+  letter-spacing: -0.032em;
+  line-height: 1.3;
+  text-wrap: balance;
 }
 
 .go-how-card p {
-  margin: 0.55rem 0 0;
-  max-width: 18.5rem;
-  color: #9d97b5;
-  font-size: 0.94rem;
-  line-height: 1.55;
+  position: relative;
+  z-index: 1;
+  margin: 0.95rem 0 0;
+  color: rgba(13, 12, 18, 0.58);
+  font-size: 1.02rem;
+  line-height: 1.65;
 }
 
 .go-how-card__visual {
@@ -1597,17 +1915,33 @@ body:has(.go) {
   z-index: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
+  align-self: stretch;
   min-width: 0;
+  min-height: 17.5rem;
+  padding: 0.35rem 0.1rem;
+}
+
+.go-how-card__visual::after {
+  content: "";
+  position: absolute;
+  inset: 14% 6%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(167, 139, 250, 0.16), transparent 72%);
+  filter: blur(18px);
 }
 
 .go-how-mock {
   position: relative;
+  z-index: 1;
   width: 100%;
-  min-height: 10.5rem;
-  padding: 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 1rem;
-  background: rgba(24, 20, 40, 0.72);
+  max-width: 26rem;
+  min-height: 16.25rem;
+  padding: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 1.15rem;
+  background: rgba(24, 20, 40, 0.78);
 }
 
 .go-how-mock__card {
@@ -1863,49 +2197,110 @@ body:has(.go) {
 
 @media (max-width: 900px) {
   .go-how-card {
-    min-height: 19.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.35rem 1.6rem;
+    min-height: 23.5rem;
+    padding: 2.15rem 1.85rem 2rem;
+  }
+
+  .go-how-card__num {
+    font-size: 4.35rem;
+  }
+
+  .go-how-card h3 {
+    font-size: 1.22rem;
+  }
+
+  .go-how-card__visual {
+    min-height: 15.5rem;
+    padding: 0.2rem 0;
   }
 }
 
 @media (max-width: 719px) {
+  .go-how {
+    margin-top: 0;
+    padding-top: 8.25rem;
+  }
+
+  .go-how__head {
+    margin-bottom: 2.75rem;
+  }
+
+  .go-how__carousel,
+  .go-how__stage,
+  .go-how__viewport {
+    max-width: 100%;
+  }
+
   .go-how-card {
     grid-template-columns: 1fr;
+    align-items: stretch;
     min-height: 0;
-    gap: 1.1rem;
-    padding: 1.25rem 1.15rem 1.15rem;
-  }
-
-  .go-how-card__copy {
-    padding-top: 1.2rem;
-  }
-
-  .go-how-card h3 {
-    font-size: 1.12rem;
-    line-height: 1.3;
-  }
-
-  .go-how-card p {
-    max-width: none;
-    font-size: 0.95rem;
-    line-height: 1.58;
+    gap: 0.15rem;
+    padding: 1.75rem 1.5rem 1.6rem;
+    max-width: 100%;
   }
 
   .go-how-card__num {
-    font-size: 3.6rem;
-    top: 0.2rem;
-    left: 0.7rem;
+    z-index: 0;
+    width: max-content;
+    margin: 0 0 0.55rem;
+    font-size: 2.85rem;
+    line-height: 1;
+    color: rgba(167, 139, 250, 0.38);
+  }
+
+  .go-how-card__copy {
+    z-index: 1;
+    padding: 0.15rem 0 0.2rem;
+  }
+
+  .go-how-card h3 {
+    font-size: 1.16rem;
+    line-height: 1.32;
+  }
+
+  .go-how-card p {
+    margin-top: 0.8rem;
+    font-size: 0.96rem;
+    line-height: 1.6;
+  }
+
+  .go-how-card__visual {
+    min-height: 12.75rem;
+    margin-top: 1.25rem;
+    padding: 0.1rem 0 0.15rem;
   }
 
   .go-how-mock {
-    min-height: 8.85rem;
+    max-width: none;
+    min-height: 12rem;
+    height: auto;
   }
 }
 
 .go-faq-section {
   position: relative;
+  isolation: isolate;
   padding: clamp(5rem, 8vw, 8rem) 0 clamp(4.5rem, 7vw, 6.5rem);
-  background: transparent;
   overflow-x: clip;
+  background: transparent;
+}
+
+.go-faq-section::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 0;
+  height: 14rem;
+  pointer-events: none;
+  background: radial-gradient(ellipse 80% 80% at 70% 100%, rgba(196, 181, 253, 0.18), transparent 70%);
+}
+
+.go-faq-section > .go-container {
+  position: relative;
+  z-index: 1;
 }
 
 .go-faq-layout {
@@ -1919,7 +2314,7 @@ body:has(.go) {
 
 .go-faq-label {
   margin: 0 0 1rem;
-  color: #a78bfa;
+  color: #6f4dff;
   font-size: 0.72rem;
   font-weight: 500;
   letter-spacing: 0.16em;
@@ -1928,7 +2323,7 @@ body:has(.go) {
 
 .go-faq-intro h2 {
   margin: 0;
-  color: #ffffff;
+  color: #0d0c12;
   font-size: clamp(2rem, 1.2rem + 2.2vw, 3.15rem);
   font-weight: 500;
   letter-spacing: -0.048em;
@@ -1947,11 +2342,11 @@ body:has(.go) {
 }
 
 .go-faq__item {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(70, 40, 140, 0.1);
 }
 
 .go-faq__item:last-child {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(70, 40, 140, 0.1);
 }
 
 .go-faq__item[data-state="open"] {
@@ -1983,8 +2378,13 @@ body:has(.go) {
   line-height: 1.35;
 }
 
+.go-faq__trigger span {
+  min-width: 0;
+  text-wrap: pretty;
+}
+
 .go-faq__trigger:hover {
-  color: #ffffff;
+  color: #43248c;
 }
 
 .go-faq__trigger:hover .go-faq__icon,
@@ -2083,34 +2483,48 @@ body:has(.go) {
 /* ---------- Close / CTA + footer ---------- */
 
 .go-close {
-  --go-accent-deep: #07050d;
-  --go-accent-mid: #6f4dff;
+  --go-accent-deep: #05030a;
+  --go-accent-mid: #6e56cf;
   position: relative;
   isolation: isolate;
   overflow-x: clip;
   overflow-y: visible;
   background:
-    radial-gradient(circle at 30% 20%, rgba(111, 77, 255, 0.25), transparent 30%),
-    radial-gradient(circle at 80% 70%, rgba(167, 139, 250, 0.18), transparent 35%),
-    linear-gradient(135deg, #100c1d 0%, #181428 40%, #0e0b18 100%);
+    radial-gradient(ellipse 90% 36% at 50% 10%, rgba(188, 174, 255, 0.16), transparent 58%),
+    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(5, 3, 10, 0.45), transparent 58%),
+    linear-gradient(
+      180deg,
+      #faf9fd 0%,
+      #faf9fd 22%,
+      #f6f3ff 32%,
+      #ece6f8 42%,
+      #d5cbed 52%,
+      #b3a3e0 62%,
+      #7a66c8 72%,
+      #3d2870 84%,
+      #140b24 93%,
+      #05030a 100%
+    );
 }
 
 .go-close::before {
   content: "";
   position: absolute;
   left: 50%;
-  top: 36%;
+  top: 4%;
   z-index: 0;
-  width: min(70vw, 740px);
+  width: min(82vw, 920px);
   height: 280px;
   transform: translateX(-50%);
   pointer-events: none;
   background: radial-gradient(
     ellipse,
-    rgba(111, 77, 255, 0.28) 0%,
-    rgba(167, 139, 250, 0.12) 40%,
-    transparent 70%
+    rgba(246, 243, 255, 0.35) 0%,
+    rgba(188, 174, 255, 0.16) 38%,
+    rgba(110, 86, 207, 0.08) 58%,
+    transparent 74%
   );
+  filter: blur(72px);
 }
 
 .go-close::after {
@@ -2119,7 +2533,7 @@ body:has(.go) {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.045;
+  opacity: 0.03;
   background-image: radial-gradient(rgba(255, 255, 255, 0.7) 0.6px, transparent 0.6px);
   background-size: 3px 3px;
 }
@@ -2133,6 +2547,9 @@ body:has(.go) {
 .go-final {
   padding: clamp(5.5rem, 11vw, 9.5rem) 0 clamp(5rem, 10vw, 8.5rem);
   text-align: center;
+  --go-ink: #0d0c12;
+  --go-muted: rgba(13, 12, 18, 0.58);
+  --go-faint: rgba(13, 12, 18, 0.45);
 }
 
 .go-final__label {
@@ -2140,8 +2557,8 @@ body:has(.go) {
   margin: 0 0 1.35rem;
   padding: 0.38rem 0.9rem;
   border-radius: 999px;
-  background: rgba(111, 77, 255, 0.16);
-  color: #c4b5fd;
+  background: rgba(111, 77, 255, 0.12);
+  color: #43248c;
   font-size: 0.78rem;
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -2191,7 +2608,10 @@ body:has(.go) {
   padding: 3.5rem 0 0;
   overflow: hidden;
   color: rgba(255, 255, 255, 0.92);
-  background: #07050d;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(111, 77, 255, 0.18), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 12% 20%, rgba(167, 139, 250, 0.1), transparent 50%),
+    #05030a;
 }
 
 .go-close .go-footer {
@@ -2326,7 +2746,7 @@ body:has(.go) {
   width: min(96vw, 1200px);
   height: 100%;
   transform: translateX(-50%);
-  background: radial-gradient(ellipse at 50% 88%, rgba(111, 77, 255, 0.22) 0%, rgba(167, 139, 250, 0.1) 42%, transparent 68%);
+  background: radial-gradient(ellipse at 50% 88%, rgba(111, 77, 255, 0.28) 0%, rgba(167, 139, 250, 0.12) 42%, transparent 68%);
 }
 
 .go-footer__mega-word {
@@ -2424,76 +2844,60 @@ body:has(.go) {
 
 @media (max-width: 959px) {
   .go-nav {
-    padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 0;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 0;
   }
 
   .go-nav__shell {
     z-index: 2;
-    min-height: 52px;
-    padding: 0.3rem 0.35rem 0.3rem 0.42rem;
-    gap: 0.5rem;
-    background: rgba(14, 11, 25, 0.88);
+    justify-content: space-between;
+    min-height: 50px;
+    padding: 0.28rem 0.38rem 0.28rem 0.5rem;
+    gap: 0.65rem;
+    background: rgba(14, 11, 25, 0.78);
     border-color: rgba(255, 255, 255, 0.08);
     box-shadow:
-      0 8px 28px rgba(0, 0, 0, 0.4),
-      0 0 24px rgba(111, 77, 255, 0.1),
+      0 8px 24px rgba(0, 0, 0, 0.32),
+      0 0 18px rgba(111, 77, 255, 0.08),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   .go-nav.is-scrolled .go-nav__shell,
   .go-nav.is-open .go-nav__shell,
   .go-nav.is-over-dark .go-nav__shell {
-    background: rgba(14, 11, 25, 0.94);
+    background: rgba(14, 11, 25, 0.9);
     border-color: rgba(255, 255, 255, 0.08);
     box-shadow:
-      0 10px 32px rgba(0, 0, 0, 0.45),
-      0 0 24px rgba(111, 77, 255, 0.1),
+      0 10px 28px rgba(0, 0, 0, 0.4),
+      0 0 20px rgba(111, 77, 255, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  }
-
-  .go-nav.is-over-dark .go-nav__cta,
-  .go-nav.is-over-dark .go-nav__cta--mobile {
-    background: #6f4dff !important;
-    color: #ffffff !important;
-    border-color: #6f4dff !important;
-  }
-
-  .go-nav.is-over-dark .go-nav__cta:hover,
-  .go-nav.is-over-dark .go-nav__cta--mobile:hover {
-    background: #a78bfa !important;
-    border-color: #a78bfa !important;
   }
 
   .go-nav.is-over-dark .go-nav__burger {
     background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.12);
   }
 
   .go-wordmark {
     min-width: 0;
-    padding: 0.16rem 0.34rem;
+    padding: 0.12rem 0.28rem;
+    background: transparent;
   }
 
   .go-wordmark__logo {
     height: 22px;
-    max-width: min(104px, 28vw);
+    max-width: min(118px, 48vw);
   }
 
   .go-nav__cta--mobile {
-    flex: 0 1 auto;
-    min-width: 0;
-    margin-left: auto;
-    white-space: nowrap;
-    font-size: 0.78rem !important;
-    min-height: 2.2rem !important;
-    padding: 0.32rem 0.78rem !important;
-    letter-spacing: -0.025em !important;
+    display: none;
   }
 
   .go-nav__burger {
-    width: 2.15rem;
-    height: 2.15rem;
+    width: 2.25rem;
+    height: 2.25rem;
     flex-shrink: 0;
+    margin-left: 0;
   }
 }
 
@@ -2501,12 +2905,19 @@ body:has(.go) {
 
 @media (max-width: 899px) {
   .go-hero {
+    display: flex;
+    flex-direction: column;
     height: auto;
-    min-height: 0;
+    min-height: 100svh;
     max-height: none;
     overflow-x: clip;
-    overflow-y: visible;
-    padding: calc(7.5rem + env(safe-area-inset-top, 0px)) 0 0;
+    overflow-y: clip;
+    padding: calc(6.35rem + env(safe-area-inset-top, 0px)) 0 0;
+  }
+
+  .go-hero::after {
+    top: 38%;
+    height: auto;
   }
 
   .go-hero__glow--core,
@@ -2521,16 +2932,29 @@ body:has(.go) {
   }
 
   .go-hero__copy {
-    padding: 0.5rem 0 0;
+    padding: 0.85rem 0 0;
     text-align: center;
   }
 
   .go-hero h1 {
-    font-size: clamp(2.15rem, 7.8vw, 2.85rem);
-    line-height: 1.02;
-    letter-spacing: -0.05em;
-    gap: 0.16em;
-    overflow-wrap: break-word;
+    font-size: clamp(1.72rem, 6.4vw, 2.15rem);
+    line-height: 1.08;
+    letter-spacing: -0.042em;
+    gap: 0.28em;
+    overflow-wrap: normal;
+    max-width: 100%;
+  }
+
+  .go-hero__static {
+    row-gap: 0.06em;
+  }
+
+  .go-hero__br--m {
+    display: block;
+  }
+
+  .go-hero__br--d {
+    display: none;
   }
 
   .go-hero__line {
@@ -2546,48 +2970,96 @@ body:has(.go) {
   }
 
   .go-hero__spin {
-    width: fit-content;
-    max-width: 100%;
-    border-radius: 0.32em;
+    width: fit-content !important;
+    min-width: 0;
+    max-width: min(100%, calc(100vw - 40px));
+    height: auto;
+    border-radius: 0.55em;
+    line-height: 1.16;
+    font-size: 0.92em;
+    color: #ffffff;
   }
 
-  .go-hero__spin-sizer,
-  .go-hero__spin-text {
-    white-space: nowrap;
+  .go-hero__spin-sizer {
+    min-width: 0;
+    width: auto;
+    max-width: min(100%, calc(100vw - 40px));
+    white-space: normal;
+    overflow-wrap: break-word;
     text-align: center;
-    max-width: 100%;
-    padding: 0.2em 0.4em 0.22em;
+    line-height: 1.16;
+    padding: 0.16em 0.38em 0.18em;
+    color: #ffffff;
+  }
+
+  .go-hero__spin-text {
+    white-space: normal;
+    overflow-wrap: break-word;
+    text-align: center;
+    line-height: 1.16;
+    align-items: center;
+    justify-content: center;
+    padding: 0.16em 0.38em 0.18em;
+    color: #ffffff;
   }
 
   .go-hero__sub {
     max-width: 22.5rem;
-    margin-top: 1rem;
-    font-size: 1.0625rem;
-    line-height: 1.55;
+    margin-top: 0.72rem;
+    font-size: 1.02rem;
+    line-height: 1.5;
   }
 
   .go-hero__ctas {
     flex-direction: column;
     align-items: center;
-    gap: 0.7rem;
-    margin-top: 1.35rem;
+    gap: 0.48rem;
+    margin-top: 1.15rem;
   }
 
-  .go-hero .go-hero__ctas .go-btn {
-    width: min(100%, 22rem);
-    min-height: 3.15rem;
-    padding: 0.88rem 1.2rem;
+  .go-hero .go-hero__ctas .go-hero__cta.go-btn--primary {
+    width: 92%;
+    max-width: 22rem;
+    min-height: 3.5rem;
+    padding: 0.9rem 1.2rem;
+    font-size: 0.98rem;
+    box-shadow:
+      0 0 28px rgba(111, 77, 255, 0.3),
+      0 12px 28px -16px rgba(111, 77, 255, 0.42);
+  }
+
+  .go-hero .go-hero__ctas .go-hero__cta--ghost {
+    width: 74%;
+    min-width: 0;
+    max-width: 18.5rem;
+    min-height: 2.75rem;
+    padding: 0.58rem 1.05rem;
+    font-size: 0.88rem;
+    background: rgba(13, 10, 24, 0.55) !important;
+    border-color: rgba(196, 181, 253, 0.28) !important;
+    box-shadow: 0 0 16px rgba(111, 77, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .go-hero__proof {
-    margin-top: 0.95rem;
+    position: relative;
+    z-index: 3;
+    margin-top: 0.72rem;
     font-size: 0.84rem;
   }
 
   .go-hero__visual {
-    flex: none;
-    display: block;
-    margin-top: 1.35rem;
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: 168px;
+    max-height: 250px;
+    margin-top: 1.15rem;
+    overflow: hidden;
   }
 
   .go-hero__visual-inner {
@@ -2595,7 +3067,8 @@ body:has(.go) {
   }
 
   .go-hero__photo-wrap {
-    width: min(360px, 86%);
+    width: min(300px, 72%);
+    transform: translateY(18%);
   }
 
   .go-hero__halo {
@@ -2606,7 +3079,8 @@ body:has(.go) {
   }
 
   .go-hero__fade {
-    height: 8%;
+    height: 18%;
+    background: linear-gradient(180deg, rgba(250, 249, 253, 0) 0%, #faf9fd 100%);
   }
 
   .go-hero__waves {
@@ -2623,8 +3097,47 @@ body:has(.go) {
 
 @media (max-width: 639px) {
   .go {
-    --go-container: min(1120px, calc(100% - 2.5rem));
+    --go-container: min(1120px, calc(100% - 2.25rem));
     overflow-x: clip;
+  }
+
+  .go-grain {
+    opacity: 0.016;
+  }
+
+  .go-day {
+    background:
+      radial-gradient(ellipse 80% 36% at 12% 22%, rgba(188, 174, 255, 0.08), transparent 58%),
+      radial-gradient(ellipse 90% 34% at 50% 80%, rgba(188, 174, 255, 0.06), transparent 60%),
+      #faf9fd;
+  }
+
+  .go-day::before {
+    top: 4%;
+    height: 28vh;
+    filter: blur(70px);
+  }
+
+  .go-story {
+    background: transparent;
+  }
+
+  .go-story::before {
+    content: none;
+  }
+
+  .go-story::after {
+    height: 48%;
+    filter: blur(56px);
+  }
+
+  .go-story__sticky::after {
+    content: none;
+  }
+
+  .go-close::before {
+    height: 200px;
+    filter: blur(48px);
   }
 
   .go > main {
@@ -2632,63 +3145,86 @@ body:has(.go) {
   }
 
   .go-hero {
-    padding-top: calc(7.25rem + env(safe-area-inset-top, 0px));
+    padding-top: calc(5.85rem + env(safe-area-inset-top, 0px));
   }
 
   .go-hero h1 {
-    font-size: clamp(2.05rem, 7.2vw, 2.45rem);
-    line-height: 1.04;
+    font-size: clamp(1.62rem, 6.1vw, 1.92rem);
+    line-height: 1.1;
+    letter-spacing: -0.038em;
   }
 
   .go-hero__sub {
     max-width: 20.5rem;
-    margin-top: 0.9rem;
-    font-size: 1.02rem;
-    line-height: 1.55;
+    margin-top: 0.62rem;
+    font-size: 0.98rem;
+    line-height: 1.5;
   }
 
   .go-hero__ctas {
-    margin-top: 1.15rem;
-    gap: 0.6rem;
+    margin-top: 1.05rem;
+    gap: 0.42rem;
   }
 
-  .go-hero .go-hero__ctas .go-btn {
-    min-height: 2.95rem;
-    font-size: 0.94rem;
+  .go-hero .go-hero__ctas .go-hero__cta.go-btn--primary {
+    width: 90%;
+    min-height: 3.4rem;
+  }
+
+  .go-hero .go-hero__ctas .go-hero__cta--ghost {
+    width: 72%;
+    min-width: 0;
+    max-width: 16.5rem;
+    min-height: 2.65rem;
+    font-size: 0.86rem;
   }
 
   .go-hero__proof {
-    margin-top: 0.85rem;
+    margin-top: 0.62rem;
   }
 
   .go-hero__visual {
-    margin-top: 0.9rem;
+    margin-top: 1.05rem;
+    min-height: 156px;
+    max-height: 220px;
   }
 
   .go-hero__photo-wrap {
-    width: min(340px, 88%);
+    width: min(270px, 68%);
+    transform: translateY(18%);
   }
 
   .go-story__sticky {
-    align-items: flex-start;
-    min-height: 100dvh;
-    height: 100dvh;
+    align-items: center;
+    min-height: 100svh;
+    height: 100svh;
   }
 
   .go-story__frame {
-    padding: 5.35rem 0 2rem;
-    gap: 1.05rem;
-    align-content: start;
+    padding: 5.15rem 0 3.5rem;
+    gap: 0.75rem;
+    align-content: center;
   }
 
   .go-story__left {
-    gap: 0.85rem;
+    gap: 0.7rem;
+  }
+
+  .go-story__meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.08rem;
+  }
+
+  .go-story__count {
+    margin-bottom: 0.18rem;
   }
 
   .go-story__copy {
-    font-size: clamp(1.42rem, 5.2vw, 1.72rem);
-    line-height: 1.34;
-    letter-spacing: -0.034em;
+    max-width: 21.5rem;
+    font-size: clamp(1.62rem, 6.8vw, 1.98rem);
+    line-height: 1.26;
+    letter-spacing: -0.032em;
     overflow-wrap: break-word;
   }
 
@@ -2701,12 +3237,14 @@ body:has(.go) {
   }
 
   .go-how {
-    padding: 3.85rem 0 3.5rem;
+    margin-top: 0;
+    padding: 7.5rem 0 3.5rem;
   }
 
   .go-how__head {
-    margin: 0 auto 1.65rem;
-    text-align: left;
+    max-width: 22.5rem;
+    margin: 0 auto 2.65rem;
+    text-align: center;
   }
 
   .go-how__head h2 {
@@ -2715,23 +3253,45 @@ body:has(.go) {
   }
 
   .go-how__lead {
-    margin-top: 0.9rem;
+    margin-top: 1.05rem;
     font-size: 0.98rem;
     line-height: 1.6;
   }
 
+  .go-how__carousel {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
   .go-how__controls {
-    margin-top: 1.15rem;
+    margin-top: 1.45rem;
+  }
+
+  .go-how__dots {
+    gap: 1.2rem;
   }
 
   .go-how-dot {
-    min-width: 2.4rem;
-    padding: 0.25rem 0.2rem;
+    min-width: 2.35rem;
+    padding: 0.25rem 0.15rem;
   }
 
   .go-how-card {
-    padding: 1.15rem 1.05rem 1.1rem;
-    border-radius: 1.2rem;
+    padding: 1.65rem 1.35rem 1.45rem;
+    border-radius: 1.25rem;
+  }
+
+  .go-how-card__num {
+    font-size: 2.55rem;
+    margin: 0 0 0.45rem;
+  }
+
+  .go-how-card__copy {
+    padding: 0.1rem 0 0.1rem;
+  }
+
+  .go-how-card__icon {
+    margin-bottom: 0.9rem;
   }
 
   .go-faq-section {
@@ -2761,7 +3321,7 @@ body:has(.go) {
     width: 1.75rem;
     height: 1.75rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(70, 40, 140, 0.08);
   }
 
   .go-faq__trigger[data-state="open"] .go-faq__icon {
@@ -2847,9 +3407,9 @@ body:has(.go) {
     box-sizing: border-box;
     flex: none;
     width: 100%;
-    min-height: 2.85rem;
-    height: 2.85rem;
-    padding: 0 1.05rem;
+    min-height: 2.65rem;
+    height: 2.65rem;
+    padding: 0 1rem;
     line-height: 1;
   }
 
@@ -2885,24 +3445,22 @@ body:has(.go) {
   }
 
   .go-nav {
-    padding-inline: 10px;
-  }
-
-  .go-nav__cta--mobile {
-    font-size: 0.72rem !important;
-    padding: 0.3rem 0.62rem !important;
+    padding-inline: 14px;
   }
 
   .go-wordmark__logo {
-    max-width: min(92px, 26vw);
+    max-width: min(110px, 46vw);
   }
 
   .go-hero h1 {
-    font-size: clamp(1.9rem, 8vw, 2.2rem);
+    font-size: clamp(1.5rem, 7.2vw, 1.72rem);
   }
 
-  .go-hero__spin-sizer,
-  .go-hero__spin-text {
-    white-space: normal;
+  .go-hero .go-hero__ctas .go-hero__cta.go-btn--primary {
+    width: 94%;
+  }
+
+  .go-hero__photo-wrap {
+    width: min(250px, 72%);
   }
 }

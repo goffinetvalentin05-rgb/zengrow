@@ -23,7 +23,7 @@ export function HeroSection() {
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-8 flex justify-center">
             <Image
-              src="/logo-zengrow.png"
+              src="/zengrow-logo.png"
               alt="ZenGrow"
               width={220}
               height={64}

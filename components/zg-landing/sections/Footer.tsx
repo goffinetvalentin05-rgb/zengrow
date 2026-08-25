@@ -28,10 +28,10 @@ export function Footer() {
           <div className="lg:col-span-4">
             <Link href="/" className="inline-flex shrink-0" aria-label="ZenGrow — accueil">
               <Image
-                src="/zengrow-logo-blanc.png"
+                src="/zengrow-logo.png"
                 alt="ZenGrow"
-                width={1680}
-                height={482}
+                width={1584}
+                height={396}
                 className="h-9 w-auto sm:h-10"
               />
             </Link>

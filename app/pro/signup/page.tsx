@@ -3,11 +3,10 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ZenGrowAuthCard, ZenGrowAuthPageShell } from "@/src/components/auth/zengrow-auth-page-shell";
+import { AuthCard, ZenGrowAuthLayout } from "@/src/components/auth/zengrow-auth-page-shell";
 import { createClient } from "@/src/lib/supabase/client";
 import { slugifyRestaurantName } from "@/src/lib/utils";
 import {
-  authBadgeClassName,
   authErrorClassName,
   authFieldLabel,
   authInputClassName,
@@ -79,20 +78,16 @@ export default function SignupPage() {
   }
 
   return (
-    <ZenGrowAuthPageShell variant="dark" footerLine={null}>
-      <ZenGrowAuthCard variant="dark">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <p className="mb-2 font-[family-name:var(--font-zg-display)] text-3xl font-bold tracking-tight text-landing-fg">
-            ZenGrow
-          </p>
-          <span className={authBadgeClassName + " mb-6"}>Espace professionnel</span>
-          <h1 className="mb-2 font-[family-name:var(--font-zg-display)] text-3xl font-bold tracking-tight text-landing-fg">
-            Crée ton compte
+    <ZenGrowAuthLayout intent="signup" footerLine={null}>
+      <AuthCard>
+        <div className="mb-8">
+          <h1 className="font-[family-name:var(--font-zg-display)] text-[1.75rem] font-semibold tracking-tight text-white sm:text-[2rem]">
+            Créer votre espace
           </h1>
-          <p className="mb-4 text-sm text-landing-muted">
-            Trois champs suffisent pour démarrer. Le reste se configure dans les paramètres.
+          <p className="mt-3 max-w-[38ch] text-pretty text-sm leading-relaxed text-white/50">
+            Trois champs suffisent pour démarrer. Le reste se configure ensuite dans les paramètres.
           </p>
-          <p className="max-w-sm text-pretty text-xs text-landing-muted/80">
+          <p className="mt-2 text-xs leading-relaxed text-white/35">
             Aucune carte bancaire requise. Essai gratuit de 14 jours.
           </p>
         </div>
@@ -146,29 +141,28 @@ export default function SignupPage() {
           </div>
 
           <Button type="submit" disabled={isLoading} size="lg" variant="ghost" className={authSubmitClassName}>
-            {isLoading ? "Création…" : "Créer mon compte"}
+            {isLoading ? "Création…" : "Créer mon espace"}
           </Button>
         </form>
 
-        <p className="mt-5 text-center text-xs leading-relaxed text-landing-muted/80">
-          Horaires, capacité, logo, page web et réseaux : tout se complète ensuite dans{" "}
-          <span className="text-landing-muted">Paramètres</span>.
+        <p className="mt-5 text-xs leading-relaxed text-white/35">
+          Canaux de vente, page d’achat et suivi : tout se complète ensuite dans les paramètres.
         </p>
 
         {error ? <p className={authErrorClassName + " mt-4"}>{error}</p> : null}
         {info ? (
-          <p className="mt-4 rounded-xl border border-landing-accent/25 bg-landing-accent/10 px-3.5 py-3 text-sm font-medium text-landing-fg">
+          <p className="mt-4 rounded-xl border border-[#8b7cff]/25 bg-[#6e56cf]/15 px-3.5 py-3 text-sm font-medium text-[#f4f0ff]">
             {info}
           </p>
         ) : null}
 
-        <p className="mt-6 text-center text-sm text-landing-muted">
+        <p className="mt-6 text-sm text-white/45">
           Déjà un compte ?{" "}
           <Link href="/pro/login" className={authLinkClassName}>
             Se connecter
           </Link>
         </p>
-      </ZenGrowAuthCard>
-    </ZenGrowAuthPageShell>
+      </AuthCard>
+    </ZenGrowAuthLayout>
   );
 }

@@ -6,7 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
 import { BRAND_NAME } from "./brand";
-import { CTA, MOBILE_NAV_PRIMARY, MOBILE_NAV_SECONDARY, NAV_LINKS, ROUTES } from "./config";
+import { CTA, MOBILE_NAV_SECONDARY, NAV_LINKS, ROUTES } from "./config";
 import { CtaButton } from "./ui";
 import { cn } from "@/src/lib/utils";
 
@@ -77,8 +77,6 @@ export function Navbar() {
           <CtaButton className="go-nav__cta">{CTA.primary}</CtaButton>
         </div>
 
-        <CtaButton className="go-nav__cta go-nav__cta--mobile">{CTA.primary}</CtaButton>
-
         <button
           type="button"
           className="go-nav__burger"
@@ -87,7 +85,7 @@ export function Navbar() {
           aria-controls="go-nav-drawer"
           onClick={() => setOpen((value) => !value)}
         >
-          {open ? <X className="h-4 w-4" strokeWidth={1.7} /> : <Menu className="h-4 w-4" strokeWidth={1.7} />}
+          {open ? <X className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.85} /> : <Menu className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.85} />}
         </button>
       </div>
 
@@ -119,15 +117,21 @@ export function Navbar() {
             transition={{ duration: reduce ? 0 : 0.32, ease }}
           >
             <div className="go-nav__drawer-group">
-              {MOBILE_NAV_PRIMARY.map((link) => (
+              {NAV_LINKS.map((link) => (
                 <a key={link.href} href={link.href} onClick={close}>
                   {link.label}
                 </a>
               ))}
+              <Link href={ROUTES.login} onClick={close}>
+                Connexion
+              </Link>
             </div>
+            <CtaButton className="go-nav__drawer-cta" onClick={close}>
+              {CTA.primary}
+            </CtaButton>
             <div className="go-nav__drawer-sep" aria-hidden />
             <div className="go-nav__drawer-group go-nav__drawer-group--muted">
-              {MOBILE_NAV_SECONDARY.map((link) =>
+              {MOBILE_NAV_SECONDARY.filter((link) => link.href !== ROUTES.login).map((link) =>
                 link.href.startsWith("/") ? (
                   <Link key={link.href} href={link.href} onClick={close}>
                     {link.label}
@@ -139,9 +143,6 @@ export function Navbar() {
                 ),
               )}
             </div>
-            <CtaButton className="go-nav__drawer-cta" onClick={close}>
-              {CTA.primary}
-            </CtaButton>
           </motion.nav>
         ) : null}
       </AnimatePresence>

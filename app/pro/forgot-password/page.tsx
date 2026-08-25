@@ -2,10 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { ZenGrowAuthCard, ZenGrowAuthPageShell } from "@/src/components/auth/zengrow-auth-page-shell";
+import { AuthCard, ZenGrowAuthLayout } from "@/src/components/auth/zengrow-auth-page-shell";
 import { authErrorMessageFr } from "@/src/lib/auth-error-fr";
 import {
-  authBadgeClassName,
   authErrorClassName,
   authFieldLabel,
   authInputClassName,
@@ -58,17 +57,13 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <ZenGrowAuthPageShell variant="dark" footerLine={null}>
-      <ZenGrowAuthCard variant="dark">
-        <div className="mb-8 flex flex-col items-center text-center sm:mb-9">
-          <p className="mb-2 font-[family-name:var(--font-zg-display)] text-3xl font-bold tracking-tight text-landing-fg">
-            ZenGrow
-          </p>
-          <span className={authBadgeClassName + " mt-3"}>Sécurité du compte</span>
-          <h1 className="mt-4 text-balance font-[family-name:var(--font-zg-display)] text-3xl font-bold tracking-tight text-landing-fg sm:text-[2rem] sm:leading-tight">
+    <ZenGrowAuthLayout intent="recover" footerLine={null}>
+      <AuthCard>
+        <div className="mb-8">
+          <h1 className="text-balance font-[family-name:var(--font-zg-display)] text-[1.75rem] font-semibold tracking-tight text-white sm:text-[2rem] sm:leading-tight">
             Mot de passe oublié
           </h1>
-          <p className="mt-2 max-w-sm text-pretty text-sm leading-relaxed text-landing-muted sm:text-[0.9375rem]">
+          <p className="mt-3 max-w-[36ch] text-pretty text-sm leading-relaxed text-white/50">
             Entrez votre adresse email pour recevoir un lien de réinitialisation.
           </p>
         </div>
@@ -105,12 +100,12 @@ export default function ForgotPasswordPage() {
           {error ? <p className={authErrorClassName}>{error}</p> : null}
         </div>
 
-        <p className="mt-6 text-center text-sm text-landing-muted">
+        <p className="mt-6 text-sm text-white/45">
           <Link href="/pro/login" className={authLinkClassName}>
             Retour à la connexion
           </Link>
         </p>
-      </ZenGrowAuthCard>
-    </ZenGrowAuthPageShell>
+      </AuthCard>
+    </ZenGrowAuthLayout>
   );
 }

@@ -2,9 +2,9 @@ import Image from "next/image";
 import { BRAND_NAME } from "./brand";
 
 export const BRAND_LOGO = {
-  src: "/ziftip-logo.png",
-  width: 415,
-  height: 100,
+  src: "/zengrow-logo.png",
+  width: 1584,
+  height: 396,
 } as const;
 
 export function BrandLogo({

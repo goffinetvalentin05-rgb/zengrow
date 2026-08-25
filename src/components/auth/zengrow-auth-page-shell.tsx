@@ -3,85 +3,146 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
-import { AppAmbientBackground } from "@/src/components/app/app-ambient-background";
+import { BrandLogo } from "@/components/landing/BrandLogo";
 import { cn } from "@/src/lib/utils";
+import "./auth-layout.css";
 
-type AuthShellVariant = "light" | "dark";
+export type AuthLayoutIntent = "login" | "signup" | "recover";
 
-type ZenGrowAuthPageShellProps = {
+type AuthVisualCopy = {
+  badge: string;
+  title: string;
+  subtitle: string;
+  steps: readonly string[];
+  activeStep: number;
+};
+
+const VISUAL: Record<AuthLayoutIntent, AuthVisualCopy> = {
+  login: {
+    badge: "Espace professionnel",
+    title: "Vos bons cadeaux, un seul espace.",
+    subtitle:
+      "Vendez sur votre site, dans votre établissement ou depuis vos réseaux. Paiement, envoi et utilisation au même endroit.",
+    steps: [
+      "Connectez-vous à votre espace",
+      "Retrouvez votre établissement",
+      "Suivez ventes, Wallet et utilisation",
+    ],
+    activeStep: 0,
+  },
+  signup: {
+    badge: "Espace professionnel",
+    title: "Créez votre espace en quelques minutes.",
+    subtitle:
+      "Ajoutez vos bons cadeaux sur votre site, dans votre établissement et sur vos réseaux — sans construire votre propre système.",
+    steps: [
+      "Créez votre espace",
+      "Configurez votre établissement",
+      "Vendez vos bons cadeaux partout",
+    ],
+    activeStep: 0,
+  },
+  recover: {
+    badge: "Sécurité du compte",
+    title: "Retrouvez l’accès à votre espace.",
+    subtitle:
+      "Un lien sécurisé pour réinitialiser votre mot de passe et revenir à votre établissement.",
+    steps: [
+      "Indiquez votre e-mail",
+      "Ouvrez le lien reçu",
+      "Choisissez un nouveau mot de passe",
+    ],
+    activeStep: 0,
+  },
+};
+
+type ZenGrowAuthLayoutProps = {
   children: ReactNode;
+  intent?: AuthLayoutIntent;
   showHomeLink?: boolean;
+  /** Conservé pour compatibilité — le layout premium n’affiche plus cette ligne. */
   footerLine?: string | null;
-  variant?: AuthShellVariant;
+  /** Conservé pour compatibilité. */
+  variant?: "light" | "dark";
   contentMaxWidthClass?: string;
 };
 
-export function ZenGrowAuthPageShell({
-  children,
-  showHomeLink = true,
-  footerLine = "Réservations en ligne, disponibilités et avis clients — tout ZenGrow, rien de superflu.",
-  variant = "dark",
-  contentMaxWidthClass,
-}: ZenGrowAuthPageShellProps) {
-  const isDark = variant === "dark";
-  const maxW = contentMaxWidthClass ?? (isDark ? "max-w-md" : "max-w-[440px]");
+export function AuthVisualPanel({ intent = "login" }: { intent?: AuthLayoutIntent }) {
+  const copy = VISUAL[intent];
 
   return (
-    <main
-      className={cn(
-        "relative flex min-h-screen flex-col overflow-hidden font-[family-name:var(--font-zg-body)]",
-        isDark ? "bg-landing-bg text-landing-fg" : "bg-landing-bg text-landing-fg",
-      )}
-    >
-      <AppAmbientBackground />
+    <aside className="zg-auth-visual flex flex-col justify-start gap-8 px-6 py-8 sm:px-9 sm:py-10 lg:gap-8 lg:px-11 lg:py-14">
+      <div className="zg-auth-visual__inner flex flex-col items-start">
+        <Link href="/" className="inline-flex w-fit items-center" aria-label="ZenGrow — accueil">
+          <BrandLogo className="zg-auth-visual__logo" sizes="180px" priority decorative />
+        </Link>
+        <span className="mt-5 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-white/90 backdrop-blur-md">
+          {copy.badge}
+        </span>
+        <h2 className="mt-5 max-w-md font-[family-name:var(--font-zg-display)] text-[1.45rem] font-semibold leading-[1.15] tracking-tight text-white sm:text-[1.85rem] lg:mt-6 lg:text-[2.05rem]">
+          {copy.title}
+        </h2>
+        <p className="mt-3 hidden max-w-sm text-sm leading-relaxed text-white/72 lg:block lg:text-[0.9375rem]">
+          {copy.subtitle}
+        </p>
+      </div>
 
-      <div className="relative z-10 flex min-h-screen w-full flex-1 flex-col">
-        {showHomeLink ? (
-          <div className="flex shrink-0 justify-center px-4 pt-6">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 rounded-full border border-landing-border/60 bg-landing-card/50 px-5 py-2 text-sm text-landing-muted shadow-sm backdrop-blur-xl transition hover:border-landing-accent/40 hover:text-landing-fg"
-            >
-              ← Retour à l&apos;accueil
-            </Link>
-          </div>
-        ) : null}
-        <div className="flex flex-1 items-center justify-center px-4 py-8 sm:py-10">
-          <div className={cn("relative w-full", maxW)}>{children}</div>
-        </div>
-        {footerLine && !isDark ? (
-          <p className="pb-8 text-center text-xs leading-relaxed text-landing-muted/70">{footerLine}</p>
-        ) : null}
+      <ol className="zg-auth-visual__inner hidden flex-col gap-2.5 lg:flex">
+        {copy.steps.map((label, index) => {
+          const active = index === copy.activeStep;
+          return (
+            <li key={label} className={cn("zg-auth-step", active && "is-active")}>
+              <span className="zg-auth-step__n">{String(index + 1).padStart(2, "0")}</span>
+              <span className="text-sm font-medium leading-snug">{label}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </aside>
+  );
+}
+
+export function AuthCard({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("mx-auto w-full max-w-[440px] lg:mx-0", className)}>{children}</div>;
+}
+
+export function ZenGrowAuthLayout({
+  children,
+  intent = "login",
+  showHomeLink = true,
+}: ZenGrowAuthLayoutProps) {
+  return (
+    <main className="zg-auth-page relative flex min-h-dvh flex-col overflow-x-hidden font-[family-name:var(--font-zg-body)]">
+      <div className="zg-auth-page__glow" aria-hidden />
+
+      <div className="relative z-10 flex min-h-dvh w-full items-center justify-center p-4 sm:p-6 lg:p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="zg-auth-frame mx-auto grid w-full max-w-[1080px] grid-cols-1 rounded-[1.5rem] sm:rounded-[1.75rem] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]"
+        >
+          <AuthVisualPanel intent={intent} />
+
+          <section className="zg-auth-form relative flex flex-col justify-start px-5 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-14 lg:pt-[4.25rem]">
+            {showHomeLink ? (
+              <Link
+                href="/"
+                className="mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-white/45 transition hover:text-white/80 lg:absolute lg:top-8 lg:left-12 lg:mb-0"
+              >
+                ← Retour à l&apos;accueil
+              </Link>
+            ) : null}
+            {children}
+          </section>
+        </motion.div>
       </div>
     </main>
   );
 }
 
-type ZenGrowAuthCardProps = {
-  children: ReactNode;
-  className?: string;
-  variant?: AuthShellVariant;
-};
+/** @deprecated Utiliser ZenGrowAuthLayout */
+export const ZenGrowAuthPageShell = ZenGrowAuthLayout;
 
-export function ZenGrowAuthCard({ children, className, variant = "dark" }: ZenGrowAuthCardProps) {
-  return (
-    <motion.section
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className={cn(
-        "relative w-full overflow-hidden rounded-2xl border border-landing-border/80 p-8 sm:p-10",
-        "bg-gradient-to-br from-landing-card/95 via-landing-section/80 to-landing-card/90",
-        "shadow-[0_24px_80px_-28px_rgba(0,0,0,0.65),0_0_60px_-20px_rgba(124,92,255,0.15)]",
-        "backdrop-blur-xl",
-        className,
-      )}
-    >
-      <div
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgb(255_255_255/0.06)_0%,transparent_42%,rgb(124_92_255/0.04)_100%)]"
-        aria-hidden
-      />
-      <div className="relative z-[1]">{children}</div>
-    </motion.section>
-  );
-}
+/** @deprecated Utiliser AuthCard */
+export const ZenGrowAuthCard = AuthCard;

@@ -37,7 +37,7 @@ export function Navbar() {
       <div className="zg-lp-container flex h-16 items-center justify-between gap-4 md:h-[4.25rem]">
         <Link href="/" className="relative z-10 flex shrink-0 items-center gap-2.5" onClick={() => setOpen(false)}>
           <Image
-            src="/logo-zengrow.png"
+            src="/zengrow-logo.png"
             alt="ZenGrow"
             width={120}
             height={32}

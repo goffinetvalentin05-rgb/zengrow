@@ -18,6 +18,7 @@ const SPIN_PHRASES = [
 function HeroSpin({ reduce }: { reduce: boolean }) {
   const [index, setIndex] = useState(0);
   const [width, setWidth] = useState<number | null>(null);
+  const [compact, setCompact] = useState(false);
   const measureRef = useRef<HTMLSpanElement>(null);
   const phrase = SPIN_PHRASES[index];
 
@@ -28,11 +29,25 @@ function HeroSpin({ reduce }: { reduce: boolean }) {
     return () => window.clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 899px)");
+    const sync = () => setCompact(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   useLayoutEffect(() => {
     const el = measureRef.current;
     if (!el) return;
 
-    const update = () => setWidth(Math.ceil(el.scrollWidth) + 4);
+    const update = () => {
+      if (window.matchMedia("(max-width: 899px)").matches) {
+        setWidth(null);
+        return;
+      }
+      setWidth(Math.ceil(el.scrollWidth) + 4);
+    };
     update();
 
     const observer = new ResizeObserver(update);
@@ -44,9 +59,9 @@ function HeroSpin({ reduce }: { reduce: boolean }) {
     <span
       className="go-hero__spin"
       style={{
-        width: width ?? "fit-content",
-        maxWidth: "100%",
-        transition: reduce || width === null ? "none" : "width 0.42s cubic-bezier(0.22, 1, 0.36, 1)",
+        width: compact || width === null ? undefined : width,
+        maxWidth: compact ? undefined : "100%",
+        transition: reduce || compact || width === null ? "none" : "width 0.42s cubic-bezier(0.22, 1, 0.36, 1)",
       }}
     >
       <span ref={measureRef} className="go-hero__spin-sizer" aria-hidden>
@@ -97,11 +112,16 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, ease }}
           >
-            <span className="go-hero__line">Ne laissez plus une intention</span>
-            <span className="go-hero__line go-hero__line--spin">
-              <span className="go-hero__lead-in">d’offrir se transformer en</span>
-              <HeroSpin reduce={reduce} />
+            <span className="go-hero__static">
+              <span className="go-hero__seg">Ne laissez plus une</span>
+              <span className="go-hero__br go-hero__br--m" aria-hidden />
+              <span className="go-hero__seg">intention</span>
+              <span className="go-hero__br go-hero__br--d" aria-hidden />
+              <span className="go-hero__seg">d’offrir</span>
+              <span className="go-hero__br go-hero__br--m" aria-hidden />
+              <span className="go-hero__seg">se transformer en</span>
             </span>
+            <HeroSpin reduce={reduce} />
           </motion.h1>
           <motion.p
             className="go-hero__sub"

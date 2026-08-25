@@ -162,10 +162,10 @@ function StepCard({
 
   return (
     <article className="go-how-card" aria-labelledby={headingId}>
-      <span className="go-how-card__num" aria-hidden>
-        {step.num}
-      </span>
       <div className="go-how-card__copy">
+        <span className="go-how-card__num" aria-hidden>
+          {step.num}
+        </span>
         <span className="go-how-card__icon">
           <Icon strokeWidth={1.7} />
         </span>

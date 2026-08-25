@@ -40,7 +40,7 @@ export function LandingLogo({
     >
       <span className="landing-logo-glow" aria-hidden />
       <Image
-        src="/logo-zengrow.png"
+        src="/zengrow-logo.png"
         alt="ZenGrow"
         width={config.width}
         height={config.height}

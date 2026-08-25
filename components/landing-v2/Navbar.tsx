@@ -22,7 +22,7 @@ export function LandingNavbar() {
       <Container className="flex h-16 items-center justify-between gap-4">
         <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
           <Image
-            src="/logo-zengrow.png"
+            src="/zengrow-logo.png"
             alt="ZenGrow"
             width={140}
             height={40}

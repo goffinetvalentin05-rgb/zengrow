@@ -27,7 +27,7 @@ import { useDashboardTheme } from "@/src/components/dashboard/dashboard-theme-pr
 import { useIsMdUp } from "@/src/hooks/use-is-md-up";
 
 const STORAGE_KEY = "zengrow_dashboard_sidebar_collapsed";
-const ZENGROW_LOGO_SRC = "/logo-zengrow.png";
+const ZENGROW_LOGO_SRC = "/zengrow-logo.png";
 const WIDTH_EXPANDED = 260;
 const WIDTH_COLLAPSED = 72;
 

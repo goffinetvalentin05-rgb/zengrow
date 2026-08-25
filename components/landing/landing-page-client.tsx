@@ -12,12 +12,15 @@ import "./landing.css";
 export function LandingPageClient() {
   return (
     <div className="go">
+      <div className="go-grain" aria-hidden />
       <Navbar />
       <main>
         <Hero />
-        <StorySection />
-        <HowItWorksSection />
-        <FAQSection />
+        <div className="go-day">
+          <StorySection />
+          <HowItWorksSection />
+          <FAQSection />
+        </div>
       </main>
       <div className="go-close">
         <FinalCTA />

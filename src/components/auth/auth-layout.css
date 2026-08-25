@@ -1,0 +1,205 @@
+/* Auth split layout — ambiance alignée sur le footer landing (nuit / violet / lavande) */
+
+.zg-auth-page {
+  --zg-auth-night: #05030a;
+  --zg-auth-ink: #140b24;
+  --zg-auth-deep: #3d2870;
+  --zg-auth-mid: #6e56cf;
+  --zg-auth-bloom: #b3a3e0;
+  --zg-auth-paper: #f6f3ff;
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  color: #f4f0ff;
+  background:
+    radial-gradient(ellipse 90% 36% at 50% 10%, rgba(188, 174, 255, 0.16), transparent 58%),
+    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(5, 3, 10, 0.45), transparent 58%),
+    linear-gradient(
+      180deg,
+      #faf9fd 0%,
+      #faf9fd 18%,
+      #f6f3ff 28%,
+      #ece6f8 38%,
+      #d5cbed 48%,
+      #b3a3e0 58%,
+      #7a66c8 70%,
+      #3d2870 82%,
+      #140b24 92%,
+      #05030a 100%
+    );
+}
+
+.zg-auth-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.7) 0.6px, transparent 0.6px);
+  background-size: 3px 3px;
+}
+
+.zg-auth-page__glow {
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  z-index: 0;
+  width: min(82vw, 920px);
+  height: 280px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse,
+    rgba(246, 243, 255, 0.35) 0%,
+    rgba(188, 174, 255, 0.16) 38%,
+    rgba(110, 86, 207, 0.08) 58%,
+    transparent 74%
+  );
+  filter: blur(72px);
+}
+
+.zg-auth-frame {
+  position: relative;
+  display: grid;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #07050f;
+  box-shadow:
+    0 28px 64px -24px rgba(20, 11, 36, 0.45),
+    0 40px 80px -28px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(20, 11, 36, 0.08);
+}
+
+@media (min-width: 1024px) {
+  .zg-auth-frame {
+    min-height: min(36.5rem, calc(100dvh - 4rem));
+  }
+}
+
+.zg-auth-visual {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 70% at 6% -4%, rgba(246, 243, 255, 0.34), transparent 46%),
+    radial-gradient(ellipse 70% 50% at 92% 8%, rgba(188, 174, 255, 0.28), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 40% 110%, rgba(110, 86, 207, 0.38), transparent 56%),
+    linear-gradient(
+      165deg,
+      #7a66c8 0%,
+      #6e56cf 22%,
+      #4a3488 48%,
+      #3d2870 64%,
+      #140b24 84%,
+      #05030a 100%
+    );
+}
+
+.zg-auth-visual::before {
+  content: "";
+  position: absolute;
+  inset: auto auto 18% -12%;
+  z-index: 0;
+  width: 70%;
+  height: 55%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse,
+    rgba(246, 243, 255, 0.28) 0%,
+    rgba(188, 174, 255, 0.16) 36%,
+    rgba(110, 86, 207, 0.08) 58%,
+    transparent 74%
+  );
+  filter: blur(48px);
+}
+
+.zg-auth-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.75) 0.55px, transparent 0.55px),
+    radial-gradient(rgba(196, 181, 253, 0.45) 0.4px, transparent 0.4px);
+  background-size: 3px 3px, 5px 5px;
+  background-position: 0 0, 1.5px 1.2px;
+}
+
+.zg-auth-visual__logo {
+  display: block;
+  width: auto;
+  height: 32px;
+  max-width: 168px;
+  object-fit: contain;
+}
+
+.zg-auth-visual__inner {
+  position: relative;
+  z-index: 2;
+}
+
+.zg-auth-step {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border-radius: 0.9rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(7, 5, 15, 0.28);
+  color: rgba(244, 240, 255, 0.78);
+  backdrop-filter: blur(10px);
+  transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+
+.zg-auth-step.is-active {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.94);
+  color: #140b24;
+  box-shadow: 0 10px 28px -16px rgba(5, 3, 10, 0.55);
+}
+
+.zg-auth-step__n {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.zg-auth-step.is-active .zg-auth-step__n {
+  background: #140b24;
+  color: #f6f3ff;
+}
+
+.zg-auth-form {
+  position: relative;
+  background:
+    radial-gradient(ellipse 80% 40% at 80% 0%, rgba(110, 86, 207, 0.08), transparent 55%),
+    #07050f;
+}
+
+@media (max-width: 1023px) {
+  .zg-auth-visual {
+    min-height: 0;
+    background:
+      radial-gradient(ellipse 90% 80% at 12% 0%, rgba(246, 243, 255, 0.28), transparent 50%),
+      radial-gradient(ellipse 70% 70% at 100% 20%, rgba(188, 174, 255, 0.2), transparent 52%),
+      linear-gradient(165deg, #6e56cf 0%, #4a3488 42%, #3d2870 72%, #140b24 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zg-auth-step {
+    transition: none;
+  }
+}

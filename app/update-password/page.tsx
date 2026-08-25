@@ -3,10 +3,9 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ZenGrowAuthCard, ZenGrowAuthPageShell } from "@/src/components/auth/zengrow-auth-page-shell";
+import { AuthCard, ZenGrowAuthLayout } from "@/src/components/auth/zengrow-auth-page-shell";
 import { authErrorMessageFr } from "@/src/lib/auth-error-fr";
 import {
-  authBadgeClassName,
   authErrorClassName,
   authFieldLabel,
   authInputClassName,
@@ -116,27 +115,23 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <ZenGrowAuthPageShell variant="dark" footerLine={null}>
-      <ZenGrowAuthCard variant="dark">
-        <div className="mb-8 flex flex-col items-center text-center sm:mb-9">
-          <p className="mb-2 font-[family-name:var(--font-zg-display)] text-3xl font-bold tracking-tight text-landing-fg">
-            ZenGrow
-          </p>
-          <span className={authBadgeClassName + " mt-3"}>Sécurité du compte</span>
-          <h1 className="mt-4 text-balance font-[family-name:var(--font-zg-display)] text-3xl font-bold tracking-tight text-landing-fg sm:text-[2rem] sm:leading-tight">
+    <ZenGrowAuthLayout intent="recover" footerLine={null}>
+      <AuthCard>
+        <div className="mb-8">
+          <h1 className="text-balance font-[family-name:var(--font-zg-display)] text-[1.75rem] font-semibold tracking-tight text-white sm:text-[2rem] sm:leading-tight">
             Nouveau mot de passe
           </h1>
-          <p className="mt-2 max-w-sm text-pretty text-sm leading-relaxed text-landing-muted sm:text-[0.9375rem]">
+          <p className="mt-3 max-w-[36ch] text-pretty text-sm leading-relaxed text-white/50">
             Choisissez un nouveau mot de passe sécurisé.
           </p>
         </div>
 
         {phase === "checking" ? (
-          <p className="py-6 text-center text-sm text-landing-muted">Vérification du lien…</p>
+          <p className="py-6 text-sm text-white/50">Vérification du lien…</p>
         ) : null}
 
         {phase === "invalid" ? (
-          <div className="space-y-5 text-center">
+          <div className="space-y-5">
             <p className="rounded-xl border border-amber-500/30 bg-amber-950/40 px-3.5 py-3 text-sm leading-relaxed text-amber-100/90">
               Ce lien est invalide ou a expiré. Demandez un nouveau lien de réinitialisation.
             </p>
@@ -144,7 +139,7 @@ export default function UpdatePasswordPage() {
               <Link href="/forgot-password" className={authLinkClassName}>
                 Demander un nouveau lien
               </Link>
-              <Link href="/login" className="text-landing-muted transition hover:text-landing-fg">
+              <Link href="/login" className="text-white/45 transition hover:text-white/80">
                 Retour à la connexion
               </Link>
             </div>
@@ -206,13 +201,13 @@ export default function UpdatePasswordPage() {
         ) : null}
 
         {phase === "ready" ? (
-          <p className="mt-6 text-center text-sm text-landing-muted">
+          <p className="mt-6 text-sm text-white/45">
             <Link href="/login" className={authLinkClassName}>
               Retour à la connexion
             </Link>
           </p>
         ) : null}
-      </ZenGrowAuthCard>
-    </ZenGrowAuthPageShell>
+      </AuthCard>
+    </ZenGrowAuthLayout>
   );
 }

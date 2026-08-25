@@ -40,10 +40,10 @@ export function Navbar() {
             aria-label="ZenGrow — accueil"
           >
             <Image
-              src="/zengrow-logo-blanc.png"
+              src="/zengrow-logo.png"
               alt="ZenGrow"
-              width={1680}
-              height={482}
+              width={1584}
+              height={396}
               className="zg-nav-logo__img"
               priority
             />

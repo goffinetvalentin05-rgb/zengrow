@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { cn } from "@/src/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ZenGrowAuthCard, ZenGrowAuthPageShell } from "@/src/components/auth/zengrow-auth-page-shell";
+import { AuthCard, ZenGrowAuthLayout } from "@/src/components/auth/zengrow-auth-page-shell";
 import { createClient } from "@/src/lib/supabase/client";
 import {
   authErrorClassName,
@@ -12,7 +12,6 @@ import {
   authInputClassName,
   authLinkClassName,
   authSubmitClassName,
-  authBadgeClassName,
 } from "@/src/lib/auth/auth-form-styles";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
@@ -58,21 +57,15 @@ export default function LoginPage() {
   }
 
   return (
-    <ZenGrowAuthPageShell variant="dark" footerLine={null}>
-      <ZenGrowAuthCard variant="dark">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <p className="mb-2 font-[family-name:var(--font-zg-display)] text-3xl font-bold tracking-tight text-landing-fg">
-            ZenGrow
-          </p>
-          <span className={cn("mb-6", authBadgeClassName)}>
-            Espace professionnel
-          </span>
-          <h1 className="mb-2 font-[family-name:var(--font-zg-display)] text-3xl font-bold tracking-tight text-landing-fg">
+    <ZenGrowAuthLayout intent="login" footerLine={null}>
+      <AuthCard>
+        <div className="mb-8">
+          <h1 className="font-[family-name:var(--font-zg-display)] text-[1.75rem] font-semibold tracking-tight text-white sm:text-[2rem]">
             Connexion
           </h1>
-          <p className="mb-8 text-sm text-landing-muted">Accède à ton dashboard ZenGrow.</p>
-          <p className="mb-8 max-w-sm text-pretty text-xs text-landing-muted">
-            Gère tes réservations, ta page web, ta base clients et tes campagnes depuis un seul espace.
+          <p className="mt-3 max-w-[38ch] text-pretty text-sm leading-relaxed text-white/50">
+            Accédez à votre espace professionnel pour vendre et suivre vos bons cadeaux — site,
+            établissement, réseaux et Wallet.
           </p>
         </div>
 
@@ -107,7 +100,7 @@ export default function LoginPage() {
               required
               className={authInputClassName}
             />
-            <div className="mt-2 flex justify-end">
+            <div className="mt-2.5 flex justify-end">
               <Link href="/pro/forgot-password" className={cn("text-xs", authLinkClassName)}>
                 Mot de passe oublié ?
               </Link>
@@ -121,25 +114,17 @@ export default function LoginPage() {
           </div>
         </form>
 
-        <div className="mt-6 min-h-[1.25rem]" role="status" aria-live="polite" aria-atomic="true">
-          {error ? (
-            <p className={authErrorClassName}>
-              {error}
-            </p>
-          ) : null}
+        <div className="mt-5 min-h-[1.25rem]" role="status" aria-live="polite" aria-atomic="true">
+          {error ? <p className={authErrorClassName}>{error}</p> : null}
         </div>
 
-        <p className="mt-6 text-center text-sm text-landing-muted">
+        <p className="mt-6 text-sm text-white/45">
           Pas encore de compte ?{" "}
           <Link href="/pro/signup" className={authLinkClassName}>
-            Créer mon restaurant
+            Créer mon espace
           </Link>
         </p>
-
-        <p className="mt-8 text-center text-xs text-landing-muted/70">
-          Réservations en ligne, page web, avis clients — tout ZenGrow, rien de superflu.
-        </p>
-      </ZenGrowAuthCard>
-    </ZenGrowAuthPageShell>
+      </AuthCard>
+    </ZenGrowAuthLayout>
   );
 }

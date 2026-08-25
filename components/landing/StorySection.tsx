@@ -33,9 +33,9 @@ const STEPS: StoryStep[] = [
   },
 ];
 
-const MUTED = [157, 151, 181] as const;
-const INK = [255, 255, 255] as const;
-const INK_EM = [255, 255, 255] as const;
+const MUTED = [154, 148, 172] as const;
+const INK = [13, 12, 18] as const;
+const INK_EM = [13, 12, 18] as const;
 
 function tokenize(text: string, highlights: string[]): Token[] {
   const ranges = highlights
@@ -193,6 +193,19 @@ export function StorySection() {
     <section id="comment-ca-marche" className="go-story" aria-label="Le problème, la solution, le résultat">
       <div className="go-story__track" ref={trackRef}>
         <div className="go-story__sticky">
+          <div className="go-story__atmosphere" aria-hidden>
+            <span className="go-story__glow go-story__glow--a" />
+            <span className="go-story__glow go-story__glow--b" />
+            <span className="go-story__glow go-story__glow--c" />
+            <span className="go-story__glow go-story__glow--d" />
+            <span className="go-story__stroke go-story__stroke--a" />
+            <span className="go-story__stroke go-story__stroke--b" />
+            <svg className="go-story__waves" viewBox="0 0 1440 900" fill="none" preserveAspectRatio="none">
+              <path d="M-80 220C180 80 460 340 780 210C1080 90 1320 300 1580 160" />
+              <path d="M-40 430C260 280 520 560 860 410C1160 280 1380 520 1640 380" />
+              <path d="M-120 640C220 500 500 760 840 620C1180 490 1400 720 1660 580" />
+            </svg>
+          </div>
           <div className="go-story__frame">
             <div className="go-story__left">
               <span className="go-story__rail" aria-hidden>
