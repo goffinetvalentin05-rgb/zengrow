@@ -7,6 +7,16 @@ import type {
   RedeemGiftVoucherInput,
 } from "@/src/lib/gift-vouchers/types";
 
+export type GiftVoucherSettingsInput = {
+  displayName?: string;
+  offerTitle?: string;
+  accentColor?: string;
+  coverUrl?: string;
+  terms?: string;
+  footer?: string;
+  includeBuyerOnPdf?: boolean;
+};
+
 function emptyToUndefined(value: unknown): unknown {
   if (value === "" || value === null || value === undefined) return undefined;
   if (typeof value === "string") {
@@ -97,6 +107,13 @@ export const redeemGiftVoucherSchema = z
         message: "Le montant doit être supérieur à 0.",
       });
     }
+    if (data.amount != null && Math.abs(data.amount * 100 - Math.round(data.amount * 100)) > 1e-6) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["amount"],
+        message: "Le montant ne peut pas avoir plus de deux décimales.",
+      });
+    }
   });
 
 export function parseRedeemGiftVoucherInput(payload: unknown): RedeemGiftVoucherInput {
@@ -146,4 +163,24 @@ export const lookupGiftVoucherTokenSchema = z
 
 export function parseLookupGiftVoucherToken(payload: unknown): string {
   return lookupGiftVoucherTokenSchema.parse(payload);
+}
+
+export const giftVoucherSettingsSchema = z.object({
+  displayName: optionalText(120),
+  offerTitle: optionalText(120),
+  accentColor: z.preprocess(
+    emptyToUndefined,
+    z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, "Couleur invalide.")
+      .optional(),
+  ),
+  coverUrl: optionalText(2000),
+  terms: optionalText(4000),
+  footer: optionalText(500),
+  includeBuyerOnPdf: z.boolean().optional(),
+});
+
+export function parseGiftVoucherSettingsInput(payload: unknown): GiftVoucherSettingsInput {
+  return giftVoucherSettingsSchema.parse(payload);
 }

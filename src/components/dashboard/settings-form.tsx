@@ -57,6 +57,7 @@ import {
   normalizeTerraceLabel,
 } from "@/src/lib/reservation/terrace-settings";
 import { ReservationSettingsPanel } from "@/src/components/dashboard/settings/reservation-settings-panel";
+import GiftVoucherSettingsPanel from "@/src/components/dashboard/settings/gift-voucher-settings-panel";
 
 type RestaurantData = {
   id: string;
@@ -961,9 +962,19 @@ export default function SettingsForm({
             iconWrapClassName="bg-zg-accent/15 text-zg-accent"
             iconClassName="text-zg-accent"
             title="Bons cadeaux"
-            subtitle="Règles par défaut pour vos bons digitaux et papier."
+            subtitle="Personnalisation du PDF imprimable et d’Apple Wallet."
           >
-            <SettingsAccordion title="Valeurs par défaut" defaultOpen>
+            <GiftVoucherSettingsPanel
+              restaurantId={restaurant.id}
+              displayName={restaurant.public_display_name?.trim() || name || "Établissement"}
+              logoUrl={logoUrl}
+              pageCoverUrl={coverImageUrl}
+              accentColor={accentColor}
+              phone={phone}
+              email={email}
+              address={address}
+            />
+            <SettingsAccordion title="Valeurs par défaut">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="dashboard-field-label">Validité par défaut</label>

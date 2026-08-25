@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Ban, Copy, ExternalLink, Mail, RefreshCw, RotateCcw, ScanLine, X } from "lucide-react";
+import { Ban, Copy, Download, ExternalLink, Mail, RefreshCw, RotateCcw, ScanLine, X } from "lucide-react";
 import GiftCardStatusBadge from "@/src/components/dashboard/gift-cards/gift-card-status-badge";
 import GiftCardTypeBadge from "@/src/components/dashboard/gift-cards/gift-card-type-badge";
 import GiftVoucherQr from "@/src/components/dashboard/gift-cards/gift-voucher-qr";
@@ -233,6 +233,17 @@ export default function GiftCardDetailDrawer({
           </div>
 
           <footer className="flex flex-col gap-2 border-t border-zg-border px-5 py-4 sm:flex-row sm:flex-wrap">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="w-full sm:w-auto"
+              disabled={busy}
+              onClick={() => onAction("download_pdf")}
+            >
+              <Download className="h-4 w-4" strokeWidth={2} aria-hidden />
+              {busyAction === "download_pdf" ? "Préparation…" : "Télécharger le bon en PDF"}
+            </Button>
             <Button
               type="button"
               variant="secondary"

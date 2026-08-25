@@ -146,6 +146,33 @@ export default function GiftCardsPage({
       showToast({ message: "L’envoi du bon arrivera plus tard." });
       return;
     }
+    if (action === "download_pdf") {
+      setBusyAction(action);
+      try {
+        const response = await fetch(`/api/gift-vouchers/${selected.id}/pdf`);
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+          showToast({ message: payload?.error ?? "Impossible de générer le PDF." });
+          return;
+        }
+        const blob = await response.blob();
+        const disposition = response.headers.get("content-disposition") ?? "";
+        const match = disposition.match(/filename="([^"]+)"/);
+        const filename = match?.[1] ?? `bon-cadeau-${selected.code}.pdf`;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast({ message: "PDF téléchargé.", icon: CheckCircle2 });
+      } catch {
+        showToast({ message: "Impossible de générer le PDF." });
+      } finally {
+        setBusyAction(null);
+      }
+      return;
+    }
     if (action === "redeem") {
       openRedeem({ voucher: selected, code: selected.code });
       return;

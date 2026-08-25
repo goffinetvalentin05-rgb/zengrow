@@ -37,4 +37,4 @@ export type GiftCardRecord = {
 
 export type GiftCardTypeFilter = "all" | GiftCardType;
 
-export type GiftCardDrawerAction = "resend" | "redeem" | "disable" | "reactivate" | "rotate_qr";
+export type GiftCardDrawerAction = "resend" | "redeem" | "disable" | "reactivate" | "rotate_qr" | "download_pdf";

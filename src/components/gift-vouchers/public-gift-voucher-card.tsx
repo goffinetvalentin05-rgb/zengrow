@@ -4,10 +4,12 @@ import { useState } from "react";
 import { Share2 } from "lucide-react";
 import GiftVoucherQr from "@/src/components/dashboard/gift-cards/gift-voucher-qr";
 import GiftCardStatusBadge from "@/src/components/dashboard/gift-cards/gift-card-status-badge";
+import AddToAppleWalletBadge from "@/src/components/gift-vouchers/add-to-apple-wallet-badge";
 import Button from "@/src/components/ui/button";
 import { formatCentsAsChf } from "@/src/lib/gift-vouchers/money";
 import { formatGiftVoucherDate } from "@/src/lib/gift-vouchers/map";
 import { giftVoucherPublicUrl } from "@/src/lib/gift-vouchers/public-token";
+import { canIssueAppleWalletPass } from "@/src/lib/gift-vouchers/wallet/eligibility";
 import { publicStatusHeadline, type PublicGiftVoucherView } from "@/src/lib/gift-vouchers/public-view";
 
 type PublicGiftVoucherCardProps = {
@@ -20,6 +22,8 @@ export default function PublicGiftVoucherCard({ voucher, origin }: PublicGiftVou
   const url = giftVoucherPublicUrl(voucher.publicToken, origin);
   const headline = publicStatusHeadline(voucher.status);
   const showQr = voucher.status !== "draft";
+  const canAddToWallet = canIssueAppleWalletPass(voucher);
+  const fullyUsed = voucher.status === "used" || voucher.remainingAmountCents <= 0;
 
   async function shareOrCopy() {
     try {
@@ -73,6 +77,12 @@ export default function PublicGiftVoucherCard({ voucher, origin }: PublicGiftVou
           </p>
         ) : null}
 
+        {fullyUsed ? (
+          <p className="rounded-2xl border border-zg-border bg-zg-surface px-4 py-3 text-center text-sm text-zg-text-muted">
+            Le solde de ce bon est à {formatCentsAsChf(0)}. Il ne peut plus être ajouté à Apple Wallet.
+          </p>
+        ) : null}
+
         {showQr ? (
           <div className="flex justify-center">
             <GiftVoucherQr value={url} size={248} label={`QR du bon ${voucher.code}`} />
@@ -106,6 +116,8 @@ export default function PublicGiftVoucherCard({ voucher, origin }: PublicGiftVou
             <dd className="font-medium text-zg-fg">{formatGiftVoucherDate(voucher.expiresAt)}</dd>
           </div>
         </dl>
+
+        {canAddToWallet ? <AddToAppleWalletBadge href={`/v/${voucher.publicToken}/apple-wallet`} /> : null}
 
         <Button type="button" variant="secondary" className="min-h-12 w-full" onClick={() => void shareOrCopy()}>
           <Share2 className="h-4 w-4" strokeWidth={2} aria-hidden />

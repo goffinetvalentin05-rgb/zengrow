@@ -1,0 +1,247 @@
+import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { formatCentsAsChf } from "@/src/lib/gift-vouchers/money";
+import { formatGiftVoucherDate } from "@/src/lib/gift-vouchers/map";
+import type { GiftVoucherPresentation } from "@/src/lib/gift-vouchers/branding";
+
+const styles = StyleSheet.create({
+  page: {
+    fontFamily: "GiftVoucherSans",
+    fontSize: 10,
+    color: "#1e293b",
+    backgroundColor: "#ffffff",
+    paddingTop: 36,
+    paddingBottom: 40,
+    paddingHorizontal: 44,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 22,
+  },
+  logo: {
+    width: 56,
+    height: 56,
+    objectFit: "contain",
+  },
+  logoFallback: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoFallbackText: {
+    color: "#ffffff",
+    fontSize: 22,
+    fontFamily: "GiftVoucherSans",
+    fontWeight: 600,
+  },
+  restaurantName: {
+    fontSize: 18,
+    fontFamily: "GiftVoucherSans",
+    fontWeight: 600,
+    color: "#0f172a",
+  },
+  contact: {
+    marginTop: 3,
+    fontSize: 9,
+    color: "#64748b",
+    maxWidth: 360,
+  },
+  coverWrap: {
+    height: 210,
+    borderRadius: 10,
+    overflow: "hidden",
+    marginBottom: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cover: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+  },
+  kicker: {
+    fontSize: 9,
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    color: "#64748b",
+    marginBottom: 4,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: "GiftVoucherSans",
+    fontWeight: 600,
+    color: "#0f172a",
+    marginBottom: 6,
+  },
+  amount: {
+    fontSize: 28,
+    fontFamily: "GiftVoucherSans",
+    fontWeight: 700,
+    marginBottom: 18,
+  },
+  grid: {
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+    paddingTop: 14,
+    marginBottom: 16,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 16,
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 9,
+    color: "#64748b",
+    width: "34%",
+  },
+  value: {
+    fontSize: 11,
+    fontFamily: "GiftVoucherSans",
+    fontWeight: 600,
+    color: "#0f172a",
+    width: "66%",
+    textAlign: "right",
+  },
+  message: {
+    marginTop: 4,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#f8fafc",
+    fontSize: 11,
+    lineHeight: 1.45,
+  },
+  terms: {
+    fontSize: 8.5,
+    lineHeight: 1.45,
+    color: "#475569",
+    marginBottom: 18,
+  },
+  footerBlock: {
+    marginTop: "auto",
+    alignItems: "center",
+  },
+  qr: {
+    width: 108,
+    height: 108,
+    marginBottom: 8,
+  },
+  code: {
+    fontSize: 13,
+    fontFamily: "GiftVoucherSans",
+    fontWeight: 600,
+    letterSpacing: 1.6,
+    marginBottom: 4,
+  },
+  qrHint: {
+    fontSize: 8,
+    color: "#64748b",
+    textAlign: "center",
+    maxWidth: 320,
+  },
+  footer: {
+    marginTop: 10,
+    fontSize: 8,
+    color: "#94a3b8",
+    textAlign: "center",
+  },
+});
+
+export type GiftVoucherPdfDocumentProps = {
+  presentation: GiftVoucherPresentation;
+  publicUrl: string;
+  logoDataUrl: string | null;
+  coverDataUrl: string | null;
+  qrDataUrl: string;
+};
+
+export function GiftVoucherPdfDocument({
+  presentation,
+  publicUrl,
+  logoDataUrl,
+  coverDataUrl,
+  qrDataUrl,
+}: GiftVoucherPdfDocumentProps) {
+  const initial = presentation.restaurantName.slice(0, 1).toUpperCase();
+  const rows: Array<{ label: string; value: string }> = [
+    { label: "Bénéficiaire", value: presentation.recipientName || "—" },
+  ];
+  if (presentation.includeBuyerOnPdf && presentation.buyerName) {
+    rows.push({ label: "Offert par", value: presentation.buyerName });
+  }
+  rows.push(
+    { label: "Expiration", value: formatGiftVoucherDate(presentation.expiresAt) },
+    { label: "Code", value: presentation.code },
+  );
+
+  return (
+    <Document
+      title={`${presentation.offerTitle} ${presentation.code}`}
+      author={presentation.restaurantName}
+      language="fr"
+    >
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header}>
+          {logoDataUrl ? (
+            // eslint-disable-next-line jsx-a11y/alt-text
+            <Image src={logoDataUrl} style={styles.logo} />
+          ) : (
+            <View style={[styles.logoFallback, { backgroundColor: presentation.accentColor }]}>
+              <Text style={styles.logoFallbackText}>{initial}</Text>
+            </View>
+          )}
+          <View>
+            <Text style={styles.restaurantName}>{presentation.restaurantName}</Text>
+            {presentation.footer ? <Text style={styles.contact}>{presentation.footer}</Text> : null}
+          </View>
+        </View>
+
+        <View style={[styles.coverWrap, { backgroundColor: presentation.accentColor }]}>
+          {coverDataUrl ? (
+            // eslint-disable-next-line jsx-a11y/alt-text
+            <Image src={coverDataUrl} style={styles.cover} />
+          ) : (
+            <Text style={{ color: presentation.foregroundColor, fontSize: 16, fontFamily: "GiftVoucherSans", fontWeight: 600 }}>
+              {presentation.offerTitle}
+            </Text>
+          )}
+        </View>
+
+        <Text style={styles.kicker}>Bon cadeau</Text>
+        <Text style={styles.title}>{presentation.offerTitle}</Text>
+        <Text style={[styles.amount, { color: presentation.accentColor }]}>
+          {formatCentsAsChf(presentation.initialAmountCents)}
+        </Text>
+
+        <View style={styles.grid}>
+          {rows.map((row) => (
+            <View key={row.label} style={styles.row}>
+              <Text style={styles.label}>{row.label}</Text>
+              <Text style={styles.value}>{row.value}</Text>
+            </View>
+          ))}
+        </View>
+
+        {presentation.message ? <Text style={styles.message}>{presentation.message}</Text> : null}
+
+        <Text style={styles.terms}>{presentation.terms}</Text>
+
+        <View style={styles.footerBlock}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
+          <Image src={qrDataUrl} style={styles.qr} />
+          <Text style={styles.code}>{presentation.code}</Text>
+          <Text style={styles.qrHint}>
+            Scannez ce QR pour consulter le solde et ajouter le bon à Apple Wallet. Il n’encaisse pas le bon.
+          </Text>
+          <Text style={styles.qrHint}>{publicUrl}</Text>
+          <Text style={styles.footer}>Document généré par ZenGrow</Text>
+        </View>
+      </Page>
+    </Document>
+  );
+}

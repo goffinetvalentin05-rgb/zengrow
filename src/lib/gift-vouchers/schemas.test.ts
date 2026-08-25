@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCreateGiftVoucherInput, parseLookupGiftVoucherCode, parseLookupGiftVoucherToken, parseRedeemGiftVoucherInput } from "@/src/lib/gift-vouchers/schemas";
+import { parseCreateGiftVoucherInput, parseGiftVoucherSettingsInput, parseLookupGiftVoucherCode, parseLookupGiftVoucherToken, parseRedeemGiftVoucherInput } from "@/src/lib/gift-vouchers/schemas";
 
 describe("parseCreateGiftVoucherInput", () => {
   it("accepte une création digitale minimale", () => {
@@ -90,6 +90,15 @@ describe("parseRedeemGiftVoucherInput", () => {
     expect(parsed.consumeAll).toBe(true);
     expect(parsed.amount).toBeUndefined();
   });
+
+  it("refuse plus de deux décimales", () => {
+    expect(() =>
+      parseRedeemGiftVoucherInput({
+        voucherId: "11111111-1111-4111-8111-111111111111",
+        amount: 60.123,
+      }),
+    ).toThrow(/deux décimales/);
+  });
 });
 
 describe("parseLookupGiftVoucherCode", () => {
@@ -111,5 +120,18 @@ describe("parseLookupGiftVoucherToken", () => {
   it("refuse un token inexistant / invalide", () => {
     expect(() => parseLookupGiftVoucherToken({ token: "ZG-8K4M-2P7Q" })).toThrow();
     expect(() => parseLookupGiftVoucherToken({ token: "" })).toThrow();
+  });
+});
+
+describe("parseGiftVoucherSettingsInput", () => {
+  it("accepte une couleur hex et ignore les vides", () => {
+    const parsed = parseGiftVoucherSettingsInput({
+      accentColor: "#1F7A6C",
+      displayName: "  ",
+      includeBuyerOnPdf: false,
+    });
+    expect(parsed.accentColor).toBe("#1F7A6C");
+    expect(parsed.displayName).toBeUndefined();
+    expect(parsed.includeBuyerOnPdf).toBe(false);
   });
 });

@@ -27,6 +27,16 @@ describe("applyRedeem", () => {
     });
   });
 
+  it("enchaîne 80 CHF puis 60 CHF puis 20 CHF", () => {
+    const after60 = applyRedeem(8000, 6000, NOW_ISO);
+    expect(after60).toEqual({ remainingAmountCents: 2000, status: "active", fullyUsedAt: null });
+    expect(applyRedeem(after60.remainingAmountCents, 2000, NOW_ISO)).toEqual({
+      remainingAmountCents: 0,
+      status: "used",
+      fullyUsedAt: NOW_ISO,
+    });
+  });
+
   it("refuse un montant nul", () => {
     expect(() => applyRedeem(5000, 0, NOW_ISO)).toThrow(/supérieur à 0/);
   });

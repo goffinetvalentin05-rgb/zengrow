@@ -14,7 +14,8 @@ export type RestaurantAssetFolder =
   | "gallery"
   | "sections"
   | "offers"
-  | "menus";
+  | "menus"
+  | "gift-vouchers";
 
 function randomSuffix(): string {
   return Math.random().toString(36).slice(2, 9);

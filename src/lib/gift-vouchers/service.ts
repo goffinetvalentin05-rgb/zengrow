@@ -27,6 +27,7 @@ import type {
   RedeemGiftVoucherInput,
 } from "@/src/lib/gift-vouchers/types";
 import type { GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
+import { notifyGiftVoucherWalletPass } from "@/src/lib/gift-vouchers/wallet/notify";
 
 const CODE_ATTEMPTS = 6;
 const UNIQUE_VIOLATION = "23505";
@@ -349,6 +350,7 @@ export async function redeemGiftVoucher(
     throw new GiftVoucherServiceError("Impossible d’utiliser ce bon.", 500);
   }
 
+  await notifyGiftVoucherWalletPass(voucherId);
   return getGiftVoucher(supabase, params.restaurantId, voucherId);
 }
 
@@ -589,6 +591,7 @@ export async function updateGiftVoucherStatus(
     throw new GiftVoucherServiceError("Action invalide.", 400);
   }
 
+  await notifyGiftVoucherWalletPass(voucher.id);
   return getGiftVoucher(supabase, params.restaurantId, voucher.id);
 }
 

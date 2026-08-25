@@ -5,8 +5,15 @@ import { Camera, CheckCircle2, SwitchCamera, X } from "lucide-react";
 import { useDialogFocusTrap } from "@/src/components/dashboard/reservations/hooks/use-dialog-focus-trap";
 import DashboardPortal from "@/src/components/dashboard/ui/dashboard-portal";
 import Button from "@/src/components/ui/button";
+import Input from "@/src/components/ui/input";
 import type { GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
-import { formatChf } from "@/src/lib/gift-vouchers/money";
+import {
+  formatAmountInput,
+  formatChf,
+  parseAmountInput,
+  remainingAfterRedeem,
+  validateAmountInput,
+} from "@/src/lib/gift-vouchers/money";
 import { resolveScannedGiftVoucherPayload } from "@/src/lib/gift-vouchers/public-token";
 import { getRedeemBlockReason, scannerVoucherMessage } from "@/src/lib/gift-vouchers/redeem";
 import { cn } from "@/src/lib/utils";
@@ -18,7 +25,7 @@ type ScanGiftVoucherModalProps = {
 };
 
 type CameraErrorKind = "permission" | "unavailable" | "unsupported";
-type ScanPhase = "camera" | "result" | "confirm" | "success";
+type ScanPhase = "camera" | "result" | "amount" | "confirm" | "success";
 
 type LookupPayload = {
   voucher?: GiftCardRecord;
@@ -102,6 +109,8 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
   const [phase, setPhase] = useState<ScanPhase>("camera");
   const [voucher, setVoucher] = useState<GiftCardRecord | null>(null);
   const [validating, setValidating] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [usedAmountChf, setUsedAmountChf] = useState(0);
 
   useDialogFocusTrap(open, panelRef);
 
@@ -162,6 +171,8 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
         return;
       }
       setVoucher(payload.voucher);
+      setAmount("");
+      setUsedAmountChf(0);
       setPhase("result");
     } catch {
       setError("Impossible de rechercher ce bon. Vérifiez votre connexion.");
@@ -211,6 +222,8 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
       setErrorKind(null);
       setPhase("camera");
       setVoucher(null);
+      setAmount("");
+      setUsedAmountChf(0);
 
       try {
         const constraints: MediaStreamConstraints = {
@@ -309,6 +322,8 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
       setValidating(false);
       setPhase("camera");
       setVoucher(null);
+      setAmount("");
+      setUsedAmountChf(0);
       validatingRef.current = false;
       return;
     }
@@ -323,8 +338,33 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
     if (next) void startCamera(next.deviceId);
   }
 
-  async function validateVoucher() {
+  function goToAmount() {
+    if (!voucher) return;
+    setError(null);
+    setAmount("");
+    setPhase("amount");
+  }
+
+  function goToConfirm() {
     if (!voucher || validatingRef.current) return;
+    const validated = validateAmountInput(amount, voucher.balanceChf);
+    if ("error" in validated) {
+      setError(validated.error);
+      return;
+    }
+    setAmount(formatAmountInput(validated.amount));
+    setError(null);
+    setPhase("confirm");
+  }
+
+  async function confirmRedeem() {
+    if (!voucher || validatingRef.current) return;
+    const validated = validateAmountInput(amount, voucher.balanceChf);
+    if ("error" in validated) {
+      setError(validated.error);
+      setPhase("amount");
+      return;
+    }
     validatingRef.current = true;
     setValidating(true);
     setError(null);
@@ -332,7 +372,7 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
       const response = await fetch("/api/gift-vouchers/redeem", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voucherId: voucher.id, consumeAll: true }),
+        body: JSON.stringify({ voucherId: voucher.id, amount: validated.amount }),
       });
       const payload = (await response.json().catch(() => null)) as {
         voucher?: GiftCardRecord;
@@ -352,15 +392,16 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
           return;
         }
         setError(message);
-        setPhase("result");
+        setPhase("amount");
         return;
       }
+      setUsedAmountChf(validated.amount);
       setVoucher(payload.voucher);
       setPhase("success");
       await onRedeemed?.(payload.voucher);
     } catch {
       setError("Impossible de valider ce bon. Vérifiez votre connexion.");
-      setPhase("result");
+      setPhase("amount");
     } finally {
       validatingRef.current = false;
       setValidating(false);
@@ -377,15 +418,37 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
         expiresAt: voucher.expiresAt ?? null,
       })
     : null;
-  const canValidate = voucher != null && block == null;
+  const canUse = voucher != null && block == null;
   const usedLabel = voucher ? usedAtLabel(voucher) : null;
-  const lastRedemption = voucher?.usageHistory.find((event) => event.kind === "redemption");
-  const validatedAmountLabel = lastRedemption
-    ? formatChf(lastRedemption.amountUsedChf)
-    : voucher
-      ? formatChf(voucher.amountChf)
-      : "";
+  const parsedAmount = parseAmountInput(amount);
+  const amountCheck = voucher ? validateAmountInput(amount, voucher.balanceChf) : null;
+  const amountValid = amountCheck != null && !("error" in amountCheck);
+  const remainingAfter =
+    voucher && parsedAmount != null ? remainingAfterRedeem(voucher.balanceChf, parsedAmount) : null;
+  const fullyUsed = voucher != null && (voucher.status === "used" || voucher.balanceChf <= 0);
   const showCamera = phase === "camera";
+  const title =
+    phase === "success"
+      ? fullyUsed
+        ? "Bon entièrement utilisé"
+        : "Bon utilisé"
+      : phase === "confirm"
+        ? "Confirmer"
+        : phase === "amount"
+          ? "Utiliser ce bon"
+          : "Scanner un bon";
+  const subtitle =
+    phase === "camera"
+      ? "Placez le QR code dans le cadre"
+      : phase === "amount"
+        ? "Saisissez le montant réellement utilisé."
+        : phase === "confirm"
+          ? "Vérifiez le montant avant de valider."
+          : phase === "success"
+            ? fullyUsed
+              ? "Ce bon a été entièrement utilisé."
+              : "Le crédit restant pourra être utilisé plus tard."
+            : "Vérifiez les informations avant utilisation.";
 
   return (
     <DashboardPortal>
@@ -406,15 +469,9 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
           <header className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-4 pt-[max(1rem,env(safe-area-inset-top))]">
             <div>
               <h2 id="scan-gift-voucher-title" className="text-lg font-semibold">
-                {phase === "success" ? "Bon validé" : phase === "confirm" ? "Confirmer" : "Scanner un bon"}
+                {title}
               </h2>
-              <p className="mt-1 text-sm text-white/75">
-                {phase === "camera"
-                  ? "Placez le QR code dans le cadre"
-                  : phase === "success"
-                    ? "Ce bon ne peut plus être utilisé."
-                    : "Vérifiez les informations avant validation."}
-              </p>
+              <p className="mt-1 text-sm text-white/75">{subtitle}</p>
             </div>
             <button
               type="button"
@@ -452,13 +509,21 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
                 {phase === "success" && voucher ? (
                   <div className="rounded-3xl border border-emerald-400/30 bg-white/10 px-5 py-6">
                     <div className="flex items-center gap-3">
-                      <CheckCircle2 className="h-8 w-8 text-emerald-300" strokeWidth={2} aria-hidden />
-                      <p className="text-lg font-semibold">Bon utilisé avec succès</p>
+                      <CheckCircle2 className="h-8 w-8 shrink-0 text-emerald-300" strokeWidth={2} aria-hidden />
+                      <div>
+                        <p className="text-lg font-semibold">
+                          {fullyUsed ? "Ce bon a été entièrement utilisé" : "Bon utilisé avec succès"}
+                        </p>
+                        <p className="mt-1 text-sm text-white/80">
+                          {formatChf(usedAmountChf)} utilisés
+                          {fullyUsed ? "" : ` · ${formatChf(voucher.balanceChf)} restants`}
+                        </p>
+                      </div>
                     </div>
                     <dl className="mt-5 divide-y divide-white/10">
-                      <Row label="Montant validé" value={validatedAmountLabel} />
+                      <Row label="Montant utilisé" value={formatChf(usedAmountChf)} />
                       <Row label="Solde restant" value={formatChf(voucher.balanceChf)} />
-                      {usedAtLabel(voucher) ? <Row label="Utilisé le" value={usedAtLabel(voucher)!} /> : null}
+                      {fullyUsed && usedLabel ? <Row label="Utilisé le" value={usedLabel} /> : null}
                     </dl>
                   </div>
                 ) : null}
@@ -476,8 +541,8 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
                       <p className={cn("text-sm font-semibold", status?.tone)}>{status?.label}</p>
                     </div>
                     <dl className="mt-4 divide-y divide-white/10">
-                      <Row label="Valeur" value={formatChf(voucher.amountChf)} />
-                      <Row label="Solde restant" value={formatChf(voucher.balanceChf)} />
+                      <Row label="Valeur initiale" value={formatChf(voucher.amountChf)} />
+                      <Row label="Crédit disponible" value={formatChf(voucher.balanceChf)} />
                       <Row label="Client" value={voucher.buyerName?.trim() || voucher.recipientName?.trim() || "—"} />
                       <Row label="Créé le" value={voucher.purchasedLabel} />
                       <Row label="Expiration" value={voucher.expiresLabel} />
@@ -489,10 +554,77 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
                     {block === "expired" ? (
                       <p className="mt-4 text-sm font-medium text-red-200">Ce bon a expiré.</p>
                     ) : null}
-                    {phase === "confirm" ? (
-                      <p className="mt-4 text-sm text-white/80">
-                        Confirmer la validation de {formatChf(voucher.balanceChf)} ? Cette action est définitive.
-                      </p>
+
+                    {canUse && phase === "amount" ? (
+                      <div className="mt-5 space-y-3 border-t border-white/10 pt-5">
+                        <label htmlFor="scan-redeem-amount" className="text-sm font-medium text-white">
+                          Montant à utiliser
+                        </label>
+                        <div className="relative">
+                          <Input
+                            id="scan-redeem-amount"
+                            value={amount}
+                            onChange={(event) => {
+                              setAmount(event.target.value);
+                              setError(null);
+                            }}
+                            placeholder="0.00"
+                            inputMode="decimal"
+                            enterKeyHint="done"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            autoFocus
+                            className="min-h-14 border-white/25 bg-white/10 pr-16 text-lg tabular-nums text-white placeholder:text-white/35 hover:border-white/40 focus:border-white/60 focus:ring-white/25 focus:shadow-none"
+                            aria-invalid={amount.trim() && !amountValid ? true : undefined}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                goToConfirm();
+                              }
+                            }}
+                          />
+                          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-semibold text-white/60">
+                            CHF
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          className="flex min-h-12 w-full items-center justify-center rounded-xl border border-white/25 bg-white/10 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-50"
+                          disabled={busy}
+                          onClick={() => {
+                            setAmount(formatAmountInput(voucher.balanceChf));
+                            setError(null);
+                          }}
+                        >
+                          Utiliser tout le solde
+                        </button>
+                        {amountValid && remainingAfter != null ? (
+                          <p className="text-sm font-medium text-emerald-200">
+                            Solde restant après utilisation : {formatChf(remainingAfter)}
+                          </p>
+                        ) : null}
+                        {amount.trim() && !amountValid && amountCheck && "error" in amountCheck ? (
+                          <p className="text-sm font-medium text-red-200">{amountCheck.error}</p>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    {canUse && phase === "confirm" && parsedAmount != null && remainingAfter != null ? (
+                      <div className="mt-5 space-y-2 border-t border-white/10 pt-5 text-sm">
+                        <div className="flex justify-between gap-3 py-1">
+                          <span className="text-white/60">Crédit actuel</span>
+                          <span className="font-semibold">{formatChf(voucher.balanceChf)}</span>
+                        </div>
+                        <div className="flex justify-between gap-3 py-1">
+                          <span className="text-white/60">Montant à utiliser</span>
+                          <span className="font-semibold">{formatChf(parsedAmount)}</span>
+                        </div>
+                        <div className="flex justify-between gap-3 border-t border-white/10 pt-3">
+                          <span className="text-white/60">Nouveau solde</span>
+                          <span className="text-base font-semibold">{formatChf(remainingAfter)}</span>
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 ) : null}
@@ -501,7 +633,12 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
           </div>
 
           <footer className="relative z-10 space-y-3 bg-gradient-to-t from-black via-black/90 to-transparent px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-6">
-            {error ? <p className="text-center text-sm font-medium text-red-200">{error}</p> : null}
+            {error && phase !== "amount" ? (
+              <p className="text-center text-sm font-medium text-red-200">{error}</p>
+            ) : null}
+            {error && phase === "amount" && !(amount.trim() && !amountValid) ? (
+              <p className="text-center text-sm font-medium text-red-200">{error}</p>
+            ) : null}
 
             {showCamera ? (
               <div className="flex flex-col gap-2">
@@ -533,18 +670,15 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
 
             {phase === "result" && voucher ? (
               <div className="flex flex-col gap-2">
-                {canValidate ? (
+                {canUse ? (
                   <Button
                     type="button"
                     size="lg"
                     className="min-h-12 w-full text-base"
                     disabled={busy}
-                    onClick={() => {
-                      setError(null);
-                      setPhase("confirm");
-                    }}
+                    onClick={goToAmount}
                   >
-                    Valider ce bon
+                    Utiliser ce bon
                   </Button>
                 ) : null}
                 <button
@@ -557,24 +691,52 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
               </div>
             ) : null}
 
+            {phase === "amount" && voucher ? (
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  size="lg"
+                  className="min-h-12 w-full text-base"
+                  disabled={busy || !amountValid}
+                  onClick={goToConfirm}
+                >
+                  Continuer
+                </Button>
+                <button
+                  type="button"
+                  className="flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-medium text-white/70 hover:text-white"
+                  disabled={busy}
+                  onClick={() => {
+                    setError(null);
+                    setPhase("result");
+                  }}
+                >
+                  Retour
+                </button>
+              </div>
+            ) : null}
+
             {phase === "confirm" ? (
               <div className="flex flex-col gap-2">
                 <Button
                   type="button"
                   size="lg"
                   className="min-h-12 w-full text-base"
-                  disabled={busy}
-                  onClick={() => void validateVoucher()}
+                  disabled={busy || !amountValid}
+                  onClick={() => void confirmRedeem()}
                 >
-                  {validating ? "Validation…" : "Confirmer la validation"}
+                  {validating ? "Validation…" : "Confirmer l’utilisation"}
                 </Button>
                 <button
                   type="button"
                   className="flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-medium text-white/70 hover:text-white"
                   disabled={busy}
-                  onClick={() => setPhase("result")}
+                  onClick={() => {
+                    setError(null);
+                    setPhase("amount");
+                  }}
                 >
-                  Retour
+                  Modifier le montant
                 </button>
               </div>
             ) : null}

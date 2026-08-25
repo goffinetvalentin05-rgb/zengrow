@@ -8,7 +8,7 @@ import { useDialogFocusTrap } from "@/src/components/dashboard/reservations/hook
 import DashboardPortal from "@/src/components/dashboard/ui/dashboard-portal";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
-import { formatChf } from "@/src/lib/gift-vouchers/money";
+import { formatAmountInput, formatChf, parseAmountInput, remainingAfterRedeem, validateAmountInput } from "@/src/lib/gift-vouchers/money";
 import { getRedeemBlockReason, redeemErrorMessage } from "@/src/lib/gift-vouchers/redeem";
 import { cn } from "@/src/lib/utils";
 
@@ -34,18 +34,6 @@ type RedeemPayload = {
   voucher?: GiftCardRecord;
   error?: string;
 };
-
-function formatAmountInput(value: number): string {
-  return value.toFixed(2);
-}
-
-function parseAmountInput(value: string): number | null {
-  const normalized = value.trim().replace(/\s/g, "").replace(",", ".");
-  if (!normalized) return null;
-  const amount = Number(normalized);
-  if (!Number.isFinite(amount)) return null;
-  return amount;
-}
 
 function VoucherPreview({ card }: { card: GiftCardRecord }) {
   return (
@@ -179,23 +167,24 @@ export default function RedeemGiftVoucherModal({
 
   function goToConfirm() {
     if (!voucher) return;
-    const parsed = parseAmountInput(amount);
-    if (parsed == null || parsed <= 0) {
-      setFormError("Le montant doit être supérieur à 0.");
+    const validated = validateAmountInput(amount, voucher.balanceChf);
+    if ("error" in validated) {
+      setFormError(validated.error);
       return;
     }
-    if (parsed > voucher.balanceChf + 1e-9) {
-      setFormError("Le montant dépasse le solde restant.");
-      return;
-    }
+    setAmount(formatAmountInput(validated.amount));
     setFormError(null);
     setStep("confirm");
   }
 
   async function confirmRedeem() {
     if (!voucher || busy) return;
-    const parsed = parseAmountInput(amount);
-    if (parsed == null) return;
+    const validated = validateAmountInput(amount, voucher.balanceChf);
+    if ("error" in validated) {
+      setFormError(validated.error);
+      setStep("amount");
+      return;
+    }
     setBusy(true);
     setFormError(null);
     try {
@@ -205,7 +194,7 @@ export default function RedeemGiftVoucherModal({
         body: JSON.stringify({
           voucherId: voucher.id,
           code: voucher.code,
-          amount: parsed,
+          amount: validated.amount,
         }),
       });
       const payload = (await response.json().catch(() => null)) as RedeemPayload | null;
@@ -214,7 +203,7 @@ export default function RedeemGiftVoucherModal({
         setStep("amount");
         return;
       }
-      setUsedAmountChf(parsed);
+      setUsedAmountChf(validated.amount);
       setVoucher(payload.voucher);
       setStep("success");
       await onRedeemed(payload.voucher);
@@ -230,7 +219,7 @@ export default function RedeemGiftVoucherModal({
 
   const parsedAmount = parseAmountInput(amount);
   const remainingAfter =
-    voucher && parsedAmount != null ? Math.max(0, voucher.balanceChf - parsedAmount) : null;
+    voucher && parsedAmount != null ? remainingAfterRedeem(voucher.balanceChf, parsedAmount) : null;
   const title =
     step === "success" ? "Bon utilisé avec succès" : step === "confirm" ? "Confirmer l’utilisation" : "Utiliser un bon";
 
@@ -364,6 +353,11 @@ export default function RedeemGiftVoucherModal({
                     >
                       Utiliser tout le solde
                     </Button>
+                    {parsedAmount != null && remainingAfter != null && remainingAfter >= 0 ? (
+                      <p className="text-sm font-medium text-zg-fg">
+                        Solde restant après utilisation : {formatChf(remainingAfter)}
+                      </p>
+                    ) : null}
                     {formError ? <p className="text-sm font-medium text-zg-danger">{formError}</p> : null}
                   </div>
                 ) : null}
@@ -429,7 +423,7 @@ export default function RedeemGiftVoucherModal({
                     type="button"
                     size="lg"
                     className="min-h-12 w-full text-base"
-                    disabled={busy}
+                    disabled={busy || parsedAmount == null || remainingAfter == null || remainingAfter < 0}
                     onClick={goToConfirm}
                   >
                     Continuer
