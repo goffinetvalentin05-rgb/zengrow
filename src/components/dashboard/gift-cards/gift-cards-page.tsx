@@ -45,6 +45,11 @@ export default function GiftCardsPage({
   const router = useRouter();
   const showToast = useDashboardToast();
   const [cards, setCards] = useState(initialCards);
+  const [seenInitialCards, setSeenInitialCards] = useState(initialCards);
+  if (seenInitialCards !== initialCards) {
+    setSeenInitialCards(initialCards);
+    setCards(initialCards);
+  }
   const [filter, setFilter] = useState<GiftCardTypeFilter>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -54,10 +59,6 @@ export default function GiftCardsPage({
   const [redeemVoucher, setRedeemVoucher] = useState<GiftCardRecord | null>(null);
   const [scanOpen, setScanOpen] = useState(initialScan);
   const [busyAction, setBusyAction] = useState<GiftCardDrawerAction | null>(null);
-
-  useEffect(() => {
-    setCards(initialCards);
-  }, [initialCards]);
 
   useEffect(() => {
     if (!initialRedeemToken) return;

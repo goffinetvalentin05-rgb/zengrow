@@ -112,6 +112,24 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
   const [validating, setValidating] = useState(false);
   const [amount, setAmount] = useState("");
   const [usedAmountChf, setUsedAmountChf] = useState(0);
+  const [seenOpen, setSeenOpen] = useState(open);
+  if (seenOpen !== open) {
+    setSeenOpen(open);
+    if (!open) {
+      setError(null);
+      setErrorKind(null);
+      setLookingUp(false);
+      setValidating(false);
+      setPhase("camera");
+      setVoucher(null);
+      setAmount("");
+      setUsedAmountChf(0);
+    }
+  }
+
+  useEffect(() => {
+    if (!open) validatingRef.current = false;
+  }, [open]);
 
   useDialogFocusTrap(open, panelRef);
 
@@ -184,7 +202,9 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
     }
   }, []);
 
-  lookupRawRef.current = lookupRaw;
+  useEffect(() => {
+    lookupRawRef.current = lookupRaw;
+  }, [lookupRaw]);
 
   const onDecoded = useCallback(
     async (raw: string) => {
@@ -205,7 +225,9 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
   );
 
   const onDecodedRef = useRef(onDecoded);
-  onDecodedRef.current = onDecoded;
+  useEffect(() => {
+    onDecodedRef.current = onDecoded;
+  }, [onDecoded]);
 
   const startCamera = useCallback(
     async (preferredDeviceId?: string | null) => {
@@ -317,19 +339,17 @@ export default function ScanGiftVoucherModal({ open, onClose, onRedeemed }: Scan
   useEffect(() => {
     if (!open) {
       stopCamera();
-      setError(null);
-      setErrorKind(null);
-      setLookingUp(false);
-      setValidating(false);
-      setPhase("camera");
-      setVoucher(null);
-      setAmount("");
-      setUsedAmountChf(0);
-      validatingRef.current = false;
       return;
     }
-    void startCamera(null);
-    return () => stopCamera();
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (!cancelled) void startCamera(null);
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      stopCamera();
+    };
   }, [open, startCamera, stopCamera]);
 
   function switchCamera() {

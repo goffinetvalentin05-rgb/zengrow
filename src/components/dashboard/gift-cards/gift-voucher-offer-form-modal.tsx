@@ -87,13 +87,16 @@ export default function GiftVoucherOfferFormModal({
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      setForm(fromOffer(offer));
-      setError(null);
-    }
-  }, [open, offer]);
+  const formKey = `${open ? "open" : "closed"}:${offer?.id ?? "new"}`;
+  const [seenFormKey, setSeenFormKey] = useState(formKey);
+  if (open && seenFormKey !== formKey) {
+    setSeenFormKey(formKey);
+    setForm(fromOffer(offer));
+    setError(null);
+  }
+  if (!open && seenFormKey !== "closed") {
+    setSeenFormKey("closed");
+  }
 
   useDialogFocusTrap(open, panelRef);
 

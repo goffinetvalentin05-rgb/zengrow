@@ -74,7 +74,15 @@ export function GiftVoucherPdfDocument({
           </View>
         ) : (
           <View style={[styles.coverFallback, { backgroundColor: presentation.accentColor }]}>
-            <Text style={{ color: presentation.foregroundColor, fontSize: 16, fontFamily, fontWeight: 600 }}>
+            <Text
+              style={{
+                color: presentation.foregroundColor,
+                fontSize: 16,
+                fontFamily,
+                fontWeight: 600,
+                textAlign: "center",
+              }}
+            >
               {heading}
             </Text>
           </View>
@@ -197,6 +205,7 @@ function makeStyles(fontFamily: string) {
       marginBottom: 22,
       alignItems: "center",
       justifyContent: "center",
+      paddingHorizontal: 20,
     },
     kicker: {
       fontSize: 9,

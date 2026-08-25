@@ -148,6 +148,9 @@ create policy gift_voucher_offers_owner_update
     )
   );
 
+-- PostgreSQL n’autorise pas CREATE OR REPLACE si le type de retour change.
+drop function if exists public.get_gift_voucher_by_public_token(text);
+
 -- Lecture publique étendue : snapshots d’offre, sans données sensibles.
 create or replace function public.get_gift_voucher_by_public_token(p_token text)
 returns table (
@@ -214,6 +217,7 @@ revoke all on function public.get_gift_voucher_by_public_token(text) from public
 grant execute on function public.get_gift_voucher_by_public_token(text) to anon, authenticated;
 
 drop function if exists public.submit_gift_voucher_request(text, text, text, text, text, text, text, text, text);
+drop function if exists public.submit_gift_voucher_request(text, text, text, text, text, text, text, text, text, uuid);
 
 create or replace function public.submit_gift_voucher_request(
   p_slug text,

@@ -128,10 +128,12 @@ export default function RedeemGiftVoucherModal({
     }
   }, []);
 
-  useEffect(() => {
-    if (!open) return;
-    resetState(initialCode, initialVoucher);
-  }, [open, initialCode, initialVoucher, resetState]);
+  const resetKey = open ? `${initialCode}:${initialVoucher?.id ?? ""}` : "";
+  const [seenResetKey, setSeenResetKey] = useState(resetKey);
+  if (seenResetKey !== resetKey) {
+    setSeenResetKey(resetKey);
+    if (open) resetState(initialCode, initialVoucher);
+  }
 
   useDialogFocusTrap(open, panelRef);
 

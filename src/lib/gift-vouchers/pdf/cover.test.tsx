@@ -84,7 +84,7 @@ describe("recadrage couverture PDF", () => {
   it("produit toujours le ratio bannière, sans étirement, pour tous les formats", async () => {
     mkdirSync(OUT_DIR, { recursive: true });
     const cases = [
-      { name: "horizontal", buffer: await solid(1600, 900, { r: 20, g: 80, b: 180 }) },
+      { name: "horizontal", buffer: await solid(1600, 900, { r: 232, g: 121, b: 32 }) },
       { name: "carre", buffer: await solid(900, 900, { r: 40, g: 140, b: 90 }) },
       { name: "vertical", buffer: await stripedVertical() },
       { name: "tres-grande", buffer: await solid(4000, 1800, { r: 90, g: 40, b: 160 }) },
