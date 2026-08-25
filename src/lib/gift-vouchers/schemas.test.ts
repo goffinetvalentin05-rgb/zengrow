@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCreateGiftVoucherInput } from "@/src/lib/gift-vouchers/schemas";
+import { parseCreateGiftVoucherInput, parseLookupGiftVoucherCode, parseRedeemGiftVoucherInput } from "@/src/lib/gift-vouchers/schemas";
 
 describe("parseCreateGiftVoucherInput", () => {
   it("accepte une création digitale minimale", () => {
@@ -53,5 +53,42 @@ describe("parseCreateGiftVoucherInput", () => {
       restaurantId: "11111111-1111-1111-1111-111111111111",
     });
     expect(parsed).not.toHaveProperty("restaurantId");
+  });
+});
+
+describe("parseRedeemGiftVoucherInput", () => {
+  it("accepte un encaissement par code", () => {
+    const parsed = parseRedeemGiftVoucherInput({
+      code: "zg-8k4m-2p7q",
+      amount: "35.00",
+      restaurantId: "11111111-1111-1111-1111-111111111111",
+    });
+    expect(parsed.code).toBe("ZG-8K4M-2P7Q");
+    expect(parsed.amount).toBe(35);
+    expect(parsed).not.toHaveProperty("restaurantId");
+  });
+
+  it("accepte une virgule suisse et un voucherId", () => {
+    const parsed = parseRedeemGiftVoucherInput({
+      voucherId: "11111111-1111-4111-8111-111111111111",
+      amount: "35,50",
+    });
+    expect(parsed.voucherId).toBe("11111111-1111-4111-8111-111111111111");
+    expect(parsed.amount).toBe(35.5);
+  });
+
+  it("refuse un montant nul ou manquant d’identifiant", () => {
+    expect(() => parseRedeemGiftVoucherInput({ code: "ZG-8K4M-2P7Q", amount: 0 })).toThrow();
+    expect(() => parseRedeemGiftVoucherInput({ amount: 20 })).toThrow();
+  });
+});
+
+describe("parseLookupGiftVoucherCode", () => {
+  it("normalise le code recherché", () => {
+    expect(parseLookupGiftVoucherCode({ code: "zg 8k4m 2p7q" })).toBe("ZG-8K4M-2P7Q");
+  });
+
+  it("refuse un code inconnu / invalide", () => {
+    expect(() => parseLookupGiftVoucherCode({ code: "ABC" })).toThrow();
   });
 });

@@ -1,5 +1,10 @@
 import { z } from "zod";
-import type { CreateGiftVoucherInput, GiftVoucherStatusAction } from "@/src/lib/gift-vouchers/types";
+import { normalizeGiftVoucherCode } from "@/src/lib/gift-vouchers/code";
+import type {
+  CreateGiftVoucherInput,
+  GiftVoucherStatusAction,
+  RedeemGiftVoucherInput,
+} from "@/src/lib/gift-vouchers/types";
 
 function emptyToUndefined(value: unknown): unknown {
   if (value === "" || value === null || value === undefined) return undefined;
@@ -53,4 +58,65 @@ export const giftVoucherStatusActionSchema = z.object({
 
 export function parseGiftVoucherStatusAction(payload: unknown): GiftVoucherStatusAction {
   return giftVoucherStatusActionSchema.parse(payload).action;
+}
+
+const chfAmountSchema = z.preprocess((value) => {
+  if (typeof value === "string") {
+    const trimmed = value.trim().replace(/\s/g, "").replace(",", ".");
+    return trimmed.length === 0 ? value : trimmed;
+  }
+  return value;
+}, z.coerce.number().positive("Le montant doit être supérieur à 0.").max(10_000, "Le montant ne peut pas dépasser 10’000 CHF."));
+
+export const redeemGiftVoucherSchema = z
+  .object({
+    code: z.preprocess(emptyToUndefined, z.string().optional()),
+    voucherId: z.preprocess(emptyToUndefined, z.string().uuid("Bon cadeau introuvable.").optional()),
+    amount: chfAmountSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (!data.code && !data.voucherId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["code"],
+        message: "Indiquez le code du bon.",
+      });
+      return;
+    }
+    if (data.code && !normalizeGiftVoucherCode(data.code)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["code"],
+        message: "Ce bon n’existe pas.",
+      });
+    }
+  });
+
+export function parseRedeemGiftVoucherInput(payload: unknown): RedeemGiftVoucherInput {
+  const parsed = redeemGiftVoucherSchema.parse(payload);
+  const code = parsed.code ? (normalizeGiftVoucherCode(parsed.code) ?? undefined) : undefined;
+  return {
+    amount: parsed.amount,
+    voucherId: parsed.voucherId,
+    code,
+  };
+}
+
+export const lookupGiftVoucherSchema = z
+  .object({
+    code: z.string().min(1, "Indiquez le code du bon."),
+  })
+  .superRefine((data, ctx) => {
+    if (!normalizeGiftVoucherCode(data.code)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["code"],
+        message: "Ce bon n’existe pas.",
+      });
+    }
+  })
+  .transform((data) => normalizeGiftVoucherCode(data.code)!);
+
+export function parseLookupGiftVoucherCode(payload: unknown): string {
+  return lookupGiftVoucherSchema.parse(payload);
 }

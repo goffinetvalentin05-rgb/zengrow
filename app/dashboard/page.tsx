@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Gift } from "lucide-react";
+import { Gift, ScanLine } from "lucide-react";
 import {
   DashboardHomeMetrics,
   DashboardHomeMetricsSkeleton,
@@ -18,10 +18,18 @@ export default async function DashboardPage() {
         subtitle="Suivez vos bons cadeaux, vos ventes et votre base d’acheteurs."
         primaryAction={{
           kind: "link",
-          href: "/dashboard/gift-vouchers",
-          label: "Créer un bon",
-          icon: <Gift className="h-4 w-4" strokeWidth={2} />,
+          href: "/dashboard/gift-vouchers?redeem=1",
+          label: "Utiliser un bon",
+          icon: <ScanLine className="h-4 w-4" strokeWidth={2} />,
         }}
+        secondaryActions={[
+          {
+            kind: "link",
+            href: "/dashboard/gift-vouchers",
+            label: "Créer un bon",
+            icon: <Gift className="h-4 w-4" strokeWidth={2} />,
+          },
+        ]}
       />
 
       <section aria-labelledby="dashboard-stats-heading" className="mt-2 space-y-4">

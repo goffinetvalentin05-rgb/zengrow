@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ScanLine } from "lucide-react";
 import CreateGiftCardModal from "@/src/components/dashboard/gift-cards/create-gift-card-modal";
 import GiftCardDetailDrawer from "@/src/components/dashboard/gift-cards/gift-card-detail-drawer";
 import GiftCardTable from "@/src/components/dashboard/gift-cards/gift-card-table";
+import RedeemGiftVoucherModal from "@/src/components/dashboard/gift-cards/redeem-gift-voucher-modal";
 import type {
   GiftCardDrawerAction,
   GiftCardRecord,
@@ -24,9 +25,15 @@ const FILTER_TABS: { id: GiftCardTypeFilter; label: string }[] = [
 
 type GiftCardsPageProps = {
   initialCards: GiftCardRecord[];
+  initialRedeem?: boolean;
+  initialRedeemCode?: string;
 };
 
-export default function GiftCardsPage({ initialCards }: GiftCardsPageProps) {
+export default function GiftCardsPage({
+  initialCards,
+  initialRedeem = false,
+  initialRedeemCode = "",
+}: GiftCardsPageProps) {
   const router = useRouter();
   const showToast = useDashboardToast();
   const [cards, setCards] = useState(initialCards);
@@ -34,6 +41,9 @@ export default function GiftCardsPage({ initialCards }: GiftCardsPageProps) {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [redeemOpen, setRedeemOpen] = useState(initialRedeem);
+  const [redeemCode, setRedeemCode] = useState(initialRedeemCode);
+  const [redeemVoucher, setRedeemVoucher] = useState<GiftCardRecord | null>(null);
   const [busyAction, setBusyAction] = useState<GiftCardDrawerAction | null>(null);
 
   useEffect(() => {
@@ -81,10 +91,29 @@ export default function GiftCardsPage({ initialCards }: GiftCardsPageProps) {
     }
   }
 
+  function openRedeem(options?: { code?: string; voucher?: GiftCardRecord | null }) {
+    setRedeemCode(options?.code ?? "");
+    setRedeemVoucher(options?.voucher ?? null);
+    setRedeemOpen(true);
+  }
+
+  async function handleRedeemed(voucher: GiftCardRecord) {
+    setCards((prev) => {
+      const exists = prev.some((card) => card.id === voucher.id);
+      if (!exists) return [voucher, ...prev];
+      return prev.map((card) => (card.id === voucher.id ? voucher : card));
+    });
+    router.refresh();
+  }
+
   async function handleAction(action: GiftCardDrawerAction) {
     if (!selected) return;
     if (action === "resend") {
       showToast({ message: "L’envoi du bon arrivera plus tard." });
+      return;
+    }
+    if (action === "redeem") {
+      openRedeem({ voucher: selected, code: selected.code });
       return;
     }
 
@@ -102,12 +131,7 @@ export default function GiftCardsPage({ initialCards }: GiftCardsPageProps) {
       }
       setCards((prev) => prev.map((card) => (card.id === payload.voucher!.id ? payload.voucher! : card)));
       showToast({
-        message:
-          action === "mark_used"
-            ? "Bon marqué comme utilisé."
-            : action === "disable"
-              ? "Bon désactivé."
-              : "Bon réactivé.",
+        message: action === "disable" ? "Bon désactivé." : "Bon réactivé.",
         icon: CheckCircle2,
       });
       router.refresh();
@@ -125,9 +149,17 @@ export default function GiftCardsPage({ initialCards }: GiftCardsPageProps) {
         subtitle="Gérez tous vos bons digitaux et papier au même endroit."
         primaryAction={{
           kind: "button",
-          label: "+ Créer un bon",
-          onClick: () => setCreateOpen(true),
+          label: "Utiliser un bon",
+          icon: <ScanLine className="h-4 w-4" strokeWidth={2} />,
+          onClick: () => openRedeem(),
         }}
+        secondaryActions={[
+          {
+            kind: "button",
+            label: "+ Créer un bon",
+            onClick: () => setCreateOpen(true),
+          },
+        ]}
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -158,6 +190,18 @@ export default function GiftCardsPage({ initialCards }: GiftCardsPageProps) {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={handleCreated}
+      />
+      <RedeemGiftVoucherModal
+        open={redeemOpen}
+        initialCode={redeemCode}
+        initialVoucher={redeemVoucher}
+        onClose={() => {
+          setRedeemOpen(false);
+          setRedeemVoucher(null);
+          setRedeemCode("");
+        }}
+        onRedeemed={handleRedeemed}
+        onViewVoucher={(voucher) => setSelectedId(voucher.id)}
       />
     </section>
   );

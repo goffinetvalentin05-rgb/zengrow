@@ -1,4 +1,4 @@
-import { centsToChf } from "@/src/lib/gift-vouchers/money";
+import { centsToChf, formatChf } from "@/src/lib/gift-vouchers/money";
 import type {
   GiftVoucher,
   GiftVoucherStatus,
@@ -143,33 +143,43 @@ export function mapGiftVoucherTransactionRow(row: GiftVoucherTransactionRow): Gi
   };
 }
 
-export function mapTransactionToUsageEvent(tx: GiftVoucherTransaction): GiftCardUsageEvent {
-  return {
-    id: tx.id,
-    dateLabel: formatGiftVoucherDate(tx.createdAt),
-    amountUsedChf: tx.type === "redemption" ? centsToChf(tx.amountCents ?? 0) : 0,
-    remainingBalanceChf: centsToChf(tx.balanceAfterCents ?? 0),
-    kind: tx.type,
-    label: transactionLabel(tx),
-  };
-}
-
-function transactionLabel(tx: GiftVoucherTransaction): string {
-  if (tx.note?.trim()) return tx.note.trim();
-  switch (tx.type) {
+function transactionTitle(type: GiftVoucherTransactionType): string {
+  switch (type) {
     case "issued":
-      return "Bon émis";
+      return "Création";
     case "redemption":
-      return `${centsToChf(tx.amountCents ?? 0).toLocaleString("fr-CH")}\u00a0CHF utilisés`;
+      return "Utilisation";
     case "disabled":
-      return "Bon désactivé";
+      return "Désactivation";
     case "reactivated":
-      return "Bon réactivé";
+      return "Réactivation";
     case "adjustment":
       return "Ajustement";
     case "refund":
       return "Remboursement";
   }
+}
+
+function transactionAmountLabel(tx: GiftVoucherTransaction): string | null {
+  if (tx.amountCents == null) return null;
+  const formatted = formatChf(centsToChf(Math.abs(tx.amountCents)));
+  if (tx.type === "issued" || tx.type === "refund") return `+${formatted}`;
+  if (tx.type === "redemption") return `-${formatted}`;
+  return formatted;
+}
+
+export function mapTransactionToUsageEvent(tx: GiftVoucherTransaction): GiftCardUsageEvent {
+  const title = transactionTitle(tx.type);
+  return {
+    id: tx.id,
+    dateLabel: formatGiftVoucherDate(tx.createdAt),
+    title,
+    amountLabel: transactionAmountLabel(tx),
+    amountUsedChf: tx.type === "redemption" ? centsToChf(tx.amountCents ?? 0) : 0,
+    remainingBalanceChf: centsToChf(tx.balanceAfterCents ?? 0),
+    kind: tx.type,
+    label: tx.note?.trim() || title,
+  };
 }
 
 export function buyerDisplayName(voucher: GiftVoucher): string {
@@ -195,10 +205,14 @@ export function toGiftCardRecord(voucher: GiftVoucher, transactions: GiftVoucher
     status: voucher.status as GiftCardStatus,
     purchasedAt: voucher.issuedAt,
     purchasedLabel: formatGiftVoucherDate(voucher.issuedAt),
+    expiresAt: voucher.expiresAt,
     expiresLabel: formatGiftVoucherDate(voucher.expiresAt),
     qrPlaceholder: `QR-${voucher.code}`,
     usageHistory: [...transactions]
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      .sort((a, b) => {
+        const byDate = b.createdAt.localeCompare(a.createdAt);
+        return byDate !== 0 ? byDate : b.id.localeCompare(a.id);
+      })
       .map(mapTransactionToUsageEvent),
   };
 }

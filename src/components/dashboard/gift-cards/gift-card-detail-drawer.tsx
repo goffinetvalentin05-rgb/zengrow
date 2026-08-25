@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Ban, Mail, QrCode, RotateCcw, X } from "lucide-react";
+import { Ban, Mail, QrCode, RotateCcw, ScanLine, X } from "lucide-react";
 import GiftCardStatusBadge from "@/src/components/dashboard/gift-cards/gift-card-status-badge";
 import GiftCardTypeBadge from "@/src/components/dashboard/gift-cards/gift-card-type-badge";
 import type { GiftCardDrawerAction, GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
 import { formatChf } from "@/src/lib/gift-vouchers/money";
-import { canDisable, canMarkUsed, canReactivate } from "@/src/lib/gift-vouchers/status";
+import { canRedeem } from "@/src/lib/gift-vouchers/redeem";
+import { canDisable, canReactivate } from "@/src/lib/gift-vouchers/status";
 import { useDialogFocusTrap } from "@/src/components/dashboard/reservations/hooks/use-dialog-focus-trap";
 import DashboardPortal from "@/src/components/dashboard/ui/dashboard-portal";
 import Button from "@/src/components/ui/button";
@@ -60,10 +61,7 @@ export default function GiftCardDetailDrawer({
 
   if (!card) return null;
 
-  const latestBalance =
-    card.usageHistory.length > 0
-      ? card.usageHistory[card.usageHistory.length - 1]!.remainingBalanceChf
-      : card.balanceChf;
+  const canUse = canRedeem(card.status, Math.round(card.balanceChf * 100), card.expiresAt ?? null);
 
   return (
     <DashboardPortal>
@@ -153,18 +151,24 @@ export default function GiftCardDetailDrawer({
                       className="rounded-xl border border-zg-border bg-zg-surface-elevated/40 px-4 py-3"
                     >
                       <p className="text-sm font-medium text-zg-fg">{event.dateLabel}</p>
-                      <p className="mt-0.5 text-sm text-zg-text-muted">
-                        {event.label ??
-                          (event.amountUsedChf > 0
-                            ? `${formatChf(event.amountUsedChf)} utilisés`
-                            : "Mouvement")}
-                      </p>
+                      <p className="mt-0.5 text-sm text-zg-fg">{event.title ?? event.label ?? "Mouvement"}</p>
+                      {event.amountLabel ? (
+                        <p
+                          className={cn(
+                            "mt-0.5 text-sm font-semibold tabular-nums",
+                            event.kind === "redemption" ? "text-zg-danger" : "text-emerald-700",
+                          )}
+                        >
+                          {event.amountLabel}
+                        </p>
+                      ) : null}
+                      <p className="mt-1 text-sm text-zg-text-muted">Solde : {formatChf(event.remainingBalanceChf)}</p>
                     </li>
                   ))}
                 </ul>
               )}
               <p className="mt-3 text-sm font-medium text-zg-fg">
-                Solde restant : {formatChf(latestBalance)}
+                Solde restant : {formatChf(card.balanceChf)}
               </p>
             </section>
           </div>
@@ -181,16 +185,17 @@ export default function GiftCardDetailDrawer({
               <Mail className="h-4 w-4" strokeWidth={2} aria-hidden />
               {busyAction === "resend" ? "…" : "Renvoyer le bon"}
             </Button>
-            {canMarkUsed(card.status, Math.round(card.balanceChf * 100)) ? (
+            {canUse ? (
               <Button
                 type="button"
-                variant="secondary"
+                variant="primary"
                 size="sm"
                 className="w-full sm:w-auto"
                 disabled={busy}
-                onClick={() => onAction("mark_used")}
+                onClick={() => onAction("redeem")}
               >
-                {busyAction === "mark_used" ? "…" : "Marquer comme utilisé"}
+                <ScanLine className="h-4 w-4" strokeWidth={2} aria-hidden />
+                {busyAction === "redeem" ? "…" : "Utiliser le bon"}
               </Button>
             ) : null}
             {canDisable(card.status) ? (

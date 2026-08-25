@@ -5,9 +5,14 @@ import { requireRestaurantSession } from "@/src/lib/auth";
 import { GiftVoucherServiceError, listGiftVouchers } from "@/src/lib/gift-vouchers/service";
 import { createClient } from "@/src/lib/supabase/server";
 
-export default async function DashboardGiftVouchersPage() {
+type DashboardGiftVouchersPageProps = {
+  searchParams: Promise<{ redeem?: string; code?: string }>;
+};
+
+export default async function DashboardGiftVouchersPage({ searchParams }: DashboardGiftVouchersPageProps) {
   const { restaurant } = await requireRestaurantSession();
   const supabase = await createClient();
+  const params = await searchParams;
 
   let initialCards: GiftCardRecord[] = [];
   try {
@@ -19,7 +24,11 @@ export default async function DashboardGiftVouchersPage() {
 
   return (
     <DashboardContent>
-      <GiftCardsPage initialCards={initialCards} />
+      <GiftCardsPage
+        initialCards={initialCards}
+        initialRedeem={params.redeem === "1"}
+        initialRedeemCode={params.code?.trim() ?? ""}
+      />
     </DashboardContent>
   );
 }

@@ -4,6 +4,8 @@ export type GiftCardStatus = "draft" | "active" | "used" | "expired" | "disabled
 export type GiftCardUsageEvent = {
   id: string;
   dateLabel: string;
+  title?: string;
+  amountLabel?: string | null;
   amountUsedChf: number;
   remainingBalanceChf: number;
   kind?: string;
@@ -24,6 +26,7 @@ export type GiftCardRecord = {
   status: GiftCardStatus;
   purchasedAt: string;
   purchasedLabel: string;
+  expiresAt?: string | null;
   expiresLabel: string;
   qrPlaceholder: string;
   usageHistory: GiftCardUsageEvent[];
@@ -31,4 +34,4 @@ export type GiftCardRecord = {
 
 export type GiftCardTypeFilter = "all" | GiftCardType;
 
-export type GiftCardDrawerAction = "resend" | "mark_used" | "disable" | "reactivate";
+export type GiftCardDrawerAction = "resend" | "redeem" | "disable" | "reactivate";

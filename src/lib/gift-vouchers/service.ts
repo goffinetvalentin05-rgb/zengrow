@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { generateGiftVoucherCode } from "@/src/lib/gift-vouchers/code";
+import { generateGiftVoucherCode, normalizeGiftVoucherCode } from "@/src/lib/gift-vouchers/code";
 import {
   mapGiftVoucherRow,
   mapGiftVoucherTransactionRow,
@@ -9,13 +9,20 @@ import {
   type GiftVoucherTransactionRow,
 } from "@/src/lib/gift-vouchers/map";
 import { chfToCents } from "@/src/lib/gift-vouchers/money";
-import { parseCreateGiftVoucherInput, parseGiftVoucherStatusAction } from "@/src/lib/gift-vouchers/schemas";
+import { getRedeemBlockReason, redeemErrorMessage } from "@/src/lib/gift-vouchers/redeem";
+import {
+  parseCreateGiftVoucherInput,
+  parseGiftVoucherStatusAction,
+  parseLookupGiftVoucherCode,
+  parseRedeemGiftVoucherInput,
+} from "@/src/lib/gift-vouchers/schemas";
 import { applyMarkUsed, applyReactivate, canDisable, canMarkUsed, canReactivate } from "@/src/lib/gift-vouchers/status";
 import type {
   CreateGiftVoucherInput,
   GiftVoucher,
   GiftVoucherStatusAction,
   GiftVoucherTransaction,
+  RedeemGiftVoucherInput,
 } from "@/src/lib/gift-vouchers/types";
 import type { GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
 
@@ -160,10 +167,129 @@ export async function getGiftVoucher(
     throw new GiftVoucherServiceError(publicError(error, "Impossible de charger ce bon cadeau."), 500);
   }
   if (!data) {
-    throw new GiftVoucherServiceError("Bon cadeau introuvable.", 404);
+    throw new GiftVoucherServiceError("Ce bon n’existe pas.", 404);
   }
 
   return mapRowWithTransactions(data as GiftVoucherWithTransactionsRow);
+}
+
+export type GiftVoucherLookupResult = {
+  voucher: GiftCardRecord;
+  redeemable: boolean;
+  error: string | null;
+};
+
+export async function lookupGiftVoucherByCode(
+  supabase: SupabaseClient,
+  restaurantId: string,
+  payload: unknown,
+): Promise<GiftVoucherLookupResult> {
+  let code: string;
+  try {
+    code = parseLookupGiftVoucherCode(payload);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const message = firstZodMessage(error);
+      throw new GiftVoucherServiceError(message, message === "Ce bon n’existe pas." ? 404 : 400);
+    }
+    throw new GiftVoucherServiceError("Ce bon n’existe pas.", 404);
+  }
+
+  const { data, error } = await supabase
+    .from("gift_vouchers")
+    .select(`${VOUCHER_SELECT}, gift_voucher_transactions!voucher_id (${TRANSACTION_SELECT})`)
+    .eq("restaurant_id", restaurantId)
+    .eq("code", code)
+    .maybeSingle();
+
+  if (error) {
+    throw new GiftVoucherServiceError(publicError(error, "Impossible de rechercher ce bon."), 500);
+  }
+  if (!data) {
+    throw new GiftVoucherServiceError("Ce bon n’existe pas.", 404);
+  }
+
+  const voucher = mapRowWithTransactions(data as GiftVoucherWithTransactionsRow);
+  const domain = mapGiftVoucherRow(data as GiftVoucherRow);
+  const block = getRedeemBlockReason({
+    status: domain.status,
+    remainingAmountCents: domain.remainingAmountCents,
+    expiresAt: domain.expiresAt,
+  });
+
+  return {
+    voucher,
+    redeemable: block == null,
+    error: block ? redeemErrorMessage(block) : null,
+  };
+}
+
+type RedeemRpcResult = {
+  ok?: boolean;
+  error?: string;
+  voucher_id?: string;
+  amount_cents?: number;
+  balance_before_cents?: number;
+  balance_after_cents?: number;
+  status?: string;
+};
+
+function rpcHttpStatus(code: string): number {
+  if (code === "not_authorized") return 401;
+  if (code === "not_found") return 404;
+  if (code === "invalid_amount" || code === "insufficient_balance") return 400;
+  if (code === "used" || code === "expired" || code === "disabled" || code === "draft") return 409;
+  return 500;
+}
+
+export async function redeemGiftVoucher(
+  supabase: SupabaseClient,
+  params: {
+    restaurantId: string;
+    payload: unknown;
+  },
+): Promise<GiftCardRecord> {
+  let input: RedeemGiftVoucherInput;
+  try {
+    input = parseRedeemGiftVoucherInput(params.payload);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      throw new GiftVoucherServiceError(firstZodMessage(error), 400);
+    }
+    throw new GiftVoucherServiceError("Données invalides.", 400);
+  }
+
+  let amountCents: number;
+  try {
+    amountCents = chfToCents(input.amount);
+  } catch (error) {
+    throw new GiftVoucherServiceError(error instanceof Error ? error.message : "Montant invalide.", 400);
+  }
+
+  const code = input.code ? (normalizeGiftVoucherCode(input.code) ?? input.code) : null;
+
+  const { data, error } = await supabase.rpc("redeem_gift_voucher", {
+    p_amount_cents: amountCents,
+    p_code: code,
+    p_voucher_id: input.voucherId ?? null,
+  });
+
+  if (error) {
+    throw new GiftVoucherServiceError(publicError(error, "Impossible d’utiliser ce bon."), 500);
+  }
+
+  const result = (data ?? {}) as RedeemRpcResult;
+  if (!result.ok) {
+    const codeKey = typeof result.error === "string" ? result.error : "not_found";
+    throw new GiftVoucherServiceError(redeemErrorMessage(codeKey), rpcHttpStatus(codeKey));
+  }
+
+  const voucherId = result.voucher_id;
+  if (!voucherId) {
+    throw new GiftVoucherServiceError("Impossible d’utiliser ce bon.", 500);
+  }
+
+  return getGiftVoucher(supabase, params.restaurantId, voucherId);
 }
 
 export async function createGiftVoucher(
