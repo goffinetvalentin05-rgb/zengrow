@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isGiftCardsEnabled } from "@/src/lib/config/features";
+import { notifyGiftVoucherRequest } from "@/src/lib/notifications/gift-voucher";
 import { createClient } from "@/src/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
@@ -53,6 +54,20 @@ export async function POST(request: NextRequest) {
     }
     if (!id) {
       return NextResponse.json({ ok: false, error: "Restaurant introuvable ou données invalides." }, { status: 400 });
+    }
+
+    const { data: restaurant } = await supabase.from("restaurants").select("id").eq("slug", slug).maybeSingle();
+    if (restaurant?.id) {
+      try {
+        await notifyGiftVoucherRequest({
+          restaurantId: restaurant.id as string,
+          requestId: String(id),
+          requesterName: `${firstName} ${lastName}`.trim(),
+          amountHint: (body.amount ?? "").trim() || null,
+        });
+      } catch (notifyError) {
+        console.error("[gift-voucher-notification]", notifyError);
+      }
     }
 
     return NextResponse.json({ ok: true, id });

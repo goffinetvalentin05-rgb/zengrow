@@ -30,19 +30,23 @@ export async function PATCH(request: Request) {
 
   try {
     const input = parseGiftVoucherSettingsInput(payload);
-    const { error } = await ctx.supabase.from("restaurant_settings").upsert(
-      {
-        restaurant_id: ctx.restaurantId,
-        gift_voucher_display_name: input.displayName ?? null,
-        gift_voucher_offer_title: input.offerTitle ?? null,
-        gift_voucher_accent_color: input.accentColor ?? null,
-        gift_voucher_cover_url: input.coverUrl ?? null,
-        gift_voucher_terms: input.terms ?? null,
-        gift_voucher_footer: input.footer ?? null,
-        gift_voucher_include_buyer_on_pdf: input.includeBuyerOnPdf ?? false,
-      },
-      { onConflict: "restaurant_id" },
-    );
+    const row: Record<string, unknown> = {
+      restaurant_id: ctx.restaurantId,
+      gift_voucher_display_name: input.displayName ?? null,
+      gift_voucher_offer_title: input.offerTitle ?? null,
+      gift_voucher_accent_color: input.accentColor ?? null,
+      gift_voucher_cover_url: input.coverUrl ?? null,
+      gift_voucher_terms: input.terms ?? null,
+      gift_voucher_footer: input.footer ?? null,
+      gift_voucher_include_buyer_on_pdf: input.includeBuyerOnPdf ?? false,
+    };
+    if (input.defaultValidityMonths != null) {
+      row.gift_voucher_default_validity_months = input.defaultValidityMonths;
+    }
+    if (input.suggestedAmounts) {
+      row.gift_voucher_suggested_amounts = input.suggestedAmounts;
+    }
+    const { error } = await ctx.supabase.from("restaurant_settings").upsert(row, { onConflict: "restaurant_id" });
     if (error) {
       throw new GiftVoucherServiceError("Impossible d’enregistrer la personnalisation des bons.", 500);
     }

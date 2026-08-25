@@ -1,5 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_PRIMARY, contrastingTextColor, normalizeHexColor } from "@/src/lib/public-page/colors";
+import {
+  clampGiftVoucherValidityMonths,
+  DEFAULT_GIFT_VOUCHER_VALIDITY_MONTHS,
+  parseSuggestedGiftVoucherAmounts,
+} from "@/src/lib/gift-vouchers/defaults";
 import { isGiftVoucherExpired } from "@/src/lib/gift-vouchers/redeem";
 import { isPublicGiftVoucherStatus } from "@/src/lib/gift-vouchers/public-view";
 import type { GiftVoucherStatus } from "@/src/lib/gift-vouchers/types";
@@ -43,6 +48,8 @@ export type GiftVoucherBrandingSettings = {
   terms: string | null;
   footer: string | null;
   includeBuyerOnPdf: boolean;
+  defaultValidityMonths: number;
+  suggestedAmounts: number[];
 };
 
 type VoucherCoreRow = {
@@ -82,6 +89,8 @@ type SettingsBrandingRow = {
   gift_voucher_terms: string | null;
   gift_voucher_footer: string | null;
   gift_voucher_include_buyer_on_pdf: boolean | null;
+  gift_voucher_default_validity_months?: number | null;
+  gift_voucher_suggested_amounts?: number[] | null;
 };
 
 const VOUCHER_CORE_SELECT =
@@ -91,7 +100,7 @@ const RESTAURANT_BRANDING_SELECT =
   "name, public_display_name, logo_url, public_accent_color, phone, email, address, banner_url";
 
 const SETTINGS_BASE_SELECT = "logo_url, cover_image_url, accent_color";
-const SETTINGS_BRANDING_SELECT = `${SETTINGS_BASE_SELECT}, gift_voucher_display_name, gift_voucher_offer_title, gift_voucher_accent_color, gift_voucher_cover_url, gift_voucher_terms, gift_voucher_footer, gift_voucher_include_buyer_on_pdf`;
+const SETTINGS_BRANDING_SELECT = `${SETTINGS_BASE_SELECT}, gift_voucher_display_name, gift_voucher_offer_title, gift_voucher_accent_color, gift_voucher_cover_url, gift_voucher_terms, gift_voucher_footer, gift_voucher_include_buyer_on_pdf, gift_voucher_default_validity_months, gift_voucher_suggested_amounts`;
 
 function firstNonEmpty(...values: Array<string | null | undefined>): string | null {
   for (const value of values) {
@@ -161,6 +170,10 @@ export function mapGiftVoucherSettingsRow(settings: SettingsBrandingRow | null):
     terms: settings?.gift_voucher_terms?.trim() || null,
     footer: settings?.gift_voucher_footer?.trim() || null,
     includeBuyerOnPdf: Boolean(settings?.gift_voucher_include_buyer_on_pdf),
+    defaultValidityMonths: clampGiftVoucherValidityMonths(
+      settings?.gift_voucher_default_validity_months ?? DEFAULT_GIFT_VOUCHER_VALIDITY_MONTHS,
+    ),
+    suggestedAmounts: parseSuggestedGiftVoucherAmounts(settings?.gift_voucher_suggested_amounts),
   };
 }
 

@@ -105,6 +105,8 @@ export type PublicReservationFormProps = {
   restaurantId: string;
   /** Slug URL publique `/r/[slug]` â€” requis pour les demandes de bons cadeaux. */
   restaurantSlug: string;
+  /** Montants CHF proposés sur le formulaire de demande de bon. */
+  giftVoucherSuggestedAmounts?: number[];
   restaurantName: string;
   heroTitle?: string | null;
   restaurantTagline?: string | null;
@@ -256,6 +258,7 @@ export default function PublicReservationForm({
   previewMode = false,
   restaurantId,
   restaurantSlug = "",
+  giftVoucherSuggestedAmounts,
   restaurantName,
   heroTitle,
   restaurantTagline,
@@ -1986,6 +1989,7 @@ export default function PublicReservationForm({
                 fallbackCta: resolvedSectionContent.gift_vouchers?.fallbackCta ?? "",
               }}
               restaurantSlug={restaurantSlug}
+              suggestedAmounts={giftVoucherSuggestedAmounts}
               previewMode={previewMode}
               surface={pageTheme.section("gift_vouchers")}
             />

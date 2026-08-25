@@ -6,11 +6,19 @@ export const NOTIFICATION_TYPES = [
   "reservation_no_show",
   "feedback_received",
   "system",
+  "gift_voucher_created",
+  "gift_voucher_request",
+  "gift_voucher_redeemed",
+  "gift_voucher_fully_used",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
-export type NotificationRelatedEntityType = "reservation" | "feedback" | "gift_voucher_request";
+export type NotificationRelatedEntityType =
+  | "reservation"
+  | "feedback"
+  | "gift_voucher"
+  | "gift_voucher_request";
 
 export type NotificationRow = {
   id: string;

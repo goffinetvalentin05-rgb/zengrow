@@ -15,6 +15,11 @@ export {
   type ReservationNotificationPayload,
 } from "@/src/lib/notifications/reservation";
 export {
+  notifyGiftVoucherCreated,
+  notifyGiftVoucherRedeemed,
+  notifyGiftVoucherRequest,
+} from "@/src/lib/notifications/gift-voucher";
+export {
   NOTIFICATION_TYPES,
   type CreateNotificationInput,
   type CreateNotificationResult,

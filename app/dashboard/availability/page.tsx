@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function DashboardAvailabilityPage() {
-  redirect("/dashboard/settings?section=availability");
+  redirect("/dashboard/settings?section=establishment");
 }

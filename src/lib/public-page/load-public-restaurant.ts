@@ -99,6 +99,7 @@ export type PublicSettingsRow = {
   terrace_capacity: number;
   terrace_label: string;
   public_page_editor_config?: unknown;
+  gift_voucher_suggested_amounts?: number[] | null;
 };
 
 const RESTAURANT_SELECT = [
@@ -199,6 +200,7 @@ const SETTINGS_SELECT = [
   "terrace_capacity",
   "terrace_label",
   "public_page_editor_config",
+  "gift_voucher_suggested_amounts",
 ].join(", ");
 
 export async function loadRestaurant(slug: string) {
@@ -216,11 +218,20 @@ export async function loadRestaurant(slug: string) {
     return null;
   }
 
-  const { data: settings } = await supabase
+  const settingsResult = await supabase
     .from("restaurant_settings")
     .select(SETTINGS_SELECT)
     .eq("restaurant_id", restaurant.id)
     .single();
+  let settings = settingsResult.data;
+  if (settingsResult.error) {
+    const fallback = await supabase
+      .from("restaurant_settings")
+      .select(SETTINGS_SELECT.replace(", gift_voucher_suggested_amounts", ""))
+      .eq("restaurant_id", restaurant.id)
+      .single();
+    settings = fallback.data;
+  }
 
   const { data: documents } = await supabase
     .from("restaurant_documents")

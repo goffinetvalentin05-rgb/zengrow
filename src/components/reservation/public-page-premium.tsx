@@ -2028,12 +2028,14 @@ export function GiftVouchersSection({
   restaurantSlug,
   previewMode = false,
   surface,
+  suggestedAmounts,
 }: {
   content: GiftVouchersSectionContent;
   surfaceCopy: GiftVouchersSectionCopy;
   restaurantSlug: string;
   previewMode?: boolean;
   surface: SectionSurface;
+  suggestedAmounts?: number[];
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -2052,6 +2054,7 @@ export function GiftVouchersSection({
   const body = content.body.trim() || (surfaceCopy.fallbackBody ?? "").trim();
   const cta = content.ctaLabel.trim() || (surfaceCopy.fallbackCta ?? "").trim();
   const img = content.imageUrl.trim();
+  const amountChoices = suggestedAmounts && suggestedAmounts.length > 0 ? suggestedAmounts : [50, 100, 150];
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -2341,8 +2344,27 @@ export function GiftVouchersSection({
               </label>
               <label className="block">
                 <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
-                  Montant souhaitÃ© (ex. 80â‚¬)
+                  Montant souhaité (CHF)
                 </span>
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {amountChoices.map((choice) => (
+                    <button
+                      key={choice}
+                      type="button"
+                      onClick={() => setAmount(String(choice))}
+                      className="rounded-full border px-3 py-1 text-xs font-semibold"
+                      style={{
+                        borderColor:
+                          amount === String(choice)
+                            ? "var(--accent-color)"
+                            : "color-mix(in srgb, var(--body-text) 18%, var(--page-bg))",
+                        color: amount === String(choice) ? "var(--accent-color)" : "var(--heading-color)",
+                      }}
+                    >
+                      {choice} CHF
+                    </button>
+                  ))}
+                </div>
                 <input
                   className="mt-1.5 min-h-[46px] w-full rounded-xl border px-3 text-sm outline-none"
                   style={{

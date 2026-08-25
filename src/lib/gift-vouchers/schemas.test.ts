@@ -134,4 +134,13 @@ describe("parseGiftVoucherSettingsInput", () => {
     expect(parsed.displayName).toBeUndefined();
     expect(parsed.includeBuyerOnPdf).toBe(false);
   });
+
+  it("accepte la validité et les montants suggérés", () => {
+    const parsed = parseGiftVoucherSettingsInput({
+      defaultValidityMonths: 18,
+      suggestedAmounts: [80, 120, 200],
+    });
+    expect(parsed.defaultValidityMonths).toBe(18);
+    expect(parsed.suggestedAmounts).toEqual([80, 120, 200]);
+  });
 });

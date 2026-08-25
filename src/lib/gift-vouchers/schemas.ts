@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { normalizeGiftVoucherCode } from "@/src/lib/gift-vouchers/code";
+import {
+  clampGiftVoucherValidityMonths,
+  parseSuggestedGiftVoucherAmounts,
+} from "@/src/lib/gift-vouchers/defaults";
 import { normalizeGiftVoucherPublicToken } from "@/src/lib/gift-vouchers/public-token";
 import type {
   CreateGiftVoucherInput,
@@ -15,6 +19,8 @@ export type GiftVoucherSettingsInput = {
   terms?: string;
   footer?: string;
   includeBuyerOnPdf?: boolean;
+  defaultValidityMonths?: number;
+  suggestedAmounts?: number[];
 };
 
 function emptyToUndefined(value: unknown): unknown {
@@ -179,6 +185,14 @@ export const giftVoucherSettingsSchema = z.object({
   terms: optionalText(4000),
   footer: optionalText(500),
   includeBuyerOnPdf: z.boolean().optional(),
+  defaultValidityMonths: z.preprocess((value) => {
+    if (value === "" || value === null || value === undefined) return undefined;
+    return clampGiftVoucherValidityMonths(value);
+  }, z.number().int().min(1).max(60).optional()),
+  suggestedAmounts: z.preprocess((value) => {
+    if (value === undefined || value === null || value === "") return undefined;
+    return parseSuggestedGiftVoucherAmounts(value);
+  }, z.array(z.number().int().min(1).max(10_000)).min(1).max(8).optional()),
 });
 
 export function parseGiftVoucherSettingsInput(payload: unknown): GiftVoucherSettingsInput {

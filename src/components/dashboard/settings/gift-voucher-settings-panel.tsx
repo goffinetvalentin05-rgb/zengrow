@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
@@ -9,6 +9,12 @@ import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
 import { SettingsAccordion } from "@/src/components/dashboard/settings/settings-accordion";
 import type { GiftVoucherBrandingSettings } from "@/src/lib/gift-vouchers/branding";
+import {
+  clampGiftVoucherValidityMonths,
+  DEFAULT_GIFT_VOUCHER_VALIDITY_MONTHS,
+  formatSuggestedGiftVoucherAmounts,
+  parseSuggestedGiftVoucherAmounts,
+} from "@/src/lib/gift-vouchers/defaults";
 import { DEFAULT_PRIMARY, normalizeHexColor } from "@/src/lib/public-page/colors";
 import {
   imageExtensionForUpload,
@@ -25,287 +31,408 @@ type GiftVoucherSettingsPanelProps = {
   phone: string;
   email: string;
   address: string;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
-export default function GiftVoucherSettingsPanel({
-  restaurantId,
-  displayName,
-  logoUrl,
-  pageCoverUrl,
-  accentColor,
-  phone,
-  email,
-  address,
-}: GiftVoucherSettingsPanelProps) {
-  const supabase = createClient();
-  const coverInputRef = useRef<HTMLInputElement>(null);
-  const [voucherName, setVoucherName] = useState("");
-  const [offerTitle, setOfferTitle] = useState("");
-  const [voucherAccent, setVoucherAccent] = useState("");
-  const [coverUrl, setCoverUrl] = useState("");
-  const [terms, setTerms] = useState("");
-  const [footer, setFooter] = useState("");
-  const [includeBuyer, setIncludeBuyer] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+export type GiftVoucherSettingsHandle = {
+  isDirty: () => boolean;
+  save: () => Promise<boolean>;
+};
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
+function snapshotOf(state: {
+  voucherName: string;
+  offerTitle: string;
+  voucherAccent: string;
+  coverUrl: string;
+  terms: string;
+  footer: string;
+  includeBuyer: boolean;
+  validityMonths: number;
+  suggestedAmounts: string;
+}) {
+  return JSON.stringify(state);
+}
+
+const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVoucherSettingsPanelProps>(
+  function GiftVoucherSettingsPanel(
+    { restaurantId, displayName, logoUrl, pageCoverUrl, accentColor, phone, email, address, onDirtyChange },
+    ref,
+  ) {
+    const supabase = createClient();
+    const coverInputRef = useRef<HTMLInputElement>(null);
+    const [voucherName, setVoucherName] = useState("");
+    const [offerTitle, setOfferTitle] = useState("");
+    const [voucherAccent, setVoucherAccent] = useState("");
+    const [coverUrl, setCoverUrl] = useState("");
+    const [terms, setTerms] = useState("");
+    const [footer, setFooter] = useState("");
+    const [includeBuyer, setIncludeBuyer] = useState(false);
+    const [validityMonths, setValidityMonths] = useState(DEFAULT_GIFT_VOUCHER_VALIDITY_MONTHS);
+    const [suggestedAmounts, setSuggestedAmounts] = useState("50, 100, 150");
+    const [savedSnapshot, setSavedSnapshot] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [message, setMessage] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const currentSnapshot = snapshotOf({
+      voucherName,
+      offerTitle,
+      voucherAccent,
+      coverUrl,
+      terms,
+      footer,
+      includeBuyer,
+      validityMonths,
+      suggestedAmounts,
+    });
+    const dirty = Boolean(savedSnapshot) && currentSnapshot !== savedSnapshot;
+
+    useEffect(() => {
+      onDirtyChange?.(dirty);
+    }, [dirty, onDirtyChange]);
+
+    useEffect(() => {
+      let cancelled = false;
+      void (async () => {
+        try {
+          const response = await fetch("/api/gift-vouchers/settings");
+          const payload = (await response.json().catch(() => null)) as {
+            settings?: GiftVoucherBrandingSettings;
+            error?: string;
+          } | null;
+          if (cancelled) return;
+          if (!response.ok || !payload?.settings) {
+            setError(payload?.error ?? "Impossible de charger la personnalisation des bons.");
+            return;
+          }
+          applySettings(payload.settings, true);
+        } catch {
+          if (!cancelled) setError("Impossible de charger la personnalisation des bons.");
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, []);
+
+    function applySettings(settings: GiftVoucherBrandingSettings, markSaved = false) {
+      const next = {
+        voucherName: settings.displayName ?? "",
+        offerTitle: settings.offerTitle ?? "",
+        voucherAccent: settings.accentColor ?? "",
+        coverUrl: settings.coverUrl ?? "",
+        terms: settings.terms ?? "",
+        footer: settings.footer ?? "",
+        includeBuyer: settings.includeBuyerOnPdf,
+        validityMonths: settings.defaultValidityMonths,
+        suggestedAmounts: settings.suggestedAmounts.join(", "),
+      };
+      setVoucherName(next.voucherName);
+      setOfferTitle(next.offerTitle);
+      setVoucherAccent(next.voucherAccent);
+      setCoverUrl(next.coverUrl);
+      setTerms(next.terms);
+      setFooter(next.footer);
+      setIncludeBuyer(next.includeBuyer);
+      setValidityMonths(next.validityMonths);
+      setSuggestedAmounts(next.suggestedAmounts);
+      if (markSaved) setSavedSnapshot(snapshotOf(next));
+    }
+
+    async function handleCoverUpload(event: ChangeEvent<HTMLInputElement>) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const invalid = validateRestaurantImageFile(file);
+      if (invalid) {
+        setError(invalid);
+        event.target.value = "";
+        return;
+      }
+      setUploading(true);
+      setError(null);
+      setMessage(null);
       try {
-        const response = await fetch("/api/gift-vouchers/settings");
+        const { publicUrl } = await uploadRestaurantPublicAsset(supabase, restaurantId, "gift-vouchers", file, {
+          extension: imageExtensionForUpload(file),
+        });
+        setCoverUrl(publicUrl);
+        setMessage("Image de couverture chargée. Enregistrez pour l’appliquer.");
+      } catch (uploadError) {
+        setError(uploadError instanceof Error ? uploadError.message : "Impossible de charger l’image.");
+      } finally {
+        setUploading(false);
+        event.target.value = "";
+      }
+    }
+
+    const save = useCallback(async (): Promise<boolean> => {
+      if (saving) return false;
+      setSaving(true);
+      setMessage(null);
+      setError(null);
+      try {
+        const response = await fetch("/api/gift-vouchers/settings", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            displayName: voucherName.trim() || undefined,
+            offerTitle: offerTitle.trim() || undefined,
+            accentColor: voucherAccent.trim() || undefined,
+            coverUrl: coverUrl.trim() || undefined,
+            terms: terms.trim() || undefined,
+            footer: footer.trim() || undefined,
+            includeBuyerOnPdf: includeBuyer,
+            defaultValidityMonths: clampGiftVoucherValidityMonths(validityMonths),
+            suggestedAmounts: parseSuggestedGiftVoucherAmounts(suggestedAmounts),
+          }),
+        });
         const payload = (await response.json().catch(() => null)) as {
           settings?: GiftVoucherBrandingSettings;
           error?: string;
         } | null;
-        if (cancelled) return;
         if (!response.ok || !payload?.settings) {
-          setMessage(payload?.error ?? "Impossible de charger la personnalisation des bons.");
-          return;
+          setError(payload?.error ?? "Impossible d’enregistrer la personnalisation des bons.");
+          return false;
         }
-        applySettings(payload.settings);
+        applySettings(payload.settings, true);
+        setMessage("Personnalisation des bons enregistrée.");
+        return true;
       } catch {
-        if (!cancelled) setMessage("Impossible de charger la personnalisation des bons.");
+        setError("Impossible d’enregistrer. Vérifiez votre connexion.");
+        return false;
       } finally {
-        if (!cancelled) setLoading(false);
+        setSaving(false);
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    }, [
+      saving,
+      voucherName,
+      offerTitle,
+      voucherAccent,
+      coverUrl,
+      terms,
+      footer,
+      includeBuyer,
+      validityMonths,
+      suggestedAmounts,
+    ]);
 
-  function applySettings(settings: GiftVoucherBrandingSettings) {
-    setVoucherName(settings.displayName ?? "");
-    setOfferTitle(settings.offerTitle ?? "");
-    setVoucherAccent(settings.accentColor ?? "");
-    setCoverUrl(settings.coverUrl ?? "");
-    setTerms(settings.terms ?? "");
-    setFooter(settings.footer ?? "");
-    setIncludeBuyer(settings.includeBuyerOnPdf);
-  }
+    useImperativeHandle(ref, () => ({ isDirty: () => dirty, save }), [dirty, save]);
 
-  async function handleCoverUpload(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const invalid = validateRestaurantImageFile(file);
-    if (invalid) {
-      setMessage(invalid);
-      event.target.value = "";
-      return;
-    }
-    setUploading(true);
-    setMessage(null);
-    try {
-      const { publicUrl } = await uploadRestaurantPublicAsset(supabase, restaurantId, "gift-vouchers", file, {
-        extension: imageExtensionForUpload(file),
-      });
-      setCoverUrl(publicUrl);
-      setMessage("Image de couverture chargée.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Impossible de charger l’image.");
-    } finally {
-      setUploading(false);
-      event.target.value = "";
-    }
-  }
+    const previewColor = normalizeHexColor(voucherAccent || accentColor, DEFAULT_PRIMARY);
+    const previewCover = coverUrl || pageCoverUrl;
+    const amountsPreview = useMemo(
+      () => formatSuggestedGiftVoucherAmounts(parseSuggestedGiftVoucherAmounts(suggestedAmounts)),
+      [suggestedAmounts],
+    );
 
-  async function save() {
-    setSaving(true);
-    setMessage(null);
-    try {
-      const response = await fetch("/api/gift-vouchers/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          displayName: voucherName.trim() || undefined,
-          offerTitle: offerTitle.trim() || undefined,
-          accentColor: voucherAccent.trim() || undefined,
-          coverUrl: coverUrl.trim() || undefined,
-          terms: terms.trim() || undefined,
-          footer: footer.trim() || undefined,
-          includeBuyerOnPdf: includeBuyer,
-        }),
-      });
-      const payload = (await response.json().catch(() => null)) as {
-        settings?: GiftVoucherBrandingSettings;
-        error?: string;
-      } | null;
-      if (!response.ok || !payload?.settings) {
-        setMessage(payload?.error ?? "Impossible d’enregistrer.");
-        return;
-      }
-      applySettings(payload.settings);
-      setMessage("Personnalisation des bons enregistrée.");
-    } catch {
-      setMessage("Impossible d’enregistrer.");
-    } finally {
-      setSaving(false);
-    }
-  }
+    return (
+      <div className="space-y-3">
+        <SettingsAccordion title="Identité réutilisée" description="Logo, nom et coordonnées de l’établissement." defaultOpen>
+          <div className="flex items-center gap-3">
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" className="h-12 w-12 rounded-xl border border-zg-border bg-white object-contain" />
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-zg-accent-soft-bg text-sm font-semibold text-zg-accent">
+                {(displayName || "É").slice(0, 1).toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-zg-fg">{displayName || "Établissement"}</p>
+              <p className="text-xs text-zg-text-muted">
+                {[address, phone, email].filter(Boolean).join(" · ") || "Coordonnées non renseignées"}
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-zg-text-muted">
+            Le logo et les coordonnées viennent de l’onglet Établissement. Modifiez-les là-bas, puis enregistrez.
+          </p>
+        </SettingsAccordion>
 
-  const previewColor = normalizeHexColor(voucherAccent || accentColor, DEFAULT_PRIMARY);
-  const previewCover = coverUrl || pageCoverUrl;
-
-  return (
-    <div className="space-y-3">
-      <SettingsAccordion title="Identité réutilisée" description="Logo, nom et coordonnées de l’établissement." defaultOpen>
-        <div className="flex items-center gap-3">
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="" className="h-12 w-12 rounded-xl border border-zg-border object-contain bg-white" />
+        <SettingsAccordion title="PDF, page publique et Wallet" description="Ces éléments visuels sont relus à chaque affichage." defaultOpen>
+          {loading ? (
+            <p className="text-sm text-zg-text-muted">Chargement…</p>
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-zg-accent-soft-bg text-sm font-semibold text-zg-accent">
-              {displayName.slice(0, 1).toUpperCase()}
+            <div className="space-y-4">
+              <p className="rounded-xl border border-zg-border bg-zg-surface-elevated/50 px-3 py-2 text-xs leading-relaxed text-zg-text-muted">
+                Logo, nom affiché, couverture, couleur, conditions et pied de page sont dynamiques : un changement
+                s’applique aussi aux anciens bons à l’affichage. Montant, solde, code et date d’expiration restent
+                ceux enregistrés à la création.
+              </p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="dashboard-field-label" htmlFor="gv-display-name">
+                    Nom affiché sur le bon
+                  </label>
+                  <Input
+                    id="gv-display-name"
+                    className="mt-1.5"
+                    value={voucherName}
+                    onChange={(event) => setVoucherName(event.target.value)}
+                    placeholder={displayName || "Nom de l’établissement"}
+                  />
+                </div>
+                <div>
+                  <label className="dashboard-field-label" htmlFor="gv-offer-title">
+                    Titre de l’offre
+                  </label>
+                  <Input
+                    id="gv-offer-title"
+                    className="mt-1.5"
+                    value={offerTitle}
+                    onChange={(event) => setOfferTitle(event.target.value)}
+                    placeholder="Bon cadeau"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="dashboard-field-label" htmlFor="gv-accent">
+                  Couleur principale
+                </label>
+                <div className="mt-1.5 flex flex-wrap items-center gap-3">
+                  <Input
+                    id="gv-accent"
+                    type="color"
+                    value={previewColor}
+                    onChange={(event) => setVoucherAccent(event.target.value)}
+                    aria-label="Couleur principale du bon"
+                    className="h-11 w-14 p-1"
+                  />
+                  <Input
+                    value={voucherAccent}
+                    onChange={(event) => setVoucherAccent(event.target.value)}
+                    placeholder={accentColor || DEFAULT_PRIMARY}
+                  />
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setVoucherAccent("")}>
+                    Reprendre la couleur de l’établissement
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <label className="dashboard-field-label">Image de couverture</label>
+                {previewCover ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewCover}
+                    alt=""
+                    className="mt-2 h-32 w-full rounded-xl border border-zg-border bg-zg-surface-elevated object-contain"
+                  />
+                ) : (
+                  <div className="mt-2 flex h-32 items-center justify-center rounded-xl border border-dashed border-zg-border text-sm text-zg-text-muted">
+                    Aucune image — un fond couleur sera utilisé.
+                  </div>
+                )}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    onChange={handleCoverUpload}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={uploading}
+                    onClick={() => coverInputRef.current?.click()}
+                  >
+                    {uploading ? "Chargement…" : "Choisir une image"}
+                  </Button>
+                  {coverUrl ? (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setCoverUrl("")}>
+                      Utiliser l’image de la page publique
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+
+              <div>
+                <label className="dashboard-field-label" htmlFor="gv-terms">
+                  Conditions d’utilisation
+                </label>
+                <Textarea
+                  id="gv-terms"
+                  className="mt-1.5 min-h-28"
+                  value={terms}
+                  onChange={(event) => setTerms(event.target.value)}
+                  placeholder="Utilisable en plusieurs fois jusqu’à épuisement du solde…"
+                />
+              </div>
+
+              <div>
+                <label className="dashboard-field-label" htmlFor="gv-footer">
+                  Texte de pied de page
+                </label>
+                <Textarea
+                  id="gv-footer"
+                  className="mt-1.5 min-h-20"
+                  value={footer}
+                  onChange={(event) => setFooter(event.target.value)}
+                  placeholder="Adresse, téléphone, site…"
+                />
+              </div>
+
+              <Toggle checked={includeBuyer} onChange={setIncludeBuyer} label="Afficher le nom de l’acheteur sur le PDF" />
             </div>
           )}
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-zg-fg">{displayName || "Établissement"}</p>
-            <p className="text-xs text-zg-text-muted">
-              {[address, phone, email].filter(Boolean).join(" · ") || "Coordonnées non renseignées"}
-            </p>
-          </div>
-        </div>
-        <p className="mt-3 text-sm text-zg-text-muted">
-          Le logo et les coordonnées viennent de votre établissement. Modifiez-les dans{" "}
-          <Link href="/dashboard/public-page" className="font-medium text-zg-accent hover:underline">
-            Page publique
-          </Link>
-          .
-        </p>
-      </SettingsAccordion>
+        </SettingsAccordion>
 
-      <SettingsAccordion title="PDF et Apple Wallet" description="Couverture, couleur, conditions et pied de page." defaultOpen>
-        {loading ? (
-          <p className="text-sm text-zg-text-muted">Chargement…</p>
-        ) : (
-          <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="dashboard-field-label" htmlFor="gv-display-name">
-                  Nom affiché sur le bon
-                </label>
-                <Input
-                  id="gv-display-name"
-                  className="mt-1.5"
-                  value={voucherName}
-                  onChange={(event) => setVoucherName(event.target.value)}
-                  placeholder={displayName || "Nom de l’établissement"}
-                />
-              </div>
-              <div>
-                <label className="dashboard-field-label" htmlFor="gv-offer-title">
-                  Titre de l’offre
-                </label>
-                <Input
-                  id="gv-offer-title"
-                  className="mt-1.5"
-                  value={offerTitle}
-                  onChange={(event) => setOfferTitle(event.target.value)}
-                  placeholder="Bon cadeau"
-                />
-              </div>
-            </div>
-
+        <SettingsAccordion
+          title="Valeurs pour les nouveaux bons"
+          description="Appliquées uniquement à la création. Les bons déjà émis ne sont pas recalculés."
+          defaultOpen
+        >
+          <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="dashboard-field-label" htmlFor="gv-accent">
-                Couleur principale
+              <label className="dashboard-field-label" htmlFor="gv-validity">
+                Durée de validité par défaut (mois)
               </label>
-              <div className="mt-1.5 flex items-center gap-3">
-                <Input
-                  id="gv-accent"
-                  type="color"
-                  value={previewColor}
-                  onChange={(event) => setVoucherAccent(event.target.value)}
-                  aria-label="Couleur principale du bon"
-                />
-                <Input
-                  value={voucherAccent}
-                  onChange={(event) => setVoucherAccent(event.target.value)}
-                  placeholder={accentColor || DEFAULT_PRIMARY}
-                />
-                <Button type="button" variant="ghost" size="sm" onClick={() => setVoucherAccent("")}>
-                  Reprendre la couleur de l’établissement
-                </Button>
-              </div>
-            </div>
-
-            <div>
-              <label className="dashboard-field-label">Image de couverture</label>
-              {previewCover ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={previewCover}
-                  alt=""
-                  className="mt-2 h-32 w-full rounded-xl border border-zg-border object-contain bg-zg-surface-elevated"
-                />
-              ) : (
-                <div className="mt-2 flex h-32 items-center justify-center rounded-xl border border-dashed border-zg-border text-sm text-zg-text-muted">
-                  Aucune image — un fond couleur sera utilisé.
-                </div>
-              )}
-              <div className="mt-2 flex flex-wrap gap-2">
-                <input
-                  ref={coverInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="sr-only"
-                  onChange={handleCoverUpload}
-                />
-                <Button type="button" variant="secondary" size="sm" disabled={uploading} onClick={() => coverInputRef.current?.click()}>
-                  {uploading ? "Chargement…" : "Choisir une image"}
-                </Button>
-                {coverUrl ? (
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setCoverUrl("")}>
-                    Utiliser l’image de la page publique
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-
-            <div>
-              <label className="dashboard-field-label" htmlFor="gv-terms">
-                Conditions d’utilisation
-              </label>
-              <Textarea
-                id="gv-terms"
-                className="mt-1.5 min-h-28"
-                value={terms}
-                onChange={(event) => setTerms(event.target.value)}
-                placeholder="Utilisable en plusieurs fois jusqu’à épuisement du solde…"
+              <Input
+                id="gv-validity"
+                type="number"
+                min={1}
+                max={60}
+                className="mt-1.5"
+                value={validityMonths}
+                onChange={(event) => setValidityMonths(clampGiftVoucherValidityMonths(event.target.value))}
               />
             </div>
-
             <div>
-              <label className="dashboard-field-label" htmlFor="gv-footer">
-                Texte de pied de page
+              <label className="dashboard-field-label" htmlFor="gv-amounts">
+                Montants proposés (CHF)
               </label>
-              <Textarea
-                id="gv-footer"
-                className="mt-1.5 min-h-20"
-                value={footer}
-                onChange={(event) => setFooter(event.target.value)}
-                placeholder="Adresse, téléphone, site…"
+              <Input
+                id="gv-amounts"
+                className="mt-1.5"
+                value={suggestedAmounts}
+                onChange={(event) => setSuggestedAmounts(event.target.value)}
+                placeholder="50, 100, 150"
               />
-            </div>
-
-            <Toggle
-              checked={includeBuyer}
-              onChange={setIncludeBuyer}
-              label="Afficher le nom de l’acheteur sur le PDF"
-            />
-
-            <div className="flex items-center gap-3">
-              <Button type="button" onClick={() => void save()} disabled={saving}>
-                {saving ? "Enregistrement…" : "Enregistrer"}
-              </Button>
-              {message ? <p className="text-sm text-zg-text-muted">{message}</p> : null}
+              <p className="mt-1.5 text-xs text-zg-text-muted">Aperçu : {amountsPreview} CHF</p>
             </div>
           </div>
-        )}
-      </SettingsAccordion>
-    </div>
-  );
-}
+        </SettingsAccordion>
+
+        {error ? (
+          <p className="text-sm text-zg-danger" role="alert">
+            {error}
+          </p>
+        ) : message ? (
+          <p className="text-sm text-zg-text-muted">{message}</p>
+        ) : null}
+        <Link href="/dashboard/gift-vouchers" className="inline-block text-sm font-medium text-zg-accent hover:underline">
+          Créer un bon avec ces réglages →
+        </Link>
+      </div>
+    );
+  },
+);
+
+export default GiftVoucherSettingsPanel;

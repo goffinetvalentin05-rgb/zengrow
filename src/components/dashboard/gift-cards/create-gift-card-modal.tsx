@@ -10,6 +10,12 @@ import Textarea from "@/src/components/ui/textarea";
 import Toggle from "@/src/components/ui/toggle";
 import { cn } from "@/src/lib/utils";
 import type { GiftCardType } from "@/src/components/dashboard/gift-cards/types";
+import type { GiftVoucherBrandingSettings } from "@/src/lib/gift-vouchers/branding";
+import {
+  DEFAULT_GIFT_VOUCHER_SUGGESTED_AMOUNTS,
+  DEFAULT_GIFT_VOUCHER_VALIDITY_MONTHS,
+  defaultGiftVoucherExpiryDate,
+} from "@/src/lib/gift-vouchers/defaults";
 
 type CreateGiftCardModalProps = {
   open: boolean;
@@ -28,12 +34,12 @@ type FormState = {
 };
 
 const EMPTY_FORM: FormState = {
-  amount: "100",
+  amount: String(DEFAULT_GIFT_VOUCHER_SUGGESTED_AMOUNTS[1] ?? 100),
   buyerName: "",
   buyerEmail: "",
   recipientName: "",
   message: "",
-  expiresAt: "2027-08-25",
+  expiresAt: defaultGiftVoucherExpiryDate(DEFAULT_GIFT_VOUCHER_VALIDITY_MONTHS),
   generatePdf: true,
 };
 
@@ -44,8 +50,34 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [suggestedAmounts, setSuggestedAmounts] = useState<number[]>([...DEFAULT_GIFT_VOUCHER_SUGGESTED_AMOUNTS]);
 
-  useDialogFocusTrap(open, panelRef);
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch("/api/gift-vouchers/settings");
+        const payload = (await response.json().catch(() => null)) as {
+          settings?: GiftVoucherBrandingSettings;
+        } | null;
+        if (cancelled || !payload?.settings) return;
+        const amounts = payload.settings.suggestedAmounts;
+        const expiry = defaultGiftVoucherExpiryDate(payload.settings.defaultValidityMonths);
+        setSuggestedAmounts(amounts);
+        setForm((current) => ({
+          ...current,
+          amount: current.amount === EMPTY_FORM.amount ? String(amounts[1] ?? amounts[0] ?? 100) : current.amount,
+          expiresAt: current.expiresAt === EMPTY_FORM.expiresAt ? expiry : current.expiresAt,
+        }));
+      } catch {
+        /* conservation des valeurs par défaut */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   const resetAndClose = useCallback(() => {
     if (submitting) return;
@@ -55,6 +87,8 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
     setFormError(null);
     onClose();
   }, [onClose, submitting]);
+
+  useDialogFocusTrap(open, panelRef);
 
   useEffect(() => {
     if (!open) return;
@@ -207,6 +241,23 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
                     onChange={(event) => setForm((prev) => ({ ...prev, amount: event.target.value }))}
                     className="mt-1.5"
                   />
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {suggestedAmounts.map((amount) => (
+                      <button
+                        key={amount}
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, amount: String(amount) }))}
+                        className={cn(
+                          "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                          form.amount === String(amount)
+                            ? "border-zg-accent bg-zg-accent/10 text-zg-accent"
+                            : "border-zg-border text-zg-text-muted hover:border-zg-accent/40",
+                        )}
+                      >
+                        {amount} CHF
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>

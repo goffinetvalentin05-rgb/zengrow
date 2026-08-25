@@ -78,18 +78,19 @@ export default function AvailabilityEditor({
   async function saveAvailability() {
     setSaving(true);
     setMessage(null);
-    const { error } = await supabase
-      .from("restaurant_settings")
-      .update({
-        opening_hours: openingHours,
-        max_guests_per_slot: maxGuestsPerSlot,
-        reservation_slot_interval: slotInterval,
-        reservation_duration: reservationDuration,
-      })
-      .eq("restaurant_id", restaurantId);
+    const payload =
+      embeddedPart === "hours"
+        ? { opening_hours: openingHours }
+        : {
+            opening_hours: openingHours,
+            max_guests_per_slot: maxGuestsPerSlot,
+            reservation_slot_interval: slotInterval,
+            reservation_duration: reservationDuration,
+          };
+    const { error } = await supabase.from("restaurant_settings").update(payload).eq("restaurant_id", restaurantId);
 
     setSaving(false);
-    setMessage(error ? error.message : "Disponibilités enregistrées.");
+    setMessage(error ? error.message : "Horaires enregistrés.");
   }
 
   const splitEmbedded = embedded && embeddedPart !== "all";
@@ -103,7 +104,7 @@ export default function AvailabilityEditor({
           <div className="min-w-0">
             <h2 className="text-xl font-semibold tracking-tight text-zg-fg">Disponibilités</h2>
             <p className="mt-1 text-sm text-zg-text-muted">
-              Indiquez quand vous accueillez les réservations, configurez vos services et vos règles de capacité.
+              Indiquez vos horaires d’ouverture, affichés sur la page publique.
             </p>
           </div>
           <Button type="button" onClick={saveAvailability} disabled={saving} className="w-full shrink-0 sm:w-auto">
@@ -175,7 +176,7 @@ export default function AvailabilityEditor({
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-zg-fg">{dayLabels[day]}</p>
                       <p className="mt-0.5 text-xs text-zg-fg-muted">
-                        {isOpen ? `${ranges.length} créneau${ranges.length > 1 ? "x" : ""}` : "Fermé"}
+                        {isOpen ? `${ranges.length} plage${ranges.length > 1 ? "s" : ""}` : "Fermé"}
                       </p>
                     </div>
                     <Toggle checked={isOpen} onChange={(value) => toggleDay(day, value)} label={isOpen ? "Ouvert" : "Fermé"} />
@@ -209,7 +210,7 @@ export default function AvailabilityEditor({
                         </div>
                       ))}
                       <Button type="button" size="sm" variant="secondary" onClick={() => addRange(day)}>
-                        Ajouter un créneau
+                        Ajouter une plage
                       </Button>
                     </div>
                   ) : null}

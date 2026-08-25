@@ -2889,7 +2889,7 @@ const PublicPageSettingsPanel = forwardRef<PublicPageSettingsHandle, PublicPageS
                         </ul>
                       </div>
                       <Link
-                        href="/dashboard/settings?section=availability"
+                        href="/dashboard/settings?section=establishment"
                         className="inline-flex items-center text-sm font-semibold text-zg-accent hover:underline"
                       >
                         Modifier les horaires

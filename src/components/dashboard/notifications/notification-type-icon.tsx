@@ -4,7 +4,9 @@ import {
   CalendarCheck,
   CalendarClock,
   CalendarX,
+  Gift,
   MessageSquare,
+  TicketCheck,
   UserX,
 } from "lucide-react";
 import type { NotificationType } from "@/src/lib/notifications/types";
@@ -17,6 +19,10 @@ const ICON_BY_TYPE: Record<NotificationType, LucideIcon> = {
   reservation_no_show: UserX,
   feedback_received: MessageSquare,
   system: Bell,
+  gift_voucher_created: Gift,
+  gift_voucher_request: Gift,
+  gift_voucher_redeemed: TicketCheck,
+  gift_voucher_fully_used: TicketCheck,
 };
 
 type NotificationTypeIconProps = {

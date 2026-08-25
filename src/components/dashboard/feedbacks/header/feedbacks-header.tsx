@@ -11,7 +11,7 @@ export default function FeedbacksHeader() {
       secondaryActions={[
         {
           kind: "link",
-          href: "/dashboard/settings?section=google-reviews",
+          href: "/dashboard/reputation",
           label: "Configurer l'envoi automatique",
           icon: <Settings className="h-4 w-4" strokeWidth={2} aria-hidden />,
         },

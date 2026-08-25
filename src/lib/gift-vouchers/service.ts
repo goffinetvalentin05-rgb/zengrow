@@ -28,6 +28,9 @@ import type {
 } from "@/src/lib/gift-vouchers/types";
 import type { GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
 import { notifyGiftVoucherWalletPass } from "@/src/lib/gift-vouchers/wallet/notify";
+import { loadGiftVoucherBrandingSettings } from "@/src/lib/gift-vouchers/branding";
+import { defaultGiftVoucherExpiryDate } from "@/src/lib/gift-vouchers/defaults";
+import { notifyGiftVoucherCreated, notifyGiftVoucherRedeemed } from "@/src/lib/notifications/gift-voucher";
 
 const CODE_ATTEMPTS = 6;
 const UNIQUE_VIOLATION = "23505";
@@ -351,7 +354,19 @@ export async function redeemGiftVoucher(
   }
 
   await notifyGiftVoucherWalletPass(voucherId);
-  return getGiftVoucher(supabase, params.restaurantId, voucherId);
+  const redeemed = await getGiftVoucher(supabase, params.restaurantId, voucherId);
+  try {
+    await notifyGiftVoucherRedeemed({
+      restaurantId: params.restaurantId,
+      voucherId: redeemed.id,
+      code: redeemed.code,
+      remainingAmountCents: Math.round(redeemed.balanceChf * 100),
+      fullyUsed: redeemed.status === "used" || redeemed.balanceChf <= 0,
+    });
+  } catch (error) {
+    console.error("[gift-voucher-notification]", error);
+  }
+  return redeemed;
 }
 
 async function loadRemainingCentsForRedeem(
@@ -418,7 +433,13 @@ export async function createGiftVoucher(
   }
 
   const buyerCustomerId = await findOrCreateBuyerCustomer(supabase, params.restaurantId, input);
-  const expiresAt = input.expiresAt ? new Date(`${input.expiresAt}T23:59:59.000Z`).toISOString() : null;
+  let expiresAt: string | null = null;
+  if (input.expiresAt) {
+    expiresAt = new Date(`${input.expiresAt}T23:59:59.000Z`).toISOString();
+  } else {
+    const branding = await loadGiftVoucherBrandingSettings(supabase, params.restaurantId);
+    expiresAt = new Date(`${defaultGiftVoucherExpiryDate(branding.defaultValidityMonths)}T23:59:59.000Z`).toISOString();
+  }
   const metadata: Record<string, unknown> = {};
   if (input.generatePdf) metadata.generate_pdf = true;
 
@@ -480,6 +501,18 @@ export async function createGiftVoucher(
 
   if (txError) {
     throw new GiftVoucherServiceError(publicError(txError, "Bon créé, mais l’historique n’a pas pu être enregistré."), 500);
+  }
+
+  try {
+    await notifyGiftVoucherCreated({
+      restaurantId: params.restaurantId,
+      voucherId: created.id,
+      code: created.code,
+      amountCents,
+      type: input.type,
+    });
+  } catch (error) {
+    console.error("[gift-voucher-notification]", error);
   }
 
   return getGiftVoucher(supabase, params.restaurantId, created.id);

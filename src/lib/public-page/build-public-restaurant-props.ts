@@ -20,6 +20,7 @@ import { resolvePublicTheme } from "@/src/lib/themes/resolve";
 import type { ThemeId } from "@/src/lib/themes/types";
 import type { PublicReservationFormProps } from "@/src/components/reservation/public-reservation-form";
 import { getDefaultOpeningHours, type OpeningHours } from "@/src/lib/utils";
+import { parseSuggestedGiftVoucherAmounts } from "@/src/lib/gift-vouchers/defaults";
 
 export type LoadedPublicRestaurant = NonNullable<Awaited<ReturnType<typeof loadRestaurant>>>;
 
@@ -78,6 +79,7 @@ export function buildPublicRestaurantPageProps(loaded: LoadedPublicRestaurant): 
     terrace_enabled: false,
     terrace_capacity: 0,
     terrace_label: "Terrasse",
+    gift_voucher_suggested_amounts: null,
   };
 
   const galleryImageUrls = (safeSettings.gallery_image_urls ?? []).filter(Boolean);
@@ -270,6 +272,7 @@ export function buildPublicRestaurantPageProps(loaded: LoadedPublicRestaurant): 
     terraceEnabled: safeSettings.terrace_enabled === true,
     terraceLabel: safeSettings.terrace_label,
     terraceCapacity: safeSettings.terrace_capacity,
+    giftVoucherSuggestedAmounts: parseSuggestedGiftVoucherAmounts(safeSettings.gift_voucher_suggested_amounts),
     sectionLayoutVariants,
     sectionContent,
   } satisfies PublicRestaurantPageBundle["formProps"];

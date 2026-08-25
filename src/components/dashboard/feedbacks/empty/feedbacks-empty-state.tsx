@@ -4,7 +4,7 @@ import Link from "next/link";
 import FeedbacksEmptyPanel from "@/src/components/dashboard/feedbacks/empty/feedbacks-empty-panel";
 import { buttonClassName } from "@/src/components/ui/button";
 
-const SETTINGS_GOOGLE_REVIEWS_HREF = "/dashboard/settings?section=google-reviews";
+const SETTINGS_GOOGLE_REVIEWS_HREF = "/dashboard/reputation";
 
 export default function FeedbacksEmptyState() {
   return (
