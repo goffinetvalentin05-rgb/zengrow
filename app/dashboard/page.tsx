@@ -18,11 +18,16 @@ export default async function DashboardPage() {
         subtitle="Suivez vos bons cadeaux, vos ventes et votre base d’acheteurs."
         primaryAction={{
           kind: "link",
-          href: "/dashboard/gift-vouchers?redeem=1",
-          label: "Utiliser un bon",
+          href: "/dashboard/gift-vouchers?scan=1",
+          label: "Scanner un bon",
           icon: <ScanLine className="h-4 w-4" strokeWidth={2} />,
         }}
         secondaryActions={[
+          {
+            kind: "link",
+            href: "/dashboard/gift-vouchers?redeem=1",
+            label: "Utiliser un bon",
+          },
           {
             kind: "link",
             href: "/dashboard/gift-vouchers",

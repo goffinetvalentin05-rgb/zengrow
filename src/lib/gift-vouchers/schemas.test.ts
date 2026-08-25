@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCreateGiftVoucherInput, parseLookupGiftVoucherCode, parseRedeemGiftVoucherInput } from "@/src/lib/gift-vouchers/schemas";
+import { parseCreateGiftVoucherInput, parseLookupGiftVoucherCode, parseLookupGiftVoucherToken, parseRedeemGiftVoucherInput } from "@/src/lib/gift-vouchers/schemas";
 
 describe("parseCreateGiftVoucherInput", () => {
   it("accepte une création digitale minimale", () => {
@@ -90,5 +90,17 @@ describe("parseLookupGiftVoucherCode", () => {
 
   it("refuse un code inconnu / invalide", () => {
     expect(() => parseLookupGiftVoucherCode({ code: "ABC" })).toThrow();
+  });
+});
+
+describe("parseLookupGiftVoucherToken", () => {
+  it("accepte un token public opaque", () => {
+    const token = "ab".repeat(32);
+    expect(parseLookupGiftVoucherToken({ token, restaurantId: "x" })).toBe(token);
+  });
+
+  it("refuse un token inexistant / invalide", () => {
+    expect(() => parseLookupGiftVoucherToken({ token: "ZG-8K4M-2P7Q" })).toThrow();
+    expect(() => parseLookupGiftVoucherToken({ token: "" })).toThrow();
   });
 });

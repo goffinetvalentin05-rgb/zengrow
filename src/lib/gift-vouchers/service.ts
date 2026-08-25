@@ -9,11 +9,13 @@ import {
   type GiftVoucherTransactionRow,
 } from "@/src/lib/gift-vouchers/map";
 import { chfToCents } from "@/src/lib/gift-vouchers/money";
+import { generateGiftVoucherPublicToken } from "@/src/lib/gift-vouchers/public-token";
 import { getRedeemBlockReason, redeemErrorMessage } from "@/src/lib/gift-vouchers/redeem";
 import {
   parseCreateGiftVoucherInput,
   parseGiftVoucherStatusAction,
   parseLookupGiftVoucherCode,
+  parseLookupGiftVoucherToken,
   parseRedeemGiftVoucherInput,
 } from "@/src/lib/gift-vouchers/schemas";
 import { applyMarkUsed, applyReactivate, canDisable, canMarkUsed, canReactivate } from "@/src/lib/gift-vouchers/status";
@@ -51,6 +53,9 @@ function publicError(error: { message?: string } | null, fallback: string): stri
   const message = error?.message ?? "";
   if (!message) return fallback;
   if (/duplicate key|unique constraint/i.test(message)) {
+    if (/public_token/i.test(message)) {
+      return "Impossible de régénérer le QR. Réessayez.";
+    }
     return "Ce code de bon existe déjà. Réessayez.";
   }
   return fallback;
@@ -61,7 +66,7 @@ const VOUCHER_SELECT = `
   initial_amount_cents, remaining_amount_cents, currency,
   buyer_name, buyer_email, buyer_phone, recipient_name, recipient_email,
   message, expires_at, issued_at, fully_used_at, created_at, updated_at,
-  created_by, metadata
+  created_by, public_token, metadata
 `;
 
 const TRANSACTION_SELECT = `
@@ -209,8 +214,44 @@ export async function lookupGiftVoucherByCode(
     throw new GiftVoucherServiceError("Ce bon n’existe pas.", 404);
   }
 
-  const voucher = mapRowWithTransactions(data as GiftVoucherWithTransactionsRow);
-  const domain = mapGiftVoucherRow(data as GiftVoucherRow);
+  return toLookupResult(data as GiftVoucherWithTransactionsRow);
+}
+
+export async function lookupGiftVoucherByPublicToken(
+  supabase: SupabaseClient,
+  restaurantId: string,
+  payload: unknown,
+): Promise<GiftVoucherLookupResult> {
+  let token: string;
+  try {
+    token = parseLookupGiftVoucherToken(payload);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      throw new GiftVoucherServiceError(firstZodMessage(error), 400);
+    }
+    throw new GiftVoucherServiceError("Ce QR code n’est pas un bon ZenGrow valide.", 400);
+  }
+
+  const { data, error } = await supabase
+    .from("gift_vouchers")
+    .select(`${VOUCHER_SELECT}, gift_voucher_transactions!voucher_id (${TRANSACTION_SELECT})`)
+    .eq("restaurant_id", restaurantId)
+    .eq("public_token", token)
+    .maybeSingle();
+
+  if (error) {
+    throw new GiftVoucherServiceError(publicError(error, "Impossible de rechercher ce bon."), 500);
+  }
+  if (!data) {
+    throw new GiftVoucherServiceError("Ce bon n’existe pas.", 404);
+  }
+
+  return toLookupResult(data as GiftVoucherWithTransactionsRow);
+}
+
+function toLookupResult(row: GiftVoucherWithTransactionsRow): GiftVoucherLookupResult {
+  const voucher = mapRowWithTransactions(row);
+  const domain = mapGiftVoucherRow(row);
   const block = getRedeemBlockReason({
     status: domain.status,
     remainingAmountCents: domain.remainingAmountCents,
@@ -333,6 +374,7 @@ export async function createGiftVoucher(
         restaurant_id: params.restaurantId,
         buyer_customer_id: buyerCustomerId,
         code,
+        public_token: generateGiftVoucherPublicToken(),
         type: input.type,
         status: "active",
         initial_amount_cents: amountCents,
@@ -456,7 +498,7 @@ export async function updateGiftVoucherStatus(
       balanceAfter: voucher.remainingAmountCents,
       note: "Bon désactivé",
     });
-  } else {
+  } else if (action === "reactivate") {
     if (!canReactivate(voucher.status)) {
       throw new GiftVoucherServiceError("Ce bon ne peut pas être réactivé.", 400);
     }
@@ -474,6 +516,27 @@ export async function updateGiftVoucherStatus(
       balanceAfter: voucher.remainingAmountCents,
       note: "Bon réactivé",
     });
+  } else if (action === "rotate_qr") {
+    let rotated = false;
+    for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt += 1) {
+      const { error: rotateError } = await supabase
+        .from("gift_vouchers")
+        .update({ public_token: generateGiftVoucherPublicToken() })
+        .eq("id", voucher.id)
+        .eq("restaurant_id", params.restaurantId);
+      if (!rotateError) {
+        rotated = true;
+        break;
+      }
+      if (!isUniqueViolation(rotateError)) {
+        throw new GiftVoucherServiceError(publicError(rotateError, "Impossible de régénérer le QR."), 500);
+      }
+    }
+    if (!rotated) {
+      throw new GiftVoucherServiceError("Impossible de régénérer le QR. Réessayez.", 500);
+    }
+  } else {
+    throw new GiftVoucherServiceError("Action invalide.", 400);
   }
 
   return getGiftVoucher(supabase, params.restaurantId, voucher.id);

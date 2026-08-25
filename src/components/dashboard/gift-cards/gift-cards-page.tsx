@@ -7,6 +7,7 @@ import CreateGiftCardModal from "@/src/components/dashboard/gift-cards/create-gi
 import GiftCardDetailDrawer from "@/src/components/dashboard/gift-cards/gift-card-detail-drawer";
 import GiftCardTable from "@/src/components/dashboard/gift-cards/gift-card-table";
 import RedeemGiftVoucherModal from "@/src/components/dashboard/gift-cards/redeem-gift-voucher-modal";
+import ScanGiftVoucherModal from "@/src/components/dashboard/gift-cards/scan-gift-voucher-modal";
 import type {
   GiftCardDrawerAction,
   GiftCardRecord,
@@ -27,12 +28,16 @@ type GiftCardsPageProps = {
   initialCards: GiftCardRecord[];
   initialRedeem?: boolean;
   initialRedeemCode?: string;
+  initialRedeemToken?: string;
+  initialScan?: boolean;
 };
 
 export default function GiftCardsPage({
   initialCards,
   initialRedeem = false,
   initialRedeemCode = "",
+  initialRedeemToken = "",
+  initialScan = false,
 }: GiftCardsPageProps) {
   const router = useRouter();
   const showToast = useDashboardToast();
@@ -41,14 +46,43 @@ export default function GiftCardsPage({
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [redeemOpen, setRedeemOpen] = useState(initialRedeem);
+  const [redeemOpen, setRedeemOpen] = useState(initialRedeem && !initialRedeemToken);
   const [redeemCode, setRedeemCode] = useState(initialRedeemCode);
   const [redeemVoucher, setRedeemVoucher] = useState<GiftCardRecord | null>(null);
+  const [scanOpen, setScanOpen] = useState(initialScan);
   const [busyAction, setBusyAction] = useState<GiftCardDrawerAction | null>(null);
 
   useEffect(() => {
     setCards(initialCards);
   }, [initialCards]);
+
+  useEffect(() => {
+    if (!initialRedeemToken) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch(
+          `/api/gift-vouchers/lookup-token?token=${encodeURIComponent(initialRedeemToken)}`,
+        );
+        const payload = (await response.json().catch(() => null)) as {
+          voucher?: GiftCardRecord;
+          error?: string;
+        } | null;
+        if (cancelled) return;
+        if (!response.ok || !payload?.voucher) {
+          showToast({ message: payload?.error ?? "Ce bon n’existe pas." });
+          return;
+        }
+        setRedeemVoucher(payload.voucher);
+        setRedeemOpen(true);
+      } catch {
+        if (!cancelled) showToast({ message: "Impossible de rechercher ce bon." });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialRedeemToken, showToast]);
 
   const selected = useMemo(
     () => cards.find((card) => card.id === selectedId) ?? null,
@@ -131,7 +165,8 @@ export default function GiftCardsPage({
       }
       setCards((prev) => prev.map((card) => (card.id === payload.voucher!.id ? payload.voucher! : card)));
       showToast({
-        message: action === "disable" ? "Bon désactivé." : "Bon réactivé.",
+        message:
+          action === "disable" ? "Bon désactivé." : action === "rotate_qr" ? "QR régénéré. L’ancien lien n’est plus valide." : "Bon réactivé.",
         icon: CheckCircle2,
       });
       router.refresh();
@@ -149,11 +184,16 @@ export default function GiftCardsPage({
         subtitle="Gérez tous vos bons digitaux et papier au même endroit."
         primaryAction={{
           kind: "button",
-          label: "Utiliser un bon",
+          label: "Scanner un bon",
           icon: <ScanLine className="h-4 w-4" strokeWidth={2} />,
-          onClick: () => openRedeem(),
+          onClick: () => setScanOpen(true),
         }}
         secondaryActions={[
+          {
+            kind: "button",
+            label: "Utiliser un bon",
+            onClick: () => openRedeem(),
+          },
           {
             kind: "button",
             label: "+ Créer un bon",
@@ -195,6 +235,7 @@ export default function GiftCardsPage({
         open={redeemOpen}
         initialCode={redeemCode}
         initialVoucher={redeemVoucher}
+        onScanRequest={() => setScanOpen(true)}
         onClose={() => {
           setRedeemOpen(false);
           setRedeemVoucher(null);
@@ -202,6 +243,16 @@ export default function GiftCardsPage({
         }}
         onRedeemed={handleRedeemed}
         onViewVoucher={(voucher) => setSelectedId(voucher.id)}
+      />
+      <ScanGiftVoucherModal
+        open={scanOpen}
+        onClose={() => setScanOpen(false)}
+        onVoucherFound={({ voucher }) => {
+          setScanOpen(false);
+          setRedeemVoucher(voucher);
+          setRedeemCode(voucher.code);
+          setRedeemOpen(true);
+        }}
       />
     </section>
   );

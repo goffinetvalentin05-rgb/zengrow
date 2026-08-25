@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Ban, Mail, QrCode, RotateCcw, ScanLine, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Ban, Copy, ExternalLink, Mail, RefreshCw, RotateCcw, ScanLine, X } from "lucide-react";
 import GiftCardStatusBadge from "@/src/components/dashboard/gift-cards/gift-card-status-badge";
 import GiftCardTypeBadge from "@/src/components/dashboard/gift-cards/gift-card-type-badge";
+import GiftVoucherQr from "@/src/components/dashboard/gift-cards/gift-voucher-qr";
 import type { GiftCardDrawerAction, GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
+import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import { formatChf } from "@/src/lib/gift-vouchers/money";
+import { giftVoucherPublicUrl } from "@/src/lib/gift-vouchers/public-token";
 import { canRedeem } from "@/src/lib/gift-vouchers/redeem";
 import { canDisable, canReactivate } from "@/src/lib/gift-vouchers/status";
 import { useDialogFocusTrap } from "@/src/components/dashboard/reservations/hooks/use-dialog-focus-trap";
@@ -36,6 +39,8 @@ export default function GiftCardDetailDrawer({
   busyAction = null,
 }: GiftCardDetailDrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const showToast = useDashboardToast();
+  const [confirmRotate, setConfirmRotate] = useState(false);
   const open = card != null;
   const busy = busyAction != null;
 
@@ -59,9 +64,24 @@ export default function GiftCardDetailDrawer({
     };
   }, [open]);
 
+  useEffect(() => {
+    setConfirmRotate(false);
+  }, [card?.id, card?.publicToken]);
+
   if (!card) return null;
 
   const canUse = canRedeem(card.status, Math.round(card.balanceChf * 100), card.expiresAt ?? null);
+  const publicUrl = card.publicToken ? giftVoucherPublicUrl(card.publicToken) : "";
+
+  async function copyPublicLink() {
+    if (!publicUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      showToast({ message: "Lien du bon copié." });
+    } catch {
+      showToast({ message: "Impossible de copier le lien." });
+    }
+  }
 
   return (
     <DashboardPortal>
@@ -124,16 +144,55 @@ export default function GiftCardDetailDrawer({
 
             <section>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-zg-text-muted">Code / QR</h3>
-              <div className="mt-3 flex items-center gap-4 rounded-2xl border border-dashed border-zg-border bg-zg-surface-elevated/50 p-4">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-zg-border bg-zg-surface">
-                  <QrCode className="h-10 w-10 text-zg-text-muted" strokeWidth={1.5} aria-hidden />
+              <div className="mt-3 rounded-2xl border border-zg-border bg-zg-surface-elevated/50 p-4">
+                {publicUrl ? (
+                  <div className="flex flex-col items-center">
+                    <GiftVoucherQr value={publicUrl} size={168} label={`QR du bon ${card.code}`} />
+                    <p className="mt-3 font-mono text-sm font-semibold tracking-wide text-zg-fg">{card.code}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-zg-text-muted">Le QR sera disponible après mise à jour de la base.</p>
+                )}
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <Button type="button" variant="secondary" size="sm" className="w-full" disabled={busy || !publicUrl} onClick={() => void copyPublicLink()}>
+                    <Copy className="h-4 w-4" strokeWidth={2} aria-hidden />
+                    Copier le lien
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    disabled={busy || !publicUrl}
+                    onClick={() => window.open(publicUrl, "_blank", "noopener,noreferrer")}
+                  >
+                    <ExternalLink className="h-4 w-4" strokeWidth={2} aria-hidden />
+                    Ouvrir le bon
+                  </Button>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-zg-fg">{card.qrPlaceholder}</p>
-                  <p className="mt-1 text-xs text-zg-text-muted">
-                    Aperçu du QR — la génération réelle arrivera plus tard.
-                  </p>
-                </div>
+                {confirmRotate ? (
+                  <div className="mt-3 rounded-xl border border-zg-border bg-zg-surface px-3 py-3">
+                    <p className="text-sm text-zg-fg">L’ancien QR et le lien actuel deviendront invalides.</p>
+                    <div className="mt-3 flex gap-2">
+                      <Button type="button" size="sm" className="flex-1" disabled={busy} onClick={() => onAction("rotate_qr")}>
+                        Confirmer
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" className="flex-1" disabled={busy} onClick={() => setConfirmRotate(false)}>
+                        Annuler
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="mt-3 w-full text-center text-xs font-medium text-zg-text-muted hover:text-zg-fg disabled:opacity-50"
+                    disabled={busy || !publicUrl}
+                    onClick={() => setConfirmRotate(true)}
+                  >
+                    <RefreshCw className="mr-1 inline h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+                    {busyAction === "rotate_qr" ? "Régénération…" : "Regénérer le QR"}
+                  </button>
+                )}
               </div>
             </section>
 

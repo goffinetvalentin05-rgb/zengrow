@@ -28,10 +28,11 @@ export type GiftCardRecord = {
   purchasedLabel: string;
   expiresAt?: string | null;
   expiresLabel: string;
+  publicToken: string;
   qrPlaceholder: string;
   usageHistory: GiftCardUsageEvent[];
 };
 
 export type GiftCardTypeFilter = "all" | GiftCardType;
 
-export type GiftCardDrawerAction = "resend" | "redeem" | "disable" | "reactivate";
+export type GiftCardDrawerAction = "resend" | "redeem" | "disable" | "reactivate" | "rotate_qr";

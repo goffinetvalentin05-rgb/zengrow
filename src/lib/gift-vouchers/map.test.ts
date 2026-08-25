@@ -25,6 +25,7 @@ const voucher: GiftVoucher = {
   createdAt: "2026-08-20T10:00:00.000Z",
   updatedAt: "2026-08-25T09:00:00.000Z",
   createdBy: "user-1",
+  publicToken: "a".repeat(64),
   metadata: {},
 };
 
@@ -70,6 +71,7 @@ describe("gift voucher history mapping", () => {
       amountLabel: `+${formatChf(100)}`,
       remainingBalanceChf: 100,
     });
+    expect(record.publicToken).toHaveLength(64);
   });
 
   it("mappe une utilisation isolée", () => {

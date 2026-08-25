@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizeGiftVoucherCode } from "@/src/lib/gift-vouchers/code";
+import { normalizeGiftVoucherPublicToken } from "@/src/lib/gift-vouchers/public-token";
 import type {
   CreateGiftVoucherInput,
   GiftVoucherStatusAction,
@@ -53,7 +54,7 @@ export function parseCreateGiftVoucherInput(payload: unknown): CreateGiftVoucher
 }
 
 export const giftVoucherStatusActionSchema = z.object({
-  action: z.enum(["disable", "reactivate", "mark_used"]),
+  action: z.enum(["disable", "reactivate", "mark_used", "rotate_qr"]),
 });
 
 export function parseGiftVoucherStatusAction(payload: unknown): GiftVoucherStatusAction {
@@ -119,4 +120,23 @@ export const lookupGiftVoucherSchema = z
 
 export function parseLookupGiftVoucherCode(payload: unknown): string {
   return lookupGiftVoucherSchema.parse(payload);
+}
+
+export const lookupGiftVoucherTokenSchema = z
+  .object({
+    token: z.string().min(1, "Ce QR code n’est pas un bon ZenGrow valide."),
+  })
+  .superRefine((data, ctx) => {
+    if (!normalizeGiftVoucherPublicToken(data.token)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["token"],
+        message: "Ce QR code n’est pas un bon ZenGrow valide.",
+      });
+    }
+  })
+  .transform((data) => normalizeGiftVoucherPublicToken(data.token)!);
+
+export function parseLookupGiftVoucherToken(payload: unknown): string {
+  return lookupGiftVoucherTokenSchema.parse(payload);
 }

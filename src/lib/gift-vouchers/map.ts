@@ -74,6 +74,7 @@ export type GiftVoucherRow = {
   created_at: string;
   updated_at: string;
   created_by: string | null;
+  public_token: string;
   metadata: unknown;
 };
 
@@ -98,6 +99,9 @@ export function mapGiftVoucherRow(row: GiftVoucherRow): GiftVoucher {
   if (!isGiftVoucherStatus(row.status)) {
     throw new Error("Statut de bon invalide.");
   }
+  if (!row.public_token) {
+    throw new Error("Token public manquant.");
+  }
   return {
     id: row.id,
     restaurantId: row.restaurant_id,
@@ -120,6 +124,7 @@ export function mapGiftVoucherRow(row: GiftVoucherRow): GiftVoucher {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     createdBy: row.created_by,
+    publicToken: row.public_token,
     metadata: asMetadata(row.metadata),
   };
 }
@@ -207,6 +212,7 @@ export function toGiftCardRecord(voucher: GiftVoucher, transactions: GiftVoucher
     purchasedLabel: formatGiftVoucherDate(voucher.issuedAt),
     expiresAt: voucher.expiresAt,
     expiresLabel: formatGiftVoucherDate(voucher.expiresAt),
+    publicToken: voucher.publicToken,
     qrPlaceholder: `QR-${voucher.code}`,
     usageHistory: [...transactions]
       .sort((a, b) => {

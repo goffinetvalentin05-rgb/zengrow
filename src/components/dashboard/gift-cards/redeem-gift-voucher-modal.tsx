@@ -21,6 +21,7 @@ type RedeemGiftVoucherModalProps = {
   onViewVoucher?: (voucher: GiftCardRecord) => void;
   initialCode?: string;
   initialVoucher?: GiftCardRecord | null;
+  onScanRequest?: () => void;
 };
 
 type LookupPayload = {
@@ -88,6 +89,7 @@ export default function RedeemGiftVoucherModal({
   onViewVoucher,
   initialCode = "",
   initialVoucher = null,
+  onScanRequest,
 }: RedeemGiftVoucherModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<RedeemStep>("code");
@@ -316,13 +318,13 @@ export default function RedeemGiftVoucherModal({
                 </div>
                 <button
                   type="button"
-                  disabled
-                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zg-border bg-zg-surface-elevated/40 px-4 text-sm font-medium text-zg-text-muted"
+                  onClick={() => onScanRequest?.()}
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-zg-border bg-zg-surface-elevated/40 px-4 text-sm font-semibold text-zg-fg hover:bg-zg-card-hover"
                 >
                   <ScanLine className="h-5 w-5" strokeWidth={2} aria-hidden />
                   Scanner un QR code
                 </button>
-                <p className="text-xs text-zg-text-muted">Le scan arrivera plus tard. Saisissez le code pour l’instant.</p>
+                <p className="text-xs text-zg-text-muted">Pointez la caméra vers le QR du bon cadeau.</p>
                 {formError ? <p className="text-sm font-medium text-zg-danger">{formError}</p> : null}
                 <Button type="submit" size="lg" className="min-h-12 w-full text-base" disabled={busy || !code.trim()}>
                   {busy ? "Recherche…" : "Rechercher le bon"}

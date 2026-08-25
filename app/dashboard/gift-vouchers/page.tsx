@@ -6,7 +6,7 @@ import { GiftVoucherServiceError, listGiftVouchers } from "@/src/lib/gift-vouche
 import { createClient } from "@/src/lib/supabase/server";
 
 type DashboardGiftVouchersPageProps = {
-  searchParams: Promise<{ redeem?: string; code?: string }>;
+  searchParams: Promise<{ redeem?: string; code?: string; redeemToken?: string; scan?: string }>;
 };
 
 export default async function DashboardGiftVouchersPage({ searchParams }: DashboardGiftVouchersPageProps) {
@@ -28,6 +28,8 @@ export default async function DashboardGiftVouchersPage({ searchParams }: Dashbo
         initialCards={initialCards}
         initialRedeem={params.redeem === "1"}
         initialRedeemCode={params.code?.trim() ?? ""}
+        initialRedeemToken={params.redeemToken?.trim() ?? ""}
+        initialScan={params.scan === "1"}
       />
     </DashboardContent>
   );

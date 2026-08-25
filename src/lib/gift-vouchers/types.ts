@@ -35,6 +35,7 @@ export type GiftVoucher = {
   createdAt: string;
   updatedAt: string;
   createdBy: string | null;
+  publicToken: string;
   metadata: Record<string, unknown>;
 };
 
@@ -65,7 +66,7 @@ export type CreateGiftVoucherInput = {
   generatePdf?: boolean;
 };
 
-export type GiftVoucherStatusAction = "disable" | "reactivate" | "mark_used";
+export type GiftVoucherStatusAction = "disable" | "reactivate" | "mark_used" | "rotate_qr";
 
 export type RedeemGiftVoucherInput = {
   code?: string;
