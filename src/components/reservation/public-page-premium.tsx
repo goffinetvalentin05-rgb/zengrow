@@ -2275,7 +2275,7 @@ export function GiftVouchersSection({
                             color: "var(--button-text)",
                           }}
                         >
-                          Offrir cette offre
+                          {offer.kind === "experience" ? "Offrir cette expérience" : "Choisir ce bon"}
                         </button>
                       </div>
                     </article>

@@ -29,9 +29,10 @@ type ActionMenuProps = {
   items: ActionMenuItem[];
   label?: string;
   className?: string;
+  compact?: boolean;
 };
 
-export default function ActionMenu({ items, label = "Actions", className }: ActionMenuProps) {
+export default function ActionMenu({ items, label = "Actions", className, compact = false }: ActionMenuProps) {
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
@@ -67,10 +68,11 @@ export default function ActionMenu({ items, label = "Actions", className }: Acti
         aria-haspopup="menu"
         aria-controls={menuId}
         aria-expanded={open}
+        aria-label={label}
         onClick={() => setOpen((v) => !v)}
       >
         <MoreHorizontal className="h-4 w-4" strokeWidth={2} />
-        {label}
+        {compact ? <span className="sr-only">{label}</span> : label}
       </Button>
 
       {open ? (

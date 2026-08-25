@@ -103,7 +103,7 @@ export function issuanceAmountCents(offer: GiftVoucherOffer): number {
 }
 
 export function offerKindLabel(kind: GiftVoucherOfferKind): string {
-  return kind === "experience" ? "Expérience" : "Bon monétaire";
+  return kind === "experience" ? "Expérience" : "Montant";
 }
 
 export function formatOfferCatalogPrice(offer: Pick<GiftVoucherOffer, "kind" | "salePriceCents" | "faceValueCents">): {

@@ -392,8 +392,8 @@ const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVouch
         </SettingsAccordion>
 
         <SettingsAccordion
-          title="Valeurs pour les nouveaux bons"
-          description="Appliquées uniquement à la création. Les bons déjà émis ne sont pas recalculés."
+          title="Montant libre"
+          description="Ces montants ne remplacent pas le catalogue « Mes offres ». Ils servent uniquement à l’option montant libre."
           defaultOpen
         >
           <div className="grid gap-4 md:grid-cols-2">
@@ -441,9 +441,14 @@ const GiftVoucherSettingsPanel = forwardRef<GiftVoucherSettingsHandle, GiftVouch
         ) : message ? (
           <p className="text-sm text-zg-text-muted">{message}</p>
         ) : null}
-        <Link href="/dashboard/gift-vouchers" className="inline-block text-sm font-medium text-zg-accent hover:underline">
-          Créer un bon avec ces réglages →
-        </Link>
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+          <Link href="/dashboard/gift-vouchers/offers" className="text-sm font-medium text-zg-accent hover:underline">
+            Gérer le catalogue d’offres →
+          </Link>
+          <Link href="/dashboard/gift-vouchers" className="text-sm font-medium text-zg-accent hover:underline">
+            Créer un bon avec ces réglages →
+          </Link>
+        </div>
       </div>
     );
   },

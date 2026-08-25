@@ -24,6 +24,10 @@ export type GiftVoucherOffer = {
   updatedAt: string;
 };
 
+export type GiftVoucherOfferListItem = GiftVoucherOffer & {
+  issuedCount: number;
+};
+
 export type PublicGiftVoucherOffer = {
   id: string;
   title: string;

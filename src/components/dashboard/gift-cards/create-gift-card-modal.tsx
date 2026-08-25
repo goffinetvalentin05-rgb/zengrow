@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Gift, Mail, Printer, X } from "lucide-react";
 import { useDialogFocusTrap } from "@/src/components/dashboard/reservations/hooks/use-dialog-focus-trap";
 import DashboardPortal from "@/src/components/dashboard/ui/dashboard-portal";
@@ -243,7 +244,11 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5">
               {offers.length === 0 ? (
                 <p className="text-sm text-zg-text-muted">
-                  Aucune offre active. Créez d’abord une offre, ou utilisez un montant libre.
+                  Aucune offre publiée.{" "}
+                  <Link href="/dashboard/gift-vouchers/offers/new" className="font-medium text-zg-accent hover:underline">
+                    Créer une offre
+                  </Link>
+                  {allowFreeAmount ? ", ou utilisez un montant libre." : "."}
                 </p>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -264,6 +269,9 @@ export default function CreateGiftCardModal({ open, onClose, onCreated }: Create
                       )}
                       <div className="p-3">
                         <p className="font-semibold text-zg-fg">{offer.title}</p>
+                        {offer.shortDescription ? (
+                          <p className="mt-1 line-clamp-2 text-sm text-zg-text-muted">{offer.shortDescription}</p>
+                        ) : null}
                         <p className="mt-1 text-sm text-zg-accent">{offerPrice(offer)}</p>
                       </div>
                     </button>

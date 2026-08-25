@@ -6,7 +6,7 @@ import { CheckCircle2, ScanLine } from "lucide-react";
 import CreateGiftCardModal from "@/src/components/dashboard/gift-cards/create-gift-card-modal";
 import GiftCardDetailDrawer from "@/src/components/dashboard/gift-cards/gift-card-detail-drawer";
 import GiftCardTable from "@/src/components/dashboard/gift-cards/gift-card-table";
-import GiftVoucherOffersSection from "@/src/components/dashboard/gift-cards/gift-voucher-offers-section";
+import GiftVoucherSectionNav from "@/src/components/dashboard/gift-cards/gift-voucher-section-nav";
 import RedeemGiftVoucherModal from "@/src/components/dashboard/gift-cards/redeem-gift-voucher-modal";
 import ScanGiftVoucherModal from "@/src/components/dashboard/gift-cards/scan-gift-voucher-modal";
 import type {
@@ -26,7 +26,6 @@ const FILTER_TABS: { id: GiftCardTypeFilter; label: string }[] = [
 ];
 
 type GiftCardsPageProps = {
-  restaurantId: string;
   initialCards: GiftCardRecord[];
   initialRedeem?: boolean;
   initialRedeemCode?: string;
@@ -35,7 +34,6 @@ type GiftCardsPageProps = {
 };
 
 export default function GiftCardsPage({
-  restaurantId,
   initialCards,
   initialRedeem = false,
   initialRedeemCode = "",
@@ -211,8 +209,8 @@ export default function GiftCardsPage({
   return (
     <section className="w-full min-w-0 space-y-6 md:space-y-8">
       <PageHeader
-        title="Bons cadeaux"
-        subtitle="Gérez tous vos bons digitaux et papier au même endroit."
+        title="Bons émis"
+        subtitle="Codes, bénéficiaires, soldes et utilisations des bons individuels."
         primaryAction={{
           kind: "button",
           label: "Scanner un bon",
@@ -233,7 +231,7 @@ export default function GiftCardsPage({
         ]}
       />
 
-      <GiftVoucherOffersSection restaurantId={restaurantId} />
+      <GiftVoucherSectionNav />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs

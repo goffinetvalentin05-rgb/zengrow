@@ -42,14 +42,17 @@ export const createGiftVoucherOfferSchema = z
     status: z.enum(["active", "inactive"]).optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.salePriceChf == null) {
+    if (data.salePriceChf == null && data.kind === "experience") {
+      return;
+    }
+    if (data.salePriceChf == null && data.status !== "inactive") {
       ctx.addIssue({
         code: "custom",
         path: ["salePriceChf"],
         message: "Indiquez le prix de vente.",
       });
     }
-    if (data.kind === "monetary") {
+    if (data.kind === "monetary" && data.status !== "inactive") {
       const face = data.faceValueChf ?? data.salePriceChf;
       if (face == null || face <= 0) {
         ctx.addIssue({
@@ -61,7 +64,7 @@ export const createGiftVoucherOfferSchema = z
     }
   })
   .transform((data): CreateGiftVoucherOfferInput => {
-    const salePriceCents = data.salePriceChf == null ? 0 : data.salePriceChf === 0 ? 0 : chfToCents(data.salePriceChf);
+    const salePriceCents = data.salePriceChf == null || data.salePriceChf === 0 ? 0 : chfToCents(data.salePriceChf);
     const faceSource = data.faceValueChf ?? (data.kind === "monetary" ? data.salePriceChf : undefined);
     const faceValueCents = faceSource != null && faceSource > 0 ? chfToCents(faceSource) : undefined;
     return {

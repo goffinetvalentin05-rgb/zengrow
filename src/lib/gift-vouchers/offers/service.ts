@@ -11,7 +11,7 @@ import {
   parseReorderGiftVoucherOfferIds,
   parseUpdateGiftVoucherOfferInput,
 } from "@/src/lib/gift-vouchers/offers/schemas";
-import type { CreateGiftVoucherOfferInput, GiftVoucherOffer, GiftVoucherOfferStatus } from "@/src/lib/gift-vouchers/offers/types";
+import type { CreateGiftVoucherOfferInput, GiftVoucherOffer, GiftVoucherOfferListItem, GiftVoucherOfferStatus } from "@/src/lib/gift-vouchers/offers/types";
 
 function firstZodMessage(error: ZodError): string {
   return error.issues[0]?.message ?? "Données invalides.";
@@ -42,6 +42,38 @@ export async function listGiftVoucherOffers(
     throw new GiftVoucherServiceError("Impossible de charger les offres.", 500);
   }
   return ((data ?? []) as GiftVoucherOfferRow[]).map(asOffer);
+}
+
+export async function countIssuedGiftVouchersByOffer(
+  supabase: SupabaseClient,
+  restaurantId: string,
+): Promise<Map<string, number>> {
+  const { data, error } = await supabase
+    .from("gift_vouchers")
+    .select("offer_id")
+    .eq("restaurant_id", restaurantId)
+    .not("offer_id", "is", null);
+  const counts = new Map<string, number>();
+  if (error || !data) return counts;
+  for (const row of data as Array<{ offer_id: string | null }>) {
+    if (!row.offer_id) continue;
+    counts.set(row.offer_id, (counts.get(row.offer_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export async function listGiftVoucherOffersWithStats(
+  supabase: SupabaseClient,
+  restaurantId: string,
+): Promise<GiftVoucherOfferListItem[]> {
+  const [offers, counts] = await Promise.all([
+    listGiftVoucherOffers(supabase, restaurantId, { includeArchived: true }),
+    countIssuedGiftVouchersByOffer(supabase, restaurantId),
+  ]);
+  return offers.map((offer) => ({
+    ...offer,
+    issuedCount: counts.get(offer.id) ?? 0,
+  }));
 }
 
 export async function listPublicGiftVoucherOffers(
@@ -209,7 +241,7 @@ export async function duplicateGiftVoucherOffer(
 ): Promise<GiftVoucherOffer> {
   const source = await getGiftVoucherOffer(supabase, params.restaurantId, params.id);
   const sortIndex = await nextSortIndex(supabase, params.restaurantId);
-  const title = source.title.endsWith("(copie)") ? source.title : `${source.title} (copie)`;
+  const title = source.title.startsWith("Copie de ") ? source.title : `Copie de ${source.title}`;
   const { data, error } = await supabase
     .from("gift_voucher_offers")
     .insert(
