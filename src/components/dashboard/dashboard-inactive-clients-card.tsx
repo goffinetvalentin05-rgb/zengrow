@@ -1,15 +1,22 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonClassName } from "@/src/components/ui/button";
+import { formatCentsAsChf } from "@/src/lib/gift-vouchers/money";
 import { cn } from "@/src/lib/utils";
 
 type DashboardGiftCardsHighlightCardProps = {
   className?: string;
+  circulationCents: number;
+  activeCount: number;
 };
 
 export default function DashboardGiftCardsHighlightCard({
   className,
+  circulationCents,
+  activeCount,
 }: DashboardGiftCardsHighlightCardProps) {
+  const activeLabel = activeCount === 1 ? "1 bon actif" : `${activeCount} bons actifs`;
+
   return (
     <div
       className={cn(
@@ -33,13 +40,13 @@ export default function DashboardGiftCardsHighlightCard({
       <p className="relative font-landing-serif text-xl italic leading-none text-white/95">ZenGrow</p>
       <p className="relative mt-auto text-sm font-medium text-white/85">Vos bons en circulation</p>
       <p className="zg-stat-value relative mt-2 text-4xl leading-none tracking-tight text-white tabular-nums sm:text-5xl">
-        2’430 CHF
+        {formatCentsAsChf(circulationCents)}
       </p>
       <p className="relative mt-3 text-xs font-medium text-white/70">
         Valeur encore disponible sur les bons actifs.
       </p>
       <p className="relative mt-2 inline-flex w-fit rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium text-white/90">
-        18 bons actifs
+        {activeLabel}
       </p>
 
       <Link

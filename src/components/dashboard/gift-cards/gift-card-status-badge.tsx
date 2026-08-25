@@ -2,13 +2,15 @@ import Badge from "@/src/components/ui/badge";
 import type { GiftCardStatus } from "@/src/components/dashboard/gift-cards/types";
 
 const STATUS_LABEL: Record<GiftCardStatus, string> = {
+  draft: "Brouillon",
   active: "Actif",
   used: "Utilisé",
   expired: "Expiré",
   disabled: "Désactivé",
 };
 
-const STATUS_TONE: Record<GiftCardStatus, "success" | "info" | "warning" | "neutral"> = {
+const STATUS_TONE: Record<GiftCardStatus, "success" | "info" | "warning" | "neutral" | "sand"> = {
+  draft: "sand",
   active: "success",
   used: "info",
   expired: "warning",

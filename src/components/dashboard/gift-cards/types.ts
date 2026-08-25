@@ -1,11 +1,13 @@
 export type GiftCardType = "digital" | "paper";
-export type GiftCardStatus = "active" | "used" | "expired" | "disabled";
+export type GiftCardStatus = "draft" | "active" | "used" | "expired" | "disabled";
 
 export type GiftCardUsageEvent = {
   id: string;
   dateLabel: string;
   amountUsedChf: number;
   remainingBalanceChf: number;
+  kind?: string;
+  label?: string;
 };
 
 export type GiftCardRecord = {
@@ -14,6 +16,8 @@ export type GiftCardRecord = {
   buyerName: string;
   buyerEmail: string;
   recipientName: string | null;
+  recipientEmail?: string | null;
+  message?: string | null;
   amountChf: number;
   balanceChf: number;
   type: GiftCardType;
@@ -26,3 +30,5 @@ export type GiftCardRecord = {
 };
 
 export type GiftCardTypeFilter = "all" | GiftCardType;
+
+export type GiftCardDrawerAction = "resend" | "mark_used" | "disable" | "reactivate";

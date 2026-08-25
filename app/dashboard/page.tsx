@@ -1,11 +1,15 @@
+import { Suspense } from "react";
 import { Gift } from "lucide-react";
-import { DashboardHomeMetrics } from "@/src/components/dashboard/dashboard-home-metrics";
+import {
+  DashboardHomeMetrics,
+  DashboardHomeMetricsSkeleton,
+} from "@/src/components/dashboard/dashboard-home-metrics";
 import { requireRestaurant } from "@/src/lib/auth";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 
 export default async function DashboardPage() {
-  await requireRestaurant();
+  const restaurant = await requireRestaurant();
 
   return (
     <DashboardContent>
@@ -24,7 +28,9 @@ export default async function DashboardPage() {
         <div className="sr-only">
           <h2 id="dashboard-stats-heading">Statistiques</h2>
         </div>
-        <DashboardHomeMetrics />
+        <Suspense fallback={<DashboardHomeMetricsSkeleton />}>
+          <DashboardHomeMetrics restaurantId={restaurant.id} />
+        </Suspense>
       </section>
     </DashboardContent>
   );

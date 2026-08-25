@@ -10,7 +10,7 @@ import PageHeader from "@/src/components/dashboard/page-header";
 import ReservationsKpiCard from "@/src/components/dashboard/reservations/header/reservations-kpi-card";
 import Badge from "@/src/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table";
-import { formatChf } from "@/src/components/dashboard/gift-cards/mock-data";
+import { formatChf } from "@/src/lib/gift-vouchers/money";
 import Input from "@/src/components/ui/input";
 
 export default function GiftCardBuyersPage() {

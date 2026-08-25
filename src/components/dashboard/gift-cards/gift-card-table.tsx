@@ -2,7 +2,7 @@
 
 import GiftCardStatusBadge from "@/src/components/dashboard/gift-cards/gift-card-status-badge";
 import GiftCardTypeBadge from "@/src/components/dashboard/gift-cards/gift-card-type-badge";
-import { formatChf } from "@/src/components/dashboard/gift-cards/mock-data";
+import { formatChf } from "@/src/lib/gift-vouchers/money";
 import type { GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
 import Button from "@/src/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table";

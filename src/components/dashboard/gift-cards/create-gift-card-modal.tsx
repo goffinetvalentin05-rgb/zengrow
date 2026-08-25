@@ -14,7 +14,7 @@ import type { GiftCardType } from "@/src/components/dashboard/gift-cards/types";
 type CreateGiftCardModalProps = {
   open: boolean;
   onClose: () => void;
-  onMockCreate: () => void;
+  onCreated: () => void | Promise<void>;
 };
 
 type FormState = {
@@ -37,20 +37,24 @@ const EMPTY_FORM: FormState = {
   generatePdf: true,
 };
 
-export default function CreateGiftCardModal({ open, onClose, onMockCreate }: CreateGiftCardModalProps) {
+export default function CreateGiftCardModal({ open, onClose, onCreated }: CreateGiftCardModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<"type" | "form">("type");
   const [selectedType, setSelectedType] = useState<GiftCardType | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useDialogFocusTrap(open, panelRef);
 
   const resetAndClose = useCallback(() => {
+    if (submitting) return;
     setStep("type");
     setSelectedType(null);
     setForm(EMPTY_FORM);
+    setFormError(null);
     onClose();
-  }, [onClose]);
+  }, [onClose, submitting]);
 
   useEffect(() => {
     if (!open) return;
@@ -77,12 +81,40 @@ export default function CreateGiftCardModal({ open, onClose, onMockCreate }: Cre
     setStep("form");
   }
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setStep("type");
-    setSelectedType(null);
-    setForm(EMPTY_FORM);
-    onMockCreate();
+    if (!selectedType || submitting) return;
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      const response = await fetch("/api/gift-vouchers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: selectedType,
+          amount: Number(form.amount),
+          buyerName: form.buyerName,
+          buyerEmail: form.buyerEmail,
+          recipientName: form.recipientName,
+          message: form.message,
+          expiresAt: form.expiresAt,
+          generatePdf: selectedType === "paper" ? form.generatePdf : undefined,
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        setFormError(payload?.error ?? "Impossible de créer le bon cadeau.");
+        return;
+      }
+      setStep("type");
+      setSelectedType(null);
+      setForm(EMPTY_FORM);
+      await onCreated();
+    } catch {
+      setFormError("Impossible de créer le bon cadeau. Vérifiez votre connexion.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -111,7 +143,7 @@ export default function CreateGiftCardModal({ open, onClose, onMockCreate }: Cre
               <p className="mt-1 text-sm text-zg-text-muted">
                 {step === "type"
                   ? "Quel type de bon souhaitez-vous créer ?"
-                  : "Aperçu du formulaire — aucune création réelle pour le moment."}
+                  : "Le bon sera enregistré dans votre établissement."}
               </p>
             </div>
             <button
@@ -156,6 +188,11 @@ export default function CreateGiftCardModal({ open, onClose, onMockCreate }: Cre
           ) : (
             <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
               <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
+                {formError ? (
+                  <p className="rounded-xl border border-zg-danger/30 bg-zg-danger-soft-bg px-3 py-2 text-sm text-zg-danger" role="alert">
+                    {formError}
+                  </p>
+                ) : null}
                 <div>
                   <label className="dashboard-field-label" htmlFor="gift-amount">
                     Montant
@@ -248,12 +285,12 @@ export default function CreateGiftCardModal({ open, onClose, onMockCreate }: Cre
                 ) : null}
               </div>
               <footer className="flex flex-col gap-2 border-t border-zg-border px-5 py-4 sm:flex-row sm:justify-between">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setStep("type")}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setStep("type")} disabled={submitting}>
                   Retour
                 </Button>
-                <Button type="submit" size="sm">
+                <Button type="submit" size="sm" disabled={submitting}>
                   <Gift className="h-4 w-4" strokeWidth={2} aria-hidden />
-                  Créer le bon
+                  {submitting ? "Création…" : "Créer le bon"}
                 </Button>
               </footer>
             </form>
