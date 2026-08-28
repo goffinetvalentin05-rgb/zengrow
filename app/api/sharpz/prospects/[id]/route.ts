@@ -22,6 +22,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     contactedAt?: string | null;
     nextFollowUpAt?: string | null;
     notes?: string;
+    linkedinUrl?: string | null;
+    instagramUrl?: string | null;
   }>(request);
 
   const { data: existing } = await supabase
@@ -46,6 +48,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (body?.lastAction !== undefined) patch.last_action = body.lastAction?.trim() || null;
   if (body?.contactedAt !== undefined) patch.contacted_at = body.contactedAt || null;
   if (body?.nextFollowUpAt !== undefined) patch.next_follow_up_at = body.nextFollowUpAt || null;
+  if (body?.linkedinUrl !== undefined) patch.linkedin_url = body.linkedinUrl?.trim() || null;
+  if (body?.instagramUrl !== undefined) patch.instagram_url = body.instagramUrl?.trim() || null;
 
   const { error } = await supabase.from("prospects").update(patch).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

@@ -18,6 +18,8 @@ type ProspectInput = {
   contactedAt?: string | null;
   nextFollowUpAt?: string | null;
   notes?: string | null;
+  linkedinUrl?: string | null;
+  instagramUrl?: string | null;
   status?: string;
 };
 
@@ -47,6 +49,8 @@ export async function POST(request: Request) {
     contacted_at: item.contactedAt || null,
     next_follow_up_at: item.nextFollowUpAt || null,
     notes: item.notes ?? null,
+    linkedin_url: item.linkedinUrl?.trim() || null,
+    instagram_url: item.instagramUrl?.trim() || null,
     status:
       item.status && isPipelineStatus(item.status) ? item.status : "to_contact",
   }));

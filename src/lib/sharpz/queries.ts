@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { DEFAULT_PROSPECT_SCRIPTS, mapProspectScript, type ProspectScript } from "@/src/lib/sharpz/outreach";
 import { computeSharpzScore } from "@/src/lib/sharpz/scoring";
 import { EMPTY_ICP, type IcpProfile, type UserSaas } from "@/src/lib/sharpz/types";
 import type {
@@ -307,9 +308,44 @@ export async function getProspects(supabase: SupabaseClient, restaurantId: strin
     contactedAt: row.contacted_at ?? null,
     nextFollowUpAt: row.next_follow_up_at ?? null,
     notes: row.notes ?? null,
+    linkedinUrl: row.linkedin_url ?? null,
+    instagramUrl: row.instagram_url ?? null,
     createdAt: String(row.created_at ?? ""),
     updatedAt: String(row.updated_at ?? row.created_at ?? ""),
   }));
+}
+
+export async function ensureDefaultProspectScripts(supabase: SupabaseClient, restaurantId: string) {
+  const { count } = await supabase
+    .from("prospect_scripts")
+    .select("id", { count: "exact", head: true })
+    .eq("restaurant_id", restaurantId);
+  if ((count ?? 0) > 0) return;
+  await supabase.from("prospect_scripts").insert(
+    DEFAULT_PROSPECT_SCRIPTS.map((item) => ({
+      restaurant_id: restaurantId,
+      name: item.name,
+      channel: item.channel,
+      stage: item.stage,
+      content: item.content,
+      notes: item.notes,
+      is_active: true,
+    })),
+  );
+}
+
+export async function getProspectScripts(
+  supabase: SupabaseClient,
+  restaurantId: string,
+): Promise<ProspectScript[]> {
+  await ensureDefaultProspectScripts(supabase, restaurantId);
+  const { data } = await supabase
+    .from("prospect_scripts")
+    .select("*")
+    .eq("restaurant_id", restaurantId)
+    .order("channel", { ascending: true })
+    .order("stage", { ascending: true });
+  return (data ?? []).map((row) => mapProspectScript(row as Record<string, unknown>));
 }
 
 export async function getProspectEvents(
@@ -327,6 +363,9 @@ export async function getProspectEvents(
     prospectId: String(row.prospect_id),
     eventType: row.event_type as ProspectEvent["eventType"],
     detail: row.detail ?? null,
+    meta: row.meta && typeof row.meta === "object" && !Array.isArray(row.meta)
+      ? (row.meta as Record<string, unknown>)
+      : null,
     createdAt: String(row.created_at ?? ""),
   }));
 }

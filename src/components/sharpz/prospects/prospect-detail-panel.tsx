@@ -6,7 +6,9 @@ import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
+import { ProspectContactPanel } from "@/src/components/sharpz/prospects/prospect-contact-panel";
 import { PIPELINE_STATUSES, isFollowUpOverdue, isFollowUpToday } from "@/src/lib/sharpz/prospects-pipeline";
+import type { OutreachSaasContext, ProspectScript } from "@/src/lib/sharpz/outreach";
 import type { Prospect, ProspectEvent, ProspectStatus } from "@/src/lib/sharpz/types";
 import { cn } from "@/src/lib/utils";
 
@@ -17,6 +19,8 @@ export type ProspectDraft = {
   email: string;
   phone: string;
   url: string;
+  linkedinUrl: string;
+  instagramUrl: string;
   contact: string;
   source: string;
   lastAction: string;
@@ -67,12 +71,21 @@ type Copy = {
   eventContact: string;
   dueToday: string;
   overdue: string;
+  linkedinUrl: string;
+  instagramUrl: string;
+  channelWhatsapp: string;
+  channelLinkedin: string;
+  channelInstagram: string;
+  channelEmail: string;
+  channelPhone: string;
 };
 
 type Props = {
   prospect: Prospect;
   draft: ProspectDraft;
   events: ProspectEvent[];
+  scripts: ProspectScript[];
+  saas: OutreachSaasContext | null;
   labels: Record<ProspectStatus, string>;
   dateLocale: string;
   pending: boolean;
@@ -84,7 +97,21 @@ type Props = {
   onAddNote: (note: string) => void;
   onCloseProspect: () => void;
   onDelete: () => void;
+  onLogged: (event: ProspectEvent | null, patch: Partial<Prospect>) => void;
+  onSchedule: (iso: string) => void;
 };
+
+function channelLabel(event: ProspectEvent, copy: Copy) {
+  const channel = typeof event.meta?.channel === "string" ? event.meta.channel : "";
+  const labels: Record<string, string> = {
+    whatsapp: copy.channelWhatsapp,
+    linkedin: copy.channelLinkedin,
+    instagram: copy.channelInstagram,
+    email: copy.channelEmail,
+    phone: copy.channelPhone,
+  };
+  return labels[channel] ?? null;
+}
 
 function eventTitle(event: ProspectEvent, copy: Copy, labels: Record<ProspectStatus, string>) {
   if (event.eventType === "created") {
@@ -100,7 +127,7 @@ function eventTitle(event: ProspectEvent, copy: Copy, labels: Record<ProspectSta
     return copy.eventStatus;
   }
   if (event.eventType === "note") return copy.eventNote;
-  if (event.eventType === "contact") return copy.eventContact;
+  if (event.eventType === "contact") return channelLabel(event, copy) ?? copy.eventContact;
   return event.eventType;
 }
 
@@ -108,6 +135,8 @@ export function ProspectDetailPanel({
   prospect,
   draft,
   events,
+  scripts,
+  saas,
   labels,
   dateLocale,
   pending,
@@ -119,6 +148,8 @@ export function ProspectDetailPanel({
   onAddNote,
   onCloseProspect,
   onDelete,
+  onLogged,
+  onSchedule,
 }: Props) {
   const [note, setNote] = useState("");
   const due = isFollowUpToday(draft.nextFollowUpAt || prospect.nextFollowUpAt);
@@ -161,6 +192,17 @@ export function ProspectDetailPanel({
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <div className="border-b border-white/[0.06] px-6 py-6">
+            <ProspectContactPanel
+              prospect={prospect}
+              draft={draft}
+              scripts={scripts}
+              saas={saas}
+              pending={pending}
+              onLogged={onLogged}
+              onSchedule={onSchedule}
+            />
+          </div>
           <form onSubmit={onSubmit} className="space-y-8 px-6 py-6">
             <section>
               <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zg-muted">{copy.identity}</h3>
@@ -178,6 +220,8 @@ export function ProspectDetailPanel({
                 <Input value={draft.url} onChange={(e) => onChange({ ...draft, url: e.target.value })} placeholder={copy.website} />
                 <Input type="email" value={draft.email} onChange={(e) => onChange({ ...draft, email: e.target.value })} placeholder={copy.email} />
                 <Input value={draft.phone} onChange={(e) => onChange({ ...draft, phone: e.target.value })} placeholder={copy.phone} />
+                <Input value={draft.linkedinUrl} onChange={(e) => onChange({ ...draft, linkedinUrl: e.target.value })} placeholder={copy.linkedinUrl} />
+                <Input value={draft.instagramUrl} onChange={(e) => onChange({ ...draft, instagramUrl: e.target.value })} placeholder={copy.instagramUrl} />
               </div>
             </section>
 
@@ -281,9 +325,16 @@ export function ProspectDetailPanel({
                         day: "numeric",
                         month: "long",
                       })}
+                      {event.eventType === "contact" && channelLabel(event, copy)
+                        ? ` · ${channelLabel(event, copy)}`
+                        : ""}
                     </p>
-                    <p className="mt-0.5 text-sm text-zg-fg">{eventTitle(event, copy, labels)}</p>
-                    {event.detail && event.eventType !== "status_change" && event.eventType !== "created" ? (
+                    <p className="mt-0.5 text-sm text-zg-fg">
+                      {event.eventType === "contact" && event.detail
+                        ? event.detail
+                        : eventTitle(event, copy, labels)}
+                    </p>
+                    {event.detail && event.eventType !== "status_change" && event.eventType !== "created" && event.eventType !== "contact" ? (
                       <p className="mt-1 text-sm leading-relaxed text-zg-text-secondary">{event.detail}</p>
                     ) : event.eventType === "created" && event.detail && !/agent/i.test(event.detail) ? (
                       <p className="mt-1 text-sm text-zg-text-secondary">{event.detail}</p>

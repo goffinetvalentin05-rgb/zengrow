@@ -249,6 +249,8 @@ export type Prospect = {
   contactedAt: string | null;
   nextFollowUpAt: string | null;
   notes: string | null;
+  linkedinUrl: string | null;
+  instagramUrl: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -258,6 +260,7 @@ export type ProspectEvent = {
   prospectId: string;
   eventType: "created" | "status_change" | "note" | "contact";
   detail: string | null;
+  meta: Record<string, unknown> | null;
   createdAt: string;
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { LayoutGrid, List, Plus, Search, Users } from "lucide-react";
+import { FileText, LayoutGrid, List, Plus, Search, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
@@ -13,6 +13,7 @@ import { SharpzEmptyPanel } from "@/src/components/sharpz/empty-panel";
 import { ProspectDetailPanel, type ProspectDraft } from "@/src/components/sharpz/prospects/prospect-detail-panel";
 import { ProspectsKanban } from "@/src/components/sharpz/prospects/prospects-kanban";
 import { ProspectsList } from "@/src/components/sharpz/prospects/prospects-list";
+import { ProspectScriptsView } from "@/src/components/sharpz/prospects/prospect-scripts-view";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
@@ -25,6 +26,7 @@ import {
   isFollowUpToday,
   isPipelineStatus,
 } from "@/src/lib/sharpz/prospects-pipeline";
+import type { OutreachSaasContext, ProspectScript } from "@/src/lib/sharpz/outreach";
 import type { Prospect, ProspectEvent, ProspectStatus, ProspectType } from "@/src/lib/sharpz/types";
 import { cn } from "@/src/lib/utils";
 
@@ -35,6 +37,8 @@ const EMPTY_DRAFT: ProspectDraft = {
   email: "",
   phone: "",
   url: "",
+  linkedinUrl: "",
+  instagramUrl: "",
   contact: "",
   source: "",
   lastAction: "",
@@ -46,7 +50,7 @@ const EMPTY_DRAFT: ProspectDraft = {
 
 type QuickFilter = "all" | "due" | "overdue" | "customers";
 type FitFilter = "all" | "high" | "mid" | "none";
-type ViewMode = "pipeline" | "list";
+type ViewMode = "pipeline" | "list" | "scripts";
 
 function fill(template: string, vars: Record<string, string | number>) {
   return Object.entries(vars).reduce(
@@ -67,6 +71,8 @@ function draftFromProspect(item: Prospect): ProspectDraft {
     email: item.email ?? "",
     phone: item.phone ?? "",
     url: item.url ?? "",
+    linkedinUrl: item.linkedinUrl ?? "",
+    instagramUrl: item.instagramUrl ?? "",
     contact: item.contact ?? "",
     source: item.source ?? "",
     lastAction: item.lastAction ?? "",
@@ -80,9 +86,11 @@ function draftFromProspect(item: Prospect): ProspectDraft {
 type Props = {
   prospects: Prospect[];
   eventsByProspect: Record<string, ProspectEvent[]>;
+  scripts: ProspectScript[];
+  saas: OutreachSaasContext | null;
 };
 
-export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
+export function ProspectsCrmView({ prospects, eventsByProspect, scripts: initialScripts, saas }: Props) {
   const { t, locale } = useDashboardI18n();
   const router = useRouter();
   const showToast = useDashboardToast();
@@ -91,6 +99,8 @@ export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
   const dateLocale = locale === "en" ? "en-GB" : "fr-FR";
 
   const [items, setItems] = useState(prospects);
+  const [scriptItems, setScriptItems] = useState(initialScripts);
+  const [eventsMap, setEventsMap] = useState(eventsByProspect);
   const [query, setQuery] = useState("");
   const [quick, setQuick] = useState<QuickFilter>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -107,6 +117,14 @@ export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
   useEffect(() => {
     setItems(prospects);
   }, [prospects]);
+
+  useEffect(() => {
+    setScriptItems(initialScripts);
+  }, [initialScripts]);
+
+  useEffect(() => {
+    setEventsMap(eventsByProspect);
+  }, [eventsByProspect]);
 
   const resolvedView: ViewMode = view ?? (isMdUp ? "pipeline" : "list");
 
@@ -299,6 +317,51 @@ export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
     router.refresh();
   }
 
+  async function scheduleFollowUp(iso: string) {
+    if (!selected) return;
+    setPending(true);
+    const saved = await patchProspect(
+      selected.id,
+      { nextFollowUpAt: iso },
+      { toast: t.prospectsPage.followUpScheduled },
+    );
+    setPending(false);
+    if (saved) {
+      setEditDraft((current) =>
+        current ? { ...current, nextFollowUpAt: dateInput(iso) } : current,
+      );
+      setItems((current) =>
+        current.map((item) => (item.id === selected.id ? { ...item, nextFollowUpAt: iso } : item)),
+      );
+    }
+  }
+
+  function handleLogged(event: ProspectEvent | null, patch: Partial<Prospect>) {
+    if (!selected) return;
+    if (event) {
+      setEventsMap((current) => ({
+        ...current,
+        [selected.id]: [event, ...(current[selected.id] ?? [])],
+      }));
+    }
+    setItems((current) =>
+      current.map((item) => (item.id === selected.id ? { ...item, ...patch } : item)),
+    );
+    setEditDraft((current) =>
+      current
+        ? {
+            ...current,
+            lastAction: patch.lastAction ?? current.lastAction,
+            contactedAt: dateInput(patch.contactedAt ?? current.contactedAt),
+            status: isPipelineStatus(String(patch.status ?? current.status))
+              ? (patch.status as ProspectStatus)
+              : current.status,
+          }
+        : current,
+    );
+    router.refresh();
+  }
+
   function askAgent() {
     void send(t.today.suggestionProspectsPrompt);
     router.push(SHARPZ_ROUTES.agent);
@@ -345,21 +408,25 @@ export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          {quickFilters.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setQuick(item.id)}
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-[12px] transition-colors",
-                quick === item.id
-                  ? "border-white/15 bg-white/[0.08] text-zg-fg"
-                  : "border-white/[0.07] text-zg-text-secondary hover:border-white/12 hover:text-zg-fg",
+          {resolvedView !== "scripts"
+            ? quickFilters.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setQuick(item.id)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-[12px] transition-colors",
+                    quick === item.id
+                      ? "border-white/15 bg-white/[0.08] text-zg-fg"
+                      : "border-white/[0.07] text-zg-text-secondary hover:border-white/12 hover:text-zg-fg",
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))
+            : (
+                <p className="text-sm text-zg-text-secondary">{t.prospectsPage.scriptsSubtitle}</p>
               )}
-            >
-              {item.label}
-            </button>
-          ))}
           <div className="ml-auto flex rounded-full border border-white/[0.08] p-0.5">
             <button
               type="button"
@@ -383,9 +450,21 @@ export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
               <List className="h-3.5 w-3.5" />
               {t.prospectsPage.viewList}
             </button>
+            <button
+              type="button"
+              onClick={() => setView("scripts")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px]",
+                resolvedView === "scripts" ? "bg-white/[0.08] text-zg-fg" : "text-zg-muted hover:text-zg-fg",
+              )}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              {t.prospectsPage.viewScripts}
+            </button>
           </div>
         </div>
 
+        {resolvedView !== "scripts" ? (
         <div className="grid gap-2 md:grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,0.7fr))]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zg-muted" />
@@ -424,9 +503,12 @@ export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
             <option value="none">{t.prospectsPage.filterFitNone}</option>
           </Select>
         </div>
+        ) : null}
       </div>
 
-      {filtered.length ? (
+      {resolvedView === "scripts" ? (
+        <ProspectScriptsView scripts={scriptItems} onChange={setScriptItems} />
+      ) : filtered.length ? (
         resolvedView === "pipeline" ? (
           <ProspectsKanban
             prospects={filtered}
@@ -498,6 +580,8 @@ export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
               <Input type="email" value={createDraft.email} onChange={(e) => setCreateDraft({ ...createDraft, email: e.target.value })} placeholder={t.prospectsPage.email} />
               <Input value={createDraft.phone} onChange={(e) => setCreateDraft({ ...createDraft, phone: e.target.value })} placeholder={t.prospectsPage.phone} />
               <Input value={createDraft.url} onChange={(e) => setCreateDraft({ ...createDraft, url: e.target.value })} placeholder={t.prospectsPage.url} />
+              <Input value={createDraft.linkedinUrl} onChange={(e) => setCreateDraft({ ...createDraft, linkedinUrl: e.target.value })} placeholder={t.prospectsPage.linkedinUrl} />
+              <Input value={createDraft.instagramUrl} onChange={(e) => setCreateDraft({ ...createDraft, instagramUrl: e.target.value })} placeholder={t.prospectsPage.instagramUrl} />
               <Input value={createDraft.source} onChange={(e) => setCreateDraft({ ...createDraft, source: e.target.value })} placeholder={t.prospectsPage.source} />
             </div>
             <Textarea
@@ -523,7 +607,9 @@ export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
         <ProspectDetailPanel
           prospect={selected}
           draft={editDraft}
-          events={eventsByProspect[selected.id] ?? []}
+          events={eventsMap[selected.id] ?? []}
+          scripts={scriptItems}
+          saas={saas}
           labels={statusLabels}
           dateLocale={dateLocale}
           pending={pending}
@@ -568,6 +654,13 @@ export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
             eventContact: t.prospectsPage.eventContact,
             dueToday: t.prospectsPage.dueToday,
             overdue: t.prospectsPage.overdue,
+            linkedinUrl: t.prospectsPage.linkedinUrl,
+            instagramUrl: t.prospectsPage.instagramUrl,
+            channelWhatsapp: t.prospectsPage.channelWhatsapp,
+            channelLinkedin: t.prospectsPage.channelLinkedin,
+            channelInstagram: t.prospectsPage.channelInstagram,
+            channelEmail: t.prospectsPage.channelEmail,
+            channelPhone: t.prospectsPage.channelPhone,
           }}
           onClose={() => {
             setSelectedId(null);
@@ -579,6 +672,8 @@ export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
           onAddNote={(note) => void addNote(note)}
           onCloseProspect={() => void closeProspect()}
           onDelete={() => void deleteProspect()}
+          onLogged={handleLogged}
+          onSchedule={(iso) => void scheduleFollowUp(iso)}
         />
       ) : null}
     </DashboardContent>
