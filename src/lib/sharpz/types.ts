@@ -109,6 +109,8 @@ export type UserSaas = {
   scanExtract: Record<string, unknown> | null;
   unknownFields: string[];
   onboardingCompleted: boolean;
+  onboardingStep: string | null;
+  onboardingDraft: Record<string, unknown> | null;
   lastAuditAt: string | null;
   createdAt: string;
   updatedAt: string;

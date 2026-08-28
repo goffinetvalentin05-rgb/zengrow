@@ -6,6 +6,7 @@ import {
   persistInsights,
   upsertSaasFromOnboarding,
 } from "@/src/lib/sharpz/insights";
+import { saveOnboardingDraft, type OnboardingDraftPayload } from "@/src/lib/sharpz/onboarding";
 import type { ScanResult } from "@/src/lib/sharpz/types";
 import { runAIGeneration } from "@/src/lib/ai/route-auth";
 
@@ -35,6 +36,25 @@ function publicOnboardingError(error: unknown) {
     return "L’analyse a pris trop de temps. Réessayez.";
   }
   return message || "Impossible de préparer vos recommandations.";
+}
+
+export async function PATCH(request: Request) {
+  const session = await requireSharpzApi();
+  if (!session.ok) return session.error;
+  const { supabase, restaurant } = session;
+
+  try {
+    const body = await parseJson<OnboardingDraftPayload>(request);
+    if (!body?.step) {
+      return NextResponse.json({ error: "Étape invalide." }, { status: 400 });
+    }
+
+    await saveOnboardingDraft(supabase, restaurant.id, body);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[sharpz:onboarding:draft]", error);
+    return NextResponse.json({ error: publicOnboardingError(error) }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -121,6 +141,7 @@ export async function POST(request: Request) {
       .update({
         onboarding_completed: true,
         onboarding_step: "done",
+        onboarding_draft: null,
       })
       .eq("restaurant_id", restaurant.id);
     if (completeError) throw new Error(completeError.message);

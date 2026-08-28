@@ -65,6 +65,8 @@ export function mapUserSaas(row: Record<string, unknown>): UserSaas {
     scanExtract: row.scan_extract ? asRecord(row.scan_extract) : null,
     unknownFields: asStringArray(row.unknown_fields),
     onboardingCompleted: Boolean(row.onboarding_completed),
+    onboardingStep: typeof row.onboarding_step === "string" ? row.onboarding_step : null,
+    onboardingDraft: row.onboarding_draft ? asRecord(row.onboarding_draft) : null,
     lastAuditAt: typeof row.last_audit_at === "string" ? row.last_audit_at : null,
     createdAt: String(row.created_at ?? ""),
     updatedAt: String(row.updated_at ?? ""),

@@ -476,6 +476,7 @@ export const en: DashboardDictionary = {
     back: "Back",
     skip: "Skip",
     progress: "{current} of {total}",
+    resumeHint: "Picking up where you left off — your answers are saved.",
     pricingQuestion: "What’s your pricing?",
     pricingSubtitle: "A simple price is enough. Sharpz won’t invent any metrics.",
     pricingPlaceholder: "$49/mo or $490/year",

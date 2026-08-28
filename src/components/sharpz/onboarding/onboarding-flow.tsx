@@ -1,12 +1,18 @@
 "use client";
 
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { CHANNEL_KEYS, OBJECTIVE_KEYS, SAAS_STAGES } from "@/src/lib/sharpz/constants";
+import type {
+  OnboardingDraftPayload,
+  OnboardingFlowStep,
+  OnboardingInitialState,
+  OnboardingResumeStep,
+} from "@/src/lib/sharpz/onboarding";
 import type { ScanResult } from "@/src/lib/sharpz/types";
 import {
   ChecklistRow,
@@ -15,21 +21,15 @@ import {
   OnboardingStepFrame,
 } from "./onboarding-primitives";
 
-type FlowStep =
-  | "url"
-  | "scanning"
-  | "pricing"
-  | "stage"
-  | "primary"
-  | "extra"
-  | "channels"
-  | "summary"
-  | "generating";
+type Props = {
+  initial: OnboardingInitialState;
+};
 
 type ScanCueId = "product" | "positioning" | "pricing" | "icp" | "market";
 type CueState = "pending" | "found" | "missing";
 
 const CUE_ORDER: ScanCueId[] = ["product", "positioning", "pricing", "icp", "market"];
+const GEN_KEYS = ["genPositioning", "genOpportunities", "genActions", "genDashboard"] as const;
 
 function hasIcp(scan: ScanResult | null) {
   const icp = scan?.detected.icp;
@@ -51,19 +51,20 @@ function formatProgress(template: string, current: number, total: number) {
   return template.replace("{current}", String(current)).replace("{total}", String(total));
 }
 
-export function OnboardingFlow() {
+export function OnboardingFlow({ initial }: Props) {
   const { t, locale } = useDashboardI18n();
   const router = useRouter();
-  const [step, setStep] = useState<FlowStep>("url");
-  const [url, setUrl] = useState("");
-  const [scan, setScan] = useState<ScanResult | null>(null);
+  const [step, setStep] = useState<FlowStep>(initial.step);
+  const [url, setUrl] = useState(initial.url);
+  const [scan, setScan] = useState<ScanResult | null>(initial.scan);
   const [error, setError] = useState<string | null>(null);
-  const [pricing, setPricing] = useState("");
-  const [stage, setStage] = useState("");
-  const [primaryObjective, setPrimaryObjective] = useState("");
-  const [extraObjectives, setExtraObjectives] = useState<string[]>([]);
-  const [channels, setChannels] = useState<string[]>([]);
+  const [pricing, setPricing] = useState(initial.pricing);
+  const [stage, setStage] = useState(initial.stage);
+  const [primaryObjective, setPrimaryObjective] = useState(initial.primaryObjective);
+  const [extraObjectives, setExtraObjectives] = useState<string[]>(initial.extraObjectives);
+  const [channels, setChannels] = useState<string[]>(initial.channels);
   const [visibleCues, setVisibleCues] = useState(1);
+  const [genIndex, setGenIndex] = useState(0);
   const [cueStates, setCueStates] = useState<Record<ScanCueId, CueState>>({
     product: "pending",
     positioning: "pending",
@@ -73,6 +74,7 @@ export function OnboardingFlow() {
   });
   const abortRef = useRef<AbortController | null>(null);
   const generatingLock = useRef(false);
+  const resumed = initial.step !== "url";
 
   const needsPricing = !scan?.detected.pricingSummary;
   const saasLabel = scan?.detected.name || url.replace(/^https?:\/\//i, "").replace(/\/$/, "") || t.onboarding.summaryNone;
@@ -95,9 +97,49 @@ export function OnboardingFlow() {
     market: t.onboarding.cueMarket,
   };
 
+  useEffect(() => {
+    if (step !== "generating") return;
+    setGenIndex(0);
+    const interval = window.setInterval(() => {
+      setGenIndex((current) => (current + 1) % GEN_KEYS.length);
+    }, 2400);
+    return () => window.clearInterval(interval);
+  }, [step]);
+
+  function buildDraftPayload(nextStep: OnboardingResumeStep): OnboardingDraftPayload {
+    return {
+      step: nextStep,
+      url: url.trim(),
+      scan,
+      pricing: pricing.trim(),
+      stage,
+      primaryObjective,
+      extraObjectives,
+      channels,
+    };
+  }
+
+  async function persistDraft(nextStep: OnboardingResumeStep) {
+    try {
+      await fetch("/api/sharpz/onboarding", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildDraftPayload(nextStep)),
+      });
+    } catch {
+      // Reprise best-effort — ne bloque pas le flow.
+    }
+  }
+
+  function goTo(next: FlowStep, persistStep?: OnboardingResumeStep) {
+    if (persistStep) void persistDraft(persistStep);
+    setStep(next);
+  }
+
   function goAfterScan(nextScan: ScanResult | null) {
     setScan(nextScan);
-    setStep(nextScan?.detected.pricingSummary ? "stage" : "pricing");
+    const nextStep = nextScan?.detected.pricingSummary ? "stage" : "pricing";
+    goTo(nextStep, nextStep);
   }
 
   async function scanSite(event: FormEvent) {
@@ -167,7 +209,7 @@ export function OnboardingFlow() {
       icp: "missing",
       market: "missing",
     });
-    setStep("pricing");
+    goTo("pricing", "pricing");
   }
 
   function goBack() {
@@ -218,6 +260,7 @@ export function OnboardingFlow() {
       };
       if (!response.ok) {
         setError(data.error ?? t.common.error);
+        setStep("summary");
         return;
       }
       router.push("/dashboard");
@@ -228,6 +271,7 @@ export function OnboardingFlow() {
       } else {
         setError(caught instanceof Error ? caught.message : t.common.error);
       }
+      setStep("summary");
     } finally {
       generatingLock.current = false;
       window.clearTimeout(timeout);
@@ -238,11 +282,7 @@ export function OnboardingFlow() {
     setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
   }
 
-  const heading = (
-    kicker: string,
-    title: string,
-    subtitle: string,
-  ) => (
+  const heading = (kicker: string, title: string, subtitle: string) => (
     <div className="mb-8">
       <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zg-text-muted">{kicker}</p>
       <h1 className="mt-3 text-[1.85rem] font-semibold leading-tight tracking-tight text-zg-fg sm:text-[2.15rem]">
@@ -252,6 +292,8 @@ export function OnboardingFlow() {
     </div>
   );
 
+  const genLabel = t.onboarding[GEN_KEYS[genIndex]];
+
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-xl flex-col justify-center px-5 py-12 sm:px-6">
       {showProgress ? (
@@ -260,6 +302,10 @@ export function OnboardingFlow() {
           total={progressSteps.length}
           label={formatProgress(t.onboarding.progress, progressIndex + 1, progressSteps.length)}
         />
+      ) : null}
+
+      {resumed && showProgress ? (
+        <p className="-mt-6 mb-8 text-xs leading-relaxed text-zg-muted">{t.onboarding.resumeHint}</p>
       ) : null}
 
       <OnboardingStepFrame stepKey={step}>
@@ -312,7 +358,7 @@ export function OnboardingFlow() {
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              setStep("stage");
+              goTo("stage", "stage");
             }}
           >
             {heading(t.onboarding.kicker, t.onboarding.pricingQuestion, t.onboarding.pricingSubtitle)}
@@ -348,7 +394,13 @@ export function OnboardingFlow() {
               <button type="button" onClick={goBack} className="text-sm text-zg-text-muted hover:text-zg-fg">
                 {t.onboarding.back}
               </button>
-              <Button type="button" className="flex-1" size="lg" disabled={!stage} onClick={() => setStep("primary")}>
+              <Button
+                type="button"
+                className="flex-1"
+                size="lg"
+                disabled={!stage}
+                onClick={() => goTo("primary", "primary")}
+              >
                 {t.onboarding.continue}
               </Button>
             </div>
@@ -374,7 +426,7 @@ export function OnboardingFlow() {
                 className="flex-1"
                 size="lg"
                 disabled={!primaryObjective}
-                onClick={() => setStep("extra")}
+                onClick={() => goTo("extra", "extra")}
               >
                 {t.onboarding.continue}
               </Button>
@@ -400,10 +452,10 @@ export function OnboardingFlow() {
               <button type="button" onClick={goBack} className="text-sm text-zg-text-muted hover:text-zg-fg">
                 {t.onboarding.back}
               </button>
-              <Button type="button" variant="ghost" onClick={() => setStep("channels")}>
+              <Button type="button" variant="ghost" onClick={() => goTo("channels", "channels")}>
                 {t.onboarding.skip}
               </Button>
-              <Button type="button" className="flex-1" size="lg" onClick={() => setStep("channels")}>
+              <Button type="button" className="flex-1" size="lg" onClick={() => goTo("channels", "channels")}>
                 {t.onboarding.continue}
               </Button>
             </div>
@@ -427,7 +479,7 @@ export function OnboardingFlow() {
               <button type="button" onClick={goBack} className="text-sm text-zg-text-muted hover:text-zg-fg">
                 {t.onboarding.back}
               </button>
-              <Button type="button" className="flex-1" size="lg" onClick={() => setStep("summary")}>
+              <Button type="button" className="flex-1" size="lg" onClick={() => goTo("summary", "summary")}>
                 {t.onboarding.continue}
               </Button>
             </div>
@@ -483,9 +535,9 @@ export function OnboardingFlow() {
           <div>
             {heading(t.onboarding.kicker, t.onboarding.generatingTitle, t.onboarding.analyzingSubtitle)}
             <div className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-4">
-              <LoaderCircle className="h-5 w-5 animate-spin text-zg-text-secondary" strokeWidth={1.8} />
+              <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-zg-text-secondary" strokeWidth={1.8} />
               <div>
-                <p className="text-sm font-medium text-zg-fg">{t.onboarding.generatingVerified}</p>
+                <p className="text-sm font-medium text-zg-fg">{genLabel}</p>
                 <p className="mt-1 text-xs leading-relaxed text-zg-text-muted">
                   {t.onboarding.generatingVerifiedDetail}
                 </p>
@@ -506,3 +558,5 @@ export function OnboardingFlow() {
     </div>
   );
 }
+
+type FlowStep = OnboardingFlowStep;

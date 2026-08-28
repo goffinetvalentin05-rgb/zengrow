@@ -37,7 +37,12 @@ export async function PATCH(request: Request) {
   if (existing?.id) {
     await supabase.from("user_saas").update(patch).eq("id", existing.id);
   } else {
-    await supabase.from("user_saas").insert({ restaurant_id: restaurant.id, ...patch, onboarding_completed: true });
+    await supabase.from("user_saas").insert({
+      restaurant_id: restaurant.id,
+      ...patch,
+      onboarding_completed: false,
+      onboarding_step: "url",
+    });
   }
 
   if (patch.name) {
