@@ -11,6 +11,7 @@ import Textarea from "@/src/components/ui/textarea";
 import Select from "@/src/components/ui/select";
 import Badge from "@/src/components/ui/badge";
 import BillingPlans from "@/src/components/dashboard/billing-plans";
+import { AnalyticsSnippetPanel } from "@/src/components/sharpz/analytics/analytics-snippet-panel";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import { CHANNEL_KEYS, OBJECTIVE_KEYS, SAAS_STAGES } from "@/src/lib/sharpz/constants";
@@ -36,6 +37,9 @@ type Props = {
   subscriptionPlan: SubscriptionPlan;
   trialEndDate: string | null;
   isOwnerDev?: boolean;
+  analyticsSnippet: string;
+  analyticsHasData: boolean;
+  analyticsLastEventAt: string | null;
 };
 
 export function SettingsView({
@@ -48,6 +52,9 @@ export function SettingsView({
   subscriptionPlan,
   trialEndDate,
   isOwnerDev,
+  analyticsSnippet,
+  analyticsHasData,
+  analyticsLastEventAt,
 }: Props) {
   const { t } = useDashboardI18n();
   const router = useRouter();
@@ -324,17 +331,27 @@ export function SettingsView({
       ) : null}
 
       {tab === "integrations" ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {(["stripe", "paddle", "google_analytics", "posthog", "supabase", "search_console"] as const).map(
+        <div className="space-y-4">
+          <AnalyticsSnippetPanel
+            snippet={analyticsSnippet}
+            hasData={analyticsHasData}
+            lastEventAt={analyticsLastEventAt}
+          />
+          <div className="grid gap-4 md:grid-cols-2">
+          {(["sharpz_analytics", "stripe", "paddle", "google_analytics", "posthog", "supabase", "search_console"] as const).map(
             (provider) => {
               const row = integrationByProvider[provider];
-              const status = (row?.status as "connected" | "available" | "coming_soon") ?? "coming_soon";
+              const status = (row?.status as "connected" | "available" | "coming_soon") ?? (provider === "sharpz_analytics" ? "available" : "coming_soon");
               return (
                 <Card key={provider} className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="text-base font-semibold text-zg-fg">{t.integrations[provider]}</h3>
-                      <p className="mt-1 text-sm text-zg-text-muted">{t.settingsPage.notConnected}</p>
+                      <p className="mt-1 text-sm text-zg-text-muted">
+                        {provider === "sharpz_analytics" && status === "connected"
+                          ? t.settingsPage.analyticsActive
+                          : t.settingsPage.notConnected}
+                      </p>
                     </div>
                     <Badge tone={status === "connected" ? "success" : status === "available" ? "accent" : "neutral"}>
                       {status === "connected"
@@ -344,13 +361,16 @@ export function SettingsView({
                           : t.common.comingSoon}
                     </Badge>
                   </div>
-                  <Button type="button" size="sm" className="mt-4" variant="secondary" disabled>
-                    {t.settingsPage.connect}
-                  </Button>
+                  {provider === "sharpz_analytics" ? null : (
+                    <Button type="button" size="sm" className="mt-4" variant="secondary" disabled>
+                      {t.settingsPage.connect}
+                    </Button>
+                  )}
                 </Card>
               );
             },
           )}
+          </div>
         </div>
       ) : null}
 

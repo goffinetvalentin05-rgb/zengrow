@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { parseJson, requireSharpzApi } from "@/src/lib/sharpz/api-session";
+import { getTrafficSummary } from "@/src/lib/sharpz/analytics";
+import { mapAction } from "@/src/lib/sharpz/queries";
+import { computeTrafficImpactForAction } from "@/src/lib/sharpz/results";
 import { computeSharpzScore } from "@/src/lib/sharpz/scoring";
 
 const STATUSES = new Set(["todo", "in_progress", "done", "ignored"]);
@@ -38,5 +41,21 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
   const { error } = await supabase.from("actions").update(patch).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  if (patch.status === "done") {
+    const traffic = await getTrafficSummary(supabase, restaurant.id);
+    if (traffic.hasData) {
+      const { data: row } = await supabase
+        .from("actions")
+        .select("*")
+        .eq("id", id)
+        .eq("restaurant_id", restaurant.id)
+        .maybeSingle();
+      if (row) {
+        await computeTrafficImpactForAction(supabase, restaurant.id, mapAction(row));
+      }
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

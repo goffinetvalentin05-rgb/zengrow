@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveAgentCapabilities } from "@/src/lib/sharpz/agent-capabilities";
+import { getTrafficSummary } from "@/src/lib/sharpz/analytics";
 import { FOLLOW_UP_STATUSES } from "@/src/lib/sharpz/prospects-pipeline";
 import {
   getActions,
@@ -24,6 +25,7 @@ export async function loadSharpzContext(supabase: SupabaseClient, restaurantId: 
     experiments,
     competitors,
     integrations,
+    traffic,
   ] = await Promise.all([
     getUserSaas(supabase, restaurantId),
     getObjectives(supabase, restaurantId),
@@ -34,7 +36,10 @@ export async function loadSharpzContext(supabase: SupabaseClient, restaurantId: 
     getExperiments(supabase, restaurantId),
     getCompetitors(supabase, restaurantId),
     getIntegrations(supabase, restaurantId),
+    getTrafficSummary(supabase, restaurantId),
   ]);
+
+  const capabilities = resolveAgentCapabilities(integrations);
 
   const primaryObjective = objectives.find((item) => item.isPrimary) ?? null;
   const openActions = actions.filter((item) => item.status === "todo" || item.status === "in_progress");
@@ -72,7 +77,22 @@ export async function loadSharpzContext(supabase: SupabaseClient, restaurantId: 
     })),
     competitors: competitors.slice(0, 8),
     experiments: experiments.slice(0, 6),
-    capabilities: resolveAgentCapabilities(integrations),
+    traffic: traffic.hasData
+      ? {
+          visitorsToday: traffic.visitorsToday,
+          visitors7d: traffic.visitors7d,
+          sessions7d: traffic.sessions7d,
+          pageviews7d: traffic.pageviews7d,
+          topPages: traffic.topPages.slice(0, 5),
+          topReferrers: traffic.topReferrers.slice(0, 5),
+          topSources: traffic.topSources.slice(0, 5),
+          lastEventAt: traffic.lastEventAt,
+        }
+      : null,
+    capabilities: {
+      ...capabilities,
+      trafficAnalytics: capabilities.trafficAnalytics || traffic.hasData,
+    },
     integrations: integrations.map((item) => ({
       provider: item.provider,
       status: item.status,

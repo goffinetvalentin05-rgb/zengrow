@@ -72,7 +72,8 @@ export type IntegrationProvider =
   | "google_analytics"
   | "posthog"
   | "supabase"
-  | "search_console";
+  | "search_console"
+  | "sharpz_analytics";
 
 export type IntegrationStatus = "connected" | "available" | "coming_soon";
 

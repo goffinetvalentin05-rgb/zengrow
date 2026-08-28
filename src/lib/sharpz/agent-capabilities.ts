@@ -15,7 +15,10 @@ export function resolveAgentCapabilities(integrations: Integration[]): AgentCapa
   return {
     prospectSearch: false,
     competitorSearch: false,
-    trafficAnalytics: connected.has("google_analytics") || connected.has("posthog"),
+    trafficAnalytics:
+      connected.has("sharpz_analytics") ||
+      connected.has("google_analytics") ||
+      connected.has("posthog"),
     revenueData: connected.has("stripe") || connected.has("paddle"),
   };
 }

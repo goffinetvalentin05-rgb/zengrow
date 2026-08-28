@@ -59,6 +59,7 @@ export const GROWTH_CATEGORIES: OpportunityCategory[] = [
 
 export const INTEGRATION_PROVIDERS: { provider: IntegrationProvider; defaultStatus: "available" | "coming_soon" }[] =
   [
+    { provider: "sharpz_analytics", defaultStatus: "available" },
     { provider: "stripe", defaultStatus: "available" },
     { provider: "paddle", defaultStatus: "coming_soon" },
     { provider: "google_analytics", defaultStatus: "available" },
