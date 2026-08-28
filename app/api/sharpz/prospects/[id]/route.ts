@@ -1,16 +1,7 @@
 import { NextResponse } from "next/server";
 import { parseJson, requireSharpzApi } from "@/src/lib/sharpz/api-session";
-
-const STATUSES = new Set([
-  "new",
-  "to_contact",
-  "contacted",
-  "followed_up",
-  "replied",
-  "qualified",
-  "not_relevant",
-  "closed",
-]);
+import { logProspectEvent } from "@/src/lib/sharpz/prospect-events";
+import { isPipelineStatus } from "@/src/lib/sharpz/prospects-pipeline";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const session = await requireSharpzApi();
@@ -31,8 +22,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     nextFollowUpAt?: string | null;
     notes?: string;
   }>(request);
+
+  const { data: existing } = await supabase
+    .from("prospects")
+    .select("id, status, notes")
+    .eq("id", id)
+    .eq("restaurant_id", restaurant.id)
+    .maybeSingle();
+  if (!existing) return NextResponse.json({ error: "Prospect introuvable." }, { status: 404 });
+
   const patch: Record<string, unknown> = {};
-  if (body?.status && STATUSES.has(body.status)) patch.status = body.status;
+  if (body?.status && isPipelineStatus(body.status)) patch.status = body.status;
   if (typeof body?.notes === "string") patch.notes = body.notes;
   if (body?.type) patch.prospect_type = body.type;
   if (body?.name !== undefined) patch.name = body.name?.trim() || null;
@@ -45,15 +45,27 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (body?.contactedAt !== undefined) patch.contacted_at = body.contactedAt || null;
   if (body?.nextFollowUpAt !== undefined) patch.next_follow_up_at = body.nextFollowUpAt || null;
 
-  const { data } = await supabase
-    .from("prospects")
-    .select("id")
-    .eq("id", id)
-    .eq("restaurant_id", restaurant.id)
-    .maybeSingle();
-  if (!data) return NextResponse.json({ error: "Prospect introuvable." }, { status: 404 });
-
   const { error } = await supabase.from("prospects").update(patch).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  if (body?.status && body.status !== existing.status && isPipelineStatus(body.status)) {
+    await logProspectEvent(supabase, {
+      restaurantId: restaurant.id,
+      prospectId: id,
+      eventType: "status_change",
+      detail: `${existing.status} → ${body.status}`,
+      meta: { from: existing.status, to: body.status },
+    });
+  }
+
+  if (body?.lastAction?.trim()) {
+    await logProspectEvent(supabase, {
+      restaurantId: restaurant.id,
+      prospectId: id,
+      eventType: "contact",
+      detail: body.lastAction.trim(),
+    });
+  }
+
   return NextResponse.json({ ok: true });
 }

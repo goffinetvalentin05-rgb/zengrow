@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveAgentCapabilities } from "@/src/lib/sharpz/agent-capabilities";
+import { FOLLOW_UP_STATUSES } from "@/src/lib/sharpz/prospects-pipeline";
 import {
   getActions,
   getChannels,
@@ -39,9 +40,7 @@ export async function loadSharpzContext(supabase: SupabaseClient, restaurantId: 
   const openActions = actions.filter((item) => item.status === "todo" || item.status === "in_progress");
   const followUpProspects = prospects.filter(
     (item) =>
-      item.status === "to_contact" ||
-      item.status === "contacted" ||
-      item.status === "followed_up" ||
+      FOLLOW_UP_STATUSES.includes(item.status as (typeof FOLLOW_UP_STATUSES)[number]) ||
       (item.nextFollowUpAt && new Date(item.nextFollowUpAt) <= new Date()),
   );
 

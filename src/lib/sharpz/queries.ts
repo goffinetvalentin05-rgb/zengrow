@@ -13,6 +13,7 @@ import type {
   Experiment,
   Integration,
   Prospect,
+  ProspectEvent,
   SharpzAction,
   SharpzOpportunity,
   UserObjective,
@@ -299,13 +300,32 @@ export async function getProspects(supabase: SupabaseClient, restaurantId: strin
     source: row.source ?? null,
     whyFit: row.why_fit ?? null,
     fitScore: row.fit_score ?? null,
-    status: row.status ?? "new",
+    status: row.status ?? "to_contact",
     lastAction: row.last_action ?? null,
     contactedAt: row.contacted_at ?? null,
     nextFollowUpAt: row.next_follow_up_at ?? null,
     notes: row.notes ?? null,
     createdAt: String(row.created_at ?? ""),
     updatedAt: String(row.updated_at ?? row.created_at ?? ""),
+  }));
+}
+
+export async function getProspectEvents(
+  supabase: SupabaseClient,
+  restaurantId: string,
+): Promise<ProspectEvent[]> {
+  const { data } = await supabase
+    .from("prospect_events")
+    .select("*")
+    .eq("restaurant_id", restaurantId)
+    .order("created_at", { ascending: false })
+    .limit(500);
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    prospectId: String(row.prospect_id),
+    eventType: row.event_type as ProspectEvent["eventType"],
+    detail: row.detail ?? null,
+    createdAt: String(row.created_at ?? ""),
   }));
 }
 

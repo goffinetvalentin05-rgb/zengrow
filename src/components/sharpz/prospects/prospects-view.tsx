@@ -17,16 +17,9 @@ import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-pr
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
 import type { Prospect, ProspectStatus } from "@/src/lib/sharpz/types";
 
-const STATUSES: ProspectStatus[] = [
-  "new",
-  "to_contact",
-  "contacted",
-  "followed_up",
-  "replied",
-  "qualified",
-  "not_relevant",
-  "closed",
-];
+import { PIPELINE_STATUSES } from "@/src/lib/sharpz/prospects-pipeline";
+
+const STATUSES = PIPELINE_STATUSES;
 
 type Props = {
   prospects: Prospect[];

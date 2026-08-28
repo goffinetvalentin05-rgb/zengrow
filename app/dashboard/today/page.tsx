@@ -8,6 +8,7 @@ import {
   resolveFocusCategory,
   selectTodayActions,
 } from "@/src/lib/sharpz/today-plan";
+import { FOLLOW_UP_STATUSES } from "@/src/lib/sharpz/prospects-pipeline";
 import {
   getActions,
   getAuditFindings,
@@ -41,7 +42,7 @@ export default async function TodayPage() {
   const done = actions.filter((item) => item.status === "done");
   const openStatuses = new Set(["todo", "in_progress"]);
   const followUpProspects = prospects.filter((item) => {
-    if (item.status === "to_contact" || item.status === "followed_up") return true;
+    if (FOLLOW_UP_STATUSES.includes(item.status as (typeof FOLLOW_UP_STATUSES)[number])) return true;
     if (item.nextFollowUpAt && new Date(item.nextFollowUpAt) <= new Date()) return true;
     return false;
   });

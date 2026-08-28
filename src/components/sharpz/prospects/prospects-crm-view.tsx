@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Building2, ChevronDown, ChevronUp, Search, UserRound, Users } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
@@ -10,35 +10,14 @@ import Input from "@/src/components/ui/input";
 import Select from "@/src/components/ui/select";
 import Textarea from "@/src/components/ui/textarea";
 import { SharpzEmptyPanel } from "@/src/components/sharpz/empty-panel";
+import { ProspectDetailPanel, type ProspectDraft } from "@/src/components/sharpz/prospects/prospect-detail-panel";
+import { ProspectsKanban } from "@/src/components/sharpz/prospects/prospects-kanban";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
-import type { Prospect, ProspectStatus, ProspectType } from "@/src/lib/sharpz/types";
-
-const STATUSES: ProspectStatus[] = [
-  "new",
-  "to_contact",
-  "contacted",
-  "followed_up",
-  "replied",
-  "qualified",
-  "not_relevant",
-  "closed",
-];
-
-type ProspectDraft = {
-  type: ProspectType;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  url: string;
-  source: string;
-  lastAction: string;
-  contactedAt: string;
-  nextFollowUpAt: string;
-  notes: string;
-};
+import { SHARPZ_ROUTES } from "@/src/lib/sharpz/routes";
+import { PIPELINE_STATUSES, isPipelineStatus } from "@/src/lib/sharpz/prospects-pipeline";
+import type { Prospect, ProspectEvent, ProspectStatus, ProspectType } from "@/src/lib/sharpz/types";
 
 const EMPTY_DRAFT: ProspectDraft = {
   type: "company",
@@ -52,6 +31,7 @@ const EMPTY_DRAFT: ProspectDraft = {
   contactedAt: "",
   nextFollowUpAt: "",
   notes: "",
+  status: "to_contact",
 };
 
 function dateInput(value: string | null) {
@@ -71,53 +51,47 @@ function draftFromProspect(item: Prospect): ProspectDraft {
     contactedAt: dateInput(item.contactedAt),
     nextFollowUpAt: dateInput(item.nextFollowUpAt),
     notes: item.notes ?? "",
+    status: isPipelineStatus(item.status) ? item.status : "to_contact",
   };
 }
 
-type Props = { prospects: Prospect[] };
+type Props = {
+  prospects: Prospect[];
+  eventsByProspect: Record<string, ProspectEvent[]>;
+};
 
-export function ProspectsCrmView({ prospects }: Props) {
+export function ProspectsCrmView({ prospects, eventsByProspect }: Props) {
   const { t, locale } = useDashboardI18n();
   const router = useRouter();
   const showToast = useDashboardToast();
   const { send } = useCopilot();
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [showCreate, setShowCreate] = useState(false);
   const [createDraft, setCreateDraft] = useState<ProspectDraft>(EMPTY_DRAFT);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<ProspectDraft | null>(null);
   const [pending, setPending] = useState(false);
   const dateLocale = locale === "en" ? "en-GB" : "fr-FR";
 
+  const statusLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        PIPELINE_STATUSES.map((status) => [status, t.prospectStatuses[status]]),
+      ) as Record<ProspectStatus, string>,
+    [t.prospectStatuses],
+  );
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return prospects.filter((item) => {
-      if (statusFilter !== "all" && item.status !== statusFilter) return false;
-      if (!needle) return true;
-      return [
-        item.name,
-        item.company,
-        item.email,
-        item.phone,
-        item.url,
-        item.source,
-        item.lastAction,
-        item.notes,
-      ]
+    if (!needle) return prospects;
+    return prospects.filter((item) =>
+      [item.name, item.company, item.email, item.phone, item.url, item.source, item.notes]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(needle));
-    });
-  }, [prospects, query, statusFilter]);
+        .some((value) => String(value).toLowerCase().includes(needle)),
+    );
+  }, [prospects, query]);
 
-  const statusCounts = useMemo(
-    () =>
-      STATUSES.map((status) => ({
-        status,
-        count: prospects.filter((item) => item.status === status).length,
-      })),
-    [prospects],
-  );
+  const selected = selectedId ? prospects.find((item) => item.id === selectedId) : null;
 
   async function createProspect(event: FormEvent) {
     event.preventDefault();
@@ -150,16 +124,6 @@ export function ProspectsCrmView({ prospects }: Props) {
     router.refresh();
   }
 
-  function openEdit(item: Prospect) {
-    if (editingId === item.id) {
-      setEditingId(null);
-      setEditDraft(null);
-      return;
-    }
-    setEditingId(item.id);
-    setEditDraft(draftFromProspect(item));
-  }
-
   async function patchProspect(id: string, patch: Record<string, unknown>) {
     setPending(true);
     const response = await fetch(`/api/sharpz/prospects/${id}`, {
@@ -177,24 +141,25 @@ export function ProspectsCrmView({ prospects }: Props) {
     return true;
   }
 
-  async function saveEdit(id: string) {
-    if (!editDraft) return;
-    const saved = await patchProspect(id, {
+  function openProspect(item: Prospect) {
+    setSelectedId(item.id);
+    setEditDraft(draftFromProspect(item));
+  }
+
+  async function saveSelected() {
+    if (!selectedId || !editDraft) return;
+    const saved = await patchProspect(selectedId, {
       ...editDraft,
       company: editDraft.company.trim() || editDraft.name.trim(),
       contactedAt: editDraft.contactedAt || null,
       nextFollowUpAt: editDraft.nextFollowUpAt || null,
     });
-    if (saved) {
-      setEditingId(null);
-      setEditDraft(null);
-      showToast({ message: t.common.saved });
-    }
+    if (saved) showToast({ message: t.common.saved });
   }
 
   function askAgent() {
     void send(t.today.suggestionProspectsPrompt);
-    router.push("/dashboard");
+    router.push(SHARPZ_ROUTES.agent);
   }
 
   return (
@@ -216,62 +181,10 @@ export function ProspectsCrmView({ prospects }: Props) {
 
       {showCreate ? (
         <form onSubmit={createProspect} className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <Select
-              value={createDraft.type}
-              onChange={(event) =>
-                setCreateDraft((current) => ({ ...current, type: event.target.value as ProspectType }))
-              }
-            >
-              <option value="company">{t.prospectsPage.company}</option>
-              <option value="individual">{t.prospectsPage.individual}</option>
-            </Select>
-            <Input
-              value={createDraft.name}
-              onChange={(event) => setCreateDraft((current) => ({ ...current, name: event.target.value }))}
-              placeholder={t.prospectsPage.name}
-            />
-            <Input
-              value={createDraft.company}
-              onChange={(event) => setCreateDraft((current) => ({ ...current, company: event.target.value }))}
-              placeholder={t.prospectsPage.company}
-            />
-            <Input
-              type="email"
-              value={createDraft.email}
-              onChange={(event) => setCreateDraft((current) => ({ ...current, email: event.target.value }))}
-              placeholder={t.prospectsPage.email}
-            />
-            <Input
-              value={createDraft.phone}
-              onChange={(event) => setCreateDraft((current) => ({ ...current, phone: event.target.value }))}
-              placeholder={t.prospectsPage.phone}
-            />
-            <Input
-              value={createDraft.url}
-              onChange={(event) => setCreateDraft((current) => ({ ...current, url: event.target.value }))}
-              placeholder={t.prospectsPage.url}
-            />
-            <Input
-              value={createDraft.source}
-              onChange={(event) => setCreateDraft((current) => ({ ...current, source: event.target.value }))}
-              placeholder={t.prospectsPage.source}
-            />
-            <Input
-              type="date"
-              value={createDraft.nextFollowUpAt}
-              onChange={(event) =>
-                setCreateDraft((current) => ({ ...current, nextFollowUpAt: event.target.value }))
-              }
-              aria-label={t.prospectsPage.nextFollowUp}
-            />
-          </div>
-          <Textarea
-            rows={2}
-            className="mt-3"
-            value={createDraft.notes}
-            onChange={(event) => setCreateDraft((current) => ({ ...current, notes: event.target.value }))}
-            placeholder={t.prospectsPage.notes}
+          <CreateFields
+            draft={createDraft}
+            onChange={setCreateDraft}
+            t={t}
           />
           <div className="mt-4 flex gap-2">
             <Button type="submit" disabled={pending}>
@@ -284,188 +197,99 @@ export function ProspectsCrmView({ prospects }: Props) {
         </form>
       ) : null}
 
-      <section>
-        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-zg-muted">
-          {t.prospectsPage.pipeline}
-        </p>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {statusCounts.map(({ status, count }) => (
-            <button
-              key={status}
-              type="button"
-              onClick={() => setStatusFilter(statusFilter === status ? "all" : status)}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
-                statusFilter === status
-                  ? "border-white/20 bg-white/[0.1] text-zg-fg"
-                  : "border-white/[0.07] text-zg-text-secondary hover:border-white/15"
-              }`}
-            >
-              {t.prospectStatuses[status]} <span className="ml-1 tabular-nums text-zg-muted">{count}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zg-muted" />
-          <Input
-            className="pl-9"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t.prospectsPage.search}
-          />
-        </div>
-        <Select
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          className="sm:max-w-[220px]"
-        >
-          <option value="all">{t.prospectsPage.allStatuses}</option>
-          {STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {t.prospectStatuses[status]}
-            </option>
-          ))}
-        </Select>
+      <div className="relative max-w-md">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zg-muted" />
+        <Input
+          className="pl-9"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t.prospectsPage.search}
+        />
       </div>
 
-      {filtered.length ? (
-        <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.015]">
-          <div className="hidden grid-cols-[1.4fr_1fr_0.8fr_0.8fr_42px] gap-4 border-b border-white/[0.07] px-5 py-3 text-[11px] uppercase tracking-wider text-zg-muted md:grid">
-            <span>{t.prospectsPage.name}</span>
-            <span>{t.prospectsPage.contact}</span>
-            <span>{t.prospectsPage.source}</span>
-            <span>{t.common.status}</span>
-            <span />
-          </div>
-          <div className="divide-y divide-white/[0.06]">
-            {filtered.map((item) => {
-              const expanded = editingId === item.id;
-              return (
-                <article key={item.id}>
-                  <div className="grid gap-4 px-5 py-4 md:grid-cols-[1.4fr_1fr_0.8fr_0.8fr_42px] md:items-center">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.035]">
-                        {item.type === "individual" ? (
-                          <UserRound className="h-4 w-4 text-zg-text-secondary" />
-                        ) : (
-                          <Building2 className="h-4 w-4 text-zg-text-secondary" />
-                        )}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-zg-fg">{item.name || item.company}</p>
-                        {item.name && item.company ? (
-                          <p className="mt-0.5 truncate text-xs text-zg-muted">{item.company}</p>
-                        ) : null}
-                      </div>
-                    </div>
-                    <div className="min-w-0 text-xs text-zg-text-secondary">
-                      <p className="truncate">{item.email || item.contact || t.prospectsPage.noContact}</p>
-                      {item.phone ? <p className="mt-0.5 truncate text-zg-muted">{item.phone}</p> : null}
-                    </div>
-                    <p className="truncate text-xs text-zg-text-secondary">{item.source || "—"}</p>
-                    <Select
-                      value={item.status}
-                      disabled={pending}
-                      onChange={(event) => void patchProspect(item.id, { status: event.target.value })}
-                      className="min-h-8 py-1 text-xs"
-                    >
-                      {STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                          {t.prospectStatuses[status]}
-                        </option>
-                      ))}
-                    </Select>
-                    <button
-                      type="button"
-                      onClick={() => openEdit(item)}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-zg-muted hover:bg-white/[0.05] hover:text-zg-fg"
-                      aria-label={expanded ? t.prospectsPage.cancelEdit : t.prospectsPage.details}
-                    >
-                      {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </button>
-                  </div>
+      <p className="text-xs text-zg-muted">{t.prospectsPage.kanbanHint}</p>
 
-                  {expanded && editDraft ? (
-                    <div className="border-t border-white/[0.06] bg-white/[0.018] px-5 py-5">
-                      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <Input
-                          value={editDraft.name}
-                          onChange={(event) => setEditDraft({ ...editDraft, name: event.target.value })}
-                          placeholder={t.prospectsPage.name}
-                        />
-                        <Input
-                          value={editDraft.company}
-                          onChange={(event) => setEditDraft({ ...editDraft, company: event.target.value })}
-                          placeholder={t.prospectsPage.company}
-                        />
-                        <Input
-                          type="email"
-                          value={editDraft.email}
-                          onChange={(event) => setEditDraft({ ...editDraft, email: event.target.value })}
-                          placeholder={t.prospectsPage.email}
-                        />
-                        <Input
-                          value={editDraft.phone}
-                          onChange={(event) => setEditDraft({ ...editDraft, phone: event.target.value })}
-                          placeholder={t.prospectsPage.phone}
-                        />
-                        <Input
-                          value={editDraft.url}
-                          onChange={(event) => setEditDraft({ ...editDraft, url: event.target.value })}
-                          placeholder={t.prospectsPage.url}
-                        />
-                        <Input
-                          value={editDraft.source}
-                          onChange={(event) => setEditDraft({ ...editDraft, source: event.target.value })}
-                          placeholder={t.prospectsPage.source}
-                        />
-                        <Input
-                          type="date"
-                          value={editDraft.contactedAt}
-                          onChange={(event) => setEditDraft({ ...editDraft, contactedAt: event.target.value })}
-                          aria-label={t.prospectsPage.contactedAt}
-                        />
-                        <Input
-                          type="date"
-                          value={editDraft.nextFollowUpAt}
-                          onChange={(event) => setEditDraft({ ...editDraft, nextFollowUpAt: event.target.value })}
-                          aria-label={t.prospectsPage.nextFollowUp}
-                        />
-                      </div>
-                      <Input
-                        className="mt-3"
-                        value={editDraft.lastAction}
-                        onChange={(event) => setEditDraft({ ...editDraft, lastAction: event.target.value })}
-                        placeholder={t.prospectsPage.lastAction}
-                      />
-                      <Textarea
-                        rows={3}
-                        className="mt-3"
-                        value={editDraft.notes}
-                        onChange={(event) => setEditDraft({ ...editDraft, notes: event.target.value })}
-                        placeholder={t.prospectsPage.notes}
-                      />
-                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                        <p className="text-xs text-zg-muted">
-                          {t.prospectsPage.addedOn}{" "}
-                          {item.createdAt ? new Date(item.createdAt).toLocaleDateString(dateLocale) : "—"}
-                        </p>
-                        <Button type="button" size="sm" disabled={pending} onClick={() => void saveEdit(item.id)}>
-                          {t.prospectsPage.saveChanges}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : null}
-                </article>
-              );
-            })}
-          </div>
-        </div>
+      {filtered.length ? (
+        <ProspectsKanban
+          prospects={filtered}
+          labels={statusLabels}
+          dateLocale={dateLocale}
+          pending={pending}
+          onSelect={openProspect}
+          onMove={(id, status) => void patchProspect(id, { status })}
+        />
       ) : (
         <SharpzEmptyPanel title={t.empty.noProspectsTitle} description={t.empty.noProspectsDescription} icon={Users} />
       )}
+
+      {selected && editDraft ? (
+        <ProspectDetailPanel
+          prospect={selected}
+          draft={editDraft}
+          events={eventsByProspect[selected.id] ?? []}
+          labels={statusLabels}
+          dateLocale={dateLocale}
+          pending={pending}
+          copy={{
+            details: t.prospectsPage.details,
+            saveChanges: t.prospectsPage.saveChanges,
+            cancel: t.common.cancel,
+            history: t.prospectsPage.history,
+            noHistory: t.prospectsPage.noHistory,
+            name: t.prospectsPage.name,
+            company: t.prospectsPage.company,
+            email: t.prospectsPage.email,
+            phone: t.prospectsPage.phone,
+            url: t.prospectsPage.url,
+            source: t.prospectsPage.source,
+            lastAction: t.prospectsPage.lastAction,
+            contactedAt: t.prospectsPage.contactedAt,
+            nextFollowUp: t.prospectsPage.nextFollowUp,
+            notes: t.prospectsPage.notes,
+            companyType: t.prospectsPage.company,
+            individualType: t.prospectsPage.individual,
+            status: t.common.status,
+          }}
+          onClose={() => {
+            setSelectedId(null);
+            setEditDraft(null);
+          }}
+          onChange={setEditDraft}
+          onSave={() => void saveSelected()}
+        />
+      ) : null}
     </DashboardContent>
+  );
+}
+
+function CreateFields({
+  draft,
+  onChange,
+  t,
+}: {
+  draft: ProspectDraft;
+  onChange: (draft: ProspectDraft) => void;
+  t: ReturnType<typeof useDashboardI18n>["t"];
+}) {
+  return (
+    <>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <Select
+          value={draft.type}
+          onChange={(event) => onChange({ ...draft, type: event.target.value as ProspectType })}
+        >
+          <option value="company">{t.prospectsPage.company}</option>
+          <option value="individual">{t.prospectsPage.individual}</option>
+        </Select>
+        <Input value={draft.name} onChange={(e) => onChange({ ...draft, name: e.target.value })} placeholder={t.prospectsPage.name} />
+        <Input value={draft.company} onChange={(e) => onChange({ ...draft, company: e.target.value })} placeholder={t.prospectsPage.company} />
+        <Input type="email" value={draft.email} onChange={(e) => onChange({ ...draft, email: e.target.value })} placeholder={t.prospectsPage.email} />
+        <Input value={draft.phone} onChange={(e) => onChange({ ...draft, phone: e.target.value })} placeholder={t.prospectsPage.phone} />
+        <Input value={draft.url} onChange={(e) => onChange({ ...draft, url: e.target.value })} placeholder={t.prospectsPage.url} />
+        <Input value={draft.source} onChange={(e) => onChange({ ...draft, source: e.target.value })} placeholder={t.prospectsPage.source} />
+        <Input type="date" value={draft.nextFollowUpAt} onChange={(e) => onChange({ ...draft, nextFollowUpAt: e.target.value })} aria-label={t.prospectsPage.nextFollowUp} />
+      </div>
+      <Textarea rows={2} className="mt-3" value={draft.notes} onChange={(e) => onChange({ ...draft, notes: e.target.value })} placeholder={t.prospectsPage.notes} />
+    </>
   );
 }

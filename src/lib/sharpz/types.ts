@@ -56,13 +56,12 @@ export type OpportunityCategory =
 export type OpportunityLevel = "low" | "medium" | "high";
 
 export type ProspectStatus =
-  | "new"
   | "to_contact"
-  | "contacted"
-  | "followed_up"
-  | "replied"
+  | "follow_up_1"
+  | "follow_up_2"
+  | "in_discussion"
   | "qualified"
-  | "not_relevant"
+  | "customer"
   | "closed";
 
 export type ProspectType = "company" | "individual";
@@ -249,6 +248,14 @@ export type Prospect = {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ProspectEvent = {
+  id: string;
+  prospectId: string;
+  eventType: "created" | "status_change" | "note" | "contact";
+  detail: string | null;
+  createdAt: string;
 };
 
 export type Experiment = {

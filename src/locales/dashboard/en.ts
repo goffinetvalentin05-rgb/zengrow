@@ -105,13 +105,12 @@ export const en: DashboardDictionary = {
     ignored: "Ignored",
   },
   prospectStatuses: {
-    new: "New",
     to_contact: "To contact",
-    contacted: "Contacted",
-    followed_up: "Followed up",
-    replied: "Reply received",
+    follow_up_1: "Follow-up 1",
+    follow_up_2: "Follow-up 2",
+    in_discussion: "In discussion",
     qualified: "Qualified",
-    not_relevant: "Not relevant",
+    customer: "Customer",
     closed: "Closed",
   },
   stages: {
@@ -502,6 +501,10 @@ export const en: DashboardDictionary = {
     pipeline: "Pipeline",
     noContact: "No contact details",
     allStatuses: "All statuses",
+    history: "History",
+    noHistory: "No events recorded yet.",
+    moveTo: "Move to",
+    kanbanHint: "Drag a card between columns to update its status.",
   },
   upsell: {
     title: "Upgrade to Pro",
