@@ -192,9 +192,12 @@ export type Competitor = {
   id: string;
   name: string;
   url: string | null;
+  pricingUrl: string | null;
   positioning: string | null;
   pricing: string | null;
+  notes: string | null;
   status: string;
+  active: boolean;
   lastCheckedAt: string | null;
 };
 
@@ -206,6 +209,10 @@ export type CompetitorChange = {
   whatChanged: string;
   importance: string;
   whyItMatters: string | null;
+  beforeValue?: string | null;
+  afterValue?: string | null;
+  sourceUrl?: string | null;
+  confidence?: string | null;
   createdAt: string;
 };
 
@@ -267,12 +274,21 @@ export type ProspectEvent = {
 
 export type Experiment = {
   id: string;
+  title: string | null;
   hypothesis: string;
   actionId: string | null;
   actionDescription: string | null;
+  metric: string | null;
+  metricSource: string | null;
+  beforeValue: number | null;
+  afterValue: number | null;
+  deltaAbsolute: number | null;
+  deltaPercent: number | null;
+  plannedEndAt: string | null;
+  notes: string | null;
   result: string | null;
   conclusion: string | null;
-  status: "running" | "completed" | string;
+  status: "draft" | "running" | "completed" | "cancelled" | string;
   startedAt: string;
   createdAt: string;
   completedAt: string | null;

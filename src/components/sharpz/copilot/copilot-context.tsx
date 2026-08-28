@@ -42,15 +42,45 @@ export type CopilotProposedAction = {
   howTo?: string;
 };
 
+export type CopilotProposedFollowUp = {
+  localId: string;
+  prospectId: string;
+  company: string;
+  name?: string | null;
+  daysFromNow: number;
+  nextFollowUpAt: string;
+  note?: string;
+};
+
+export type CopilotProposedExperiment = {
+  localId: string;
+  hypothesis: string;
+  title?: string | null;
+  actionId?: string | null;
+  actionDescription?: string | null;
+  metric?: string | null;
+  plannedDays?: number | null;
+};
+
 export type CopilotSearchError = {
   message: string;
   retryable: boolean;
+};
+
+export type CopilotCompetitor = {
+  localId: string;
+  companyName: string;
+  website: string;
+  whyCompetitor?: string | null;
+  sourceUrl?: string | null;
+  confidence?: number | null;
 };
 
 export type CopilotMessage = {
   role: "user" | "assistant";
   content: string;
   prospects?: CopilotProspect[];
+  competitors?: CopilotCompetitor[];
   searchError?: CopilotSearchError;
 };
 
@@ -60,7 +90,10 @@ type CopilotContextValue = {
   input: string;
   setInput: (value: string) => void;
   proposed: CopilotProspect[];
+  proposedCompetitors: CopilotCompetitor[];
   proposedActions: CopilotProposedAction[];
+  proposedFollowUps: CopilotProposedFollowUp[];
+  proposedExperiments: CopilotProposedExperiment[];
   selectedProspectIds: Set<string>;
   dockOpen: boolean;
   setDockOpen: (open: boolean) => void;
@@ -73,12 +106,19 @@ type CopilotContextValue = {
   acceptProspect: (localId: string) => Promise<void>;
   acceptSelectedProspects: () => Promise<void>;
   acceptAllProspects: () => Promise<void>;
+  acceptCompetitor: (localId: string) => Promise<void>;
+  dismissCompetitor: (localId: string) => void;
   dismissAction: (localId: string) => void;
   acceptAction: (localId: string) => Promise<void>;
   acceptAllActions: () => Promise<void>;
+  dismissFollowUp: (localId: string) => void;
+  acceptFollowUp: (localId: string) => Promise<void>;
+  dismissExperiment: (localId: string) => void;
+  acceptExperiment: (localId: string) => Promise<void>;
   acceptingId: string | null;
   acceptingActions: boolean;
   acceptingProspects: boolean;
+  acceptingCompetitorId: string | null;
 };
 
 const CopilotContext = createContext<CopilotContextValue | null>(null);
@@ -94,6 +134,12 @@ function withLocalIds(items: Omit<CopilotProspect, "localId">[]) {
     .map((item) => ({ ...item, localId: newLocalId() }));
 }
 
+function withCompetitorLocalIds(items: Omit<CopilotCompetitor, "localId">[]) {
+  return items
+    .filter((item) => item.companyName?.trim() && item.website?.trim())
+    .map((item) => ({ ...item, localId: newLocalId() }));
+}
+
 export function CopilotProvider({ children }: { children: ReactNode }) {
   const { t } = useDashboardI18n();
   const router = useRouter();
@@ -102,12 +148,16 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState(false);
   const [input, setInput] = useState("");
   const [proposed, setProposed] = useState<CopilotProspect[]>([]);
+  const [proposedCompetitors, setProposedCompetitors] = useState<CopilotCompetitor[]>([]);
   const [proposedActions, setProposedActions] = useState<CopilotProposedAction[]>([]);
+  const [proposedFollowUps, setProposedFollowUps] = useState<CopilotProposedFollowUp[]>([]);
+  const [proposedExperiments, setProposedExperiments] = useState<CopilotProposedExperiment[]>([]);
   const [selectedProspectIds, setSelectedProspectIds] = useState<Set<string>>(new Set());
   const [dockOpen, setDockOpen] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [acceptingActions, setAcceptingActions] = useState(false);
   const [acceptingProspects, setAcceptingProspects] = useState(false);
+  const [acceptingCompetitorId, setAcceptingCompetitorId] = useState<string | null>(null);
   const [lastSearchPrompt, setLastSearchPrompt] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const lock = useRef(false);
@@ -132,8 +182,13 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
         error?: string;
         reply?: string;
         prospects?: Omit<CopilotProspect, "localId">[];
+        competitors?: Omit<CopilotCompetitor, "localId">[];
         proposedActions?: Omit<CopilotProposedAction, "localId">[];
+        proposedFollowUps?: Omit<CopilotProposedFollowUp, "localId">[];
+        proposedExperiments?: Omit<CopilotProposedExperiment, "localId">[];
+        proposedCompetitors?: Omit<CopilotCompetitor, "localId">[];
         searchError?: CopilotSearchError;
+        meta?: { toolsCalled?: string[] };
       };
 
       if (!response.ok) {
@@ -142,11 +197,16 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       }
 
       const mapped = withLocalIds(data.prospects ?? []);
+      const mappedCompetitors = withCompetitorLocalIds([
+        ...(data.competitors ?? []),
+        ...(data.proposedCompetitors ?? []),
+      ]);
       const assistantMessage: CopilotMessage = {
         role: "assistant",
         content: data.reply ?? "",
         searchError: data.searchError,
         prospects: mapped.length ? mapped : undefined,
+        competitors: mappedCompetitors.length ? mappedCompetitors : undefined,
       };
       setMessages((current) => [...current, assistantMessage]);
 
@@ -159,6 +219,10 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
         });
       }
 
+      if (mappedCompetitors.length) {
+        setProposedCompetitors((current) => [...mappedCompetitors, ...current]);
+      }
+
       const incomingActions = (data.proposedActions ?? []).filter((item) => item.title?.trim());
       if (incomingActions.length) {
         setProposedActions((current) => [
@@ -167,7 +231,25 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
         ]);
       }
 
-      if (/prospect|club|restaurant|lead/i.test(userText)) {
+      const incomingFollowUps = (data.proposedFollowUps ?? []).filter((item) => item.prospectId);
+      if (incomingFollowUps.length) {
+        setProposedFollowUps((current) => [
+          ...incomingFollowUps.map((item) => ({ ...item, localId: newLocalId() })),
+          ...current,
+        ]);
+      }
+
+      const incomingExperiments = (data.proposedExperiments ?? []).filter((item) => item.hypothesis?.trim());
+      if (incomingExperiments.length) {
+        setProposedExperiments((current) => [
+          ...incomingExperiments.map((item) => ({ ...item, localId: newLocalId() })),
+          ...current,
+        ]);
+      }
+
+      if (data.meta?.toolsCalled?.includes("search_prospects")) {
+        setLastSearchPrompt(userText);
+      } else if (/prospect|club|restaurant|lead/i.test(userText)) {
         setLastSearchPrompt(userText);
       }
     },
@@ -333,6 +415,37 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
     await persistProspects(proposed);
   }, [persistProspects, proposed]);
 
+  const dismissCompetitor = useCallback((localId: string) => {
+    setProposedCompetitors((current) => current.filter((item) => item.localId !== localId));
+  }, []);
+
+  const acceptCompetitor = useCallback(
+    async (localId: string) => {
+      const item = proposedCompetitors.find((c) => c.localId === localId);
+      if (!item) return;
+      setAcceptingCompetitorId(localId);
+      const response = await fetch("/api/sharpz/competitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: item.companyName,
+          url: item.website,
+          notes: item.whyCompetitor ?? null,
+        }),
+      });
+      setAcceptingCompetitorId(null);
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        showToast({ message: data.error ?? t.common.error });
+        return;
+      }
+      dismissCompetitor(localId);
+      showToast({ message: t.common.saved });
+      router.refresh();
+    },
+    [dismissCompetitor, proposedCompetitors, router, showToast, t.common.error, t.common.saved],
+  );
+
   const dismissAction = useCallback((localId: string) => {
     setProposedActions((current) => current.filter((item) => item.localId !== localId));
   }, []);
@@ -386,6 +499,69 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
     await persistActions(proposedActions);
   }, [persistActions, proposedActions]);
 
+  const dismissFollowUp = useCallback((localId: string) => {
+    setProposedFollowUps((current) => current.filter((item) => item.localId !== localId));
+  }, []);
+
+  const acceptFollowUp = useCallback(
+    async (localId: string) => {
+      const item = proposedFollowUps.find((followUp) => followUp.localId === localId);
+      if (!item) return;
+      setAcceptingId(localId);
+      const response = await fetch(`/api/sharpz/prospects/${item.prospectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nextFollowUpAt: item.nextFollowUpAt,
+          notes: item.note,
+        }),
+      });
+      setAcceptingId(null);
+      if (!response.ok) {
+        showToast({ message: t.common.error });
+        return;
+      }
+      dismissFollowUp(localId);
+      showToast({ message: "Relance programmée." });
+      router.refresh();
+    },
+    [dismissFollowUp, proposedFollowUps, router, showToast, t.common.error],
+  );
+
+  const dismissExperiment = useCallback((localId: string) => {
+    setProposedExperiments((current) => current.filter((item) => item.localId !== localId));
+  }, []);
+
+  const acceptExperiment = useCallback(
+    async (localId: string) => {
+      const item = proposedExperiments.find((experiment) => experiment.localId === localId);
+      if (!item) return;
+      setAcceptingId(localId);
+      const response = await fetch("/api/sharpz/experiments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hypothesis: item.hypothesis,
+          title: item.title,
+          actionId: item.actionId,
+          actionDescription: item.actionDescription,
+          metric: item.metric,
+          plannedDays: item.plannedDays ?? 14,
+          startNow: true,
+        }),
+      });
+      setAcceptingId(null);
+      if (!response.ok) {
+        showToast({ message: t.common.error });
+        return;
+      }
+      dismissExperiment(localId);
+      showToast({ message: "Expérimentation créée." });
+      router.refresh();
+    },
+    [dismissExperiment, proposedExperiments, router, showToast, t.common.error],
+  );
+
   const value = useMemo(
     () => ({
       messages,
@@ -393,7 +569,10 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       input,
       setInput,
       proposed,
+      proposedCompetitors,
       proposedActions,
+      proposedFollowUps,
+      proposedExperiments,
       selectedProspectIds,
       dockOpen,
       setDockOpen,
@@ -406,19 +585,29 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       acceptProspect,
       acceptSelectedProspects,
       acceptAllProspects,
+      acceptCompetitor,
+      dismissCompetitor,
       dismissAction,
       acceptAction,
       acceptAllActions,
+      dismissFollowUp,
+      acceptFollowUp,
+      dismissExperiment,
+      acceptExperiment,
       acceptingId,
       acceptingActions,
       acceptingProspects,
+      acceptingCompetitorId,
     }),
     [
       messages,
       pending,
       input,
       proposed,
+      proposedCompetitors,
       proposedActions,
+      proposedFollowUps,
+      proposedExperiments,
       selectedProspectIds,
       dockOpen,
       send,
@@ -429,12 +618,19 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       acceptProspect,
       acceptSelectedProspects,
       acceptAllProspects,
+      acceptCompetitor,
+      dismissCompetitor,
       dismissAction,
       acceptAction,
       acceptAllActions,
+      dismissFollowUp,
+      acceptFollowUp,
+      dismissExperiment,
+      acceptExperiment,
       acceptingId,
       acceptingActions,
       acceptingProspects,
+      acceptingCompetitorId,
     ],
   );
 

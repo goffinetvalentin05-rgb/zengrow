@@ -26,6 +26,8 @@ type NotificationDbRow = {
   action_url: string | null;
   read: boolean;
   created_at: string;
+  severity?: string | null;
+  dedup_key?: string | null;
 };
 
 function mapRow(row: NotificationDbRow): NotificationRow {
@@ -40,6 +42,8 @@ function mapRow(row: NotificationDbRow): NotificationRow {
     action_url: row.action_url,
     read: row.read,
     created_at: row.created_at,
+    severity: row.severity ?? null,
+    dedup_key: row.dedup_key ?? null,
   };
 }
 
@@ -101,7 +105,7 @@ export function NotificationProvider({ restaurantId, children }: NotificationPro
       supabase
         .from("notifications")
         .select(
-          "id, restaurant_id, type, title, message, related_entity_type, related_entity_id, action_url, read, created_at",
+          "id, restaurant_id, type, title, message, related_entity_type, related_entity_id, action_url, read, created_at, severity, dedup_key",
         )
         .eq("restaurant_id", restaurantId)
         .order("created_at", { ascending: false })
@@ -134,7 +138,15 @@ export function NotificationProvider({ restaurantId, children }: NotificationPro
   useEffect(() => {
     mountedRef.current = true;
     setLoading(true);
-    void refresh();
+    void (async () => {
+      // Sync Growth signals (idempotent) puis refresh cloche.
+      try {
+        await fetch("/api/sharpz/notifications/sync", { method: "POST" });
+      } catch {
+        // Non bloquant — legacy + growth déjà en DB restent visibles.
+      }
+      await refresh();
+    })();
     return () => {
       mountedRef.current = false;
     };

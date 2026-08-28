@@ -97,14 +97,7 @@ export function AnalyticsView({
         />
       ) : null}
       {tab === "market" ? (
-        competitors.length || changes.length ? (
-          <MarketView embedded competitors={competitors} changes={changes} opportunities={[]} />
-        ) : (
-          <AnalyticsTabEmpty
-            title={t.analyticsPage.marketEmptyTitle}
-            description={t.analyticsPage.marketEmptyDescription}
-          />
-        )
+        <MarketView embedded competitors={competitors} changes={changes} />
       ) : null}
       {tab === "content" ? (
         contentOpportunities.length || contentIdeas.length ? (

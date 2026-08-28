@@ -218,9 +218,12 @@ export async function getCompetitors(supabase: SupabaseClient, restaurantId: str
     id: String(row.id),
     name: String(row.name ?? ""),
     url: row.url ?? null,
+    pricingUrl: row.pricing_url ?? null,
     positioning: row.positioning ?? null,
     pricing: row.pricing ?? null,
+    notes: row.notes ?? null,
     status: String(row.status ?? "watching"),
+    active: row.active !== false,
     lastCheckedAt: row.last_checked_at ?? null,
   }));
 }
@@ -231,18 +234,26 @@ export async function getCompetitorChanges(
 ): Promise<CompetitorChange[]> {
   const { data } = await supabase
     .from("competitor_changes")
-    .select("*")
+    .select("*, competitors(name)")
     .eq("restaurant_id", restaurantId)
     .order("created_at", { ascending: false });
-  return (data ?? []).map((row) => ({
-    id: String(row.id),
-    competitorId: row.competitor_id ?? null,
-    changeType: String(row.change_type ?? ""),
-    whatChanged: String(row.what_changed ?? ""),
-    importance: String(row.importance ?? "medium"),
-    whyItMatters: row.why_it_matters ?? null,
-    createdAt: String(row.created_at ?? ""),
-  }));
+  return (data ?? []).map((row) => {
+    const joined = row.competitors as { name?: string } | null;
+    return {
+      id: String(row.id),
+      competitorId: row.competitor_id ?? null,
+      competitorName: joined?.name ?? null,
+      changeType: String(row.change_type ?? ""),
+      whatChanged: String(row.what_changed ?? ""),
+      importance: String(row.importance ?? "medium"),
+      whyItMatters: row.why_it_matters ?? null,
+      beforeValue: row.before_value ?? null,
+      afterValue: row.after_value ?? null,
+      sourceUrl: row.source_url ?? null,
+      confidence: row.confidence ?? null,
+      createdAt: String(row.created_at ?? ""),
+    };
+  });
 }
 
 export async function getContentOpportunities(
@@ -379,9 +390,18 @@ export async function getExperiments(supabase: SupabaseClient, restaurantId: str
     .order("created_at", { ascending: false });
   return (data ?? []).map((row) => ({
     id: String(row.id),
+    title: typeof row.title === "string" ? row.title : null,
     hypothesis: String(row.hypothesis ?? ""),
     actionId: row.action_id ?? null,
     actionDescription: row.action_description ?? null,
+    metric: typeof row.metric === "string" ? row.metric : null,
+    metricSource: typeof row.metric_source === "string" ? row.metric_source : null,
+    beforeValue: row.before_value != null ? Number(row.before_value) : null,
+    afterValue: row.after_value != null ? Number(row.after_value) : null,
+    deltaAbsolute: row.delta_absolute != null ? Number(row.delta_absolute) : null,
+    deltaPercent: row.delta_percent != null ? Number(row.delta_percent) : null,
+    plannedEndAt: row.planned_end_at ?? null,
+    notes: typeof row.notes === "string" ? row.notes : null,
     result: row.result ?? null,
     conclusion: row.conclusion ?? null,
     status: row.status ?? "running",

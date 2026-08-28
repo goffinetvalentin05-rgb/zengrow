@@ -4,6 +4,7 @@ import { forwardRef } from "react";
 import NotificationTypeIcon from "@/src/components/dashboard/notifications/notification-type-icon";
 import { formatNotificationRelativeTime } from "@/src/lib/notifications/relative-time";
 import type { NotificationRow } from "@/src/lib/notifications/types";
+import { isGrowthNotificationType } from "@/src/lib/notifications/types";
 import { cn } from "@/src/lib/utils";
 
 type NotificationListItemProps = {
@@ -39,6 +40,11 @@ const NotificationListItem = forwardRef<HTMLButtonElement, NotificationListItemP
         <span className="min-w-0 flex-1">
           <span className="flex items-start gap-2">
             <span className="min-w-0 flex-1 text-sm font-semibold text-zg-fg">{notification.title}</span>
+            {isGrowthNotificationType(notification.type) && notification.severity ? (
+              <span className="mt-0.5 shrink-0 text-[10px] uppercase tracking-wide text-zg-text-muted">
+                {notification.severity}
+              </span>
+            ) : null}
             {!notification.read ? (
               <span
                 className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-sky-400"

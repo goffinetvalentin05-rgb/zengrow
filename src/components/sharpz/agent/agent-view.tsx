@@ -4,6 +4,7 @@ import { Check, X } from "lucide-react";
 import { useLayoutEffect } from "react";
 import { useSetDashboardTitle } from "@/src/components/dashboard/dashboard-title-context";
 import { ProspectSearchCards } from "@/src/components/sharpz/agent/prospect-search-cards";
+import { CompetitorSearchCards } from "@/src/components/sharpz/agent/competitor-search-cards";
 import { CopilotHero } from "@/src/components/sharpz/copilot/copilot-panel";
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
 import { ScorePills } from "@/src/components/sharpz/score-pills";
@@ -45,19 +46,29 @@ export function AgentView({
   const setDashboardTitle = useSetDashboardTitle();
   const {
     proposed,
+    proposedCompetitors,
     proposedActions,
+    proposedFollowUps,
+    proposedExperiments,
     selectedProspectIds,
     toggleProspectSelection,
     acceptProspect,
     acceptSelectedProspects,
     acceptAllProspects,
     dismissProspect,
+    acceptCompetitor,
+    dismissCompetitor,
     acceptAction,
     dismissAction,
     acceptAllActions,
+    dismissFollowUp,
+    acceptFollowUp,
+    dismissExperiment,
+    acceptExperiment,
     acceptingId,
     acceptingActions,
     acceptingProspects,
+    acceptingCompetitorId,
   } = useCopilot();
 
   useLayoutEffect(() => {
@@ -209,6 +220,65 @@ export function AgentView({
         </section>
       ) : null}
 
+      {proposedFollowUps.length ? (
+        <section className="zg-surface-panel mt-6 overflow-hidden p-6 text-left">
+          <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.prospectsPage.scheduleFollowUp}</h2>
+          <div className="divide-y divide-white/[0.06]">
+            {proposedFollowUps.map((item) => (
+              <article key={item.localId} className="py-5 first:pt-0 last:pb-0">
+                <h3 className="text-base font-semibold text-zg-fg">{item.company}</h3>
+                <p className="mt-2 text-sm text-zg-text-secondary">
+                  {t.prospectsPage.nextFollowUp} · {new Date(item.nextFollowUpAt).toLocaleDateString()}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={acceptingId === item.localId}
+                    onClick={() => void acceptFollowUp(item.localId)}
+                  >
+                    <Check />
+                    {t.today.validate}
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => dismissFollowUp(item.localId)}>
+                    <X />
+                    {t.today.ignore}
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {proposedExperiments.length ? (
+        <section className="zg-surface-panel mt-6 overflow-hidden p-6 text-left">
+          <h2 className="text-lg font-semibold tracking-tight text-zg-fg">Expérimentation proposée</h2>
+          <div className="divide-y divide-white/[0.06]">
+            {proposedExperiments.map((item) => (
+              <article key={item.localId} className="py-5 first:pt-0 last:pb-0">
+                <p className="text-sm leading-relaxed text-zg-text-secondary">{item.hypothesis}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={acceptingId === item.localId}
+                    onClick={() => void acceptExperiment(item.localId)}
+                  >
+                    <Check />
+                    {t.today.validate}
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => dismissExperiment(item.localId)}>
+                    <X />
+                    {t.today.ignore}
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {proposed.length ? (
         <section className="zg-surface-panel mt-6 overflow-hidden p-6 text-left">
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
@@ -251,6 +321,34 @@ export function AgentView({
               <Button key={item.localId} type="button" size="sm" variant="ghost" onClick={() => dismissProspect(item.localId)}>
                 <X />
                 {t.today.ignore} · {item.company}
+              </Button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {proposedCompetitors.length ? (
+        <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+          <h2 className="text-lg font-semibold tracking-tight text-zg-fg">Concurrents proposés</h2>
+          <p className="mt-1 text-sm text-zg-text-secondary">
+            Validation requise avant ajout à Market — aucune entreprise inventée.
+          </p>
+          <CompetitorSearchCards
+            competitors={proposedCompetitors}
+            onAddOne={(id) => void acceptCompetitor(id)}
+            acceptingId={acceptingCompetitorId}
+          />
+          <div className="mt-4 flex flex-wrap gap-2">
+            {proposedCompetitors.map((item) => (
+              <Button
+                key={item.localId}
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => dismissCompetitor(item.localId)}
+              >
+                <X />
+                {t.today.ignore} · {item.companyName}
               </Button>
             ))}
           </div>

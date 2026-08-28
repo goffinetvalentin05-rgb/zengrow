@@ -7,16 +7,22 @@ function trimOrNull(value: string | null | undefined): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+export type CreateNotificationWithDedupInput = CreateNotificationInput & {
+  dedupKey?: string | null;
+  severity?: "info" | "attention" | "critical" | null;
+};
+
 /**
- * Insère une notification in-app (service role, contourne RLS INSERT).
- * Appelé depuis les routes API / actions serveur lors d'événements métier.
+ * Insère une notification in-app (service role).
+ * Si dedupKey est fourni et existe déjà pour le restaurant → no-op (pas de doublon).
  */
 export async function createNotification(
-  input: CreateNotificationInput,
-): Promise<CreateNotificationResult> {
+  input: CreateNotificationWithDedupInput,
+): Promise<CreateNotificationResult & { skipped?: boolean }> {
   const restaurantId = input.restaurantId.trim();
   const title = input.title.trim();
   const message = input.message.trim();
+  const dedupKey = trimOrNull(input.dedupKey ?? null);
 
   if (!restaurantId) {
     return { ok: false, error: "restaurantId requis." };
@@ -34,6 +40,19 @@ export async function createNotification(
   }
 
   const admin = createAdminClient();
+
+  if (dedupKey) {
+    const { data: existing } = await admin
+      .from("notifications")
+      .select("id")
+      .eq("restaurant_id", restaurantId)
+      .eq("dedup_key", dedupKey)
+      .maybeSingle();
+    if (existing?.id) {
+      return { ok: true, id: String(existing.id), skipped: true };
+    }
+  }
+
   const { data, error } = await admin
     .from("notifications")
     .insert({
@@ -45,14 +64,26 @@ export async function createNotification(
       related_entity_id: input.relatedEntityId ?? null,
       action_url: actionUrl,
       read: false,
+      dedup_key: dedupKey,
+      severity: input.severity ?? null,
     })
     .select("id")
     .single();
 
   if (error || !data) {
+    // Course: unique violation → traiter comme skip
+    if (error?.code === "23505" && dedupKey) {
+      const { data: again } = await admin
+        .from("notifications")
+        .select("id")
+        .eq("restaurant_id", restaurantId)
+        .eq("dedup_key", dedupKey)
+        .maybeSingle();
+      if (again?.id) return { ok: true, id: String(again.id), skipped: true };
+    }
     console.error("[createNotification]", error?.message ?? "insert failed");
     return { ok: false, error: error?.message ?? "Impossible de créer la notification." };
   }
 
-  return { ok: true, id: data.id };
+  return { ok: true, id: String(data.id) };
 }

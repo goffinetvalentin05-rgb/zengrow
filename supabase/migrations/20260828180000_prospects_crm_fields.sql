@@ -1,4 +1,5 @@
 -- Sharpz Prospects: champs CRM réels, sans casser les lignes existantes.
+-- Compatible avec des données déjà en statuts pipeline (follow_up_*, customer, …).
 
 alter table public.prospects
   add column if not exists prospect_type text not null default 'company',
@@ -10,13 +11,34 @@ alter table public.prospects
   add column if not exists contacted_at timestamptz,
   add column if not exists next_follow_up_at timestamptz;
 
+-- Normaliser uniquement les libellés legacy exclus (pas les statuts pipeline déjà en prod).
 update public.prospects
 set status = case status
-  when 'customer' then 'closed'
   when 'refused' then 'not_relevant'
   else status
 end
-where status in ('customer', 'refused');
+where status = 'refused';
+
+-- Tout statut inconnu → to_contact (évite 23514 sur données de test / anciennes).
+update public.prospects
+set status = 'to_contact'
+where status is null
+   or status not in (
+     -- pipeline final (20260828200000)
+     'to_contact',
+     'follow_up_1',
+     'follow_up_2',
+     'in_discussion',
+     'qualified',
+     'customer',
+     'closed',
+     -- intermediaires legacy (cette migration / avant pipeline)
+     'new',
+     'contacted',
+     'followed_up',
+     'replied',
+     'not_relevant'
+   );
 
 alter table public.prospects
   drop constraint if exists prospects_status_chk;
@@ -32,7 +54,11 @@ alter table public.prospects
       'replied',
       'qualified',
       'not_relevant',
-      'closed'
+      'closed',
+      'follow_up_1',
+      'follow_up_2',
+      'in_discussion',
+      'customer'
     )
   );
 

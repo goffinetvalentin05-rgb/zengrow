@@ -14,6 +14,7 @@ import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-loca
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import type { ResultImpactRow } from "@/src/lib/sharpz/results";
 import { computeProspectStats } from "@/src/lib/sharpz/results";
+import { EXPERIMENT_METRICS } from "@/src/lib/sharpz/experiments";
 import type { Experiment, Prospect, SharpzAction } from "@/src/lib/sharpz/types";
 import { cn } from "@/src/lib/utils";
 
@@ -37,6 +38,13 @@ function inPeriod(dateIso: string, period: Period) {
   return date >= start;
 }
 
+function statusTone(status: string): "success" | "warning" | "neutral" | "danger" {
+  if (status === "completed") return "success";
+  if (status === "running") return "warning";
+  if (status === "cancelled") return "danger";
+  return "neutral";
+}
+
 export function ResultsView({
   actions,
   experiments,
@@ -45,13 +53,19 @@ export function ResultsView({
   hasConnectedData,
   trafficHasData,
 }: Props) {
-  const { t } = useDashboardI18n();
+  const { t, locale } = useDashboardI18n();
   const router = useRouter();
   const showToast = useDashboardToast();
   const [period, setPeriod] = useState<Period>("week");
+  const [title, setTitle] = useState("");
   const [hypothesis, setHypothesis] = useState("");
   const [actionDescription, setActionDescription] = useState("");
+  const [metric, setMetric] = useState<string>("visitors_7d");
+  const [plannedDays, setPlannedDays] = useState(14);
   const [pending, setPending] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const dateLocale = locale === "en" ? "en-GB" : "fr-FR";
 
   const counts = useMemo(() => {
     const scoped = actions.filter((action) => inPeriod(action.detectedAt, period) || action.status !== "todo");
@@ -73,17 +87,66 @@ export function ResultsView({
     const response = await fetch("/api/sharpz/experiments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ hypothesis, actionDescription }),
+      body: JSON.stringify({
+        title: title.trim() || undefined,
+        hypothesis,
+        actionDescription,
+        metric: metric || null,
+        plannedDays,
+        startNow: true,
+      }),
     });
     setPending(false);
     if (!response.ok) {
       showToast({ message: t.common.error });
       return;
     }
+    const data = (await response.json()) as { beforeAvailable?: boolean };
+    setTitle("");
     setHypothesis("");
     setActionDescription("");
-    showToast({ message: t.common.saved });
+    showToast({
+      message: data.beforeAvailable
+        ? t.progressPage.experimentStartedWithBaseline
+        : t.progressPage.experimentStartedNoBaseline,
+    });
     router.refresh();
+  }
+
+  async function patchExperiment(id: string, action: "start" | "complete" | "cancel") {
+    setBusyId(id);
+    const response = await fetch(`/api/sharpz/experiments/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    setBusyId(null);
+    if (!response.ok) {
+      showToast({ message: t.common.error });
+      return;
+    }
+    showToast({
+      message:
+        action === "complete"
+          ? t.progressPage.experimentCompleted
+          : action === "cancel"
+            ? t.progressPage.experimentCancelled
+            : t.progressPage.experimentStartedWithBaseline,
+    });
+    router.refresh();
+  }
+
+  function metricLabel(key: string | null) {
+    if (!key) return t.progressPage.metricUnavailable;
+    return t.progressPage.metrics[key as keyof typeof t.progressPage.metrics] ?? key;
+  }
+
+  function statusLabel(status: string) {
+    if (status === "completed") return t.progressPage.completed;
+    if (status === "running") return t.progressPage.running;
+    if (status === "draft") return t.progressPage.draft;
+    if (status === "cancelled") return t.progressPage.cancelled;
+    return status;
   }
 
   return (
@@ -150,11 +213,14 @@ export function ResultsView({
                   <div key={item.id} className="py-5 first:pt-5">
                     <Badge tone="neutral">{t.progressPage.attributionExperiment}</Badge>
                     <p className="mt-3 text-sm font-semibold text-zg-fg">
-                      {item.actionDescription || item.hypothesis}
+                      {item.title || item.actionDescription || item.hypothesis}
                     </p>
                     <p className="mt-2 text-sm text-zg-text-secondary">
                       {t.progressPage.correlated}: {item.result}
                     </p>
+                    {item.conclusion ? (
+                      <p className="mt-2 text-sm text-zg-muted">{item.conclusion}</p>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -175,55 +241,149 @@ export function ResultsView({
 
       <section className="zg-surface-panel p-7">
         <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.progressPage.experiments}</h2>
-        <form className="mt-5 grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-start" onSubmit={createExperiment}>
-          <Input
+        <p className="mt-1.5 max-w-2xl text-sm text-zg-muted">{t.progressPage.experimentsSubtitle}</p>
+
+        <form className="mt-5 grid gap-3" onSubmit={createExperiment}>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder={t.progressPage.experimentTitle}
+            />
+            <select
+              value={metric}
+              onChange={(event) => setMetric(event.target.value)}
+              className="min-h-10 rounded-2xl border border-white/[0.1] bg-white/[0.03] px-4 text-sm text-zg-fg outline-none"
+              aria-label={t.progressPage.metric}
+            >
+              {EXPERIMENT_METRICS.map((key) => (
+                <option key={key} value={key} className="bg-zinc-950 text-white">
+                  {metricLabel(key)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Textarea
             value={hypothesis}
             onChange={(event) => setHypothesis(event.target.value)}
             placeholder={t.progressPage.hypothesis}
+            rows={2}
             required
           />
-          <Textarea
-            value={actionDescription}
-            onChange={(event) => setActionDescription(event.target.value)}
-            placeholder={t.progressPage.action}
-            rows={1}
-            className="min-h-10 md:min-h-10"
-          />
-          <Button type="submit" size="sm" className="md:mt-0.5" disabled={pending}>
-            {t.progressPage.addExperiment}
-          </Button>
+          <div className="grid gap-3 md:grid-cols-[1fr_140px_auto] md:items-start">
+            <Input
+              value={actionDescription}
+              onChange={(event) => setActionDescription(event.target.value)}
+              placeholder={t.progressPage.action}
+            />
+            <Input
+              type="number"
+              min={1}
+              max={90}
+              value={plannedDays}
+              onChange={(event) => setPlannedDays(Number(event.target.value) || 14)}
+              aria-label={t.progressPage.plannedDays}
+            />
+            <Button type="submit" size="sm" disabled={pending}>
+              {t.progressPage.addExperiment}
+            </Button>
+          </div>
         </form>
 
         {experiments.length ? (
           <div className="mt-6 divide-y divide-white/[0.06] border-t border-white/[0.06]">
             {experiments.map((item) => (
-              <div key={item.id} className="space-y-2 py-5">
-                <Badge tone={item.status === "completed" ? "success" : "warning"}>
-                  {item.status === "completed" ? t.progressPage.completed : t.progressPage.running}
-                </Badge>
-                <p className="text-sm">
+              <article key={item.id} className="space-y-3 py-6">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge tone={statusTone(item.status)}>{statusLabel(item.status)}</Badge>
+                  {item.metric ? <Badge tone="neutral">{metricLabel(item.metric)}</Badge> : null}
+                </div>
+                <h3 className="text-base font-semibold tracking-tight text-zg-fg">
+                  {item.title || item.hypothesis}
+                </h3>
+                <p className="text-sm text-zg-text-secondary">
                   <span className="font-medium text-zg-fg">{t.progressPage.hypothesis}: </span>
-                  <span className="text-zg-text-secondary">{item.hypothesis}</span>
+                  {item.hypothesis}
                 </p>
                 {item.actionDescription ? (
-                  <p className="text-sm">
+                  <p className="text-sm text-zg-text-secondary">
                     <span className="font-medium text-zg-fg">{t.progressPage.action}: </span>
-                    <span className="text-zg-text-secondary">{item.actionDescription}</span>
+                    {item.actionDescription}
                   </p>
                 ) : null}
+                <p className="text-xs text-zg-muted">
+                  {t.progressPage.period}: {new Date(item.startedAt).toLocaleDateString(dateLocale)}
+                  {item.plannedEndAt
+                    ? ` → ${new Date(item.plannedEndAt).toLocaleDateString(dateLocale)}`
+                    : ""}
+                  {item.completedAt
+                    ? ` · ${t.progressPage.ended}: ${new Date(item.completedAt).toLocaleDateString(dateLocale)}`
+                    : ""}
+                </p>
+                <div className="grid gap-2 text-sm text-zg-text-secondary sm:grid-cols-3">
+                  <p>
+                    <span className="text-zg-muted">{t.progressPage.before}: </span>
+                    {item.beforeValue != null ? item.beforeValue : t.progressPage.baselineUnavailable}
+                  </p>
+                  <p>
+                    <span className="text-zg-muted">{t.progressPage.after}: </span>
+                    {item.afterValue != null ? item.afterValue : "—"}
+                  </p>
+                  <p>
+                    <span className="text-zg-muted">{t.progressPage.observedDelta}: </span>
+                    {item.deltaPercent != null
+                      ? `${item.deltaPercent > 0 ? "+" : ""}${item.deltaPercent} %`
+                      : item.deltaAbsolute != null
+                        ? String(item.deltaAbsolute)
+                        : "—"}
+                  </p>
+                </div>
                 {item.result ? (
-                  <p className="text-sm">
+                  <p className="text-sm text-zg-text-secondary">
                     <span className="font-medium text-zg-fg">{t.progressPage.result}: </span>
-                    <span className="text-zg-text-secondary">{item.result}</span>
+                    {item.result}
                   </p>
                 ) : null}
                 {item.conclusion ? (
-                  <p className="text-sm">
+                  <p className="text-sm leading-relaxed text-zg-muted">
                     <span className="font-medium text-zg-fg">{t.progressPage.conclusion}: </span>
-                    <span className="text-zg-text-secondary">{item.conclusion}</span>
+                    {item.conclusion}
                   </p>
                 ) : null}
-              </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {item.status === "draft" ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={busyId === item.id}
+                      onClick={() => void patchExperiment(item.id, "start")}
+                    >
+                      {t.progressPage.startExperiment}
+                    </Button>
+                  ) : null}
+                  {item.status === "running" ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={busyId === item.id}
+                      onClick={() => void patchExperiment(item.id, "complete")}
+                    >
+                      {t.progressPage.completeExperiment}
+                    </Button>
+                  ) : null}
+                  {item.status === "draft" || item.status === "running" ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={busyId === item.id}
+                      onClick={() => void patchExperiment(item.id, "cancel")}
+                    >
+                      {t.progressPage.cancelExperiment}
+                    </Button>
+                  ) : null}
+                </div>
+              </article>
             ))}
           </div>
         ) : (

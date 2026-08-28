@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import type { ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
 
 export class AIConfigurationError extends Error {
   constructor(message = "Le service IA n'est pas configuré. Contactez l'administrateur.") {
@@ -23,6 +24,76 @@ export function assertOpenAIConfigured() {
   if (!process.env.OPENAI_API_KEY?.trim()) {
     throw new AIConfigurationError();
   }
+}
+
+type GenerateWithToolsOptions = {
+  system: string;
+  messages: ChatCompletionMessageParam[];
+  tools: ChatCompletionTool[];
+  maxTokens?: number;
+  timeoutMs?: number;
+};
+
+export type ToolCallRequest = {
+  id: string;
+  name: string;
+  arguments: string;
+};
+
+export type GenerateWithToolsResult = {
+  model: string;
+  message: OpenAI.Chat.Completions.ChatCompletionMessage;
+  toolCalls: ToolCallRequest[];
+  finishReason: string | null;
+};
+
+export async function generateWithTools({
+  system,
+  messages,
+  tools,
+  maxTokens = 1600,
+  timeoutMs = 25000,
+}: GenerateWithToolsOptions): Promise<GenerateWithToolsResult> {
+  const client = getOpenAIClient();
+  const model = getOpenAIModel();
+  const controller = timeoutMs ? new AbortController() : null;
+  const timer = timeoutMs ? setTimeout(() => controller?.abort(), timeoutMs) : null;
+
+  let completion;
+  try {
+    completion = await client.chat.completions.create(
+      {
+        model,
+        max_tokens: maxTokens,
+        messages: [{ role: "system", content: system }, ...messages],
+        tools: tools.length ? tools : undefined,
+        tool_choice: tools.length ? "auto" : undefined,
+      },
+      controller ? { signal: controller.signal } : undefined,
+    );
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+
+  const message = completion.choices[0]?.message;
+  if (!message) {
+    throw new Error("Réponse IA vide.");
+  }
+
+  const toolCalls: ToolCallRequest[] = (message.tool_calls ?? [])
+    .filter((call): call is OpenAI.Chat.Completions.ChatCompletionMessageToolCall & { type: "function" } => call.type === "function")
+    .map((call) => ({
+      id: call.id,
+      name: call.function.name,
+      arguments: call.function.arguments,
+    }));
+
+  return {
+    model,
+    message,
+    toolCalls,
+    finishReason: completion.choices[0]?.finish_reason ?? null,
+  };
 }
 
 type GenerateAITextOptions = {

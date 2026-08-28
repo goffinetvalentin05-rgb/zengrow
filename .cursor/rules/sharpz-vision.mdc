@@ -1,0 +1,88 @@
+---
+description: Vision produit Sharpz — Growth OS piloté par IA (garde-fou architectural)
+alwaysApply: true
+---
+
+# Sharpz — Vision produit (référence)
+
+Sharpz n’est **pas** un dashboard, un chatbot avec des pages, ni un outil d’analyse isolé.
+C’est un **Growth Operating System piloté par IA** pour fondateurs SaaS.
+
+## Promesse
+
+> Sharpz connaît votre SaaS, vos objectifs et vos données. Il dit quoi faire pour grandir, aide à l’exécuter et suit ce que ça change.
+
+## Boucle centrale (toute feature doit s’y rattacher)
+
+COMPRENDRE → CONNECTER → DÉTECTER → PRIORISER → AGIR → SUIVRE → MESURER → APPRENDRE → REPRIORISER
+
+Avant d’ajouter quoi que ce soit, demander :
+**« Est-ce qu’elle aide Sharpz à mieux comprendre, décider, exécuter ou mesurer ? »**
+Si non → ne pas ajouter.
+
+## Navigation (6 zones — ne pas fragmenter)
+
+1. **Dashboard** — Aujourd’hui : 3–5 actions max, exécution d’abord (pas 30 KPIs)
+2. **Agent** — Orion : cerveau du produit
+3. **Prospects** — mini-CRM + exécution commerciale
+4. **Analytics** — données réelles (Overview, Traffic, Revenue, SaaS, Market, Content **en onglets**, pas en sidebar)
+5. **Résultats** — impact mesuré, causalité prudente
+6. **Réglages** — profil SaaS, objectifs, intégrations
+
+**Interdit sans justification forte :** nouvelle page principale sidebar (ex. Growth, Market, Content séparés).
+Legacy routes → redirects ou onglets Analytics existants.
+
+## Agent Orion (pas un chatbot)
+
+- Connaît le **contexte DB réel** : SaaS, ICP, objectifs, actions, prospects, trafic, MRR, concurrents, expériences
+- **Décide** → **tools Sharpz exécutent** (ex. `search_prospects`, `create_action`, `schedule_followup`, `create_experiment`)
+- Ne pas se limiter à du texte si une action/outil existe déjà
+- Validation utilisateur avant persistance (prospects, actions proposées)
+
+## Objectifs utilisateur
+
+Les objectifs (`user_objectives`, objectif principal) **doivent influencer** priorités : plan du jour, agent, scoring, recommandations.
+
+## Recommandations → Actions → Résultats
+
+- Toute reco IA pertinente → **action exécutable/validable** (Dashboard ou module métier)
+- Action terminée → peut alimenter **Résultats** (`action_impacts`, stats prospects, expériences)
+- Causalité : « variation observée après » — jamais « a causé +X % » sans expérimentation solide
+
+## Règle anti-bullshit (absolue)
+
+- **Jamais** inventer entreprise, email, téléphone, MRR, trafic, concurrent, métrique
+- Donnée absente → « Donnée non disponible » / « Connectez Stripe » / « Installez Sharpz Analytics »
+- Recherche externe échouée → erreur honnête + retry, pas de complétion fictive
+- Empty states explicites, pas de KPI placeholder avec fausses valeurs
+
+## Architecture — réutiliser, ne pas reconstruire
+
+Tables et modules existants à étendre :
+`user_saas`, `user_objectives`, `integrations`, `actions`, `audits`, `prospects`, `prospect_events`, `prospect_scripts`, `analytics_*`, `experiments`, `action_impacts`, `competitors`, `competitor_changes`, APIs `/api/sharpz/*`, composants Sharpz sous `src/components/sharpz/`.
+
+Ne pas dupliquer CRM, analytics ou actions dans de nouvelles entités/pages.
+
+## Priorités roadmap (référence)
+
+### P0
+1. Agent tools framework (orchestration + tools réels)
+2. Relances prospects → actions Dashboard (contact sans réponse)
+3. Expérimentations complètes (PATCH, avant/après, conclusion)
+4. Notifications growth (événements réels)
+5. Veille concurrents v1 (`competitor_changes`, pas scraping LinkedIn)
+6. Config prod (migrations Supabase, OpenAI, clés prospect search)
+
+### P1 (résumé)
+Stripe enrichi (churn, évolution MRR) · Résultats/`progress_snapshots` · Market/Content liés objectifs · onboarding/ICP → agent · relances auto post-outreach
+
+### P2 (résumé)
+GA/PostHog/Paddle · page Actions dédiée (réutiliser `ActionsBoard`, pas nouvelle nav) · snapshots hebdo · content engine
+
+## Garde-fous session (checklist rapide)
+
+- [ ] Pas de sidebar Growth/Market/Content séparée
+- [ ] Pas de KPI fake si intégration absente
+- [ ] Orion = contexte + tool + exécution
+- [ ] Feature dans la boucle Sharpz
+- [ ] Réutilisation tables/APIs existantes

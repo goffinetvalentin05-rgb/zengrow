@@ -1,4 +1,5 @@
 import { analyticsHref, SHARPZ_ROUTES } from "@/src/lib/sharpz/routes";
+import type { GrowthSignal } from "@/src/lib/sharpz/follow-ups";
 import type {
   AuditFinding,
   CompetitorChange,
@@ -25,21 +26,48 @@ export function buildAttentionSignals(input: {
   content: ContentOpportunity[];
   opportunities: SharpzOpportunity[];
   followUpProspects?: FollowUpProspect[];
+  /** Signal growth regroupé (préféré aux N cartes individuelles). */
+  followUpGrowthSignal?: GrowthSignal | null;
+  extraSignals?: AttentionSignal[];
 }): AttentionSignal[] {
   const signals: AttentionSignal[] = [];
 
-  for (const prospect of (input.followUpProspects ?? []).slice(0, 2)) {
+  if (input.followUpGrowthSignal) {
     signals.push({
-      id: `prospect-${prospect.id}`,
-      title: prospect.title,
-      detail: prospect.detail,
-      href: SHARPZ_ROUTES.prospects,
+      id: input.followUpGrowthSignal.id,
+      title: input.followUpGrowthSignal.title,
+      detail: input.followUpGrowthSignal.detail,
+      href: input.followUpGrowthSignal.href || `${SHARPZ_ROUTES.dashboard}#today-follow-ups`,
     });
+  } else {
+    for (const prospect of (input.followUpProspects ?? []).slice(0, 2)) {
+      signals.push({
+        id: `prospect-${prospect.id}`,
+        title: prospect.title,
+        detail: prospect.detail,
+        href: SHARPZ_ROUTES.prospects,
+      });
+    }
   }
-  for (const change of input.changes.slice(0, 2)) {
+
+  for (const extra of input.extraSignals ?? []) {
+    if (signals.length >= 5) break;
+    signals.push(extra);
+  }
+
+  for (const change of input.changes.slice(0, 3)) {
+    // Uniquement changements méritant une action (pricing / high)
+    const actionable =
+      change.importance === "high" ||
+      change.changeType === "pricing_changed" ||
+      change.changeType === "plan_added" ||
+      change.changeType === "plan_removed";
+    if (!actionable) continue;
     signals.push({
       id: `change-${change.id}`,
-      title: change.whatChanged,
+      title: change.competitorName
+        ? `${change.competitorName} — ${change.whatChanged}`
+        : change.whatChanged,
       detail: change.whyItMatters || change.changeType,
       href: analyticsHref("market"),
     });

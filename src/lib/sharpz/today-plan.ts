@@ -1,5 +1,5 @@
 import { OBJECTIVE_PRIORITY_CATEGORIES } from "@/src/lib/sharpz/constants";
-import { FOLLOW_UP_STATUSES } from "@/src/lib/sharpz/prospects-pipeline";
+import { selectDueFollowUps } from "@/src/lib/sharpz/follow-ups";
 import type { ActionCategory, ObjectiveKey, Prospect, SharpzAction } from "@/src/lib/sharpz/types";
 
 const MAX_TODAY_ACTIONS = 5;
@@ -29,13 +29,9 @@ export function selectTodayActions(
     .map((item) => item.action);
 }
 
+/** Compte les relances dues (next_follow_up_at ≤ aujourd’hui, hors client/fermé). */
 export function countFollowUpProspects(prospects: Prospect[]): number {
-  const now = Date.now();
-  return prospects.filter((item) => {
-    if (FOLLOW_UP_STATUSES.includes(item.status as (typeof FOLLOW_UP_STATUSES)[number])) return true;
-    if (item.nextFollowUpAt && new Date(item.nextFollowUpAt).getTime() <= now) return true;
-    return false;
-  }).length;
+  return selectDueFollowUps(prospects).length;
 }
 
 export function countDoneToday(actions: SharpzAction[]): number {

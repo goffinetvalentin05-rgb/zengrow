@@ -3,6 +3,7 @@
 import { FormEvent } from "react";
 import { ArrowUp } from "lucide-react";
 import { ProspectSearchCards } from "@/src/components/sharpz/agent/prospect-search-cards";
+import { CompetitorSearchCards } from "@/src/components/sharpz/agent/competitor-search-cards";
 import { CopilotOrb } from "@/src/components/sharpz/copilot/copilot-orb";
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
 import Button from "@/src/components/ui/button";
@@ -38,6 +39,22 @@ function ProspectSearchInline({ prospects }: { prospects: import("@/src/componen
         add: t.today.validate,
         whyFit: t.prospectsPage.whyFit + " :",
       }}
+    />
+  );
+}
+
+function CompetitorSearchInline({
+  competitors,
+}: {
+  competitors: import("@/src/components/sharpz/copilot/copilot-context").CopilotCompetitor[];
+}) {
+  const { acceptCompetitor, acceptingCompetitorId } = useCopilot();
+  return (
+    <CompetitorSearchCards
+      competitors={competitors}
+      onAddOne={(id) => void acceptCompetitor(id)}
+      acceptingId={acceptingCompetitorId}
+      compact
     />
   );
 }
@@ -169,6 +186,11 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
               {message.prospects?.length ? (
                 <div className="max-w-[92%]">
                   <ProspectSearchInline prospects={message.prospects} />
+                </div>
+              ) : null}
+              {message.competitors?.length ? (
+                <div className="max-w-[92%]">
+                  <CompetitorSearchInline competitors={message.competitors} />
                 </div>
               ) : null}
             </div>

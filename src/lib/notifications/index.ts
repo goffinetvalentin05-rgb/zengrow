@@ -20,10 +20,14 @@ export {
   notifyGiftVoucherRequest,
 } from "@/src/lib/notifications/gift-voucher";
 export {
+  GROWTH_NOTIFICATION_TYPES,
   NOTIFICATION_TYPES,
+  isGrowthNotificationType,
   type CreateNotificationInput,
   type CreateNotificationResult,
+  type GrowthNotificationType,
   type NotificationRelatedEntityType,
   type NotificationRow,
+  type NotificationSeverity,
   type NotificationType,
 } from "@/src/lib/notifications/types";

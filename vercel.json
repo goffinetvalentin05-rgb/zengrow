@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/growth-notifications",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/competitor-watch",
+      "schedule": "0 8 * * *"
+    }
+  ]
+}

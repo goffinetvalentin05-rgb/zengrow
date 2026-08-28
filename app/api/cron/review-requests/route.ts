@@ -2,27 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendReviewRequestEmail } from "@/lib/email";
 import { insertPendingFeedbackTokensForReservation } from "@/src/lib/review-feedback-tokens";
 import { devOwnerBypassesPublicBookingBlock } from "@/src/lib/access";
+import { assertCronAuthorized } from "@/src/lib/cron-auth";
 import { isRestaurantExpired, type SubscriptionStatus } from "@/src/lib/subscription";
 import { createAdminClient } from "@/src/lib/supabase/admin";
-
-function isAuthorized(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true;
-
-  const authHeader = request.headers.get("authorization");
-  const headerSecret = request.headers.get("x-cron-secret");
-
-  return authHeader === `Bearer ${cronSecret}` || headerSecret === cronSecret;
-}
 
 function toCompletedAt(date: string, time: string) {
   return new Date(`${date}T${time}:00`);
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
-  }
+  const denied = assertCronAuthorized(request);
+  if (denied) return denied;
 
   const supabase = createAdminClient();
   const now = new Date();

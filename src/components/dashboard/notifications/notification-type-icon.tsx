@@ -4,10 +4,14 @@ import {
   CalendarCheck,
   CalendarClock,
   CalendarX,
+  FlaskConical,
   Gift,
+  LineChart,
   MessageSquare,
   TicketCheck,
+  TrendingDown,
   UserX,
+  Users,
 } from "lucide-react";
 import type { NotificationType } from "@/src/lib/notifications/types";
 import { cn } from "@/src/lib/utils";
@@ -23,6 +27,12 @@ const ICON_BY_TYPE: Record<NotificationType, LucideIcon> = {
   gift_voucher_request: Gift,
   gift_voucher_redeemed: TicketCheck,
   gift_voucher_fully_used: TicketCheck,
+  growth_follow_up_due: Users,
+  growth_experiment_due: FlaskConical,
+  growth_experiment_overdue: FlaskConical,
+  growth_traffic_signal: LineChart,
+  growth_revenue_signal: TrendingDown,
+  growth_competitor_change: Bell,
 };
 
 type NotificationTypeIconProps = {

@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe2 } from "lucide-react";
+import { ExternalLink, Globe2, RefreshCw } from "lucide-react";
 import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -10,31 +10,55 @@ import Badge from "@/src/components/ui/badge";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import { SharpzEmptyPanel } from "@/src/components/sharpz/empty-panel";
-import { OpportunityCard } from "@/src/components/sharpz/opportunity-card";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
-import type { Competitor, CompetitorChange, SharpzOpportunity } from "@/src/lib/sharpz/types";
+import type { Competitor, CompetitorChange } from "@/src/lib/sharpz/types";
 
 type Props = {
   competitors: Competitor[];
   changes: CompetitorChange[];
-  opportunities: SharpzOpportunity[];
   embedded?: boolean;
 };
 
-export function MarketView({ competitors, changes, opportunities, embedded = false }: Props) {
+function changeLabel(type: string) {
+  switch (type) {
+    case "pricing_changed":
+      return "Pricing";
+    case "plan_added":
+      return "Plan +";
+    case "plan_removed":
+      return "Plan −";
+    case "hero_changed":
+      return "Hero";
+    case "cta_changed":
+      return "CTA";
+    case "positioning_changed":
+      return "Positionnement";
+    case "page_unavailable":
+      return "Inaccessible";
+    default:
+      return type;
+  }
+}
+
+export function MarketView({ competitors, changes, embedded = false }: Props) {
   const { t, locale } = useDashboardI18n();
   const router = useRouter();
   const showToast = useDashboardToast();
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [pending, setPending] = useState(false);
+  const [checkingId, setCheckingId] = useState<string | null>(null);
   const dateLocale = locale === "en" ? "en-GB" : "fr-FR";
 
-  const newCompetitors = competitors.filter((item) => item.status === "new");
-  const trends = opportunities.filter((item) => item.category === "market_trend");
-  const products = opportunities.filter((item) => item.category === "new_product");
-  const shifts = opportunities.filter((item) => item.category === "market_shift");
+  const latestByCompetitor = useMemo(() => {
+    const map = new Map<string, CompetitorChange>();
+    for (const change of changes) {
+      if (!change.competitorId) continue;
+      if (!map.has(change.competitorId)) map.set(change.competitorId, change);
+    }
+    return map;
+  }, [changes]);
 
   async function addCompetitor(event: FormEvent) {
     event.preventDefault();
@@ -42,16 +66,52 @@ export function MarketView({ competitors, changes, opportunities, embedded = fal
     const response = await fetch("/api/sharpz/competitors", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, url }),
+      body: JSON.stringify({ name: name || undefined, url }),
     });
     setPending(false);
     if (!response.ok) {
-      showToast({ message: t.common.error });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      showToast({ message: data.error ?? t.common.error });
       return;
     }
     setName("");
     setUrl("");
     showToast({ message: t.common.saved });
+    router.refresh();
+  }
+
+  async function checkNow(id: string) {
+    setCheckingId(id);
+    const response = await fetch(`/api/sharpz/competitors/${id}/check`, { method: "POST" });
+    setCheckingId(null);
+    if (!response.ok) {
+      showToast({ message: t.common.error });
+      return;
+    }
+    const data = (await response.json()) as { ok?: boolean; errorMessage?: string | null; changesCreated?: number };
+    if (!data.ok && data.errorMessage) {
+      showToast({ message: data.errorMessage });
+    } else {
+      showToast({
+        message:
+          data.changesCreated && data.changesCreated > 0
+            ? `${data.changesCreated} changement(s) détecté(s)`
+            : "Vérification terminée",
+      });
+    }
+    router.refresh();
+  }
+
+  async function setActive(id: string, active: boolean) {
+    const response = await fetch(`/api/sharpz/competitors/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active }),
+    });
+    if (!response.ok) {
+      showToast({ message: t.common.error });
+      return;
+    }
     router.refresh();
   }
 
@@ -66,51 +126,105 @@ export function MarketView({ competitors, changes, opportunities, embedded = fal
         <CardContent className="space-y-4">
           <form className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]" onSubmit={addCompetitor}>
             <Input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={t.marketPage.competitorName}
-              required
-            />
-            <Input
               value={url}
               onChange={(event) => setUrl(event.target.value)}
               placeholder={t.marketPage.competitorUrl}
+              required
             />
-            <Button type="submit" size="sm" disabled={pending}>
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder={`${t.marketPage.competitorName} (optionnel)`}
+            />
+            <Button type="submit" size="sm" disabled={pending || !url.trim()}>
               {t.marketPage.addCompetitor}
             </Button>
           </form>
+
           {competitors.length ? (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="text-xs uppercase tracking-wider text-zg-text-muted">
-                  <tr>
-                    <th className="pb-3 pr-4">{t.marketPage.competitorName}</th>
-                    <th className="pb-3 pr-4">{t.marketPage.competitorUrl}</th>
-                    <th className="pb-3 pr-4">{t.marketPage.positioning}</th>
-                    <th className="pb-3 pr-4">{t.marketPage.pricing}</th>
-                    <th className="pb-3">{t.marketPage.lastChecked}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {competitors.map((item) => (
-                    <tr key={item.id} className="border-t border-zg-border">
-                      <td className="py-3 pr-4 font-medium text-zg-fg">{item.name}</td>
-                      <td className="py-3 pr-4 text-zg-text-secondary">{item.url ?? "—"}</td>
-                      <td className="py-3 pr-4 text-zg-text-secondary">{item.positioning ?? "—"}</td>
-                      <td className="py-3 pr-4 text-zg-text-secondary">{item.pricing ?? "—"}</td>
-                      <td className="py-3 text-zg-text-muted">
-                        {item.lastCheckedAt ? new Date(item.lastCheckedAt).toLocaleDateString(dateLocale) : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ul className="space-y-3">
+              {competitors.map((item) => {
+                const latest = latestByCompetitor.get(item.id);
+                return (
+                  <li
+                    key={item.id}
+                    className="rounded-xl border border-zg-border px-4 py-3"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium text-zg-fg">{item.name}</p>
+                          <Badge tone={item.active ? "success" : "neutral"}>
+                            {item.active ? (item.status === "check_failed" ? "Erreur check" : "Actif") : "Pause"}
+                          </Badge>
+                        </div>
+                        {item.url ? (
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 inline-flex items-center gap-1 text-xs text-zg-text-secondary hover:underline"
+                          >
+                            {item.url.replace(/^https?:\/\//, "")}
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : (
+                          <p className="mt-1 text-xs text-zg-muted">URL manquante</p>
+                        )}
+                        <p className="mt-2 text-xs text-zg-muted">
+                          Dernière vérif.{" "}
+                          {item.lastCheckedAt
+                            ? new Date(item.lastCheckedAt).toLocaleString(dateLocale)
+                            : "jamais"}
+                          {latest ? ` · Dernier changement : ${changeLabel(latest.changeType)}` : ""}
+                        </p>
+                        {item.pricing ? (
+                          <p className="mt-1 text-sm text-zg-text-secondary">{item.pricing}</p>
+                        ) : (
+                          <p className="mt-1 text-sm text-zg-muted">Pricing : donnée non disponible</p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {item.url ? (
+                          <a
+                            href={item.pricingUrl || item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex"
+                          >
+                            <Button type="button" size="sm" variant="secondary">
+                              Voir source
+                            </Button>
+                          </a>
+                        ) : null}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          disabled={checkingId === item.id || !item.url}
+                          onClick={() => void checkNow(item.id)}
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" />
+                          Vérifier
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => void setActive(item.id, !item.active)}
+                        >
+                          {item.active ? "Désactiver" : "Réactiver"}
+                        </Button>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           ) : (
             <SharpzEmptyPanel
               title={t.empty.noCompetitorsTitle}
-              description={t.empty.noCompetitorsDescription}
+              description="Ajoute une URL publique pour démarrer la veille. Aucun concurrent inventé."
               icon={Globe2}
               className="min-h-[180px]"
             />
@@ -118,98 +232,49 @@ export function MarketView({ competitors, changes, opportunities, embedded = fal
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t.marketPage.changes}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {changes.length ? (
-              changes.map((item) => (
-                <div key={item.id} className="rounded-xl border border-zg-border p-4">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge tone={item.importance === "high" ? "danger" : "warning"}>{item.importance}</Badge>
-                    <span className="text-xs text-zg-text-muted">
-                      {new Date(item.createdAt).toLocaleDateString(dateLocale)}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-zg-fg">{item.whatChanged}</p>
-                  {item.whyItMatters ? <p className="mt-1 text-sm text-zg-text-secondary">{item.whyItMatters}</p> : null}
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-zg-text-muted">{t.empty.noAlertsDescription}</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t.marketPage.newCompetitors}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {newCompetitors.length ? (
-              <ul className="space-y-2">
-                {newCompetitors.map((item) => (
-                  <li key={item.id} className="text-sm text-zg-fg">
-                    {item.name} {item.url ? `· ${item.url}` : ""}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-zg-text-muted">{t.empty.noCompetitorsDescription}</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <section className="space-y-4">
-        <h2 className="text-base font-semibold text-zg-fg">{t.marketPage.trends}</h2>
-        {trends.length ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {trends.map((item) => (
-              <OpportunityCard key={item.id} opportunity={item} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-zg-text-muted">{t.empty.noOpportunitiesDescription}</p>
-        )}
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-base font-semibold text-zg-fg">{t.marketPage.products}</h2>
-        {products.length ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {products.map((item) => (
-              <OpportunityCard key={item.id} opportunity={item} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-zg-text-muted">{t.empty.noOpportunitiesDescription}</p>
-        )}
-      </section>
-
       <Card>
         <CardHeader>
-          <CardTitle>{t.marketPage.evolution}</CardTitle>
+          <CardTitle>{t.marketPage.changes}</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <p className="text-xs uppercase tracking-wider text-zg-text-muted">{t.marketPage.patterns}</p>
-            <p className="mt-2 text-sm text-zg-text-secondary">
-              {shifts.length ? shifts.map((item) => item.name).join(" · ") : t.common.none}
+        <CardContent className="space-y-3">
+          {changes.length ? (
+            changes.slice(0, 30).map((item) => (
+              <div key={item.id} className="rounded-xl border border-zg-border p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge tone={item.importance === "high" ? "danger" : "warning"}>
+                    {changeLabel(item.changeType)}
+                  </Badge>
+                  {item.competitorName ? (
+                    <span className="text-xs font-medium text-zg-fg">{item.competitorName}</span>
+                  ) : null}
+                  <span className="text-xs text-zg-text-muted">
+                    {new Date(item.createdAt).toLocaleDateString(dateLocale)}
+                  </span>
+                  {item.confidence ? (
+                    <span className="text-[10px] uppercase tracking-wide text-zg-muted">{item.confidence}</span>
+                  ) : null}
+                </div>
+                <p className="mt-2 text-sm font-medium text-zg-fg">{item.whatChanged}</p>
+                {item.whyItMatters ? (
+                  <p className="mt-1 text-sm text-zg-text-secondary">{item.whyItMatters}</p>
+                ) : null}
+                {item.sourceUrl ? (
+                  <a
+                    href={item.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 text-xs text-zg-accent hover:underline"
+                  >
+                    Voir source <ExternalLink className="h-3 w-3" />
+                  </a>
+                ) : null}
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-zg-text-muted">
+              Aucun changement détecté pour l’instant. Les vérifications quotidiennes alimentent cette timeline.
             </p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wider text-zg-text-muted">{t.dashboard.recentOpportunities}</p>
-            <p className="mt-2 text-sm text-zg-text-secondary">{opportunities.length}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wider text-zg-text-muted">{t.marketPage.threats}</p>
-            <p className="mt-2 text-sm text-zg-text-secondary">
-              {changes.filter((item) => item.importance === "high").length || t.common.none}
-            </p>
-          </div>
+          )}
         </CardContent>
       </Card>
     </>

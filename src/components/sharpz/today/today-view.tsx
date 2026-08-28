@@ -11,8 +11,10 @@ import Button from "@/src/components/ui/button";
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
 import EmptyState from "@/src/components/ui/empty-state";
 import { ScorePills } from "@/src/components/sharpz/score-pills";
+import { TodayFollowUpsCard } from "@/src/components/sharpz/today/today-follow-ups-card";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
+import type { DueFollowUpItem } from "@/src/lib/sharpz/follow-ups";
 import { SHARPZ_ROUTES } from "@/src/lib/sharpz/routes";
 import type { SharpzAction } from "@/src/lib/sharpz/types";
 import type { AttentionSignal } from "@/src/lib/sharpz/signals";
@@ -30,6 +32,7 @@ type Props = {
   saasStageKey: string | null;
   primaryObjectiveKey: string | null;
   dayActions: SharpzAction[];
+  dueFollowUps: DueFollowUpItem[];
   signals: AttentionSignal[];
   doneCount: number;
   doneTodayCount: number;
@@ -46,6 +49,7 @@ export function TodayView({
   saasStageKey,
   primaryObjectiveKey,
   dayActions,
+  dueFollowUps,
   signals,
   doneCount,
   doneTodayCount,
@@ -189,8 +193,11 @@ export function TodayView({
             </div>
             <span className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs tabular-nums text-zg-muted">
               {dayActions.length}/5
+              {dueFollowUps.length ? ` · ${dueFollowUps.length}` : ""}
             </span>
           </div>
+
+          {dueFollowUps.length ? <TodayFollowUpsCard items={dueFollowUps} /> : null}
 
           {dayActions.length ? (
             <ol className="divide-y divide-white/[0.06]">
@@ -293,7 +300,7 @@ export function TodayView({
                 );
               })}
             </ol>
-          ) : (
+          ) : dueFollowUps.length ? null : (
             <div className="px-6 py-10">
               <EmptyState
                 title={t.empty.noActionsTitle}
@@ -344,7 +351,9 @@ export function TodayView({
                 {signals.map((signal) => (
                   <li key={signal.id}>
                     <Link href={signal.href} className="-mx-2 flex gap-2.5 rounded-xl px-2 py-3 hover:bg-white/[0.03]">
-                      {signal.id.startsWith("prospect-") ? (
+                      {signal.id.startsWith("prospect-") ||
+                      signal.id.startsWith("growth-followups") ||
+                      signal.id.startsWith("experiment-") ? (
                         <Users className="mt-0.5 h-4 w-4 shrink-0 text-zg-text-secondary" strokeWidth={1.75} />
                       ) : (
                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-zg-warning" strokeWidth={1.75} />
