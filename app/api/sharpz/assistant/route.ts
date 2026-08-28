@@ -2,28 +2,122 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { generateStructuredAI } from "@/src/lib/ai/openai";
 import { runAIGeneration } from "@/src/lib/ai/route-auth";
+import {
+  asksForCompetitorDiscovery,
+  asksForDailyPlan,
+  asksForProspectDiscovery,
+  asksForTrafficAnalysis,
+} from "@/src/lib/sharpz/agent-capabilities";
 import { parseJson, requireSharpzApi } from "@/src/lib/sharpz/api-session";
 import { loadSharpzContext } from "@/src/lib/sharpz/context";
+import {
+  clampConfidence,
+  clampEffort,
+  clampImpact,
+  computeSharpzScore,
+} from "@/src/lib/sharpz/scoring";
+import type { ActionCategory } from "@/src/lib/sharpz/types";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   content: z.string().min(1).max(4000),
 });
 
+const proposedActionSchema = z.object({
+  title: z.string(),
+  category: z.string(),
+  impact: z.number(),
+  effort: z.number(),
+  confidence: z.number(),
+  why: z.string(),
+  howTo: z.string().optional(),
+});
+
 const replySchema = z.object({
   reply: z.string(),
-  prospects: z
-    .array(
-      z.object({
-        company: z.string(),
-        url: z.string().nullable().optional(),
-        contact: z.string().nullable().optional(),
-        whyFit: z.string().nullable().optional(),
-        fitScore: z.number().nullable().optional(),
-      }),
-    )
-    .optional(),
+  proposedActions: z.array(proposedActionSchema).max(5).optional(),
 });
+
+const ACTION_CATEGORIES = new Set<ActionCategory>([
+  "acquisition",
+  "conversion",
+  "landing",
+  "pricing",
+  "content",
+  "seo",
+  "retention",
+  "market",
+  "prospection",
+  "monetisation",
+  "positioning",
+]);
+
+function normalizeCategory(value: string): ActionCategory {
+  return ACTION_CATEGORIES.has(value as ActionCategory) ? (value as ActionCategory) : "acquisition";
+}
+
+function normalizeProposedActions(
+  items: z.infer<typeof proposedActionSchema>[] | undefined,
+  existingTitles: string[],
+) {
+  if (!items?.length) return [];
+  const seen = new Set(existingTitles.map((title) => title.trim().toLowerCase()));
+  const normalized: z.infer<typeof proposedActionSchema>[] = [];
+
+  for (const item of items) {
+    const title = item.title?.trim();
+    if (!title) continue;
+    const key = title.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    normalized.push({
+      title,
+      category: normalizeCategory(item.category),
+      impact: clampImpact(item.impact),
+      effort: clampEffort(item.effort),
+      confidence: clampConfidence(item.confidence),
+      why: item.why?.trim() || "",
+      howTo: item.howTo?.trim(),
+    });
+    if (normalized.length >= 5) break;
+  }
+
+  return normalized.map((item) => ({
+    ...item,
+    score: computeSharpzScore(item.impact, item.effort, item.confidence),
+  }));
+}
+
+function systemPrompt(mode: "default" | "daily_plan") {
+  const base = `Tu es Orion, l'agent Sharpz — Growth OS pour fondateurs SaaS.
+Tu reçois un contexte JSON (profil SaaS, objectifs, actions ouvertes, prospects, concurrents suivis, audit vérifié, expérimentations, capacités connectées).
+
+Capacités NON disponibles (ne jamais prétendre les avoir faites) :
+- Recherche web de prospects ou concurrents
+- Données Sharpz Analytics / trafic (sauf si capabilities.trafficAnalytics = true)
+- MRR / revenue Stripe (sauf si capabilities.revenueData = true)
+
+Règles absolues :
+- N'invente aucune métrique, entreprise, email, téléphone ou concurrent.
+- prospects[] et proposedCompetitors ne sont jamais renvoyés — laisse-les absents.
+- proposedActions : uniquement des recommandations concrètes basées sur le contexte réel.
+- Ne duplique pas une action déjà ouverte (openActions).
+- Si une donnée manque, dis-le explicitement dans reply.
+- Réponds en JSON { reply, proposedActions? }.`;
+
+  if (mode === "daily_plan") {
+    return `${base}
+Mode plan du jour :
+- Propose 3 à 5 actions maximum dans proposedActions.
+- Priorise selon primaryObjective, openActions, followUpProspects et findings d'audit.
+- Chaque action : title, category, impact, effort, confidence, why, howTo.
+- Dans reply : résume le focus du jour en 2-3 phrases, sans inventer de chiffres.`;
+  }
+
+  return `${base}
+- proposedActions : seulement si tu proposes des actions vérifiables à ajouter dans Aujourd'hui (max 3).
+- Sinon, omets proposedActions.`;
+}
 
 export async function POST(request: Request) {
   const session = await requireSharpzApi();
@@ -37,29 +131,39 @@ export async function POST(request: Request) {
 
   const context = await loadSharpzContext(supabase, restaurant.id);
   const lastUser = [...parsed.data].reverse().find((item) => item.role === "user")?.content ?? "";
-  const normalized = lastUser.toLowerCase();
-  const asksForProspectDiscovery =
-    /(trouve|trouver|cherche|chercher|find|search|liste|list).{0,40}(prospect|lead)/i.test(normalized);
-  const asksForTraffic =
-    /(trafic|traffic|visiteur|visitor|session|page vue|pageview|utm|referral)/i.test(normalized);
 
-  if (asksForProspectDiscovery) {
+  if (asksForProspectDiscovery(lastUser)) {
     return NextResponse.json({
       reply:
-        "La recherche web de prospects n’est pas encore connectée à une source de données vérifiable. Je ne vais pas inventer d’entreprises, de contacts ou d’emails. Vous pouvez ajouter des prospects manuellement dans Prospects ; une source d’enrichissement devra être connectée avant que je puisse en trouver réellement.",
-      prospects: [],
+        "La recherche web de prospects n’est pas encore connectée à une source vérifiable. Je ne vais pas inventer d’entreprises, de contacts ou d’emails. Ajoutez des prospects manuellement dans Prospects, ou demandez-moi un plan basé sur vos prospects déjà enregistrés.",
+      proposedActions: [],
       capability: "prospect_search_not_connected",
     });
   }
 
-  if (asksForTraffic) {
+  if (asksForCompetitorDiscovery(lastUser)) {
     return NextResponse.json({
       reply:
-        "Sharpz Analytics n’est pas encore installé sur votre SaaS. Je n’ai donc aucune donnée de trafic réelle à analyser pour le moment. Tant que le snippet de tracking n’est pas connecté, je ne fournirai ni visiteurs, ni sessions, ni taux de conversion estimés.",
-      prospects: [],
+        "La découverte automatique de concurrents n’est pas connectée. Je ne listerai pas de noms inventés. Vous pouvez ajouter des concurrents manuellement dans Réglages ou Analytics → Marché. Je peux en revanche commenter les concurrents déjà suivis dans votre contexte.",
+      proposedActions: [],
+      capability: "competitor_search_not_connected",
+    });
+  }
+
+  if (asksForTrafficAnalysis(lastUser) && !context.capabilities.trafficAnalytics) {
+    return NextResponse.json({
+      reply:
+        "Sharpz Analytics n’est pas encore installé sur votre SaaS. Je n’ai donc aucune donnée de trafic réelle à analyser. Installez le snippet depuis Réglages (phase Analytics) — je ne fournirai ni visiteurs, ni sessions, ni taux de conversion estimés.",
+      proposedActions: [],
       capability: "traffic_not_connected",
     });
   }
+
+  const dailyPlan = asksForDailyPlan(lastUser);
+  const existingTitles = [
+    ...context.openActions.map((item) => item.title),
+    ...context.actions.filter((item) => item.status === "todo").map((item) => item.title),
+  ];
 
   try {
     const result = (await runAIGeneration({
@@ -70,37 +174,23 @@ export async function POST(request: Request) {
       input: lastUser,
       generate: () =>
         generateStructuredAI({
-          system: `Tu es l'assistant Sharpz, Growth Operating System pour fondateurs SaaS.
-Tu connais le contexte JSON fourni (SaaS, objectifs, actions, analyses, prospects, marché, contenus, résultats).
-Capacités actuellement disponibles:
-- Contexte Supabase fourni ci-dessous.
-- Profil SaaS et extrait de site déjà enregistrés, lorsqu'ils existent.
-- Aucune navigation web en direct.
-- Aucune donnée de trafic Sharpz Analytics.
-- Aucune base externe de prospects ou d'emails.
-Règles:
-- N'invente pas de métriques absentes du contexte.
-- Ne prétends jamais avoir recherché le web, trouvé un contact ou observé du trafic.
-- Si une donnée manque, dis exactement qu'elle manque.
-- N'invente aucun prospect, entreprise, email ou téléphone. Laisse toujours prospects[] vide.
-- N'ajoute jamais de prospects en base: l'utilisateur doit confirmer.
-- Sois concret et orienté action.
-Réponds en JSON { reply, prospects? }.`,
+          system: systemPrompt(dailyPlan ? "daily_plan" : "default"),
           user: JSON.stringify({
             context,
             conversation: parsed.data.slice(-8),
+            mode: dailyPlan ? "daily_plan" : "default",
           }),
-          maxTokens: 1600,
-          timeoutMs: 20000,
+          maxTokens: dailyPlan ? 2200 : 1600,
+          timeoutMs: 25000,
           parse: (raw) => replySchema.parse(raw),
         }),
     })) as { data: z.infer<typeof replySchema> };
 
+    const proposedActions = normalizeProposedActions(result.data.proposedActions, existingTitles);
+
     return NextResponse.json({
       reply: result.data.reply,
-      // Aucun fournisseur de recherche/enrichissement n'est connecté : on ne transmet
-      // jamais au client des prospects générés uniquement par le modèle.
-      prospects: [],
+      proposedActions,
     });
   } catch (error) {
     const { aiErrorResponse } = await import("@/src/lib/ai/route-auth");
