@@ -1,14 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { CHANNEL_KEYS, OBJECTIVE_KEYS, SAAS_STAGES } from "@/src/lib/sharpz/constants";
 import type { ScanResult } from "@/src/lib/sharpz/types";
-import { cn } from "@/src/lib/utils";
 import {
   ChecklistRow,
   ChoiceButton,
@@ -31,7 +30,6 @@ type ScanCueId = "product" | "positioning" | "pricing" | "icp" | "market";
 type CueState = "pending" | "found" | "missing";
 
 const CUE_ORDER: ScanCueId[] = ["product", "positioning", "pricing", "icp", "market"];
-const GEN_KEYS = ["genPositioning", "genOpportunities", "genActions", "genDashboard"] as const;
 
 function hasIcp(scan: ScanResult | null) {
   const icp = scan?.detected.icp;
@@ -73,7 +71,6 @@ export function OnboardingFlow() {
     icp: "pending",
     market: "pending",
   });
-  const [genDone, setGenDone] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const generatingLock = useRef(false);
 
@@ -97,17 +94,6 @@ export function OnboardingFlow() {
     icp: t.onboarding.cueIcp,
     market: t.onboarding.cueMarket,
   };
-
-  useEffect(() => {
-    if (step !== "generating" || error) return;
-    setGenDone(0);
-    const timers = GEN_KEYS.map((_, index) =>
-      window.setTimeout(() => {
-        setGenDone((current) => Math.max(current, index + 1));
-      }, 700 * (index + 1)),
-    );
-    return () => timers.forEach((id) => window.clearTimeout(id));
-  }, [step, error]);
 
   function goAfterScan(nextScan: ScanResult | null) {
     setScan(nextScan);
@@ -225,13 +211,15 @@ export function OnboardingFlow() {
         }),
         signal: controller.signal,
       });
-      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        warning?: string | null;
+        insightsGenerated?: boolean;
+      };
       if (!response.ok) {
         setError(data.error ?? t.common.error);
         return;
       }
-      setGenDone(GEN_KEYS.length);
-      await new Promise((resolve) => window.setTimeout(resolve, 450));
       router.push("/dashboard");
       router.refresh();
     } catch (caught) {
@@ -452,6 +440,14 @@ export function OnboardingFlow() {
             <dl className="space-y-3 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
               {[
                 [t.onboarding.summarySaas, saasLabel],
+                [
+                  t.onboarding.summaryAnalysisSource,
+                  scan?.enrichmentSource === "openai"
+                    ? t.onboarding.sourceOpenAI
+                    : scan
+                      ? t.onboarding.sourceExtract
+                      : t.onboarding.summaryNone,
+                ],
                 [t.onboarding.summaryStage, stage ? t.stages[stage as keyof typeof t.stages] : t.onboarding.summaryNone],
                 [
                   t.onboarding.summaryObjective,
@@ -486,29 +482,14 @@ export function OnboardingFlow() {
         {step === "generating" ? (
           <div>
             {heading(t.onboarding.kicker, t.onboarding.generatingTitle, t.onboarding.analyzingSubtitle)}
-            <div className="space-y-2.5">
-              {GEN_KEYS.map((key, index) => {
-                const done = genDone > index;
-                return (
-                  <div
-                    key={key}
-                    className={cn(
-                      "flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition-all duration-500",
-                      done ? "border-white/12 bg-white/[0.04]" : "border-white/8 bg-white/[0.02] opacity-55",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "flex h-6 w-6 items-center justify-center rounded-full border",
-                        done ? "border-zg-accent/40 bg-zg-accent/20 text-white" : "border-white/10",
-                      )}
-                    >
-                      {done ? <Check className="h-3.5 w-3.5" strokeWidth={2.4} /> : null}
-                    </span>
-                    <span className="text-sm text-zg-fg">{t.onboarding[key]}</span>
-                  </div>
-                );
-              })}
+            <div className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-4">
+              <LoaderCircle className="h-5 w-5 animate-spin text-zg-text-secondary" strokeWidth={1.8} />
+              <div>
+                <p className="text-sm font-medium text-zg-fg">{t.onboarding.generatingVerified}</p>
+                <p className="mt-1 text-xs leading-relaxed text-zg-text-muted">
+                  {t.onboarding.generatingVerifiedDetail}
+                </p>
+              </div>
             </div>
             {error ? (
               <div className="mt-8 rounded-2xl border border-zg-danger/30 bg-zg-danger/10 p-4">

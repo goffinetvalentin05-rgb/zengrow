@@ -11,8 +11,7 @@ import { DashboardToastProvider } from "@/src/components/dashboard/dashboard-toa
 import { DashboardTitleProvider } from "@/src/components/dashboard/dashboard-title-context";
 import { NotificationProvider } from "@/src/components/dashboard/notifications/notification-provider";
 import { DashboardLocaleProvider } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
-import { SharpzAssistant } from "@/src/components/sharpz/assistant/sharpz-assistant";
-import { CopilotProvider, useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
+import { CopilotProvider } from "@/src/components/sharpz/copilot/copilot-context";
 import { OnboardingChrome } from "@/src/components/sharpz/onboarding/onboarding-chrome";
 import { DashboardThemeProvider } from "@/src/components/dashboard/dashboard-theme-provider";
 import {
@@ -142,7 +141,7 @@ function DashboardShellInner({
             />
 
             <div className="relative z-0 flex h-full min-w-0 flex-1 flex-col">
-              <DashboardTopBarWithCopilot onOpenMobileNav={() => setMobileNavOpen(true)} />
+              <DashboardTopBar onOpenMobileNav={() => setMobileNavOpen(true)} />
               <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-16 pt-6 md:px-10 md:pb-20 md:pt-8">
                 {children}
               </main>
@@ -164,26 +163,11 @@ function DashboardShellInner({
               />
             ) : null}
           </AnimatePresence>
-          <SharpzAssistant />
         </div>
         </NotificationProvider>
       </DashboardTitleProvider>
       </CopilotProvider>
     </DashboardToastProvider>
-  );
-}
-
-function DashboardTopBarWithCopilot({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
-  const pathname = usePathname();
-  const copilot = useCopilot();
-  return (
-    <DashboardTopBar
-      onOpenMobileNav={onOpenMobileNav}
-      onOpenAssistant={() => {
-        if (pathname === "/dashboard") copilot.focusInput();
-        else copilot.setDockOpen(true);
-      }}
-    />
   );
 }
 

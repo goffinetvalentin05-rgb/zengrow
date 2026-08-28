@@ -35,7 +35,8 @@ export function AnalyseView({ lastAudit, findings, recommendedActions, embedded 
     const response = await fetch("/api/sharpz/audit", { method: "POST" });
     setRunning(false);
     if (!response.ok) {
-      showToast({ message: t.common.error });
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      showToast({ message: data?.error ?? t.common.error });
       return;
     }
     showToast({ message: t.common.saved });

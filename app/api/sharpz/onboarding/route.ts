@@ -7,6 +7,7 @@ import {
   upsertSaasFromOnboarding,
 } from "@/src/lib/sharpz/insights";
 import type { ScanResult } from "@/src/lib/sharpz/types";
+import { runAIGeneration } from "@/src/lib/ai/route-auth";
 
 export const maxDuration = 60;
 
@@ -39,7 +40,7 @@ function publicOnboardingError(error: unknown) {
 export async function POST(request: Request) {
   const session = await requireSharpzApi();
   if (!session.ok) return session.error;
-  const { supabase, restaurant } = session;
+  const { supabase, user, restaurant } = session;
 
   try {
     const body = await parseJson<Payload>(request);
@@ -87,19 +88,33 @@ export async function POST(request: Request) {
 
     await ensureIntegrations(supabase, restaurant.id);
 
-    const bundle = await buildWorkspaceInsights({
-      saasName: name,
-      url,
-      description: scan?.detected.description ?? null,
-      stage,
-      primaryObjective,
-      extraObjectives,
-      channels,
-      scan,
-      locale: body?.locale === "en" ? "en" : "fr",
-    });
+    let insightsGenerated = false;
+    try {
+      const insightInput = {
+        saasName: name,
+        url,
+        description: scan?.detected.description ?? null,
+        stage,
+        primaryObjective,
+        extraObjectives,
+        channels,
+        scan,
+        locale: body?.locale === "en" ? ("en" as const) : ("fr" as const),
+      };
+      const bundle = (await runAIGeneration({
+        supabase,
+        user,
+        restaurant,
+        feature: "sharpz_onboarding",
+        input: JSON.stringify(insightInput),
+        generate: () => buildWorkspaceInsights(insightInput),
+      })) as Awaited<ReturnType<typeof buildWorkspaceInsights>>;
 
-    await persistInsights(supabase, restaurant.id, bundle, url, null);
+      await persistInsights(supabase, restaurant.id, bundle, url, null);
+      insightsGenerated = true;
+    } catch (error) {
+      console.error("[sharpz:onboarding:insights]", error);
+    }
 
     const { error: completeError } = await supabase
       .from("user_saas")
@@ -110,7 +125,13 @@ export async function POST(request: Request) {
       .eq("restaurant_id", restaurant.id);
     if (completeError) throw new Error(completeError.message);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      insightsGenerated,
+      warning: insightsGenerated
+        ? null
+        : "Votre profil est enregistré, mais l’analyse IA n’a pas pu être produite. Aucun résultat simulé n’a été créé.",
+    });
   } catch (error) {
     console.error("[sharpz:onboarding]", error);
     return NextResponse.json({ error: publicOnboardingError(error) }, { status: 500 });

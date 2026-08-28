@@ -37,6 +37,29 @@ export async function POST(request: Request) {
 
   const context = await loadSharpzContext(supabase, restaurant.id);
   const lastUser = [...parsed.data].reverse().find((item) => item.role === "user")?.content ?? "";
+  const normalized = lastUser.toLowerCase();
+  const asksForProspectDiscovery =
+    /(trouve|trouver|cherche|chercher|find|search|liste|list).{0,40}(prospect|lead)/i.test(normalized);
+  const asksForTraffic =
+    /(trafic|traffic|visiteur|visitor|session|page vue|pageview|utm|referral)/i.test(normalized);
+
+  if (asksForProspectDiscovery) {
+    return NextResponse.json({
+      reply:
+        "La recherche web de prospects n’est pas encore connectée à une source de données vérifiable. Je ne vais pas inventer d’entreprises, de contacts ou d’emails. Vous pouvez ajouter des prospects manuellement dans Prospects ; une source d’enrichissement devra être connectée avant que je puisse en trouver réellement.",
+      prospects: [],
+      capability: "prospect_search_not_connected",
+    });
+  }
+
+  if (asksForTraffic) {
+    return NextResponse.json({
+      reply:
+        "Sharpz Analytics n’est pas encore installé sur votre SaaS. Je n’ai donc aucune donnée de trafic réelle à analyser pour le moment. Tant que le snippet de tracking n’est pas connecté, je ne fournirai ni visiteurs, ni sessions, ni taux de conversion estimés.",
+      prospects: [],
+      capability: "traffic_not_connected",
+    });
+  }
 
   try {
     const result = (await runAIGeneration({
@@ -49,9 +72,17 @@ export async function POST(request: Request) {
         generateStructuredAI({
           system: `Tu es l'assistant Sharpz, Growth Operating System pour fondateurs SaaS.
 Tu connais le contexte JSON fourni (SaaS, objectifs, actions, analyses, prospects, marché, contenus, résultats).
+Capacités actuellement disponibles:
+- Contexte Supabase fourni ci-dessous.
+- Profil SaaS et extrait de site déjà enregistrés, lorsqu'ils existent.
+- Aucune navigation web en direct.
+- Aucune donnée de trafic Sharpz Analytics.
+- Aucune base externe de prospects ou d'emails.
 Règles:
 - N'invente pas de métriques absentes du contexte.
-- Si l'utilisateur demande des prospects, propose uniquement des profils plausibles alignés à l'ICP. Explique le fit. Remplis prospects[].
+- Ne prétends jamais avoir recherché le web, trouvé un contact ou observé du trafic.
+- Si une donnée manque, dis exactement qu'elle manque.
+- N'invente aucun prospect, entreprise, email ou téléphone. Laisse toujours prospects[] vide.
 - N'ajoute jamais de prospects en base: l'utilisateur doit confirmer.
 - Sois concret et orienté action.
 Réponds en JSON { reply, prospects? }.`,
@@ -67,7 +98,9 @@ Réponds en JSON { reply, prospects? }.`,
 
     return NextResponse.json({
       reply: result.data.reply,
-      prospects: result.data.prospects ?? [],
+      // Aucun fournisseur de recherche/enrichissement n'est connecté : on ne transmet
+      // jamais au client des prospects générés uniquement par le modèle.
+      prospects: [],
     });
   } catch (error) {
     const { aiErrorResponse } = await import("@/src/lib/ai/route-auth");

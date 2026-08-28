@@ -83,13 +83,17 @@ export function scanFromExtractOnly(extract: WebsiteExtract): ScanResult {
     hasTrial: extract.hasTrialSignals ? true : null,
     icp: { ...EMPTY_ICP },
   };
-  return { extract, detected, unknownFields: collectUnknownFields(detected, extract) };
+  return {
+    enrichmentSource: "extract_only",
+    extract,
+    detected,
+    unknownFields: collectUnknownFields(detected, extract),
+  };
 }
 
 export async function enrichScanWithAI(extract: WebsiteExtract): Promise<ScanResult> {
   const fallback = scanFromExtractOnly(extract);
-  try {
-    const { data } = await generateStructuredAI({
+  const { data } = await generateStructuredAI({
       system: `Tu extrais des faits depuis un extrait HTML de site SaaS.
 Règles STRICTES:
 - N'invente jamais.
@@ -140,8 +144,10 @@ Réponds en JSON.`,
       icp,
     };
 
-    return { extract, detected, unknownFields: collectUnknownFields(detected, extract) };
-  } catch {
-    return fallback;
-  }
+  return {
+    enrichmentSource: "openai",
+    extract,
+    detected,
+    unknownFields: collectUnknownFields(detected, extract),
+  };
 }

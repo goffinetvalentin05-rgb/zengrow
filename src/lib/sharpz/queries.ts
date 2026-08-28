@@ -131,6 +131,7 @@ export function mapAction(row: Record<string, unknown>): SharpzAction {
     updatedAt: String(row.updated_at ?? row.created_at ?? ""),
     objectiveKey: typeof row.objective_key === "string" ? row.objective_key : null,
     sourceType: typeof row.source_type === "string" ? row.source_type : null,
+    sourceId: typeof row.source_id === "string" ? row.source_id : null,
     opportunityId: typeof row.opportunity_id === "string" ? row.opportunity_id : null,
   };
 }
@@ -166,6 +167,7 @@ export async function getLatestAudit(supabase: SupabaseClient, restaurantId: str
     .from("audits")
     .select("*")
     .eq("restaurant_id", restaurantId)
+    .contains("raw_extract", { source: "openai" })
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -287,14 +289,23 @@ export async function getProspects(supabase: SupabaseClient, restaurantId: strin
     .order("created_at", { ascending: false });
   return (data ?? []).map((row) => ({
     id: String(row.id),
+    type: row.prospect_type === "individual" ? "individual" : "company",
+    name: row.name ?? null,
     company: String(row.company ?? ""),
+    email: row.email ?? null,
+    phone: row.phone ?? null,
     url: row.url ?? null,
     contact: row.contact ?? null,
+    source: row.source ?? null,
     whyFit: row.why_fit ?? null,
     fitScore: row.fit_score ?? null,
     status: row.status ?? "new",
+    lastAction: row.last_action ?? null,
+    contactedAt: row.contacted_at ?? null,
+    nextFollowUpAt: row.next_follow_up_at ?? null,
     notes: row.notes ?? null,
     createdAt: String(row.created_at ?? ""),
+    updatedAt: String(row.updated_at ?? row.created_at ?? ""),
   }));
 }
 

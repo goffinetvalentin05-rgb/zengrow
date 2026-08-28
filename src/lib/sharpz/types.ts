@@ -59,10 +59,13 @@ export type ProspectStatus =
   | "new"
   | "to_contact"
   | "contacted"
+  | "followed_up"
   | "replied"
   | "qualified"
-  | "customer"
-  | "refused";
+  | "not_relevant"
+  | "closed";
+
+export type ProspectType = "company" | "individual";
 
 export type IntegrationProvider =
   | "stripe"
@@ -164,6 +167,7 @@ export type SharpzAction = {
   updatedAt?: string;
   objectiveKey: string | null;
   sourceType: string | null;
+  sourceId: string | null;
   opportunityId: string | null;
 };
 
@@ -228,14 +232,23 @@ export type ContentIdea = {
 
 export type Prospect = {
   id: string;
+  type: ProspectType;
+  name: string | null;
   company: string;
+  email: string | null;
+  phone: string | null;
   url: string | null;
   contact: string | null;
+  source: string | null;
   whyFit: string | null;
   fitScore: number | null;
   status: ProspectStatus | string;
+  lastAction: string | null;
+  contactedAt: string | null;
+  nextFollowUpAt: string | null;
   notes: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 
 export type Experiment = {
@@ -292,6 +305,7 @@ export type WebsiteExtract = {
 };
 
 export type ScanResult = {
+  enrichmentSource: "openai" | "extract_only";
   extract: WebsiteExtract;
   detected: {
     name: string | null;

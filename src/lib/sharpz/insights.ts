@@ -69,6 +69,11 @@ export type WorkspaceInsightBundle = {
   actions: InsightAction[];
   opportunities: InsightOpportunity[];
   content: InsightContent[];
+  provenance?: {
+    source: "openai";
+    model: string;
+    generatedAt: string;
+  };
 };
 
 type InsightContext = {
@@ -367,6 +372,10 @@ function heuristicBundle(ctx: InsightContext): WorkspaceInsightBundle {
   return { audit, actions: actions.slice(0, 8), opportunities, content };
 }
 
+// Conservé uniquement pour relire d'anciens résultats en développement.
+// Aucun flux produit ne peut appeler ni persister ce générateur heuristique.
+void heuristicBundle;
+
 const aiBundleSchema = z.object({
   audit: z.object({
     summary: z.string(),
@@ -450,9 +459,8 @@ function throwIfError(error: { message: string } | null, fallback: string) {
 }
 
 export async function buildWorkspaceInsights(ctx: InsightContext): Promise<WorkspaceInsightBundle> {
-  const fallback = heuristicBundle(ctx);
   try {
-    const { data } = await generateStructuredAI({
+    const { data, model } = await generateStructuredAI({
       system: `Tu es Sharpz, Growth Operating System pour fondateurs SaaS.
 Génère un bundle JSON d'audit + actions + opportunités + contenus.
 Règles:
@@ -482,9 +490,15 @@ Règles:
         category: item.category as OpportunityCategory,
       })),
       content: data.content,
+      provenance: {
+        source: "openai",
+        model,
+        generatedAt: new Date().toISOString(),
+      },
     };
-  } catch {
-    return fallback;
+  } catch (error) {
+    console.error("[sharpz:insights] AI generation failed; no fallback persisted.", error);
+    throw new Error("L’analyse IA n’a pas pu être produite. Aucun résultat simulé n’a été enregistré.");
   }
 }
 
@@ -507,6 +521,7 @@ export async function persistInsights(
         Object.entries(bundle.audit.subscores).map(([key, value]) => [key, clampScore100(value)]),
       ),
       source_url: sourceUrl,
+      raw_extract: bundle.provenance ?? null,
     })
     .select("id")
     .single();

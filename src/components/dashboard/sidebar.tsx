@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
+  Bot,
   CalendarDays,
   LogOut,
   PanelLeftClose,
@@ -64,7 +65,8 @@ export default function DashboardSidebar({
   const showProUpsell = subscriptionPlan === "starter" && subscriptionStatus !== "trial";
 
   const navItems = [
-    { href: "/dashboard", label: t.nav.today, icon: CalendarDays },
+    { href: "/dashboard", label: t.nav.agent, icon: Bot },
+    { href: "/dashboard/today", label: t.nav.today, icon: CalendarDays },
     { href: "/dashboard/prospects", label: t.nav.prospects, icon: Users },
     { href: "/dashboard/intelligence", label: t.nav.intelligence, icon: Radar },
     { href: "/dashboard/progress", label: t.nav.progress, icon: BarChart3 },

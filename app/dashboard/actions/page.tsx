@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function ActionsRedirect() {
-  redirect("/dashboard");
+  redirect("/dashboard/today");
 }

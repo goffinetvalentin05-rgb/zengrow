@@ -2,25 +2,21 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   getActions,
   getChannels,
-  getContentOpportunities,
   getExperiments,
   getLatestAudit,
   getObjectives,
-  getOpportunities,
   getProspects,
   getUserSaas,
 } from "@/src/lib/sharpz/queries";
 
 export async function loadSharpzContext(supabase: SupabaseClient, restaurantId: string) {
-  const [saas, objectives, channels, actions, opportunities, audit, content, prospects, experiments] =
+  const [saas, objectives, channels, actions, audit, prospects, experiments] =
     await Promise.all([
       getUserSaas(supabase, restaurantId),
       getObjectives(supabase, restaurantId),
       getChannels(supabase, restaurantId),
       getActions(supabase, restaurantId),
-      getOpportunities(supabase, restaurantId),
       getLatestAudit(supabase, restaurantId),
-      getContentOpportunities(supabase, restaurantId),
       getProspects(supabase, restaurantId),
       getExperiments(supabase, restaurantId),
     ]);
@@ -29,10 +25,14 @@ export async function loadSharpzContext(supabase: SupabaseClient, restaurantId: 
     saas,
     objectives,
     channels,
-    actions: actions.slice(0, 12),
-    opportunities: opportunities.slice(0, 8),
+    actions: actions
+      .filter((action) => action.sourceType !== "audit" || action.sourceId === audit?.id)
+      .slice(0, 12),
+    // Les anciennes opportunités et contenus ne stockent pas encore une provenance
+    // vérifiable. Ils ne sont donc pas envoyés à l'agent.
+    opportunities: [],
     audit,
-    content: content.slice(0, 6),
+    content: [],
     prospects: prospects.slice(0, 12),
     experiments: experiments.slice(0, 6),
   };

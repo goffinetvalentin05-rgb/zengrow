@@ -21,10 +21,11 @@ const STATUSES: ProspectStatus[] = [
   "new",
   "to_contact",
   "contacted",
+  "followed_up",
   "replied",
   "qualified",
-  "customer",
-  "refused",
+  "not_relevant",
+  "closed",
 ];
 
 type Props = {
@@ -35,7 +36,7 @@ export function ProspectsView({ prospects }: Props) {
   const { t, locale } = useDashboardI18n();
   const router = useRouter();
   const showToast = useDashboardToast();
-  const { send, setDockOpen } = useCopilot();
+  const { send } = useCopilot();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
@@ -132,8 +133,8 @@ export function ProspectsView({ prospects }: Props) {
             type="button"
             variant="secondary"
             onClick={() => {
-              setDockOpen(true);
               void send(t.today.suggestionProspectsPrompt);
+              router.push("/dashboard");
             }}
           >
             {t.today.suggestionProspects}
