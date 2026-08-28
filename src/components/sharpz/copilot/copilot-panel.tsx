@@ -32,18 +32,17 @@ export function CopilotHero({ greeting, question, subtitle, suggestions }: Props
     >
       <CopilotOrb />
 
-      <p className="text-[13px] font-medium tracking-wide text-slate-400">{greeting}</p>
-      <h1 className="mt-3 max-w-2xl text-[2rem] font-semibold leading-[1.12] tracking-tight text-white sm:text-[2.5rem]">
+      <p className="text-[13px] font-normal tracking-wide text-zg-muted">{greeting}</p>
+      <h1 className="mt-3.5 max-w-2xl text-[2.1rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.6rem]">
         {question}
       </h1>
-      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-400">{subtitle}</p>
+      <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-zg-text-secondary">{subtitle}</p>
 
-      <form onSubmit={onSubmit} className="relative mx-auto mt-8 w-full max-w-2xl">
+      <form onSubmit={onSubmit} className="relative mx-auto mt-10 w-full max-w-2xl">
         <div
           className={cn(
-            "flex items-end gap-2 rounded-[28px] border border-white/10 bg-white/[0.045] px-4 py-2.5",
-            "shadow-[0_1px_0_rgba(255,255,255,0.04)_inset,0_18px_50px_-28px_rgba(0,0,0,0.85)]",
-            "transition-colors focus-within:border-white/18",
+            "flex items-end gap-2 rounded-[26px] border border-white/[0.1] bg-white/[0.035] px-4 py-2",
+            "transition-colors focus-within:border-white/20 focus-within:bg-white/[0.05]",
           )}
         >
           <textarea
@@ -59,27 +58,27 @@ export function CopilotHero({ greeting, question, subtitle, suggestions }: Props
               }
             }}
             placeholder={t.today.inputPlaceholder}
-            className="min-h-11 w-full resize-none bg-transparent py-2.5 text-left text-[15px] leading-relaxed text-white outline-none placeholder:text-slate-500"
+            className="min-h-11 w-full resize-none bg-transparent py-3 text-left text-[15px] leading-relaxed text-white outline-none placeholder:text-zg-text-placeholder"
           />
           <button
             type="submit"
             disabled={pending || !input.trim()}
-            className="mb-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-zinc-950 transition-opacity disabled:opacity-30"
+            className="mb-1.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-zinc-950 transition-colors hover:bg-zinc-200 disabled:opacity-25"
             aria-label={t.assistant.send}
           >
-            <ArrowUp className="h-4 w-4" strokeWidth={2.4} />
+            <ArrowUp className="h-4 w-4" strokeWidth={2.2} />
           </button>
         </div>
       </form>
 
-      <div className="mx-auto mt-6 grid w-full max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-2">
+      <div className="mx-auto mt-4 flex w-full max-w-2xl flex-wrap justify-center gap-2">
         {suggestions.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => void send(item.prompt)}
             disabled={pending}
-            className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-left text-sm font-medium text-slate-200 transition-colors hover:border-white/16 hover:bg-white/[0.055] hover:text-white disabled:opacity-50"
+            className="rounded-full border border-white/[0.09] px-4 py-2 text-[13px] font-normal text-zg-text-secondary transition-colors hover:border-white/20 hover:bg-white/[0.05] hover:text-white disabled:opacity-40"
           >
             {item.label}
           </button>
@@ -87,7 +86,7 @@ export function CopilotHero({ greeting, question, subtitle, suggestions }: Props
       </div>
 
       {messages.length || pending ? (
-        <div className="relative mx-auto mt-8 max-h-64 w-full max-w-2xl space-y-2.5 overflow-y-auto text-left">
+        <div className="relative mx-auto mt-10 max-h-64 w-full max-w-2xl space-y-3 overflow-y-auto text-left">
           {messages.map((message, index) => (
             <div
               key={`${message.role}-${index}`}
@@ -95,13 +94,13 @@ export function CopilotHero({ greeting, question, subtitle, suggestions }: Props
                 "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
                 message.role === "user"
                   ? "ml-10 bg-white/[0.07] text-white"
-                  : "mr-8 text-slate-300",
+                  : "mr-8 text-zg-text-secondary",
               )}
             >
               <p className="whitespace-pre-wrap">{message.content}</p>
             </div>
           ))}
-          {pending ? <p className="px-4 text-xs text-slate-500">{t.assistant.thinking}</p> : null}
+          {pending ? <p className="px-4 text-xs text-zg-muted">{t.assistant.thinking}</p> : null}
         </div>
       ) : null}
     </section>

@@ -125,27 +125,27 @@ function DashboardShellInner({
         <div
           data-dashboard-theme="dark"
           data-dashboard-canvas="dark"
-          className={cn(fontClassName, "relative min-h-screen bg-black font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}
+          className={cn(fontClassName, "relative h-dvh overflow-hidden bg-black font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}
         >
           <AppAmbientBackground />
 
-          <div className="relative flex min-h-screen">
+          <div className="relative flex h-full">
             <DashboardSidebar
               subscriptionPlan={subscriptionPlan}
               subscriptionStatus={subscriptionStatus}
               mobileOpen={mobileNavOpen}
               onNavigate={() => setMobileNavOpen(false)}
+              userDisplayName={userDisplayName}
+              userRoleLabel={userRoleLabel}
+              userInitials={userInitials}
+              userAvatarUrl={userAvatarUrl}
             />
 
-            <div className="relative z-0 flex min-w-0 flex-1 flex-col">
-              <DashboardTopBarWithCopilot
-                userDisplayName={userDisplayName}
-                userRoleLabel={userRoleLabel}
-                userInitials={userInitials}
-                userAvatarUrl={userAvatarUrl}
-                onOpenMobileNav={() => setMobileNavOpen(true)}
-              />
-              <main className="flex-1 overflow-x-hidden px-4 pb-6 pt-8 md:px-8 md:pb-8 md:pt-10">{children}</main>
+            <div className="relative z-0 flex h-full min-w-0 flex-1 flex-col">
+              <DashboardTopBarWithCopilot onOpenMobileNav={() => setMobileNavOpen(true)} />
+              <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-16 pt-6 md:px-10 md:pb-20 md:pt-8">
+                {children}
+              </main>
             </div>
           </div>
 
@@ -173,27 +173,11 @@ function DashboardShellInner({
   );
 }
 
-function DashboardTopBarWithCopilot({
-  userDisplayName,
-  userRoleLabel,
-  userInitials,
-  userAvatarUrl,
-  onOpenMobileNav,
-}: {
-  userDisplayName: string;
-  userRoleLabel: string;
-  userInitials: string;
-  userAvatarUrl?: string | null;
-  onOpenMobileNav: () => void;
-}) {
+function DashboardTopBarWithCopilot({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
   const pathname = usePathname();
   const copilot = useCopilot();
   return (
     <DashboardTopBar
-      userDisplayName={userDisplayName}
-      userRoleLabel={userRoleLabel}
-      userInitials={userInitials}
-      userAvatarUrl={userAvatarUrl}
       onOpenMobileNav={onOpenMobileNav}
       onOpenAssistant={() => {
         if (pathname === "/dashboard") copilot.focusInput();

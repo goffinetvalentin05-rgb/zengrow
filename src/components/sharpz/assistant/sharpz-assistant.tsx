@@ -28,9 +28,9 @@ export function SharpzAssistant() {
         type="button"
         onClick={() => setDockOpen(true)}
         className={cn(
-          "fixed bottom-5 right-5 z-40 inline-flex h-12 items-center gap-2 rounded-2xl px-4 text-sm font-semibold text-white",
-          "bg-gradient-to-br from-[#7c5cff] to-[#6366f1] shadow-[0_0_28px_-8px_rgba(124,92,255,0.55)]",
-          "hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent",
+          "fixed bottom-6 right-6 z-40 inline-flex h-11 items-center gap-2 rounded-full px-4 text-[13px] font-semibold text-zinc-950",
+          "bg-white shadow-[0_18px_44px_-18px_rgba(0,0,0,0.9)]",
+          "hover:bg-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
         )}
         aria-label={t.assistant.open}
       >
@@ -39,7 +39,7 @@ export function SharpzAssistant() {
       </button>
 
       {dockOpen ? (
-        <div className="fixed bottom-5 right-5 z-50 flex h-[min(70vh,560px)] w-[min(100vw-2rem,400px)] flex-col overflow-hidden rounded-2xl border border-zg-border bg-zg-surface shadow-2xl shadow-black/35">
+        <div className="fixed bottom-6 right-6 z-50 flex h-[min(70vh,560px)] w-[min(100vw-2rem,400px)] flex-col overflow-hidden rounded-2xl border border-white/[0.1] bg-zinc-950 shadow-2xl shadow-black/60">
           <div className="flex items-center justify-between border-b border-zg-border px-4 py-3">
             <div>
               <h2 className="text-sm font-semibold text-zg-fg">{t.assistant.title}</h2>
@@ -61,8 +61,8 @@ export function SharpzAssistant() {
                 className={cn(
                   "rounded-xl px-3 py-2 text-sm leading-relaxed",
                   message.role === "user"
-                    ? "ml-8 bg-zg-accent-soft-bg text-zg-fg"
-                    : "mr-4 bg-zg-surface-elevated text-zg-text-secondary",
+                    ? "ml-8 bg-white/[0.07] text-zg-fg"
+                    : "mr-4 text-zg-text-secondary",
                 )}
               >
                 <p className="whitespace-pre-wrap">{message.content}</p>

@@ -39,7 +39,7 @@ export function OnboardingProgress({ current, total, label }: { current: number;
       <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-zg-text-muted">{label}</p>
       <div className="h-[2px] w-full overflow-hidden rounded-full bg-white/10">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[#7c5cff] to-[#6366f1] transition-[width] duration-500 ease-out"
+          className="h-full rounded-full bg-white transition-[width] duration-500 ease-out"
           style={{ width: `${ratio * 100}%` }}
         />
       </div>
@@ -63,7 +63,7 @@ export function ChoiceButton({
       className={cn(
         "rounded-2xl border px-4 py-3 text-left text-sm font-medium transition-all duration-200",
         active
-          ? "border-zg-accent bg-zg-accent/15 text-white shadow-[0_0_28px_-14px_rgba(124,92,255,0.85)]"
+          ? "border-white/40 bg-white/[0.08] text-white"
           : "border-white/10 bg-white/[0.03] text-zg-text-secondary hover:border-white/20 hover:bg-white/[0.06] hover:text-zg-fg",
       )}
     >

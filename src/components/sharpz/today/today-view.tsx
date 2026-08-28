@@ -37,8 +37,6 @@ type Props = {
 
 export function TodayView({
   firstName,
-  saasName: _saasName,
-  primaryObjectiveKey: _primaryObjectiveKey,
   actions,
   signals,
   doneCount,
@@ -102,7 +100,7 @@ export function TodayView({
         : null;
 
   return (
-    <DashboardContent width="wide" className="space-y-12">
+    <DashboardContent width="wide" className="space-y-20 md:space-y-24">
       <CopilotHero
         greeting={greeting}
         question={t.today.question}
@@ -111,52 +109,49 @@ export function TodayView({
       />
 
       <section>
-        <div className="mb-5">
-          <h2 className="text-lg font-semibold text-zg-fg">{t.today.planTitle}</h2>
-          <p className="mt-1 text-sm text-zg-text-secondary">{t.today.planSubtitle}</p>
+        <div className="mb-6 border-b border-white/[0.06] pb-4">
+          <h2 className="text-[17px] font-semibold tracking-tight text-zg-fg">{t.today.planTitle}</h2>
+          <p className="mt-1.5 text-sm text-zg-text-secondary">{t.today.planSubtitle}</p>
         </div>
         {dayActions.length ? (
-          <ol className="space-y-3">
+          <ol className="divide-y divide-white/[0.06]">
             {dayActions.map((action, index) => (
-              <li
-                key={action.id}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
-              >
-                <div className="flex flex-wrap items-start gap-4">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 text-xs font-semibold text-zg-text-muted">
-                    {index + 1}
+              <li key={action.id} className="py-7 first:pt-1">
+                <div className="flex items-start gap-5">
+                  <span className="mt-0.5 w-5 shrink-0 text-[13px] tabular-nums text-zg-muted">
+                    {String(index + 1).padStart(2, "0")}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge tone="accent">
+                      <Badge tone="neutral">
                         {t.categories[action.category as keyof typeof t.categories] ?? action.category}
                       </Badge>
-                      <Badge tone={action.status === "in_progress" ? "warning" : "info"}>
+                      <Badge tone={action.status === "in_progress" ? "warning" : "neutral"}>
                         {t.statuses[action.status]}
                       </Badge>
                     </div>
-                    <h3 className="mt-2 text-base font-semibold text-zg-fg">{action.title}</h3>
+                    <h3 className="mt-3 text-[17px] font-semibold leading-snug tracking-tight text-zg-fg">
+                      {action.title}
+                    </h3>
                     {action.why ? (
-                      <p className="mt-2 text-sm leading-relaxed text-zg-text-secondary">
-                        <span className="font-medium text-zg-fg">{t.today.why} · </span>
+                      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zg-text-secondary">
                         {action.why}
                       </p>
                     ) : null}
-                    <div className="mt-3">
-                      <ScorePills
-                        impact={action.impact}
-                        effort={action.effort}
-                        confidence={action.confidence}
-                        score={action.score}
-                        labels={{
-                          impact: t.common.impact,
-                          effort: t.common.effort,
-                          confidence: t.common.confidence,
-                          score: t.common.score,
-                        }}
-                      />
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <ScorePills
+                      className="mt-4"
+                      impact={action.impact}
+                      effort={action.effort}
+                      confidence={action.confidence}
+                      score={action.score}
+                      labels={{
+                        impact: t.common.impact,
+                        effort: t.common.effort,
+                        confidence: t.common.confidence,
+                        score: t.common.score,
+                      }}
+                    />
+                    <div className="mt-5 flex flex-wrap items-center gap-2">
                       <Button type="button" size="sm" onClick={() => launchAction(action)} disabled={pending}>
                         <Sparkles className="h-3.5 w-3.5" />
                         {t.today.launchWithAssistant}
@@ -190,22 +185,22 @@ export function TodayView({
 
       {proposed.length ? (
         <section>
-          <div className="mb-5">
-            <h2 className="text-lg font-semibold text-zg-fg">{t.today.proposedTitle}</h2>
-            <p className="mt-1 text-sm text-zg-text-secondary">{t.today.proposedSubtitle}</p>
+          <div className="mb-6 border-b border-white/[0.06] pb-4">
+            <h2 className="text-[17px] font-semibold tracking-tight text-zg-fg">{t.today.proposedTitle}</h2>
+            <p className="mt-1.5 text-sm text-zg-text-secondary">{t.today.proposedSubtitle}</p>
           </div>
-          <ul className="space-y-3">
+          <ul className="divide-y divide-white/[0.06]">
             {proposed.map((item) => (
-              <li key={item.localId} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <li key={item.localId} className="py-7 first:pt-1">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-base font-semibold text-zg-fg">{item.company}</h3>
+                    <h3 className="text-[17px] font-semibold tracking-tight text-zg-fg">{item.company}</h3>
                     {item.url ? (
                       <a
                         href={item.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-1 block text-sm text-zg-accent hover:underline"
+                        className="mt-1 block text-sm text-zg-text-muted underline-offset-4 hover:text-zg-fg hover:underline"
                       >
                         {item.url}
                       </a>
@@ -244,22 +239,22 @@ export function TodayView({
         </section>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <h2 className="text-base font-semibold text-zg-fg">{t.today.attentionTitle}</h2>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6">
+          <h2 className="text-[15px] font-semibold tracking-tight text-zg-fg">{t.today.attentionTitle}</h2>
           {signals.length ? (
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-5 divide-y divide-white/[0.06]">
               {signals.map((signal) => (
-                <li key={signal.id}>
+                <li key={signal.id} className="first:pt-0">
                   <Link
                     href={signal.href}
-                    className="block rounded-xl border border-white/8 p-3 transition-colors hover:border-white/16 hover:bg-white/[0.04]"
+                    className="-mx-2 block rounded-xl px-2 py-3.5 transition-colors hover:bg-white/[0.03]"
                   >
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-zg-warning" />
-                      <div>
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-zg-warning" strokeWidth={1.75} />
+                      <div className="min-w-0">
                         <p className="text-sm font-medium text-zg-fg">{signal.title}</p>
-                        <p className="mt-1 text-sm text-zg-text-secondary">{signal.detail}</p>
+                        <p className="mt-1 text-sm leading-relaxed text-zg-text-secondary">{signal.detail}</p>
                       </div>
                     </div>
                   </Link>
@@ -267,13 +262,13 @@ export function TodayView({
               ))}
             </ul>
           ) : (
-            <p className="mt-4 text-sm text-zg-text-muted">{t.today.attentionEmpty}</p>
+            <p className="mt-5 text-sm text-zg-text-muted">{t.today.attentionEmpty}</p>
           )}
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <h2 className="text-base font-semibold text-zg-fg">{t.today.pulseTitle}</h2>
-          <p className={cn("mt-4 text-sm leading-relaxed", pulse ? "text-zg-text-secondary" : "text-zg-text-muted")}>
+        <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6">
+          <h2 className="text-[15px] font-semibold tracking-tight text-zg-fg">{t.today.pulseTitle}</h2>
+          <p className={cn("mt-5 text-sm leading-relaxed", pulse ? "text-zg-text-secondary" : "text-zg-text-muted")}>
             {pulse ?? t.today.pulseEmpty}
           </p>
         </section>

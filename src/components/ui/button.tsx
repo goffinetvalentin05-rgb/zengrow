@@ -10,25 +10,25 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold outline-none transition-all duration-200 ease-out disabled:pointer-events-none disabled:opacity-60 [&_svg]:h-[18px] [&_svg]:w-[18px]";
+  "inline-flex items-center justify-center gap-2 rounded-full font-medium outline-none transition-colors duration-200 ease-out disabled:pointer-events-none disabled:opacity-50 [&_svg]:h-[16px] [&_svg]:w-[16px]";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "border border-transparent bg-gradient-to-br from-[#7c5cff] via-[#6366f1] to-[#4f46e5] text-white shadow-[0_12px_36px_-14px_rgba(124,92,255,0.45)] hover:scale-[1.02] hover:brightness-110 hover:shadow-[0_18px_44px_-12px_rgba(124,92,255,0.5)] focus-visible:ring-2 focus-visible:ring-zg-accent/30 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app active:scale-[0.99]",
+    "border border-transparent bg-white font-semibold text-zinc-950 hover:bg-zinc-200 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
   secondary:
-    "border border-zg-border bg-zg-surface/80 text-zg-fg backdrop-blur-sm hover:scale-[1.02] hover:border-zg-border-hover hover:bg-zg-surface-elevated hover:shadow-[0_0_24px_-8px_rgba(124,92,255,0.2)] focus-visible:ring-2 focus-visible:ring-zg-accent/25 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app active:scale-[0.99]",
+    "border border-zg-border bg-transparent text-zg-fg hover:border-zg-border-hover hover:bg-white/[0.05] focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
   ghost:
-    "border border-transparent bg-transparent text-zg-text-secondary hover:bg-zg-card-hover hover:text-zg-fg focus-visible:ring-2 focus-visible:ring-zg-accent/20 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
+    "border border-transparent bg-transparent text-zg-text-secondary hover:bg-white/[0.05] hover:text-zg-fg focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
   ghostDark:
-    "border border-transparent bg-transparent text-zg-on-dark-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:ring-2 focus-visible:ring-zg-accent/20 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg",
+    "border border-transparent bg-transparent text-zg-on-dark-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg",
   ghostInverse:
-    "border border-transparent bg-transparent text-zg-muted hover:bg-zg-card-hover hover:text-zg-fg focus-visible:ring-2 focus-visible:ring-zg-accent/20 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
+    "border border-transparent bg-transparent text-zg-muted hover:bg-white/[0.05] hover:text-zg-fg focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
   danger:
-    "border border-transparent bg-zg-danger text-white shadow-sm hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-zg-danger/35 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app active:scale-[0.99]",
+    "border border-zg-danger/30 bg-zg-danger-soft-bg text-zg-danger hover:bg-zg-danger/20 focus-visible:ring-2 focus-visible:ring-zg-danger/35 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "min-h-9 px-3 py-2 text-xs",
+  sm: "min-h-9 px-4 py-2 text-[13px]",
   md: "min-h-10 px-5 py-2.5 text-sm",
   lg: "min-h-11 px-6 py-2.5 text-sm",
 };

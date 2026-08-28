@@ -92,12 +92,12 @@ export function CopilotOrb() {
   }, []);
 
   return (
-    <div className="relative mx-auto mb-7 flex h-[168px] w-[168px] items-center justify-center" aria-hidden>
+    <div className="relative mx-auto mb-8 flex h-[168px] w-[168px] items-center justify-center" aria-hidden>
       <div
-        className="absolute inset-8 rounded-full"
+        className="absolute inset-10 rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(226, 232, 240, 0.16) 0%, transparent 70%)",
-          filter: "blur(18px)",
+          background: "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%)",
+          filter: "blur(22px)",
         }}
       />
       <canvas ref={canvasRef} className="relative" />

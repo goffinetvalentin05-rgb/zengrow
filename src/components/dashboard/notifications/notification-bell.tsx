@@ -42,9 +42,9 @@ export default function NotificationBell() {
       <button
         type="button"
         className={cn(
-          "relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-zg-border bg-zg-surface text-zg-text-secondary transition-all duration-200 ease-out",
-          "hover:border-zg-border-hover hover:text-zg-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
-          open && "border-zg-border-focus text-zg-fg",
+          "relative inline-flex h-10 w-10 items-center justify-center rounded-full text-zg-text-secondary transition-colors duration-200 ease-out",
+          "hover:bg-white/[0.05] hover:text-zg-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25",
+          open && "bg-white/[0.07] text-zg-fg",
         )}
         aria-label={ariaLabel}
         aria-haspopup="dialog"

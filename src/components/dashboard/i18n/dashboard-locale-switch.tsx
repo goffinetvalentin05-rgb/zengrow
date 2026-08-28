@@ -24,9 +24,9 @@ export function DashboardLocaleSwitch({ variant = "default", className }: Props)
               type="button"
               onClick={() => setLocale(code)}
               className={cn(
-                "inline-flex h-8 items-center justify-center rounded-lg text-[11px] font-semibold uppercase tracking-wide transition-colors duration-200",
+                "inline-flex h-7 items-center justify-center rounded-md text-[11px] font-semibold uppercase tracking-wide transition-colors duration-200",
                 active
-                  ? "bg-zg-accent text-white shadow-sm"
+                  ? "bg-white/[0.1] text-zg-on-dark"
                   : "text-zg-on-dark-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark",
               )}
               aria-pressed={active}
@@ -53,8 +53,8 @@ export function DashboardLocaleSwitch({ variant = "default", className }: Props)
             type="button"
             onClick={() => setLocale(code)}
             className={cn(
-              "min-h-9 rounded-lg px-3 text-xs font-semibold uppercase tracking-wide transition-all duration-200",
-              active ? "bg-zg-accent text-white shadow-sm" : "text-zg-text-muted hover:bg-zg-card-hover hover:text-zg-fg",
+              "min-h-9 rounded-lg px-3 text-xs font-semibold uppercase tracking-wide transition-colors duration-200",
+              active ? "bg-white/[0.1] text-zg-fg" : "text-zg-text-muted hover:bg-white/[0.05] hover:text-zg-fg",
             )}
             aria-pressed={active}
           >

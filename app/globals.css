@@ -23,77 +23,76 @@ html:has(.zg-public-r-root) {
 
 :root {
   --background: #000000;
-  --background-elevated: #0c0818;
-  --foreground: #f4f0ff;
-  --surface: #0c0818;
-  --surface-card: #120e1a;
-  --surface-muted: #0c0818;
+  --background-elevated: #0a0a0a;
+  --foreground: #fafafa;
+  --surface: #0a0a0a;
+  --surface-card: #101010;
+  --surface-muted: #0a0a0a;
   --border: rgb(255 255 255 / 0.08);
   --border-soft: rgb(255 255 255 / 0.06);
-  --primary: #7c5cff;
-  --primary-hover: #a78bfa;
-  --primary-muted: rgba(124, 92, 255, 0.15);
-  --primary-foreground: #ffffff;
-  --muted-foreground: #9b8fb8;
+  --primary: #ffffff;
+  --primary-hover: #e4e4e7;
+  --primary-muted: rgba(255, 255, 255, 0.12);
+  --primary-foreground: #09090b;
+  --muted-foreground: #a1a1aa;
   --accent-amber: #f59e0b;
   --accent-amber-soft: rgba(245, 158, 11, 0.12);
   --badge-sand-bg: rgba(255, 255, 255, 0.06);
-  --badge-sand-text: #9b8fb8;
+  --badge-sand-text: #a1a1aa;
   --danger-bg: rgba(239, 68, 68, 0.12);
   --danger-text: #fca5a5;
-  --focus-ring: 0 0 0 3px rgba(124, 92, 255, 0.28);
+  --focus-ring: 0 0 0 3px rgba(255, 255, 255, 0.22);
 
-  /* ZenGrow app — palette dark premium violet / bleu / rose (landing v3) */
+  /* Sharpz app — monochrome strict : noir, blanc, gris. Couleur réservée au sémantique. */
   --zg-app: #000000;
-  --zg-sidebar-bg: #050505;
-  --zg-sidebar-border: rgb(255 255 255 / 0.05);
-  --zg-on-dark: #f8fafc;
-  --zg-on-dark-muted: #94a3b8;
+  --zg-sidebar-bg: #070707;
+  --zg-sidebar-border: rgb(255 255 255 / 0.06);
+  --zg-on-dark: #fafafa;
+  --zg-on-dark-muted: #a1a1aa;
   --zg-canvas: #000000;
   --zg-canvas-mid: #0a0a0a;
-  --zg-fg: #f8fafc;
-  --zg-text-secondary: #94a3b8;
-  --zg-muted: #64748b;
-  --zg-text-muted: #94a3b8;
-  --zg-fg-muted: #94a3b8;
-  --zg-text-placeholder: #64748b;
-  --zg-teal: #7c5cff;
-  --zg-accent: #7c5cff;
-  --zg-accent-hover: #a78bfa;
-  --zg-mint: #38bdf8;
-  --zg-cyan: #38bdf8;
-  --zg-magenta: #c026d3;
+  --zg-fg: #fafafa;
+  --zg-text-secondary: #a1a1aa;
+  --zg-muted: #7c7c85;
+  --zg-text-muted: #9a9aa3;
+  --zg-fg-muted: #a1a1aa;
+  --zg-text-placeholder: #6b6b73;
+  --zg-teal: #fafafa;
+  --zg-accent: #ffffff;
+  --zg-accent-hover: #e4e4e7;
+  --zg-mint: #d4d4d8;
+  --zg-cyan: #d4d4d8;
+  --zg-magenta: #a1a1aa;
   --zg-border: rgb(255 255 255 / 0.08);
-  --zg-border-strong: rgb(255 255 255 / 0.12);
-  --zg-border-hover: rgb(124 92 255 / 0.35);
-  --zg-border-accent: rgba(124, 92, 255, 0.35);
-  --zg-border-focus: #7c5cff;
-  --zg-surface: #071018;
-  --zg-surface-elevated: #0b1520;
-  --zg-surface-soft: #0a121c;
-  --zg-card-hover: #101a26;
-  --zg-highlight: rgba(43, 140, 255, 0.08);
-  --zg-accent-soft-bg: rgba(124, 92, 255, 0.12);
-  --zg-accent-soft-text: #c4b5fd;
-  --zg-glow-from: rgba(148, 163, 184, 0.1);
-  --zg-glow-via: rgba(43, 140, 255, 0.06);
-  --zg-glow-magenta: rgba(148, 163, 184, 0.04);
+  --zg-border-strong: rgb(255 255 255 / 0.14);
+  --zg-border-hover: rgb(255 255 255 / 0.2);
+  --zg-border-accent: rgb(255 255 255 / 0.18);
+  --zg-border-focus: rgb(255 255 255 / 0.5);
+  --zg-surface: #0a0a0a;
+  --zg-surface-elevated: #121212;
+  --zg-surface-soft: #0d0d0d;
+  --zg-card-hover: #161616;
+  --zg-highlight: rgba(255, 255, 255, 0.05);
+  --zg-accent-soft-bg: rgba(255, 255, 255, 0.08);
+  --zg-accent-soft-text: #fafafa;
+  --zg-glow-from: rgba(255, 255, 255, 0.06);
+  --zg-glow-via: rgba(255, 255, 255, 0.03);
+  --zg-glow-magenta: rgba(255, 255, 255, 0.02);
   --zg-shadow-card:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 20px 50px -32px rgba(0, 0, 0, 0.55),
-    0 0 40px -20px rgba(124, 92, 255, 0.08);
+    0 24px 60px -36px rgba(0, 0, 0, 0.9);
   --zg-shadow-card-soft: 0 1px 0 rgba(255, 255, 255, 0.03);
   --zg-shadow-sidebar: 0 18px 50px -32px rgba(0, 0, 0, 0.65);
   --zg-success: #34d399;
-  --zg-success-soft-bg: rgba(52, 211, 153, 0.12);
+  --zg-success-soft-bg: rgba(52, 211, 153, 0.1);
   --zg-warning: #fbbf24;
-  --zg-warning-soft-bg: rgba(251, 191, 36, 0.12);
+  --zg-warning-soft-bg: rgba(251, 191, 36, 0.1);
   --zg-danger: #f87171;
-  --zg-danger-soft-bg: rgba(248, 113, 113, 0.12);
-  --zg-info: #38bdf8;
-  --zg-info-soft-bg: rgba(56, 189, 248, 0.12);
-  --zg-premium: #a78bfa;
-  --zg-premium-soft-bg: rgba(167, 139, 250, 0.12);
+  --zg-danger-soft-bg: rgba(248, 113, 113, 0.1);
+  --zg-info: #d4d4d8;
+  --zg-info-soft-bg: rgba(255, 255, 255, 0.06);
+  --zg-premium: #d4d4d8;
+  --zg-premium-soft-bg: rgba(255, 255, 255, 0.06);
   --zg-neutral-badge-bg: rgba(255, 255, 255, 0.06);
   --zg-sidebar-hover: rgb(255 255 255 / 0.05);
   --zg-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -109,9 +108,9 @@ html:has(.zg-public-r-root) {
   --surface-muted: #f3f4f6;
   --border: #e5e7eb;
   --border-soft: #e5e7eb;
-  --primary: #7c5cff;
-  --primary-hover: #6d4df5;
-  --primary-muted: rgba(124, 92, 255, 0.1);
+  --primary: #111827;
+  --primary-hover: #000000;
+  --primary-muted: rgba(17, 24, 39, 0.08);
   --primary-foreground: #ffffff;
   --muted-foreground: #6b7280;
   --accent-amber: #d97706;
@@ -120,7 +119,7 @@ html:has(.zg-public-r-root) {
   --badge-sand-text: #4b5563;
   --danger-bg: rgba(239, 68, 68, 0.08);
   --danger-text: #dc2626;
-  --focus-ring: 0 0 0 3px rgba(124, 92, 255, 0.22);
+  --focus-ring: 0 0 0 3px rgba(17, 24, 39, 0.18);
 
   --zg-app: #f8f8fb;
   --zg-sidebar-bg: #ffffff;
@@ -135,27 +134,27 @@ html:has(.zg-public-r-root) {
   --zg-text-muted: #6b7280;
   --zg-fg-muted: #6b7280;
   --zg-text-placeholder: #9ca3af;
-  --zg-teal: #7c5cff;
-  --zg-accent: #7c5cff;
-  --zg-accent-hover: #6d4df5;
-  --zg-mint: #0ea5e9;
-  --zg-cyan: #0ea5e9;
-  --zg-magenta: #a21caf;
+  --zg-teal: #111827;
+  --zg-accent: #111827;
+  --zg-accent-hover: #000000;
+  --zg-mint: #4b5563;
+  --zg-cyan: #4b5563;
+  --zg-magenta: #6b7280;
   --zg-border: #e5e7eb;
   --zg-border-strong: #d1d5db;
-  --zg-border-hover: rgba(124, 92, 255, 0.35);
-  --zg-border-accent: rgba(124, 92, 255, 0.28);
-  --zg-border-focus: #7c5cff;
+  --zg-border-hover: rgba(17, 24, 39, 0.28);
+  --zg-border-accent: rgba(17, 24, 39, 0.22);
+  --zg-border-focus: #111827;
   --zg-surface: #ffffff;
   --zg-surface-elevated: #ffffff;
   --zg-surface-soft: #f3f4f6;
   --zg-card-hover: #f3f4f6;
-  --zg-highlight: rgba(124, 92, 255, 0.08);
-  --zg-accent-soft-bg: rgba(124, 92, 255, 0.1);
-  --zg-accent-soft-text: #5b3fd4;
-  --zg-glow-from: rgba(124, 92, 255, 0.08);
-  --zg-glow-via: rgba(14, 165, 233, 0.06);
-  --zg-glow-magenta: rgba(162, 28, 175, 0.04);
+  --zg-highlight: rgba(17, 24, 39, 0.05);
+  --zg-accent-soft-bg: rgba(17, 24, 39, 0.06);
+  --zg-accent-soft-text: #111827;
+  --zg-glow-from: rgba(17, 24, 39, 0.05);
+  --zg-glow-via: rgba(17, 24, 39, 0.03);
+  --zg-glow-magenta: rgba(17, 24, 39, 0.02);
   --zg-shadow-card:
     0 1px 2px rgba(17, 24, 39, 0.04),
     0 8px 24px -12px rgba(17, 24, 39, 0.08);
@@ -167,10 +166,10 @@ html:has(.zg-public-r-root) {
   --zg-warning-soft-bg: rgba(217, 119, 6, 0.1);
   --zg-danger: #dc2626;
   --zg-danger-soft-bg: rgba(220, 38, 38, 0.08);
-  --zg-info: #0284c7;
-  --zg-info-soft-bg: rgba(2, 132, 199, 0.1);
-  --zg-premium: #7c3aed;
-  --zg-premium-soft-bg: rgba(124, 58, 237, 0.1);
+  --zg-info: #4b5563;
+  --zg-info-soft-bg: rgba(17, 24, 39, 0.06);
+  --zg-premium: #4b5563;
+  --zg-premium-soft-bg: rgba(17, 24, 39, 0.06);
   --zg-neutral-badge-bg: #f3f4f6;
   --zg-sidebar-hover: rgb(17 24 39 / 0.04);
 
@@ -223,7 +222,7 @@ html:has(.zg-public-r-root) {
 }
 
 [data-dashboard-theme="light"] ::selection {
-  background: rgba(124, 92, 255, 0.18);
+  background: rgba(17, 24, 39, 0.14);
   color: #111827;
 }
 
@@ -401,8 +400,8 @@ body {
 }
 
 ::selection {
-  background: rgba(124, 92, 255, 0.25);
-  color: #f4f0ff;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 @keyframes accordion-down {
@@ -503,9 +502,7 @@ body {
   background: linear-gradient(
     to right,
     transparent 0%,
-    #38bdf8 25%,
-    #7c5cff 50%,
-    #c026d3 75%,
+    rgb(255 255 255 / 0.35) 50%,
     transparent 100%
   );
 }
@@ -570,21 +567,13 @@ body {
   width: min(70vw, 36rem);
   translate: -50% 0;
   border-radius: 9999px;
-  background: radial-gradient(ellipse, rgba(148, 163, 184, 0.08), transparent 70%);
+  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.05), transparent 70%);
   filter: blur(64px);
   opacity: 0.5;
 }
 
 .zg-dashboard-backdrop__glow-b {
-  position: absolute;
-  right: -8%;
-  bottom: 8%;
-  height: min(40vw, 14rem);
-  width: min(50vw, 22rem);
-  border-radius: 9999px;
-  background: radial-gradient(ellipse, rgba(43, 140, 255, 0.05), transparent 75%);
-  filter: blur(56px);
-  opacity: 0.4;
+  display: none;
 }
 
 .zg-dashboard-backdrop__glow-c {
@@ -613,24 +602,17 @@ body {
 .zg-premium-card {
   border-radius: 1rem;
   border: 1px solid var(--zg-border);
-  background: linear-gradient(
-    145deg,
-    rgb(255 255 255 / 0.05) 0%,
-    rgb(124 92 255 / 0.04) 48%,
-    rgb(255 255 255 / 0.02) 100%
-  );
+  background: rgb(255 255 255 / 0.028);
   box-shadow: var(--zg-shadow-card);
-  backdrop-filter: blur(20px) saturate(160%);
 }
 
 .zg-btn-primary-gradient {
-  background: linear-gradient(135deg, #7c5cff 0%, #6366f1 50%, #4f46e5 100%);
-  box-shadow: 0 12px 36px -14px rgba(124, 92, 255, 0.55);
+  background: #ffffff;
+  color: #09090b;
 }
 
 .zg-btn-primary-gradient:hover {
-  filter: brightness(1.08);
-  box-shadow: 0 18px 44px -12px rgba(124, 92, 255, 0.5);
+  background: #e4e4e7;
 }
 
 /* ============================================================

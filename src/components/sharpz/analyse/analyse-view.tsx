@@ -57,7 +57,7 @@ export function AnalyseView({ lastAudit, findings, recommendedActions, embedded 
             type="button"
             onClick={() => void runAudit()}
             disabled={running}
-            className="rounded-xl bg-gradient-to-br from-[#7c5cff] to-[#6366f1] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-zinc-950 transition-colors hover:bg-zinc-200 disabled:opacity-50"
           >
             {running ? t.analysePage.running : t.common.launchAnalysis}
           </button>

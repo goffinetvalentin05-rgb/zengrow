@@ -162,7 +162,7 @@ export function SettingsView({
               className={cn(
                 "shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold transition-all duration-200 ease-out",
                 tab === id
-                  ? "bg-gradient-to-br from-[#7c5cff] to-[#6366f1] text-white shadow-[0_0_24px_-8px_rgba(124,92,255,0.55)]"
+                  ? "bg-white text-zinc-950"
                   : "text-zg-text-muted hover:bg-white/5 hover:text-zg-fg",
               )}
             >
