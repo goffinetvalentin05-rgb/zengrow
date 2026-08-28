@@ -1,7 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateStructuredAI } from "@/src/lib/ai/openai";
 import { INTEGRATION_PROVIDERS, OBJECTIVE_PRIORITY_CATEGORIES } from "@/src/lib/sharpz/constants";
-import { computeSharpzScore, opportunityLevelFromPotential } from "@/src/lib/sharpz/scoring";
+import {
+  clampConfidence,
+  clampEffort,
+  clampImpact,
+  computeSharpzScore,
+  opportunityLevelFromPotential,
+} from "@/src/lib/sharpz/scoring";
 import type {
   ActionCategory,
   ObjectiveKey,
@@ -423,6 +429,26 @@ const aiBundleSchema = z.object({
   ),
 });
 
+function clampScore100(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+function clampSeverity(value: number) {
+  if (!Number.isFinite(value)) return 5;
+  return Math.min(10, Math.max(1, Math.round(value)));
+}
+
+function toTenScale(value: number) {
+  if (!Number.isFinite(value)) return 5;
+  if (value > 10) return Math.min(10, Math.max(1, Math.round(value / 10)));
+  return Math.min(10, Math.max(1, Math.round(value)));
+}
+
+function throwIfError(error: { message: string } | null, fallback: string) {
+  if (error) throw new Error(error.message || fallback);
+}
+
 export async function buildWorkspaceInsights(ctx: InsightContext): Promise<WorkspaceInsightBundle> {
   const fallback = heuristicBundle(ctx);
   try {
@@ -437,6 +463,7 @@ Règles:
 - Content = de quoi parler, pas une ferme à posts.`,
       user: JSON.stringify(ctx),
       maxTokens: 2500,
+      timeoutMs: 12000,
       parse: (raw) => aiBundleSchema.parse(raw),
     });
     return {
@@ -474,20 +501,21 @@ export async function persistInsights(
       restaurant_id: restaurantId,
       status: "completed",
       summary: bundle.audit.summary,
-      global_score: bundle.audit.globalScore,
-      previous_score: previousScore,
-      subscores: bundle.audit.subscores,
+      global_score: clampScore100(bundle.audit.globalScore),
+      previous_score: previousScore == null ? null : clampScore100(previousScore),
+      subscores: Object.fromEntries(
+        Object.entries(bundle.audit.subscores).map(([key, value]) => [key, clampScore100(value)]),
+      ),
       source_url: sourceUrl,
     })
     .select("id")
     .single();
 
-  if (auditError || !audit) {
-    throw new Error(auditError?.message ?? "Impossible de créer l’audit.");
-  }
+  throwIfError(auditError, "Impossible de créer l’audit.");
+  if (!audit) throw new Error("Impossible de créer l’audit.");
 
   if (bundle.audit.findings.length) {
-    await supabase.from("audit_findings").insert(
+    const { error: findingsError } = await supabase.from("audit_findings").insert(
       bundle.audit.findings.map((finding) => ({
         restaurant_id: restaurantId,
         audit_id: audit.id,
@@ -495,14 +523,16 @@ export async function persistInsights(
         area: finding.area,
         title: finding.title,
         detail: finding.detail,
-        severity: finding.severity,
+        severity: clampSeverity(finding.severity),
       })),
     );
+    throwIfError(findingsError, "Impossible d’enregistrer les findings.");
   }
 
   const opportunityIds: string[] = [];
   for (const item of bundle.opportunities) {
-    const { data } = await supabase
+    const potential = toTenScale(item.potential);
+    const { data, error } = await supabase
       .from("opportunities")
       .insert({
         restaurant_id: restaurantId,
@@ -510,29 +540,33 @@ export async function persistInsights(
         category: item.category,
         explanation: item.explanation,
         why_detected: item.whyDetected,
-        potential: item.potential,
-        effort: item.effort,
-        confidence: item.confidence,
+        potential,
+        effort: toTenScale(item.effort),
+        confidence: clampConfidence(item.confidence),
         data_used: item.dataUsed,
-        opportunity_level: opportunityLevelFromPotential(item.potential),
+        opportunity_level: opportunityLevelFromPotential(potential),
         source_type: "audit",
         source_id: audit.id,
       })
       .select("id")
       .single();
+    throwIfError(error, "Impossible d’enregistrer une opportunité.");
     if (data?.id) opportunityIds.push(data.id);
   }
 
   for (const [index, action] of bundle.actions.entries()) {
-    await supabase.from("actions").insert({
+    const impact = clampImpact(action.impact);
+    const effort = clampEffort(action.effort);
+    const confidence = clampConfidence(action.confidence);
+    const { error } = await supabase.from("actions").insert({
       restaurant_id: restaurantId,
       title: action.title,
       category: action.category,
       status: "todo",
-      impact: action.impact,
-      effort: action.effort,
-      confidence: action.confidence,
-      score: computeSharpzScore(action.impact, action.effort, action.confidence),
+      impact,
+      effort,
+      confidence,
+      score: computeSharpzScore(impact, effort, confidence),
       why: action.why,
       how_to: action.howTo,
       micro_steps: action.microSteps,
@@ -541,25 +575,27 @@ export async function persistInsights(
       source_id: audit.id,
       opportunity_id: opportunityIds[index] ?? null,
     });
+    throwIfError(error, "Impossible d’enregistrer une action.");
   }
 
   for (const item of bundle.content) {
-    const { data: opportunity } = await supabase
+    const { data: opportunity, error: contentError } = await supabase
       .from("content_opportunities")
       .insert({
         restaurant_id: restaurantId,
         topic: item.topic,
         audience: item.audience,
-        potential: item.potential,
-        relevance: item.relevance,
+        potential: clampScore100(item.potential),
+        relevance: clampScore100(item.relevance),
         why_now: item.whyNow,
         recommended_angle: item.recommendedAngle,
       })
       .select("id")
       .single();
+    throwIfError(contentError, "Impossible d’enregistrer une opportunité contenu.");
 
     if (opportunity && item.ideas.length) {
-      await supabase.from("content_ideas").insert(
+      const { error: ideasError } = await supabase.from("content_ideas").insert(
         item.ideas.map((idea) => ({
           restaurant_id: restaurantId,
           opportunity_id: opportunity.id,
@@ -571,29 +607,36 @@ export async function persistInsights(
           cta: idea.cta,
         })),
       );
+      throwIfError(ideasError, "Impossible d’enregistrer les idées contenu.");
     }
   }
 
-  await supabase
+  const { error: saasError } = await supabase
     .from("user_saas")
     .update({ last_audit_at: new Date().toISOString() })
     .eq("restaurant_id", restaurantId);
+  throwIfError(saasError, "Impossible de mettre à jour le SaaS.");
 
   return audit.id as string;
 }
 
 export async function ensureIntegrations(supabase: SupabaseClient, restaurantId: string) {
-  const { data: existing } = await supabase.from("integrations").select("provider").eq("restaurant_id", restaurantId);
+  const { data: existing, error: existingError } = await supabase
+    .from("integrations")
+    .select("provider")
+    .eq("restaurant_id", restaurantId);
+  throwIfError(existingError, "Impossible de lire les intégrations.");
   const present = new Set((existing ?? []).map((row) => row.provider));
   const missing = INTEGRATION_PROVIDERS.filter((item) => !present.has(item.provider));
   if (!missing.length) return;
-  await supabase.from("integrations").insert(
+  const { error } = await supabase.from("integrations").insert(
     missing.map((item) => ({
       restaurant_id: restaurantId,
       provider: item.provider,
       status: item.defaultStatus,
     })),
   );
+  throwIfError(error, "Impossible de créer les intégrations.");
 }
 
 export async function upsertSaasFromOnboarding(
@@ -606,6 +649,7 @@ export async function upsertSaasFromOnboarding(
     pricingSummary: string | null;
     stage: string;
     icp?: UserSaas["icp"];
+    onboardingCompleted?: boolean;
   },
 ) {
   const detected = input.scan?.detected;
@@ -630,20 +674,23 @@ export async function upsertSaasFromOnboarding(
     stage: input.stage,
     scan_extract: input.scan?.extract ?? null,
     unknown_fields: input.scan?.unknownFields ?? [],
-    onboarding_completed: true,
-    onboarding_step: "done",
+    onboarding_completed: Boolean(input.onboardingCompleted),
+    onboarding_step: input.onboardingCompleted ? "done" : "in_progress",
   };
 
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("user_saas")
     .select("id")
     .eq("restaurant_id", restaurantId)
     .maybeSingle();
+  throwIfError(existingError, "Impossible de lire le profil SaaS.");
 
   if (existing?.id) {
-    await supabase.from("user_saas").update(payload).eq("id", existing.id);
+    const { error } = await supabase.from("user_saas").update(payload).eq("id", existing.id);
+    throwIfError(error, "Impossible de mettre à jour le profil SaaS.");
   } else {
-    await supabase.from("user_saas").insert(payload);
+    const { error } = await supabase.from("user_saas").insert(payload);
+    throwIfError(error, "Impossible de créer le profil SaaS.");
   }
 
   if (payload.name) {

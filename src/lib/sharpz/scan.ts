@@ -112,6 +112,7 @@ Réponds en JSON.`,
         },
       }),
       maxTokens: 1200,
+      timeoutMs: 12000,
       parse: (raw) => scanSchema.parse(raw),
     });
 

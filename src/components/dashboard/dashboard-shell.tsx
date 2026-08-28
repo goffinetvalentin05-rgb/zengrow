@@ -12,6 +12,7 @@ import { DashboardTitleProvider } from "@/src/components/dashboard/dashboard-tit
 import { NotificationProvider } from "@/src/components/dashboard/notifications/notification-provider";
 import { DashboardLocaleProvider } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { SharpzAssistant } from "@/src/components/sharpz/assistant/sharpz-assistant";
+import { OnboardingChrome } from "@/src/components/sharpz/onboarding/onboarding-chrome";
 import {
   DashboardThemeProvider,
   useDashboardTheme,
@@ -100,6 +101,26 @@ function DashboardShellInner({
 
   const overlayTransition = { type: "tween" as const, duration: 0.25, ease: [0, 0, 0.2, 1] as const };
 
+  if (onboardingMode) {
+    return (
+      <DashboardToastProvider>
+        <DashboardTitleProvider>
+          <div
+            data-dashboard-theme="dark"
+            data-dashboard-canvas="dark"
+            className={cn(fontClassName, "relative min-h-screen bg-zg-app font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}
+          >
+            <AppAmbientBackground />
+            <div className="relative z-10 flex min-h-screen flex-col">
+              <OnboardingChrome />
+              <main className="flex-1">{children}</main>
+            </div>
+          </div>
+        </DashboardTitleProvider>
+      </DashboardToastProvider>
+    );
+  }
+
   return (
     <DashboardToastProvider>
       <DashboardTitleProvider>
@@ -117,7 +138,6 @@ function DashboardShellInner({
               subscriptionStatus={subscriptionStatus}
               mobileOpen={mobileNavOpen}
               onNavigate={() => setMobileNavOpen(false)}
-              onboardingMode={onboardingMode}
             />
 
             <div className="relative z-0 flex min-w-0 flex-1 flex-col">

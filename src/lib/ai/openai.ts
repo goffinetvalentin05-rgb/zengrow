@@ -54,6 +54,7 @@ export async function generateAIText({ system, user, maxTokens = 600 }: Generate
 
 type GenerateStructuredAIOptions<T> = GenerateAITextOptions & {
   parse: (raw: unknown) => T;
+  timeoutMs?: number;
 };
 
 export async function generateStructuredAI<T>({
@@ -61,19 +62,32 @@ export async function generateStructuredAI<T>({
   user,
   maxTokens = 900,
   parse,
+  timeoutMs,
 }: GenerateStructuredAIOptions<T>) {
   const client = getOpenAIClient();
   const model = getOpenAIModel();
+  const controller = timeoutMs ? new AbortController() : null;
+  const timer = timeoutMs
+    ? setTimeout(() => controller?.abort(), timeoutMs)
+    : null;
 
-  const completion = await client.chat.completions.create({
-    model,
-    max_tokens: maxTokens,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-  });
+  let completion;
+  try {
+    completion = await client.chat.completions.create(
+      {
+        model,
+        max_tokens: maxTokens,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+      },
+      controller ? { signal: controller.signal } : undefined,
+    );
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 
   const raw = completion.choices[0]?.message?.content?.trim();
   if (!raw) {

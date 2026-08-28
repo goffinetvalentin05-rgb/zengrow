@@ -3,6 +3,8 @@ import { parseJson, requireSharpzApi } from "@/src/lib/sharpz/api-session";
 import { extractWebsite, WebsiteExtractError } from "@/src/lib/sharpz/website-extract";
 import { enrichScanWithAI, scanFromExtractOnly } from "@/src/lib/sharpz/scan";
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   const session = await requireSharpzApi();
   if (!session.ok) return session.error;
