@@ -35,41 +35,41 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
       id="sharpz-copilot"
       className={cn(
         "relative mx-auto flex w-full max-w-3xl flex-col items-center px-1 text-center",
-        hasThread ? "justify-start pt-4" : "min-h-[min(calc(100dvh-9rem),640px)] justify-center",
+        hasThread ? "justify-start pt-2" : "min-h-[min(calc(100dvh-9rem),680px)] justify-center",
       )}
     >
       <div
-        className="pointer-events-none absolute left-1/2 top-[18%] h-[320px] w-[520px] -translate-x-1/2 rounded-full"
+        className="pointer-events-none absolute left-1/2 top-[12%] h-[360px] w-[540px] -translate-x-1/2 rounded-full"
         style={{
           background:
-            "radial-gradient(ellipse, rgba(155,122,173,0.22) 0%, rgba(155,122,173,0.05) 42%, transparent 70%)",
+            "radial-gradient(ellipse, rgba(232, 154, 140, 0.18) 0%, rgba(196, 120, 114, 0.06) 42%, transparent 70%)",
         }}
         aria-hidden
       />
 
-      {!hasThread ? <CopilotOrb className="mx-auto mb-8" /> : null}
+      <CopilotOrb className={cn("mx-auto", hasThread ? "mb-6 scale-[0.72]" : "mb-10")} />
 
       <p className="relative text-[15px] tracking-wide text-zg-muted">
         {name ? (
           <>
             {greetingLead}
-            <span className="font-medium text-[#cbb4dc]">{name}</span>
+            <span className="font-medium text-[#e8b4ae]">{name}</span>
           </>
         ) : (
           greeting
         )}
       </p>
-      <h1 className="relative mt-3 max-w-2xl text-[2.15rem] font-semibold leading-[1.08] tracking-[-0.035em] text-zg-fg sm:text-[2.65rem]">
+      <h1 className="relative mt-4 max-w-2xl text-[2.2rem] font-semibold leading-[1.08] tracking-[-0.035em] text-zg-fg sm:text-[2.75rem]">
         {question}
       </h1>
-      <p className="relative mx-auto mt-4 max-w-lg text-sm leading-relaxed text-zg-text-secondary">{subtitle}</p>
+      <p className="relative mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-zg-text-secondary">{subtitle}</p>
 
-      <form onSubmit={onSubmit} className="relative mt-9 w-full max-w-2xl">
+      <form onSubmit={onSubmit} className={cn("relative w-full max-w-2xl", hasThread ? "mt-8" : "mt-11")}>
         <div
           className={cn(
             "flex items-end gap-2 rounded-full border border-white/[0.1] bg-white/[0.04] px-5 py-1.5",
             "backdrop-blur-sm transition-colors",
-            "focus-within:border-[#cbb4dc]/35 focus-within:bg-white/[0.055]",
+            "focus-within:border-[#e8b4ae]/35 focus-within:bg-white/[0.055]",
           )}
         >
           <textarea
@@ -90,7 +90,7 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
           <button
             type="submit"
             disabled={pending || !input.trim()}
-            className="mb-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#cbb4dc] to-[#9b7aad] text-[#1a121c] transition-opacity hover:opacity-90 disabled:opacity-25"
+            className="mb-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#f6d0c2] to-[#c47872] text-[#1a1210] transition-opacity hover:opacity-90 disabled:opacity-25"
             aria-label={t.assistant.send}
           >
             <ArrowUp className="h-4 w-4" strokeWidth={2.2} />
@@ -98,14 +98,14 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
         </div>
       </form>
 
-      <div className="relative mt-5 flex w-full max-w-2xl flex-wrap justify-center gap-2">
+      <div className="relative mt-6 flex w-full max-w-2xl flex-wrap justify-center gap-2">
         {suggestions.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => void send(item.prompt)}
             disabled={pending}
-            className="rounded-full border border-white/[0.08] px-4 py-2 text-[13px] text-zg-text-secondary transition-colors hover:border-[#cbb4dc]/30 hover:text-zg-fg disabled:opacity-40"
+            className="rounded-full border border-white/[0.08] px-4 py-2 text-[13px] text-zg-text-secondary transition-colors hover:border-[#e8b4ae]/35 hover:text-zg-fg disabled:opacity-40"
           >
             {item.label}
           </button>
@@ -113,7 +113,7 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
       </div>
 
       {hasThread ? (
-        <div className="relative mt-10 w-full max-w-2xl space-y-3 text-left">
+        <div className="relative mt-12 w-full max-w-2xl space-y-3 text-left">
           {messages.map((message, index) => (
             <div
               key={`${message.role}-${index}`}

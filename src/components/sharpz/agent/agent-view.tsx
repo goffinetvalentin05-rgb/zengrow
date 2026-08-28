@@ -105,7 +105,7 @@ export function AgentView({
   ];
 
   return (
-    <div className="mx-auto w-full max-w-3xl pb-10">
+    <div className="mx-auto w-full max-w-3xl pb-14">
       <CopilotHero
         greeting={greeting}
         firstName={firstName}
@@ -114,7 +114,7 @@ export function AgentView({
         suggestions={suggestions}
       />
 
-      <p className="mx-auto mt-10 max-w-xl text-center text-[11px] leading-relaxed text-zg-muted/80">
+      <p className="mx-auto mt-12 max-w-xl text-center text-[11px] leading-relaxed text-zg-muted/80">
         {[
           hasSaasProfile ? t.agentPage.saasContext : null,
           hasVerifiedAudit ? t.agentPage.auditContext : null,
@@ -185,8 +185,8 @@ export function AgentView({
           </div>
           <p className="mt-4 text-xs text-zg-muted">
             {t.agentPage.todayHint}{" "}
-            <Link href={SHARPZ_ROUTES.today} className="text-zg-fg underline-offset-2 hover:underline">
-              {t.nav.today}
+            <Link href={SHARPZ_ROUTES.dashboard} className="text-zg-fg underline-offset-2 hover:underline">
+              {t.nav.dashboard}
             </Link>
           </p>
         </section>

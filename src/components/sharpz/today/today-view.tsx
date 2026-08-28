@@ -3,21 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLayoutEffect } from "react";
-import {
-  AlertTriangle,
-  ArrowRight,
-  Bot,
-  CheckCircle2,
-  Sparkles,
-  Target,
-  Users,
-} from "lucide-react";
+import { AlertTriangle, ArrowRight, Bot, Sparkles, Target, Users } from "lucide-react";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 import { useSetDashboardTitle } from "@/src/components/dashboard/dashboard-title-context";
 import Badge from "@/src/components/ui/badge";
 import Button from "@/src/components/ui/button";
-import { Card } from "@/src/components/ui/card";
-import StatCard from "@/src/components/ui/stat-card";
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
 import EmptyState from "@/src/components/ui/empty-state";
 import { ScorePills } from "@/src/components/sharpz/score-pills";
@@ -36,6 +26,8 @@ function fill(template: string, vars: Record<string, string | number>) {
 }
 
 type Props = {
+  saasName: string | null;
+  saasStageKey: string | null;
   primaryObjectiveKey: string | null;
   dayActions: SharpzAction[];
   signals: AttentionSignal[];
@@ -43,12 +35,15 @@ type Props = {
   doneTodayCount: number;
   openCount: number;
   followUpProspectCount: number;
+  visitors7d: number | null;
   focusCategoryKey: string | null;
   hasVerifiedAudit: boolean;
   auditScore: number | null;
 };
 
 export function TodayView({
+  saasName,
+  saasStageKey,
   primaryObjectiveKey,
   dayActions,
   signals,
@@ -56,6 +51,7 @@ export function TodayView({
   doneTodayCount,
   openCount,
   followUpProspectCount,
+  visitors7d,
   focusCategoryKey,
   hasVerifiedAudit,
   auditScore,
@@ -68,15 +64,18 @@ export function TodayView({
 
   useLayoutEffect(() => {
     if (!setDashboardTitle) return;
-    setDashboardTitle({ title: t.nav.today, subtitle: t.today.executionSubtitle });
+    setDashboardTitle({ title: t.nav.dashboard, subtitle: t.dashboardPage.subtitle });
     return () => setDashboardTitle(null);
-  }, [setDashboardTitle, t.nav.today, t.today.executionSubtitle]);
+  }, [setDashboardTitle, t.nav.dashboard, t.dashboardPage.subtitle]);
 
   const primaryObjective = primaryObjectiveKey
     ? t.objectives[primaryObjectiveKey as keyof typeof t.objectives] ?? primaryObjectiveKey
     : t.common.none;
   const focusCategory = focusCategoryKey
     ? t.categories[focusCategoryKey as keyof typeof t.categories] ?? focusCategoryKey
+    : null;
+  const saasStage = saasStageKey
+    ? t.stages[saasStageKey as keyof typeof t.stages] ?? saasStageKey
     : null;
 
   async function updateStatus(id: string, status: "done" | "ignored" | "in_progress") {
@@ -119,49 +118,74 @@ export function TodayView({
         })
       : null;
 
-  return (
-    <DashboardContent width="wide" className="space-y-6 pb-4">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label={t.today.doneToday}
-          value={doneTodayCount}
-          icon={CheckCircle2}
-          dataTone={doneTodayCount > 0 ? "success" : "accent"}
-        />
-        <StatCard
-          label={t.today.followUpProspects}
-          value={followUpProspectCount}
-          icon={Users}
-          dataTone={followUpProspectCount > 0 ? "warning" : "accent"}
-        />
-        <StatCard
-          label={t.today.auditScore}
-          value={auditScore != null ? `${auditScore}` : "—"}
-          icon={Target}
-          dataTone="accent"
-        />
-        <Card className="flex min-h-full flex-col justify-between p-6">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.06] text-zg-fg">
-            <Sparkles className="h-[22px] w-[22px]" strokeWidth={1.85} />
-          </div>
-          <div className="mt-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-zg-text-muted">
-              {t.today.currentObjective}
-            </p>
-            <p className="mt-2 text-lg font-semibold leading-snug tracking-tight text-zg-fg">{primaryObjective}</p>
-          </div>
-        </Card>
-      </div>
+  const snapshot = [
+    { label: t.today.doneToday, value: doneTodayCount },
+    { label: t.today.followUpProspects, value: followUpProspectCount },
+    { label: t.today.auditScore, value: auditScore != null ? auditScore : t.dashboardPage.noTraffic },
+    { label: t.dashboardPage.visitors7d, value: visitors7d != null ? visitors7d : t.dashboardPage.noTraffic },
+  ];
 
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.72fr)]">
-        <Card className="overflow-hidden p-0">
-          <div className="flex items-end justify-between gap-4 border-b border-white/[0.07] px-6 py-5">
+  return (
+    <DashboardContent width="wide" className="space-y-8 pb-4">
+      <header className="max-w-2xl">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zg-muted">
+          {t.nav.dashboard}
+        </p>
+        <h1 className="mt-2 text-[1.85rem] font-semibold leading-[1.12] tracking-tight text-zg-fg sm:text-[2.15rem]">
+          {t.dashboardPage.title}
+        </h1>
+        <p className="mt-2.5 max-w-xl text-sm leading-relaxed text-zg-text-secondary">
+          {t.dashboardPage.subtitle}
+        </p>
+      </header>
+
+      <section className="zg-surface-panel overflow-hidden">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/[0.06] px-6 py-5 sm:px-7">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zg-muted">
+              {t.dashboardPage.snapshotTitle}
+            </p>
+            <p className="mt-2 text-lg font-semibold tracking-tight text-zg-fg">
+              {saasName?.trim() || t.dashboardPage.saasUntitled}
+            </p>
+            <p className="mt-1 text-sm text-zg-text-secondary">
+              {primaryObjective}
+              {saasStage ? ` · ${saasStage}` : ""}
+            </p>
+          </div>
+          <p className="text-xs tabular-nums text-zg-muted">
+            {openCount} {t.dashboardPage.openActions.toLowerCase()}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4">
+          {snapshot.map((item, index) => (
+            <div
+              key={item.label}
+              className={cn(
+                "px-6 py-5 sm:px-7",
+                index % 2 === 1 && "border-l border-white/[0.06]",
+                index >= 2 && "border-t border-white/[0.06] sm:border-t-0",
+                index >= 1 && "sm:border-l sm:border-white/[0.06]",
+              )}
+            >
+              <p className="text-xs text-zg-muted">{item.label}</p>
+              <p className="mt-2 text-2xl font-semibold tabular-nums tracking-tight text-zg-fg">
+                {item.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.72fr)]">
+        <section className="zg-surface-panel overflow-hidden">
+          <div className="flex items-end justify-between gap-4 border-b border-white/[0.07] px-6 py-6">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zg-muted">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#e8b4ae]">
                 {t.today.executionKicker}
               </p>
-              <h2 className="mt-1.5 text-lg font-semibold tracking-tight text-zg-fg">{t.today.planTitle}</h2>
-              <p className="mt-1 text-sm text-zg-text-secondary">{t.today.planSubtitle}</p>
+              <h2 className="mt-2 text-xl font-semibold tracking-tight text-zg-fg">{t.today.planTitle}</h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-zg-text-secondary">{t.today.planSubtitle}</p>
             </div>
             <span className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs tabular-nums text-zg-muted">
               {dayActions.length}/5
@@ -175,7 +199,7 @@ export function TodayView({
                 return (
                   <li
                     key={action.id}
-                    className={cn("group relative px-6 py-6", isPrimary && "bg-white/[0.02]")}
+                    className={cn("group relative px-6 py-6", isPrimary && "bg-white/[0.015]")}
                   >
                     <div className="flex items-start gap-5">
                       <div className="flex flex-col items-center self-stretch">
@@ -300,10 +324,10 @@ export function TodayView({
               />
             </div>
           )}
-        </Card>
+        </section>
 
-        <aside className="space-y-4 xl:sticky xl:top-2">
-          <Card className="p-5">
+        <aside className="space-y-5 xl:sticky xl:top-2">
+          <section className="zg-surface-panel p-6">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zg-muted">
               {t.today.currentFocus}
             </p>
@@ -311,9 +335,9 @@ export function TodayView({
             <p className={cn("mt-3 text-sm leading-relaxed", pulse ? "text-zg-text-secondary" : "text-zg-muted")}>
               {pulse ?? t.today.pulseEmpty}
             </p>
-          </Card>
+          </section>
 
-          <Card className="p-5">
+          <section className="zg-surface-panel p-6">
             <h2 className="text-sm font-semibold text-zg-fg">{t.today.attentionTitle}</h2>
             {signals.length ? (
               <ul className="mt-3 divide-y divide-white/[0.06]">
@@ -347,7 +371,7 @@ export function TodayView({
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             ) : null}
-          </Card>
+          </section>
         </aside>
       </div>
     </DashboardContent>

@@ -1,13 +1,20 @@
 /** Routes Sharpz — architecture produit verrouillée (5 sections + réglages). */
 export const SHARPZ_ROUTES = {
-  agent: "/dashboard",
-  today: "/dashboard/today",
+  dashboard: "/dashboard",
+  agent: "/dashboard/agent",
+  /** Alias : « Aujourd’hui » est désormais une section du Dashboard. */
+  today: "/dashboard",
   prospects: "/dashboard/prospects",
   analytics: "/dashboard/analytics",
   results: "/dashboard/results",
   settings: "/dashboard/settings",
   onboarding: "/dashboard/onboarding",
 } as const;
+
+export function isSharpzAgentPath(pathname: string | null | undefined): boolean {
+  if (!pathname) return false;
+  return pathname === SHARPZ_ROUTES.agent || pathname.startsWith(`${SHARPZ_ROUTES.agent}/`);
+}
 
 export type AnalyticsTab = "overview" | "traffic" | "revenue" | "saas" | "market" | "content";
 

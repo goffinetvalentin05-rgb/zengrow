@@ -1,111 +1,115 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useState } from "react";
 import { cn } from "@/src/lib/utils";
 
-const COUNT = 160;
-
-type Point = { x: number; y: number; z: number };
-
-function fibonacciSphere(count: number): Point[] {
-  const points: Point[] = [];
-  const golden = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < count; i += 1) {
-    const y = 1 - (i / (count - 1)) * 2;
-    const radius = Math.sqrt(1 - y * y);
-    const theta = golden * i;
-    points.push({
-      x: Math.cos(theta) * radius,
-      y,
-      z: Math.sin(theta) * radius,
-    });
-  }
-  return points;
-}
-
-function drawFrame(
-  ctx: CanvasRenderingContext2D,
-  size: number,
-  points: Point[],
-  angle: number,
-) {
-  const dpr = window.devicePixelRatio || 1;
-  ctx.clearRect(0, 0, size * dpr, size * dpr);
-  ctx.save();
-  ctx.scale(dpr, dpr);
-  const cx = size / 2;
-  const cy = size / 2;
-  const radius = size * 0.34;
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-
-  for (const point of points) {
-    const x = point.x * cos - point.z * sin;
-    const z = point.x * sin + point.z * cos;
-    const depth = (z + 1.15) / 2.15;
-    const px = cx + x * radius;
-    const py = cy + point.y * radius;
-    const alpha = 0.12 + depth * 0.72;
-    const dot = 0.7 + depth * 1.35;
-    ctx.beginPath();
-    ctx.fillStyle = `rgba(248, 250, 252, ${alpha.toFixed(3)})`;
-    ctx.arc(px, py, dot, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
-}
+const RING_PATHS = [
+  "M100 56C123.5 56 144 76.5 144 100C144 123.5 123.5 144 100 144C76.5 144 56 123.5 56 100C56 76.5 76.5 56 100 56Z",
+  "M101 50C128 49 149 70 147 98C145 126 124 149 96 147C68 145 49 123 52 95C55 67 76 51 101 50Z",
+  "M98 54C119 46 148 64 146 94C144 126 122 150 92 146C64 142 48 116 54 88C60 62 76 60 98 54Z",
+  "M102 52C130 56 148 80 142 108C136 134 110 150 84 144C58 138 48 108 58 84C68 60 80 50 102 52Z",
+];
 
 type Props = {
   className?: string;
 };
 
 export function CopilotOrb({ className }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const uid = useId().replace(/:/g, "");
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const points = fibonacciSphere(COUNT);
-    const size = 168;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    canvas.style.width = `${size}px`;
-    canvas.style.height = `${size}px`;
-
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      drawFrame(ctx, size, points, 0.4);
-      return;
-    }
-
-    let frame = 0;
-    let running = true;
-    const tick = (time: number) => {
-      if (!running) return;
-      drawFrame(ctx, size, points, time / 9000);
-      frame = window.requestAnimationFrame(tick);
-    };
-    frame = window.requestAnimationFrame(tick);
-    return () => {
-      running = false;
-      window.cancelAnimationFrame(frame);
-    };
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduceMotion(media.matches);
+    const onChange = () => setReduceMotion(media.matches);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
   }, []);
 
+  const loop = [...RING_PATHS, RING_PATHS[0]].join(";");
+  const stroke = `url(#${uid}-stroke)`;
+  const glow = `url(#${uid}-glow)`;
+  const softGlow = `url(#${uid}-soft)`;
+
   return (
-    <div className={cn("relative flex h-[168px] w-[168px] items-center justify-center", className)} aria-hidden>
-      <div
-        className="absolute inset-10 rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%)",
-          filter: "blur(22px)",
-        }}
-      />
-      <canvas ref={canvasRef} className="relative" />
+    <div className={cn("agent-orb", className)} aria-hidden>
+      <div className="agent-orb__bloom" />
+      <svg viewBox="0 0 200 200" className="agent-orb__svg">
+        <defs>
+          <linearGradient id={`${uid}-stroke`} x1="0.12" y1="1" x2="0.88" y2="0.08">
+            <stop offset="0%" stopColor="#fff8f2" />
+            <stop offset="22%" stopColor="#f6d0c2" />
+            <stop offset="52%" stopColor="#e39a88" />
+            <stop offset="100%" stopColor="#c47872" />
+          </linearGradient>
+          <filter id={`${uid}-glow`} x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id={`${uid}-soft`} x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" />
+          </filter>
+        </defs>
+        <path d={RING_PATHS[0]} fill={stroke} opacity="0.14" filter={softGlow}>
+          {reduceMotion ? null : (
+            <animate
+              attributeName="d"
+              dur="12s"
+              repeatCount="indefinite"
+              calcMode="spline"
+              keyTimes="0;0.25;0.5;0.75;1"
+              keySplines="0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1"
+              values={loop}
+            />
+          )}
+        </path>
+        <path
+          d={RING_PATHS[0]}
+          fill="none"
+          stroke={stroke}
+          strokeWidth="7.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          filter={glow}
+        >
+          {reduceMotion ? null : (
+            <animate
+              attributeName="d"
+              dur="9s"
+              repeatCount="indefinite"
+              calcMode="spline"
+              keyTimes="0;0.25;0.5;0.75;1"
+              keySplines="0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1"
+              values={loop}
+            />
+          )}
+        </path>
+        <path
+          d={RING_PATHS[0]}
+          fill="none"
+          stroke="#fff7f0"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          opacity="0.55"
+          filter={glow}
+        >
+          {reduceMotion ? null : (
+            <animate
+              attributeName="d"
+              dur="11s"
+              repeatCount="indefinite"
+              calcMode="spline"
+              keyTimes="0;0.25;0.5;0.75;1"
+              keySplines="0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1"
+              values={loop}
+            />
+          )}
+        </path>
+      </svg>
+      <div className="agent-orb__core" />
     </div>
   );
 }

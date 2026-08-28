@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import {
   BarChart3,
   Bot,
-  CalendarDays,
+  LayoutDashboard,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -65,8 +65,8 @@ export default function DashboardSidebar({
   const showProUpsell = subscriptionPlan === "starter" && subscriptionStatus !== "trial";
 
   const navItems = [
-    { href: "/dashboard", label: t.nav.agent, icon: Bot },
-    { href: "/dashboard/today", label: t.nav.today, icon: CalendarDays },
+    { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    { href: "/dashboard/agent", label: t.nav.agent, icon: Bot },
     { href: "/dashboard/prospects", label: t.nav.prospects, icon: Users },
     { href: "/dashboard/analytics", label: t.nav.analytics, icon: Radar },
     { href: "/dashboard/results", label: t.nav.results, icon: BarChart3 },

@@ -17,7 +17,7 @@ export default async function OnboardingPage() {
   ]);
 
   if (saas?.onboardingCompleted) {
-    redirect(SHARPZ_ROUTES.agent);
+    redirect(SHARPZ_ROUTES.dashboard);
   }
 
   const initial = buildOnboardingInitialState(saas, objectives, channels);

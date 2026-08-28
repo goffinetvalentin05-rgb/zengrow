@@ -13,6 +13,7 @@ import { NotificationProvider } from "@/src/components/dashboard/notifications/n
 import { DashboardLocaleProvider } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { CopilotProvider } from "@/src/components/sharpz/copilot/copilot-context";
 import { OnboardingChrome } from "@/src/components/sharpz/onboarding/onboarding-chrome";
+import { isSharpzAgentPath } from "@/src/lib/sharpz/routes";
 import { DashboardThemeProvider } from "@/src/components/dashboard/dashboard-theme-provider";
 import {
   type DashboardResolvedCanvas,
@@ -153,7 +154,7 @@ function DashboardShellInner({
                   "min-h-0 flex-1 overflow-y-auto overflow-x-hidden",
                   onboardingMode
                     ? ""
-                    : pathname === "/dashboard" || pathname === "/dashboard/"
+                    : isSharpzAgentPath(pathname)
                       ? "px-5 pb-10 pt-2 md:px-10 md:pb-12"
                       : "px-5 pb-16 pt-6 md:px-10 md:pb-14 md:pt-8",
                 )}

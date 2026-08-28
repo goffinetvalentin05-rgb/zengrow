@@ -7,15 +7,16 @@ import Button from "@/src/components/ui/button";
 import Textarea from "@/src/components/ui/textarea";
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
+import { isSharpzAgentPath } from "@/src/lib/sharpz/routes";
 import { cn } from "@/src/lib/utils";
 
 export function SharpzAssistant() {
   const { t } = useDashboardI18n();
   const pathname = usePathname();
   const { dockOpen, setDockOpen, messages, pending, input, setInput, send } = useCopilot();
-  const onToday = pathname === "/dashboard";
+  const onAgent = isSharpzAgentPath(pathname);
 
-  if (onToday) return null;
+  if (onAgent) return null;
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();

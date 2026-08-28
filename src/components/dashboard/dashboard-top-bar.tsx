@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Bot, Menu } from "lucide-react";
 import NotificationBell from "@/src/components/dashboard/notifications/notification-bell";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
-import { SHARPZ_ROUTES } from "@/src/lib/sharpz/routes";
+import { isSharpzAgentPath, SHARPZ_ROUTES } from "@/src/lib/sharpz/routes";
 import { cn } from "@/src/lib/utils";
 
 type DashboardTopBarProps = {
@@ -23,7 +23,7 @@ export default function DashboardTopBar({
 }: DashboardTopBarProps) {
   const { t } = useDashboardI18n();
   const pathname = usePathname();
-  const onAgent = pathname === "/dashboard" || pathname === "/dashboard/";
+  const onAgent = isSharpzAgentPath(pathname);
   const initials = (userInitials || "?").slice(0, 2).toUpperCase();
 
   return (
