@@ -71,8 +71,8 @@ export function StatCardHighlight({
       className={cn(
         "relative isolate flex h-full min-h-[220px] min-w-0 flex-col overflow-hidden rounded-2xl border p-6 transition-all duration-200 ease-out",
         isAccent
-          ? "border-white/20 bg-gradient-to-br from-[#7c5cff] via-[#6366f1] to-[#4f46e5] text-white shadow-[0_0_60px_-12px_rgba(124,92,255,0.55)]"
-          : "border-emerald-400/30 bg-gradient-to-br from-emerald-600 via-emerald-600 to-emerald-500 text-white shadow-[0_0_50px_-14px_rgba(34,197,94,0.45)]",
+          ? "border-white/[0.12] bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent text-zg-fg shadow-[0_1px_0_rgba(255,255,255,0.08)_inset]"
+          : "border-emerald-400/25 bg-zg-success-soft-bg text-zg-fg shadow-[0_1px_0_rgba(255,255,255,0.06)_inset]",
         className,
       )}
     >
@@ -89,17 +89,17 @@ export function StatCardHighlight({
         aria-hidden
       />
 
-      <p className="relative font-landing-serif text-xl italic leading-none text-white/95">Sharpz</p>
-      <p className="relative mt-auto text-sm font-medium text-white/85">{label}</p>
+      <p className="relative font-landing-serif text-xl italic leading-none text-zg-fg">Sharpz</p>
+      <p className="relative mt-auto text-sm font-medium text-zg-text-secondary">{label}</p>
       <p
         className={cn(
-          "zg-stat-value relative mt-2 text-5xl leading-none tracking-tight text-white tabular-nums sm:text-6xl",
+          "zg-stat-value relative mt-2 text-5xl leading-none tracking-tight text-zg-fg tabular-nums sm:text-6xl",
           typeof value === "string" && String(value).length > 5 && "text-4xl sm:text-5xl",
         )}
       >
         {value}
       </p>
-      {subInfo ? <p className="relative mt-3 text-xs font-medium text-white/70">{subInfo}</p> : null}
+      {subInfo ? <p className="relative mt-3 text-xs font-medium text-zg-muted">{subInfo}</p> : null}
     </div>
   );
 }

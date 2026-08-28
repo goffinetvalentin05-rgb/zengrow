@@ -24,9 +24,9 @@ export function DashboardLocaleSwitch({ variant = "default", className }: Props)
               type="button"
               onClick={() => setLocale(code)}
               className={cn(
-                "inline-flex h-7 items-center justify-center rounded-md text-[11px] font-semibold uppercase tracking-wide transition-colors duration-200",
+              className="inline-flex h-7 items-center justify-center rounded-lg text-[11px] font-semibold uppercase tracking-wide transition-colors duration-200",
                 active
-                  ? "bg-white/[0.1] text-zg-on-dark"
+                  ? "bg-white text-zinc-950"
                   : "text-zg-on-dark-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark",
               )}
               aria-pressed={active}

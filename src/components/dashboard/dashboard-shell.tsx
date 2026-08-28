@@ -124,11 +124,11 @@ function DashboardShellInner({
         <div
           data-dashboard-theme="dark"
           data-dashboard-canvas="dark"
-          className={cn(fontClassName, "relative h-dvh overflow-hidden bg-black font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}
+          className={cn(fontClassName, "relative h-dvh overflow-hidden bg-[#050506] font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}
         >
           <AppAmbientBackground />
 
-          <div className="relative flex h-full">
+          <div className="relative flex h-full md:gap-3 md:p-3">
             <DashboardSidebar
               subscriptionPlan={subscriptionPlan}
               subscriptionStatus={subscriptionStatus}
@@ -140,9 +140,9 @@ function DashboardShellInner({
               userAvatarUrl={userAvatarUrl}
             />
 
-            <div className="relative z-0 flex h-full min-w-0 flex-1 flex-col">
+            <div className="relative z-0 flex h-full min-w-0 flex-1 flex-col overflow-hidden md:rounded-[1.5rem] md:border md:border-white/[0.07] md:bg-[#0a0a0c] md:shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_18px_40px_-28px_rgba(0,0,0,0.7)]">
               <DashboardTopBar onOpenMobileNav={() => setMobileNavOpen(true)} />
-              <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-16 pt-6 md:px-10 md:pb-20 md:pt-8">
+              <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-16 pt-6 md:px-8 md:pb-12 md:pt-7">
                 {children}
               </main>
             </div>

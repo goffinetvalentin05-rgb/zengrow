@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { Check, Database, FileSearch, Target, Users, Building2, X } from "lucide-react";
+import { useLayoutEffect } from "react";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
+import { useSetDashboardTitle } from "@/src/components/dashboard/dashboard-title-context";
 import Badge from "@/src/components/ui/badge";
 import Button from "@/src/components/ui/button";
 import { CopilotHero } from "@/src/components/sharpz/copilot/copilot-panel";
@@ -40,6 +42,7 @@ export function AgentView({
   primaryObjectiveCustomLabel,
 }: Props) {
   const { t } = useDashboardI18n();
+  const setDashboardTitle = useSetDashboardTitle();
   const {
     proposed,
     proposedActions,
@@ -51,6 +54,12 @@ export function AgentView({
     acceptingId,
     acceptingActions,
   } = useCopilot();
+
+  useLayoutEffect(() => {
+    if (!setDashboardTitle) return;
+    setDashboardTitle({ title: t.nav.agent, subtitle: t.agentPage.subtitle });
+    return () => setDashboardTitle(null);
+  }, [setDashboardTitle, t.nav.agent, t.agentPage.subtitle]);
 
   const primaryObjectiveLabel =
     primaryObjectiveCustomLabel?.trim() ||
@@ -97,7 +106,7 @@ export function AgentView({
   ];
 
   return (
-    <DashboardContent width="wide" className="space-y-14 pb-8">
+    <DashboardContent width="wide" className="space-y-6 pb-4">
       <CopilotHero
         greeting={greeting}
         question={t.agentPage.question}
@@ -105,11 +114,11 @@ export function AgentView({
         suggestions={suggestions}
       />
 
-      <section className="mx-auto w-full max-w-3xl border-t border-white/[0.06] pt-6">
-        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-zg-muted">
+      <section>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-zg-muted">
           {t.agentPage.contextTitle}
         </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <ContextItem
             icon={Database}
             label={t.agentPage.saasContext}
@@ -151,7 +160,7 @@ export function AgentView({
       </section>
 
       {proposedActions.length ? (
-        <section className="mx-auto w-full max-w-3xl">
+        <section>
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.agentPage.proposedActionsTitle}</h2>
@@ -170,7 +179,7 @@ export function AgentView({
             {proposedActions.map((item) => (
               <article
                 key={item.localId}
-                className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5"
+                className="zg-premium-card p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -223,14 +232,14 @@ export function AgentView({
       ) : null}
 
       {proposed.length ? (
-        <section className="mx-auto w-full max-w-3xl">
+        <section>
           <div className="mb-5">
             <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.today.proposedTitle}</h2>
             <p className="mt-1 text-sm text-zg-text-secondary">{t.today.proposedSubtitle}</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {proposed.map((item) => (
-              <article key={item.localId} className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5">
+              <article key={item.localId} className="zg-premium-card p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="truncate text-base font-semibold text-zg-fg">{item.company}</h3>
@@ -277,7 +286,7 @@ function ContextItem({
   available: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3">
+    <div className="zg-premium-card flex items-center gap-3 px-4 py-3.5">
       <Icon className="h-4 w-4 shrink-0 text-zg-text-secondary" strokeWidth={1.7} />
       <div className="min-w-0">
         <p className="truncate text-[13px] text-zg-fg">{label}</p>

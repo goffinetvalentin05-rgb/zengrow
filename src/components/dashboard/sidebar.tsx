@@ -161,7 +161,7 @@ export default function DashboardSidebar({
       <motion.aside
         className={cn(
           "zg-dashboard-mobile-sidebar fixed inset-y-0 left-0 z-[60] flex h-dvh shrink-0 flex-col border-r border-zg-sidebar-border bg-zg-sidebar-bg",
-          "md:static md:z-0 md:h-full",
+          "md:static md:z-0 md:h-full md:overflow-hidden md:rounded-[1.5rem] md:border md:border-white/[0.07] md:shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_18px_40px_-28px_rgba(0,0,0,0.7)]",
           !isMdUp && (mobileOpen ? "pointer-events-auto" : "pointer-events-none"),
         )}
         initial={false}
@@ -225,7 +225,7 @@ export default function DashboardSidebar({
 
         <nav
           className={cn(
-            "flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto pb-4 pt-4",
+            "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pb-4 pt-3",
             showExpandedChrome ? "px-3" : "items-center px-2",
           )}
         >
@@ -266,14 +266,14 @@ export default function DashboardSidebar({
                 onNavigate={onNavigate}
               />
 
-              <div className="flex items-center justify-between gap-2 rounded-xl px-3 py-1.5">
+              <div className="flex items-center justify-between gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
                 <span className="text-[11px] font-medium uppercase tracking-wider text-zg-muted">
                   {t.nav.locale}
                 </span>
                 <DashboardLocaleSwitch variant="sidebar" className="w-[76px] shrink-0" />
               </div>
 
-              <div className="flex items-center gap-2.5 rounded-xl px-3 py-2">
+              <div className="flex items-center gap-2.5 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
                 {userAvatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -365,9 +365,9 @@ function NavItem({
         onClick={onNavigate}
         {...tipHandlers}
         className={cn(
-          "relative flex h-11 w-11 items-center justify-center rounded-xl transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25",
+          "relative flex h-11 w-11 items-center justify-center rounded-2xl transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25",
           active
-            ? "bg-white/[0.07] text-zg-on-dark"
+            ? "bg-white/[0.1] text-zg-on-dark shadow-[0_1px_0_rgba(255,255,255,0.08)_inset]"
             : "text-zg-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark",
         )}
         aria-label={label}
@@ -384,15 +384,15 @@ function NavItem({
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25",
+        "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[13.5px] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25",
         active
-          ? "bg-white/[0.07] font-medium text-zg-on-dark"
+          ? "bg-white/[0.09] font-medium text-zg-on-dark shadow-[0_1px_0_rgba(255,255,255,0.08)_inset]"
           : "font-normal text-zg-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark",
       )}
     >
       <span
         className={cn(
-          "absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-white transition-opacity duration-200",
+          "absolute left-1.5 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-white transition-opacity duration-200",
           active ? "opacity-100" : "opacity-0",
         )}
         aria-hidden

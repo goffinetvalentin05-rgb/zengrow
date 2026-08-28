@@ -4,12 +4,12 @@
 export function AppAmbientBackground() {
   return (
     <div className="zg-app-backdrop pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
-      <div className="absolute inset-0 bg-black" />
+      <div className="absolute inset-0 bg-[#050506]" />
       <div
-        className="absolute left-1/2 top-[-12%] h-[min(520px,70vw)] w-[min(720px,88vw)] -translate-x-1/2 rounded-full"
+        className="absolute left-1/2 top-[-16%] h-[min(480px,62vw)] w-[min(680px,80vw)] -translate-x-1/2 rounded-full"
         style={{
           background:
-            "radial-gradient(ellipse 55% 45% at 50% 40%, rgba(255,255,255,0.045) 0%, transparent 70%)",
+            "radial-gradient(ellipse 55% 45% at 50% 40%, rgba(255,255,255,0.032) 0%, transparent 70%)",
         }}
       />
       <div

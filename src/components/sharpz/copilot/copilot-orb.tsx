@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { cn } from "@/src/lib/utils";
 
 const COUNT = 160;
 
@@ -54,7 +55,11 @@ function drawFrame(
   ctx.restore();
 }
 
-export function CopilotOrb() {
+type Props = {
+  className?: string;
+};
+
+export function CopilotOrb({ className }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -92,7 +97,7 @@ export function CopilotOrb() {
   }, []);
 
   return (
-    <div className="relative mx-auto mb-8 flex h-[168px] w-[168px] items-center justify-center" aria-hidden>
+    <div className={cn("relative flex h-[168px] w-[168px] items-center justify-center", className)} aria-hidden>
       <div
         className="absolute inset-10 rounded-full"
         style={{

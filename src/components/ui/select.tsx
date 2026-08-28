@@ -7,9 +7,9 @@ export default function Select({ className = "", ...props }: SelectProps) {
   return (
     <select
       className={cn(
-        "min-h-[44px] w-full cursor-pointer rounded-xl border border-zg-border bg-zg-surface/90 px-4 py-2.5 text-sm text-zg-fg outline-none backdrop-blur-sm transition-all duration-200 ease-out",
-        "hover:border-zg-border-hover",
-        "focus:border-zg-border-focus focus:ring-2 focus:ring-zg-accent/20",
+        "min-h-[44px] w-full cursor-pointer rounded-2xl border border-white/[0.1] bg-white/[0.035] px-4 py-2.5 text-sm text-zg-fg outline-none shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] transition-all duration-200 ease-out",
+        "hover:border-white/[0.16]",
+        "focus:border-white/30 focus:ring-2 focus:ring-white/12",
         className,
       )}
       {...props}

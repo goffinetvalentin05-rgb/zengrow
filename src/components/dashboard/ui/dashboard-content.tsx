@@ -17,8 +17,8 @@ export default function DashboardContent({ children, className, width = "default
     <div
       className={cn(
         "w-full min-w-0",
-        width === "wide" ? "max-w-[1240px]" : "max-w-[1120px]",
-        "mx-auto space-y-8 md:space-y-10",
+        width === "wide" ? "max-w-[1280px]" : "max-w-[1120px]",
+        "mx-auto space-y-6 md:space-y-8",
         className,
       )}
     >

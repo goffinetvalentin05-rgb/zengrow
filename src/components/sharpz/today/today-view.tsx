@@ -2,12 +2,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowRight, Bot, Sparkles, Target, Users } from "lucide-react";
+import { useLayoutEffect } from "react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Bot,
+  CheckCircle2,
+  Sparkles,
+  Target,
+  Users,
+} from "lucide-react";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
+import { useSetDashboardTitle } from "@/src/components/dashboard/dashboard-title-context";
 import Badge from "@/src/components/ui/badge";
 import Button from "@/src/components/ui/button";
+import { Card } from "@/src/components/ui/card";
+import StatCard from "@/src/components/ui/stat-card";
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
-import { SharpzEmptyPanel } from "@/src/components/sharpz/empty-panel";
+import EmptyState from "@/src/components/ui/empty-state";
 import { ScorePills } from "@/src/components/sharpz/score-pills";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
@@ -52,6 +64,13 @@ export function TodayView({
   const { send, pending } = useCopilot();
   const router = useRouter();
   const showToast = useDashboardToast();
+  const setDashboardTitle = useSetDashboardTitle();
+
+  useLayoutEffect(() => {
+    if (!setDashboardTitle) return;
+    setDashboardTitle({ title: t.nav.today, subtitle: t.today.executionSubtitle });
+    return () => setDashboardTitle(null);
+  }, [setDashboardTitle, t.nav.today, t.today.executionSubtitle]);
 
   const primaryObjective = primaryObjectiveKey
     ? t.objectives[primaryObjectiveKey as keyof typeof t.objectives] ?? primaryObjectiveKey
@@ -101,27 +120,50 @@ export function TodayView({
       : null;
 
   return (
-    <DashboardContent width="wide" className="space-y-10 pb-8">
-      <header className="max-w-3xl pt-4 md:pt-8">
-        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-zg-muted">
-          {t.today.executionKicker}
-        </p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-zg-fg sm:text-4xl">
-          {t.today.executionTitle}
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zg-text-secondary">
-          {t.today.executionSubtitle}
-        </p>
-      </header>
+    <DashboardContent width="wide" className="space-y-6 pb-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label={t.today.doneToday}
+          value={doneTodayCount}
+          icon={CheckCircle2}
+          dataTone={doneTodayCount > 0 ? "success" : "accent"}
+        />
+        <StatCard
+          label={t.today.followUpProspects}
+          value={followUpProspectCount}
+          icon={Users}
+          dataTone={followUpProspectCount > 0 ? "warning" : "accent"}
+        />
+        <StatCard
+          label={t.today.auditScore}
+          value={auditScore != null ? `${auditScore}` : "—"}
+          icon={Target}
+          dataTone="accent"
+        />
+        <Card className="flex min-h-full flex-col justify-between p-6">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.06] text-zg-fg">
+            <Sparkles className="h-[22px] w-[22px]" strokeWidth={1.85} />
+          </div>
+          <div className="mt-4">
+            <p className="text-xs font-medium uppercase tracking-wider text-zg-text-muted">
+              {t.today.currentObjective}
+            </p>
+            <p className="mt-2 text-lg font-semibold leading-snug tracking-tight text-zg-fg">{primaryObjective}</p>
+          </div>
+        </Card>
+      </div>
 
-      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.7fr)]">
-        <section className="overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02]">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.72fr)]">
+        <Card className="overflow-hidden p-0">
           <div className="flex items-end justify-between gap-4 border-b border-white/[0.07] px-6 py-5">
             <div>
-              <h2 className="text-base font-semibold tracking-tight text-zg-fg">{t.today.planTitle}</h2>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zg-muted">
+                {t.today.executionKicker}
+              </p>
+              <h2 className="mt-1.5 text-lg font-semibold tracking-tight text-zg-fg">{t.today.planTitle}</h2>
               <p className="mt-1 text-sm text-zg-text-secondary">{t.today.planSubtitle}</p>
             </div>
-            <span className="shrink-0 text-xs tabular-nums text-zg-muted">
+            <span className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs tabular-nums text-zg-muted">
               {dayActions.length}/5
             </span>
           </div>
@@ -133,10 +175,7 @@ export function TodayView({
                 return (
                   <li
                     key={action.id}
-                    className={cn(
-                      "group relative px-6 py-6",
-                      isPrimary && "bg-white/[0.02]",
-                    )}
+                    className={cn("group relative px-6 py-6", isPrimary && "bg-white/[0.02]")}
                   >
                     <div className="flex items-start gap-5">
                       <div className="flex flex-col items-center self-stretch">
@@ -231,80 +270,56 @@ export function TodayView({
               })}
             </ol>
           ) : (
-            <SharpzEmptyPanel
-              className="border-0 bg-transparent"
-              title={t.empty.noActionsTitle}
-              description={t.today.noPlanHonest}
-              icon={Target}
-              action={
-                <div className="flex flex-wrap items-center justify-center gap-4">
-                  {hasVerifiedAudit ? (
-                    <button
-                      type="button"
-                      onClick={askAgentForPlan}
-                      className="inline-flex items-center gap-2 text-sm text-zg-fg hover:underline"
-                    >
-                      <Bot className="h-4 w-4" />
-                      {t.today.askAgentForPlan}
-                    </button>
-                  ) : (
-                    <Link
-                      href={`${SHARPZ_ROUTES.analytics}?tab=saas`}
-                      className="inline-flex items-center gap-2 text-sm text-zg-fg"
-                    >
-                      {t.common.launchAnalysis}
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  )}
-                </div>
-              }
-            />
-          )}
-        </section>
-
-        <aside className="space-y-4 xl:sticky xl:top-4">
-          <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
-            <p className="text-[11px] uppercase tracking-[0.14em] text-zg-muted">{t.today.opsTitle}</p>
-            <dl className="mt-4 space-y-3">
-              <OpsRow label={t.today.currentObjective} value={primaryObjective} />
-              <OpsRow
-                label={t.today.doneToday}
-                value={String(doneTodayCount)}
-                highlight={doneTodayCount > 0}
-              />
-              <OpsRow
-                label={t.today.followUpProspects}
-                value={String(followUpProspectCount)}
-                highlight={followUpProspectCount > 0}
-              />
-              <OpsRow
-                label={t.today.auditScore}
-                value={
-                  auditScore != null
-                    ? `${auditScore}/100`
-                    : hasVerifiedAudit
-                      ? t.common.unknown
-                      : t.agentPage.missing
+            <div className="px-6 py-10">
+              <EmptyState
+                title={t.empty.noActionsTitle}
+                description={t.today.noPlanHonest}
+                icon={Target}
+                action={
+                  <div className="flex flex-wrap items-center justify-center gap-4">
+                    {hasVerifiedAudit ? (
+                      <button
+                        type="button"
+                        onClick={askAgentForPlan}
+                        className="inline-flex items-center gap-2 text-sm text-zg-fg hover:underline"
+                      >
+                        <Bot className="h-4 w-4" />
+                        {t.today.askAgentForPlan}
+                      </button>
+                    ) : (
+                      <Link
+                        href={`${SHARPZ_ROUTES.analytics}?tab=saas`}
+                        className="inline-flex items-center gap-2 text-sm text-zg-fg"
+                      >
+                        {t.common.launchAnalysis}
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    )}
+                  </div>
                 }
               />
-            </dl>
-          </section>
+            </div>
+          )}
+        </Card>
 
-          <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
-            <p className="text-[11px] uppercase tracking-[0.14em] text-zg-muted">{t.today.currentFocus}</p>
+        <aside className="space-y-4 xl:sticky xl:top-2">
+          <Card className="p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zg-muted">
+              {t.today.currentFocus}
+            </p>
             <p className="mt-3 text-base font-medium text-zg-fg">{focusCategory ?? t.common.none}</p>
             <p className={cn("mt-3 text-sm leading-relaxed", pulse ? "text-zg-text-secondary" : "text-zg-muted")}>
               {pulse ?? t.today.pulseEmpty}
             </p>
-          </section>
+          </Card>
 
-          <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+          <Card className="p-5">
             <h2 className="text-sm font-semibold text-zg-fg">{t.today.attentionTitle}</h2>
             {signals.length ? (
               <ul className="mt-3 divide-y divide-white/[0.06]">
                 {signals.map((signal) => (
                   <li key={signal.id}>
-                    <Link href={signal.href} className="-mx-2 flex gap-2.5 rounded-lg px-2 py-3 hover:bg-white/[0.03]">
+                    <Link href={signal.href} className="-mx-2 flex gap-2.5 rounded-xl px-2 py-3 hover:bg-white/[0.03]">
                       {signal.id.startsWith("prospect-") ? (
                         <Users className="mt-0.5 h-4 w-4 shrink-0 text-zg-text-secondary" strokeWidth={1.75} />
                       ) : (
@@ -332,28 +347,9 @@ export function TodayView({
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             ) : null}
-          </section>
+          </Card>
         </aside>
       </div>
     </DashboardContent>
-  );
-}
-
-function OpsRow({
-  label,
-  value,
-  highlight = false,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-xs text-zg-muted">{label}</dt>
-      <dd className={cn("text-sm font-medium tabular-nums", highlight ? "text-zg-fg" : "text-zg-text-secondary")}>
-        {value}
-      </dd>
-    </div>
   );
 }

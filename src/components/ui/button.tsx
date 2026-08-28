@@ -10,13 +10,13 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-full font-medium outline-none transition-colors duration-200 ease-out disabled:pointer-events-none disabled:opacity-50 [&_svg]:h-[16px] [&_svg]:w-[16px]";
+  "inline-flex items-center justify-center gap-2 rounded-2xl font-medium outline-none transition-colors duration-200 ease-out disabled:pointer-events-none disabled:opacity-50 [&_svg]:h-[16px] [&_svg]:w-[16px]";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "border border-transparent bg-white font-semibold text-zinc-950 hover:bg-zinc-200 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
+    "border border-transparent bg-white font-semibold text-zinc-950 shadow-[0_1px_0_rgba(255,255,255,0.35)_inset] hover:bg-zinc-200 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
   secondary:
-    "border border-zg-border bg-transparent text-zg-fg hover:border-zg-border-hover hover:bg-white/[0.05] focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
+    "border border-white/[0.1] bg-white/[0.03] text-zg-fg shadow-[0_1px_0_rgba(255,255,255,0.05)_inset] hover:border-white/[0.16] hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
   ghost:
     "border border-transparent bg-transparent text-zg-text-secondary hover:bg-white/[0.05] hover:text-zg-fg focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app",
   ghostDark:
