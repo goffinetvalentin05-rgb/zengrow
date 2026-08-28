@@ -1,4 +1,4 @@
-import { analyticsHref } from "@/src/lib/sharpz/routes";
+import { analyticsHref, SHARPZ_ROUTES } from "@/src/lib/sharpz/routes";
 import type {
   AuditFinding,
   CompetitorChange,
@@ -13,13 +13,29 @@ export type AttentionSignal = {
   href: string;
 };
 
+type FollowUpProspect = {
+  id: string;
+  title: string;
+  detail: string;
+};
+
 export function buildAttentionSignals(input: {
   changes: CompetitorChange[];
   findings: AuditFinding[];
   content: ContentOpportunity[];
   opportunities: SharpzOpportunity[];
+  followUpProspects?: FollowUpProspect[];
 }): AttentionSignal[] {
   const signals: AttentionSignal[] = [];
+
+  for (const prospect of (input.followUpProspects ?? []).slice(0, 2)) {
+    signals.push({
+      id: `prospect-${prospect.id}`,
+      title: prospect.title,
+      detail: prospect.detail,
+      href: SHARPZ_ROUTES.prospects,
+    });
+  }
   for (const change of input.changes.slice(0, 2)) {
     signals.push({
       id: `change-${change.id}`,

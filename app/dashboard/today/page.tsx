@@ -3,20 +3,30 @@ import { createClient } from "@/src/lib/supabase/server";
 import { TodayView } from "@/src/components/sharpz/today/today-view";
 import { buildAttentionSignals } from "@/src/lib/sharpz/signals";
 import {
+  countDoneToday,
+  countFollowUpProspects,
+  resolveFocusCategory,
+  selectTodayActions,
+} from "@/src/lib/sharpz/today-plan";
+import {
   getActions,
   getAuditFindings,
+  getCompetitorChanges,
   getLatestAudit,
   getObjectives,
+  getProspects,
 } from "@/src/lib/sharpz/queries";
 
 export default async function TodayPage() {
   const { restaurant } = await requireRestaurantSession();
   const supabase = await createClient();
 
-  const [allActions, lastAudit, objectives] = await Promise.all([
+  const [allActions, lastAudit, objectives, prospects, changes] = await Promise.all([
     getActions(supabase, restaurant.id),
     getLatestAudit(supabase, restaurant.id),
     getObjectives(supabase, restaurant.id),
+    getProspects(supabase, restaurant.id),
+    getCompetitorChanges(supabase, restaurant.id),
   ]);
 
   const actions = allActions.filter(
@@ -26,24 +36,40 @@ export default async function TodayPage() {
     ? await getAuditFindings(supabase, restaurant.id, lastAudit.id)
     : [];
 
+  const primary = objectives.find((item) => item.isPrimary);
+  const dayActions = selectTodayActions(actions, primary?.key ?? null);
   const done = actions.filter((item) => item.status === "done");
   const openStatuses = new Set(["todo", "in_progress"]);
-  const focusKey = done[0]?.category ?? null;
-  const primary = objectives.find((item) => item.isPrimary);
+  const followUpProspects = prospects.filter((item) => {
+    if (item.status === "to_contact" || item.status === "followed_up") return true;
+    if (item.nextFollowUpAt && new Date(item.nextFollowUpAt) <= new Date()) return true;
+    return false;
+  });
 
   return (
     <TodayView
       primaryObjectiveKey={primary?.key ?? null}
-      actions={actions}
+      dayActions={dayActions}
       signals={buildAttentionSignals({
-        changes: [],
+        changes,
         findings,
         content: [],
         opportunities: [],
+        followUpProspects: followUpProspects.map((item) => ({
+          id: item.id,
+          title: item.name?.trim() || item.company,
+          detail: item.nextFollowUpAt
+            ? `Relance — ${new Date(item.nextFollowUpAt).toLocaleDateString()}`
+            : item.status,
+        })),
       })}
       doneCount={done.length}
+      doneTodayCount={countDoneToday(actions)}
       openCount={actions.filter((item) => openStatuses.has(item.status)).length}
-      focusCategoryKey={focusKey}
+      followUpProspectCount={countFollowUpProspects(prospects)}
+      focusCategoryKey={resolveFocusCategory(dayActions, done)}
+      hasVerifiedAudit={Boolean(lastAudit)}
+      auditScore={lastAudit?.globalScore ?? null}
     />
   );
 }
