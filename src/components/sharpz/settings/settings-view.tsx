@@ -14,7 +14,7 @@ import BillingPlans from "@/src/components/dashboard/billing-plans";
 import { AnalyticsSnippetPanel } from "@/src/components/sharpz/analytics/analytics-snippet-panel";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
-import { CHANNEL_KEYS, OBJECTIVE_KEYS, SAAS_STAGES } from "@/src/lib/sharpz/constants";
+import { CHANNEL_KEYS, INTEGRATION_PROVIDERS, OBJECTIVE_KEYS, SAAS_STAGES } from "@/src/lib/sharpz/constants";
 import { cn } from "@/src/lib/utils";
 import type {
   AcquisitionChannel,
@@ -63,6 +63,9 @@ export function SettingsView({
   const initialTab = (searchParams.get("section") as TabId) || "saas";
   const [tab, setTab] = useState<TabId>(TABS.includes(initialTab) ? initialTab : "saas");
   const [pending, setPending] = useState(false);
+  const [stripeKey, setStripeKey] = useState("");
+  const [stripeFormOpen, setStripeFormOpen] = useState(false);
+  const [stripePending, setStripePending] = useState(false);
 
   const [name, setName] = useState(saas?.name ?? "");
   const [url, setUrl] = useState(saas?.url ?? "");
@@ -148,6 +151,38 @@ export function SettingsView({
       return;
     }
     showToast({ message: t.common.saved });
+    router.refresh();
+  }
+
+  async function connectStripe(event: FormEvent) {
+    event.preventDefault();
+    setStripePending(true);
+    const response = await fetch("/api/sharpz/integrations/stripe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secretKey: stripeKey }),
+    });
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    setStripePending(false);
+    if (!response.ok) {
+      showToast({ message: payload?.error || t.common.error });
+      return;
+    }
+    setStripeKey("");
+    setStripeFormOpen(false);
+    showToast({ message: t.settingsPage.stripeConnectedToast });
+    router.refresh();
+  }
+
+  async function disconnectStripe() {
+    setStripePending(true);
+    const response = await fetch("/api/sharpz/integrations/stripe", { method: "DELETE" });
+    setStripePending(false);
+    if (!response.ok) {
+      showToast({ message: t.common.error });
+      return;
+    }
+    showToast({ message: t.settingsPage.stripeDisconnectedToast });
     router.refresh();
   }
 
@@ -341,7 +376,13 @@ export function SettingsView({
           {(["sharpz_analytics", "stripe", "paddle", "google_analytics", "posthog", "supabase", "search_console"] as const).map(
             (provider) => {
               const row = integrationByProvider[provider];
-              const status = (row?.status as "connected" | "available" | "coming_soon") ?? (provider === "sharpz_analytics" ? "available" : "coming_soon");
+              const fallback =
+                INTEGRATION_PROVIDERS.find((item) => item.provider === provider)?.defaultStatus ?? "coming_soon";
+              const status =
+                (row?.status as "connected" | "available" | "coming_soon") ??
+                (provider === "sharpz_analytics" ? "available" : fallback);
+              const canConnect = provider === "stripe" && status !== "connected";
+              const canDisconnect = provider === "stripe" && status === "connected";
               return (
                 <Card key={provider} className="p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -350,7 +391,9 @@ export function SettingsView({
                       <p className="mt-1 text-sm text-zg-text-muted">
                         {provider === "sharpz_analytics" && status === "connected"
                           ? t.settingsPage.analyticsActive
-                          : t.settingsPage.notConnected}
+                          : provider === "stripe" && status === "connected"
+                            ? t.analyticsPage.revenueConnected
+                            : t.settingsPage.notConnected}
                       </p>
                     </div>
                     <Badge tone={status === "connected" ? "success" : status === "available" ? "accent" : "neutral"}>
@@ -361,8 +404,58 @@ export function SettingsView({
                           : t.common.comingSoon}
                     </Badge>
                   </div>
-                  {provider === "sharpz_analytics" ? null : (
-                    <Button type="button" size="sm" className="mt-4" variant="secondary" disabled>
+                  {provider === "sharpz_analytics" ? null : canDisconnect ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="mt-4"
+                      variant="secondary"
+                      disabled={stripePending}
+                      onClick={() => void disconnectStripe()}
+                    >
+                      {t.settingsPage.disconnect}
+                    </Button>
+                  ) : canConnect && stripeFormOpen ? (
+                    <form onSubmit={(event) => void connectStripe(event)} className="mt-4 space-y-3">
+                      <label className="block text-xs text-zg-muted" htmlFor="stripe-restricted-key">
+                        {t.settingsPage.stripeKeyLabel}
+                      </label>
+                      <Input
+                        id="stripe-restricted-key"
+                        type="password"
+                        autoComplete="off"
+                        value={stripeKey}
+                        onChange={(event) => setStripeKey(event.target.value)}
+                        placeholder={t.settingsPage.stripeKeyPlaceholder}
+                      />
+                      <p className="text-xs leading-relaxed text-zg-muted">{t.settingsPage.stripeKeyHelp}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="submit" size="sm" disabled={stripePending || !stripeKey.trim()}>
+                          {t.settingsPage.connect}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          disabled={stripePending}
+                          onClick={() => {
+                            setStripeFormOpen(false);
+                            setStripeKey("");
+                          }}
+                        >
+                          {t.common.cancel}
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="mt-4"
+                      variant="secondary"
+                      disabled={!canConnect || stripePending}
+                      onClick={() => setStripeFormOpen(true)}
+                    >
                       {t.settingsPage.connect}
                     </Button>
                   )}

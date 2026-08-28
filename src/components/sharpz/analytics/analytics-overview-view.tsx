@@ -4,16 +4,18 @@ import Link from "next/link";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { analyticsHref } from "@/src/lib/sharpz/routes";
 import type { TrafficSummary } from "@/src/lib/sharpz/analytics";
+import type { StripeRevenueSummary } from "@/src/lib/sharpz/stripe-revenue";
 
 type Props = {
   traffic: TrafficSummary;
   auditScore: number | null;
   hasVerifiedAudit: boolean;
   stripeConnected: boolean;
+  stripeRevenue: StripeRevenueSummary | null;
 };
 
-export function AnalyticsOverviewView({ traffic, auditScore, hasVerifiedAudit, stripeConnected }: Props) {
-  const { t } = useDashboardI18n();
+export function AnalyticsOverviewView({ traffic, auditScore, hasVerifiedAudit, stripeConnected, stripeRevenue }: Props) {
+  const { t, locale } = useDashboardI18n();
   const gaps = [
     !traffic.hasData
       ? { href: analyticsHref("traffic"), title: t.analyticsPage.trafficNotConnected, detail: t.analyticsPage.overviewTrafficMissing, cta: t.analyticsPage.tabTraffic }
@@ -49,7 +51,17 @@ export function AnalyticsOverviewView({ traffic, auditScore, hasVerifiedAudit, s
             <MiniStat label={t.analyticsPage.auditScoreLabel} value={auditScore != null ? `${auditScore}` : "—"} />
             <MiniStat
               label={t.analyticsPage.mrrLabel}
-              value={stripeConnected ? t.analyticsPage.revenueConnected : "—"}
+              value={
+                stripeRevenue
+                  ? new Intl.NumberFormat(locale === "en" ? "en-US" : "fr-FR", {
+                      style: "currency",
+                      currency: stripeRevenue.currency.toUpperCase(),
+                      maximumFractionDigits: 0,
+                    }).format(stripeRevenue.mrrCents / 100)
+                  : stripeConnected
+                    ? t.analyticsPage.revenueConnected
+                    : "—"
+              }
             />
           </div>
         </div>

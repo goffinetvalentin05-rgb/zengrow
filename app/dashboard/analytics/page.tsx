@@ -3,6 +3,7 @@ import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import { AnalyticsView } from "@/src/components/sharpz/analytics/analytics-view";
 import { getTrafficSummary, sharpzAnalyticsSnippet } from "@/src/lib/sharpz/analytics";
+import { getStripeRevenueSummary } from "@/src/lib/sharpz/stripe-revenue";
 import {
   getActions,
   getAuditFindings,
@@ -42,6 +43,7 @@ export default async function AnalyticsPage({
     changes,
     contentOpportunities,
     contentIdeas,
+    stripeRevenue,
   ] = await Promise.all([
     getLatestAudit(supabase, restaurant.id),
     getActions(supabase, restaurant.id),
@@ -51,6 +53,7 @@ export default async function AnalyticsPage({
     getCompetitorChanges(supabase, restaurant.id),
     getContentOpportunities(supabase, restaurant.id),
     getContentIdeas(supabase, restaurant.id),
+    getStripeRevenueSummary(supabase, restaurant.id).catch(() => null),
   ]);
 
   const findings = lastAudit
@@ -79,6 +82,7 @@ export default async function AnalyticsPage({
       traffic={traffic}
       snippet={snippet}
       stripeConnected={stripeConnected}
+      stripeRevenue={stripeRevenue}
       competitors={competitors}
       changes={changes}
       contentOpportunities={contentOpportunities}

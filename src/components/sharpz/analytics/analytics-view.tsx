@@ -10,8 +10,10 @@ import { ContentView } from "@/src/components/sharpz/content/content-view";
 import { MarketView } from "@/src/components/sharpz/market/market-view";
 import { BarChart3 } from "lucide-react";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
+import { AnalyticsRevenueView } from "@/src/components/sharpz/analytics/analytics-revenue-view";
 import { analyticsHref, type AnalyticsTab } from "@/src/lib/sharpz/routes";
 import type { TrafficSummary } from "@/src/lib/sharpz/analytics";
+import type { StripeRevenueSummary } from "@/src/lib/sharpz/stripe-revenue";
 import type {
   AuditFinding,
   AuditRecord,
@@ -30,6 +32,7 @@ type Props = {
   traffic: TrafficSummary;
   snippet: string;
   stripeConnected: boolean;
+  stripeRevenue: StripeRevenueSummary | null;
   competitors: Competitor[];
   changes: CompetitorChange[];
   contentOpportunities: ContentOpportunity[];
@@ -44,6 +47,7 @@ export function AnalyticsView({
   traffic,
   snippet,
   stripeConnected,
+  stripeRevenue,
   competitors,
   changes,
   contentOpportunities,
@@ -79,22 +83,11 @@ export function AnalyticsView({
           auditScore={lastAudit?.globalScore ?? null}
           hasVerifiedAudit={Boolean(lastAudit)}
           stripeConnected={stripeConnected}
+          stripeRevenue={stripeRevenue}
         />
       ) : null}
       {tab === "traffic" ? <AnalyticsTrafficView traffic={traffic} snippet={snippet} /> : null}
-      {tab === "revenue" ? (
-        stripeConnected ? (
-          <AnalyticsTabEmpty
-            title={t.analyticsPage.revenueConnectedTitle}
-            description={t.analyticsPage.revenueConnectedDescription}
-          />
-        ) : (
-          <AnalyticsTabEmpty
-            title={t.analyticsPage.revenueEmptyTitle}
-            description={t.analyticsPage.revenueEmptyDescription}
-          />
-        )
-      ) : null}
+      {tab === "revenue" ? <AnalyticsRevenueView revenue={stripeRevenue} /> : null}
       {tab === "saas" ? (
         <AnalyseView
           embedded
