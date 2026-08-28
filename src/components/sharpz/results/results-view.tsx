@@ -2,23 +2,20 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, FlaskConical, Loader, Ban, Users, Target } from "lucide-react";
-import PageHeader from "@/src/components/dashboard/page-header";
+import { FlaskConical } from "lucide-react";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 import Tabs from "@/src/components/ui/tabs";
-import StatCard from "@/src/components/ui/stat-card";
-import { Card } from "@/src/components/ui/card";
 import Badge from "@/src/components/ui/badge";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import Textarea from "@/src/components/ui/textarea";
-import { SharpzEmptyPanel } from "@/src/components/sharpz/empty-panel";
 import { ResultsImpactList } from "@/src/components/sharpz/results/results-impact-list";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
 import type { ResultImpactRow } from "@/src/lib/sharpz/results";
 import { computeProspectStats } from "@/src/lib/sharpz/results";
 import type { Experiment, Prospect, SharpzAction } from "@/src/lib/sharpz/types";
+import { cn } from "@/src/lib/utils";
 
 type Period = "week" | "month";
 
@@ -90,8 +87,12 @@ export function ResultsView({
   }
 
   return (
-    <DashboardContent>
-      <PageHeader title={t.progressPage.title} subtitle={t.progressPage.subtitle}>
+    <DashboardContent width="wide" className="space-y-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-[-0.03em] text-zg-fg">{t.progressPage.title}</h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-zg-text-secondary">{t.progressPage.subtitle}</p>
+        </div>
         <Tabs
           value={period}
           onChange={(value) => setPeriod(value as Period)}
@@ -100,98 +101,103 @@ export function ResultsView({
             { id: "month", label: t.common.thisMonth },
           ]}
         />
-      </PageHeader>
+      </header>
 
-      <section className="space-y-4">
-        <h2 className="text-base font-semibold text-zg-fg">{t.progressPage.results}</h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <StatCard label={`${counts.done} ${t.progressPage.done}`} value={counts.done} icon={CheckCircle2} dataTone="success" />
-          <StatCard
-            label={`${counts.inProgress} ${t.progressPage.inProgress}`}
-            value={counts.inProgress}
-            icon={Loader}
-            dataTone="accent"
+      <section className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <div className="zg-surface-panel relative overflow-hidden p-7">
+          <div
+            className="pointer-events-none absolute -bottom-24 -right-10 h-56 w-56 rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(155,122,173,0.22), transparent 68%)" }}
+            aria-hidden
           />
-          <StatCard label={`${counts.ignored} ${t.progressPage.ignored}`} value={counts.ignored} icon={Ban} dataTone="warning" />
-          <StatCard
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zg-muted">
+            {t.progressPage.results}
+          </p>
+          <p className="zg-stat-value mt-6 text-6xl leading-none tracking-tight text-zg-fg tabular-nums">
+            {counts.done}
+          </p>
+          <p className="mt-3 text-sm text-zg-text-secondary">{t.progressPage.done}</p>
+        </div>
+
+        <div className="zg-surface-panel grid grid-cols-2 content-stretch divide-x divide-y divide-white/[0.06] overflow-hidden p-0">
+          <MetricCell label={t.progressPage.inProgress} value={counts.inProgress} />
+          <MetricCell label={t.progressPage.ignored} value={counts.ignored} />
+          <MetricCell
             label={period === "week" ? t.progressPage.prospectsCustomers : t.progressPage.prospectsCustomersMonth}
             value={prospectStats.customers}
-            icon={Users}
-            dataTone="success"
           />
-          <StatCard
+          <MetricCell
             label={period === "week" ? t.progressPage.prospectsQualified : t.progressPage.prospectsQualifiedMonth}
             value={prospectStats.qualified}
-            icon={Target}
-            dataTone="accent"
           />
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="space-y-1">
-          <h2 className="text-base font-semibold text-zg-fg">{t.progressPage.impact}</h2>
-          <p className="text-xs leading-relaxed text-zg-muted">{t.progressPage.correlationDisclaimer}</p>
+      <section className="zg-surface-panel p-7">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.progressPage.impact}</h2>
+          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-zg-muted">
+            {t.progressPage.correlationDisclaimer}
+          </p>
         </div>
 
         {hasImpactSection ? (
           <div className="space-y-6">
             {impacts.length ? <ResultsImpactList impacts={impacts} /> : null}
-
             {completedWithResult.length ? (
-              <div className="grid gap-4">
+              <div className="divide-y divide-white/[0.06] border-t border-white/[0.06]">
                 {completedWithResult.map((item) => (
-                  <Card key={item.id} className="p-5">
-                    <Badge tone="neutral" className="mb-3">
-                      {t.progressPage.attributionExperiment}
-                    </Badge>
-                    <p className="text-sm font-semibold text-zg-fg">{item.actionDescription || item.hypothesis}</p>
+                  <div key={item.id} className="py-5 first:pt-5">
+                    <Badge tone="neutral">{t.progressPage.attributionExperiment}</Badge>
+                    <p className="mt-3 text-sm font-semibold text-zg-fg">
+                      {item.actionDescription || item.hypothesis}
+                    </p>
                     <p className="mt-2 text-sm text-zg-text-secondary">
                       {t.progressPage.correlated}: {item.result}
                     </p>
-                  </Card>
+                  </div>
                 ))}
               </div>
             ) : null}
           </div>
         ) : (
-          <SharpzEmptyPanel
-            title={t.empty.noProgressTitle}
-            description={
-              hasConnectedData || trafficHasData
+          <div className="flex min-h-[180px] flex-col items-center justify-center text-center">
+            <FlaskConical className="h-6 w-6 text-zg-muted" strokeWidth={1.5} />
+            <p className="mt-3 text-sm font-medium text-zg-fg">{t.empty.noProgressTitle}</p>
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-zg-muted">
+              {hasConnectedData || trafficHasData
                 ? t.progressPage.noImpactsYet
-                : t.empty.noIntegrationsDescription
-            }
-            icon={FlaskConical}
-          />
+                : t.empty.noIntegrationsDescription}
+            </p>
+          </div>
         )}
       </section>
 
-      <section className="space-y-4">
-        <h2 className="text-base font-semibold text-zg-fg">{t.progressPage.experiments}</h2>
-        <Card className="p-5">
-          <form className="space-y-3" onSubmit={createExperiment}>
-            <Input
-              value={hypothesis}
-              onChange={(event) => setHypothesis(event.target.value)}
-              placeholder={t.progressPage.hypothesis}
-              required
-            />
-            <Textarea
-              value={actionDescription}
-              onChange={(event) => setActionDescription(event.target.value)}
-              placeholder={t.progressPage.action}
-              rows={3}
-            />
-            <Button type="submit" size="sm" disabled={pending}>
-              {t.progressPage.addExperiment}
-            </Button>
-          </form>
-        </Card>
+      <section className="zg-surface-panel p-7">
+        <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.progressPage.experiments}</h2>
+        <form className="mt-5 grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-start" onSubmit={createExperiment}>
+          <Input
+            value={hypothesis}
+            onChange={(event) => setHypothesis(event.target.value)}
+            placeholder={t.progressPage.hypothesis}
+            required
+          />
+          <Textarea
+            value={actionDescription}
+            onChange={(event) => setActionDescription(event.target.value)}
+            placeholder={t.progressPage.action}
+            rows={1}
+            className="min-h-10 md:min-h-10"
+          />
+          <Button type="submit" size="sm" className="md:mt-0.5" disabled={pending}>
+            {t.progressPage.addExperiment}
+          </Button>
+        </form>
+
         {experiments.length ? (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="mt-6 divide-y divide-white/[0.06] border-t border-white/[0.06]">
             {experiments.map((item) => (
-              <Card key={item.id} className="space-y-3 p-5">
+              <div key={item.id} className="space-y-2 py-5">
                 <Badge tone={item.status === "completed" ? "success" : "warning"}>
                   {item.status === "completed" ? t.progressPage.completed : t.progressPage.running}
                 </Badge>
@@ -217,14 +223,23 @@ export function ResultsView({
                     <span className="text-zg-text-secondary">{item.conclusion}</span>
                   </p>
                 ) : null}
-              </Card>
+              </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-zg-text-muted">{t.empty.noExperimentsDescription}</p>
+          <p className="mt-5 text-sm text-zg-muted">{t.empty.noExperimentsDescription}</p>
         )}
       </section>
     </DashboardContent>
+  );
+}
+
+function MetricCell({ label, value }: { label: string; value: number }) {
+  return (
+    <div className={cn("flex min-h-[120px] flex-col justify-between p-5")}>
+      <p className="text-xs text-zg-muted">{label}</p>
+      <p className="zg-stat-value text-3xl tabular-nums tracking-tight text-zg-fg">{value}</p>
+    </div>
   );
 }
 

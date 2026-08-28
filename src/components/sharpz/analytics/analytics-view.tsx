@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import PageHeader from "@/src/components/dashboard/page-header";
 import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 import Tabs from "@/src/components/ui/tabs";
 import { AnalyseView } from "@/src/components/sharpz/analyse/analyse-view";
@@ -54,8 +53,12 @@ export function AnalyticsView({
   const router = useRouter();
 
   return (
-    <DashboardContent width="wide">
-      <PageHeader title={t.analyticsPage.title} subtitle={t.analyticsPage.subtitle}>
+    <DashboardContent width="wide" className="space-y-6">
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-[-0.03em] text-zg-fg">{t.analyticsPage.title}</h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-zg-text-secondary">{t.analyticsPage.subtitle}</p>
+        </div>
         <Tabs
           value={tab}
           onChange={(value) => router.replace(analyticsHref(value as AnalyticsTab))}
@@ -68,7 +71,7 @@ export function AnalyticsView({
             { id: "content", label: t.analyticsPage.tabContent },
           ]}
         />
-      </PageHeader>
+      </header>
 
       {tab === "overview" ? (
         <AnalyticsOverviewView
@@ -134,7 +137,7 @@ function AnalyticsTabEmpty({
   icon?: typeof BarChart3;
 }) {
   return (
-    <section className="flex min-h-[420px] items-center justify-center rounded-3xl border border-white/[0.08] bg-white/[0.02] p-8 text-center">
+    <section className="flex min-h-[380px] items-center justify-center zg-surface-panel p-8 text-center">
       <div className="max-w-md">
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04]">
           <Icon className="h-5 w-5 text-zg-text-secondary" strokeWidth={1.6} />

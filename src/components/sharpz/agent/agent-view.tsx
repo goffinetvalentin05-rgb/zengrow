@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Database, FileSearch, Target, Users, Building2, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useLayoutEffect } from "react";
-import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
 import { useSetDashboardTitle } from "@/src/components/dashboard/dashboard-title-context";
 import Badge from "@/src/components/ui/badge";
 import Button from "@/src/components/ui/button";
@@ -106,61 +105,30 @@ export function AgentView({
   ];
 
   return (
-    <DashboardContent width="wide" className="space-y-6 pb-4">
+    <div className="mx-auto w-full max-w-3xl pb-10">
       <CopilotHero
         greeting={greeting}
+        firstName={firstName}
         question={t.agentPage.question}
         subtitle={t.agentPage.subtitle}
         suggestions={suggestions}
       />
 
-      <section>
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-zg-muted">
-          {t.agentPage.contextTitle}
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <ContextItem
-            icon={Database}
-            label={t.agentPage.saasContext}
-            value={hasSaasProfile ? t.agentPage.available : t.agentPage.missing}
-            available={hasSaasProfile}
-          />
-          <ContextItem
-            icon={FileSearch}
-            label={t.agentPage.auditContext}
-            value={hasVerifiedAudit ? t.agentPage.available : t.agentPage.missing}
-            available={hasVerifiedAudit}
-          />
-          <ContextItem
-            icon={Target}
-            label={t.agentPage.objectiveContext}
-            value={primaryObjectiveLabel ?? t.agentPage.missing}
-            available={Boolean(primaryObjectiveLabel)}
-          />
-          <ContextItem
-            icon={Users}
-            label={t.agentPage.prospectContext}
-            value={fill(t.agentPage.prospectCount, { count: prospectCount })}
-            available={prospectCount > 0}
-          />
-          <ContextItem
-            icon={Building2}
-            label={t.agentPage.competitorContext}
-            value={fill(t.agentPage.competitorCount, { count: competitorCount })}
-            available={competitorCount > 0}
-          />
-          <ContextItem
-            icon={Check}
-            label={t.agentPage.openActionsContext}
-            value={fill(t.agentPage.openActionCount, { count: openActionCount })}
-            available={openActionCount > 0}
-          />
-        </div>
-        <p className="mt-4 text-xs leading-relaxed text-zg-muted">{t.agentPage.honestyNote}</p>
-      </section>
+      <p className="mx-auto mt-10 max-w-xl text-center text-[11px] leading-relaxed text-zg-muted/80">
+        {[
+          hasSaasProfile ? t.agentPage.saasContext : null,
+          hasVerifiedAudit ? t.agentPage.auditContext : null,
+          primaryObjectiveLabel,
+          prospectCount > 0 ? fill(t.agentPage.prospectCount, { count: prospectCount }) : null,
+          competitorCount > 0 ? fill(t.agentPage.competitorCount, { count: competitorCount }) : null,
+          openActionCount > 0 ? fill(t.agentPage.openActionCount, { count: openActionCount }) : null,
+        ]
+          .filter(Boolean)
+          .join("  ·  ") || t.agentPage.honestyNote}
+      </p>
 
       {proposedActions.length ? (
-        <section>
+        <section className="zg-surface-panel mt-12 overflow-hidden p-6 text-left">
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.agentPage.proposedActionsTitle}</h2>
@@ -175,18 +143,11 @@ export function AgentView({
               {t.agentPage.addAllToToday}
             </Button>
           </div>
-          <div className="space-y-3">
+          <div className="divide-y divide-white/[0.06]">
             {proposedActions.map((item) => (
-              <article
-                key={item.localId}
-                className="zg-premium-card p-5"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <Badge tone="sand">{item.category}</Badge>
-                    <h3 className="mt-2 text-base font-semibold text-zg-fg">{item.title}</h3>
-                  </div>
-                </div>
+              <article key={item.localId} className="py-5 first:pt-0 last:pb-0">
+                <Badge tone="sand">{item.category}</Badge>
+                <h3 className="mt-2 text-base font-semibold text-zg-fg">{item.title}</h3>
                 {item.why ? (
                   <p className="mt-3 text-sm leading-relaxed text-zg-text-secondary">{item.why}</p>
                 ) : null}
@@ -232,14 +193,12 @@ export function AgentView({
       ) : null}
 
       {proposed.length ? (
-        <section>
-          <div className="mb-5">
-            <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.today.proposedTitle}</h2>
-            <p className="mt-1 text-sm text-zg-text-secondary">{t.today.proposedSubtitle}</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+        <section className="zg-surface-panel mt-6 overflow-hidden p-6 text-left">
+          <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.today.proposedTitle}</h2>
+          <p className="mt-1 text-sm text-zg-text-secondary">{t.today.proposedSubtitle}</p>
+          <div className="mt-5 divide-y divide-white/[0.06]">
             {proposed.map((item) => (
-              <article key={item.localId} className="zg-premium-card p-5">
+              <article key={item.localId} className="py-5 first:pt-0 last:pb-0">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="truncate text-base font-semibold text-zg-fg">{item.company}</h3>
@@ -270,32 +229,6 @@ export function AgentView({
           </div>
         </section>
       ) : null}
-    </DashboardContent>
-  );
-}
-
-function ContextItem({
-  icon: Icon,
-  label,
-  value,
-  available,
-}: {
-  icon: typeof Database;
-  label: string;
-  value: string;
-  available: boolean;
-}) {
-  return (
-    <div className="zg-premium-card flex items-center gap-3 px-4 py-3.5">
-      <Icon className="h-4 w-4 shrink-0 text-zg-text-secondary" strokeWidth={1.7} />
-      <div className="min-w-0">
-        <p className="truncate text-[13px] text-zg-fg">{label}</p>
-        <p className="mt-0.5 truncate text-xs text-zg-muted">{value}</p>
-      </div>
-      <span
-        className={`ml-auto h-1.5 w-1.5 shrink-0 rounded-full ${available ? "bg-zg-success" : "bg-zg-muted"}`}
-        aria-hidden
-      />
     </div>
   );
 }

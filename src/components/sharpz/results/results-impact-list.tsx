@@ -2,7 +2,6 @@
 
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import Badge from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import type { ResultImpactRow } from "@/src/lib/sharpz/results";
 import type { ActionImpactAttribution } from "@/src/lib/sharpz/types";
@@ -39,9 +38,9 @@ export function ResultsImpactList({ impacts }: Props) {
   };
 
   return (
-    <div className="grid gap-4">
+    <div className="divide-y divide-white/[0.06]">
       {impacts.map((item) => (
-        <Card key={item.id} className="space-y-3 p-5">
+        <div key={item.id} className="space-y-3 py-5 first:pt-0 last:pb-0">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-zg-fg">{item.actionTitle}</p>
@@ -86,7 +85,7 @@ export function ResultsImpactList({ impacts }: Props) {
           {item.evidence ? (
             <p className="text-sm leading-relaxed text-zg-text-secondary">{item.evidence}</p>
           ) : null}
-        </Card>
+        </div>
       ))}
     </div>
   );

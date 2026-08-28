@@ -160,8 +160,8 @@ export default function DashboardSidebar({
       {tipPortal}
       <motion.aside
         className={cn(
-          "zg-dashboard-mobile-sidebar fixed inset-y-0 left-0 z-[60] flex h-dvh shrink-0 flex-col border-r border-zg-sidebar-border bg-zg-sidebar-bg",
-          "md:static md:z-0 md:h-full md:overflow-hidden md:rounded-[1.5rem] md:border md:border-white/[0.07] md:shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_18px_40px_-28px_rgba(0,0,0,0.7)]",
+          "zg-dashboard-mobile-sidebar fixed inset-y-0 left-0 z-[60] flex h-dvh shrink-0 flex-col border-r border-white/[0.06] bg-[#0d0c12]",
+          "md:static md:z-0 md:h-full md:overflow-hidden md:bg-transparent",
           !isMdUp && (mobileOpen ? "pointer-events-auto" : "pointer-events-none"),
         )}
         initial={false}
@@ -367,7 +367,7 @@ function NavItem({
         className={cn(
           "relative flex h-11 w-11 items-center justify-center rounded-2xl transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25",
           active
-            ? "bg-white/[0.1] text-zg-on-dark shadow-[0_1px_0_rgba(255,255,255,0.08)_inset]"
+            ? "bg-[linear-gradient(90deg,rgba(155,122,173,0.28),rgba(155,122,173,0.06))] text-zg-on-dark"
             : "text-zg-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark",
         )}
         aria-label={label}
@@ -386,13 +386,13 @@ function NavItem({
       className={cn(
         "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[13.5px] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25",
         active
-          ? "bg-white/[0.09] font-medium text-zg-on-dark shadow-[0_1px_0_rgba(255,255,255,0.08)_inset]"
-          : "font-normal text-zg-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark",
+          ? "bg-[linear-gradient(90deg,rgba(155,122,173,0.26),rgba(155,122,173,0.04))] font-medium text-zg-on-dark"
+          : "font-normal text-zg-muted hover:bg-white/[0.04] hover:text-zg-on-dark",
       )}
     >
       <span
         className={cn(
-          "absolute left-1.5 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-white transition-opacity duration-200",
+          "absolute left-1.5 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-[#cbb4dc] transition-opacity duration-200",
           active ? "opacity-100" : "opacity-0",
         )}
         aria-hidden

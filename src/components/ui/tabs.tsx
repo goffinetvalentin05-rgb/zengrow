@@ -19,7 +19,7 @@ export default function Tabs({ tabs, value, onChange }: TabsProps) {
           className={cn(
             "rounded-xl px-4 py-1.5 text-[13px] font-medium transition-colors duration-200 ease-out",
             tab.id === value
-              ? "bg-white text-zinc-950 shadow-sm"
+              ? "bg-[linear-gradient(180deg,#cbb4dc,#9b7aad)] text-[#1a121c] shadow-sm"
               : "text-zg-text-muted hover:bg-white/[0.05] hover:text-zg-fg",
           )}
         >
