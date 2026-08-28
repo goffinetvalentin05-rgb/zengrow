@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
-import { BrandLogo } from "@/components/landing/BrandLogo";
+import { LandingWordmark } from "@/components/landing/BrandLogo";
 import { cn } from "@/src/lib/utils";
 import "./auth-layout.css";
 
@@ -19,26 +19,26 @@ type AuthVisualCopy = {
 
 const VISUAL: Record<AuthLayoutIntent, AuthVisualCopy> = {
   login: {
-    badge: "Espace professionnel",
-    title: "Vos bons cadeaux, un seul espace.",
+    badge: "Growth OS",
+    title: "Sachez quoi faire ensuite.",
     subtitle:
-      "Vendez sur votre site, dans votre établissement ou depuis vos réseaux. Paiement, envoi et utilisation au même endroit.",
+      "Sharpz comprend votre SaaS, priorise vos actions et mesure ce qui fonctionne vraiment.",
     steps: [
       "Connectez-vous à votre espace",
-      "Retrouvez votre établissement",
-      "Suivez ventes, Wallet et utilisation",
+      "Retrouvez votre dashboard Sharpz",
+      "Agissez sur vos priorités du jour",
     ],
     activeStep: 0,
   },
   signup: {
-    badge: "Espace professionnel",
-    title: "Créez votre espace en quelques minutes.",
+    badge: "Nouveau compte",
+    title: "Votre système de croissance, en quelques minutes.",
     subtitle:
-      "Ajoutez vos bons cadeaux sur votre site, dans votre établissement et sur vos réseaux — sans construire votre propre système.",
+      "Onboarding guidé, analyse de votre site, puis un plan d’actions priorisé.",
     steps: [
       "Créez votre espace",
-      "Configurez votre établissement",
-      "Vendez vos bons cadeaux partout",
+      "Analysez votre SaaS",
+      "Recevez vos premières actions",
     ],
     activeStep: 0,
   },
@@ -46,7 +46,7 @@ const VISUAL: Record<AuthLayoutIntent, AuthVisualCopy> = {
     badge: "Sécurité du compte",
     title: "Retrouvez l’accès à votre espace.",
     subtitle:
-      "Un lien sécurisé pour réinitialiser votre mot de passe et revenir à votre établissement.",
+      "Un lien sécurisé pour réinitialiser votre mot de passe et revenir à Sharpz.",
     steps: [
       "Indiquez votre e-mail",
       "Ouvrez le lien reçu",
@@ -73,8 +73,8 @@ export function AuthVisualPanel({ intent = "login" }: { intent?: AuthLayoutInten
   return (
     <aside className="zg-auth-visual flex flex-col justify-start gap-8 px-6 py-8 sm:px-9 sm:py-10 lg:gap-8 lg:px-11 lg:py-14">
       <div className="zg-auth-visual__inner flex flex-col items-start">
-        <Link href="/" className="inline-flex w-fit items-center" aria-label="ZenGrow — accueil">
-          <BrandLogo className="zg-auth-visual__logo" sizes="180px" priority decorative />
+        <Link href="/" className="inline-flex w-fit items-center" aria-label="Sharpz — accueil">
+          <LandingWordmark className="zg-auth-visual__logo" priority />
         </Link>
         <span className="mt-5 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-white/90 backdrop-blur-md">
           {copy.badge}

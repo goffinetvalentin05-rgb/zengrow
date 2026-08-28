@@ -1,50 +1,40 @@
-import { Suspense } from "react";
-import { Gift, ScanLine } from "lucide-react";
-import {
-  DashboardHomeMetrics,
-  DashboardHomeMetricsSkeleton,
-} from "@/src/components/dashboard/dashboard-home-metrics";
 import { requireRestaurant } from "@/src/lib/auth";
-import PageHeader from "@/src/components/dashboard/page-header";
-import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
+import { createClient } from "@/src/lib/supabase/server";
+import { HomeDashboard } from "@/src/components/sharpz/dashboard/home-dashboard";
+import {
+  getActions,
+  getCompetitorChanges,
+  getIntegrations,
+  getLatestAudit,
+  getOpportunities,
+  hasConnectedIntegration,
+} from "@/src/lib/sharpz/queries";
 
 export default async function DashboardPage() {
   const restaurant = await requireRestaurant();
+  const supabase = await createClient();
+
+  const [actions, opportunities, alerts, lastAudit, integrations] = await Promise.all([
+    getActions(supabase, restaurant.id),
+    getOpportunities(supabase, restaurant.id),
+    getCompetitorChanges(supabase, restaurant.id),
+    getLatestAudit(supabase, restaurant.id),
+    getIntegrations(supabase, restaurant.id),
+  ]);
+
+  const openStatuses = new Set(["todo", "in_progress"]);
+  const topActions = actions.filter((item) => openStatuses.has(item.status)).slice(0, 3);
 
   return (
-    <DashboardContent>
-      <PageHeader
-        title="Tableau de bord"
-        subtitle="Suivez vos bons cadeaux, vos ventes et votre base d’acheteurs."
-        primaryAction={{
-          kind: "link",
-          href: "/dashboard/gift-vouchers?scan=1",
-          label: "Scanner un bon",
-          icon: <ScanLine className="h-4 w-4" strokeWidth={2} />,
-        }}
-        secondaryActions={[
-          {
-            kind: "link",
-            href: "/dashboard/gift-vouchers?redeem=1",
-            label: "Utiliser un bon",
-          },
-          {
-            kind: "link",
-            href: "/dashboard/gift-vouchers",
-            label: "Créer un bon",
-            icon: <Gift className="h-4 w-4" strokeWidth={2} />,
-          },
-        ]}
-      />
-
-      <section aria-labelledby="dashboard-stats-heading" className="mt-2 space-y-4">
-        <div className="sr-only">
-          <h2 id="dashboard-stats-heading">Statistiques</h2>
-        </div>
-        <Suspense fallback={<DashboardHomeMetricsSkeleton />}>
-          <DashboardHomeMetrics restaurantId={restaurant.id} />
-        </Suspense>
-      </section>
-    </DashboardContent>
+    <HomeDashboard
+      topActions={topActions}
+      opportunities={opportunities.slice(0, 4)}
+      alerts={alerts.filter((item) => item.importance === "high" || item.importance === "medium")}
+      lastAudit={lastAudit}
+      hasConnectedData={hasConnectedIntegration(integrations)}
+      actionsDone={actions.filter((item) => item.status === "done").length}
+      actionsOpen={actions.filter((item) => openStatuses.has(item.status)).length}
+      opportunitiesCount={opportunities.length}
+    />
   );
 }

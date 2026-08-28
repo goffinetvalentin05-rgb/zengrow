@@ -89,7 +89,7 @@ export function StatCardHighlight({
         aria-hidden
       />
 
-      <p className="relative font-landing-serif text-xl italic leading-none text-white/95">ZenGrow</p>
+      <p className="relative font-landing-serif text-xl italic leading-none text-white/95">Sharpz</p>
       <p className="relative mt-auto text-sm font-medium text-white/85">{label}</p>
       <p
         className={cn(

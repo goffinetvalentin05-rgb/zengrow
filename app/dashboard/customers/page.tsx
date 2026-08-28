@@ -13,7 +13,7 @@ export default async function DashboardCustomersPage() {
     return (
       <DashboardContent>
         <section className="relative space-y-6">
-          <PageHeader title="Clients" subtitle="Les personnes qui ont acheté un bon cadeau dans votre établissement." />
+          <PageHeader title="Clients" subtitle="Votre base de clients." />
 
           <div className="relative min-h-[min(70vh,560px)] overflow-hidden rounded-2xl border border-zg-border bg-zg-surface transition-all duration-200 ease-out">
             <div

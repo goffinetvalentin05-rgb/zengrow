@@ -69,6 +69,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/billing", request.url));
   }
 
+  if (pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/onboarding")) {
+    const { data: saas, error: saasError } = await supabase
+      .from("user_saas")
+      .select("onboarding_completed")
+      .eq("restaurant_id", restaurant.id)
+      .maybeSingle();
+
+    if (!saasError && (!saas || saas.onboarding_completed !== true)) {
+      return NextResponse.redirect(new URL("/dashboard/onboarding", request.url));
+    }
+  }
+
   return response;
 }
 

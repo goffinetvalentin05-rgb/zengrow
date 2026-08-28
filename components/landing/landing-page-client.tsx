@@ -1,31 +1,33 @@
 "use client";
 
+import { LocaleProvider } from "./locale-provider";
 import { Navbar } from "./Navbar";
-import { Hero } from "./Hero";
-import { StorySection } from "./StorySection";
-import { HowItWorksSection } from "./HowItWorksSection";
-import { FAQSection } from "./FAQSection";
-import { FinalCTA } from "./FinalCTA";
 import { Footer } from "./Footer";
+import { PageCanvas } from "./PageCanvas";
+import { Hero } from "./sections/Hero";
+import { ProblemSection } from "./sections/ProblemSection";
+import { FeaturesSection } from "./sections/FeaturesSection";
+import { HowItWorksSection } from "./sections/HowItWorksSection";
+import { FinalCtaSection } from "./sections/FinalCtaSection";
 import "./landing.css";
 
 export function LandingPageClient() {
   return (
-    <div className="go">
-      <div className="go-grain" aria-hidden />
-      <Navbar />
-      <main>
-        <Hero />
-        <div className="go-day">
-          <StorySection />
+    <LocaleProvider>
+      <div className="go">
+        <PageCanvas />
+        <Navbar />
+        <main>
+          <Hero />
+          <ProblemSection />
+          <FeaturesSection />
           <HowItWorksSection />
-          <FAQSection />
+        </main>
+        <div className="go-close" id="faq">
+          <FinalCtaSection />
+          <Footer variant="close" />
         </div>
-      </main>
-      <div className="go-close">
-        <FinalCTA />
-        <Footer />
       </div>
-    </div>
+    </LocaleProvider>
   );
 }

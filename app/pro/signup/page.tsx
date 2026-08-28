@@ -74,7 +74,7 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/dashboard/onboarding");
   }
 
   return (
@@ -85,7 +85,7 @@ export default function SignupPage() {
             Créer votre espace
           </h1>
           <p className="mt-3 max-w-[38ch] text-pretty text-sm leading-relaxed text-white/50">
-            Trois champs suffisent pour démarrer. Le reste se configure ensuite dans les paramètres.
+            Trois champs suffisent pour démarrer. Sharpz analysera ensuite votre SaaS.
           </p>
           <p className="mt-2 text-xs leading-relaxed text-white/35">
             Aucune carte bancaire requise. Essai gratuit de 14 jours.
@@ -95,14 +95,14 @@ export default function SignupPage() {
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="restaurantName" className={authFieldLabel}>
-              Nom du restaurant
+              Nom de votre SaaS
             </label>
             <Input
               id="restaurantName"
               value={restaurantName}
               onChange={(event) => setRestaurantName(event.target.value)}
               className={authInputClassName}
-              placeholder="Le Bistrot du Lac"
+              placeholder="Mon SaaS"
               required
             />
           </div>
@@ -118,7 +118,7 @@ export default function SignupPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className={authInputClassName}
-              placeholder="vous@restaurant.ch"
+              placeholder="vous@startup.com"
               required
             />
           </div>
@@ -146,7 +146,7 @@ export default function SignupPage() {
         </form>
 
         <p className="mt-5 text-xs leading-relaxed text-white/35">
-          Canaux de vente, page d’achat et suivi : tout se complète ensuite dans les paramètres.
+          Canaux, objectifs et analyse : tout se complète ensuite dans l’onboarding Sharpz.
         </p>
 
         {error ? <p className={authErrorClassName + " mt-4"}>{error}</p> : null}

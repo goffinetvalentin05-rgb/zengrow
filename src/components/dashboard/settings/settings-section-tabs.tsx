@@ -4,7 +4,7 @@ import { cn } from "@/src/lib/utils";
 
 export const SETTINGS_SECTION_TABS = [
   { id: "establishment", label: "Établissement" },
-  { id: "gift-cards", label: "Bons cadeaux" },
+  { id: "loyalty", label: "Fidélité" },
   { id: "payments", label: "Paiements" },
   { id: "sales-channels", label: "Canaux de vente" },
   { id: "notifications", label: "Notifications" },
@@ -17,6 +17,7 @@ export function parseSettingsSection(section: string | null): SettingsSectionId 
   if (section === "subscription") return "payments";
   if (section === "google-reviews") return "notifications";
   if (section === "availability") return "establishment";
+  if (section === "gift-cards") return "loyalty";
   if (SETTINGS_SECTION_TABS.some((tab) => tab.id === section)) {
     return section as SettingsSectionId;
   }

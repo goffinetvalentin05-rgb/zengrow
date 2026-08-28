@@ -48,7 +48,7 @@ export default function LoginPage() {
 
     if (!bootstrapResponse.ok) {
       const data = (await bootstrapResponse.json().catch(() => ({}))) as { error?: string };
-      setError(data.error ?? "Impossible de préparer le restaurant.");
+      setError(data.error ?? "Impossible de préparer votre espace.");
       setIsLoading(false);
       return;
     }
@@ -64,8 +64,7 @@ export default function LoginPage() {
             Connexion
           </h1>
           <p className="mt-3 max-w-[38ch] text-pretty text-sm leading-relaxed text-white/50">
-            Accédez à votre espace professionnel pour vendre et suivre vos bons cadeaux — site,
-            établissement, réseaux et Wallet.
+            Accédez à votre Growth Operating System Sharpz.
           </p>
         </div>
 

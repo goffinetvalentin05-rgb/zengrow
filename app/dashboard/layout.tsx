@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import DashboardShell from "@/src/components/dashboard/dashboard-shell";
 import { requireRestaurantSession } from "@/src/lib/auth";
 import type { EffectiveAccess } from "@/src/lib/access";
+import { getDashboardLocale } from "@/src/locales/dashboard/server";
 import {
   DASHBOARD_THEME_COOKIE,
   isDashboardThemePreference,
@@ -67,12 +68,14 @@ export default async function DashboardLayout({
     resolvedTheme: initialResolvedTheme,
     resolvedCanvas: initialResolvedCanvas,
   } = initialDashboardThemeFromCookie(themeCookie);
+  const initialLocale = await getDashboardLocale();
 
   return (
     <DashboardShell
       initialThemePreference={initialThemePreference}
       initialResolvedTheme={initialResolvedTheme}
       initialResolvedCanvas={initialResolvedCanvas}
+      initialLocale={initialLocale}
       fontClassName={zgBody.className}
       restaurantId={restaurant.id}
       userDisplayName={userDisplayName}

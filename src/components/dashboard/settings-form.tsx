@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bell, Gift, Store, UserRound } from "lucide-react";
+import { Bell, CreditCard, Store, UserRound } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
@@ -18,9 +18,9 @@ import {
 } from "@/src/components/dashboard/settings/settings-section-tabs";
 import { DashboardThemeToggle } from "@/src/components/dashboard/dashboard-theme-toggle";
 import AvailabilityEditor from "@/src/components/dashboard/availability-editor";
-import GiftVoucherSettingsPanel, {
-  type GiftVoucherSettingsHandle,
-} from "@/src/components/dashboard/settings/gift-voucher-settings-panel";
+import LoyaltySettingsPanel, {
+  type LoyaltySettingsHandle,
+} from "@/src/components/dashboard/settings/loyalty-settings-panel";
 import { PaymentsSettingsPanel } from "@/src/components/dashboard/settings/payments-settings-panel";
 import { SalesChannelsPanel } from "@/src/components/dashboard/settings/sales-channels-panel";
 import { SiteIntegrationPanel } from "@/src/components/dashboard/settings/site-integration-panel";
@@ -104,7 +104,7 @@ export default function SettingsForm({
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const giftPanelRef = useRef<GiftVoucherSettingsHandle | null>(null);
+  const loyaltyPanelRef = useRef<LoyaltySettingsHandle | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [activeSection, setActiveSection] = useState<SettingsSectionId>(() =>
@@ -151,7 +151,7 @@ export default function SettingsForm({
   const [saveButtonSuccess, setSaveButtonSuccess] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
-  const [giftDirty, setGiftDirty] = useState(false);
+  const [loyaltyDirty, setLoyaltyDirty] = useState(false);
 
   const establishmentDirty =
     establishmentSnapshot({
@@ -169,10 +169,10 @@ export default function SettingsForm({
   const notificationsDirty = JSON.stringify(prefs) !== initialPrefs.current;
 
   const sectionHasForm =
-    activeSection === "establishment" || activeSection === "gift-cards" || activeSection === "notifications";
+    activeSection === "establishment" || activeSection === "loyalty" || activeSection === "notifications";
   const isDirty =
-    activeSection === "gift-cards"
-      ? giftDirty
+    activeSection === "loyalty"
+      ? loyaltyDirty
       : activeSection === "notifications"
         ? notificationsDirty
         : activeSection === "establishment"
@@ -195,16 +195,16 @@ export default function SettingsForm({
   }, [supabase]);
 
   useEffect(() => {
-    if (!establishmentDirty && !notificationsDirty && !giftDirty) return;
+    if (!establishmentDirty && !notificationsDirty && !loyaltyDirty) return;
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [establishmentDirty, notificationsDirty, giftDirty]);
+  }, [establishmentDirty, notificationsDirty, loyaltyDirty]);
 
-  const onGiftDirtyChange = useCallback((dirty: boolean) => setGiftDirty(dirty), []);
+  const onLoyaltyDirtyChange = useCallback((dirty: boolean) => setLoyaltyDirty(dirty), []);
 
   async function handleLogoUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -322,8 +322,8 @@ export default function SettingsForm({
     setMessage(null);
     try {
       let ok = true;
-      if (activeSection === "gift-cards") {
-        ok = (await giftPanelRef.current?.save()) ?? false;
+      if (activeSection === "loyalty") {
+        ok = (await loyaltyPanelRef.current?.save()) ?? false;
       } else if (activeSection === "notifications") {
         ok = await saveNotifications();
       } else {
@@ -562,26 +562,15 @@ export default function SettingsForm({
           </div>
         ) : null}
 
-        {activeSection === "gift-cards" ? (
+        {activeSection === "loyalty" ? (
           <SettingsCategoryCard
-            icon={Gift}
+            icon={CreditCard}
             iconWrapClassName="bg-zg-accent/15 text-zg-accent"
             iconClassName="text-zg-accent"
-            title="Bons cadeaux"
-            subtitle="Personnalisation du PDF, de la page publique du bon et d’Apple Wallet."
+            title="Fidélité"
+            subtitle="Ratio points, bonus d’inscription et paliers de récompenses."
           >
-            <GiftVoucherSettingsPanel
-              ref={giftPanelRef}
-              restaurantId={restaurant.id}
-              displayName={restaurant.public_display_name?.trim() || name || "Établissement"}
-              logoUrl={logoUrl}
-              pageCoverUrl={settings.cover_image_url ?? restaurant.banner_url ?? ""}
-              accentColor={primaryColor}
-              phone={phone}
-              email={email}
-              address={address}
-              onDirtyChange={onGiftDirtyChange}
-            />
+            <LoyaltySettingsPanel ref={loyaltyPanelRef} onDirtyChange={onLoyaltyDirtyChange} />
           </SettingsCategoryCard>
         ) : null}
 
@@ -604,50 +593,20 @@ export default function SettingsForm({
             iconWrapClassName="bg-[#F59E0B]/15 text-[#F59E0B]"
             iconClassName="text-[#F59E0B]"
             title="Notifications"
-            subtitle="Alertes in-app réellement envoyées pour vos bons."
+            subtitle="Alertes in-app réellement envoyées."
           >
-            <SettingsAccordion title="Bons cadeaux" defaultOpen>
+            <SettingsAccordion title="Page publique" defaultOpen>
               <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-zg-fg">Nouveau bon créé manuellement</p>
-                    <p className="mt-0.5 text-xs text-zg-text-muted">Lorsqu’un bon est émis depuis le tableau de bord.</p>
-                  </div>
-                  <Toggle
-                    checked={prefs.notify_gift_voucher_created}
-                    onChange={(value) => setPrefs((current) => ({ ...current, notify_gift_voucher_created: value }))}
-                  />
-                </div>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-medium text-zg-fg">Nouvelle demande depuis la page publique</p>
                     <p className="mt-0.5 text-xs text-zg-text-muted">
-                      Quand un client envoie le formulaire de la section bons cadeaux.
+                      Quand un client envoie un formulaire depuis votre page publique.
                     </p>
                   </div>
                   <Toggle
                     checked={prefs.notify_gift_voucher_request}
                     onChange={(value) => setPrefs((current) => ({ ...current, notify_gift_voucher_request: value }))}
-                  />
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-zg-fg">Bon utilisé partiellement</p>
-                    <p className="mt-0.5 text-xs text-zg-text-muted">Après un encaissement qui laisse un solde.</p>
-                  </div>
-                  <Toggle
-                    checked={prefs.notify_gift_voucher_redeemed}
-                    onChange={(value) => setPrefs((current) => ({ ...current, notify_gift_voucher_redeemed: value }))}
-                  />
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-zg-fg">Bon entièrement utilisé</p>
-                    <p className="mt-0.5 text-xs text-zg-text-muted">Quand le solde arrive à zéro.</p>
-                  </div>
-                  <Toggle
-                    checked={prefs.notify_gift_voucher_fully_used}
-                    onChange={(value) => setPrefs((current) => ({ ...current, notify_gift_voucher_fully_used: value }))}
                   />
                 </div>
               </div>
@@ -657,8 +616,7 @@ export default function SettingsForm({
               <Link href="/dashboard/reputation" className="font-medium text-zg-accent hover:underline">
                 Avis Google
               </Link>
-              . Les rappels d’expiration et les e-mails de remboursement ne sont pas proposés : ils n’existent pas
-              encore.
+              .
             </p>
           </SettingsCategoryCard>
         ) : null}

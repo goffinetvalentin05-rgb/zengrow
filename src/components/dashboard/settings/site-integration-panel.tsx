@@ -28,7 +28,7 @@ export function SiteIntegrationPanel({ origin, slug }: SiteIntegrationPanelProps
       iconWrapClassName="bg-zg-premium-soft-bg text-zg-premium"
       iconClassName="text-zg-premium"
       title="Intégration site"
-      subtitle="Liens et bouton HTML vers votre boutique de bons."
+      subtitle="Liens et bouton HTML vers votre page publique."
     >
       <SettingsAccordion title="Lien public" defaultOpen>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -40,10 +40,9 @@ export function SiteIntegrationPanel({ origin, slug }: SiteIntegrationPanelProps
         {publicCopy.error ? <p className="mt-2 text-sm text-zg-danger">{publicCopy.error}</p> : null}
       </SettingsAccordion>
 
-      <SettingsAccordion title="Bouton vers la boutique de bons" defaultOpen>
+      <SettingsAccordion title="Bouton vers la page publique" defaultOpen>
         <p className="text-sm text-zg-text-muted">
-          Lien direct vers la section bons cadeaux de votre page. Collez-le sur votre site, vos réseaux ou un bouton
-          existant.
+          Lien direct vers une section de votre page. Collez-le sur votre site, vos réseaux ou un bouton existant.
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <Input readOnly value={shopUrl} className="font-mono text-xs sm:text-sm" />
@@ -55,7 +54,7 @@ export function SiteIntegrationPanel({ origin, slug }: SiteIntegrationPanelProps
       </SettingsAccordion>
 
       <SettingsAccordion title="QR téléchargeable">
-        <SettingsQrBlock value={shopUrl} filename={`zengrow-integration-${slug}.png`} label="QR d’intégration vers les bons" />
+        <SettingsQrBlock value={shopUrl} filename={`zengrow-integration-${slug}.png`} label="QR d’intégration vers la page publique" />
       </SettingsAccordion>
 
       <SettingsAccordion title="Bouton HTML" description="Lien simple à coller sur un site externe. Pas de widget JavaScript.">

@@ -7,17 +7,18 @@ import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Gift,
+  BarChart3,
   LayoutDashboard,
+  LineChart,
+  ListChecks,
   LogOut,
-  Megaphone,
+  Newspaper,
   PanelLeftClose,
   PanelLeftOpen,
+  Radar,
   Settings,
-  Users,
+  TrendingUp,
   X,
-  Star,
-  AppWindow,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/client";
@@ -26,10 +27,12 @@ import { buttonClassName } from "@/src/components/ui/button";
 import CompactProUpsell from "@/src/components/dashboard/sidebar/compact-pro-upsell";
 import { DashboardThemeToggle } from "@/src/components/dashboard/dashboard-theme-toggle";
 import { useDashboardTheme } from "@/src/components/dashboard/dashboard-theme-provider";
+import { DashboardLocaleSwitch } from "@/src/components/dashboard/i18n/dashboard-locale-switch";
+import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { useIsMdUp } from "@/src/hooks/use-is-md-up";
 
 const STORAGE_KEY = "zengrow_dashboard_sidebar_collapsed";
-const ZENGROW_LOGO_SRC = "/zengrow-logo.png";
+const SHARPZ_LOGO_SRC = "/sharpz-logo.png";
 const WIDTH_EXPANDED = 260;
 const WIDTH_COLLAPSED = 72;
 
@@ -40,17 +43,8 @@ type DashboardSidebarProps = {
   subscriptionStatus: "trial" | "active" | "expired";
   mobileOpen?: boolean;
   onNavigate?: () => void;
+  onboardingMode?: boolean;
 };
-
-const navItems = [
-  { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/dashboard/gift-vouchers", label: "Bons cadeaux", icon: Gift },
-  { href: "/dashboard/customers", label: "Clients", icon: Users },
-  { href: "/dashboard/marketing", label: "Campagnes IA", icon: Megaphone, requiresPro: true },
-  { href: "/dashboard/reputation", label: "Avis Google", icon: Star },
-  { href: "/dashboard/public-page", label: "Page publique", icon: AppWindow },
-  { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
-];
 
 type HoverTipState = { text: string; x: number; y: number } | null;
 
@@ -59,13 +53,25 @@ export default function DashboardSidebar({
   subscriptionStatus,
   mobileOpen = false,
   onNavigate,
+  onboardingMode = false,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme } = useDashboardTheme();
+  const { t } = useDashboardI18n();
   const isMdUp = useIsMdUp();
-  const hasProMarketingAccess = subscriptionStatus === "trial" || subscriptionPlan === "pro";
   const showProUpsell = subscriptionPlan === "starter" && subscriptionStatus !== "trial";
+
+  const navItems = [
+    { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    { href: "/dashboard/actions", label: t.nav.actions, icon: ListChecks },
+    { href: "/dashboard/analyse", label: t.nav.analyse, icon: Radar },
+    { href: "/dashboard/growth", label: t.nav.growth, icon: TrendingUp },
+    { href: "/dashboard/content", label: t.nav.content, icon: Newspaper },
+    { href: "/dashboard/market", label: t.nav.market, icon: LineChart },
+    { href: "/dashboard/progress", label: t.nav.progress, icon: BarChart3 },
+    { href: "/dashboard/settings", label: t.nav.settings, icon: Settings },
+  ];
 
   const [collapsed, setCollapsed] = useState(false);
   const [hoverTip, setHoverTip] = useState<HoverTipState>(null);
@@ -165,7 +171,7 @@ export default function DashboardSidebar({
             type="button"
             onClick={onNavigate}
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-zg-on-dark-muted transition-colors duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
-            aria-label="Fermer le menu de navigation"
+            aria-label={t.nav.close}
           >
             <X className="h-5 w-5" strokeWidth={2} aria-hidden />
           </button>
@@ -183,11 +189,11 @@ export default function DashboardSidebar({
                 href="/dashboard"
                 onClick={onNavigate}
                 className="flex min-w-0 flex-1 items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg rounded-lg"
-                aria-label="ZenGrow — tableau de bord"
+                aria-label={t.nav.homeAria}
               >
                 <Image
-                  src={ZENGROW_LOGO_SRC}
-                  alt="ZenGrow"
+                  src={SHARPZ_LOGO_SRC}
+                  alt={t.brand}
                   width={160}
                   height={44}
                   className="h-7 w-auto max-w-[140px] object-contain object-left"
@@ -198,7 +204,7 @@ export default function DashboardSidebar({
                 type="button"
                 onClick={() => persistCollapsed(true)}
                 className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zg-on-dark-muted transition-colors duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg md:inline-flex"
-                aria-label="Réduire la barre latérale"
+                aria-label={t.nav.collapse}
               >
                 <PanelLeftClose className="h-5 w-5" strokeWidth={2} aria-hidden />
               </button>
@@ -209,7 +215,7 @@ export default function DashboardSidebar({
                 type="button"
                 onClick={() => persistCollapsed(false)}
                 className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zg-on-dark-muted transition-colors duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg md:inline-flex"
-                aria-label="Développer la barre latérale"
+                aria-label={t.nav.expand}
               >
                 <PanelLeftOpen className="h-5 w-5" strokeWidth={2} aria-hidden />
               </button>
@@ -217,11 +223,11 @@ export default function DashboardSidebar({
                 href="/dashboard"
                 onClick={onNavigate}
                 className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
-                aria-label="ZenGrow — tableau de bord"
-                {...bindHoverTip("ZenGrow")}
+                aria-label={t.nav.homeAria}
+                {...bindHoverTip(t.brand)}
               >
                 <Image
-                  src={ZENGROW_LOGO_SRC}
+                  src={SHARPZ_LOGO_SRC}
                   alt=""
                   width={72}
                   height={28}
@@ -234,12 +240,12 @@ export default function DashboardSidebar({
 
         {showExpandedChrome ? (
           <p className="mb-3 ml-3 mt-2 shrink-0 text-xs font-medium uppercase tracking-wider text-zg-on-dark-muted">
-            Menu
+            {t.nav.menu}
           </p>
         ) : null}
 
         <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pb-4 md:px-2">
-          {navItems.map((item) => (
+          {(onboardingMode ? [] : navItems).map((item) => (
             <NavItem
               key={item.href}
               href={item.href}
@@ -252,7 +258,6 @@ export default function DashboardSidebar({
                   ? pathname === "/dashboard"
                   : pathname === item.href || pathname.startsWith(`${item.href}/`)
               }
-              locked={Boolean(item.requiresPro && !hasProMarketingAccess)}
               onNavigate={onNavigate}
             />
           ))}
@@ -272,9 +277,16 @@ export default function DashboardSidebar({
 
               <div className="min-w-0 rounded-xl border border-zg-sidebar-border bg-zg-surface/50 p-2">
                 <p className="mb-1.5 px-0.5 text-[10px] font-semibold uppercase tracking-wider text-zg-on-dark-muted">
-                  Thème
+                  {t.nav.theme}
                 </p>
                 <DashboardThemeToggle variant="sidebar" />
+              </div>
+
+              <div className="min-w-0 rounded-xl border border-zg-sidebar-border bg-zg-surface/50 p-2">
+                <p className="mb-1.5 px-0.5 text-[10px] font-semibold uppercase tracking-wider text-zg-on-dark-muted">
+                  {t.nav.locale}
+                </p>
+                <DashboardLocaleSwitch variant="sidebar" />
               </div>
 
               <button
@@ -288,7 +300,7 @@ export default function DashboardSidebar({
                 onClick={handleLogout}
               >
                 <LogOut className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-                Déconnexion
+                {t.nav.logout}
               </button>
             </>
           ) : (
@@ -296,9 +308,9 @@ export default function DashboardSidebar({
               <DashboardThemeToggle variant="sidebarCompact" />
               <button
                 type="button"
-                {...bindHoverTip("Déconnexion")}
+                {...bindHoverTip(t.nav.logout)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-zg-on-dark-muted transition-all duration-200 ease-out hover:bg-zg-sidebar-hover hover:text-zg-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-sidebar-bg"
-                aria-label="Déconnexion"
+                aria-label={t.nav.logout}
                 onClick={handleLogout}
               >
                 <LogOut className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />

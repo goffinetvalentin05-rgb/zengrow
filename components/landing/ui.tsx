@@ -1,18 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight, Link2 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/src/lib/utils";
-import { CTA, ROUTES } from "./config";
+import { ROUTES } from "./config";
 
 export function Container({
   className,
+  wide = false,
   children,
 }: {
   className?: string;
+  wide?: boolean;
   children: React.ReactNode;
 }) {
-  return <div className={cn("go-container", className)}>{children}</div>;
+  return (
+    <div className={cn(wide ? "go-container--wide" : "go-container", className)}>
+      {children}
+    </div>
+  );
 }
 
 export function Section({
@@ -24,10 +31,13 @@ export function Section({
   id?: string;
   className?: string;
   children: React.ReactNode;
-  tone?: "default" | "muted" | "ink";
+  tone?: "default" | "soft" | "ink";
 }) {
   return (
-    <section id={id} className={cn("go-section", tone !== "default" && `go-section--${tone}`, className)}>
+    <section
+      id={id}
+      className={cn("go-section", tone !== "default" && `go-section--${tone}`, className)}
+    >
       {children}
     </section>
   );
@@ -37,7 +47,7 @@ export function ScrollReveal({
   children,
   className,
   delay = 0,
-  y = 18,
+  y = 16,
 }: {
   children: React.ReactNode;
   className?: string;
@@ -55,8 +65,8 @@ export function ScrollReveal({
       className={className}
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-72px" }}
-      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
+      viewport={{ once: true, margin: "-64px" }}
+      transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -67,25 +77,37 @@ export function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="go-eyebrow">{children}</p>;
 }
 
-export function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
+export function SectionTitle({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return <h2 className={cn("go-title", className)}>{children}</h2>;
 }
 
-export function SectionLead({ children, className }: { children: React.ReactNode; className?: string }) {
+export function SectionLead({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return <p className={cn("go-lead", className)}>{children}</p>;
 }
 
 export function CtaButton({
   href = ROUTES.signup,
-  children = CTA.primary,
+  children,
   className,
   variant = "primary",
   onClick,
 }: {
   href?: string;
-  children?: React.ReactNode;
+  children: React.ReactNode;
   className?: string;
-  variant?: "primary" | "secondary" | "on-ink" | "accent";
+  variant?: "primary" | "secondary" | "on-ink" | "ghost";
   onClick?: () => void;
 }) {
   const classNames = cn(
@@ -93,7 +115,7 @@ export function CtaButton({
     variant === "primary" && "go-btn--primary",
     variant === "secondary" && "go-btn--secondary",
     variant === "on-ink" && "go-btn--on-ink",
-    variant === "accent" && "go-btn--accent",
+    variant === "ghost" && "go-btn--ghost",
     className,
   );
 
@@ -112,28 +134,43 @@ export function CtaButton({
   );
 }
 
-export function DemoCaption({ children }: { children: React.ReactNode }) {
-  return <p className="go-demo-caption">{children}</p>;
-}
-
-export function SectionHeader({
-  label,
-  title,
-  lead,
-  align = "center",
+export function UrlAnalyzeField({
+  placeholder,
+  buttonLabel,
+  onInk = false,
+  hero = false,
   className,
 }: {
-  label?: string;
-  title: React.ReactNode;
-  lead?: React.ReactNode;
-  align?: "center" | "left";
+  placeholder: string;
+  buttonLabel: string;
+  onInk?: boolean;
+  hero?: boolean;
   className?: string;
 }) {
   return (
-    <header className={cn("go-section-head", align === "left" && "go-section-head--left", className)}>
-      {label ? <Eyebrow>{label}</Eyebrow> : null}
-      <SectionTitle>{title}</SectionTitle>
-      {lead ? <SectionLead>{lead}</SectionLead> : null}
-    </header>
+    <form
+      className={cn("go-url", hero && "go-url--hero", onInk && "go-url--on-ink", className)}
+      onSubmit={(event) => {
+        event.preventDefault();
+      }}
+    >
+      {hero ? <Link2 className="go-url__icon" strokeWidth={1.75} aria-hidden /> : null}
+      <input
+        type="url"
+        name="url"
+        className="go-url__input"
+        placeholder={placeholder}
+        aria-label={placeholder}
+        autoComplete="url"
+      />
+      <button type="submit" className="go-url__btn">
+        {buttonLabel}
+        {hero ? (
+          <span className="go-url__arrow" aria-hidden>
+            <ArrowRight strokeWidth={2} />
+          </span>
+        ) : null}
+      </button>
+    </form>
   );
 }

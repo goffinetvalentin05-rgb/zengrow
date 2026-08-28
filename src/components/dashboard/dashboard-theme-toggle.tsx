@@ -104,7 +104,7 @@ export function DashboardThemeToggle({
           ? "Le fond suit votre appareil ; textes et cartes restent en thème sombre."
           : preference === "light"
             ? "Interface claire, optimisée pour une utilisation en journée."
-            : "Interface sombre ZenGrow, idéale en soirée."}
+            : "Interface sombre Sharpz, idéale en soirée."}
       </p>
     </div>
   );

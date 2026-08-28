@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { AppAmbientBackground } from "@/src/components/app/app-ambient-background";
 import { cn } from "@/src/lib/utils";
@@ -9,6 +10,8 @@ import DashboardTopBar from "@/src/components/dashboard/dashboard-top-bar";
 import { DashboardToastProvider } from "@/src/components/dashboard/dashboard-toast-provider";
 import { DashboardTitleProvider } from "@/src/components/dashboard/dashboard-title-context";
 import { NotificationProvider } from "@/src/components/dashboard/notifications/notification-provider";
+import { DashboardLocaleProvider } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
+import { SharpzAssistant } from "@/src/components/sharpz/assistant/sharpz-assistant";
 import {
   DashboardThemeProvider,
   useDashboardTheme,
@@ -18,6 +21,7 @@ import {
   type DashboardResolvedTheme,
   type DashboardThemePreference,
 } from "@/src/lib/dashboard/theme";
+import type { DashboardLocale } from "@/src/locales/dashboard";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -32,6 +36,7 @@ type DashboardShellProps = {
   initialThemePreference: DashboardThemePreference;
   initialResolvedTheme: DashboardResolvedTheme;
   initialResolvedCanvas: DashboardResolvedCanvas;
+  initialLocale: DashboardLocale;
 };
 
 export default function DashboardShell({
@@ -47,6 +52,7 @@ export default function DashboardShell({
   initialThemePreference,
   initialResolvedTheme,
   initialResolvedCanvas,
+  initialLocale,
 }: DashboardShellProps) {
   return (
     <DashboardThemeProvider
@@ -54,18 +60,20 @@ export default function DashboardShell({
       initialResolvedTheme={initialResolvedTheme}
       initialResolvedCanvas={initialResolvedCanvas}
     >
-      <DashboardShellInner
-        fontClassName={fontClassName}
-        restaurantId={restaurantId}
-        userDisplayName={userDisplayName}
-        userRoleLabel={userRoleLabel}
-        userInitials={userInitials}
-        userAvatarUrl={userAvatarUrl}
-        subscriptionPlan={subscriptionPlan}
-        subscriptionStatus={subscriptionStatus}
-      >
-        {children}
-      </DashboardShellInner>
+      <DashboardLocaleProvider initialLocale={initialLocale}>
+        <DashboardShellInner
+          fontClassName={fontClassName}
+          restaurantId={restaurantId}
+          userDisplayName={userDisplayName}
+          userRoleLabel={userRoleLabel}
+          userInitials={userInitials}
+          userAvatarUrl={userAvatarUrl}
+          subscriptionPlan={subscriptionPlan}
+          subscriptionStatus={subscriptionStatus}
+        >
+          {children}
+        </DashboardShellInner>
+      </DashboardLocaleProvider>
     </DashboardThemeProvider>
   );
 }
@@ -82,9 +90,12 @@ function DashboardShellInner({
   subscriptionStatus,
 }: Omit<
   DashboardShellProps,
-  "initialThemePreference" | "initialResolvedTheme" | "initialResolvedCanvas"
+  "initialThemePreference" | "initialResolvedTheme" | "initialResolvedCanvas" | "initialLocale"
 >) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [assistantSignal, setAssistantSignal] = useState(0);
+  const pathname = usePathname();
+  const onboardingMode = pathname.startsWith("/dashboard/onboarding");
   const { resolvedTheme, resolvedCanvas } = useDashboardTheme();
 
   const overlayTransition = { type: "tween" as const, duration: 0.25, ease: [0, 0, 0.2, 1] as const };
@@ -106,6 +117,7 @@ function DashboardShellInner({
               subscriptionStatus={subscriptionStatus}
               mobileOpen={mobileNavOpen}
               onNavigate={() => setMobileNavOpen(false)}
+              onboardingMode={onboardingMode}
             />
 
             <div className="relative z-0 flex min-w-0 flex-1 flex-col">
@@ -115,6 +127,7 @@ function DashboardShellInner({
                 userInitials={userInitials}
                 userAvatarUrl={userAvatarUrl}
                 onOpenMobileNav={() => setMobileNavOpen(true)}
+                onOpenAssistant={() => setAssistantSignal((value) => value + 1)}
               />
               <main className="flex-1 overflow-x-hidden px-4 pb-6 pt-8 md:px-8 md:pb-8 md:pt-10">{children}</main>
             </div>
@@ -135,6 +148,7 @@ function DashboardShellInner({
               />
             ) : null}
           </AnimatePresence>
+          <SharpzAssistant hidden={onboardingMode} openSignal={assistantSignal} />
         </div>
         </NotificationProvider>
       </DashboardTitleProvider>

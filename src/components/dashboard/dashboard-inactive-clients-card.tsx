@@ -1,21 +1,21 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonClassName } from "@/src/components/ui/button";
-import { formatCentsAsChf } from "@/src/lib/gift-vouchers/money";
+import { formatPoints } from "@/src/lib/loyalty/points";
 import { cn } from "@/src/lib/utils";
 
-type DashboardGiftCardsHighlightCardProps = {
+type DashboardLoyaltyHighlightCardProps = {
   className?: string;
-  circulationCents: number;
+  pointsInCirculation: number;
   activeCount: number;
 };
 
-export default function DashboardGiftCardsHighlightCard({
+export default function DashboardLoyaltyHighlightCard({
   className,
-  circulationCents,
+  pointsInCirculation,
   activeCount,
-}: DashboardGiftCardsHighlightCardProps) {
-  const activeLabel = activeCount === 1 ? "1 bon actif" : `${activeCount} bons actifs`;
+}: DashboardLoyaltyHighlightCardProps) {
+  const activeLabel = activeCount === 1 ? "1 carte active" : `${activeCount} cartes actives`;
 
   return (
     <div
@@ -38,19 +38,17 @@ export default function DashboardGiftCardsHighlightCard({
       />
 
       <p className="relative font-landing-serif text-xl italic leading-none text-white/95">ZenGrow</p>
-      <p className="relative mt-auto text-sm font-medium text-white/85">Vos bons en circulation</p>
+      <p className="relative mt-auto text-sm font-medium text-white/85">Points en circulation</p>
       <p className="zg-stat-value relative mt-2 text-4xl leading-none tracking-tight text-white tabular-nums sm:text-5xl">
-        {formatCentsAsChf(circulationCents)}
+        {formatPoints(pointsInCirculation)}
       </p>
-      <p className="relative mt-3 text-xs font-medium text-white/70">
-        Valeur encore disponible sur les bons actifs.
-      </p>
+      <p className="relative mt-3 text-xs font-medium text-white/70">Solde actuel de vos cartes de fidélité actives.</p>
       <p className="relative mt-2 inline-flex w-fit rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium text-white/90">
         {activeLabel}
       </p>
 
       <Link
-        href="/dashboard/gift-vouchers"
+        href="/dashboard/loyalty"
         className={buttonClassName({
           variant: "secondary",
           size: "sm",
@@ -58,7 +56,7 @@ export default function DashboardGiftCardsHighlightCard({
             "relative mt-6 w-full border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white sm:w-auto",
         })}
       >
-        Voir les bons
+        Voir la fidélité
         <ArrowRight className="h-4 w-4" strokeWidth={2} aria-hidden />
       </Link>
     </div>

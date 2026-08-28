@@ -44,8 +44,8 @@ export function PaymentsSettingsPanel({
         icon={Wallet}
         iconWrapClassName="bg-zg-accent/15 text-zg-accent"
         iconClassName="text-zg-accent"
-        title="Paiements bons cadeaux"
-        subtitle="Encaissement des ventes de bons."
+        title="Paiements"
+        subtitle="Encaissement et abonnement Stripe."
       >
         <SettingsAccordion title="État" defaultOpen>
           <dl className="space-y-4 text-sm">
@@ -67,14 +67,13 @@ export function PaymentsSettingsPanel({
             <div className="rounded-xl border border-zg-border px-4 py-3">
               <dt className="font-medium text-zg-fg">Devise</dt>
               <dd className="mt-0.5 text-zg-text-muted">
-                CHF — utilisée pour tous les bons (création, PDF, Wallet, encaissement).
+                CHF — devise utilisée dans tout le tableau de bord.
               </dd>
             </div>
             <div className="rounded-xl border border-zg-border px-4 py-3">
               <dt className="font-medium text-zg-fg">Vente en ligne (Stripe Connect)</dt>
               <dd className="mt-0.5 text-zg-text-muted">
-                Pas encore disponible. Les clients envoient une demande depuis votre page publique ; vous créez et
-                encaissez les bons depuis le tableau de bord.
+                Pas encore disponible. Les paiements en ligne arriveront plus tard.
               </dd>
             </div>
           </dl>

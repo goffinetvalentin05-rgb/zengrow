@@ -1,7 +1,8 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, Sparkles } from "lucide-react";
 import NotificationBell from "@/src/components/dashboard/notifications/notification-bell";
+import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { cn } from "@/src/lib/utils";
 
 type DashboardTopBarProps = {
@@ -10,6 +11,7 @@ type DashboardTopBarProps = {
   userInitials: string;
   userAvatarUrl?: string | null;
   onOpenMobileNav?: () => void;
+  onOpenAssistant?: () => void;
 };
 
 export default function DashboardTopBar({
@@ -18,7 +20,9 @@ export default function DashboardTopBar({
   userInitials,
   userAvatarUrl,
   onOpenMobileNav,
+  onOpenAssistant,
 }: DashboardTopBarProps) {
+  const { t } = useDashboardI18n();
   const initials = (userInitials || "?").slice(0, 2).toUpperCase();
 
   return (
@@ -31,7 +35,7 @@ export default function DashboardTopBar({
         <button
           type="button"
           className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zg-fg transition-all duration-200 ease-out hover:bg-zg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app md:hidden"
-          aria-label="Ouvrir le menu de navigation"
+          aria-label={t.nav.menu}
           onClick={onOpenMobileNav}
         >
           <Menu className="h-5 w-5" strokeWidth={2} />
@@ -39,6 +43,15 @@ export default function DashboardTopBar({
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <button
+          type="button"
+          onClick={onOpenAssistant}
+          className="inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-zg-fg transition-all duration-200 ease-out hover:bg-zg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zg-app"
+          aria-label={t.assistant.open}
+        >
+          <Sparkles className="h-4 w-4 text-zg-accent" strokeWidth={2} />
+          <span className="hidden sm:inline">{t.nav.assistant}</span>
+        </button>
         <NotificationBell />
 
         <div className="flex min-w-0 items-center gap-3 sm:pl-1">

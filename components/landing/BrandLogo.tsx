@@ -7,6 +7,33 @@ export const BRAND_LOGO = {
   height: 396,
 } as const;
 
+export const LANDING_LOGO = {
+  src: "/sharpz-logo.png",
+  width: 710,
+  height: 111,
+} as const;
+
+export function LandingWordmark({
+  className = "go-wordmark__logo",
+  priority = false,
+}: {
+  className?: string;
+  priority?: boolean;
+}) {
+  return (
+    <Image
+      src={LANDING_LOGO.src}
+      alt=""
+      width={LANDING_LOGO.width}
+      height={LANDING_LOGO.height}
+      className={className}
+      priority={priority}
+      sizes="180px"
+      aria-hidden
+    />
+  );
+}
+
 export function BrandLogo({
   className,
   priority = false,

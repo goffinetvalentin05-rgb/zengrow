@@ -4,29 +4,29 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { BrandLogo } from "./BrandLogo";
-import { BRAND_NAME } from "./brand";
-import { CTA, MOBILE_NAV_SECONDARY, NAV_LINKS, ROUTES } from "./config";
+import { LandingWordmark } from "./BrandLogo";
+import { ROUTES } from "./config";
+import { LanguageSwitch } from "./LanguageSwitch";
+import { useLocale } from "./locale-provider";
 import { CtaButton } from "./ui";
 import { cn } from "@/src/lib/utils";
 
-const ease = [0.22, 1, 0.36, 1] as const;
-
 export function Navbar() {
+  const { t } = useLocale();
   const [scrolled, setScrolled] = useState(false);
-  const [overDark, setOverDark] = useState(false);
   const [open, setOpen] = useState(false);
   const reduce = Boolean(useReducedMotion());
 
+  const links = [
+    { href: ROUTES.features, label: t.nav.features },
+    { href: ROUTES.how, label: t.nav.how },
+    { href: ROUTES.faq, label: t.nav.faq },
+  ];
+
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 12);
-      const footer = document.querySelector(".go-footer");
-      setOverDark(Boolean(footer && footer.getBoundingClientRect().top < 92));
-    };
+    const onScroll = () => setScrolled(window.scrollY > 8);
     const onResize = () => {
       if (window.innerWidth >= 960) setOpen(false);
-      onScroll();
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -54,96 +54,93 @@ export function Navbar() {
   const close = () => setOpen(false);
 
   return (
-    <header className={cn("go-nav", scrolled && "is-scrolled", overDark && "is-over-dark", open && "is-open")}>
-      <div className="go-nav__shell">
-        <Link href={ROUTES.home} className="go-wordmark" aria-label={`${BRAND_NAME} — accueil`}>
-          <BrandLogo className="go-wordmark__logo" priority sizes="150px" />
-        </Link>
-
-        <ul className="go-nav__links">
-          {NAV_LINKS.map((link) => (
-            <li key={link.href}>
-              <a href={link.href} className="go-nav__link">
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        <div className="go-nav__actions">
-          <Link href={ROUTES.login} className="go-nav__login">
-            Connexion
+    <header className={cn("go-nav", scrolled && "is-scrolled", open && "is-open")}>
+      <div className="go-nav__wrap">
+        <div className="go-nav__shell">
+          <Link href={ROUTES.home} className="go-wordmark" aria-label={t.nav.homeAria}>
+            <LandingWordmark priority />
           </Link>
-          <CtaButton className="go-nav__cta">{CTA.primary}</CtaButton>
-        </div>
 
-        <button
-          type="button"
-          className="go-nav__burger"
-          aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
-          aria-expanded={open}
-          aria-controls="go-nav-drawer"
-          onClick={() => setOpen((value) => !value)}
-        >
-          {open ? <X className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.85} /> : <Menu className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.85} />}
-        </button>
+          <ul className="go-nav__links">
+            {links.map((link) => (
+              <li key={link.href}>
+                <a href={link.href} className="go-nav__link">
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          <div className="go-nav__actions">
+            <LanguageSwitch />
+            <Link href={ROUTES.login} className="go-nav__login">
+              {t.nav.login}
+            </Link>
+            <CtaButton href={ROUTES.signup} className="go-nav__cta">
+              {t.nav.cta}
+            </CtaButton>
+          </div>
+
+          <button
+            type="button"
+            className="go-nav__burger"
+            aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
+            aria-expanded={open}
+            aria-controls="go-nav-drawer"
+            onClick={() => setOpen((value) => !value)}
+          >
+            {open ? (
+              <X className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.85} />
+            ) : (
+              <Menu className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.85} />
+            )}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
         {open ? (
-          <motion.button
-            key="overlay"
-            type="button"
-            className="go-nav__overlay"
-            aria-label="Fermer le menu"
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={reduce ? undefined : { opacity: 0 }}
-            transition={{ duration: reduce ? 0 : 0.28, ease }}
-            onClick={close}
-          />
-        ) : null}
-      </AnimatePresence>
-      <AnimatePresence>
-        {open ? (
-          <motion.nav
-            key="drawer"
-            id="go-nav-drawer"
-            className="go-nav__drawer"
-            aria-label="Menu mobile"
-            initial={reduce ? false : { opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduce ? undefined : { opacity: 0, y: -8 }}
-            transition={{ duration: reduce ? 0 : 0.32, ease }}
-          >
-            <div className="go-nav__drawer-group">
-              {NAV_LINKS.map((link) => (
-                <a key={link.href} href={link.href} onClick={close}>
-                  {link.label}
-                </a>
-              ))}
-              <Link href={ROUTES.login} onClick={close}>
-                Connexion
-              </Link>
-            </div>
-            <CtaButton className="go-nav__drawer-cta" onClick={close}>
-              {CTA.primary}
-            </CtaButton>
-            <div className="go-nav__drawer-sep" aria-hidden />
-            <div className="go-nav__drawer-group go-nav__drawer-group--muted">
-              {MOBILE_NAV_SECONDARY.filter((link) => link.href !== ROUTES.login).map((link) =>
-                link.href.startsWith("/") ? (
-                  <Link key={link.href} href={link.href} onClick={close}>
-                    {link.label}
-                  </Link>
-                ) : (
-                  <a key={link.href} href={link.href} onClick={close}>
-                    {link.label}
-                  </a>
-                ),
-              )}
-            </div>
-          </motion.nav>
+          <>
+            <motion.button
+              key="overlay"
+              type="button"
+              className="go-nav__overlay"
+              aria-label={t.nav.closeMenu}
+              initial={reduce ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={close}
+            />
+            <motion.nav
+              key="drawer"
+              id="go-nav-drawer"
+              className="go-nav__drawer"
+              initial={reduce ? false : { x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <LanguageSwitch />
+              <ul className="go-nav__drawer-links">
+                {links.map((link) => (
+                  <li key={link.href}>
+                    <a href={link.href} onClick={close}>
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <div className="go-nav__drawer-actions">
+                <Link href={ROUTES.login} className="go-btn go-btn--secondary go-btn--full" onClick={close}>
+                  {t.nav.login}
+                </Link>
+                <CtaButton href={ROUTES.signup} className="go-btn--full" onClick={close}>
+                  {t.nav.cta}
+                </CtaButton>
+              </div>
+            </motion.nav>
+          </>
         ) : null}
       </AnimatePresence>
     </header>

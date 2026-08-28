@@ -1,36 +1,15 @@
-import GiftCardsPage from "@/src/components/dashboard/gift-cards/gift-cards-page";
-import type { GiftCardRecord } from "@/src/components/dashboard/gift-cards/types";
-import DashboardContent from "@/src/components/dashboard/ui/dashboard-content";
-import { requireRestaurantSession } from "@/src/lib/auth";
-import { GiftVoucherServiceError, listGiftVouchers } from "@/src/lib/gift-vouchers/service";
-import { createClient } from "@/src/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-type DashboardGiftVouchersPageProps = {
-  searchParams: Promise<{ redeem?: string; code?: string; redeemToken?: string; scan?: string }>;
+type LegacyGiftVouchersPageProps = {
+  searchParams: Promise<{ scan?: string; redeem?: string; code?: string; redeemToken?: string }>;
 };
 
-export default async function DashboardGiftVouchersPage({ searchParams }: DashboardGiftVouchersPageProps) {
-  const { restaurant } = await requireRestaurantSession();
-  const supabase = await createClient();
+export default async function DashboardGiftVouchersRedirect({ searchParams }: LegacyGiftVouchersPageProps) {
   const params = await searchParams;
-
-  let initialCards: GiftCardRecord[] = [];
-  try {
-    initialCards = await listGiftVouchers(supabase, restaurant.id);
-  } catch (error) {
-    if (!(error instanceof GiftVoucherServiceError)) throw error;
-    initialCards = [];
+  const query = new URLSearchParams();
+  if (params.scan === "1" || params.redeem === "1" || params.redeemToken || params.code) {
+    query.set("scan", "1");
   }
-
-  return (
-    <DashboardContent>
-      <GiftCardsPage
-        initialCards={initialCards}
-        initialRedeem={params.redeem === "1"}
-        initialRedeemCode={params.code?.trim() ?? ""}
-        initialRedeemToken={params.redeemToken?.trim() ?? ""}
-        initialScan={params.scan === "1"}
-      />
-    </DashboardContent>
-  );
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  redirect(`/dashboard/loyalty${suffix}`);
 }

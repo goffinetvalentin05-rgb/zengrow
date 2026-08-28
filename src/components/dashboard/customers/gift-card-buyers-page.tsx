@@ -36,7 +36,7 @@ export default function GiftCardBuyersPage() {
     <section className="w-full min-w-0 space-y-8 md:space-y-12">
       <PageHeader
         title="Clients"
-        subtitle="Les personnes qui ont acheté un bon cadeau dans votre établissement."
+        subtitle="Votre base de clients."
       />
 
       <div
@@ -49,12 +49,12 @@ export default function GiftCardBuyersPage() {
         <ReservationsKpiCard
           label="Clients enregistrés"
           value={kpis.totalClients}
-          subline="Acheteurs de bons"
+          subline="Clients enregistrés"
           icon={Users}
           dataTone="accent"
         />
         <ReservationsKpiCard
-          label="Bons achetés"
+          label="Passages"
           value={kpis.totalCards}
           subline={`Total dépensé ${formatChf(kpis.totalSpent)}`}
           icon={Gift}
@@ -90,7 +90,7 @@ export default function GiftCardBuyersPage() {
               <TableRow className="hover:bg-transparent">
                 <TableHead>Nom</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Bons achetés</TableHead>
+                <TableHead>Visites</TableHead>
                 <TableHead>Total dépensé</TableHead>
                 <TableHead>Dernier achat</TableHead>
                 <TableHead>Statut marketing</TableHead>
@@ -114,7 +114,7 @@ function BuyerRow({ buyer }: { buyer: GiftCardBuyer }) {
       <TableCell className="font-semibold">{buyer.name}</TableCell>
       <TableCell className="text-zg-text-muted">{buyer.email}</TableCell>
       <TableCell>
-        {buyer.giftCardsBought} bon{buyer.giftCardsBought > 1 ? "s" : ""}
+        {buyer.giftCardsBought} visite{buyer.giftCardsBought > 1 ? "s" : ""}
       </TableCell>
       <TableCell className="tabular-nums">{formatChf(buyer.totalSpentChf)}</TableCell>
       <TableCell className="whitespace-nowrap text-zg-text-muted">{buyer.lastPurchaseLabel}</TableCell>

@@ -10,7 +10,7 @@ export default function CustomersHeader() {
   return (
     <PageHeader
       title="Clients"
-      subtitle="Les personnes qui ont acheté un bon cadeau dans votre établissement."
+      subtitle="Votre base de clients."
       secondaryActions={[
         {
           kind: "button",

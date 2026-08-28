@@ -37,7 +37,7 @@ export default function CustomersKpiCards() {
         dataTone="premium"
       />
       <ReservationsKpiCard
-        label="Bons achetés"
+        label="Visites"
         value={kpis.totalReservations}
         subline={formatAvgVisitsSubline(kpis.avgVisitsPerClient)}
         icon={CalendarDays}

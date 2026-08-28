@@ -12,6 +12,29 @@ const nextConfig: NextConfig = {
       "./src/lib/gift-vouchers/pdf/fonts/**/*",
     ],
   },
+  async redirects() {
+    return [
+      { source: "/dashboard/gift-vouchers/offers", destination: "/dashboard", permanent: false },
+      { source: "/dashboard/gift-vouchers/offers/:path*", destination: "/dashboard", permanent: false },
+      { source: "/dashboard/gift-vouchers", destination: "/dashboard", permanent: false },
+      { source: "/dashboard/gift-vouchers/:path*", destination: "/dashboard", permanent: false },
+      { source: "/dashboard/loyalty", destination: "/dashboard", permanent: false },
+      { source: "/dashboard/loyalty/:path*", destination: "/dashboard", permanent: false },
+      { source: "/dashboard/customers", destination: "/dashboard/prospects", permanent: false },
+      { source: "/dashboard/marketing", destination: "/dashboard/content", permanent: false },
+      { source: "/dashboard/marketing/:path*", destination: "/dashboard/content", permanent: false },
+      { source: "/dashboard/reputation", destination: "/dashboard/analyse", permanent: false },
+      { source: "/dashboard/public-page", destination: "/dashboard/analyse", permanent: false },
+      { source: "/dashboard/reservations", destination: "/dashboard", permanent: false },
+      { source: "/dashboard/feedbacks", destination: "/dashboard", permanent: false },
+      { source: "/dashboard/feedback", destination: "/dashboard", permanent: false },
+      { source: "/dashboard/reviews", destination: "/dashboard/analyse", permanent: false },
+      { source: "/dashboard/ai", destination: "/dashboard", permanent: false },
+      { source: "/dashboard/availability", destination: "/dashboard/settings", permanent: false },
+      { source: "/dashboard/billing", destination: "/dashboard/settings", permanent: false },
+      { source: "/dashboard/notifications", destination: "/dashboard", permanent: false },
+    ];
+  },
   images: {
     remotePatterns: [
       {

@@ -1,26 +1,33 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LandingPage } from "@/components/landing/LandingPage";
-import { PRODUCT, SEO } from "@/components/landing/config";
+import { fr } from "@/components/landing/locales/fr";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
 export const metadata: Metadata = {
   ...(siteUrl ? { metadataBase: new URL(siteUrl.replace(/\/$/, "")) } : {}),
-  title: { absolute: SEO.title },
-  description: SEO.description,
-  applicationName: PRODUCT.name,
+  title: { absolute: fr.meta.title },
+  description: fr.meta.description,
+  applicationName: fr.brand.name,
+  alternates: {
+    languages: {
+      fr: "/",
+      en: "/",
+    },
+  },
   openGraph: {
-    title: SEO.title,
-    description: SEO.description,
+    title: fr.meta.title,
+    description: fr.meta.description,
     type: "website",
     locale: "fr_CH",
-    siteName: PRODUCT.name,
+    alternateLocale: ["en_US"],
+    siteName: fr.brand.name,
   },
   twitter: {
     card: "summary_large_image",
-    title: SEO.title,
-    description: SEO.description,
+    title: fr.meta.title,
+    description: fr.meta.description,
   },
 };
 

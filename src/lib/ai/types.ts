@@ -2,7 +2,11 @@ export type AIFeature =
   | "google_review_reply"
   | "campaign"
   | "private_feedback_analysis"
-  | "improve_review_email";
+  | "improve_review_email"
+  | "sharpz_scan"
+  | "sharpz_audit"
+  | "sharpz_assistant"
+  | "sharpz_onboarding";
 
 export type AIPlanTier = "trial" | "basic" | "pro" | "premium";
 

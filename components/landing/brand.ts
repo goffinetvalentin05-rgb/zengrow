@@ -1,2 +1,2 @@
-/** Temporary brand name. Change this constant to rebrand the public landing. */
-export const BRAND_NAME = "ZifTip" as const;
+/** Public product brand for the marketing landing. */
+export const BRAND_NAME = "Sharpz" as const;

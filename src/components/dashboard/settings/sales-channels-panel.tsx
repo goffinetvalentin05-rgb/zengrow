@@ -29,7 +29,7 @@ export function SalesChannelsPanel({ origin, slug }: SalesChannelsPanelProps) {
       subtitle="Chaque lien et QR pointe vers votre établissement."
     >
       <SettingsAccordion title="Page publique" defaultOpen>
-        <p className="text-sm text-zg-text-muted">Vitrine de votre commerce, section bons cadeaux incluse.</p>
+        <p className="text-sm text-zg-text-muted">Vitrine de votre commerce.</p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <Input readOnly value={publicUrl} className="font-mono text-xs sm:text-sm" />
           <Button type="button" variant="secondary" size="sm" onClick={() => void publicCopy.copy(publicUrl)}>
@@ -48,7 +48,7 @@ export function SalesChannelsPanel({ origin, slug }: SalesChannelsPanelProps) {
         {publicCopy.error ? <p className="mt-2 text-sm text-zg-danger">{publicCopy.error}</p> : null}
       </SettingsAccordion>
 
-      <SettingsAccordion title="Lien partageable" description="Atterrit directement sur la section bons cadeaux." defaultOpen>
+      <SettingsAccordion title="Lien partageable" description="Atterrit directement sur votre page publique." defaultOpen>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Input readOnly value={shopUrl} className="font-mono text-xs sm:text-sm" />
           <Button type="button" variant="secondary" size="sm" onClick={() => void shopCopy.copy(shopUrl)}>
@@ -59,32 +59,31 @@ export function SalesChannelsPanel({ origin, slug }: SalesChannelsPanelProps) {
       </SettingsAccordion>
 
       <SettingsAccordion title="QR code" description="À imprimer ou afficher en caisse.">
-        <SettingsQrBlock value={shopUrl} filename={`zengrow-bons-${slug}.png`} label="QR vers la boutique de bons" />
+        <SettingsQrBlock value={shopUrl} filename={`zengrow-page-${slug}.png`} label="QR vers la page publique" />
       </SettingsAccordion>
 
       <SettingsAccordion title="Plaquette NFC" description="Encodez la même URL que le QR.">
         <div className="flex items-start gap-3 text-sm text-zg-text-muted">
           <Nfc className="mt-0.5 h-5 w-5 shrink-0 text-zg-accent" aria-hidden />
           <p>
-            Programmez la puce avec le lien ci-dessus. Un tap ouvre la page de demande de bon de votre établissement,
-            pas un autre commerce.
+            Programmez la puce avec le lien ci-dessus. Un tap ouvre la page publique de votre établissement.
           </p>
         </div>
         <p className="mt-3 break-all font-mono text-xs text-zg-fg">{shopUrl}</p>
       </SettingsAccordion>
 
-      <SettingsAccordion title="Vente manuelle" description="Création depuis le tableau de bord.">
+      <SettingsAccordion title="Vente manuelle" description="Fidélité depuis le tableau de bord.">
         <div className="flex items-start gap-3">
           <Store className="mt-0.5 h-5 w-5 shrink-0 text-zg-accent" aria-hidden />
           <div>
             <p className="text-sm text-zg-text-muted">
-              Créez un bon digital ou papier, suivez le solde et encaissez les utilisations.
+              Ajoutez un client, scannez sa carte et attribuez des points à chaque passage.
             </p>
             <Link
-              href="/dashboard/gift-vouchers"
+              href="/dashboard/loyalty"
               className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-zg-accent hover:underline"
             >
-              Ouvrir les bons cadeaux
+              Ouvrir la fidélité
               <Share2 className="h-3.5 w-3.5" />
             </Link>
           </div>
