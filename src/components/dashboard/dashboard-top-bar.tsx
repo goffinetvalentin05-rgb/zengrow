@@ -28,7 +28,7 @@ export default function DashboardTopBar({
   return (
     <header
       className={cn(
-        "relative flex h-[72px] shrink-0 items-center justify-between gap-4 border-b border-zg-border/60 bg-zg-app/80 px-4 backdrop-blur-md transition-colors duration-200 ease-out md:px-8",
+        "relative flex h-[72px] shrink-0 items-center justify-between gap-4 border-b border-white/[0.06] bg-transparent px-4 transition-colors duration-200 ease-out md:px-8",
       )}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">

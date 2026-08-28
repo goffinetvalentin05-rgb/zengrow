@@ -12,12 +12,17 @@ body:has(.zg-public-r-root) {
   background-color: #06040f;
 }
 
+html:has([data-dashboard-theme="dark"]),
+body:has([data-dashboard-theme="dark"]) {
+  background-color: #01040f;
+}
+
 html:has(.zg-public-r-root) {
   background-color: #06040f;
 }
 
 :root {
-  --background: #06040f;
+  --background: #01040f;
   --background-elevated: #0c0818;
   --foreground: #f4f0ff;
   --surface: #0c0818;
@@ -39,19 +44,19 @@ html:has(.zg-public-r-root) {
   --focus-ring: 0 0 0 3px rgba(124, 92, 255, 0.28);
 
   /* ZenGrow app — palette dark premium violet / bleu / rose (landing v3) */
-  --zg-app: #06040f;
-  --zg-sidebar-bg: #080612;
-  --zg-sidebar-border: rgb(255 255 255 / 0.06);
-  --zg-on-dark: #f4f0ff;
-  --zg-on-dark-muted: #9b8fb8;
-  --zg-canvas: #06040f;
-  --zg-canvas-mid: #0c0818;
-  --zg-fg: #f4f0ff;
-  --zg-text-secondary: #c4b5fd;
-  --zg-muted: #7a6f9a;
-  --zg-text-muted: #9b8fb8;
-  --zg-fg-muted: #9b8fb8;
-  --zg-text-placeholder: #6b6280;
+  --zg-app: #01040f;
+  --zg-sidebar-bg: #030712;
+  --zg-sidebar-border: rgb(255 255 255 / 0.05);
+  --zg-on-dark: #f8fafc;
+  --zg-on-dark-muted: #94a3b8;
+  --zg-canvas: #01040f;
+  --zg-canvas-mid: #061018;
+  --zg-fg: #f8fafc;
+  --zg-text-secondary: #94a3b8;
+  --zg-muted: #64748b;
+  --zg-text-muted: #94a3b8;
+  --zg-fg-muted: #94a3b8;
+  --zg-text-placeholder: #64748b;
   --zg-teal: #7c5cff;
   --zg-accent: #7c5cff;
   --zg-accent-hover: #a78bfa;
@@ -63,16 +68,16 @@ html:has(.zg-public-r-root) {
   --zg-border-hover: rgb(124 92 255 / 0.35);
   --zg-border-accent: rgba(124, 92, 255, 0.35);
   --zg-border-focus: #7c5cff;
-  --zg-surface: #0c0818;
-  --zg-surface-elevated: #120e1a;
-  --zg-surface-soft: #141020;
-  --zg-card-hover: #16122a;
-  --zg-highlight: rgba(124, 92, 255, 0.12);
-  --zg-accent-soft-bg: rgba(124, 92, 255, 0.15);
+  --zg-surface: #071018;
+  --zg-surface-elevated: #0b1520;
+  --zg-surface-soft: #0a121c;
+  --zg-card-hover: #101a26;
+  --zg-highlight: rgba(43, 140, 255, 0.08);
+  --zg-accent-soft-bg: rgba(124, 92, 255, 0.12);
   --zg-accent-soft-text: #c4b5fd;
-  --zg-glow-from: rgba(124, 92, 255, 0.2);
-  --zg-glow-via: rgba(56, 189, 248, 0.1);
-  --zg-glow-magenta: rgba(192, 38, 211, 0.08);
+  --zg-glow-from: rgba(148, 163, 184, 0.1);
+  --zg-glow-via: rgba(43, 140, 255, 0.06);
+  --zg-glow-magenta: rgba(148, 163, 184, 0.04);
   --zg-shadow-card:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 20px 50px -32px rgba(0, 0, 0, 0.55),
@@ -559,38 +564,31 @@ body {
 
 .zg-dashboard-backdrop__glow-a {
   position: absolute;
-  left: min(6vw, 4rem);
-  top: -20%;
-  height: min(55vw, 22rem);
-  width: min(70vw, 32rem);
+  left: 50%;
+  top: -18%;
+  height: min(50vw, 20rem);
+  width: min(70vw, 36rem);
+  translate: -50% 0;
   border-radius: 9999px;
-  background: linear-gradient(135deg, var(--zg-glow-from), transparent 72%);
-  filter: blur(56px);
-  opacity: 0.45;
+  background: radial-gradient(ellipse, rgba(148, 163, 184, 0.08), transparent 70%);
+  filter: blur(64px);
+  opacity: 0.5;
 }
 
 .zg-dashboard-backdrop__glow-b {
   position: absolute;
-  right: -5%;
-  bottom: 5%;
-  height: min(50vw, 18rem);
-  width: min(65vw, 28rem);
+  right: -8%;
+  bottom: 8%;
+  height: min(40vw, 14rem);
+  width: min(50vw, 22rem);
   border-radius: 9999px;
-  background: linear-gradient(200deg, var(--zg-glow-via), transparent 75%);
-  filter: blur(48px);
-  opacity: 0.35;
+  background: radial-gradient(ellipse, rgba(43, 140, 255, 0.05), transparent 75%);
+  filter: blur(56px);
+  opacity: 0.4;
 }
 
 .zg-dashboard-backdrop__glow-c {
-  position: absolute;
-  left: 42%;
-  top: 38%;
-  height: 12rem;
-  width: 12rem;
-  border-radius: 9999px;
-  background: radial-gradient(circle, var(--zg-glow-magenta) 0%, transparent 70%);
-  filter: blur(28px);
-  opacity: 0.85;
+  display: none;
 }
 
 /* Fond ambient partagé (dashboard, auth, billing) */

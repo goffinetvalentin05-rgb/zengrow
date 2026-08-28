@@ -37,8 +37,8 @@ type Props = {
 
 export function TodayView({
   firstName,
-  saasName,
-  primaryObjectiveKey,
+  saasName: _saasName,
+  primaryObjectiveKey: _primaryObjectiveKey,
   actions,
   signals,
   doneCount,
@@ -51,9 +51,6 @@ export function TodayView({
   const router = useRouter();
   const showToast = useDashboardToast();
 
-  const primaryObjectiveLabel = primaryObjectiveKey
-    ? t.objectives[primaryObjectiveKey as keyof typeof t.objectives] ?? primaryObjectiveKey
-    : null;
   const focusCategory = focusCategoryKey
     ? t.categories[focusCategoryKey as keyof typeof t.categories] ?? focusCategoryKey
     : null;
@@ -64,11 +61,10 @@ export function TodayView({
   const dayActions = actions.filter((item) => item.status === "todo" || item.status === "in_progress").slice(0, 5);
 
   const suggestions = [
-    { id: "plan", label: t.today.suggestionPlan, prompt: t.today.suggestionPlanPrompt },
     { id: "prospects", label: t.today.suggestionProspects, prompt: t.today.suggestionProspectsPrompt },
+    { id: "plan", label: t.today.suggestionPlan, prompt: t.today.suggestionPlanPrompt },
+    { id: "analyse", label: t.today.suggestionAnalyse, prompt: t.today.suggestionAnalysePrompt },
     { id: "landing", label: t.today.suggestionLanding, prompt: t.today.suggestionLandingPrompt },
-    { id: "content", label: t.today.suggestionContent, prompt: t.today.suggestionContentPrompt },
-    { id: "market", label: t.today.suggestionMarket, prompt: t.today.suggestionMarketPrompt },
   ];
 
   async function updateStatus(id: string, status: "done" | "ignored" | "in_progress") {
@@ -108,9 +104,9 @@ export function TodayView({
   return (
     <DashboardContent width="wide" className="space-y-12">
       <CopilotHero
-        greeting={saasName ? `${greeting} · ${saasName}` : greeting}
+        greeting={greeting}
         question={t.today.question}
-        objectiveLabel={primaryObjectiveLabel}
+        subtitle={t.today.heroSubtitle}
         suggestions={suggestions}
       />
 

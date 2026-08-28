@@ -153,7 +153,7 @@ export default function DashboardSidebar({
       {tipPortal}
       <motion.aside
         className={cn(
-          "zg-dashboard-mobile-sidebar fixed inset-y-0 left-0 z-[60] flex shrink-0 flex-col border-r border-zg-sidebar-border bg-zg-sidebar-bg md:static md:z-0 md:bg-zg-sidebar-bg/95 md:backdrop-blur-xl",
+          "zg-dashboard-mobile-sidebar fixed inset-y-0 left-0 z-[60] flex shrink-0 flex-col border-r border-zg-sidebar-border bg-zg-sidebar-bg md:static md:z-0 md:bg-zg-sidebar-bg/80 md:backdrop-blur-md",
           !isMdUp && (mobileOpen ? "pointer-events-auto" : "pointer-events-none"),
         )}
         initial={false}
@@ -354,7 +354,7 @@ function NavItem({
           locked
             ? "text-zg-on-dark-muted/80 hover:bg-zg-sidebar-hover hover:text-zg-on-dark"
             : active
-              ? "bg-gradient-to-br from-[#7c5cff] to-[#6366f1] text-white shadow-[0_0_24px_-8px_rgba(124,92,255,0.55)]"
+              ? "bg-white/[0.08] text-white"
               : "text-zg-on-dark-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark",
         )}
         aria-label={label}
@@ -383,7 +383,7 @@ function NavItem({
         locked
           ? "text-zg-on-dark-muted/80 hover:bg-zg-sidebar-hover hover:text-zg-on-dark"
           : active
-            ? "bg-gradient-to-br from-[#7c5cff] to-[#6366f1] text-white shadow-[0_0_24px_-8px_rgba(124,92,255,0.55)]"
+            ? "bg-white/[0.08] text-white"
             : "text-zg-on-dark-muted hover:bg-zg-sidebar-hover hover:text-zg-on-dark",
       )}
     >

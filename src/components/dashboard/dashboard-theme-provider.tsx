@@ -97,3 +97,7 @@ export function useDashboardTheme() {
   }
   return ctx;
 }
+
+export function useOptionalDashboardTheme() {
+  return useContext(DashboardThemeContext);
+}
