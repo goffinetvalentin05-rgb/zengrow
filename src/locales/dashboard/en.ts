@@ -8,13 +8,16 @@ export const en: DashboardDictionary = {
     today: "Today",
     dashboard: "Today",
     prospects: "Prospects",
-    intelligence: "Intelligence",
+    analytics: "Analytics",
+    results: "Results",
+    /** @deprecated — legacy nav keys */
+    intelligence: "Analytics",
     actions: "Actions",
     analyse: "Analysis",
     growth: "Growth",
     content: "Content",
     market: "Market",
-    progress: "Progress",
+    progress: "Results",
     settings: "Settings",
     assistant: "Agent",
     logout: "Log out",
@@ -230,15 +233,30 @@ export const en: DashboardDictionary = {
     missing: "Unavailable",
     honestyNote: "Orion never invents traffic, contacts or results. Any unavailable capability is stated explicitly.",
   },
-  intelligencePage: {
-    title: "Intelligence",
-    subtitle: "SaaS analysis and traffic data, without invented metrics.",
-    tabAnalyse: "SaaS analysis",
+  analyticsPage: {
+    title: "Analytics",
+    subtitle: "Overview, traffic, revenue, SaaS analysis, market and content — no invented metrics.",
+    tabOverview: "Overview",
     tabTraffic: "Traffic",
+    tabRevenue: "Revenue",
+    tabSaas: "SaaS analysis",
     tabMarket: "Market",
     tabContent: "Content",
+    overviewEmptyTitle: "Overview waiting for data",
+    overviewEmptyDescription:
+      "Key metrics (visitors, conversion, MRR) will appear here once Sharpz Analytics and/or Stripe are connected.",
+    revenueEmptyTitle: "Revenue not connected",
+    revenueEmptyDescription:
+      "Connect Stripe or Paddle in Settings to show MRR, churn and trends. No data is simulated.",
+    marketEmptyTitle: "Market — Analytics phase",
+    marketEmptyDescription:
+      "Tracked competitors, pricing changes and market signals will be grouped here. Real data only.",
+    contentEmptyTitle: "Content — Analytics phase",
+    contentEmptyDescription:
+      "Content opportunities and platform ideas will be available here once sources are connected.",
     trafficNotConnected: "Sharpz Analytics is not connected yet",
-    trafficNotConnectedDescription: "No visitor, session or conversion data is being collected. The tracking snippet will be added during the Analytics phase.",
+    trafficNotConnectedDescription:
+      "No visitor, session or conversion data is being collected. Install the snippet from Settings (Analytics phase).",
   },
   actionsPage: {
     title: "Actions",
@@ -317,8 +335,8 @@ export const en: DashboardDictionary = {
     patterns: "New patterns",
   },
   progressPage: {
-    title: "Progress",
-    subtitle: "Is what Sharpz recommended actually working?",
+    title: "Results",
+    subtitle: "Real measurements only — actions, prospects, trends and experiments.",
     results: "Results",
     impact: "Impact",
     experiments: "Experiments",

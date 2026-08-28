@@ -68,8 +68,8 @@ export default function DashboardSidebar({
     { href: "/dashboard", label: t.nav.agent, icon: Bot },
     { href: "/dashboard/today", label: t.nav.today, icon: CalendarDays },
     { href: "/dashboard/prospects", label: t.nav.prospects, icon: Users },
-    { href: "/dashboard/intelligence", label: t.nav.intelligence, icon: Radar },
-    { href: "/dashboard/progress", label: t.nav.progress, icon: BarChart3 },
+    { href: "/dashboard/analytics", label: t.nav.analytics, icon: Radar },
+    { href: "/dashboard/results", label: t.nav.results, icon: BarChart3 },
   ];
 
   const [collapsed, setCollapsed] = useState(false);

@@ -187,7 +187,7 @@ export function TodayView({
               description={t.today.noPlanHonest}
               icon={Target}
               action={
-                <Link href="/dashboard/intelligence" className="inline-flex items-center gap-2 text-sm text-zg-fg">
+                <Link href="/dashboard/analytics" className="inline-flex items-center gap-2 text-sm text-zg-fg">
                   {t.common.launchAnalysis}
                   <ArrowRight className="h-4 w-4" />
                 </Link>

@@ -1,3 +1,4 @@
+import { analyticsHref } from "@/src/lib/sharpz/routes";
 import type {
   AuditFinding,
   CompetitorChange,
@@ -24,7 +25,7 @@ export function buildAttentionSignals(input: {
       id: `change-${change.id}`,
       title: change.whatChanged,
       detail: change.whyItMatters || change.changeType,
-      href: "/dashboard/intelligence?tab=market",
+      href: analyticsHref("market"),
     });
   }
   for (const finding of input.findings.filter((item) => item.kind === "problem").slice(0, 2)) {
@@ -32,7 +33,7 @@ export function buildAttentionSignals(input: {
       id: `finding-${finding.id}`,
       title: finding.title,
       detail: finding.detail || finding.area,
-      href: "/dashboard/intelligence?tab=analyse",
+      href: analyticsHref("saas"),
     });
   }
   const content = input.content[0];
@@ -41,7 +42,7 @@ export function buildAttentionSignals(input: {
       id: `content-${content.id}`,
       title: content.topic,
       detail: content.whyNow || content.recommendedAngle || "",
-      href: "/dashboard/intelligence?tab=content",
+      href: analyticsHref("content"),
     });
   }
   const opportunity = input.opportunities[0];
@@ -50,7 +51,7 @@ export function buildAttentionSignals(input: {
       id: `opp-${opportunity.id}`,
       title: opportunity.name,
       detail: opportunity.explanation || opportunity.whyDetected || "",
-      href: "/dashboard/intelligence?tab=analyse",
+      href: analyticsHref("saas"),
     });
   }
   return signals.slice(0, 5);

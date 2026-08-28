@@ -93,7 +93,7 @@ export function ActionsBoard({ actions }: Props) {
       return;
     }
     showToast({ message: t.common.saved });
-    router.push("/dashboard/progress");
+    router.push("/dashboard/results");
   }
 
   return (

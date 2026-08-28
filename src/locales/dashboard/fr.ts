@@ -6,13 +6,16 @@ export const fr = {
     today: "Aujourd’hui",
     dashboard: "Aujourd’hui",
     prospects: "Prospects",
-    intelligence: "Intelligence",
+    analytics: "Analytics",
+    results: "Résultats",
+    /** @deprecated — anciennes entrées, redirigées vers les sections finales */
+    intelligence: "Analytics",
     actions: "Actions",
     analyse: "Analyse",
     growth: "Growth",
     content: "Content",
     market: "Market",
-    progress: "Progrès",
+    progress: "Résultats",
     settings: "Réglages",
     assistant: "Agent",
     logout: "Déconnexion",
@@ -228,15 +231,30 @@ export const fr = {
     missing: "Non disponible",
     honestyNote: "Orion n’invente ni trafic, ni contact, ni résultat. Une capacité non connectée est signalée explicitement.",
   },
-  intelligencePage: {
-    title: "Intelligence",
-    subtitle: "Analyse du SaaS et données de trafic, sans métriques inventées.",
-    tabAnalyse: "Analyse SaaS",
+  analyticsPage: {
+    title: "Analytics",
+    subtitle: "Vue d’ensemble, trafic, revenue, analyse SaaS, marché et contenu — sans métriques inventées.",
+    tabOverview: "Overview",
     tabTraffic: "Trafic",
-    tabMarket: "Market",
+    tabRevenue: "Revenue",
+    tabSaas: "Analyse SaaS",
+    tabMarket: "Marché",
     tabContent: "Content",
+    overviewEmptyTitle: "Vue d’ensemble à connecter",
+    overviewEmptyDescription:
+      "Les métriques clés (visiteurs, conversion, MRR) apparaîtront ici dès que Sharpz Analytics et/ou Stripe seront connectés.",
+    revenueEmptyTitle: "Revenue non connecté",
+    revenueEmptyDescription:
+      "Connectez Stripe ou Paddle dans Réglages pour afficher MRR, churn et évolution. Aucune donnée n’est simulée.",
+    marketEmptyTitle: "Marché — phase Analytics",
+    marketEmptyDescription:
+      "Concurrents suivis, changements pricing et signaux marché seront regroupés ici. Données réelles uniquement.",
+    contentEmptyTitle: "Content — phase Analytics",
+    contentEmptyDescription:
+      "Opportunités de contenu et idées par plateforme seront disponibles ici après branchement des sources.",
     trafficNotConnected: "Sharpz Analytics n’est pas encore connecté",
-    trafficNotConnectedDescription: "Aucune donnée de visiteurs, sessions ou conversion n’est collectée. Le snippet de tracking sera ajouté pendant la phase Analytics.",
+    trafficNotConnectedDescription:
+      "Aucune donnée de visiteurs, sessions ou conversion n’est collectée. Installez le snippet depuis Réglages (phase Analytics).",
   },
   actionsPage: {
     title: "Actions",
@@ -315,8 +333,8 @@ export const fr = {
     patterns: "Nouveaux patterns",
   },
   progressPage: {
-    title: "Progrès",
-    subtitle: "Est-ce que ce que Sharpz vous a recommandé fonctionne réellement ?",
+    title: "Résultats",
+    subtitle: "Mesures réelles uniquement — actions, prospects, évolution et expérimentations.",
     results: "Résultats",
     impact: "Impact",
     experiments: "Expérimentations",
