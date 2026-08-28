@@ -649,6 +649,7 @@ export function ProspectsCrmView({ prospects, eventsByProspect, scripts: initial
             saveNote: t.prospectsPage.saveNote,
             eventCreated: t.prospectsPage.eventCreated,
             eventCreatedByAgent: t.prospectsPage.eventCreatedByAgent,
+            eventFoundByOrion: t.prospectsPage.eventFoundByOrion,
             eventStatus: t.prospectsPage.eventStatus,
             eventNote: t.prospectsPage.eventNote,
             eventContact: t.prospectsPage.eventContact,

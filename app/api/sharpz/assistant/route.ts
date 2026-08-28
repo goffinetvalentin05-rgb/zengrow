@@ -9,6 +9,10 @@ import {
   asksForTrafficAnalysis,
 } from "@/src/lib/sharpz/agent-capabilities";
 import { parseJson, requireSharpzApi } from "@/src/lib/sharpz/api-session";
+import { logProspectEvent } from "@/src/lib/sharpz/prospect-events";
+import { isProspectSearchConfigured } from "@/src/lib/sharpz/prospect-search/providers";
+import { searchProspects } from "@/src/lib/sharpz/prospect-search/search-prospects";
+import { ProspectSearchError } from "@/src/lib/sharpz/prospect-search/types";
 import { loadSharpzContext } from "@/src/lib/sharpz/context";
 import {
   clampConfidence,
@@ -93,13 +97,14 @@ function systemPrompt(mode: "default" | "daily_plan") {
 Tu reçois un contexte JSON (profil SaaS, objectifs, actions ouvertes, prospects, concurrents suivis, audit vérifié, expérimentations, capacités connectées).
 
 Capacités NON disponibles (ne jamais prétendre les avoir faites) :
-- Recherche web de prospects ou concurrents
+- Recherche web de concurrents
 - Données Sharpz Analytics / trafic (sauf si capabilities.trafficAnalytics = true)
 - MRR / revenue Stripe (sauf si capabilities.revenueData = true)
 
 Règles absolues :
 - N'invente aucune métrique, entreprise, email, téléphone ou concurrent.
-- prospects[] et proposedCompetitors ne sont jamais renvoyés — laisse-les absents.
+- La recherche de prospects est gérée par un outil dédié côté serveur — ne renvoie jamais prospects[] toi-même dans cette conversation.
+- proposedCompetitors ne sont jamais renvoyés — laisse-les absents.
 - proposedActions : uniquement des recommandations concrètes basées sur le contexte réel.
 - Ne duplique pas une action déjà ouverte (openActions).
 - Si une donnée manque, dis-le explicitement dans reply.
@@ -133,12 +138,47 @@ export async function POST(request: Request) {
   const lastUser = [...parsed.data].reverse().find((item) => item.role === "user")?.content ?? "";
 
   if (asksForProspectDiscovery(lastUser)) {
-    return NextResponse.json({
-      reply:
-        "La recherche web de prospects n’est pas encore connectée à une source vérifiable. Je ne vais pas inventer d’entreprises, de contacts ou d’emails. Ajoutez des prospects manuellement dans Prospects, ou demandez-moi un plan basé sur vos prospects déjà enregistrés.",
-      proposedActions: [],
-      capability: "prospect_search_not_connected",
-    });
+    if (!isProspectSearchConfigured()) {
+      return NextResponse.json({
+        reply:
+          "La recherche web de prospects n’est pas encore configurée côté serveur (clé API manquante). Je ne vais pas inventer d’entreprises, de contacts ou d’emails. Ajoutez des prospects manuellement dans Prospects.",
+        proposedActions: [],
+        capability: "prospect_search_not_connected",
+      });
+    }
+
+    try {
+      const result = await searchProspects({
+        supabase,
+        user,
+        restaurant,
+        userMessage: lastUser,
+        context,
+      });
+
+      return NextResponse.json({
+        reply: result.reply,
+        prospects: result.prospects,
+        meta: {
+          requested: result.requested,
+          found: result.found,
+          duplicatesRemoved: result.duplicatesRemoved,
+          provider: result.provider,
+        },
+        capability: "prospect_search",
+      });
+    } catch (error) {
+      if (error instanceof ProspectSearchError) {
+        return NextResponse.json({
+          reply: error.message,
+          prospects: [],
+          searchError: { message: error.message, retryable: error.retryable },
+          capability: "prospect_search_error",
+        });
+      }
+      const { aiErrorResponse } = await import("@/src/lib/ai/route-auth");
+      return aiErrorResponse(error);
+    }
   }
 
   if (asksForCompetitorDiscovery(lastUser)) {

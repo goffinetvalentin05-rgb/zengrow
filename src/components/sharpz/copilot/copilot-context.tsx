@@ -12,15 +12,22 @@ import {
 import { useRouter } from "next/navigation";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { useDashboardToast } from "@/src/components/dashboard/dashboard-toast-provider";
-import { SHARPZ_ROUTES } from "@/src/lib/sharpz/routes";
 
 export type CopilotProspect = {
   localId: string;
   company: string;
+  name?: string | null;
   url?: string | null;
+  sourceUrl?: string | null;
+  location?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  linkedinUrl?: string | null;
+  instagramUrl?: string | null;
   contact?: string | null;
   whyFit?: string | null;
   fitScore?: number | null;
+  notes?: string | null;
 };
 
 export type CopilotProposedAction = {
@@ -35,9 +42,16 @@ export type CopilotProposedAction = {
   howTo?: string;
 };
 
+export type CopilotSearchError = {
+  message: string;
+  retryable: boolean;
+};
+
 export type CopilotMessage = {
   role: "user" | "assistant";
   content: string;
+  prospects?: CopilotProspect[];
+  searchError?: CopilotSearchError;
 };
 
 type CopilotContextValue = {
@@ -47,18 +61,24 @@ type CopilotContextValue = {
   setInput: (value: string) => void;
   proposed: CopilotProspect[];
   proposedActions: CopilotProposedAction[];
+  selectedProspectIds: Set<string>;
   dockOpen: boolean;
   setDockOpen: (open: boolean) => void;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   send: (text?: string) => Promise<void>;
+  retrySearch: () => Promise<void>;
   focusInput: () => void;
+  toggleProspectSelection: (localId: string) => void;
   dismissProspect: (localId: string) => void;
   acceptProspect: (localId: string) => Promise<void>;
+  acceptSelectedProspects: () => Promise<void>;
+  acceptAllProspects: () => Promise<void>;
   dismissAction: (localId: string) => void;
   acceptAction: (localId: string) => Promise<void>;
   acceptAllActions: () => Promise<void>;
   acceptingId: string | null;
   acceptingActions: boolean;
+  acceptingProspects: boolean;
 };
 
 const CopilotContext = createContext<CopilotContextValue | null>(null);
@@ -66,6 +86,12 @@ const CopilotContext = createContext<CopilotContextValue | null>(null);
 function newLocalId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
   return `p-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function withLocalIds(items: Omit<CopilotProspect, "localId">[]) {
+  return items
+    .filter((item) => item.company?.trim())
+    .map((item) => ({ ...item, localId: newLocalId() }));
 }
 
 export function CopilotProvider({ children }: { children: ReactNode }) {
@@ -77,9 +103,12 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
   const [input, setInput] = useState("");
   const [proposed, setProposed] = useState<CopilotProspect[]>([]);
   const [proposedActions, setProposedActions] = useState<CopilotProposedAction[]>([]);
+  const [selectedProspectIds, setSelectedProspectIds] = useState<Set<string>>(new Set());
   const [dockOpen, setDockOpen] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [acceptingActions, setAcceptingActions] = useState(false);
+  const [acceptingProspects, setAcceptingProspects] = useState(false);
+  const [lastSearchPrompt, setLastSearchPrompt] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const lock = useRef(false);
 
@@ -87,6 +116,63 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
     document.getElementById("sharpz-copilot")?.scrollIntoView({ behavior: "smooth", block: "center" });
     window.setTimeout(() => inputRef.current?.focus(), 280);
   }, []);
+
+  const runAssistant = useCallback(
+    async (nextMessages: CopilotMessage[], userText: string) => {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 120000);
+      const response = await fetch("/api/sharpz/assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: nextMessages }),
+        signal: controller.signal,
+      });
+      window.clearTimeout(timeout);
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        reply?: string;
+        prospects?: Omit<CopilotProspect, "localId">[];
+        proposedActions?: Omit<CopilotProposedAction, "localId">[];
+        searchError?: CopilotSearchError;
+      };
+
+      if (!response.ok) {
+        showToast({ message: data.error ?? t.common.error });
+        return;
+      }
+
+      const mapped = withLocalIds(data.prospects ?? []);
+      const assistantMessage: CopilotMessage = {
+        role: "assistant",
+        content: data.reply ?? "",
+        searchError: data.searchError,
+        prospects: mapped.length ? mapped : undefined,
+      };
+      setMessages((current) => [...current, assistantMessage]);
+
+      if (mapped.length) {
+        setProposed((current) => [...mapped, ...current]);
+        setSelectedProspectIds((current) => {
+          const next = new Set(current);
+          for (const item of mapped) next.add(item.localId);
+          return next;
+        });
+      }
+
+      const incomingActions = (data.proposedActions ?? []).filter((item) => item.title?.trim());
+      if (incomingActions.length) {
+        setProposedActions((current) => [
+          ...incomingActions.map((item) => ({ ...item, localId: newLocalId() })),
+          ...current,
+        ]);
+      }
+
+      if (/prospect|club|restaurant|lead/i.test(userText)) {
+        setLastSearchPrompt(userText);
+      }
+    },
+    [showToast, t.common.error],
+  );
 
   const send = useCallback(
     async (preset?: string) => {
@@ -98,40 +184,7 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       setMessages(nextMessages);
       setPending(true);
       try {
-        const controller = new AbortController();
-        const timeout = window.setTimeout(() => controller.abort(), 45000);
-        const response = await fetch("/api/sharpz/assistant", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: nextMessages }),
-          signal: controller.signal,
-        });
-        window.clearTimeout(timeout);
-        const data = (await response.json().catch(() => ({}))) as {
-          error?: string;
-          reply?: string;
-          prospects?: Omit<CopilotProspect, "localId">[];
-          proposedActions?: Omit<CopilotProposedAction, "localId">[];
-        };
-        if (!response.ok) {
-          showToast({ message: data.error ?? t.common.error });
-          return;
-        }
-        setMessages((current) => [...current, { role: "assistant", content: data.reply ?? "" }]);
-        const incomingProspects = (data.prospects ?? []).filter((item) => item.company?.trim());
-        if (incomingProspects.length) {
-          setProposed((current) => [
-            ...incomingProspects.map((item) => ({ ...item, localId: newLocalId() })),
-            ...current,
-          ]);
-        }
-        const incomingActions = (data.proposedActions ?? []).filter((item) => item.title?.trim());
-        if (incomingActions.length) {
-          setProposedActions((current) => [
-            ...incomingActions.map((item) => ({ ...item, localId: newLocalId() })),
-            ...current,
-          ]);
-        }
+        await runAssistant(nextMessages, text);
       } catch {
         showToast({ message: t.common.error });
       } finally {
@@ -139,11 +192,123 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
         lock.current = false;
       }
     },
-    [input, messages, showToast, t.common.error],
+    [input, messages, runAssistant, showToast, t.common.error],
+  );
+
+  const retrySearch = useCallback(async () => {
+    if (!lastSearchPrompt || lock.current) return;
+    lock.current = true;
+    setPending(true);
+    try {
+      const response = await fetch("/api/sharpz/prospects/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: lastSearchPrompt }),
+      });
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        reply?: string;
+        prospects?: Omit<CopilotProspect, "localId">[];
+        retryable?: boolean;
+      };
+      if (!response.ok) {
+        setMessages((current) => [
+          ...current,
+          {
+            role: "assistant",
+            content: data.error ?? t.agentPage.searchError,
+            searchError: { message: data.error ?? t.agentPage.searchError, retryable: data.retryable !== false },
+          },
+        ]);
+        return;
+      }
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          content: data.reply ?? "",
+          prospects: withLocalIds(data.prospects ?? []),
+        },
+      ]);
+      if (data.prospects?.length) {
+        const mapped = withLocalIds(data.prospects);
+        setProposed((current) => [...mapped, ...current]);
+        setSelectedProspectIds((current) => {
+          const next = new Set(current);
+          for (const item of mapped) next.add(item.localId);
+          return next;
+        });
+      }
+    } catch {
+      showToast({ message: t.common.error });
+    } finally {
+      setPending(false);
+      lock.current = false;
+    }
+  }, [lastSearchPrompt, showToast, t.agentPage.searchError, t.common.error]);
+
+  const toggleProspectSelection = useCallback((localId: string) => {
+    setSelectedProspectIds((current) => {
+      const next = new Set(current);
+      if (next.has(localId)) next.delete(localId);
+      else next.add(localId);
+      return next;
+    });
+  }, []);
+
+  const persistProspects = useCallback(
+    async (items: CopilotProspect[]) => {
+      if (!items.length) return false;
+      setAcceptingProspects(true);
+      const response = await fetch("/api/sharpz/prospects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prospects: items.map((item) => ({
+            type: "company",
+            company: item.company,
+            name: item.name ?? item.contact ?? null,
+            contact: item.contact ?? item.name ?? null,
+            url: item.url ?? null,
+            email: item.email ?? null,
+            phone: item.phone ?? null,
+            linkedinUrl: item.linkedinUrl ?? null,
+            instagramUrl: item.instagramUrl ?? null,
+            source: "sharpz_agent",
+            sourceUrl: item.sourceUrl ?? item.url ?? null,
+            whyFit: item.whyFit ?? null,
+            fitScore: item.fitScore ?? null,
+            notes: item.notes ?? null,
+            status: "to_contact",
+          })),
+        }),
+      });
+      setAcceptingProspects(false);
+      if (!response.ok) {
+        showToast({ message: t.common.error });
+        return false;
+      }
+      const ids = new Set(items.map((item) => item.localId));
+      setProposed((current) => current.filter((item) => !ids.has(item.localId)));
+      setSelectedProspectIds((current) => {
+        const next = new Set(current);
+        for (const id of ids) next.delete(id);
+        return next;
+      });
+      showToast({ message: t.agentPage.prospectsAdded });
+      router.refresh();
+      return true;
+    },
+    [router, showToast, t.agentPage.prospectsAdded, t.common.error],
   );
 
   const dismissProspect = useCallback((localId: string) => {
     setProposed((current) => current.filter((item) => item.localId !== localId));
+    setSelectedProspectIds((current) => {
+      const next = new Set(current);
+      next.delete(localId);
+      return next;
+    });
   }, []);
 
   const acceptProspect = useCallback(
@@ -151,35 +316,22 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       const item = proposed.find((prospect) => prospect.localId === localId);
       if (!item) return;
       setAcceptingId(localId);
-      const response = await fetch("/api/sharpz/prospects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prospects: [
-            {
-              company: item.company,
-              name: item.contact,
-              contact: item.contact,
-              url: item.url,
-              whyFit: item.whyFit,
-              fitScore: item.fitScore,
-              source: "Sharpz Agent",
-              status: "to_contact",
-            },
-          ],
-        }),
-      });
+      await persistProspects([item]);
       setAcceptingId(null);
-      if (!response.ok) {
-        showToast({ message: t.common.error });
-        return;
-      }
-      setProposed((current) => current.filter((prospect) => prospect.localId !== localId));
-      showToast({ message: t.common.saved });
-      router.refresh();
     },
-    [proposed, router, showToast, t.common.error, t.common.saved],
+    [persistProspects, proposed],
   );
+
+  const acceptSelectedProspects = useCallback(async () => {
+    const items = proposed.filter((item) => selectedProspectIds.has(item.localId));
+    if (!items.length) return;
+    await persistProspects(items);
+  }, [persistProspects, proposed, selectedProspectIds]);
+
+  const acceptAllProspects = useCallback(async () => {
+    if (!proposed.length) return;
+    await persistProspects(proposed);
+  }, [persistProspects, proposed]);
 
   const dismissAction = useCallback((localId: string) => {
     setProposedActions((current) => current.filter((item) => item.localId !== localId));
@@ -232,8 +384,7 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
   const acceptAllActions = useCallback(async () => {
     if (!proposedActions.length) return;
     await persistActions(proposedActions);
-    router.push(SHARPZ_ROUTES.today);
-  }, [persistActions, proposedActions, router]);
+  }, [persistActions, proposedActions]);
 
   const value = useMemo(
     () => ({
@@ -243,18 +394,24 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       setInput,
       proposed,
       proposedActions,
+      selectedProspectIds,
       dockOpen,
       setDockOpen,
       inputRef,
       send,
+      retrySearch,
       focusInput,
+      toggleProspectSelection,
       dismissProspect,
       acceptProspect,
+      acceptSelectedProspects,
+      acceptAllProspects,
       dismissAction,
       acceptAction,
       acceptAllActions,
       acceptingId,
       acceptingActions,
+      acceptingProspects,
     }),
     [
       messages,
@@ -262,16 +419,22 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       input,
       proposed,
       proposedActions,
+      selectedProspectIds,
       dockOpen,
       send,
+      retrySearch,
       focusInput,
+      toggleProspectSelection,
       dismissProspect,
       acceptProspect,
+      acceptSelectedProspects,
+      acceptAllProspects,
       dismissAction,
       acceptAction,
       acceptAllActions,
       acceptingId,
       acceptingActions,
+      acceptingProspects,
     ],
   );
 

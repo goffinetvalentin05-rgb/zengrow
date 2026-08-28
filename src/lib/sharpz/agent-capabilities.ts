@@ -1,4 +1,5 @@
 import type { Integration } from "@/src/lib/sharpz/types";
+import { isProspectSearchConfigured } from "@/src/lib/sharpz/prospect-search/providers";
 
 export type AgentCapabilities = {
   prospectSearch: boolean;
@@ -13,7 +14,7 @@ export function resolveAgentCapabilities(integrations: Integration[]): AgentCapa
   );
 
   return {
-    prospectSearch: false,
+    prospectSearch: isProspectSearchConfigured(),
     competitorSearch: false,
     trafficAnalytics:
       connected.has("sharpz_analytics") ||
@@ -24,7 +25,12 @@ export function resolveAgentCapabilities(integrations: Integration[]): AgentCapa
 }
 
 export function asksForProspectDiscovery(text: string) {
-  return /(trouve|trouver|cherche|chercher|find|search|liste|list).{0,40}(prospect|lead)/i.test(text);
+  return (
+    /(trouve|trouver|cherche|chercher|find|search|liste|list).{0,48}(prospect|lead|client|cible)/i.test(text) ||
+    /(trouve|trouver|cherche|chercher|find|search).{0,48}(club|restaurant|entreprise|company|organisation|organization)/i.test(text) ||
+    /(prospect|lead|client|cible).{0,40}(cohérent|coherent|icp|similar|similaire)/i.test(text) ||
+    /(similaire|similar).{0,40}(prospect|à|to)/i.test(text)
+  );
 }
 
 export function asksForCompetitorDiscovery(text: string) {

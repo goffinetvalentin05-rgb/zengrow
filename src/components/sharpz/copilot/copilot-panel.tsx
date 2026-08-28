@@ -2,12 +2,45 @@
 
 import { FormEvent } from "react";
 import { ArrowUp } from "lucide-react";
+import { ProspectSearchCards } from "@/src/components/sharpz/agent/prospect-search-cards";
 import { CopilotOrb } from "@/src/components/sharpz/copilot/copilot-orb";
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
+import Button from "@/src/components/ui/button";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { cn } from "@/src/lib/utils";
 
 type Suggestion = { id: string; label: string; prompt: string };
+
+function ProspectSearchInline({ prospects }: { prospects: import("@/src/components/sharpz/copilot/copilot-context").CopilotProspect[] }) {
+  const { t } = useDashboardI18n();
+  const {
+    selectedProspectIds,
+    toggleProspectSelection,
+    acceptProspect,
+    acceptingId,
+  } = useCopilot();
+
+  return (
+    <ProspectSearchCards
+      prospects={prospects}
+      selectedIds={selectedProspectIds}
+      onToggle={toggleProspectSelection}
+      onAddOne={(id) => void acceptProspect(id)}
+      acceptingId={acceptingId}
+      compact
+      copy={{
+        fit: t.agentPage.fitLabel,
+        email: t.prospectsPage.email,
+        phone: t.prospectsPage.phone,
+        location: t.agentPage.locationLabel,
+        noContact: t.agentPage.contactNotFound,
+        viewSite: t.agentPage.viewSite,
+        add: t.today.validate,
+        whyFit: t.prospectsPage.whyFit + " :",
+      }}
+    />
+  );
+}
 
 type Props = {
   greeting: string;
@@ -19,7 +52,7 @@ type Props = {
 
 export function CopilotHero({ greeting, firstName, question, subtitle, suggestions }: Props) {
   const { t } = useDashboardI18n();
-  const { input, setInput, inputRef, send, pending, messages } = useCopilot();
+  const { input, setInput, inputRef, send, pending, messages, retrySearch } = useCopilot();
   const hasThread = Boolean(messages.length || pending);
 
   function onSubmit(event: FormEvent) {
@@ -115,16 +148,29 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
       {hasThread ? (
         <div className="relative mt-12 w-full max-w-2xl space-y-3 text-left">
           {messages.map((message, index) => (
-            <div
-              key={`${message.role}-${index}`}
-              className={cn(
-                "rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                message.role === "user"
-                  ? "ml-auto max-w-[85%] bg-white/[0.07] text-zg-fg"
-                  : "max-w-[92%] text-zg-text-secondary",
-              )}
-            >
-              <p className="whitespace-pre-wrap">{message.content}</p>
+            <div key={`${message.role}-${index}`} className="space-y-2">
+              <div
+                className={cn(
+                  "rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                  message.role === "user"
+                    ? "ml-auto max-w-[85%] bg-white/[0.07] text-zg-fg"
+                    : "max-w-[92%] text-zg-text-secondary",
+                )}
+              >
+                <p className="whitespace-pre-wrap">{message.content}</p>
+              </div>
+              {message.searchError?.retryable ? (
+                <div className="max-w-[92%]">
+                  <Button type="button" size="sm" variant="secondary" onClick={() => void retrySearch()}>
+                    {t.agentPage.retrySearch}
+                  </Button>
+                </div>
+              ) : null}
+              {message.prospects?.length ? (
+                <div className="max-w-[92%]">
+                  <ProspectSearchInline prospects={message.prospects} />
+                </div>
+              ) : null}
             </div>
           ))}
           {pending ? <p className="px-1 text-xs text-zg-muted">{t.assistant.thinking}</p> : null}

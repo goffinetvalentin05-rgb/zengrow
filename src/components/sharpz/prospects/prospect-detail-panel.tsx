@@ -66,6 +66,7 @@ type Copy = {
   saveNote: string;
   eventCreated: string;
   eventCreatedByAgent: string;
+  eventFoundByOrion: string;
   eventStatus: string;
   eventNote: string;
   eventContact: string;
@@ -115,7 +116,7 @@ function channelLabel(event: ProspectEvent, copy: Copy) {
 
 function eventTitle(event: ProspectEvent, copy: Copy, labels: Record<ProspectStatus, string>) {
   if (event.eventType === "created") {
-    return /agent/i.test(event.detail ?? "") ? copy.eventCreatedByAgent : copy.eventCreated;
+    return /orion|agent/i.test(event.detail ?? "") ? copy.eventFoundByOrion : copy.eventCreated;
   }
   if (event.eventType === "status_change") {
     const match = event.detail?.match(/^(\w+)\s*→\s*(\w+)$/);

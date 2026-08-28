@@ -12,6 +12,7 @@ type ProspectInput = {
   url?: string | null;
   contact?: string | null;
   source?: string | null;
+  sourceUrl?: string | null;
   whyFit?: string | null;
   fitScore?: number | null;
   lastAction?: string | null;
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
     url: item.url ?? null,
     contact: item.contact ?? null,
     source: item.source?.trim() || null,
+    source_url: item.sourceUrl?.trim() || null,
     why_fit: item.whyFit ?? null,
     fit_score: item.fitScore ?? null,
     last_action: item.lastAction?.trim() || null,
@@ -66,8 +68,8 @@ export async function POST(request: Request) {
         restaurantId: restaurant.id,
         prospectId: String(row.id),
         eventType: "created",
-        detail: fromAgent ? "Ajouté par Sharpz Agent" : "Prospect ajouté",
-        meta: fromAgent ? { source: "agent" } : {},
+        detail: fromAgent ? "Prospect trouvé par Orion" : "Prospect ajouté",
+        meta: fromAgent ? { source: "sharpz_agent" } : {},
       });
     }),
   );

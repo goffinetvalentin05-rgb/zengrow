@@ -242,6 +242,7 @@ export type Prospect = {
   url: string | null;
   contact: string | null;
   source: string | null;
+  sourceUrl: string | null;
   whyFit: string | null;
   fitScore: number | null;
   status: ProspectStatus | string;

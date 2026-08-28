@@ -1,16 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { Check, X } from "lucide-react";
 import { useLayoutEffect } from "react";
 import { useSetDashboardTitle } from "@/src/components/dashboard/dashboard-title-context";
-import Badge from "@/src/components/ui/badge";
-import Button from "@/src/components/ui/button";
+import { ProspectSearchCards } from "@/src/components/sharpz/agent/prospect-search-cards";
 import { CopilotHero } from "@/src/components/sharpz/copilot/copilot-panel";
 import { useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
 import { ScorePills } from "@/src/components/sharpz/score-pills";
 import { useDashboardI18n } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { SHARPZ_ROUTES } from "@/src/lib/sharpz/routes";
+import Badge from "@/src/components/ui/badge";
+import Button from "@/src/components/ui/button";
+import Link from "next/link";
 
 function fill(template: string, vars: Record<string, string | number>) {
   return Object.entries(vars).reduce(
@@ -45,13 +46,18 @@ export function AgentView({
   const {
     proposed,
     proposedActions,
+    selectedProspectIds,
+    toggleProspectSelection,
     acceptProspect,
+    acceptSelectedProspects,
+    acceptAllProspects,
     dismissProspect,
     acceptAction,
     dismissAction,
     acceptAllActions,
     acceptingId,
     acceptingActions,
+    acceptingProspects,
   } = useCopilot();
 
   useLayoutEffect(() => {
@@ -103,6 +109,17 @@ export function AgentView({
       prompt: t.agentPage.suggestionPriorityPrompt,
     },
   ];
+
+  const cardCopy = {
+    fit: t.agentPage.fitLabel,
+    email: t.prospectsPage.email,
+    phone: t.prospectsPage.phone,
+    location: t.agentPage.locationLabel,
+    noContact: t.agentPage.contactNotFound,
+    viewSite: t.agentPage.viewSite,
+    add: t.today.validate,
+    whyFit: t.prospectsPage.whyFit + " :",
+  };
 
   return (
     <div className="mx-auto w-full max-w-3xl pb-14">
@@ -194,37 +211,47 @@ export function AgentView({
 
       {proposed.length ? (
         <section className="zg-surface-panel mt-6 overflow-hidden p-6 text-left">
-          <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.today.proposedTitle}</h2>
-          <p className="mt-1 text-sm text-zg-text-secondary">{t.today.proposedSubtitle}</p>
-          <div className="mt-5 divide-y divide-white/[0.06]">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight text-zg-fg">{t.today.proposedTitle}</h2>
+              <p className="mt-1 text-sm text-zg-text-secondary">{t.today.proposedSubtitle}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={acceptingProspects || selectedProspectIds.size === 0}
+                onClick={() => void acceptSelectedProspects()}
+              >
+                {t.agentPage.addSelectedProspects}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={acceptingProspects}
+                onClick={() => void acceptAllProspects()}
+              >
+                {fill(t.agentPage.addAllProspects, { count: proposed.length })}
+              </Button>
+            </div>
+          </div>
+
+          <ProspectSearchCards
+            prospects={proposed}
+            selectedIds={selectedProspectIds}
+            onToggle={toggleProspectSelection}
+            onAddOne={(id) => void acceptProspect(id)}
+            acceptingId={acceptingId}
+            copy={cardCopy}
+          />
+
+          <div className="mt-4 flex flex-wrap gap-2">
             {proposed.map((item) => (
-              <article key={item.localId} className="py-5 first:pt-0 last:pb-0">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate text-base font-semibold text-zg-fg">{item.company}</h3>
-                    {item.url ? <p className="mt-1 truncate text-xs text-zg-muted">{item.url}</p> : null}
-                  </div>
-                  {item.fitScore != null ? <Badge>{item.fitScore}/100</Badge> : null}
-                </div>
-                {item.whyFit ? (
-                  <p className="mt-3 text-sm leading-relaxed text-zg-text-secondary">{item.whyFit}</p>
-                ) : null}
-                <div className="mt-5 flex gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={acceptingId === item.localId}
-                    onClick={() => void acceptProspect(item.localId)}
-                  >
-                    <Check />
-                    {t.today.validate}
-                  </Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => dismissProspect(item.localId)}>
-                    <X />
-                    {t.today.ignore}
-                  </Button>
-                </div>
-              </article>
+              <Button key={item.localId} type="button" size="sm" variant="ghost" onClick={() => dismissProspect(item.localId)}>
+                <X />
+                {t.today.ignore} · {item.company}
+              </Button>
             ))}
           </div>
         </section>

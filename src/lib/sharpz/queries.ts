@@ -301,6 +301,7 @@ export async function getProspects(supabase: SupabaseClient, restaurantId: strin
     url: row.url ?? null,
     contact: row.contact ?? null,
     source: row.source ?? null,
+    sourceUrl: row.source_url ?? null,
     whyFit: row.why_fit ?? null,
     fitScore: row.fit_score ?? null,
     status: row.status ?? "to_contact",
