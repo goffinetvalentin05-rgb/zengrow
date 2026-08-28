@@ -158,10 +158,13 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
           prospects: [
             {
               company: item.company,
-              url: item.url,
+              name: item.contact,
               contact: item.contact,
+              url: item.url,
               whyFit: item.whyFit,
               fitScore: item.fitScore,
+              source: "Sharpz Agent",
+              status: "to_contact",
             },
           ],
         }),

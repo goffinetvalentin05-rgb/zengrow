@@ -16,6 +16,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     phone?: string | null;
     url?: string | null;
     source?: string | null;
+    contact?: string | null;
     status?: string;
     lastAction?: string | null;
     contactedAt?: string | null;
@@ -25,7 +26,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
   const { data: existing } = await supabase
     .from("prospects")
-    .select("id, status, notes")
+    .select("id, status, notes, contacted_at, last_action")
     .eq("id", id)
     .eq("restaurant_id", restaurant.id)
     .maybeSingle();
@@ -41,6 +42,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (body?.phone !== undefined) patch.phone = body.phone?.trim() || null;
   if (body?.url !== undefined) patch.url = body.url?.trim() || null;
   if (body?.source !== undefined) patch.source = body.source?.trim() || null;
+  if (body?.contact !== undefined) patch.contact = body.contact?.trim() || null;
   if (body?.lastAction !== undefined) patch.last_action = body.lastAction?.trim() || null;
   if (body?.contactedAt !== undefined) patch.contacted_at = body.contactedAt || null;
   if (body?.nextFollowUpAt !== undefined) patch.next_follow_up_at = body.nextFollowUpAt || null;
@@ -58,14 +60,49 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     });
   }
 
-  if (body?.lastAction?.trim()) {
+  if (typeof body?.notes === "string" && body.notes !== (existing.notes ?? "")) {
+    await logProspectEvent(supabase, {
+      restaurantId: restaurant.id,
+      prospectId: id,
+      eventType: "note",
+      detail: body.notes.trim() || "Note mise à jour",
+    });
+  }
+
+  if (body?.lastAction?.trim() && body.lastAction.trim() !== (existing.last_action ?? "")) {
     await logProspectEvent(supabase, {
       restaurantId: restaurant.id,
       prospectId: id,
       eventType: "contact",
       detail: body.lastAction.trim(),
     });
+  } else if (body?.contactedAt && body.contactedAt !== existing.contacted_at) {
+    await logProspectEvent(supabase, {
+      restaurantId: restaurant.id,
+      prospectId: id,
+      eventType: "contact",
+      detail: "Contact enregistré",
+    });
   }
 
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await requireSharpzApi();
+  if (!session.ok) return session.error;
+  const { supabase, restaurant } = session;
+  const { id } = await context.params;
+
+  const { data: existing } = await supabase
+    .from("prospects")
+    .select("id")
+    .eq("id", id)
+    .eq("restaurant_id", restaurant.id)
+    .maybeSingle();
+  if (!existing) return NextResponse.json({ error: "Prospect introuvable." }, { status: 404 });
+
+  const { error } = await supabase.from("prospects").delete().eq("id", id).eq("restaurant_id", restaurant.id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });
 }

@@ -55,14 +55,17 @@ export async function POST(request: Request) {
   if (error || !data) return NextResponse.json({ error: error?.message ?? "Erreur." }, { status: 400 });
 
   await Promise.all(
-    data.map((row) =>
-      logProspectEvent(supabase, {
+    data.map((row, index) => {
+      const source = prospects[index]?.source?.trim() ?? "";
+      const fromAgent = /agent|orion|sharpz/i.test(source);
+      return logProspectEvent(supabase, {
         restaurantId: restaurant.id,
         prospectId: String(row.id),
         eventType: "created",
-        detail: "Prospect ajouté",
-      }),
-    ),
+        detail: fromAgent ? "Ajouté par Sharpz Agent" : "Prospect ajouté",
+        meta: fromAgent ? { source: "agent" } : {},
+      });
+    }),
   );
 
   return NextResponse.json({ ok: true, count: data.length });
