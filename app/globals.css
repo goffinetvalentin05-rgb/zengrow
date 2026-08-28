@@ -12,9 +12,9 @@ body:has(.zg-public-r-root) {
   background-color: #06040f;
 }
 
-html:has([data-dashboard-theme="dark"]),
-body:has([data-dashboard-theme="dark"]) {
-  background-color: #01040f;
+html:has([data-dashboard-theme]),
+body:has([data-dashboard-theme]) {
+  background-color: #000000;
 }
 
 html:has(.zg-public-r-root) {
@@ -22,7 +22,7 @@ html:has(.zg-public-r-root) {
 }
 
 :root {
-  --background: #01040f;
+  --background: #000000;
   --background-elevated: #0c0818;
   --foreground: #f4f0ff;
   --surface: #0c0818;
@@ -44,13 +44,13 @@ html:has(.zg-public-r-root) {
   --focus-ring: 0 0 0 3px rgba(124, 92, 255, 0.28);
 
   /* ZenGrow app — palette dark premium violet / bleu / rose (landing v3) */
-  --zg-app: #01040f;
-  --zg-sidebar-bg: #030712;
+  --zg-app: #000000;
+  --zg-sidebar-bg: #050505;
   --zg-sidebar-border: rgb(255 255 255 / 0.05);
   --zg-on-dark: #f8fafc;
   --zg-on-dark-muted: #94a3b8;
-  --zg-canvas: #01040f;
-  --zg-canvas-mid: #061018;
+  --zg-canvas: #000000;
+  --zg-canvas-mid: #0a0a0a;
   --zg-fg: #f8fafc;
   --zg-text-secondary: #94a3b8;
   --zg-muted: #64748b;
@@ -246,11 +246,11 @@ html:has(.zg-public-r-root) {
   opacity: 0.2;
 }
 
-/* Mode auto : fond clair uniquement, UI sombre inchangée */
+/* Canvas Sharpz : toujours noir, même si l’OS est en mode clair */
 [data-dashboard-theme="dark"][data-dashboard-canvas="light"] {
-  --zg-app: #f8f8fb;
-  --zg-canvas: #f8f8fb;
-  --zg-canvas-mid: #f3f4f6;
+  --zg-app: #000000;
+  --zg-canvas: #000000;
+  --zg-canvas-mid: #0a0a0a;
   --color-zg-app: var(--zg-app);
   --color-zg-canvas: var(--zg-canvas);
   --color-zg-canvas-mid: var(--zg-canvas-mid);

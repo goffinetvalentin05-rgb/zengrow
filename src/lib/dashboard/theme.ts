@@ -18,14 +18,12 @@ export function resolveDashboardTheme(preference: DashboardThemePreference): Das
   return "dark";
 }
 
-/** Fond d’écran / canvas — en auto, suit prefers-color-scheme. */
+/** Fond d’écran Sharpz — toujours noir. Le mode clair ne blanchit plus le canvas. */
 export function resolveDashboardCanvas(
-  preference: DashboardThemePreference,
-  prefersDark: boolean,
+  _preference: DashboardThemePreference,
+  _prefersDark: boolean,
 ): DashboardResolvedCanvas {
-  if (preference === "light") return "light";
-  if (preference === "dark") return "dark";
-  return prefersDark ? "dark" : "light";
+  return "dark";
 }
 
 export function readDashboardThemePreferenceFromStorage(): DashboardThemePreference | null {

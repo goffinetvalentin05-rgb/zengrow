@@ -14,10 +14,7 @@ import { DashboardLocaleProvider } from "@/src/components/dashboard/i18n/dashboa
 import { SharpzAssistant } from "@/src/components/sharpz/assistant/sharpz-assistant";
 import { CopilotProvider, useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
 import { OnboardingChrome } from "@/src/components/sharpz/onboarding/onboarding-chrome";
-import {
-  DashboardThemeProvider,
-  useDashboardTheme,
-} from "@/src/components/dashboard/dashboard-theme-provider";
+import { DashboardThemeProvider } from "@/src/components/dashboard/dashboard-theme-provider";
 import {
   type DashboardResolvedCanvas,
   type DashboardResolvedTheme,
@@ -97,7 +94,6 @@ function DashboardShellInner({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pathname = usePathname();
   const onboardingMode = pathname.startsWith("/dashboard/onboarding");
-  const { resolvedTheme, resolvedCanvas } = useDashboardTheme();
 
   const overlayTransition = { type: "tween" as const, duration: 0.25, ease: [0, 0, 0.2, 1] as const };
 
@@ -108,7 +104,7 @@ function DashboardShellInner({
           <div
             data-dashboard-theme="dark"
             data-dashboard-canvas="dark"
-            className={cn(fontClassName, "relative min-h-screen bg-zg-app font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}
+            className={cn(fontClassName, "relative min-h-screen bg-black font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}
           >
             <AppAmbientBackground />
             <div className="relative z-10 flex min-h-screen flex-col">
@@ -127,9 +123,9 @@ function DashboardShellInner({
       <DashboardTitleProvider>
         <NotificationProvider restaurantId={restaurantId}>
         <div
-          data-dashboard-theme={resolvedTheme}
-          data-dashboard-canvas={resolvedCanvas}
-          className={cn(fontClassName, "relative min-h-screen bg-zg-app font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}
+          data-dashboard-theme="dark"
+          data-dashboard-canvas="dark"
+          className={cn(fontClassName, "relative min-h-screen bg-black font-[family-name:var(--font-zg-body)] text-zg-fg antialiased")}
         >
           <AppAmbientBackground />
 
