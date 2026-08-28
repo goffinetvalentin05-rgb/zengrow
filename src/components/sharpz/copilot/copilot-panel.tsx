@@ -42,7 +42,7 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
         className="pointer-events-none absolute left-1/2 top-[12%] h-[360px] w-[540px] -translate-x-1/2 rounded-full"
         style={{
           background:
-            "radial-gradient(ellipse, rgba(232, 154, 140, 0.18) 0%, rgba(196, 120, 114, 0.06) 42%, transparent 70%)",
+            "radial-gradient(ellipse, rgba(203, 180, 220, 0.2) 0%, rgba(155, 122, 173, 0.06) 42%, transparent 70%)",
         }}
         aria-hidden
       />
@@ -53,7 +53,7 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
         {name ? (
           <>
             {greetingLead}
-            <span className="font-medium text-[#e8b4ae]">{name}</span>
+            <span className="font-medium text-[#cbb4dc]">{name}</span>
           </>
         ) : (
           greeting
@@ -69,7 +69,7 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
           className={cn(
             "flex items-end gap-2 rounded-full border border-white/[0.1] bg-white/[0.04] px-5 py-1.5",
             "backdrop-blur-sm transition-colors",
-            "focus-within:border-[#e8b4ae]/35 focus-within:bg-white/[0.055]",
+            "focus-within:border-[#cbb4dc]/35 focus-within:bg-white/[0.055]",
           )}
         >
           <textarea
@@ -90,7 +90,7 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
           <button
             type="submit"
             disabled={pending || !input.trim()}
-            className="mb-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#f6d0c2] to-[#c47872] text-[#1a1210] transition-opacity hover:opacity-90 disabled:opacity-25"
+            className="mb-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#cbb4dc] to-[#9b7aad] text-[#1a121c] transition-opacity hover:opacity-90 disabled:opacity-25"
             aria-label={t.assistant.send}
           >
             <ArrowUp className="h-4 w-4" strokeWidth={2.2} />
@@ -105,7 +105,7 @@ export function CopilotHero({ greeting, firstName, question, subtitle, suggestio
             type="button"
             onClick={() => void send(item.prompt)}
             disabled={pending}
-            className="rounded-full border border-white/[0.08] px-4 py-2 text-[13px] text-zg-text-secondary transition-colors hover:border-[#e8b4ae]/35 hover:text-zg-fg disabled:opacity-40"
+            className="rounded-full border border-white/[0.08] px-4 py-2 text-[13px] text-zg-text-secondary transition-colors hover:border-[#cbb4dc]/30 hover:text-zg-fg disabled:opacity-40"
           >
             {item.label}
           </button>

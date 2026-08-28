@@ -181,7 +181,7 @@ export function TodayView({
         <section className="zg-surface-panel overflow-hidden">
           <div className="flex items-end justify-between gap-4 border-b border-white/[0.07] px-6 py-6">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#e8b4ae]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#cbb4dc]">
                 {t.today.executionKicker}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-zg-fg">{t.today.planTitle}</h2>

@@ -632,7 +632,7 @@ body {
   background: rgb(255 255 255 / 0.03);
 }
 
-/* Agent IA — orbe organique, glow rose chaud */
+/* Agent IA — orbe organique, glow mauve poudré du SaaS */
 .agent-orb {
   position: relative;
   display: flex;
@@ -647,10 +647,10 @@ body {
   inset: 6%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 34% 72%, rgba(255, 236, 224, 0.42) 0%, transparent 42%),
-    radial-gradient(circle at 48% 52%, rgba(232, 154, 140, 0.28) 0%, transparent 58%);
+    radial-gradient(circle at 34% 72%, rgba(244, 234, 248, 0.38) 0%, transparent 42%),
+    radial-gradient(circle at 48% 52%, rgba(203, 180, 220, 0.32) 0%, transparent 58%);
   filter: blur(22px);
-  animation: agent-orb-breathe 7.5s ease-in-out infinite;
+  animation: agent-orb-breathe 1.7s ease-in-out infinite;
 }
 
 .agent-orb__svg {
@@ -659,7 +659,7 @@ body {
   height: 176px;
   width: 176px;
   overflow: visible;
-  animation: agent-orb-drift 18s ease-in-out infinite;
+  animation: agent-orb-drift 2.4s ease-in-out infinite;
 }
 
 .agent-orb__core {
@@ -674,11 +674,11 @@ body {
 @keyframes agent-orb-breathe {
   0%,
   100% {
-    transform: scale(1);
-    opacity: 0.72;
+    transform: scale(0.86);
+    opacity: 0.55;
   }
   50% {
-    transform: scale(1.12);
+    transform: scale(1.32);
     opacity: 1;
   }
 }
@@ -686,10 +686,10 @@ body {
 @keyframes agent-orb-drift {
   0%,
   100% {
-    transform: rotate(-4deg) scale(1);
+    transform: rotate(-10deg) scale(0.9);
   }
   50% {
-    transform: rotate(6deg) scale(1.03);
+    transform: rotate(12deg) scale(1.14);
   }
 }
 

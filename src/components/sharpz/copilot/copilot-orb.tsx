@@ -5,9 +5,9 @@ import { cn } from "@/src/lib/utils";
 
 const RING_PATHS = [
   "M100 56C123.5 56 144 76.5 144 100C144 123.5 123.5 144 100 144C76.5 144 56 123.5 56 100C56 76.5 76.5 56 100 56Z",
-  "M101 50C128 49 149 70 147 98C145 126 124 149 96 147C68 145 49 123 52 95C55 67 76 51 101 50Z",
-  "M98 54C119 46 148 64 146 94C144 126 122 150 92 146C64 142 48 116 54 88C60 62 76 60 98 54Z",
-  "M102 52C130 56 148 80 142 108C136 134 110 150 84 144C58 138 48 108 58 84C68 60 80 50 102 52Z",
+  "M100 48C134 46 160 74 154 108C148 140 118 158 86 152C52 146 40 112 50 80C60 50 72 50 100 48Z",
+  "M100 42C122 40 146 64 148 98C150 136 122 164 92 158C58 152 40 118 48 84C56 50 76 44 100 42Z",
+  "M98 54C136 44 166 80 152 116C138 152 96 160 66 144C36 128 38 88 56 66C74 44 70 62 98 54Z",
 ];
 
 type Props = {
@@ -37,10 +37,10 @@ export function CopilotOrb({ className }: Props) {
       <svg viewBox="0 0 200 200" className="agent-orb__svg">
         <defs>
           <linearGradient id={`${uid}-stroke`} x1="0.12" y1="1" x2="0.88" y2="0.08">
-            <stop offset="0%" stopColor="#fff8f2" />
-            <stop offset="22%" stopColor="#f6d0c2" />
-            <stop offset="52%" stopColor="#e39a88" />
-            <stop offset="100%" stopColor="#c47872" />
+            <stop offset="0%" stopColor="#f4eaf8" />
+            <stop offset="28%" stopColor="#cbb4dc" />
+            <stop offset="68%" stopColor="#9b7aad" />
+            <stop offset="100%" stopColor="#7d628c" />
           </linearGradient>
           <filter id={`${uid}-glow`} x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur in="SourceGraphic" stdDeviation="2.8" result="blur" />
@@ -53,11 +53,11 @@ export function CopilotOrb({ className }: Props) {
             <feGaussianBlur in="SourceGraphic" stdDeviation="7" />
           </filter>
         </defs>
-        <path d={RING_PATHS[0]} fill={stroke} opacity="0.14" filter={softGlow}>
+        <path d={RING_PATHS[0]} fill={stroke} opacity="0.16" filter={softGlow}>
           {reduceMotion ? null : (
             <animate
               attributeName="d"
-              dur="12s"
+              dur="2.8s"
               repeatCount="indefinite"
               calcMode="spline"
               keyTimes="0;0.25;0.5;0.75;1"
@@ -78,7 +78,7 @@ export function CopilotOrb({ className }: Props) {
           {reduceMotion ? null : (
             <animate
               attributeName="d"
-              dur="9s"
+              dur="2.2s"
               repeatCount="indefinite"
               calcMode="spline"
               keyTimes="0;0.25;0.5;0.75;1"
@@ -90,7 +90,7 @@ export function CopilotOrb({ className }: Props) {
         <path
           d={RING_PATHS[0]}
           fill="none"
-          stroke="#fff7f0"
+          stroke="#f4eaf8"
           strokeWidth="2.2"
           strokeLinecap="round"
           opacity="0.55"
@@ -99,7 +99,7 @@ export function CopilotOrb({ className }: Props) {
           {reduceMotion ? null : (
             <animate
               attributeName="d"
-              dur="11s"
+              dur="2.5s"
               repeatCount="indefinite"
               calcMode="spline"
               keyTimes="0;0.25;0.5;0.75;1"
