@@ -12,6 +12,7 @@ import { DashboardTitleProvider } from "@/src/components/dashboard/dashboard-tit
 import { NotificationProvider } from "@/src/components/dashboard/notifications/notification-provider";
 import { DashboardLocaleProvider } from "@/src/components/dashboard/i18n/dashboard-locale-provider";
 import { SharpzAssistant } from "@/src/components/sharpz/assistant/sharpz-assistant";
+import { CopilotProvider, useCopilot } from "@/src/components/sharpz/copilot/copilot-context";
 import { OnboardingChrome } from "@/src/components/sharpz/onboarding/onboarding-chrome";
 import {
   DashboardThemeProvider,
@@ -94,7 +95,6 @@ function DashboardShellInner({
   "initialThemePreference" | "initialResolvedTheme" | "initialResolvedCanvas" | "initialLocale"
 >) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [assistantSignal, setAssistantSignal] = useState(0);
   const pathname = usePathname();
   const onboardingMode = pathname.startsWith("/dashboard/onboarding");
   const { resolvedTheme, resolvedCanvas } = useDashboardTheme();
@@ -123,6 +123,7 @@ function DashboardShellInner({
 
   return (
     <DashboardToastProvider>
+      <CopilotProvider>
       <DashboardTitleProvider>
         <NotificationProvider restaurantId={restaurantId}>
         <div
@@ -141,13 +142,12 @@ function DashboardShellInner({
             />
 
             <div className="relative z-0 flex min-w-0 flex-1 flex-col">
-              <DashboardTopBar
+              <DashboardTopBarWithCopilot
                 userDisplayName={userDisplayName}
                 userRoleLabel={userRoleLabel}
                 userInitials={userInitials}
                 userAvatarUrl={userAvatarUrl}
                 onOpenMobileNav={() => setMobileNavOpen(true)}
-                onOpenAssistant={() => setAssistantSignal((value) => value + 1)}
               />
               <main className="flex-1 overflow-x-hidden px-4 pb-6 pt-8 md:px-8 md:pb-8 md:pt-10">{children}</main>
             </div>
@@ -168,11 +168,42 @@ function DashboardShellInner({
               />
             ) : null}
           </AnimatePresence>
-          <SharpzAssistant hidden={onboardingMode} openSignal={assistantSignal} />
+          <SharpzAssistant />
         </div>
         </NotificationProvider>
       </DashboardTitleProvider>
+      </CopilotProvider>
     </DashboardToastProvider>
+  );
+}
+
+function DashboardTopBarWithCopilot({
+  userDisplayName,
+  userRoleLabel,
+  userInitials,
+  userAvatarUrl,
+  onOpenMobileNav,
+}: {
+  userDisplayName: string;
+  userRoleLabel: string;
+  userInitials: string;
+  userAvatarUrl?: string | null;
+  onOpenMobileNav: () => void;
+}) {
+  const pathname = usePathname();
+  const copilot = useCopilot();
+  return (
+    <DashboardTopBar
+      userDisplayName={userDisplayName}
+      userRoleLabel={userRoleLabel}
+      userInitials={userInitials}
+      userAvatarUrl={userAvatarUrl}
+      onOpenMobileNav={onOpenMobileNav}
+      onOpenAssistant={() => {
+        if (pathname === "/dashboard") copilot.focusInput();
+        else copilot.setDockOpen(true);
+      }}
+    />
   );
 }
 

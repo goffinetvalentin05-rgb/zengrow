@@ -18,11 +18,12 @@ type Props = {
   lastAudit: AuditRecord | null;
   findings: AuditFinding[];
   recommendedActions: SharpzAction[];
+  embedded?: boolean;
 };
 
 const SUBSCORE_KEYS = ["landing", "ux", "seo", "positioning", "conversion", "retention"] as const;
 
-export function AnalyseView({ lastAudit, findings, recommendedActions }: Props) {
+export function AnalyseView({ lastAudit, findings, recommendedActions, embedded = false }: Props) {
   const { t, locale } = useDashboardI18n();
   const router = useRouter();
   const showToast = useDashboardToast();
@@ -48,18 +49,31 @@ export function AnalyseView({ lastAudit, findings, recommendedActions }: Props) 
       ? lastAudit.globalScore - lastAudit.previousScore
       : null;
 
-  return (
-    <DashboardContent>
-      <PageHeader
-        title={t.analysePage.title}
-        subtitle={t.analysePage.subtitle}
-        primaryAction={{
-          kind: "button",
-          label: running ? t.analysePage.running : t.common.launchAnalysis,
-          onClick: runAudit,
-          disabled: running,
-        }}
-      />
+  const inner = (
+    <>
+      {embedded ? (
+        <div className="mb-6 flex justify-end">
+          <button
+            type="button"
+            onClick={() => void runAudit()}
+            disabled={running}
+            className="rounded-xl bg-gradient-to-br from-[#7c5cff] to-[#6366f1] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {running ? t.analysePage.running : t.common.launchAnalysis}
+          </button>
+        </div>
+      ) : (
+        <PageHeader
+          title={t.analysePage.title}
+          subtitle={t.analysePage.subtitle}
+          primaryAction={{
+            kind: "button",
+            label: running ? t.analysePage.running : t.common.launchAnalysis,
+            onClick: runAudit,
+            disabled: running,
+          }}
+        />
+      )}
 
       {!lastAudit ? (
         <SharpzEmptyPanel
@@ -174,6 +188,9 @@ export function AnalyseView({ lastAudit, findings, recommendedActions }: Props) 
           </section>
         </>
       )}
-    </DashboardContent>
+    </>
   );
+
+  if (embedded) return <div className="space-y-8">{inner}</div>;
+  return <DashboardContent>{inner}</DashboardContent>;
 }

@@ -319,8 +319,8 @@ function heuristicBundle(ctx: InsightContext): WorkspaceInsightBundle {
       ideas: channels.slice(0, 3).map((platform) => ({
         platform,
         hook: fr
-          ? `La plupart des ${name}s manquent cette étape avant d’acquérir`
-          : `Most ${name}s skip this step before acquiring`,
+          ? "La plupart des fondateurs SaaS manquent cette étape avant d’acquérir"
+          : "Most SaaS founders skip this step before acquiring",
         angle: fr ? "Erreur fréquente + correction" : "Common mistake + fix",
         objective: fr ? "Autorité + prospects" : "Authority + prospects",
         format: platform === "tiktok" || platform === "youtube" ? (fr ? "Vidéo courte" : "Short video") : fr ? "Post" : "Post",

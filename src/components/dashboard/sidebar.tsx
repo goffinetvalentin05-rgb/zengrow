@@ -8,16 +8,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
-  LayoutDashboard,
-  LineChart,
-  ListChecks,
+  CalendarDays,
   LogOut,
-  Newspaper,
   PanelLeftClose,
   PanelLeftOpen,
   Radar,
   Settings,
-  TrendingUp,
+  Users,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -63,12 +60,9 @@ export default function DashboardSidebar({
   const showProUpsell = subscriptionPlan === "starter" && subscriptionStatus !== "trial";
 
   const navItems = [
-    { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
-    { href: "/dashboard/actions", label: t.nav.actions, icon: ListChecks },
-    { href: "/dashboard/analyse", label: t.nav.analyse, icon: Radar },
-    { href: "/dashboard/growth", label: t.nav.growth, icon: TrendingUp },
-    { href: "/dashboard/content", label: t.nav.content, icon: Newspaper },
-    { href: "/dashboard/market", label: t.nav.market, icon: LineChart },
+    { href: "/dashboard", label: t.nav.today, icon: CalendarDays },
+    { href: "/dashboard/prospects", label: t.nav.prospects, icon: Users },
+    { href: "/dashboard/intelligence", label: t.nav.intelligence, icon: Radar },
     { href: "/dashboard/progress", label: t.nav.progress, icon: BarChart3 },
     { href: "/dashboard/settings", label: t.nav.settings, icon: Settings },
   ];

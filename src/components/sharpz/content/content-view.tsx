@@ -14,24 +14,31 @@ import type { ContentIdea, ContentOpportunity } from "@/src/lib/sharpz/types";
 type Props = {
   opportunities: ContentOpportunity[];
   ideas: ContentIdea[];
+  embedded?: boolean;
 };
 
-export function ContentView({ opportunities, ideas }: Props) {
+export function ContentView({ opportunities, ideas, embedded = false }: Props) {
   const { t } = useDashboardI18n();
   const [tab, setTab] = useState("opportunities");
 
-  return (
-    <DashboardContent>
-      <PageHeader title={t.contentPage.title} subtitle={t.contentPage.subtitle}>
-        <Tabs
-          value={tab}
-          onChange={setTab}
-          tabs={[
-            { id: "opportunities", label: t.contentPage.opportunities },
-            { id: "ideas", label: t.contentPage.ideas },
-          ]}
-        />
-      </PageHeader>
+  const tabs = (
+    <Tabs
+      value={tab}
+      onChange={setTab}
+      tabs={[
+        { id: "opportunities", label: t.contentPage.opportunities },
+        { id: "ideas", label: t.contentPage.ideas },
+      ]}
+    />
+  );
+
+  const inner = (
+    <>
+      {embedded ? <div className="mb-6">{tabs}</div> : (
+        <PageHeader title={t.contentPage.title} subtitle={t.contentPage.subtitle}>
+          {tabs}
+        </PageHeader>
+      )}
 
       {tab === "opportunities" ? (
         opportunities.length ? (
@@ -98,6 +105,9 @@ export function ContentView({ opportunities, ideas }: Props) {
       ) : (
         <SharpzEmptyPanel title={t.empty.noContentTitle} description={t.empty.noContentDescription} icon={PenLine} />
       )}
-    </DashboardContent>
+    </>
   );
+
+  if (embedded) return <div className="space-y-8">{inner}</div>;
+  return <DashboardContent>{inner}</DashboardContent>;
 }

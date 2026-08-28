@@ -53,7 +53,7 @@ export function ActionCard({ action, onOpen, className }: Props) {
           </button>
         ) : (
           <Link
-            href="/dashboard/actions"
+            href="/dashboard"
             className={buttonClassName({ variant: "secondary", size: "sm", className: "shrink-0" })}
           >
             {t.common.seeAction}

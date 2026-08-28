@@ -19,9 +19,10 @@ type Props = {
   competitors: Competitor[];
   changes: CompetitorChange[];
   opportunities: SharpzOpportunity[];
+  embedded?: boolean;
 };
 
-export function MarketView({ competitors, changes, opportunities }: Props) {
+export function MarketView({ competitors, changes, opportunities, embedded = false }: Props) {
   const { t, locale } = useDashboardI18n();
   const router = useRouter();
   const showToast = useDashboardToast();
@@ -54,9 +55,9 @@ export function MarketView({ competitors, changes, opportunities }: Props) {
     router.refresh();
   }
 
-  return (
-    <DashboardContent>
-      <PageHeader title={t.marketPage.title} subtitle={t.marketPage.subtitle} />
+  const inner = (
+    <>
+      {embedded ? null : <PageHeader title={t.marketPage.title} subtitle={t.marketPage.subtitle} />}
 
       <Card>
         <CardHeader>
@@ -211,6 +212,9 @@ export function MarketView({ competitors, changes, opportunities }: Props) {
           </div>
         </CardContent>
       </Card>
-    </DashboardContent>
+    </>
   );
+
+  if (embedded) return <div className="space-y-8">{inner}</div>;
+  return <DashboardContent>{inner}</DashboardContent>;
 }

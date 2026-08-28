@@ -128,6 +128,7 @@ export function mapAction(row: Record<string, unknown>): SharpzAction {
     howTo: typeof row.how_to === "string" ? row.how_to : null,
     microSteps: asStringArray(row.micro_steps),
     detectedAt: String(row.detected_at ?? row.created_at ?? ""),
+    updatedAt: String(row.updated_at ?? row.created_at ?? ""),
     objectiveKey: typeof row.objective_key === "string" ? row.objective_key : null,
     sourceType: typeof row.source_type === "string" ? row.source_type : null,
     opportunityId: typeof row.opportunity_id === "string" ? row.opportunity_id : null,

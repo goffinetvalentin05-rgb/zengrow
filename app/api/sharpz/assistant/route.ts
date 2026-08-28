@@ -60,6 +60,7 @@ Réponds en JSON { reply, prospects? }.`,
             conversation: parsed.data.slice(-8),
           }),
           maxTokens: 1600,
+          timeoutMs: 20000,
           parse: (raw) => replySchema.parse(raw),
         }),
     })) as { data: z.infer<typeof replySchema> };

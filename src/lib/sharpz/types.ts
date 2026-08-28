@@ -161,6 +161,7 @@ export type SharpzAction = {
   howTo: string | null;
   microSteps: string[];
   detectedAt: string;
+  updatedAt?: string;
   objectiveKey: string | null;
   sourceType: string | null;
   opportunityId: string | null;
