@@ -27,7 +27,7 @@ export function ProblemSection() {
         <ScrollReveal className="go-mind" y={22}>
           <figure className="go-mind__frame">
             <Image
-              src="/landing/problem-mind-v2.png"
+              src="/landing/problem-mind-names.png"
               alt={t.problem.visualAlt}
               fill
               sizes="(max-width: 880px) 100vw, 72rem"
@@ -35,6 +35,12 @@ export function ProblemSection() {
               priority
             />
             <span className="go-mind__glow" aria-hidden />
+            <span className="go-mind__cavity" aria-hidden />
+            <div className="go-mind__names" aria-hidden>
+              <span className="go-mind__chip go-mind__chip--a">Kéo</span>
+              <span className="go-mind__chip go-mind__chip--b">Yomi</span>
+              <span className="go-mind__chip go-mind__chip--c">Iman Gadhzi</span>
+            </div>
             <figcaption className="go-mind__kicker">{t.problem.visualKicker}</figcaption>
           </figure>
           <p className="go-algo__caption">{t.problem.visualCaption}</p>
