@@ -18,7 +18,8 @@ export function Navbar() {
   const reduce = Boolean(useReducedMotion());
 
   const links = [
-    { href: ROUTES.features, label: t.nav.features },
+    { href: ROUTES.explore, label: t.nav.explore },
+    { href: ROUTES.categories, label: t.nav.categories },
     { href: ROUTES.how, label: t.nav.how },
     { href: ROUTES.faq, label: t.nav.faq },
   ];

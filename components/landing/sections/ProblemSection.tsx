@@ -1,48 +1,43 @@
 "use client";
 
+import Image from "next/image";
 import { useLocale } from "../locale-provider";
-import { QuestionRoulette } from "../QuestionRoulette";
 import { Container, Eyebrow, ScrollReveal, Section, SectionTitle } from "../ui";
 
 export function ProblemSection() {
-  const { locale, t } = useLocale();
+  const { t } = useLocale();
 
   return (
-    <Section>
+    <Section className="go-problem-v2">
       <Container>
-        <ScrollReveal>
+        <ScrollReveal className="go-section-head go-section-head--center">
           <Eyebrow>{t.problem.label}</Eyebrow>
-          <SectionTitle>
-            {t.problem.titleLine1}
-            <br />
-            {t.problem.titleLine2}
-          </SectionTitle>
-        </ScrollReveal>
-      </Container>
-
-      <ScrollReveal delay={0.05}>
-        <QuestionRoulette key={locale} questions={t.problem.questions} />
-      </ScrollReveal>
-
-      <Container>
-        <ScrollReveal delay={0.08}>
-          <div className="go-problem__close">
-            <p className="go-problem__kicker">{t.problem.closeLabel}</p>
-            <h3 className="go-problem__close-title">{t.problem.closeTitle}</h3>
-            <p className="go-problem__close-lead">{t.problem.closeSubtitle}</p>
-
-            <div className="go-problem__priorities">
-              {t.problem.priorities.map((item) => (
-                <div key={item.index} className="go-problem__priority">
-                  <span className="go-problem__priority-index">{item.index}</span>
-                  <span className={`go-problem__priority-impact go-problem__priority-impact--${item.tone}`}>
-                    {item.impact}
-                  </span>
-                  <span className="go-problem__priority-title">{item.title}</span>
-                </div>
+          <SectionTitle className="go-title--center">{t.problem.title}</SectionTitle>
+          <p className="go-lead go-problem__body">{t.problem.body}</p>
+          <div className="go-problem__know">
+            <p className="go-problem__know-lead">{t.problem.pointsLead}</p>
+            <ul>
+              {t.problem.points.map((point) => (
+                <li key={point}>{point}</li>
               ))}
-            </div>
+            </ul>
           </div>
+        </ScrollReveal>
+
+        <ScrollReveal className="go-mind" y={22}>
+          <figure className="go-mind__frame">
+            <Image
+              src="/landing/problem-mind-v2.png"
+              alt={t.problem.visualAlt}
+              fill
+              sizes="(max-width: 880px) 100vw, 72rem"
+              className="go-mind__img"
+              priority
+            />
+            <span className="go-mind__glow" aria-hidden />
+            <figcaption className="go-mind__kicker">{t.problem.visualKicker}</figcaption>
+          </figure>
+          <p className="go-algo__caption">{t.problem.visualCaption}</p>
         </ScrollReveal>
       </Container>
     </Section>

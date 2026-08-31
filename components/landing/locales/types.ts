@@ -1,5 +1,18 @@
 export type Locale = "fr" | "en";
 
+/** Drives which mock preview visual a category card renders. */
+export type CategoryKind =
+  | "saas"
+  | "ecommerce"
+  | "agency"
+  | "ofm"
+  | "creators"
+  | "ai"
+  | "realestate"
+  | "marketing"
+  | "sales"
+  | "freelancing";
+
 export type LandingDictionary = {
   meta: {
     title: string;
@@ -10,7 +23,8 @@ export type LandingDictionary = {
     tagline: string;
   };
   nav: {
-    features: string;
+    explore: string;
+    categories: string;
     how: string;
     faq: string;
     login: string;
@@ -31,64 +45,64 @@ export type LandingDictionary = {
     subtitle: string;
     ctaPrimary: string;
     ctaSecondary: string;
-    finePrint: string;
-    urlPlaceholder: string;
-  };
-  todayMockup: {
-    title: string;
-    actions: Array<{
-      index: string;
-      title: string;
-      description: string;
-      impact: string;
-    }>;
   };
   problem: {
     label: string;
-    titleLine1: string;
-    titleLine2: string;
-    questions: string[];
-    closeLabel: string;
-    closeTitle: string;
-    closeSubtitle: string;
-    priorities: Array<{
-      index: string;
-      impact: string;
-      title: string;
-      tone: "high" | "medium";
+    title: string;
+    body: string;
+    pointsLead: string;
+    points: string[];
+    visualCaption: string;
+    visualKicker: string;
+    visualAlt: string;
+    popularLabel: string;
+    foundLabel: string;
+    popular: Array<{
+      name: string;
+      initials: string;
+      followers: string;
+    }>;
+    rising: Array<{
+      name: string;
+      initials: string;
+      tag: string;
     }>;
   };
-  features: {
+  discover: {
     label: string;
     title: string;
     subtitle: string;
-    items: Array<{
-      index: string;
-      title: string;
-      text: string;
-      chips: string[];
-      phrase?: string;
+    categoryLabel: string;
+    niches: string[];
+    filters: string[];
+    viewProfile: string;
+    followersLabel: string;
+    projectLabel: string;
+    profiles: Array<{
+      name: string;
+      role: string;
+      project: string;
+      followers: string;
+      platforms: string[];
+      initials: string;
+      badge: string;
     }>;
-    closingLine1: string;
-    closingLine2: string;
-    closingLine3: string;
   };
   how: {
-    label: string;
     title: string;
     subtitle: string;
     steps: Array<{
       index: string;
       title: string;
       text: string;
-      visual: "url" | "questions" | "context" | "today";
-      urlPlaceholder?: string;
-      bubbles?: string[];
-      orbs?: string[];
-      actions?: string[];
     }>;
-    closingLine1: string;
-    closingLine2: string;
+  };
+  finalCta: {
+    titleLine1: string;
+    titleLine2: string;
+    subtitle: string;
+    ctaPrimary: string;
+    ctaSecondary: string;
   };
   faq: {
     label: string;
@@ -97,15 +111,6 @@ export type LandingDictionary = {
       q: string;
       a: string;
     }>;
-  };
-  finalCta: {
-    label: string;
-    titleLine1: string;
-    titleLine2: string;
-    subtitle: string;
-    urlPlaceholder: string;
-    analyze: string;
-    finePrint: string;
   };
   footer: {
     product: string;

@@ -1,22 +1,20 @@
 "use client";
 
-import { Play, Sparkles } from "lucide-react";
 import { ROUTES } from "../config";
 import { useLocale } from "../locale-provider";
-import { TodayMockup } from "../mockups/TodayMockup";
-import { Container, ScrollReveal, UrlAnalyzeField } from "../ui";
+import { HeroField } from "../mockups/HeroField";
+import { Container, CtaButton, ScrollReveal } from "../ui";
 
 export function Hero() {
   const { t } = useLocale();
 
   return (
     <section className="go-hero" id="top">
+      <HeroField />
+
       <Container wide className="go-hero__inner">
         <ScrollReveal className="go-hero__copy">
-          <p className="go-hero__badge">
-            <Sparkles strokeWidth={1.75} aria-hidden />
-            {t.hero.badge}
-          </p>
+          <p className="go-hero__badge">{t.hero.badge}</p>
 
           <h1 className="go-hero__title">
             {t.hero.titleLine1}
@@ -26,26 +24,12 @@ export function Hero() {
 
           <p className="go-hero__lead">{t.hero.subtitle}</p>
 
-          <div className="go-hero__form">
-            <UrlAnalyzeField
-              hero
-              placeholder={t.hero.urlPlaceholder}
-              buttonLabel={t.hero.ctaPrimary}
-            />
+          <div className="go-hero__actions">
+            <CtaButton href={ROUTES.categories}>{t.hero.ctaPrimary}</CtaButton>
+            <CtaButton href={ROUTES.signup} variant="secondary">
+              {t.hero.ctaSecondary}
+            </CtaButton>
           </div>
-
-          <a href={ROUTES.how} className="go-hero__secondary">
-            <span className="go-hero__play" aria-hidden>
-              <Play strokeWidth={0} />
-            </span>
-            {t.hero.ctaSecondary}
-          </a>
-
-          <p className="go-hero__fine">{t.hero.finePrint}</p>
-        </ScrollReveal>
-
-        <ScrollReveal className="go-hero__mock" delay={0.12} y={26}>
-          <TodayMockup />
         </ScrollReveal>
       </Container>
     </section>
