@@ -30,7 +30,7 @@ export type LandingDictionary = {
   hero: {
     title: string;
     titleLead: string;
-    titleRotating: string[];
+    titleRotating: readonly string[];
     subtitle: string;
     ctaPrimary: string;
     ctaSecondary: string;

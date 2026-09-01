@@ -8,7 +8,7 @@ function clamp(value: number, min = 0, max = 1) {
   return Math.min(max, Math.max(min, value));
 }
 
-function useDifferenceProgress(trackRef: React.RefObject<HTMLElement | null>) {
+function useDifferenceProgress(trackRef: React.RefObject<HTMLDivElement | null>) {
   const [progress, setProgress] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -71,7 +71,7 @@ function wordReveal(progress: number, index: number, total: number) {
 
 export function DifferenceSection() {
   const { t } = useLocale();
-  const trackRef = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const { progress, reducedMotion } = useDifferenceProgress(trackRef);
   const words = t.difference.title.split(/\s+/);
 
