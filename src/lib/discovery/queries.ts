@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AUDIENCE_RANGES, DISCOVERY_PAGE_SIZE, PROFILE_TYPE_LABELS, PROFILE_TYPES } from "@/src/lib/discovery/constants";
+import { mapProfileAnalytics, parseAnalyticsRange } from "@/src/lib/discovery/analytics";
+import { connectionStatusForViewer } from "@/src/lib/discovery/connections";
 import { applyDiscoveryFilters } from "@/src/lib/discovery/apply-filters";
 import { birthDateBounds, sanitizeIlike } from "@/src/lib/discovery/media";
 import {
@@ -22,6 +24,7 @@ import type {
   Project,
   PublicProfileModel,
   SocialLink,
+  ConnectionUiStatus,
 } from "@/src/lib/discovery/types";
 
 const PROFILE_SELECT = "*";
@@ -67,7 +70,7 @@ async function hydrateCards(
   const ids = profiles.map((p) => p.id);
   const categoryIds = [...new Set(profiles.map((p) => p.primaryCategoryId).filter(Boolean))] as string[];
 
-  const [projectsRes, linksRes, catsRes, followsRes, savedRes, featuredRes, membershipRes] = await Promise.all([
+  const [projectsRes, linksRes, catsRes, followsRes, savedRes, featuredRes, membershipRes, connectionsRes] = await Promise.all([
     supabase.from("projects").select("*").in("owner_id", ids).eq("featured_project", true),
     supabase.from("social_links").select("*").in("profile_id", ids).order("sort_index"),
     categoryIds.length
@@ -81,6 +84,12 @@ async function hydrateCards(
       : Promise.resolve({ data: [] as { profile_id: string }[] }),
     supabase.from("featured_content").select("*").in("profile_id", ids).order("sort_index"),
     supabase.from("profile_categories").select("profile_id, categories(slug)").in("profile_id", ids),
+    viewerId
+      ? supabase
+          .from("connections")
+          .select("requester_id, receiver_id, status")
+          .or(`requester_id.eq.${viewerId},receiver_id.eq.${viewerId}`)
+      : Promise.resolve({ data: [] as { requester_id: string; receiver_id: string; status: string }[] }),
   ]);
 
   const featuredByOwner = new Map<string, Project>();
@@ -106,6 +115,14 @@ async function hydrateCards(
   const cats = new Map((catsRes.data ?? []).map((row) => [String((row as { id: string }).id), mapCategory(row as Record<string, unknown>)]));
   const followed = new Set((followsRes.data ?? []).map((row) => row.following_id));
   const saved = new Set((savedRes.data ?? []).map((row) => row.profile_id));
+  const connectionsByProfile = new Map<string, ConnectionUiStatus>();
+  if (viewerId) {
+    for (const row of connectionsRes.data ?? []) {
+      const otherId = row.requester_id === viewerId ? row.receiver_id : row.requester_id;
+      if (!ids.includes(otherId)) continue;
+      connectionsByProfile.set(otherId, connectionStatusForViewer(viewerId, row));
+    }
+  }
   const slugsByProfile = new Map<string, string[]>();
   for (const row of membershipRes.data ?? []) {
     const rec = row as { profile_id: string; categories: { slug: string } | { slug: string }[] | null };
@@ -125,6 +142,7 @@ async function hydrateCards(
     categorySlugs: slugsByProfile.get(profile.id) ?? [],
     followedByMe: followed.has(profile.id),
     savedByMe: saved.has(profile.id),
+    connectionStatus: connectionsByProfile.get(profile.id) ?? "none",
   }));
 }
 
@@ -523,10 +541,47 @@ export async function searchDiscovery(supabase: SupabaseClient, query: string, v
   };
 }
 
-export async function getProfileAnalytics(supabase: SupabaseClient, profileId: string): Promise<ProfileAnalytics | null> {
-  const { data, error } = await supabase.rpc("discovery_profile_analytics", { p_profile_id: profileId });
-  if (error || !data) return null;
-  return data as ProfileAnalytics;
+export async function getIncomingConnectionRequests(supabase: SupabaseClient, viewerId: string) {
+  const { data, error } = await supabase
+    .from("connections")
+    .select("id, requester_id, created_at")
+    .eq("receiver_id", viewerId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+  if (error) return [];
+  const rows = data ?? [];
+  const ids = rows.map((row) => row.requester_id as string);
+  if (!ids.length) return [];
+  const { data: profiles } = await supabase.from("profiles").select("*").in("id", ids);
+  const cards = await hydrateCards(
+    supabase,
+    (profiles ?? []).map((row) => mapProfile(row as Record<string, unknown>)),
+    viewerId,
+  );
+  const byId = new Map(cards.map((card) => [card.id, card]));
+  return rows
+    .map((row) => {
+      const profile = byId.get(row.requester_id as string);
+      if (!profile) return null;
+      return { id: String(row.id), profile };
+    })
+    .filter((item): item is { id: string; profile: ProfileCardModel } => Boolean(item));
+}
+
+export async function getProfileAnalytics(
+  supabase: SupabaseClient,
+  profileId: string,
+  range?: number | string | null,
+): Promise<ProfileAnalytics | null> {
+  const days = parseAnalyticsRange(range);
+  const primary = await supabase.rpc("discovery_profile_analytics", {
+    p_profile_id: profileId,
+    p_range_days: days,
+  });
+  if (!primary.error && primary.data) return mapProfileAnalytics(primary.data, days);
+  const fallback = await supabase.rpc("discovery_profile_analytics", { p_profile_id: profileId });
+  if (fallback.error || !fallback.data) return null;
+  return mapProfileAnalytics(fallback.data, days);
 }
 
 export async function getRecentViewSignals(supabase: SupabaseClient, profileIds: string[]) {

@@ -1,29 +1,56 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import Button from "@/src/components/ui/button";
+import { AnalyticsViewsChart } from "@/src/components/discovery/analytics-chart";
+import {
+  clickThroughRate,
+  discoveryConversion,
+  followConversion,
+  formatDelta,
+  percentChange,
+  platformLabel,
+  topLinkLabel,
+  trafficSourceLabel,
+} from "@/src/lib/discovery/analytics";
+import { ANALYTICS_RANGES, type AnalyticsRange } from "@/src/lib/discovery/constants";
 import { SHARPZ_PRO_PRICE_LABEL } from "@/src/lib/discovery/pro";
 import type { ProfileAnalytics } from "@/src/lib/discovery/types";
 import { cn } from "@/src/lib/utils";
 
-const SOURCE_LABELS: Record<string, string> = {
-  explore: "Explore",
-  search: "Search",
-  category: "Category page",
-  direct: "Direct profile",
-  following: "Following",
-  saved: "Saved",
-};
-
 export function AnalyticsView({
-  isPro,
   analytics,
+  range,
+  tier,
 }: {
-  isPro: boolean;
-  analytics: ProfileAnalytics | null;
+  analytics: ProfileAnalytics;
+  range: AnalyticsRange;
+  tier: "full" | "limited";
 }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [upgrading, setUpgrading] = useState(false);
+  const full = tier === "full";
+
+  const views = analytics.views;
+  const unique = analytics.unique_visitors;
+  const clicks = analytics.external_clicks;
+  const ctr = clickThroughRate(clicks, views);
+  const discoveryRate = discoveryConversion(analytics.profile_opens, analytics.impressions);
+  const followRate = followConversion(analytics.follows, analytics.profile_opens || views);
+
+  function setRange(next: AnalyticsRange) {
+    startTransition(() => {
+      router.push(`/analytics?range=${next}`);
+    });
+  }
+
   async function upgrade() {
+    setUpgrading(true);
     const response = await fetch("/api/discovery/checkout", { method: "POST" });
     const payload = (await response.json().catch(() => ({}))) as { url?: string; error?: string };
+    setUpgrading(false);
     if (payload.url) {
       window.location.href = payload.url;
       return;
@@ -32,95 +59,233 @@ export function AnalyticsView({
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
-      <header className="mb-8">
-        <h1 className="font-[family-name:var(--font-zg-display)] text-4xl text-white">Analytics</h1>
-        <p className="mt-2 text-sm text-white/45">Aggregated visibility only. We never show who visited your profile.</p>
+    <div className="mx-auto w-full max-w-4xl pb-10">
+      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-[family-name:var(--font-zg-display)] text-4xl text-white">Analytics</h1>
+          <p className="mt-2 max-w-md text-sm text-white/45">
+            Aggregated visibility only. We never show who visited your profile.
+          </p>
+        </div>
+        <div className="flex rounded-full border border-white/[0.08] bg-white/[0.03] p-1">
+          {ANALYTICS_RANGES.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setRange(item)}
+              disabled={pending}
+              className={cn(
+                "min-w-12 rounded-full px-3 py-1.5 text-xs tracking-[0.12em] text-white/40 transition-colors",
+                range === item && "bg-white text-zinc-950",
+              )}
+            >
+              {item}D
+            </button>
+          ))}
+        </div>
       </header>
 
-      <div className={cn("relative", !isPro && "min-h-[420px]")}>
-        <div className={cn(!isPro && "pointer-events-none select-none blur-sm")}>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Stat label="Profile views" value={analytics?.views_total ?? 0} />
-            <Stat label="Last 7 days" value={analytics?.views_7d ?? 0} />
-            <Stat label="Last 30 days" value={analytics?.views_30d ?? 0} />
-            <Stat label="External clicks" value={analytics?.external_clicks ?? 0} />
-            <Stat label="New followers (7d)" value={analytics?.new_followers_7d ?? 0} />
-            <Stat label="Followers" value={analytics?.followers_total ?? 0} />
-          </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat
+          label="Profile views"
+          value={views}
+          hint={`${analytics.views_today} today`}
+          delta={percentChange(views, analytics.views_prev)}
+          range={range}
+        />
+        <Stat
+          label="Unique visitors"
+          value={unique}
+          delta={percentChange(unique, analytics.unique_visitors_prev)}
+          range={range}
+        />
+        <Stat
+          label="External clicks"
+          value={clicks}
+          delta={percentChange(clicks, analytics.external_clicks_prev)}
+          range={range}
+        />
+        <Stat label="External CTR" value={ctr == null ? "—" : `${ctr}%`} hint="Clicks / views" />
+      </div>
 
-          <section className="mt-8 rounded-3xl border border-white/[0.07] p-5">
-            <h2 className="text-sm text-white/50">Clicks by platform</h2>
-            <BarList data={analytics?.clicks_by_platform ?? {}} />
-          </section>
-          <section className="mt-4 rounded-3xl border border-white/[0.07] p-5">
-            <h2 className="text-sm text-white/50">Top discovery sources</h2>
-            <BarList
-              data={Object.fromEntries(
-                Object.entries(analytics?.sources ?? {}).map(([key, value]) => [SOURCE_LABELS[key] ?? key, value]),
-              )}
+      <section className="mt-6 rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5">
+        <p className="sz-label">Profile views over time</p>
+        <AnalyticsViewsChart data={analytics.views_over_time} />
+      </section>
+
+      {full ? (
+        <>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <Stat
+              label="Followers"
+              value={analytics.followers_total}
+              hint={`${analytics.new_followers} new this period`}
             />
-          </section>
-          <section className="mt-4 rounded-3xl border border-white/[0.07] p-5">
-            <h2 className="text-sm text-white/50">Top niches of visitors</h2>
-            {(analytics?.visitor_niches ?? []).length ? (
-              <ul className="mt-3 space-y-2 text-sm text-white/70">
-                {analytics?.visitor_niches.map((item) => (
-                  <li key={item.slug}>
-                    {item.share}% of visitors came from {item.slug}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-3 text-sm text-white/35">Not enough visits yet.</p>
-            )}
-          </section>
-        </div>
-
-        {!isPro ? (
-          <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-black/40 p-6">
-            <div className="max-w-sm rounded-3xl border border-white/10 bg-[#0d0c12] p-6 text-center">
-              <p className="font-[family-name:var(--font-zg-display)] text-2xl text-white">Unlock Sharpz Pro</p>
-              <p className="mt-2 text-sm text-white/50">
-                See how people discover you. {SHARPZ_PRO_PRICE_LABEL}.
-              </p>
-              <Button className="mt-5 w-full" onClick={upgrade}>
-                Upgrade to Pro
-              </Button>
-            </div>
+            <Stat
+              label="Profile opens"
+              value={analytics.profile_opens}
+              hint={followRate != null ? `${followRate}% follow conversion` : "From Explore & Search"}
+            />
+            <Stat
+              label="Discovery impressions"
+              value={analytics.impressions}
+              hint={discoveryRate != null ? `${discoveryRate}% open rate` : "Cards seen in Sharpz"}
+            />
           </div>
+
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            <ListCard
+              title="Traffic sources"
+              empty="No traffic sources yet."
+              items={analytics.traffic_sources.map((item) => ({
+                label: trafficSourceLabel(item.key),
+                value: item.share != null ? `${item.share}%` : String(item.count),
+                count: item.count,
+              }))}
+            />
+            <BarCard title="Clicks by platform" data={analytics.clicks_by_platform} labelFor={platformLabel} />
+          </div>
+
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            <ListCard
+              title="Top clicked links"
+              empty="No external clicks yet."
+              items={analytics.top_links.map((item) => ({
+                label: topLinkLabel(item),
+                value: `${item.clicks}`,
+                count: item.clicks,
+              }))}
+            />
+            <section className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5">
+              <p className="sz-label">Visitor niches</p>
+              {analytics.visitor_niches.length ? (
+                <ul className="mt-4 space-y-3">
+                  {analytics.visitor_niches.map((item) => (
+                    <li key={item.slug} className="flex items-center justify-between text-sm text-white/70">
+                      <span>{item.name || item.slug}</span>
+                      <span className="tabular-nums text-white/45">{item.share}%</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-4 text-sm text-white/35">Not enough signed-in visitors yet.</p>
+              )}
+            </section>
+          </div>
+        </>
+      ) : (
+        <div className="mt-6 rounded-[1.6rem] border border-white/[0.08] bg-[#0d0c12] p-6 text-center">
+          <p className="font-[family-name:var(--font-zg-display)] text-2xl text-white">Unlock the full picture</p>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-white/50">
+            Traffic sources, top links, discovery conversion and visitor niches. {SHARPZ_PRO_PRICE_LABEL}.
+          </p>
+          <Button className="mt-5" onClick={() => void upgrade()} disabled={upgrading}>
+            Upgrade to Pro
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  hint,
+  delta,
+  range,
+}: {
+  label: string;
+  value: number | string;
+  hint?: string;
+  delta?: number | null;
+  range?: AnalyticsRange;
+}) {
+  const deltaLabel = formatDelta(delta ?? null);
+  return (
+    <div className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.025] p-5">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">{label}</p>
+      <p className="mt-2 font-[family-name:var(--font-zg-display)] text-3xl text-white">{value}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/35">
+        {deltaLabel ? (
+          <span className={cn(delta && delta > 0 ? "text-white/70" : "text-white/40")}>
+            {deltaLabel}
+            {range ? ` vs previous ${range}d` : ""}
+          </span>
         ) : null}
+        {hint ? <span>{hint}</span> : null}
       </div>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function BarCard({
+  title,
+  data,
+  labelFor,
+}: {
+  title: string;
+  data: Record<string, number>;
+  labelFor: (key: string) => string;
+}) {
+  const entries = Object.entries(data)
+    .map(([key, n]) => [labelFor(key), n] as const)
+    .sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...entries.map(([, n]) => n));
   return (
-    <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] p-5">
-      <p className="text-xs uppercase tracking-[0.14em] text-white/35">{label}</p>
-      <p className="mt-2 font-[family-name:var(--font-zg-display)] text-3xl text-white">{value}</p>
-    </div>
+    <section className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5">
+      <p className="sz-label">{title}</p>
+      {entries.length ? (
+        <ul className="mt-4 space-y-3">
+          {entries.map(([label, n]) => (
+            <li key={label}>
+              <div className="mb-1 flex justify-between text-sm text-white/70">
+                <span>{label}</span>
+                <span className="tabular-nums">{n}</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                <div className="h-full rounded-full bg-white/70" style={{ width: `${(n / max) * 100}%` }} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-4 text-sm text-white/35">No data yet.</p>
+      )}
+    </section>
   );
 }
 
-function BarList({ data }: { data: Record<string, number> }) {
-  const entries = Object.entries(data).sort((a, b) => b[1] - a[1]);
-  const max = Math.max(1, ...entries.map(([, n]) => n));
-  if (!entries.length) return <p className="mt-3 text-sm text-white/35">No data yet.</p>;
+function ListCard({
+  title,
+  empty,
+  items,
+}: {
+  title: string;
+  empty: string;
+  items: { label: string; value: string; count: number }[];
+}) {
+  const max = Math.max(1, ...items.map((item) => item.count));
   return (
-    <ul className="mt-4 space-y-3">
-      {entries.map(([label, n]) => (
-        <li key={label}>
-          <div className="mb-1 flex justify-between text-sm text-white/70">
-            <span>{label}</span>
-            <span>{n}</span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-            <div className="h-full rounded-full bg-white/70" style={{ width: `${(n / max) * 100}%` }} />
-          </div>
-        </li>
-      ))}
-    </ul>
+    <section className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5">
+      <p className="sz-label">{title}</p>
+      {items.length ? (
+        <ul className="mt-4 space-y-3">
+          {items.map((item) => (
+            <li key={item.label}>
+              <div className="mb-1 flex justify-between gap-3 text-sm text-white/70">
+                <span className="min-w-0 truncate">{item.label}</span>
+                <span className="shrink-0 tabular-nums text-white/50">{item.value}</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                <div className="h-full rounded-full bg-white/70" style={{ width: `${(item.count / max) * 100}%` }} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-4 text-sm text-white/35">{empty}</p>
+      )}
+    </section>
   );
 }

@@ -1,11 +1,57 @@
+import { readUtmMedium, readUtmSource, referrerHostFromUrl, sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
 import type { DiscoveryEventInput } from "@/src/lib/discovery/types";
+
+const VISITOR_TOKEN_KEY = "sz_vid";
+
+export function getAnonymousVisitorToken() {
+  if (typeof window === "undefined") return null;
+  try {
+    const existing = window.localStorage.getItem(VISITOR_TOKEN_KEY);
+    if (existing) return existing;
+    const next = window.crypto.randomUUID();
+    window.localStorage.setItem(VISITOR_TOKEN_KEY, next);
+    return next;
+  } catch {
+    return null;
+  }
+}
+
+function sessionFlag(key: string) {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setSessionFlag(key: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(key, "1");
+  } catch {
+    /* private mode */
+  }
+}
 
 export function trackDiscoveryEvent(input: DiscoveryEventInput) {
   if (typeof window === "undefined") return;
+  if (input.eventType === "profile_view" && sessionFlag(`sz_view:${input.profileId}`)) return;
+  if (input.eventType === "profile_impression" && sessionFlag(`sz_imp:${input.profileId}`)) return;
+  if (input.eventType === "profile_view") setSessionFlag(`sz_view:${input.profileId}`);
+  if (input.eventType === "profile_impression") setSessionFlag(`sz_imp:${input.profileId}`);
+
+  const search = window.location.search;
   void fetch("/api/discovery/events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      ...input,
+      visitorToken: getAnonymousVisitorToken(),
+      utmSource: input.utmSource ?? sanitizeTrackingPlatform(readUtmSource(search)),
+      utmMedium: input.utmMedium ?? sanitizeTrackingPlatform(readUtmMedium(search)),
+      referrerHost: referrerHostFromUrl(document.referrer, window.location.hostname),
+    }),
   });
 }
 

@@ -13,16 +13,16 @@ export default async function SavedPage() {
 
   return (
     <div className="pb-8">
-      <DiscoveryPageHeader title="Saved" subtitle="People you want to remember." />
+      <DiscoveryPageHeader title="Saved" subtitle="Profiles you want to keep close." />
       <div className="mt-8 px-5 md:px-0">
         {profiles.length ? (
           <PeopleFeed profiles={profiles} source="saved" />
         ) : (
           <DiscoveryEmpty
-            title="Nothing saved yet."
-            description="Save someone interesting while you explore."
+            title="You haven’t saved any profiles yet."
+            description="Save someone interesting while you explore. Follow and connect stay separate."
             href={DISCOVERY_ROUTES.explore}
-            cta="Discover people"
+            cta="Discover profiles"
           />
         )}
       </div>

@@ -5,7 +5,9 @@ import {
   getBrandedProfilePreview,
   getProfileShareText,
   publicSlugStatusMessage,
+  readUtmMedium,
   readUtmSource,
+  referrerHostFromUrl,
   sanitizeTrackingPlatform,
 } from "@/src/lib/discovery/public-link";
 import { isReservedProfileSlug, isValidPublicSlug, slugifyUsername } from "@/src/lib/discovery/slug";
@@ -45,9 +47,12 @@ describe("public Sharpz slug", () => {
 
   it("keeps UTM source for later analytics", () => {
     expect(readUtmSource("utm_source=instagram&utm_medium=bio")).toBe("instagram");
+    expect(readUtmMedium("utm_source=instagram&utm_medium=bio")).toBe("bio");
     expect(readUtmSource({ utm_source: "tiktok", utm_medium: "bio" })).toBe("tiktok");
     expect(sanitizeTrackingPlatform("Instagram")).toBe("instagram");
     expect(sanitizeTrackingPlatform("not a source!")).toBeNull();
+    expect(referrerHostFromUrl("https://www.instagram.com/reel/abc", "localhost")).toBe("instagram.com");
+    expect(referrerHostFromUrl("https://localhost:3000/explore", "localhost")).toBeNull();
   });
 
   it("builds a branded share preview", () => {

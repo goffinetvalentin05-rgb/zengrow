@@ -141,6 +141,10 @@ export const DISCOVERY_EVENT_TYPES = [
   "project_click",
   "follow",
   "search_result_click",
+  "profile_save",
+  "profile_impression",
+  "profile_open_from_discovery",
+  "profile_external_click",
 ] as const;
 
 export type DiscoveryEventType = (typeof DISCOVERY_EVENT_TYPES)[number];
@@ -155,6 +159,26 @@ export const DISCOVERY_SOURCES = [
 ] as const;
 
 export type DiscoverySource = (typeof DISCOVERY_SOURCES)[number];
+
+export const ANALYTICS_RANGES = [7, 30, 90] as const;
+export type AnalyticsRange = (typeof ANALYTICS_RANGES)[number];
+
+export const CONNECTION_STATUSES = ["pending", "accepted", "declined"] as const;
+export type ConnectionRecordStatus = (typeof CONNECTION_STATUSES)[number];
+
+export const CLICK_PLATFORMS = [
+  "instagram",
+  "youtube",
+  "tiktok",
+  "x",
+  "linkedin",
+  "website",
+  "project",
+  "featured_content",
+  "other",
+] as const;
+
+export type ClickPlatform = (typeof CLICK_PLATFORMS)[number];
 
 export const MAX_NICHES = 5;
 export const MAX_FEATURED_CONTENT = 6;

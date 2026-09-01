@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { SOCIAL_PLATFORM_LABELS, type SocialPlatform } from "@/src/lib/discovery/constants";
@@ -9,6 +10,8 @@ import { persistExploreScroll, trackDiscoveryEvent } from "@/src/lib/discovery/t
 import { profileHref } from "@/src/lib/discovery/routes";
 import type { ProfileCardModel } from "@/src/lib/discovery/types";
 import { FollowButton } from "@/src/components/discovery/follow-button";
+import { SaveButton } from "@/src/components/discovery/save-button";
+import { ConnectButton } from "@/src/components/discovery/connect-button";
 import { SocialGlyph } from "@/src/components/discovery/social-glyph";
 import { FadeImg, ProjectStrip } from "@/src/components/discovery/sz-ui";
 import { initialsFromName } from "@/src/lib/discovery/slug";
@@ -16,13 +19,11 @@ import { cn } from "@/src/lib/utils";
 
 function openProfile(profile: ProfileCardModel, source: string) {
   persistExploreScroll(`${window.location.pathname}${window.location.search}`);
-  if (source === "search") {
-    trackDiscoveryEvent({
-      profileId: profile.id,
-      eventType: "search_result_click",
-      source: "search",
-    });
-  }
+  trackDiscoveryEvent({
+    profileId: profile.id,
+    eventType: "profile_open_from_discovery",
+    source,
+  });
 }
 
 function CardFallback({ profile }: { profile: ProfileCardModel }) {
@@ -80,9 +81,33 @@ export function ProfileDiscoveryCard({
   const media = resolveCardMedia(profile);
   const swipe = variant === "swipe";
   const accent = profile.accentColor;
+  const articleRef = useRef<HTMLElement>(null);
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    const node = articleRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        trackDiscoveryEvent({
+          profileId: profile.id,
+          eventType: "profile_impression",
+          source,
+        });
+        observer.disconnect();
+      },
+      { threshold: 0.55 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [profile.id, source]);
+
+  if (hidden) return null;
 
   return (
     <article
+      ref={articleRef}
       className={cn(
         "sz-card overflow-hidden bg-[#121214]",
         swipe ? "shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)]" : "sz-card-hover",
@@ -119,6 +144,7 @@ export function ProfileDiscoveryCard({
                 source: source === "search" ? "search" : source === "category" ? "category" : "explore",
                 platform: "youtube",
                 contentId: profile.featuredPreview?.id,
+                destination: media.youtubeUrl,
               })
             }
             className="absolute inset-0 flex items-center justify-center"
@@ -185,13 +211,19 @@ export function ProfileDiscoveryCard({
           <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-white/48">{profile.bio}</p>
         ) : null}
 
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <FollowButton
             profileId={profile.id}
             initialFollowing={profile.followedByMe}
             source={source}
             silent
             isLoggedIn={isLoggedIn}
+          />
+          <ConnectButton
+            profileId={profile.id}
+            initialStatus={profile.connectionStatus ?? "none"}
+            isLoggedIn={isLoggedIn}
+            silent
           />
           <Link
             href={href}
@@ -200,6 +232,17 @@ export function ProfileDiscoveryCard({
           >
             View profile
           </Link>
+          <SaveButton
+            profileId={profile.id}
+            initialSaved={profile.savedByMe}
+            source={source}
+            isLoggedIn={isLoggedIn}
+            silent
+            className="ml-auto"
+            onChange={(saved) => {
+              if (source === "saved") setHidden(!saved);
+            }}
+          />
         </div>
 
         {socials.length || audience ? (

@@ -17,11 +17,14 @@ import {
   resolveProfileLayout,
   resolveProfileTheme,
 } from "@/src/lib/discovery/appearance";
-import { readUtmSource, sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
+import { readUtmMedium, readUtmSource, sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
 import { completenessSuggestions } from "@/src/lib/discovery/completeness";
+import { trackDiscoveryEvent } from "@/src/lib/discovery/track";
 import type { Project, PublicProfileModel } from "@/src/lib/discovery/types";
 import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 import { FollowButton } from "@/src/components/discovery/follow-button";
+import { SaveButton } from "@/src/components/discovery/save-button";
+import { ConnectButton } from "@/src/components/discovery/connect-button";
 import { FeaturedContentCard } from "@/src/components/discovery/featured-content-card";
 import { ShareProfileButton } from "@/src/components/discovery/share-profile-button";
 import { SocialGlyph } from "@/src/components/discovery/social-glyph";
@@ -55,16 +58,15 @@ export function PublicProfileView({
   useEffect(() => {
     if (isOwner) return;
     const fromQuery = sanitizeTrackingPlatform(readUtmSource(window.location.search));
+    const medium = sanitizeTrackingPlatform(readUtmMedium(window.location.search));
     const platform = utmSource || fromQuery || undefined;
-    void fetch("/api/discovery/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        profileId: profile.id,
-        eventType: "profile_view",
-        source,
-        platform,
-      }),
+    trackDiscoveryEvent({
+      profileId: profile.id,
+      eventType: "profile_view",
+      source,
+      platform,
+      utmSource: platform,
+      utmMedium: medium,
     });
   }, [isOwner, profile.id, source, utmSource]);
 
@@ -89,11 +91,18 @@ export function PublicProfileView({
       })
     : [];
 
-  async function track(eventType: string, extra?: Record<string, unknown>) {
-    await fetch("/api/discovery/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profileId: profile.id, eventType, source, ...extra }),
+  function track(eventType: "featured_content_click" | "project_click" | "external_link_click", extra?: {
+    platform?: string;
+    contentId?: string;
+    destination?: string;
+  }) {
+    trackDiscoveryEvent({
+      profileId: profile.id,
+      eventType,
+      source,
+      platform: extra?.platform,
+      contentId: extra?.contentId,
+      destination: extra?.destination,
     });
   }
 
@@ -101,7 +110,10 @@ export function PublicProfileView({
     <BuildingCard
       project={featured}
       fallbackCategory={niche}
-      onOpen={() => featured.url && track("project_click", { contentId: featured.id, platform: "website" })}
+      onOpen={() =>
+        featured.url &&
+        track("project_click", { contentId: featured.id, platform: "project", destination: featured.url })
+      }
     />
   ) : null;
 
@@ -113,7 +125,13 @@ export function PublicProfileView({
           <FeaturedContentCard
             key={item.id}
             item={item}
-            onClick={() => track("featured_content_click", { contentId: item.id, platform: item.platform })}
+            onClick={() =>
+              track("featured_content_click", {
+                contentId: item.id,
+                platform: item.platform === "article" ? "other" : item.platform,
+                destination: item.url,
+              })
+            }
           />
         ))}
       </div>
@@ -196,7 +214,7 @@ export function PublicProfileView({
             </p>
           ) : null}
 
-          <div className="mt-5 w-full max-w-[280px]">
+          <div className="mt-5 w-full max-w-[320px]">
             {isOwner ? (
               showOwnerBar ? (
                 profile.username ? (
@@ -214,21 +232,42 @@ export function PublicProfileView({
                   </Link>
                 </div>
               )
-            ) : isLoggedIn ? (
-              <FollowButton
-                profileId={profile.id}
-                initialFollowing={profile.followedByMe}
-                source={source}
-                size="md"
-                className="w-full min-h-11 rounded-full border-0"
-                style={accentCta}
-              />
             ) : (
-              <Link href={DISCOVERY_ROUTES.signup} className="block">
-                <Button className="w-full min-h-11 rounded-full border-0" style={accentCta}>
-                  Follow
-                </Button>
-              </Link>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  {isLoggedIn ? (
+                    <FollowButton
+                      profileId={profile.id}
+                      initialFollowing={profile.followedByMe}
+                      source={source}
+                      size="md"
+                      className="min-h-11 flex-1 rounded-full border-0"
+                      style={accentCta}
+                    />
+                  ) : (
+                    <Link href={DISCOVERY_ROUTES.signup} className="block flex-1">
+                      <Button className="w-full min-h-11 rounded-full border-0" style={accentCta}>
+                        Follow
+                      </Button>
+                    </Link>
+                  )}
+                  <SaveButton
+                    profileId={profile.id}
+                    initialSaved={profile.savedByMe}
+                    source={source}
+                    isLoggedIn={isLoggedIn}
+                    silent
+                    className="h-11 w-11 rounded-full"
+                  />
+                </div>
+                <ConnectButton
+                  profileId={profile.id}
+                  initialStatus={profile.connectionStatus ?? "none"}
+                  isLoggedIn={isLoggedIn}
+                  size="md"
+                  className="w-full min-h-11 rounded-full"
+                />
+              </div>
             )}
           </div>
         </div>
@@ -267,7 +306,13 @@ export function PublicProfileView({
                     href={normalizeHttpUrl(link.url)}
                     target="_blank"
                     rel="noreferrer"
-                    onClick={() => track("external_link_click", { platform: link.platform })}
+                    onClick={() =>
+                      track("external_link_click", {
+                        platform: link.platform,
+                        contentId: link.id,
+                        destination: link.url,
+                      })
+                    }
                     className="sz-press flex min-h-14 items-center gap-3 rounded-[1.15rem] bg-white/[0.035] px-3.5 ring-1 ring-white/[0.06] transition-colors duration-150 hover:bg-white/[0.055] hover:ring-white/12"
                     style={{ boxShadow: "inset 0 0 0 1px var(--profile-ring)" }}
                   >
@@ -318,6 +363,10 @@ export function PublicProfileView({
                     href={project.url ? normalizeHttpUrl(project.url) : undefined}
                     target={project.url ? "_blank" : undefined}
                     rel="noreferrer"
+                    onClick={() =>
+                      project.url &&
+                      track("project_click", { contentId: project.id, platform: "project", destination: project.url })
+                    }
                     className="flex items-start gap-3 rounded-[1.15rem] bg-white/[0.035] px-4 py-3.5 ring-1 ring-white/[0.05] transition-colors duration-150 hover:ring-white/12"
                   >
                     {project.logoUrl ? (

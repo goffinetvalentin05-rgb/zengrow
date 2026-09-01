@@ -21,3 +21,14 @@ export function isSharpzProActive(input: {
   if (input.isOwnerDev) return true;
   return input.plan === "pro" && (input.status === "active" || input.status === "trialing");
 }
+
+/** Gating point for discovery analytics. Full dashboard is Pro; owner/dev is never blocked. */
+export type DiscoveryAnalyticsTier = "full" | "limited";
+
+export function discoveryAnalyticsTier(input: {
+  plan: "free" | "pro";
+  status: "inactive" | "active" | "canceled" | "past_due" | "trialing";
+  isOwnerDev?: boolean;
+}): DiscoveryAnalyticsTier {
+  return isSharpzProActive(input) ? "full" : "limited";
+}

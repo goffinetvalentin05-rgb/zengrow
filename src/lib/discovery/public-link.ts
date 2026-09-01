@@ -78,15 +78,39 @@ export function publicSlugStatusMessage(status: PublicSlugStatus) {
   }
 }
 
-export function readUtmSource(search: string | URLSearchParams | Record<string, string | string[] | undefined> | null | undefined) {
+function readSearchParam(
+  search: string | URLSearchParams | Record<string, string | string[] | undefined> | null | undefined,
+  key: string,
+) {
   if (!search) return null;
   if (typeof search === "string") {
-    return new URLSearchParams(search.startsWith("?") ? search.slice(1) : search).get("utm_source");
+    return new URLSearchParams(search.startsWith("?") ? search.slice(1) : search).get(key);
   }
-  if (search instanceof URLSearchParams) return search.get("utm_source");
-  const value = search.utm_source;
+  if (search instanceof URLSearchParams) return search.get(key);
+  const value = search[key];
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;
+}
+
+export function readUtmSource(search: string | URLSearchParams | Record<string, string | string[] | undefined> | null | undefined) {
+  return readSearchParam(search, "utm_source");
+}
+
+export function readUtmMedium(search: string | URLSearchParams | Record<string, string | string[] | undefined> | null | undefined) {
+  return readSearchParam(search, "utm_medium");
+}
+
+export function referrerHostFromUrl(referrer: string | null | undefined, currentHost?: string | null) {
+  if (!referrer) return null;
+  try {
+    const url = new URL(referrer);
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+    if (!host) return null;
+    if (currentHost && host === currentHost.replace(/^www\./, "").toLowerCase()) return null;
+    return host.slice(0, 120);
+  } catch {
+    return null;
+  }
 }
 
 export function sanitizeTrackingPlatform(value: string | null | undefined) {
