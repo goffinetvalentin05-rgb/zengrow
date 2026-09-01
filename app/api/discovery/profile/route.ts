@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { getDiscoveryApiSession, isApiError } from "@/src/lib/discovery/api-session";
 import { MAX_NICHES, PROFILE_TYPES } from "@/src/lib/discovery/constants";
 import { isAdultBirthDate } from "@/src/lib/discovery/media";
-import { isProfileLayoutVariant, isProfileThemeKey, sanitizeAccentColor } from "@/src/lib/discovery/appearance";
+import {
+  isPageBackgroundKey,
+  isProfileLayoutVariant,
+  isProfileThemeKey,
+  sanitizeAccentColor,
+} from "@/src/lib/discovery/appearance";
 import { classifyPublicSlug } from "@/src/lib/discovery/public-link";
 import { normalizePublicSlug } from "@/src/lib/discovery/slug";
 import { syncProfileDerived } from "@/src/lib/discovery/sync-profile";
@@ -39,6 +44,12 @@ export async function PATCH(request: Request) {
   if (typeof body.country === "string") patch.country = body.country.trim() || null;
   if (typeof body.avatarUrl === "string") patch.avatar_url = body.avatarUrl.trim() || null;
   if (typeof body.coverImageUrl === "string") patch.cover_image_url = body.coverImageUrl.trim() || null;
+  if (typeof body.pageBackgroundKey === "string" && isPageBackgroundKey(body.pageBackgroundKey)) {
+    patch.page_background_key = body.pageBackgroundKey;
+  }
+  if (typeof body.pageBackgroundImageUrl === "string") {
+    patch.page_background_image_url = body.pageBackgroundImageUrl.trim() || null;
+  }
   if (typeof body.themeKey === "string" && isProfileThemeKey(body.themeKey)) {
     patch.theme_key = body.themeKey;
   }

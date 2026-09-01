@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  isPageBackgroundKey,
   profileSectionOrder,
+  resolvePageBackground,
   resolveProfileLayout,
   sanitizeAccentColor,
 } from "@/src/lib/discovery/appearance";
@@ -26,5 +28,13 @@ describe("profile personal page appearance", () => {
     expect(sanitizeAccentColor("#fff")).toBeNull();
     expect(sanitizeAccentColor("red")).toBeNull();
     expect(sanitizeAccentColor("")).toBeNull();
+  });
+
+  it("resolves page backgrounds and ignores unknown keys", () => {
+    expect(isPageBackgroundKey("halo")).toBe(true);
+    expect(isPageBackgroundKey("rainbow")).toBe(false);
+    expect(resolvePageBackground("dusk").kind).toBe("premium");
+    expect(resolvePageBackground("navy").kind).toBe("solid");
+    expect(resolvePageBackground("nope").key).toBe("void");
   });
 });

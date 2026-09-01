@@ -63,6 +63,8 @@ export function mapProfile(row: Row): Profile {
     birthDate: str(row.birth_date),
     themeKey: str(row.theme_key) ?? "obsidian",
     coverImageUrl: str(row.cover_image_url),
+    pageBackgroundKey: str(row.page_background_key) ?? "void",
+    pageBackgroundImageUrl: str(row.page_background_image_url),
     featuredFirst: Boolean(row.featured_first),
     accentColor: str(row.accent_color),
     layoutVariant: str(row.layout_variant) ?? (row.featured_first ? "content_first" : "default"),

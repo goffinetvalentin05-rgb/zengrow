@@ -6,7 +6,7 @@ import { FadeImg } from "@/src/components/discovery/sz-ui";
 import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 import { cn } from "@/src/lib/utils";
 
-function cropImage(file: File, width: number, height: number): Promise<Blob> {
+function cropImage(file: File, width: number, height: number, mime: "image/jpeg" | "image/png" = "image/jpeg"): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     const url = URL.createObjectURL(file);
@@ -32,6 +32,7 @@ function cropImage(file: File, width: number, height: number): Promise<Blob> {
         reject(new Error("Canvas unavailable"));
         return;
       }
+      if (mime === "image/png") ctx.clearRect(0, 0, width, height);
       ctx.drawImage(image, sx, sy, sw, sh, 0, 0, width, height);
       canvas.toBlob(
         (blob) => {
@@ -39,8 +40,8 @@ function cropImage(file: File, width: number, height: number): Promise<Blob> {
           if (blob) resolve(blob);
           else reject(new Error("Could not crop image"));
         },
-        "image/jpeg",
-        0.88,
+        mime,
+        mime === "image/jpeg" ? 0.88 : undefined,
       );
     };
     image.onerror = () => {
@@ -49,6 +50,18 @@ function cropImage(file: File, width: number, height: number): Promise<Blob> {
     };
     image.src = url;
   });
+}
+
+async function uploadSquarePng(file: File, path: string) {
+  const blob = await cropImage(file, 512, 512, "image/png");
+  const supabase = createClient();
+  const { error } = await supabase.storage.from("avatars").upload(path, blob, {
+    upsert: true,
+    contentType: "image/png",
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  return `${data.publicUrl}?t=${Date.now()}`;
 }
 
 async function uploadCropped(
@@ -209,7 +222,7 @@ export function OnboardingLogoPick({
     setPending(true);
     setError(null);
     try {
-      const next = await uploadCropped(userId, file, `${userId}/onboarding/project-logo.jpg`, 512, 512, "avatars");
+      const next = await uploadSquarePng(file, `${userId}/onboarding/project-logo.png`);
       onChange(next);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Upload failed.");
@@ -220,7 +233,7 @@ export function OnboardingLogoPick({
   return (
     <div className="flex items-center gap-3">
       <div className={cn("flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/[0.06] ring-1 ring-white/10")}>
-        {url ? <FadeImg src={url} alt="" className="h-full w-full object-cover" /> : <span className="text-[10px] text-white/35">Logo</span>}
+        {url ? <FadeImg src={url} alt="" className="h-full w-full object-contain p-1.5" /> : <span className="text-[10px] text-white/35">Logo</span>}
       </div>
       <FilePick label={url ? "Replace logo" : "Add logo"} onFile={(file) => void onFile(file)} pending={pending} error={error} />
     </div>

@@ -38,6 +38,8 @@ function card(partial: Partial<ProfileCardModel> & { id: string; displayName: st
     birthDate: null,
     themeKey: "obsidian",
     coverImageUrl: null,
+    pageBackgroundKey: "void",
+    pageBackgroundImageUrl: null,
     featuredFirst: false,
     accentColor: null,
     layoutVariant: "default",

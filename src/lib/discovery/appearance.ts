@@ -157,3 +157,143 @@ export function profileThemeVars(theme: ProfileTheme, accentOverride?: string | 
     "--profile-ring": `${accent}33`,
   } as CSSProperties;
 }
+
+export const PAGE_BACKGROUND_SOLID_KEYS = ["void", "graphite", "navy", "plum", "pine"] as const;
+export const PAGE_BACKGROUND_PRESET_KEYS = ["halo", "dusk", "ember", "mist", "aurora"] as const;
+export const PAGE_BACKGROUND_KEYS = [...PAGE_BACKGROUND_SOLID_KEYS, ...PAGE_BACKGROUND_PRESET_KEYS] as const;
+
+export type PageBackgroundKey = (typeof PAGE_BACKGROUND_KEYS)[number];
+export type PageBackgroundKind = "solid" | "premium";
+
+export type PageBackground = {
+  key: PageBackgroundKey;
+  label: string;
+  kind: PageBackgroundKind;
+  base: string;
+  layers: string[];
+  grain: number;
+  vignette: number;
+};
+
+export const PAGE_BACKGROUNDS: Record<PageBackgroundKey, PageBackground> = {
+  void: {
+    key: "void",
+    label: "Black",
+    kind: "solid",
+    base: "#050506",
+    layers: [],
+    grain: 0.035,
+    vignette: 0.28,
+  },
+  graphite: {
+    key: "graphite",
+    label: "Graphite",
+    kind: "solid",
+    base: "#161618",
+    layers: [],
+    grain: 0.04,
+    vignette: 0.32,
+  },
+  navy: {
+    key: "navy",
+    label: "Night blue",
+    kind: "solid",
+    base: "#0b1220",
+    layers: [],
+    grain: 0.035,
+    vignette: 0.36,
+  },
+  plum: {
+    key: "plum",
+    label: "Deep violet",
+    kind: "solid",
+    base: "#140f18",
+    layers: [],
+    grain: 0.04,
+    vignette: 0.34,
+  },
+  pine: {
+    key: "pine",
+    label: "Deep green",
+    kind: "solid",
+    base: "#0c1410",
+    layers: [],
+    grain: 0.035,
+    vignette: 0.34,
+  },
+  halo: {
+    key: "halo",
+    label: "Halo",
+    kind: "premium",
+    base: "#070708",
+    layers: [
+      "radial-gradient(ellipse 72% 48% at 50% 8%, rgba(255,255,255,0.12), transparent 62%)",
+      "radial-gradient(ellipse 42% 28% at 82% 88%, rgba(255,255,255,0.04), transparent 58%)",
+    ],
+    grain: 0.045,
+    vignette: 0.42,
+  },
+  dusk: {
+    key: "dusk",
+    label: "Dusk",
+    kind: "premium",
+    base: "#070b12",
+    layers: [
+      "linear-gradient(180deg, #101828 0%, #070b12 46%, #050506 100%)",
+      "radial-gradient(ellipse 80% 46% at 50% -8%, rgba(125,211,252,0.09), transparent 58%)",
+    ],
+    grain: 0.04,
+    vignette: 0.4,
+  },
+  ember: {
+    key: "ember",
+    label: "Ember",
+    kind: "premium",
+    base: "#0a0808",
+    layers: [
+      "linear-gradient(180deg, #141010 0%, #0a0808 100%)",
+      "radial-gradient(ellipse 70% 48% at 50% 108%, rgba(251,146,60,0.08), transparent 56%)",
+    ],
+    grain: 0.045,
+    vignette: 0.44,
+  },
+  mist: {
+    key: "mist",
+    label: "Mist",
+    kind: "premium",
+    base: "#09090b",
+    layers: [
+      "linear-gradient(180deg, rgba(255,255,255,0.045), transparent 38%, rgba(0,0,0,0.38) 100%)",
+    ],
+    grain: 0.07,
+    vignette: 0.48,
+  },
+  aurora: {
+    key: "aurora",
+    label: "Aurora",
+    kind: "premium",
+    base: "#08070c",
+    layers: [
+      "radial-gradient(ellipse 55% 40% at 16% 18%, rgba(167,139,250,0.10), transparent 62%)",
+      "radial-gradient(ellipse 50% 38% at 84% 28%, rgba(56,189,248,0.07), transparent 60%)",
+    ],
+    grain: 0.04,
+    vignette: 0.4,
+  },
+};
+
+export function isPageBackgroundKey(value: string | null | undefined): value is PageBackgroundKey {
+  return Boolean(value && PAGE_BACKGROUND_KEYS.includes(value as PageBackgroundKey));
+}
+
+export function resolvePageBackground(key: string | null | undefined): PageBackground {
+  return isPageBackgroundKey(key) ? PAGE_BACKGROUNDS[key] : PAGE_BACKGROUNDS.void;
+}
+
+export function pageBackgroundPreviewStyle(key: PageBackgroundKey): CSSProperties {
+  const bg = PAGE_BACKGROUNDS[key];
+  return {
+    backgroundColor: bg.base,
+    backgroundImage: bg.layers.length ? bg.layers.join(", ") : undefined,
+  };
+}

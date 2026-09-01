@@ -17,10 +17,11 @@ import {
 import { completenessSuggestions } from "@/src/lib/discovery/completeness";
 import { COUNTRY_PRESETS } from "@/src/lib/discovery/media";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
-import { PROFILE_THEMES, PROFILE_THEME_KEYS, PROFILE_LAYOUT_VARIANTS, PROFILE_LAYOUT_LABELS, type ProfileLayoutVariant, type ProfileThemeKey } from "@/src/lib/discovery/appearance";
+import { PROFILE_THEMES, PROFILE_THEME_KEYS, PROFILE_LAYOUT_VARIANTS, PROFILE_LAYOUT_LABELS, isPageBackgroundKey, type ProfileLayoutVariant, type ProfileThemeKey } from "@/src/lib/discovery/appearance";
 import type { Category, FeaturedContent, Profile, Project, SocialLink } from "@/src/lib/discovery/types";
 import { AvatarUpload } from "@/src/components/discovery/avatar-upload";
 import { CoverUpload } from "@/src/components/discovery/cover-upload";
+import { PageBackgroundPicker } from "@/src/components/discovery/page-background-picker";
 import { FeaturedContentEditor } from "@/src/components/discovery/featured-content-editor";
 import { ProjectLogoUpload } from "@/src/components/discovery/project-logo-upload";
 import { SharpzLinkEditor } from "@/src/components/discovery/sharpz-link-editor";
@@ -183,8 +184,18 @@ export function ProfileEditor({
 
       <EditorSection id="appearance" title="Appearance">
         <p className="mb-5 text-sm text-white/40">A light identity for your public page. The page stays dark.</p>
-        <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Cover image</p>
-        <CoverUpload userId={userId} currentUrl={profile.coverImageUrl} />
+        <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Page background</p>
+        <p className="mb-4 text-sm text-white/40">Shown behind the whole profile. Header cover stays a separate strip at the top.</p>
+        <PageBackgroundPicker
+          userId={userId}
+          value={isPageBackgroundKey(profile.pageBackgroundKey) ? profile.pageBackgroundKey : "void"}
+          imageUrl={profile.pageBackgroundImageUrl}
+          onSaved={() => router.refresh()}
+        />
+        <div className="mt-8">
+          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Header cover</p>
+          <CoverUpload userId={userId} currentUrl={profile.coverImageUrl} />
+        </div>
         <div className="mt-8">
           <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Theme</p>
           <ThemePicker
@@ -465,7 +476,10 @@ function ProjectList({ userId, projects }: { userId: string; projects: Project[]
               </button>
             </div>
           </div>
-          <ProjectLogoUpload userId={userId} projectId={project.id} currentUrl={project.logoUrl} />
+          <div>
+            <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-white/40">Project logo</p>
+            <ProjectLogoUpload userId={userId} projectId={project.id} currentUrl={project.logoUrl} />
+          </div>
         </div>
       ))}
       <form className="space-y-3" onSubmit={create}>

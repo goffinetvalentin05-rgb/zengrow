@@ -50,6 +50,8 @@ export type Profile = {
   birthDate: string | null;
   themeKey: string;
   coverImageUrl: string | null;
+  pageBackgroundKey: string;
+  pageBackgroundImageUrl: string | null;
   featuredFirst: boolean;
   accentColor: string | null;
   layoutVariant: string;

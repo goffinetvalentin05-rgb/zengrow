@@ -5,31 +5,35 @@ import { useRouter } from "next/navigation";
 import Button from "@/src/components/ui/button";
 import { createClient } from "@/src/lib/supabase/client";
 
-function cropToSquarePng(file: File): Promise<Blob> {
+function fitPageBackground(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     const url = URL.createObjectURL(file);
     image.onload = () => {
-      const size = Math.min(image.width, image.height);
-      const sx = (image.width - size) / 2;
-      const sy = (image.height - size) / 2;
+      const maxW = 1920;
+      const maxH = 2400;
+      let width = image.width;
+      let height = image.height;
+      const scale = Math.min(1, maxW / width, maxH / height);
+      width = Math.max(1, Math.round(width * scale));
+      height = Math.max(1, Math.round(height * scale));
       const canvas = document.createElement("canvas");
-      canvas.width = 512;
-      canvas.height = 512;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         reject(new Error("Canvas unavailable"));
         return;
       }
-      ctx.clearRect(0, 0, 512, 512);
-      ctx.drawImage(image, sx, sy, size, size, 0, 0, 512, 512);
+      ctx.drawImage(image, 0, 0, width, height);
       canvas.toBlob(
         (blob) => {
           URL.revokeObjectURL(url);
           if (blob) resolve(blob);
-          else reject(new Error("Could not crop image"));
+          else reject(new Error("Could not process image"));
         },
-        "image/png",
+        "image/jpeg",
+        0.86,
       );
     };
     image.onerror = () => {
@@ -40,15 +44,7 @@ function cropToSquarePng(file: File): Promise<Blob> {
   });
 }
 
-export function ProjectLogoUpload({
-  userId,
-  projectId,
-  currentUrl,
-}: {
-  userId: string;
-  projectId: string;
-  currentUrl: string | null;
-}) {
+export function PageBackgroundUpload({ userId, currentUrl }: { userId: string; currentUrl: string | null }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -61,30 +57,30 @@ export function ProjectLogoUpload({
       return;
     }
     setError(null);
-    const blob = await cropToSquarePng(file);
+    const blob = await fitPageBackground(file);
     setPreview(URL.createObjectURL(blob));
     setPending(true);
     const supabase = createClient();
-    const path = `${userId}/projects/${projectId}.png`;
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, blob, {
+    const path = `${userId}/page-bg.jpg`;
+    const { error: uploadError } = await supabase.storage.from("covers").upload(path, blob, {
       upsert: true,
-      contentType: "image/png",
+      contentType: "image/jpeg",
     });
     if (uploadError) {
       setPending(false);
       setError(uploadError.message);
       return;
     }
-    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    const logoUrl = `${data.publicUrl}?t=${Date.now()}`;
-    const response = await fetch("/api/discovery/projects", {
+    const { data } = supabase.storage.from("covers").getPublicUrl(path);
+    const pageBackgroundImageUrl = `${data.publicUrl}?t=${Date.now()}`;
+    const response = await fetch("/api/discovery/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: projectId, logoUrl }),
+      body: JSON.stringify({ pageBackgroundImageUrl }),
     });
     setPending(false);
     if (!response.ok) {
-      setError("Uploaded, but project could not be updated.");
+      setError("Uploaded, but profile could not be updated.");
       return;
     }
     router.refresh();
@@ -92,10 +88,10 @@ export function ProjectLogoUpload({
 
   async function remove() {
     setPending(true);
-    const response = await fetch("/api/discovery/projects", {
+    const response = await fetch("/api/discovery/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: projectId, logoUrl: "" }),
+      body: JSON.stringify({ pageBackgroundImageUrl: "" }),
     });
     setPending(false);
     if (response.ok) {
@@ -107,41 +103,37 @@ export function ProjectLogoUpload({
   const shown = preview || currentUrl;
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-black/40 ring-1 ring-white/10"
-        aria-label="Upload project logo"
-      >
+    <div>
+      <div className="overflow-hidden rounded-2xl bg-white/[0.04] ring-1 ring-white/[0.06]">
         {shown ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={shown} alt="" className="h-full w-full object-contain p-1.5" />
+          <img src={shown} alt="" className="h-40 w-full object-cover" />
         ) : (
-          <span className="text-[10px] text-white/35">Logo</span>
+          <div className="flex h-28 items-center justify-center text-sm text-white/35">No background image</div>
         )}
-      </button>
+      </div>
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/webp,image/jpeg,image/svg+xml,image/*"
+        accept="image/*"
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (file) void onFile(file);
         }}
       />
-      <div className="flex min-w-0 flex-1 flex-wrap gap-2">
-        <Button type="button" variant="secondary" size="sm" disabled={pending} onClick={() => inputRef.current?.click()}>
-          {pending ? "Uploading…" : shown ? "Replace logo" : "Upload logo"}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button type="button" variant="secondary" disabled={pending} onClick={() => inputRef.current?.click()}>
+          {pending ? "Uploading…" : shown ? "Replace image" : "Upload image"}
         </Button>
         {shown ? (
-          <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={() => void remove()}>
+          <Button type="button" variant="ghost" disabled={pending} onClick={() => void remove()}>
             Remove
           </Button>
         ) : null}
-        {error ? <p className="w-full text-xs text-red-300">{error}</p> : null}
       </div>
+      <p className="mt-2 text-xs text-white/35">Shown full-page, cropped to cover. A dark overlay keeps text readable.</p>
+      {error ? <p className="mt-1 text-sm text-red-300">{error}</p> : null}
     </div>
   );
 }

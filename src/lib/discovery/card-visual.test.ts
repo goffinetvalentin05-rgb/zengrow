@@ -34,6 +34,8 @@ function card(partial: Partial<ProfileCardModel>): ProfileCardModel {
     birthDate: null,
     themeKey: "obsidian",
     coverImageUrl: null,
+    pageBackgroundKey: "void",
+    pageBackgroundImageUrl: null,
     featuredFirst: false,
     accentColor: null,
     layoutVariant: "default",
