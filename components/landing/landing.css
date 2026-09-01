@@ -653,15 +653,13 @@
   z-index: 1;
   display: flex;
   align-items: center;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: max(clamp(36rem, 100dvh, 54rem), 100dvh);
   margin-top: calc(-1 * var(--zg-nav-h));
   padding: calc(var(--zg-nav-h) + clamp(3.5rem, 7vw, 6rem)) 0 clamp(3.5rem, 7vw, 5.5rem);
   background: transparent;
   color: #f7f7f5;
   text-align: center;
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: hidden;
 }
 
 .go-hero__inner {
@@ -705,18 +703,17 @@
 }
 
 .go-hero__title {
-  --go-hero-title-line-h: 1.18;
-  position: relative;
   margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
   max-width: 100%;
+  overflow: visible;
   font-family: var(--zg-font);
   font-size: clamp(2.45rem, 6.2vw, 4.5rem);
   font-weight: 700;
-  line-height: var(--go-hero-title-line-h);
+  line-height: 1.12;
   letter-spacing: -0.04em;
 }
 
@@ -731,103 +728,53 @@
   color: transparent;
 }
 
-/* In-flow sizer = tallest phrase. Overlay viewport clips only during the slide. */
-.go-hero__title-rotate {
-  position: relative;
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  margin-top: 0.12em;
-}
-
-.go-hero__title-sizer {
+.go-hero__title-stack {
   display: grid;
   width: 100%;
-  min-height: var(--go-hero-rotate-slot-h);
-  visibility: hidden;
-  pointer-events: none;
+  margin-top: 0.12em;
+  overflow: visible;
 }
 
 .go-hero__title-phrase {
+  grid-area: 1 / 1;
   display: block;
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding-block: 0.12em;
+  padding: 0;
   text-align: center;
   text-wrap: wrap;
   white-space: normal;
-  overflow-wrap: break-word;
-  word-break: normal;
-  hyphens: none;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   color: rgba(255, 255, 255, 0.82);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(0.18em);
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-.go-hero__title-sizer .go-hero__title-phrase {
-  grid-area: 1 / 1;
-  height: auto;
-}
-
-.go-hero__title-rotate-viewport {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  background: transparent;
-}
-
-.go-hero__title-rotate-track {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  will-change: transform;
-}
-
-.go-hero__title-rotate-line {
-  box-sizing: border-box;
-  flex: 0 0 var(--go-hero-rotate-slot-h);
-  width: 100%;
-  height: var(--go-hero-rotate-slot-h);
-  overflow: visible;
-}
-
-@keyframes go-hero-title-rotate {
-  0%,
-  17% {
-    transform: translate3d(0, 0, 0);
-  }
-  20%,
-  37% {
-    transform: translate3d(0, -20%, 0);
-  }
-  40%,
-  57% {
-    transform: translate3d(0, -40%, 0);
-  }
-  60%,
-  77% {
-    transform: translate3d(0, -60%, 0);
-  }
-  80%,
-  100% {
-    transform: translate3d(0, -80%, 0);
-  }
+.go-hero__title-phrase.is-active {
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
 }
 
 @media (max-width: 767px) {
   .go-hero {
+    align-items: flex-start;
     min-height: 100vh;
-    min-height: 100dvh;
     min-height: 100svh;
     padding-top: calc(var(--zg-nav-h) + clamp(2.75rem, 10vw, 4rem));
     padding-bottom: clamp(2.5rem, 8vw, 3.5rem);
   }
 
   .go-hero__title {
-    --go-hero-title-line-h: 1.26;
-    font-size: clamp(1.7rem, 6.3vw, 2.08rem);
+    font-size: clamp(1.85rem, 7.4vw, 2.35rem);
+    line-height: 1.2;
   }
 
   .go-hero__title-static {
@@ -842,8 +789,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .go-hero__title-rotate-line:not(:first-child) {
-    visibility: hidden;
+  .go-hero__title-phrase {
+    transform: none;
+    transition: none;
   }
 }
 
@@ -6339,17 +6287,8 @@
   animation: go-niche-band-marquee var(--go-niche-band-duration, 30s) linear infinite !important;
 }
 
-.go .go-hero__title-rotate-track {
-  animation: go-hero-title-rotate 15s cubic-bezier(0.45, 0.05, 0.2, 1) infinite !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .go .go-niche-band__track {
-    animation: none !important;
-    transform: none !important;
-  }
-
-  .go .go-hero__title-rotate-track {
     animation: none !important;
     transform: none !important;
   }
