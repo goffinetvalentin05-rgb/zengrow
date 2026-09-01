@@ -46,6 +46,7 @@ export type Profile = {
   completeness: number;
   followersCount: number;
   followingCount: number;
+  birthDate: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -88,7 +89,9 @@ export type FeaturedContent = {
 export type ProfileCardModel = Profile & {
   primaryCategory: Category | null;
   featuredProject: Project | null;
+  featuredPreview?: FeaturedContent | null;
   socialLinks: SocialLink[];
+  categorySlugs?: string[];
   followedByMe?: boolean;
   savedByMe?: boolean;
 };
@@ -135,5 +138,6 @@ export type ExploreFilters = {
   profileType?: ProfileType | null;
   audience?: string | null;
   platform?: SocialPlatform | null;
-  activity?: "new" | "rising" | "most-followed" | null;
+  activity?: "rising" | "new" | "most-followed" | "recently-active" | null;
+  age?: string | null;
 };

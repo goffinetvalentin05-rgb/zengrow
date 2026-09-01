@@ -9,5 +9,9 @@ export default async function SettingsPage() {
     status: session.subscription.status,
     isOwnerDev: session.isOwnerDev,
   });
-  return <SettingsView email={session.user.email} subscription={session.subscription} isPro={isPro} isAdmin={session.profile.isAdmin || session.isOwnerDev} />;
+  return (
+    <div className="px-5 md:px-0">
+      <SettingsView email={session.user.email} subscription={session.subscription} isPro={isPro} isAdmin={session.profile.isAdmin || session.isOwnerDev} />
+    </div>
+  );
 }

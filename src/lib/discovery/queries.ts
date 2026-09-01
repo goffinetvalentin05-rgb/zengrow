@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { AUDIENCE_RANGES } from "@/src/lib/discovery/constants";
+import { AGE_RANGES, AUDIENCE_RANGES } from "@/src/lib/discovery/constants";
+import { ageFromBirthDate, birthDateBounds, sanitizeIlike } from "@/src/lib/discovery/media";
 import {
   mapCategory,
   mapFeaturedContent,
@@ -7,6 +8,7 @@ import {
   mapProject,
   mapSocialLink,
 } from "@/src/lib/discovery/mappers";
+import { mixDiscoverFeed } from "@/src/lib/discovery/mix";
 import { sortByRising } from "@/src/lib/discovery/scoring";
 import type {
   Category,
@@ -63,7 +65,7 @@ async function hydrateCards(
   const ids = profiles.map((p) => p.id);
   const categoryIds = [...new Set(profiles.map((p) => p.primaryCategoryId).filter(Boolean))] as string[];
 
-  const [projectsRes, linksRes, catsRes, followsRes, savedRes] = await Promise.all([
+  const [projectsRes, linksRes, catsRes, followsRes, savedRes, featuredRes, membershipRes] = await Promise.all([
     supabase.from("projects").select("*").in("owner_id", ids).eq("featured_project", true),
     supabase.from("social_links").select("*").in("profile_id", ids).order("sort_index"),
     categoryIds.length
@@ -75,6 +77,8 @@ async function hydrateCards(
     viewerId
       ? supabase.from("saved_profiles").select("profile_id").eq("user_id", viewerId).in("profile_id", ids)
       : Promise.resolve({ data: [] as { profile_id: string }[] }),
+    supabase.from("featured_content").select("*").in("profile_id", ids).order("sort_index"),
+    supabase.from("profile_categories").select("profile_id, categories(slug)").in("profile_id", ids),
   ]);
 
   const featuredByOwner = new Map<string, Project>();
@@ -89,15 +93,31 @@ async function hydrateCards(
     list.push(link);
     linksByProfile.set(link.profileId, list);
   }
+  const featuredPreviewByProfile = new Map<string, FeaturedContent>();
+  for (const row of featuredRes.data ?? []) {
+    const item = mapFeaturedContent(row as Record<string, unknown>);
+    if (!featuredPreviewByProfile.has(item.profileId)) featuredPreviewByProfile.set(item.profileId, item);
+  }
   const cats = new Map((catsRes.data ?? []).map((row) => [String((row as { id: string }).id), mapCategory(row as Record<string, unknown>)]));
   const followed = new Set((followsRes.data ?? []).map((row) => row.following_id));
   const saved = new Set((savedRes.data ?? []).map((row) => row.profile_id));
+  const slugsByProfile = new Map<string, string[]>();
+  for (const row of membershipRes.data ?? []) {
+    const rec = row as { profile_id: string; categories: { slug: string } | { slug: string }[] | null };
+    const cat = Array.isArray(rec.categories) ? rec.categories[0] : rec.categories;
+    if (!cat?.slug) continue;
+    const list = slugsByProfile.get(rec.profile_id) ?? [];
+    list.push(cat.slug);
+    slugsByProfile.set(rec.profile_id, list);
+  }
 
   return profiles.map((profile) => ({
     ...profile,
     primaryCategory: profile.primaryCategoryId ? cats.get(profile.primaryCategoryId) ?? null : null,
     featuredProject: featuredByOwner.get(profile.id) ?? null,
+    featuredPreview: featuredPreviewByProfile.get(profile.id) ?? null,
     socialLinks: linksByProfile.get(profile.id) ?? [],
+    categorySlugs: slugsByProfile.get(profile.id) ?? [],
     followedByMe: followed.has(profile.id),
     savedByMe: saved.has(profile.id),
   }));
@@ -105,8 +125,13 @@ async function hydrateCards(
 
 function applyFilters(cards: ProfileCardModel[], filters: ExploreFilters): ProfileCardModel[] {
   return cards.filter((card) => {
-    if (filters.niche && card.primaryCategory?.slug !== filters.niche) {
-      return false;
+    if (filters.niche) {
+      const slugs = card.categorySlugs?.length
+        ? card.categorySlugs
+        : card.primaryCategory
+          ? [card.primaryCategory.slug]
+          : [];
+      if (!slugs.includes(filters.niche)) return false;
     }
     if (filters.location) {
       const loc = `${card.location ?? ""} ${card.country ?? ""}`.toLowerCase();
@@ -121,6 +146,13 @@ function applyFilters(cards: ProfileCardModel[], filters: ExploreFilters): Profi
       if (!range || card.audienceSize == null) return false;
       if (card.audienceSize < range.min) return false;
       if (range.max != null && card.audienceSize > range.max) return false;
+    }
+    if (filters.age) {
+      const range = AGE_RANGES.find((item) => item.id === filters.age);
+      const age = ageFromBirthDate(card.birthDate);
+      if (!range || age == null) return false;
+      if (age < range.min) return false;
+      if (range.max != null && age > range.max) return false;
     }
     return true;
   });
@@ -139,6 +171,76 @@ export async function listDiscoverableProfiles(
     .limit(200);
   const profiles = (data ?? []).map((row) => mapProfile(row as Record<string, unknown>));
   return hydrateCards(supabase, profiles, viewerId);
+}
+
+export async function listCategoryProfiles(
+  supabase: SupabaseClient,
+  slug: string,
+  filters: ExploreFilters,
+  viewerId?: string | null,
+): Promise<ProfileCardModel[]> {
+  const category = await getCategoryBySlug(supabase, slug);
+  if (!category) return [];
+
+  const { data: membership } = await supabase
+    .from("profile_categories")
+    .select("profile_id")
+    .eq("category_id", category.id);
+  let ids = [...new Set((membership ?? []).map((row) => String((row as { profile_id: string }).profile_id)))];
+  if (!ids.length) return [];
+
+  if (filters.platform) {
+    const { data: social } = await supabase
+      .from("social_links")
+      .select("profile_id")
+      .eq("platform", filters.platform)
+      .in("profile_id", ids);
+    ids = [...new Set((social ?? []).map((row) => String((row as { profile_id: string }).profile_id)))];
+    if (!ids.length) return [];
+  }
+
+  let query = supabase
+    .from("profiles")
+    .select(PROFILE_SELECT)
+    .eq("is_public", true)
+    .eq("is_disabled", false)
+    .in("id", ids);
+
+  if (filters.profileType) query = query.eq("profile_type", filters.profileType);
+
+  if (filters.location) {
+    const loc = sanitizeIlike(filters.location);
+    if (loc) query = query.or(`country.ilike.%${loc}%,location.ilike.%${loc}%`);
+  }
+
+  if (filters.audience) {
+    const range = AUDIENCE_RANGES.find((item) => item.id === filters.audience);
+    if (range) {
+      query = query.gte("audience_size", range.min);
+      if (range.max != null) query = query.lte("audience_size", range.max);
+    }
+  }
+
+  const age = birthDateBounds(filters.age);
+  if (age) {
+    query = query.not("birth_date", "is", null).lte("birth_date", age.maxBirth);
+    if (age.minBirth) query = query.gt("birth_date", age.minBirth);
+  }
+
+  const activity = filters.activity ?? "rising";
+  if (activity === "new") query = query.order("created_at", { ascending: false });
+  else if (activity === "most-followed") query = query.order("followers_count", { ascending: false });
+  else if (activity === "recently-active") query = query.order("updated_at", { ascending: false });
+  else query = query.order("created_at", { ascending: false });
+
+  const { data } = await query.limit(150);
+  let cards = await hydrateCards(
+    supabase,
+    (data ?? []).map((row) => mapProfile(row as Record<string, unknown>)),
+    viewerId,
+  );
+  if (activity === "rising") cards = sortByRising(cards);
+  return cards;
 }
 
 export async function getExplorePayload(
@@ -162,7 +264,9 @@ export async function getExplorePayload(
         ? [...all].sort((a, b) => b.followersCount - a.followersCount)
         : input.filters.activity === "rising"
           ? sortByRising(all)
-          : all;
+          : input.filters.activity === "recently-active"
+            ? [...all].sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt))
+            : all;
 
   const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
   const nearYou = input.viewerLocation
@@ -188,6 +292,7 @@ export async function getExplorePayload(
     under5k: pick(activitySorted.filter((card) => card.audienceSize != null && card.audienceSize < 5000)),
     nearYou: pick(nearYou),
     recentlyJoined: pick(activitySorted.filter((card) => +new Date(card.createdAt) >= fourteenDaysAgo)),
+    feed: mixDiscoverFeed(activitySorted, input.favoriteSlugs),
     favoriteSlugs: input.favoriteSlugs,
   };
 }
@@ -206,21 +311,15 @@ export async function getFavoriteCategorySlugs(supabase: SupabaseClient, profile
   return slugs;
 }
 
-export async function getProfileByUsername(
+async function assemblePublicProfile(
   supabase: SupabaseClient,
-  username: string,
+  profile: Profile,
   viewerId?: string | null,
 ): Promise<PublicProfileModel | null> {
-  const { data } = await supabase.from("profiles").select("*").eq("username", username.toLowerCase()).maybeSingle();
-  if (!data) return null;
-  const profile = mapProfile(data);
   if (profile.isDisabled && profile.id !== viewerId) return null;
   const [cards, catsRes, projectsRes, featuredRes] = await Promise.all([
     hydrateCards(supabase, [profile], viewerId),
-    supabase
-      .from("profile_categories")
-      .select("categories(*)")
-      .eq("profile_id", profile.id),
+    supabase.from("profile_categories").select("categories(*)").eq("profile_id", profile.id),
     supabase.from("projects").select("*").eq("owner_id", profile.id).order("sort_index"),
     supabase.from("featured_content").select("*").eq("profile_id", profile.id).order("sort_index"),
   ]);
@@ -238,6 +337,26 @@ export async function getProfileByUsername(
     projects: (projectsRes.data ?? []).map((row) => mapProject(row as Record<string, unknown>)),
     featuredContent: (featuredRes.data ?? []).map((row) => mapFeaturedContent(row as Record<string, unknown>)),
   };
+}
+
+export async function getProfileByUsername(
+  supabase: SupabaseClient,
+  username: string,
+  viewerId?: string | null,
+): Promise<PublicProfileModel | null> {
+  const { data } = await supabase.from("profiles").select("*").eq("username", username.toLowerCase()).maybeSingle();
+  if (!data) return null;
+  return assemblePublicProfile(supabase, mapProfile(data), viewerId);
+}
+
+export async function getPublicProfileById(
+  supabase: SupabaseClient,
+  profileId: string,
+  viewerId?: string | null,
+): Promise<PublicProfileModel | null> {
+  const { data } = await supabase.from("profiles").select("*").eq("id", profileId).maybeSingle();
+  if (!data) return null;
+  return assemblePublicProfile(supabase, mapProfile(data), viewerId);
 }
 
 export async function getOwnedRelations(supabase: SupabaseClient, profileId: string) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireDiscoverySession } from "@/src/lib/discovery/auth";
 import { SOCIAL_PLATFORMS } from "@/src/lib/discovery/constants";
+import { normalizeHttpUrl } from "@/src/lib/discovery/media";
 import { syncProfileDerived } from "@/src/lib/discovery/sync-profile";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -16,7 +17,7 @@ export async function PUT(request: Request) {
     .map((item, index) => ({
       profile_id: profile.id,
       platform: item.platform,
-      url: item.url.trim(),
+      url: normalizeHttpUrl(item.url),
       sort_index: index,
     }));
   if (links.length) {

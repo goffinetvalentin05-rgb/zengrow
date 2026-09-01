@@ -60,6 +60,7 @@ export function mapProfile(row: Row): Profile {
     completeness: Number(row.completeness ?? 0),
     followersCount: Number(row.followers_count ?? 0),
     followingCount: Number(row.following_count ?? 0),
+    birthDate: str(row.birth_date),
     createdAt: String(row.created_at ?? new Date().toISOString()),
     updatedAt: String(row.updated_at ?? new Date().toISOString()),
   };

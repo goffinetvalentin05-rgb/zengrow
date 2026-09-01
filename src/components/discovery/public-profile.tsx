@@ -2,12 +2,13 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { FEATURED_PLATFORM_LABELS, SOCIAL_PLATFORM_LABELS, type SocialPlatform } from "@/src/lib/discovery/constants";
+import { SOCIAL_PLATFORM_LABELS, type SocialPlatform } from "@/src/lib/discovery/constants";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
+import { formatLocation, normalizeHttpUrl, parseSocialHandle } from "@/src/lib/discovery/media";
 import type { PublicProfileModel } from "@/src/lib/discovery/types";
 import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 import { FollowButton } from "@/src/components/discovery/follow-button";
-import { SaveButton } from "@/src/components/discovery/save-button";
+import { FeaturedContentCard } from "@/src/components/discovery/featured-content-card";
 import Button from "@/src/components/ui/button";
 
 export function PublicProfileView({
@@ -15,11 +16,15 @@ export function PublicProfileView({
   isOwner,
   isLoggedIn,
   source = "direct",
+  editHref,
+  showEditButton = true,
 }: {
   profile: PublicProfileModel;
   isOwner: boolean;
   isLoggedIn: boolean;
   source?: string;
+  editHref?: string;
+  showEditButton?: boolean;
 }) {
   useEffect(() => {
     if (isOwner) return;
@@ -36,6 +41,8 @@ export function PublicProfileView({
 
   const featured = profile.projects.find((item) => item.featuredProject) ?? profile.featuredProject ?? profile.projects[0];
   const otherProjects = profile.projects.filter((item) => item.id !== featured?.id);
+  const place = formatLocation(profile.location, profile.country);
+  const meta = [profile.primaryCategory?.name || profile.roleLabel, place].filter(Boolean).join(" · ");
 
   async function track(eventType: string, extra?: Record<string, unknown>) {
     await fetch("/api/discovery/events", {
@@ -46,30 +53,22 @@ export function PublicProfileView({
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl pb-16">
-      <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <DiscoveryAvatar name={profile.displayName} src={profile.avatarUrl} size="xl" />
-          <div>
-            <h1 className="font-[family-name:var(--font-zg-display)] text-4xl text-white">{profile.displayName}</h1>
-            {profile.username ? <p className="text-white/40">@{profile.username}</p> : null}
-            <div className="mt-2 flex flex-wrap gap-2 text-xs text-white/50">
-              {profile.primaryCategory ? <span>{profile.primaryCategory.name}</span> : null}
-              {profile.roleLabel ? <span>{profile.roleLabel}</span> : null}
-              {profile.location || profile.country ? <span>{profile.location || profile.country}</span> : null}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
+    <div className="mx-auto w-full max-w-[520px] pb-16">
+      <div className="flex flex-col items-center px-5 pt-4 text-center">
+        <DiscoveryAvatar name={profile.displayName} src={profile.avatarUrl} size="xl" className="h-28 w-28 text-3xl" />
+        <h1 className="mt-4 font-[family-name:var(--font-zg-display)] text-4xl text-white">{profile.displayName}</h1>
+        {profile.username ? <p className="mt-1 text-white/40">@{profile.username}</p> : null}
+        {meta ? <p className="mt-3 text-sm text-white/50">{meta}</p> : null}
+
+        <div className="mt-5 flex items-center gap-2">
           {isOwner ? (
-            <Link href={DISCOVERY_ROUTES.me}>
-              <Button variant="secondary">Edit profile</Button>
-            </Link>
+            showEditButton ? (
+              <Link href={editHref || DISCOVERY_ROUTES.meEdit}>
+                <Button variant="secondary">Edit profile</Button>
+              </Link>
+            ) : null
           ) : isLoggedIn ? (
-            <>
-              <SaveButton profileId={profile.id} initialSaved={profile.savedByMe} />
-              <FollowButton profileId={profile.id} initialFollowing={profile.followedByMe} source={source} />
-            </>
+            <FollowButton profileId={profile.id} initialFollowing={profile.followedByMe} source={source} size="md" />
           ) : (
             <Link href={DISCOVERY_ROUTES.signup}>
               <Button>Follow</Button>
@@ -79,75 +78,86 @@ export function PublicProfileView({
       </div>
 
       {profile.claimStatus === "unclaimed" ? (
-        <div className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 text-sm text-white/60">
-          This profile is unclaimed.
-          {isLoggedIn ? (
-            <ClaimButton profileId={profile.id} />
-          ) : (
-            <span>
-              {" "}
-              <Link href={DISCOVERY_ROUTES.signup} className="text-white underline-offset-4 hover:underline">
-                Claim this profile
-              </Link>
-            </span>
-          )}
-        </div>
+        <p className="mt-6 px-5 text-center text-sm text-white/45">This profile is unclaimed.</p>
       ) : null}
 
-      {profile.bio ? <p className="mt-6 text-base leading-relaxed text-white/70">{profile.bio}</p> : null}
-
-      <p className="mt-4 text-sm text-white/35">
-        {profile.followersCount} followers · {profile.followingCount} following
-      </p>
-
-      {profile.socialLinks.length ? (
-        <div className="mt-6 flex flex-wrap gap-2">
-          {profile.socialLinks.map((link) => (
-            <a
-              key={link.id}
-              href={link.url}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => track("external_link_click", { platform: link.platform })}
-              className="rounded-full border border-white/[0.08] px-3 py-1.5 text-sm text-white/70 hover:text-white"
-            >
-              {link.platform === "other" ? "Web" : SOCIAL_PLATFORM_LABELS[link.platform as SocialPlatform] ?? link.platform}
-            </a>
-          ))}
-        </div>
+      {profile.bio ? (
+        <p className="mt-8 px-5 text-[15px] leading-relaxed text-white/70">{profile.bio}</p>
       ) : null}
 
       {featured ? (
-        <section className="mt-12">
+        <section className="mt-10 px-5">
           <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">Currently building</p>
           <a
-            href={featured.url || undefined}
+            href={featured.url ? normalizeHttpUrl(featured.url) : undefined}
             target={featured.url ? "_blank" : undefined}
             rel="noreferrer"
             onClick={() => featured.url && track("project_click", { contentId: featured.id, platform: "website" })}
-            className="mt-3 block rounded-3xl border border-white/[0.08] bg-white/[0.03] p-6"
+            className="mt-3 block rounded-[1.6rem] bg-white/[0.04] p-5"
           >
             <h2 className="font-[family-name:var(--font-zg-display)] text-3xl text-white">{featured.name}</h2>
-            {featured.description ? <p className="mt-2 text-sm leading-relaxed text-white/55">{featured.description}</p> : null}
-            <p className="mt-3 text-xs uppercase tracking-[0.14em] text-white/35">
-              {featured.category} · {featured.status}
-            </p>
+            {featured.description ? <p className="mt-2 text-sm leading-relaxed text-white/50">{featured.description}</p> : null}
           </a>
         </section>
       ) : null}
 
+      {profile.featuredContent.length ? (
+        <section className="mt-10 px-5">
+          <h2 className="font-[family-name:var(--font-zg-display)] text-2xl text-white">Featured</h2>
+          <div className="mt-4 grid gap-4">
+            {profile.featuredContent.map((item) => (
+              <FeaturedContentCard
+                key={item.id}
+                item={item}
+                onClick={() => track("featured_content_click", { contentId: item.id, platform: item.platform })}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {profile.socialLinks.length ? (
+        <section className="mt-10 px-5">
+          <h2 className="font-[family-name:var(--font-zg-display)] text-2xl text-white">Where to find me</h2>
+          <div className="mt-4 divide-y divide-white/[0.06]">
+            {profile.socialLinks.map((link) => {
+              const handle = parseSocialHandle(link.platform, link.url);
+              const label = link.platform === "other" ? "Web" : SOCIAL_PLATFORM_LABELS[link.platform as SocialPlatform] ?? link.platform;
+              const subtitle =
+                link.platform === "website" || link.platform === "other"
+                  ? handle || "Open"
+                  : handle
+                    ? `@${handle}`
+                    : "Open";
+              return (
+                <a
+                  key={link.id}
+                  href={normalizeHttpUrl(link.url)}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => track("external_link_click", { platform: link.platform })}
+                  className="flex items-center justify-between py-3.5 text-[15px]"
+                >
+                  <span className="text-white">{label}</span>
+                  <span className="text-white/40">{subtitle}</span>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
       {otherProjects.length ? (
-        <section className="mt-10">
+        <section className="mt-10 px-5">
           <h2 className="font-[family-name:var(--font-zg-display)] text-2xl text-white">Projects</h2>
-          <div className="mt-4 grid gap-3">
+          <div className="mt-4 space-y-3">
             {otherProjects.map((project) => (
               <a
                 key={project.id}
-                href={project.url || undefined}
+                href={project.url ? normalizeHttpUrl(project.url) : undefined}
                 target={project.url ? "_blank" : undefined}
                 rel="noreferrer"
-                onClick={() => project.url && track("project_click", { contentId: project.id, platform: "website" })}
-                className="rounded-2xl border border-white/[0.07] p-4"
+                className="block rounded-2xl bg-white/[0.04] p-4"
               >
                 <p className="text-white">{project.name}</p>
                 {project.description ? <p className="mt-1 text-sm text-white/45">{project.description}</p> : null}
@@ -156,53 +166,6 @@ export function PublicProfileView({
           </div>
         </section>
       ) : null}
-
-      {profile.featuredContent.length ? (
-        <section className="mt-10">
-          <h2 className="font-[family-name:var(--font-zg-display)] text-2xl text-white">Find me online</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {profile.featuredContent.map((item) => (
-              <a
-                key={item.id}
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() =>
-                  track("featured_content_click", { contentId: item.id, platform: item.platform })
-                }
-                className="overflow-hidden rounded-2xl border border-white/[0.07]"
-              >
-                {item.thumbnailUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.thumbnailUrl} alt="" className="h-36 w-full object-cover" />
-                ) : null}
-                <div className="p-4">
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-white/35">
-                    {FEATURED_PLATFORM_LABELS[item.platform]}
-                  </p>
-                  <p className="mt-1 text-sm text-white">{item.title || item.url}</p>
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
-      ) : null}
     </div>
-  );
-}
-
-function ClaimButton({ profileId }: { profileId: string }) {
-  async function claim() {
-    await fetch("/api/discovery/claim", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profileId, proofNote: "I control this identity." }),
-    });
-    alert("Claim request sent. An admin will review it.");
-  }
-  return (
-    <button type="button" className="ml-2 underline underline-offset-4" onClick={claim}>
-      Claim this profile
-    </button>
   );
 }

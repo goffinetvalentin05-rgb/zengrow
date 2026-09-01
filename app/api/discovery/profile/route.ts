@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDiscoveryApiSession, isApiError } from "@/src/lib/discovery/api-session";
 import { MAX_NICHES, PROFILE_TYPES, USERNAME_PATTERN } from "@/src/lib/discovery/constants";
+import { isAdultBirthDate } from "@/src/lib/discovery/media";
 import { slugifyUsername } from "@/src/lib/discovery/slug";
 import { syncProfileDerived } from "@/src/lib/discovery/sync-profile";
 import { createClient } from "@/src/lib/supabase/server";
@@ -37,6 +38,16 @@ export async function PATCH(request: Request) {
   if (typeof body.avatarUrl === "string") patch.avatar_url = body.avatarUrl.trim() || null;
   if (typeof body.profileType === "string" && PROFILE_TYPES.includes(body.profileType as (typeof PROFILE_TYPES)[number])) {
     patch.profile_type = body.profileType;
+  }
+  if ("birthDate" in body) {
+    if (body.birthDate === "" || body.birthDate == null) {
+      patch.birth_date = null;
+    } else if (typeof body.birthDate === "string") {
+      if (!isAdultBirthDate(body.birthDate)) {
+        return NextResponse.json({ error: "Birthday is optional, and must be 18+." }, { status: 400 });
+      }
+      patch.birth_date = body.birthDate;
+    }
   }
   if (typeof body.username === "string") {
     const username = slugifyUsername(body.username);

@@ -1,5 +1,5 @@
 import { DiscoveryEmpty } from "@/src/components/discovery/empty-state";
-import { ProfileCard } from "@/src/components/discovery/profile-card";
+import { PeopleFeed } from "@/src/components/discovery/profile-discovery-card";
 import { requireOnboardedSession } from "@/src/lib/discovery/auth";
 import { getFollowedProfiles } from "@/src/lib/discovery/queries";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
@@ -11,24 +11,27 @@ export default async function FollowingPage() {
   const profiles = await getFollowedProfiles(supabase, session.profile.id);
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
-      <h1 className="font-[family-name:var(--font-zg-display)] text-4xl text-white">Following</h1>
-      <p className="mt-2 text-sm text-white/40">People you follow. No feed — just the people.</p>
-      {profiles.length ? (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {profiles.map((profile) => (
-            <ProfileCard key={profile.id} profile={profile} source="following" />
-          ))}
-        </div>
-      ) : (
-        <DiscoveryEmpty
-          className="mt-10"
-          title="You’re not following anyone yet."
-          description="Explore your niches and find people worth following."
-          href={DISCOVERY_ROUTES.explore}
-          cta="Explore people"
-        />
-      )}
+    <div className="pb-8">
+      <header className="mx-auto w-full max-w-[560px] px-5 md:px-0">
+        <h1 className="font-[family-name:var(--font-zg-display)] text-[2.4rem] leading-none tracking-tight text-white">
+          Following
+        </h1>
+        <p className="mt-2 text-sm text-white/40">People you follow.</p>
+      </header>
+      <div className="mt-8">
+        {profiles.length ? (
+          <PeopleFeed profiles={profiles} source="following" />
+        ) : (
+          <div className="px-5">
+            <DiscoveryEmpty
+              title="You’re not following anyone yet."
+              description="Discover people in your world, then follow the ones worth keeping."
+              href={DISCOVERY_ROUTES.explore}
+              cta="Discover people"
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

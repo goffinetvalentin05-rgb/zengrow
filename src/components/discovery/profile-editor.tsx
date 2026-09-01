@@ -6,9 +6,6 @@ import { useRouter } from "next/navigation";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import {
-  FEATURED_PLATFORM_LABELS,
-  FEATURED_PLATFORMS,
-  MAX_FEATURED_CONTENT,
   MAX_NICHES,
   PROFILE_TYPE_LABELS,
   PROFILE_TYPES,
@@ -18,10 +15,18 @@ import {
   SOCIAL_PLATFORMS,
 } from "@/src/lib/discovery/constants";
 import { completenessSuggestions } from "@/src/lib/discovery/completeness";
+import { COUNTRY_PRESETS } from "@/src/lib/discovery/media";
+import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
 import type { Category, FeaturedContent, Profile, Project, SocialLink } from "@/src/lib/discovery/types";
+import { AvatarUpload } from "@/src/components/discovery/avatar-upload";
+import { FeaturedContentEditor } from "@/src/components/discovery/featured-content-editor";
 import { cn } from "@/src/lib/utils";
 
+const selectClass =
+  "h-11 w-full rounded-2xl border border-white/[0.1] bg-[#0d0c12] px-3 text-sm text-white";
+
 export function ProfileEditor({
+  userId,
   profile,
   categories,
   selectedCategoryIds,
@@ -29,6 +34,7 @@ export function ProfileEditor({
   socialLinks,
   featuredContent,
 }: {
+  userId: string;
   profile: Profile;
   categories: Category[];
   selectedCategoryIds: string[];
@@ -53,11 +59,12 @@ export function ProfileEditor({
         location: form.get("location"),
         country: form.get("country"),
         profileType: form.get("profileType"),
-        avatarUrl: form.get("avatarUrl"),
         audienceSize: form.get("audienceSize"),
+        birthDate: form.get("birthDate"),
       }),
     });
-    setMessage(response.ok ? "Profile saved." : "Could not save profile.");
+    const payload = (await response.json().catch(() => ({}))) as { error?: string };
+    setMessage(response.ok ? "Saved." : payload.error ?? "Could not save.");
     if (response.ok) router.refresh();
   }
 
@@ -71,58 +78,40 @@ export function ProfileEditor({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto flex w-full max-w-[560px] flex-col gap-12 px-5 pb-10 md:px-0">
+      <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="font-[family-name:var(--font-zg-display)] text-4xl text-white">My profile</h1>
-          <p className="mt-1 text-sm text-white/40">Keep it short. People should see what you are building.</p>
-        </div>
-        {profile.username ? (
-          <Link href={`/u/${profile.username}`} className="text-sm text-white/50 hover:text-white">
-            Preview profile
+          <Link href={DISCOVERY_ROUTES.me} className="text-sm text-white/40 hover:text-white">
+            ← Preview
           </Link>
-        ) : null}
+          <h1 className="mt-3 font-[family-name:var(--font-zg-display)] text-4xl text-white">Edit profile</h1>
+        </div>
       </header>
 
-      <section className="rounded-3xl border border-white/[0.07] bg-white/[0.025] p-5">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-white/70">Profile completeness</p>
-          <p className="text-sm text-white">{profile.completeness}%</p>
-        </div>
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-          <div className="h-full rounded-full bg-white" style={{ width: `${profile.completeness}%` }} />
-        </div>
-        {suggestions.length ? (
-          <ul className="mt-4 space-y-1 text-sm text-white/45">
-            {suggestions.map((item) => (
-              <li key={item.key}>
-                <a href={item.href} className="hover:text-white">
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </section>
+      {suggestions.length ? (
+        <ul className="space-y-1 text-sm text-white/45">
+          {suggestions.map((item) => (
+            <li key={item.key}>
+              <a href={item.href} className="hover:text-white">
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
-      <EditorCard id="photo" title="Profile">
+      <EditorSection id="photo" title="Profile">
+        <div className="mb-6">
+          <AvatarUpload userId={userId} name={profile.displayName} currentUrl={profile.avatarUrl} />
+        </div>
         <form className="space-y-4" onSubmit={saveProfile}>
-          <Field label="Photo URL">
-            <Input name="avatarUrl" defaultValue={profile.avatarUrl ?? ""} placeholder="https://..." />
-          </Field>
           <Field label="Name">
             <Input name="displayName" defaultValue={profile.displayName} required />
           </Field>
           <Field label="Username">
             <Input name="username" defaultValue={profile.username ?? ""} required />
           </Field>
-          <Button type="submit">Save profile</Button>
-        </form>
-      </EditorCard>
-
-      <EditorCard id="about" title="About">
-        <form className="space-y-4" onSubmit={saveProfile}>
-          <Field label="Short bio">
+          <Field label="Bio">
             <textarea
               name="bio"
               defaultValue={profile.bio ?? ""}
@@ -130,20 +119,29 @@ export function ProfileEditor({
               className="w-full rounded-2xl border border-white/[0.1] bg-white/[0.035] px-3.5 py-2.5 text-sm text-white outline-none"
             />
           </Field>
+          <Field label="Birthday (optional, 18+)">
+            <Input name="birthDate" type="date" defaultValue={profile.birthDate ?? ""} />
+          </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Location">
-              <Input name="location" defaultValue={profile.location ?? ""} />
+            <Field label="City">
+              <Input name="location" defaultValue={profile.location ?? ""} placeholder="Optional" />
             </Field>
             <Field label="Country">
-              <Input name="country" defaultValue={profile.country ?? ""} />
+              <select name="country" defaultValue={profile.country ?? ""} className={selectClass}>
+                <option value="">Select</option>
+                {COUNTRY_PRESETS.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+                {profile.country && !(COUNTRY_PRESETS as readonly string[]).includes(profile.country) ? (
+                  <option value={profile.country}>{profile.country}</option>
+                ) : null}
+              </select>
             </Field>
           </div>
-          <Field label="Profile type">
-            <select
-              name="profileType"
-              defaultValue={profile.profileType ?? ""}
-              className="h-10 w-full rounded-2xl border border-white/[0.1] bg-[#0d0c12] px-3 text-sm text-white"
-            >
+          <Field label="Role">
+            <select name="profileType" defaultValue={profile.profileType ?? ""} className={selectClass}>
               <option value="">Select</option>
               {PROFILE_TYPES.map((type) => (
                 <option key={type} value={type}>
@@ -152,38 +150,39 @@ export function ProfileEditor({
               ))}
             </select>
           </Field>
-          <Field label="Audience size (optional, self-reported)">
+          <Field label="Audience size (optional)">
             <Input name="audienceSize" type="number" min={0} defaultValue={profile.audienceSize ?? ""} />
           </Field>
-          <Button type="submit">Save about</Button>
+          <Button type="submit">Save profile</Button>
         </form>
-      </EditorCard>
+      </EditorSection>
 
-      <EditorCard id="niches" title="Niches">
+      <EditorSection id="niches" title="Niches">
+        <p className="mb-4 text-sm text-white/40">Primary niche is the first one you select.</p>
         <NichePicker categories={categories} selected={selectedCategoryIds} onSave={saveNiches} />
-      </EditorCard>
+      </EditorSection>
 
-      <EditorCard id="projects" title="Projects">
+      <EditorSection id="projects" title="Projects">
         <ProjectList projects={projects} />
-      </EditorCard>
+      </EditorSection>
 
-      <EditorCard id="social" title="Social links">
+      <EditorSection id="social" title="Socials">
         <SocialEditor links={socialLinks} />
-      </EditorCard>
+      </EditorSection>
 
-      <EditorCard id="featured" title="Featured content">
-        <FeaturedEditor items={featuredContent} />
-      </EditorCard>
+      <EditorSection id="featured" title="Featured content">
+        <FeaturedContentEditor profileId={profile.id} items={featuredContent} />
+      </EditorSection>
 
       {message ? <p className="text-sm text-white/50">{message}</p> : null}
     </div>
   );
 }
 
-function EditorCard({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+function EditorSection({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="rounded-3xl border border-white/[0.07] bg-white/[0.025] p-5">
-      <h2 className="mb-4 font-[family-name:var(--font-zg-display)] text-2xl text-white">{title}</h2>
+    <section id={id}>
+      <h2 className="mb-5 font-[family-name:var(--font-zg-display)] text-2xl text-white">{title}</h2>
       {children}
     </section>
   );
@@ -225,8 +224,8 @@ function NichePicker({
                 })
               }
               className={cn(
-                "rounded-full border px-3 py-1.5 text-sm",
-                active ? "border-white bg-white text-zinc-950" : "border-white/10 text-white/60",
+                "rounded-full px-3 py-1.5 text-sm",
+                active ? "bg-white text-zinc-950" : "bg-white/[0.06] text-white/60",
               )}
             >
               {cat.name}
@@ -253,9 +252,8 @@ function ProjectList({ projects }: { projects: Project[] }) {
         name: form.get("name"),
         url: form.get("url"),
         description: form.get("description"),
-        category: form.get("category"),
         status: form.get("status"),
-        featuredProject: true,
+        featuredProject: projects.length === 0,
       }),
     });
     event.currentTarget.reset();
@@ -272,12 +270,12 @@ function ProjectList({ projects }: { projects: Project[] }) {
   return (
     <div className="space-y-4">
       {projects.map((project) => (
-        <div key={project.id} className="flex items-start justify-between gap-3 rounded-2xl border border-white/[0.06] p-3">
+        <div key={project.id} className="flex items-start justify-between gap-3 py-2">
           <div>
             <p className="text-sm font-medium text-white">{project.name}</p>
             <p className="text-xs text-white/40">
               {PROJECT_STATUS_LABELS[project.status]}
-              {project.featuredProject ? " · Featured" : ""}
+              {project.featuredProject ? " · Currently building" : ""}
             </p>
           </div>
           <button type="button" className="text-xs text-white/35" onClick={() => remove(project.id)}>
@@ -289,8 +287,7 @@ function ProjectList({ projects }: { projects: Project[] }) {
         <Input name="name" placeholder="Project name" required />
         <Input name="url" placeholder="https://" />
         <Input name="description" placeholder="Short description" />
-        <Input name="category" placeholder="Category" />
-        <select name="status" className="h-10 w-full rounded-2xl border border-white/[0.1] bg-[#0d0c12] px-3 text-sm text-white">
+        <select name="status" className={selectClass}>
           {PROJECT_STATUSES.map((status) => (
             <option key={status} value={status}>
               {PROJECT_STATUS_LABELS[status]}
@@ -324,71 +321,14 @@ function SocialEditor({ links }: { links: SocialLink[] }) {
     <form className="space-y-3" onSubmit={save}>
       {SOCIAL_PLATFORMS.map((platform) => (
         <Field key={platform} label={SOCIAL_PLATFORM_LABELS[platform]}>
-          <Input name={platform} defaultValue={byPlatform[platform] ?? ""} placeholder="https://" />
+          <Input
+            name={platform}
+            defaultValue={byPlatform[platform] ?? ""}
+            placeholder={platform === "website" ? "https://" : `${platform}.com/username`}
+          />
         </Field>
       ))}
       <Button type="submit">Save links</Button>
     </form>
-  );
-}
-
-function FeaturedEditor({ items }: { items: FeaturedContent[] }) {
-  const router = useRouter();
-  async function create(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    await fetch("/api/discovery/featured", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        platform: form.get("platform"),
-        url: form.get("url"),
-        title: form.get("title"),
-        thumbnailUrl: form.get("thumbnailUrl"),
-      }),
-    });
-    event.currentTarget.reset();
-    router.refresh();
-  }
-  async function remove(id: string) {
-    await fetch("/api/discovery/featured", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-    router.refresh();
-  }
-  return (
-    <div className="space-y-4">
-      <p className="text-xs text-white/35">
-        Up to {MAX_FEATURED_CONTENT}. Content stays on the original platform — Sharpz only links to it.
-      </p>
-      {items.map((item) => (
-        <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.06] p-3">
-          <div>
-            <p className="text-sm text-white">{item.title || item.url}</p>
-            <p className="text-xs text-white/35">{FEATURED_PLATFORM_LABELS[item.platform]}</p>
-          </div>
-          <button type="button" className="text-xs text-white/35" onClick={() => remove(item.id)}>
-            Remove
-          </button>
-        </div>
-      ))}
-      {items.length < MAX_FEATURED_CONTENT ? (
-        <form className="space-y-3" onSubmit={create}>
-          <select name="platform" className="h-10 w-full rounded-2xl border border-white/[0.1] bg-[#0d0c12] px-3 text-sm text-white">
-            {FEATURED_PLATFORMS.map((platform) => (
-              <option key={platform} value={platform}>
-                {FEATURED_PLATFORM_LABELS[platform]}
-              </option>
-            ))}
-          </select>
-          <Input name="url" placeholder="https://" required />
-          <Input name="title" placeholder="Optional title" />
-          <Input name="thumbnailUrl" placeholder="Optional thumbnail URL" />
-          <Button type="submit">Add content</Button>
-        </form>
-      ) : null}
-    </div>
   );
 }

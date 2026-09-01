@@ -14,5 +14,9 @@ export default async function AnalyticsPage() {
   const supabase = await createClient();
   const analytics = isPro ? await getProfileAnalytics(supabase, session.profile.id) : null;
 
-  return <AnalyticsView isPro={isPro} analytics={analytics} />;
+  return (
+    <div className="px-5 md:px-0">
+      <AnalyticsView isPro={isPro} analytics={analytics} />
+    </div>
+  );
 }

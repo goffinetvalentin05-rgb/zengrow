@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import { MAX_NICHES, PROFILE_TYPE_LABELS, PROFILE_TYPES, SOCIAL_PLATFORMS, SOCIAL_PLATFORM_LABELS } from "@/src/lib/discovery/constants";
+import { COUNTRY_PRESETS } from "@/src/lib/discovery/media";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
 import { slugifyUsername } from "@/src/lib/discovery/slug";
 import type { Category } from "@/src/lib/discovery/types";
@@ -17,6 +18,7 @@ type Draft = {
   username: string;
   bio: string;
   location: string;
+  country: string;
   projectName: string;
   projectUrl: string;
   projectDescription: string;
@@ -43,6 +45,7 @@ export function OnboardingFlow({
     username: initialUsername,
     bio: "",
     location: "",
+    country: "",
     projectName: "",
     projectUrl: "",
     projectDescription: "",
@@ -164,8 +167,26 @@ export function OnboardingFlow({
                 className="w-full rounded-2xl border border-white/[0.1] bg-white/[0.035] px-3.5 py-2.5 text-sm text-white outline-none"
               />
             </Field>
-            <Field label="Location">
-              <Input value={draft.location} onChange={(e) => setDraft({ ...draft, location: e.target.value })} placeholder="Switzerland" />
+            <Field label="City">
+              <Input
+                value={draft.location}
+                onChange={(e) => setDraft({ ...draft, location: e.target.value })}
+                placeholder="Optional"
+              />
+            </Field>
+            <Field label="Country">
+              <select
+                value={draft.country}
+                onChange={(e) => setDraft({ ...draft, country: e.target.value })}
+                className="h-11 w-full rounded-2xl border border-white/[0.1] bg-[#0d0c12] px-3 text-sm text-white"
+              >
+                <option value="">Optional</option>
+                {COUNTRY_PRESETS.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
             </Field>
           </form>
         </>

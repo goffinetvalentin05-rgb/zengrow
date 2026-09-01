@@ -3,6 +3,7 @@ export const DISCOVERY_ROUTES = {
   following: "/following",
   saved: "/saved",
   me: "/me",
+  meEdit: "/me/edit",
   analytics: "/analytics",
   settings: "/settings",
   onboarding: "/onboarding",

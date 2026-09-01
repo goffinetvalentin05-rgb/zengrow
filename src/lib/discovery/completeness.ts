@@ -41,22 +41,22 @@ export function completenessSuggestions(input: {
 }): CompletenessSuggestion[] {
   const suggestions: CompletenessSuggestion[] = [];
   if (!input.profile.avatarUrl) {
-    suggestions.push({ key: "photo", label: "Add a profile picture", href: "/me#photo" });
+    suggestions.push({ key: "photo", label: "Add a profile picture", href: "/me/edit#photo" });
   }
   if (!input.projects.length) {
-    suggestions.push({ key: "project", label: "Add a project", href: "/me#projects" });
+    suggestions.push({ key: "project", label: "Add a project", href: "/me/edit#projects" });
   }
   if (!input.socialLinks.some((link) => link.platform === "youtube")) {
-    suggestions.push({ key: "youtube", label: "Connect YouTube", href: "/me#social" });
+    suggestions.push({ key: "youtube", label: "Connect YouTube", href: "/me/edit#social" });
   }
   if (!input.socialLinks.length) {
-    suggestions.push({ key: "social", label: "Add where people can find you", href: "/me#social" });
+    suggestions.push({ key: "social", label: "Add where people can find you", href: "/me/edit#social" });
   }
   if ((input.profile.bio ?? "").trim().length < 12) {
-    suggestions.push({ key: "bio", label: "Write a short bio", href: "/me#about" });
+    suggestions.push({ key: "bio", label: "Write a short bio", href: "/me/edit#about" });
   }
   if (!input.featuredContent.length) {
-    suggestions.push({ key: "featured", label: "Feature a piece of content", href: "/me#featured" });
+    suggestions.push({ key: "featured", label: "Feature a piece of content", href: "/me/edit#featured" });
   }
   return suggestions.slice(0, 4);
 }

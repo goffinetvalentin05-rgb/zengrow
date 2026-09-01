@@ -21,6 +21,7 @@ import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 
 const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: DISCOVERY_ROUTES.explore, label: "Explore", icon: Compass },
+  { href: DISCOVERY_ROUTES.search, label: "Search", icon: Search },
   { href: DISCOVERY_ROUTES.following, label: "Following", icon: Users },
   { href: DISCOVERY_ROUTES.saved, label: "Saved", icon: Bookmark },
   { href: DISCOVERY_ROUTES.me, label: "My profile", icon: UserRound },
@@ -78,7 +79,7 @@ export function DiscoverySidebar({
 
       {completeness < 80 ? (
         <Link
-          href={DISCOVERY_ROUTES.me}
+          href={DISCOVERY_ROUTES.meEdit}
           className="mx-3 mb-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 text-sm text-white/70 hover:text-white"
         >
           Complete profile

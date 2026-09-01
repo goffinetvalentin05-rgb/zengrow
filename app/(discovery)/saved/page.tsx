@@ -1,5 +1,5 @@
 import { DiscoveryEmpty } from "@/src/components/discovery/empty-state";
-import { ProfileCard } from "@/src/components/discovery/profile-card";
+import { PeopleFeed } from "@/src/components/discovery/profile-discovery-card";
 import { requireOnboardedSession } from "@/src/lib/discovery/auth";
 import { getSavedProfiles } from "@/src/lib/discovery/queries";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
@@ -11,24 +11,27 @@ export default async function SavedPage() {
   const profiles = await getSavedProfiles(supabase, session.profile.id);
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
-      <h1 className="font-[family-name:var(--font-zg-display)] text-4xl text-white">Saved</h1>
-      <p className="mt-2 text-sm text-white/40">Profiles you want to remember without following.</p>
-      {profiles.length ? (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {profiles.map((profile) => (
-            <ProfileCard key={profile.id} profile={profile} source="saved" />
-          ))}
-        </div>
-      ) : (
-        <DiscoveryEmpty
-          className="mt-10"
-          title="Nothing saved yet."
-          description="Save someone interesting while you explore."
-          href={DISCOVERY_ROUTES.explore}
-          cta="Explore people"
-        />
-      )}
+    <div className="pb-8">
+      <header className="mx-auto w-full max-w-[560px] px-5 md:px-0">
+        <h1 className="font-[family-name:var(--font-zg-display)] text-[2.4rem] leading-none tracking-tight text-white">
+          Saved
+        </h1>
+        <p className="mt-2 text-sm text-white/40">People you want to remember.</p>
+      </header>
+      <div className="mt-8">
+        {profiles.length ? (
+          <PeopleFeed profiles={profiles} source="saved" />
+        ) : (
+          <div className="px-5">
+            <DiscoveryEmpty
+              title="Nothing saved yet."
+              description="Save someone interesting while you explore."
+              href={DISCOVERY_ROUTES.explore}
+              cta="Discover people"
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -18,13 +18,15 @@ export default async function AdminPage() {
   ]);
 
   return (
-    <AdminView
-      profiles={(profilesRes.data ?? []).map((row) => mapProfile(row as Record<string, unknown>))}
-      categories={categories.map((cat) => ({ ...cat, profileCount: counts.get(cat.id) ?? 0 }))}
-      projects={(projectsRes.data ?? []).map((row) => mapProject(row as Record<string, unknown>))}
-      claims={(claimsRes.data ?? []) as { id: string; profile_id: string; status: string; proof_note: string | null; created_at: string }[]}
-      reports={(reportsRes.data ?? []) as { id: string; profile_id: string; reason: string; status: string; created_at: string }[]}
-      subscriptions={(subsRes.data ?? []) as { user_id: string; plan: string; status: string }[]}
-    />
+    <div className="px-5 md:px-0">
+      <AdminView
+        profiles={(profilesRes.data ?? []).map((row) => mapProfile(row as Record<string, unknown>))}
+        categories={categories.map((cat) => ({ ...cat, profileCount: counts.get(cat.id) ?? 0 }))}
+        projects={(projectsRes.data ?? []).map((row) => mapProject(row as Record<string, unknown>))}
+        claims={(claimsRes.data ?? []) as { id: string; profile_id: string; status: string; proof_note: string | null; created_at: string }[]}
+        reports={(reportsRes.data ?? []) as { id: string; profile_id: string; reason: string; status: string; created_at: string }[]}
+        subscriptions={(subsRes.data ?? []) as { user_id: string; plan: string; status: string }[]}
+      />
+    </div>
   );
 }

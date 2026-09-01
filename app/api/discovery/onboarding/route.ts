@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDiscoveryApiSession, isApiError } from "@/src/lib/discovery/api-session";
 import { MAX_NICHES, PROFILE_TYPES, SOCIAL_PLATFORMS, USERNAME_PATTERN } from "@/src/lib/discovery/constants";
 import { slugifyHandle, slugifyUsername } from "@/src/lib/discovery/slug";
+import { normalizeHttpUrl } from "@/src/lib/discovery/media";
 import { syncProfileDerived } from "@/src/lib/discovery/sync-profile";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
     username?: string;
     bio?: string;
     location?: string;
+    country?: string;
     projectName?: string;
     projectUrl?: string;
     projectDescription?: string;
@@ -45,6 +47,7 @@ export async function POST(request: Request) {
       username,
       bio: body.bio?.trim() || null,
       location: body.location?.trim() || null,
+      country: body.country?.trim() || null,
       profile_type: body.profileType,
       primary_category_id: niches[0],
       onboarding_completed: true,
@@ -73,7 +76,7 @@ export async function POST(request: Request) {
       owner_id: profile.id,
       name: body.projectName.trim(),
       slug: slugifyHandle(body.projectName),
-      url: body.projectUrl?.trim() || null,
+      url: body.projectUrl?.trim() ? normalizeHttpUrl(body.projectUrl) : null,
       description: body.projectDescription?.trim() || null,
       featured_project: true,
       status: "building",
@@ -85,7 +88,7 @@ export async function POST(request: Request) {
     .map(([platform, url], index) => ({
       profile_id: profile.id,
       platform,
-      url: url.trim(),
+      url: normalizeHttpUrl(url),
       sort_index: index,
     }));
   if (links.length) {

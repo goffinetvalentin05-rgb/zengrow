@@ -45,7 +45,7 @@ export function DiscoveryShell({
               username={username}
             />
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pb-24 pt-6 md:px-10 md:pb-14 md:pt-8">
+              <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-0 pb-24 pt-4 md:px-10 md:pb-14 md:pt-8">
                 {children}
               </main>
             </div>
