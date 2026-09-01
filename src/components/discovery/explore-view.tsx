@@ -167,7 +167,7 @@ export function ExploreView({
   ].join("|");
 
   return (
-    <div className="pb-8">
+    <div className="pb-8 max-md:pb-12">
       <header className="mx-auto w-full max-w-[720px] px-5 md:mx-0 md:max-w-none md:px-0">
         <h1 className="sz-display">Discover people worth knowing.</h1>
         {feedReady ? <p className="sz-copied mt-3 text-sm text-white/50">Your feed is ready.</p> : null}

@@ -24,7 +24,7 @@ export function NichePills({
   const ordered = [...favorites, ...rest];
 
   return (
-    <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-1 touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-1 touch-pan-x touch-pan-y [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       <Link
         href={hrefFor(null)}
         scroll={false}
