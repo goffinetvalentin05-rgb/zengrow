@@ -35,9 +35,14 @@ export const LANDING_COPY = {
     ctaSecondary: "Créer mon profil",
   },
   problem: {
-    label: "Le problème",
-    title: "Les profils émergents sont souvent noyés derrière les plus gros.",
-    text: "Dans chaque niche, les profils déjà installés prennent naturellement beaucoup de place. Pendant ce temps, des créateurs, builders et fondateurs construisent des choses intéressantes sans encore avoir la visibilité qu’ils méritent, ce qui les rend plus difficiles à découvrir, à suivre et à contacter.",
+    label: "01 — LE CONSTAT",
+    title: "Les algorithmes te montrent toujours les mêmes.",
+    aside:
+      "Pendant que des milliers de personnes brillantes construisent, créent et partagent dans l’ombre.",
+    stat: "92%",
+    statCaption: "DES PROFILS RECOMMANDÉS SONT DÉJÀ ULTRA-VISIBLES.",
+    quote:
+      "Le prochain profil qui changera ta façon de travailler n’est probablement pas encore dans ton feed.",
   },
   answer: {
     label: "La solution",

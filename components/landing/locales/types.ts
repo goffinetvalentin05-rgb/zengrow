@@ -38,7 +38,10 @@ export type LandingDictionary = {
   problem: {
     label: string;
     title: string;
-    text: string;
+    aside: string;
+    stat: string;
+    statCaption: string;
+    quote: string;
   };
   answer: {
     label: string;

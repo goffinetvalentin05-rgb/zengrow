@@ -5156,32 +5156,210 @@
   margin: 0.45rem 0 0.15rem;
 }
 
-/* ——— Problem: algorithm vs relevance ——— */
+/* ——— Problem / constat: editorial layout ——— */
 
-.go-problem__body {
-  max-width: 40rem;
-  margin-inline: auto;
-  text-align: center;
-}
-
-.go-problem-v2 .go-section-head {
-  margin-bottom: clamp(2.15rem, 4.2vw, 3.25rem);
+.go-problem-v2 {
+  overflow-x: clip;
 }
 
 .go-problem-v2 .go-eyebrow {
   margin: 0 0 1.15rem;
 }
 
-.go-problem-v2 .go-problem__body {
-  max-width: 38.5rem;
-  margin-top: 1.25rem;
-  font-size: clamp(1.02rem, 1.4vw, 1.125rem);
-  line-height: 1.72;
+.go-constat__header {
+  padding-bottom: clamp(1.75rem, 3.4vw, 2.6rem);
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--zg-line);
+}
+
+.go-constat__intro {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.15rem;
+  align-items: end;
+}
+
+.go-constat__title {
+  margin: 0;
+  font-family: var(--zg-font);
+  font-size: clamp(1.95rem, 4vw, 3.2rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+  color: var(--zg-white);
+}
+
+.go-constat__em {
+  font-family: var(--zg-display);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+.go-constat__aside {
+  margin: 0;
+  max-width: 22.5rem;
+  font-size: clamp(0.95rem, 1.25vw, 1.05rem);
+  line-height: 1.65;
+  color: var(--zg-muted);
+}
+
+.go-constat__stage {
+  position: relative;
+  padding-top: clamp(1.55rem, 3.6vw, 2.7rem);
+}
+
+.go-constat__frame {
+  margin: 0;
+}
+
+.go-constat__frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.14) 30%,
+    transparent 56%
+  );
 }
 
 .go-problem-v2 .go-mind__img {
   object-position: center 28%;
   transform: none;
+}
+
+.go-constat__stat {
+  position: absolute;
+  left: clamp(0.35rem, 1.1vw, 1.05rem);
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem 1.05rem;
+  max-width: calc(100% - 1.25rem);
+  pointer-events: none;
+}
+
+.go-constat__figure {
+  margin: 0;
+  font-family: var(--zg-font);
+  font-size: clamp(4.6rem, 12.5vw, 8.75rem);
+  font-weight: 700;
+  letter-spacing: -0.07em;
+  line-height: 0.78;
+  color: var(--zg-white);
+  text-shadow:
+    0 10px 36px rgba(0, 0, 0, 0.55),
+    0 0 48px rgba(0, 0, 0, 0.28);
+}
+
+.go-constat__caption {
+  margin: 0;
+  max-width: 9.25rem;
+  padding-top: 0.2rem;
+  font-size: 0.64rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  line-height: 1.38;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.go-constat__quote {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.35rem 1rem;
+  align-items: start;
+  max-width: 38rem;
+  margin: clamp(1.85rem, 3.8vw, 2.85rem) 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.go-constat__mark {
+  display: block;
+  margin-top: 0.12rem;
+  font-family: var(--zg-display);
+  font-size: clamp(2.6rem, 4vw, 3.5rem);
+  font-style: italic;
+  line-height: 0.7;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.go-constat__quote p {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.02rem, 1.7vw, 1.22rem);
+  line-height: 1.55;
+  color: var(--zg-ink-soft);
+}
+
+@media (min-width: 880px) {
+  .go-constat__intro {
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 21rem);
+    gap: 2rem 3.25rem;
+  }
+
+  .go-constat__aside {
+    justify-self: end;
+    padding-bottom: 0.15rem;
+  }
+
+  .go-constat__stat {
+    gap: 1.05rem 1.2rem;
+  }
+
+  .go-constat__caption {
+    font-size: 0.68rem;
+    max-width: 9.75rem;
+  }
+
+  .go-constat__quote {
+    margin-left: auto;
+    max-width: 34rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .go-constat__title {
+    max-width: none;
+  }
+
+  .go-constat__aside {
+    max-width: none;
+  }
+
+  .go-constat__stage {
+    padding-top: 1.45rem;
+  }
+
+  .go-constat__stat {
+    left: 0.7rem;
+    gap: 0.65rem 0.8rem;
+  }
+
+  .go-constat__figure {
+    font-size: clamp(3.4rem, 22vw, 4.6rem);
+  }
+
+  .go-constat__caption {
+    max-width: 8.1rem;
+    font-size: 0.56rem;
+    letter-spacing: 0.08em;
+  }
+
+  .go-constat__quote {
+    gap: 0.25rem 0.75rem;
+    margin-top: 1.65rem;
+  }
+
+  .go-constat__mark {
+    font-size: 2.35rem;
+  }
 }
 
 .go-problem__know {
