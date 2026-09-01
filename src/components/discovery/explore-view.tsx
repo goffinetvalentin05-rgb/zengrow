@@ -6,6 +6,7 @@ import { DiscoveryFiltersSheet } from "@/src/components/discovery/explore-filter
 import { DiscoveryEmpty } from "@/src/components/discovery/empty-state";
 import { NichePills } from "@/src/components/discovery/niche-pills";
 import { PeopleFeed } from "@/src/components/discovery/profile-discovery-card";
+import { PeopleSwipeDeck } from "@/src/components/discovery/people-swipe-deck";
 import { DiscoverySearchBar } from "@/src/components/discovery/search-bar";
 import { DISCOVERY_PAGE_SIZE } from "@/src/lib/discovery/constants";
 import { droppedFilterHints } from "@/src/lib/discovery/apply-filters";
@@ -149,16 +150,14 @@ export function ExploreView({
         <div className="mt-5">
           <DiscoverySearchBar />
         </div>
-        <div className="mt-5 flex items-start gap-3">
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <NichePills
-              categories={categories}
-              activeSlug={filters.niche}
-              favoriteSlugs={favoriteSlugs}
-              hrefFor={(slug) => hrefFor({ ...filters, niche: slug })}
-            />
-          </div>
-          <div className="shrink-0 pt-0.5">
+        <div className="mt-5">
+          <NichePills
+            categories={categories}
+            activeSlug={filters.niche}
+            favoriteSlugs={favoriteSlugs}
+            hrefFor={(slug) => hrefFor({ ...filters, niche: slug })}
+          />
+          <div className="mt-3">
             <DiscoveryFiltersSheet
               filters={filters}
               extraLocations={extraLocations}
@@ -213,8 +212,18 @@ export function ExploreView({
           </div>
         ) : (
           <>
-            <PeopleFeed profiles={profiles} source={source} isLoggedIn={isLoggedIn} />
-            <div ref={sentinel} className="h-10" />
+            <div className="md:hidden">
+              <PeopleSwipeDeck
+                profiles={profiles}
+                source={source}
+                isLoggedIn={isLoggedIn}
+                onNearEnd={() => void loadMore()}
+              />
+            </div>
+            <div className="hidden md:block">
+              <PeopleFeed profiles={profiles} source={source} isLoggedIn={isLoggedIn} />
+              <div ref={sentinel} className="h-10" />
+            </div>
             {loading ? <p className="py-6 text-center text-sm text-white/35">Loading more people…</p> : null}
             {!hasMore && profiles.length ? (
               <p className="py-8 text-center text-sm text-white/30">That’s everyone in this slice for now.</p>

@@ -98,7 +98,10 @@ async function hydrateCards(
   const featuredPreviewByProfile = new Map<string, FeaturedContent>();
   for (const row of featuredRes.data ?? []) {
     const item = mapFeaturedContent(row as Record<string, unknown>);
-    if (!featuredPreviewByProfile.has(item.profileId)) featuredPreviewByProfile.set(item.profileId, item);
+    const current = featuredPreviewByProfile.get(item.profileId);
+    const score = (candidate: FeaturedContent) =>
+      candidate.platform === "youtube" ? 3 : candidate.thumbnailUrl ? 2 : 1;
+    if (!current || score(item) > score(current)) featuredPreviewByProfile.set(item.profileId, item);
   }
   const cats = new Map((catsRes.data ?? []).map((row) => [String((row as { id: string }).id), mapCategory(row as Record<string, unknown>)]));
   const followed = new Set((followsRes.data ?? []).map((row) => row.following_id));

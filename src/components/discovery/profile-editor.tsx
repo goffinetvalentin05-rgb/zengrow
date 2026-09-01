@@ -22,6 +22,7 @@ import type { Category, FeaturedContent, Profile, Project, SocialLink } from "@/
 import { AvatarUpload } from "@/src/components/discovery/avatar-upload";
 import { CoverUpload } from "@/src/components/discovery/cover-upload";
 import { FeaturedContentEditor } from "@/src/components/discovery/featured-content-editor";
+import { ProjectLogoUpload } from "@/src/components/discovery/project-logo-upload";
 import { SharpzLinkEditor } from "@/src/components/discovery/sharpz-link-editor";
 import { cn } from "@/src/lib/utils";
 
@@ -213,7 +214,7 @@ export function ProfileEditor({
       </EditorSection>
 
       <EditorSection id="projects" title="Projects">
-        <ProjectList projects={projects} />
+        <ProjectList userId={userId} projects={projects} />
       </EditorSection>
 
       <EditorSection id="featured" title="Featured content">
@@ -404,7 +405,7 @@ function NichePicker({
   );
 }
 
-function ProjectList({ projects }: { projects: Project[] }) {
+function ProjectList({ userId, projects }: { userId: string; projects: Project[] }) {
   const router = useRouter();
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -444,24 +445,27 @@ function ProjectList({ projects }: { projects: Project[] }) {
   return (
     <div className="space-y-4">
       {projects.map((project) => (
-        <div key={project.id} className="flex items-start justify-between gap-3 rounded-2xl bg-white/[0.03] px-3 py-3">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-white">{project.name}</p>
-            <p className="text-xs text-white/40">
-              {PROJECT_STATUS_LABELS[project.status]}
-              {project.featuredProject ? " · Currently building" : ""}
-            </p>
-          </div>
-          <div className="flex shrink-0 gap-3 text-xs text-white/40">
-            {!project.featuredProject ? (
-              <button type="button" onClick={() => void setFeatured(project.id)}>
-                Feature
+        <div key={project.id} className="space-y-3 rounded-2xl bg-white/[0.03] px-3 py-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-white">{project.name}</p>
+              <p className="text-xs text-white/40">
+                {PROJECT_STATUS_LABELS[project.status]}
+                {project.featuredProject ? " · Currently building" : ""}
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-3 text-xs text-white/40">
+              {!project.featuredProject ? (
+                <button type="button" onClick={() => void setFeatured(project.id)}>
+                  Feature
+                </button>
+              ) : null}
+              <button type="button" onClick={() => remove(project.id)}>
+                Remove
               </button>
-            ) : null}
-            <button type="button" onClick={() => remove(project.id)}>
-              Remove
-            </button>
+            </div>
           </div>
+          <ProjectLogoUpload userId={userId} projectId={project.id} currentUrl={project.logoUrl} />
         </div>
       ))}
       <form className="space-y-3" onSubmit={create}>

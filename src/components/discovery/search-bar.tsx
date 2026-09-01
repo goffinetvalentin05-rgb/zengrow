@@ -31,7 +31,7 @@ export function DiscoverySearchBar({
         onChange={(event) => setValue(event.target.value)}
         placeholder="Search people, projects, niches"
         autoFocus={autoFocus}
-        className="h-12 w-full rounded-full border border-white/[0.08] bg-white/[0.04] pl-11 pr-4 text-sm text-white outline-none placeholder:text-white/30 focus:border-white/20"
+        className="h-12 w-full rounded-full border border-white/[0.08] bg-white/[0.06] pl-11 pr-4 text-sm text-white outline-none placeholder:text-white/30 backdrop-blur-md focus:border-white/20"
       />
     </form>
   );

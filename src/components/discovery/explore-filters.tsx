@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ACTIVITY_FILTERS,
   ACTIVITY_LABELS,
@@ -33,14 +33,19 @@ export function DiscoveryFiltersSheet({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<ExploreFilters>(filters);
   const locations = [...new Set([...COUNTRY_PRESETS, ...extraLocations])];
   const activeCount = countActiveFilters(filters);
-  const toHref = hrefFor ?? ((next: ExploreFilters) => (next.niche ? categoryDiscoveryHref(next.niche, next) : exploreHref(next)));
+  const toHref =
+    hrefFor ?? ((next: ExploreFilters) => (next.niche ? categoryDiscoveryHref(next.niche, next) : exploreHref(next)));
 
-  function go(patch: Partial<ExploreFilters>) {
-    const next = { ...filters, ...patch };
+  useEffect(() => {
+    if (open) setDraft(filters);
+  }, [open, filters]);
+
+  function apply(next = draft) {
     setOpen(false);
-    router.push(toHref(next));
+    router.push(toHref(next), { scroll: false });
   }
 
   return (
@@ -49,19 +54,25 @@ export function DiscoveryFiltersSheet({
         Filters{activeCount ? ` · ${activeCount}` : ""}
       </Button>
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/70 md:items-center md:justify-center md:p-6">
-          <div className="max-h-[86dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-[#121118] p-5 md:rounded-3xl">
+        <div
+          className="fixed inset-0 z-50 flex items-end bg-black/70 md:items-center md:justify-center md:p-6"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="max-h-[86dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-[#121118] p-5 md:rounded-3xl"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="mb-5 flex items-center justify-between">
               <h2 className="font-[family-name:var(--font-zg-display)] text-2xl text-white">Filters</h2>
-              <button type="button" className="text-sm text-white/40" onClick={() => setOpen(false)}>
-                Done
+              <button type="button" className="min-h-10 text-sm text-white/40" onClick={() => setOpen(false)}>
+                Close
               </button>
             </div>
             <Field label="Location">
               <select
                 className={selectClass}
-                value={filters.location ?? ""}
-                onChange={(event) => go({ location: event.target.value || null })}
+                value={draft.location ?? ""}
+                onChange={(event) => setDraft((current) => ({ ...current, location: event.target.value || null }))}
               >
                 <option value="">Anywhere</option>
                 {locations.map((item) => (
@@ -74,8 +85,13 @@ export function DiscoveryFiltersSheet({
             <Field label="Role">
               <select
                 className={selectClass}
-                value={filters.profileType ?? ""}
-                onChange={(event) => go({ profileType: (event.target.value || null) as ExploreFilters["profileType"] })}
+                value={draft.profileType ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    profileType: (event.target.value || null) as ExploreFilters["profileType"],
+                  }))
+                }
               >
                 <option value="">All</option>
                 {ROLE_FILTERS.map((type) => (
@@ -86,7 +102,11 @@ export function DiscoveryFiltersSheet({
               </select>
             </Field>
             <Field label="Age">
-              <select className={selectClass} value={filters.age ?? ""} onChange={(event) => go({ age: event.target.value || null })}>
+              <select
+                className={selectClass}
+                value={draft.age ?? ""}
+                onChange={(event) => setDraft((current) => ({ ...current, age: event.target.value || null }))}
+              >
                 <option value="">Any</option>
                 {AGE_RANGES.map((range) => (
                   <option key={range.id} value={range.id}>
@@ -98,8 +118,8 @@ export function DiscoveryFiltersSheet({
             <Field label="Audience">
               <select
                 className={selectClass}
-                value={filters.audience ?? ""}
-                onChange={(event) => go({ audience: event.target.value || null })}
+                value={draft.audience ?? ""}
+                onChange={(event) => setDraft((current) => ({ ...current, audience: event.target.value || null }))}
               >
                 <option value="">Any</option>
                 {AUDIENCE_RANGES.map((range) => (
@@ -112,8 +132,13 @@ export function DiscoveryFiltersSheet({
             <Field label="Platform">
               <select
                 className={selectClass}
-                value={filters.platform ?? ""}
-                onChange={(event) => go({ platform: (event.target.value || null) as ExploreFilters["platform"] })}
+                value={draft.platform ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    platform: (event.target.value || null) as ExploreFilters["platform"],
+                  }))
+                }
               >
                 <option value="">Any</option>
                 {SOCIAL_PLATFORMS.filter((platform) => platform !== "website").map((platform) => (
@@ -126,8 +151,13 @@ export function DiscoveryFiltersSheet({
             <Field label="Sort">
               <select
                 className={selectClass}
-                value={filters.activity ?? "recommended"}
-                onChange={(event) => go({ activity: (event.target.value || null) as ExploreFilters["activity"] })}
+                value={draft.activity ?? "recommended"}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    activity: (event.target.value || null) as ExploreFilters["activity"],
+                  }))
+                }
               >
                 {ACTIVITY_FILTERS.map((activity) => (
                   <option key={activity} value={activity}>
@@ -136,12 +166,15 @@ export function DiscoveryFiltersSheet({
                 ))}
               </select>
             </Field>
-            <button
-              type="button"
-              className="mt-4 text-sm text-white/40"
-              onClick={() =>
-                router.push(
-                  toHref({
+            <div className="mt-2 flex items-center gap-3">
+              <Button type="button" className="flex-1" onClick={() => apply()}>
+                Apply
+              </Button>
+              <button
+                type="button"
+                className="text-sm text-white/40"
+                onClick={() =>
+                  apply({
                     niche: filters.niche,
                     location: null,
                     profileType: null,
@@ -149,12 +182,12 @@ export function DiscoveryFiltersSheet({
                     audience: null,
                     platform: null,
                     activity: null,
-                  }),
-                )
-              }
-            >
-              Clear filters
-            </button>
+                  })
+                }
+              >
+                Clear
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

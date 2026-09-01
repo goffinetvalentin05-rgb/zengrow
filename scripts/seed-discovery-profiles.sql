@@ -167,6 +167,28 @@ join (
 where p.is_seed = true
 on conflict do nothing;
 
+update public.projects pr
+set logo_url = 'https://api.dicebear.com/9.x/identicon/svg?seed=' || coalesce(pr.slug, pr.name)
+from public.profiles p
+where pr.owner_id = p.id
+  and p.is_seed = true
+  and (pr.logo_url is null or pr.logo_url = '');
+
+insert into public.featured_content (profile_id, platform, url, title, sort_index)
+select p.id, v.platform, v.url, v.title, v.sort_index
+from public.profiles p
+join (
+  values
+  ('jonashale', 'youtube', 'https://www.youtube.com/watch?v=aqz-KE-bpKQ', 'Northloop walkthrough', 0),
+  ('elisemoreau', 'youtube', 'https://www.youtube.com/watch?v=eRsGyueBTv0', 'Building slowly', 0),
+  ('kenjimori', 'youtube', 'https://www.youtube.com/watch?v=aqz-KE-bpKQ', 'Small models, useful evals', 0)
+) as v(username, platform, url, title, sort_index)
+  on p.username = v.username
+where p.is_seed = true
+  and not exists (
+    select 1 from public.featured_content fc where fc.profile_id = p.id and fc.platform = 'youtube'
+  );
+
 -- Enrich an existing SaaS seed so Explore can test:
 -- SaaS + Switzerland + 18–20 + Under 5k
 update public.profiles

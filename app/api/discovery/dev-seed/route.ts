@@ -60,6 +60,7 @@ export async function POST() {
       description: person.project.description,
       url: person.project.url,
       category: person.project.category,
+      logo_url: `https://api.dicebear.com/9.x/identicon/svg?seed=${person.project.slug}`,
       status: "building",
       featured_project: true,
     });
@@ -87,6 +88,43 @@ export async function POST() {
     })
     .eq("username", "priyashah")
     .eq("is_seed", true);
+
+  const { data: seedProfiles } = await supabase.from("profiles").select("id, username").eq("is_seed", true);
+  const seedIds = (seedProfiles ?? []).map((row) => String(row.id));
+  if (seedIds.length) {
+    const { data: seedProjects } = await supabase.from("projects").select("id, slug, name").in("owner_id", seedIds);
+    for (const project of seedProjects ?? []) {
+      await supabase
+        .from("projects")
+        .update({
+          logo_url: `https://api.dicebear.com/9.x/identicon/svg?seed=${project.slug || project.name}`,
+        })
+        .eq("id", project.id);
+    }
+    const youtubeSeeds: Record<string, { url: string; title: string }> = {
+      jonashale: { url: "https://www.youtube.com/watch?v=aqz-KE-bpKQ", title: "Northloop walkthrough" },
+      elisemoreau: { url: "https://www.youtube.com/watch?v=eRsGyueBTv0", title: "Building slowly" },
+      kenjimori: { url: "https://www.youtube.com/watch?v=aqz-KE-bpKQ", title: "Small models, useful evals" },
+    };
+    for (const row of seedProfiles ?? []) {
+      const clip = youtubeSeeds[String(row.username)];
+      if (!clip) continue;
+      const { data: existing } = await supabase
+        .from("featured_content")
+        .select("id")
+        .eq("profile_id", row.id)
+        .eq("platform", "youtube")
+        .maybeSingle();
+      if (existing) continue;
+      await supabase.from("featured_content").insert({
+        profile_id: row.id,
+        platform: "youtube",
+        url: clip.url,
+        title: clip.title,
+        sort_index: 0,
+      });
+    }
+  }
 
   return NextResponse.json({ ok: true, created });
 }
