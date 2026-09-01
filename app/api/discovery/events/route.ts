@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { DISCOVERY_EVENT_TYPES } from "@/src/lib/discovery/constants";
-import { recordDiscoveryEvent } from "@/src/lib/discovery/track-server";
+import { isSelfDiscoveryTraffic, recordDiscoveryEvent } from "@/src/lib/discovery/track-server";
 import { createClient } from "@/src/lib/supabase/server";
 
 type EventBody = {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     if (!isEventBody(body) || !body.profileId || !DISCOVERY_EVENT_TYPES.includes(body.eventType as (typeof DISCOVERY_EVENT_TYPES)[number])) {
       continue;
     }
-    if (visitorProfileId && visitorProfileId === body.profileId && body.eventType === "profile_view") {
+    if (isSelfDiscoveryTraffic(body.profileId, visitorProfileId)) {
       continue;
     }
     const result = await recordDiscoveryEvent(supabase, {

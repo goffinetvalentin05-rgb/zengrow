@@ -31,9 +31,17 @@ type TrackInput = {
   referrerHost?: string | null;
 };
 
+/** Owner traffic must never land in analytics. Anonymous visitors are not skipped. */
+export function isSelfDiscoveryTraffic(profileId: string, visitorProfileId?: string | null) {
+  return Boolean(visitorProfileId && visitorProfileId === profileId);
+}
+
 export async function recordDiscoveryEvent(supabase: SupabaseClient, input: TrackInput) {
   if (!DISCOVERY_EVENT_TYPES.includes(input.eventType as (typeof DISCOVERY_EVENT_TYPES)[number])) {
     return { ok: false as const, error: "Invalid event." };
+  }
+  if (isSelfDiscoveryTraffic(input.profileId, input.visitorProfileId)) {
+    return { ok: true as const, skipped: "self" };
   }
   const visitorSeed = input.visitorProfileId || input.visitorToken || null;
   const { data, error } = await supabase.rpc("discovery_track_event", {
