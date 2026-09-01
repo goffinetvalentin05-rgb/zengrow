@@ -130,7 +130,7 @@ export function CoverUpload({ userId, currentUrl }: { userId: string; currentUrl
       />
       <div className="mt-3 flex flex-wrap gap-2">
         <Button type="button" variant="secondary" disabled={pending} onClick={() => inputRef.current?.click()}>
-          {pending ? "Uploading…" : "Upload cover"}
+          {pending ? "Uploading…" : shown ? "Replace cover" : "Upload cover"}
         </Button>
         {currentUrl || preview ? (
           <Button type="button" variant="ghost" disabled={pending} onClick={() => void remove()}>

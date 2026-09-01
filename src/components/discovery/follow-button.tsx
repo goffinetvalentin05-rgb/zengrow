@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { ButtonHTMLAttributes, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -11,12 +11,14 @@ export function FollowButton({
   source = "explore",
   size = "sm",
   className,
+  style,
 }: {
   profileId: string;
   initialFollowing?: boolean;
   source?: string;
   size?: "sm" | "md";
   className?: string;
+  style?: ButtonHTMLAttributes<HTMLButtonElement>["style"];
 }) {
   const router = useRouter();
   const [following, setFollowing] = useState(Boolean(initialFollowing));
@@ -44,6 +46,7 @@ export function FollowButton({
       variant={following ? "secondary" : "primary"}
       onClick={toggle}
       disabled={pending}
+      style={following ? undefined : style}
       className={cn("min-w-[5.5rem]", className)}
     >
       {following ? "Following" : "Follow"}

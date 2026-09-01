@@ -64,6 +64,8 @@ export function mapProfile(row: Row): Profile {
     themeKey: str(row.theme_key) ?? "obsidian",
     coverImageUrl: str(row.cover_image_url),
     featuredFirst: Boolean(row.featured_first),
+    accentColor: str(row.accent_color),
+    layoutVariant: str(row.layout_variant) ?? (row.featured_first ? "content_first" : "default"),
     createdAt: String(row.created_at ?? new Date().toISOString()),
     updatedAt: String(row.updated_at ?? new Date().toISOString()),
   };

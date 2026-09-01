@@ -17,7 +17,7 @@ import {
 import { completenessSuggestions } from "@/src/lib/discovery/completeness";
 import { COUNTRY_PRESETS } from "@/src/lib/discovery/media";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
-import { PROFILE_THEMES, PROFILE_THEME_KEYS, type ProfileThemeKey } from "@/src/lib/discovery/appearance";
+import { PROFILE_THEMES, PROFILE_THEME_KEYS, PROFILE_LAYOUT_VARIANTS, PROFILE_LAYOUT_LABELS, type ProfileLayoutVariant, type ProfileThemeKey } from "@/src/lib/discovery/appearance";
 import type { Category, FeaturedContent, Profile, Project, SocialLink } from "@/src/lib/discovery/types";
 import { AvatarUpload } from "@/src/components/discovery/avatar-upload";
 import { CoverUpload } from "@/src/components/discovery/cover-upload";
@@ -90,27 +90,49 @@ export function ProfileEditor({
         </div>
       </header>
 
-      <SharpzLinkEditor username={profile.username} />
-
       {suggestions.length ? (
-        <ul className="space-y-1 text-sm text-white/45">
-          {suggestions.map((item) => (
-            <li key={item.key}>
-              <a href={item.href} className="hover:text-white">
-                {item.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3.5 ring-1 ring-white/[0.06]">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-white/40">Profile completeness</p>
+            <p className="text-sm text-white">{profile.completeness}%</p>
+          </div>
+          <ul className="mt-3 space-y-1 text-sm text-white/45">
+            {suggestions.map((item) => (
+              <li key={item.key}>
+                <a href={item.href} className="hover:text-white">
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
-      <EditorSection id="photo" title="Profile">
+      <EditorSection id="profile" title="Profile">
         <div className="mb-6">
           <AvatarUpload userId={userId} name={profile.displayName} currentUrl={profile.avatarUrl} />
         </div>
         <form className="space-y-4" onSubmit={saveProfile}>
           <Field label="Name">
             <Input name="displayName" defaultValue={profile.displayName} required />
+          </Field>
+          {profile.username ? (
+            <p className="text-sm text-white/40">
+              @{profile.username}{" "}
+              <a href="#link" className="text-white/60 hover:text-white">
+                Change link
+              </a>
+            </p>
+          ) : null}
+          <Field label="Role">
+            <select name="profileType" defaultValue={profile.profileType ?? ""} className={selectClass}>
+              <option value="">Select</option>
+              {PROFILE_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {PROFILE_TYPE_LABELS[type]}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Bio">
             <textarea
@@ -119,9 +141,6 @@ export function ProfileEditor({
               rows={4}
               className="w-full rounded-2xl border border-white/[0.1] bg-white/[0.035] px-3.5 py-2.5 text-sm text-white outline-none"
             />
-          </Field>
-          <Field label="Birthday (optional, 18+)">
-            <Input name="birthDate" type="date" defaultValue={profile.birthDate ?? ""} />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="City">
@@ -141,25 +160,29 @@ export function ProfileEditor({
               </select>
             </Field>
           </div>
-          <Field label="Role">
-            <select name="profileType" defaultValue={profile.profileType ?? ""} className={selectClass}>
-              <option value="">Select</option>
-              {PROFILE_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {PROFILE_TYPE_LABELS[type]}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Audience size (optional)">
-            <Input name="audienceSize" type="number" min={0} defaultValue={profile.audienceSize ?? ""} />
-          </Field>
+          <details className="rounded-2xl bg-white/[0.02] px-3 py-2">
+            <summary className="cursor-pointer text-sm text-white/40">More</summary>
+            <div className="mt-3 space-y-4">
+              <Field label="Birthday (optional, 18+)">
+                <Input name="birthDate" type="date" defaultValue={profile.birthDate ?? ""} />
+              </Field>
+              <Field label="Audience size (optional)">
+                <Input name="audienceSize" type="number" min={0} defaultValue={profile.audienceSize ?? ""} />
+              </Field>
+            </div>
+          </details>
           <Button type="submit">Save profile</Button>
         </form>
+        <div className="mt-8">
+          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Niche</p>
+          <p className="mb-3 text-sm text-white/40">Primary niche is the first one you select.</p>
+          <NichePicker categories={categories} selected={selectedCategoryIds} onSave={saveNiches} />
+        </div>
       </EditorSection>
 
       <EditorSection id="appearance" title="Appearance">
-        <p className="mb-5 text-sm text-white/40">A light identity for your profile. The page stays dark.</p>
+        <p className="mb-5 text-sm text-white/40">A light identity for your public page. The page stays dark.</p>
+        <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Cover image</p>
         <CoverUpload userId={userId} currentUrl={profile.coverImageUrl} />
         <div className="mt-8">
           <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Theme</p>
@@ -170,38 +193,39 @@ export function ProfileEditor({
             onSaved={() => router.refresh()}
           />
         </div>
-        <label className="mt-8 flex items-center gap-3 text-sm text-white/70">
-          <input
-            type="checkbox"
-            defaultChecked={profile.featuredFirst}
-            onChange={(event) => {
-              void fetch("/api/discovery/profile", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ featuredFirst: event.target.checked }),
-              }).then(() => router.refresh());
-            }}
-            className="h-4 w-4 rounded border-white/20 bg-transparent"
+        <div className="mt-8">
+          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Accent color</p>
+          <AccentPicker value={profile.accentColor} onSaved={() => router.refresh()} />
+        </div>
+        <div className="mt-8">
+          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Content layout</p>
+          <LayoutPicker
+            value={
+              PROFILE_LAYOUT_VARIANTS.includes(profile.layoutVariant as ProfileLayoutVariant)
+                ? (profile.layoutVariant as ProfileLayoutVariant)
+                : profile.featuredFirst
+                  ? "content_first"
+                  : "default"
+            }
+            onSaved={() => router.refresh()}
           />
-          Show featured content before the project
-        </label>
-      </EditorSection>
-
-      <EditorSection id="niches" title="Niches">
-        <p className="mb-4 text-sm text-white/40">Primary niche is the first one you select.</p>
-        <NichePicker categories={categories} selected={selectedCategoryIds} onSave={saveNiches} />
+        </div>
       </EditorSection>
 
       <EditorSection id="projects" title="Projects">
         <ProjectList projects={projects} />
       </EditorSection>
 
-      <EditorSection id="social" title="Socials">
+      <EditorSection id="featured" title="Featured content">
+        <FeaturedContentEditor profileId={profile.id} items={featuredContent} />
+      </EditorSection>
+
+      <EditorSection id="social" title="Social links">
         <SocialEditor links={socialLinks} />
       </EditorSection>
 
-      <EditorSection id="featured" title="Featured content">
-        <FeaturedContentEditor profileId={profile.id} items={featuredContent} />
+      <EditorSection id="link" title="Sharpz link">
+        <SharpzLinkEditor username={profile.username} />
       </EditorSection>
 
       {message ? <p className="text-sm text-white/50">{message}</p> : null}
@@ -258,8 +282,78 @@ function ThemePicker({ value, onSaved }: { value: ProfileThemeKey; onSaved: () =
             <span className="h-8 w-8 rounded-full" style={{ background: theme.swatch }} />
             <span>
               <span className="block text-sm text-white">{theme.label}</span>
-              {theme.plan === "pro" ? <span className="text-[11px] text-white/35">Pro later</span> : null}
             </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function AccentPicker({ value, onSaved }: { value: string | null; onSaved: () => void }) {
+  const [color, setColor] = useState(value ?? "#f4f4f5");
+
+  async function save(next: string | null) {
+    await fetch("/api/discovery/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accentColor: next ?? "" }),
+    });
+    onSaved();
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <input
+        type="color"
+        value={color}
+        onChange={(event) => setColor(event.target.value)}
+        onBlur={() => void save(color)}
+        className="h-10 w-14 cursor-pointer rounded-xl border border-white/10 bg-transparent p-1"
+        aria-label="Accent color"
+      />
+      <Input
+        value={color}
+        onChange={(event) => setColor(event.target.value)}
+        onBlur={() => void save(color)}
+        className="w-32"
+        spellCheck={false}
+      />
+      <Button type="button" variant="ghost" size="sm" onClick={() => { setColor("#f4f4f5"); void save(null); }}>
+        Theme default
+      </Button>
+    </div>
+  );
+}
+
+function LayoutPicker({ value, onSaved }: { value: ProfileLayoutVariant; onSaved: () => void }) {
+  const [current, setCurrent] = useState(value);
+
+  async function select(next: ProfileLayoutVariant) {
+    setCurrent(next);
+    await fetch("/api/discovery/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ layoutVariant: next }),
+    });
+    onSaved();
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      {PROFILE_LAYOUT_VARIANTS.map((key) => {
+        const active = current === key;
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={() => void select(key)}
+            className={cn(
+              "rounded-2xl px-3 py-3 text-left text-sm ring-1 transition",
+              active ? "bg-white/[0.08] text-white ring-white/25" : "bg-white/[0.03] text-white/70 ring-white/[0.06]",
+            )}
+          >
+            {PROFILE_LAYOUT_LABELS[key]}
           </button>
         );
       })}
@@ -322,8 +416,10 @@ function ProjectList({ projects }: { projects: Project[] }) {
         name: form.get("name"),
         url: form.get("url"),
         description: form.get("description"),
+        category: form.get("category"),
+        logoUrl: form.get("logoUrl"),
         status: form.get("status"),
-        featuredProject: projects.length === 0,
+        featuredProject: projects.length === 0 || form.get("featuredProject") === "on",
       }),
     });
     event.currentTarget.reset();
@@ -337,26 +433,43 @@ function ProjectList({ projects }: { projects: Project[] }) {
     });
     router.refresh();
   }
+  async function setFeatured(id: string) {
+    await fetch("/api/discovery/projects", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, featuredProject: true }),
+    });
+    router.refresh();
+  }
   return (
     <div className="space-y-4">
       {projects.map((project) => (
-        <div key={project.id} className="flex items-start justify-between gap-3 py-2">
-          <div>
+        <div key={project.id} className="flex items-start justify-between gap-3 rounded-2xl bg-white/[0.03] px-3 py-3">
+          <div className="min-w-0">
             <p className="text-sm font-medium text-white">{project.name}</p>
             <p className="text-xs text-white/40">
               {PROJECT_STATUS_LABELS[project.status]}
               {project.featuredProject ? " · Currently building" : ""}
             </p>
           </div>
-          <button type="button" className="text-xs text-white/35" onClick={() => remove(project.id)}>
-            Remove
-          </button>
+          <div className="flex shrink-0 gap-3 text-xs text-white/40">
+            {!project.featuredProject ? (
+              <button type="button" onClick={() => void setFeatured(project.id)}>
+                Feature
+              </button>
+            ) : null}
+            <button type="button" onClick={() => remove(project.id)}>
+              Remove
+            </button>
+          </div>
         </div>
       ))}
       <form className="space-y-3" onSubmit={create}>
         <Input name="name" placeholder="Project name" required />
         <Input name="url" placeholder="https://" />
         <Input name="description" placeholder="Short description" />
+        <Input name="category" placeholder="Category (optional)" />
+        <Input name="logoUrl" placeholder="Logo URL (optional)" />
         <select name="status" className={selectClass}>
           {PROJECT_STATUSES.map((status) => (
             <option key={status} value={status}>
@@ -364,6 +477,10 @@ function ProjectList({ projects }: { projects: Project[] }) {
             </option>
           ))}
         </select>
+        <label className="flex items-center gap-2 text-sm text-white/55">
+          <input type="checkbox" name="featuredProject" className="h-4 w-4" defaultChecked={projects.length === 0} />
+          Currently building
+        </label>
         <Button type="submit">Add project</Button>
       </form>
     </div>

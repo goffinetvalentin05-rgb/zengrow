@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDiscoveryApiSession, isApiError } from "@/src/lib/discovery/api-session";
 import { MAX_NICHES, PROFILE_TYPES } from "@/src/lib/discovery/constants";
 import { isAdultBirthDate } from "@/src/lib/discovery/media";
-import { isProfileThemeKey } from "@/src/lib/discovery/appearance";
+import { isProfileLayoutVariant, isProfileThemeKey, sanitizeAccentColor } from "@/src/lib/discovery/appearance";
 import { classifyPublicSlug } from "@/src/lib/discovery/public-link";
 import { normalizePublicSlug } from "@/src/lib/discovery/slug";
 import { syncProfileDerived } from "@/src/lib/discovery/sync-profile";
@@ -42,7 +42,22 @@ export async function PATCH(request: Request) {
   if (typeof body.themeKey === "string" && isProfileThemeKey(body.themeKey)) {
     patch.theme_key = body.themeKey;
   }
-  if (typeof body.featuredFirst === "boolean") patch.featured_first = body.featuredFirst;
+  if ("accentColor" in body) {
+    if (body.accentColor === "" || body.accentColor == null) {
+      patch.accent_color = null;
+    } else if (typeof body.accentColor === "string") {
+      const accent = sanitizeAccentColor(body.accentColor);
+      if (!accent) return NextResponse.json({ error: "Accent must be a hex color." }, { status: 400 });
+      patch.accent_color = accent;
+    }
+  }
+  if (typeof body.layoutVariant === "string" && isProfileLayoutVariant(body.layoutVariant)) {
+    patch.layout_variant = body.layoutVariant;
+    patch.featured_first = body.layoutVariant === "content_first";
+  } else if (typeof body.featuredFirst === "boolean") {
+    patch.featured_first = body.featuredFirst;
+    patch.layout_variant = body.featuredFirst ? "content_first" : "default";
+  }
   if (typeof body.profileType === "string" && PROFILE_TYPES.includes(body.profileType as (typeof PROFILE_TYPES)[number])) {
     patch.profile_type = body.profileType;
   }
