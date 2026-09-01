@@ -22,6 +22,7 @@ import type { Category, FeaturedContent, Profile, Project, SocialLink } from "@/
 import { AvatarUpload } from "@/src/components/discovery/avatar-upload";
 import { CoverUpload } from "@/src/components/discovery/cover-upload";
 import { FeaturedContentEditor } from "@/src/components/discovery/featured-content-editor";
+import { SharpzLinkEditor } from "@/src/components/discovery/sharpz-link-editor";
 import { cn } from "@/src/lib/utils";
 
 const selectClass =
@@ -56,7 +57,6 @@ export function ProfileEditor({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         displayName: form.get("displayName"),
-        username: form.get("username"),
         bio: form.get("bio"),
         location: form.get("location"),
         country: form.get("country"),
@@ -90,6 +90,8 @@ export function ProfileEditor({
         </div>
       </header>
 
+      <SharpzLinkEditor username={profile.username} />
+
       {suggestions.length ? (
         <ul className="space-y-1 text-sm text-white/45">
           {suggestions.map((item) => (
@@ -109,9 +111,6 @@ export function ProfileEditor({
         <form className="space-y-4" onSubmit={saveProfile}>
           <Field label="Name">
             <Input name="displayName" defaultValue={profile.displayName} required />
-          </Field>
-          <Field label="Username">
-            <Input name="username" defaultValue={profile.username ?? ""} required />
           </Field>
           <Field label="Bio">
             <textarea

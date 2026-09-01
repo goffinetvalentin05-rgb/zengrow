@@ -137,4 +137,61 @@ export type DiscoverySource = (typeof DISCOVERY_SOURCES)[number];
 export const MAX_NICHES = 5;
 export const MAX_FEATURED_CONTENT = 6;
 
-export const USERNAME_PATTERN = /^[a-z0-9_]{3,30}$/;
+/** 3–30 chars, starts and ends with a letter or digit, hyphens and underscores in the middle. */
+export const USERNAME_PATTERN = /^[a-z0-9](?:[a-z0-9_-]{1,28}[a-z0-9])$/;
+
+export const RESERVED_PROFILE_SLUGS = [
+  "about",
+  "account",
+  "admin",
+  "analytics",
+  "api",
+  "app",
+  "auth",
+  "billing",
+  "blog",
+  "categories",
+  "category",
+  "claim",
+  "conditions",
+  "confidentialite",
+  "dashboard",
+  "discover",
+  "docs",
+  "explore",
+  "featured",
+  "feedback",
+  "following",
+  "forgot-password",
+  "help",
+  "home",
+  "index",
+  "legal",
+  "login",
+  "me",
+  "onboarding",
+  "p",
+  "pricing",
+  "privacy",
+  "pro",
+  "r",
+  "reset-password",
+  "review",
+  "robots",
+  "saved",
+  "search",
+  "settings",
+  "sharpz",
+  "signup",
+  "sitemap",
+  "static",
+  "status",
+  "support",
+  "terms",
+  "u",
+  "update-password",
+  "v",
+  "www",
+] as const;
+
+export const RESERVED_PROFILE_SLUG_SET = new Set<string>(RESERVED_PROFILE_SLUGS);

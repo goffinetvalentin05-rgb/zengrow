@@ -1,6 +1,7 @@
 "use client";
 
 import Button from "@/src/components/ui/button";
+import { SharpzLinkEditor } from "@/src/components/discovery/sharpz-link-editor";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
 import { SHARPZ_PRO_PRICE_LABEL } from "@/src/lib/discovery/pro";
 import type { UserSubscription } from "@/src/lib/discovery/types";
@@ -8,11 +9,13 @@ import Link from "next/link";
 
 export function SettingsView({
   email,
+  username,
   subscription,
   isPro,
   isAdmin,
 }: {
   email: string | undefined;
+  username: string | null;
   subscription: UserSubscription;
   isPro: boolean;
   isAdmin?: boolean;
@@ -35,6 +38,9 @@ export function SettingsView({
     <div className="mx-auto w-full max-w-xl">
       <h1 className="font-[family-name:var(--font-zg-display)] text-4xl text-white">Settings</h1>
       <section className="mt-8 rounded-3xl border border-white/[0.07] p-5">
+        <SharpzLinkEditor username={username} compact />
+      </section>
+      <section className="mt-4 rounded-3xl border border-white/[0.07] p-5">
         <p className="text-xs uppercase tracking-[0.14em] text-white/35">Account</p>
         <p className="mt-2 text-white">{email}</p>
       </section>

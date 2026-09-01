@@ -7,7 +7,8 @@ import Input from "@/src/components/ui/input";
 import { MAX_NICHES, PROFILE_TYPE_LABELS, PROFILE_TYPES, SOCIAL_PLATFORMS, SOCIAL_PLATFORM_LABELS } from "@/src/lib/discovery/constants";
 import { COUNTRY_PRESETS } from "@/src/lib/discovery/media";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
-import { slugifyUsername } from "@/src/lib/discovery/slug";
+import { isValidPublicSlug } from "@/src/lib/discovery/slug";
+import { classifyPublicSlug, getBrandedProfilePreview, publicSlugStatusMessage } from "@/src/lib/discovery/public-link";
 import type { Category } from "@/src/lib/discovery/types";
 import { cn } from "@/src/lib/utils";
 
@@ -56,7 +57,7 @@ export function OnboardingFlow({
   const canNext = useMemo(() => {
     if (step === 1) return draft.niches.length >= 1 && draft.niches.length <= MAX_NICHES;
     if (step === 2) return Boolean(draft.profileType);
-    if (step === 3) return draft.displayName.trim().length >= 2 && slugifyUsername(draft.username).length >= 3;
+    if (step === 3) return draft.displayName.trim().length >= 2 && isValidPublicSlug(draft.username);
     return true;
   }, [step, draft]);
 
@@ -152,12 +153,25 @@ export function OnboardingFlow({
             <Field label="Name">
               <Input value={draft.displayName} onChange={(e) => setDraft({ ...draft, displayName: e.target.value })} required />
             </Field>
-            <Field label="Username">
+            <Field label="Your Sharpz link">
               <Input
                 value={draft.username}
-                onChange={(e) => setDraft({ ...draft, username: slugifyUsername(e.target.value) })}
+                onChange={(e) => setDraft({ ...draft, username: e.target.value.toLowerCase().replace(/^\/+/, "") })}
                 required
+                spellCheck={false}
+                autoCapitalize="none"
+                placeholder="valentin"
               />
+              {draft.username ? (
+                <p className="mt-2 text-sm text-white/40">
+                  {(() => {
+                    const check = classifyPublicSlug(draft.username);
+                    return check === "ok"
+                      ? getBrandedProfilePreview(draft.username)
+                      : publicSlugStatusMessage(check);
+                  })()}
+                </p>
+              ) : null}
             </Field>
             <Field label="Short bio">
               <textarea

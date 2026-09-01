@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDiscoveryApiSession, isApiError } from "@/src/lib/discovery/api-session";
-import { MAX_NICHES, PROFILE_TYPES, SOCIAL_PLATFORMS, USERNAME_PATTERN } from "@/src/lib/discovery/constants";
+import { MAX_NICHES, PROFILE_TYPES, SOCIAL_PLATFORMS } from "@/src/lib/discovery/constants";
+import { classifyPublicSlug } from "@/src/lib/discovery/public-link";
 import { slugifyHandle, slugifyUsername } from "@/src/lib/discovery/slug";
 import { normalizeHttpUrl } from "@/src/lib/discovery/media";
 import { syncProfileDerived } from "@/src/lib/discovery/sync-profile";
@@ -25,8 +26,12 @@ export async function POST(request: Request) {
   };
 
   const username = slugifyUsername(body.username || profile.username || profile.displayName);
-  if (!USERNAME_PATTERN.test(username)) {
-    return NextResponse.json({ error: "Choose a username with 3–30 letters, numbers or underscores." }, { status: 400 });
+  const format = classifyPublicSlug(username);
+  if (format === "reserved") {
+    return NextResponse.json({ error: "This link is reserved." }, { status: 400 });
+  }
+  if (format === "invalid") {
+    return NextResponse.json({ error: "Choose a link with 3–30 letters, numbers or hyphens." }, { status: 400 });
   }
   if (!body.displayName?.trim()) {
     return NextResponse.json({ error: "Name is required." }, { status: 400 });
@@ -57,7 +62,7 @@ export async function POST(request: Request) {
 
   if (profileError) {
     if (profileError.code === "23505") {
-      return NextResponse.json({ error: "Username already taken." }, { status: 409 });
+      return NextResponse.json({ error: "Already taken." }, { status: 409 });
     }
     return NextResponse.json({ error: profileError.message }, { status: 400 });
   }

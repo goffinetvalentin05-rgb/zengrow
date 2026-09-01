@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/src/lib/discovery/auth";
+import { classifyPublicSlug } from "@/src/lib/discovery/public-link";
 import { slugifyUsername } from "@/src/lib/discovery/slug";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 
@@ -15,6 +16,9 @@ export async function POST(request: Request) {
   if (body.entity !== "profile") return NextResponse.json({ error: "Unsupported." }, { status: 400 });
   const supabase = createAdminClient();
   const username = slugifyUsername(body.username || body.displayName || "person");
+  if (classifyPublicSlug(username) !== "ok") {
+    return NextResponse.json({ error: "This link is reserved or invalid." }, { status: 400 });
+  }
   const { error } = await supabase.from("profiles").insert({
     display_name: body.displayName?.trim() || "Unclaimed",
     username,

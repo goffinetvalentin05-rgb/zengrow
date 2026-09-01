@@ -11,7 +11,13 @@ export default async function SettingsPage() {
   });
   return (
     <div className="px-5 md:px-0">
-      <SettingsView email={session.user.email} subscription={session.subscription} isPro={isPro} isAdmin={session.profile.isAdmin || session.isOwnerDev} />
+      <SettingsView
+        email={session.user.email}
+        username={session.profile.username}
+        subscription={session.subscription}
+        isPro={isPro}
+        isAdmin={session.profile.isAdmin || session.isOwnerDev}
+      />
     </div>
   );
 }

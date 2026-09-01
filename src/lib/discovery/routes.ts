@@ -19,7 +19,7 @@ export function categoryHref(slug: string) {
 }
 
 export function profileHref(username: string) {
-  return `/u/${username}`;
+  return `/${username.toLowerCase()}`;
 }
 
 export const DISCOVERY_AUTH_PATHS = [

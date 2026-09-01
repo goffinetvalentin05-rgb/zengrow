@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { DISCOVERY_EVENT_TYPES, DISCOVERY_SOURCES } from "@/src/lib/discovery/constants";
+import { sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
 import { createClient } from "@/src/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     profile_id: body.profileId,
     event_type: body.eventType,
     source: DISCOVERY_SOURCES.includes(body.source as (typeof DISCOVERY_SOURCES)[number]) ? body.source : "direct",
-    platform: body.platform ?? null,
+    platform: sanitizeTrackingPlatform(body.platform) ?? null,
     content_id: body.contentId ?? null,
     visitor_category_slug: visitorCategory,
   });

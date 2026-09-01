@@ -6,10 +6,12 @@ import { SOCIAL_PLATFORM_LABELS, type SocialPlatform } from "@/src/lib/discovery
 import { DISCOVERY_ROUTES, profileHref } from "@/src/lib/discovery/routes";
 import { formatLocation, normalizeHttpUrl, parseSocialHandle } from "@/src/lib/discovery/media";
 import { profileThemeVars, resolveProfileTheme } from "@/src/lib/discovery/appearance";
+import { readUtmSource, sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
 import type { PublicProfileModel } from "@/src/lib/discovery/types";
 import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 import { FollowButton } from "@/src/components/discovery/follow-button";
 import { FeaturedContentCard } from "@/src/components/discovery/featured-content-card";
+import { ShareProfileButton } from "@/src/components/discovery/share-profile-button";
 import { SocialGlyph } from "@/src/components/discovery/social-glyph";
 import Button from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -19,6 +21,7 @@ export function PublicProfileView({
   isOwner,
   isLoggedIn,
   source = "direct",
+  utmSource,
   editHref,
   showOwnerBar = false,
 }: {
@@ -26,11 +29,14 @@ export function PublicProfileView({
   isOwner: boolean;
   isLoggedIn: boolean;
   source?: string;
+  utmSource?: string | null;
   editHref?: string;
   showOwnerBar?: boolean;
 }) {
   useEffect(() => {
     if (isOwner) return;
+    const fromQuery = sanitizeTrackingPlatform(readUtmSource(window.location.search));
+    const platform = utmSource || fromQuery || undefined;
     void fetch("/api/discovery/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -38,9 +44,10 @@ export function PublicProfileView({
         profileId: profile.id,
         eventType: "profile_view",
         source,
+        platform,
       }),
     });
-  }, [isOwner, profile.id, source]);
+  }, [isOwner, profile.id, source, utmSource]);
 
   const theme = resolveProfileTheme(profile.themeKey);
   const featured = profile.projects.find((item) => item.featuredProject) ?? profile.featuredProject ?? profile.projects[0];
@@ -139,6 +146,7 @@ export function PublicProfileView({
             <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-5 pt-4">
               <p className="text-xs uppercase tracking-[0.16em] text-white/55">Preview</p>
               <div className="flex items-center gap-3">
+                {profile.username ? <ShareProfileButton username={profile.username} variant="ghost" size="sm" className="text-white/70" /> : null}
                 {profile.username ? (
                   <Link href={profileHref(profile.username)} className="text-xs text-white/60 hover:text-white">
                     Public profile
@@ -184,14 +192,17 @@ export function PublicProfileView({
             </p>
           ) : null}
 
-          <div className="mt-5 w-full max-w-[220px]">
+          <div className="mt-5 w-full max-w-[240px]">
             {isOwner ? (
               showOwnerBar ? null : (
-                <Link href={editHref || DISCOVERY_ROUTES.meEdit} className="block">
-                  <Button variant="secondary" className="w-full rounded-full">
-                    Edit profile
-                  </Button>
-                </Link>
+                <div className="flex flex-col gap-2">
+                  {profile.username ? <ShareProfileButton username={profile.username} className="w-full" /> : null}
+                  <Link href={editHref || DISCOVERY_ROUTES.meEdit} className="block">
+                    <Button variant="secondary" className="w-full rounded-full">
+                      Edit profile
+                    </Button>
+                  </Link>
+                </div>
               )
             ) : isLoggedIn ? (
               <FollowButton

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getDiscoveryApiSession, isApiError } from "@/src/lib/discovery/api-session";
-import { MAX_NICHES, PROFILE_TYPES, USERNAME_PATTERN } from "@/src/lib/discovery/constants";
+import { MAX_NICHES, PROFILE_TYPES } from "@/src/lib/discovery/constants";
 import { isAdultBirthDate } from "@/src/lib/discovery/media";
 import { isProfileThemeKey } from "@/src/lib/discovery/appearance";
-import { slugifyUsername } from "@/src/lib/discovery/slug";
+import { classifyPublicSlug } from "@/src/lib/discovery/public-link";
+import { normalizePublicSlug } from "@/src/lib/discovery/slug";
 import { syncProfileDerived } from "@/src/lib/discovery/sync-profile";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -56,9 +57,13 @@ export async function PATCH(request: Request) {
     }
   }
   if (typeof body.username === "string") {
-    const username = slugifyUsername(body.username);
-    if (!USERNAME_PATTERN.test(username)) {
-      return NextResponse.json({ error: "Username must be 3–30 characters, a-z, 0-9, underscore." }, { status: 400 });
+    const username = normalizePublicSlug(body.username);
+    const format = classifyPublicSlug(username);
+    if (format === "reserved") {
+      return NextResponse.json({ error: "This link is reserved." }, { status: 400 });
+    }
+    if (format === "invalid") {
+      return NextResponse.json({ error: "Use 3–30 letters, numbers or hyphens." }, { status: 400 });
     }
     patch.username = username;
   }
@@ -76,7 +81,7 @@ export async function PATCH(request: Request) {
   const { error } = await supabase.from("profiles").update(patch).eq("id", profile.id);
   if (error) {
     if (error.message.toLowerCase().includes("duplicate") || error.code === "23505") {
-      return NextResponse.json({ error: "Username already taken." }, { status: 409 });
+      return NextResponse.json({ error: "Already taken." }, { status: 409 });
     }
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
