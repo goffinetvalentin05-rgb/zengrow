@@ -30,20 +30,59 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    if (signInError) {
-      setError(signInError.message);
+      if (signInError) {
+        setError(signInError.message);
+        return;
+      }
+
+      if (!data.session) {
+        setError("Unable to sign in. Check your email and password.");
+        return;
+      }
+
+      router.refresh();
+
+      let onboardingCompleted = false;
+
+      try {
+        const bootstrapResponse = await fetch("/api/discovery/bootstrap", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (bootstrapResponse.ok) {
+          const payload = (await bootstrapResponse.json()) as { onboardingCompleted?: boolean };
+          onboardingCompleted = Boolean(payload.onboardingCompleted);
+        } else if (bootstrapResponse.status === 401) {
+          await router.refresh();
+          const retry = await fetch("/api/discovery/bootstrap", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+          });
+          if (retry.ok) {
+            const payload = (await retry.json()) as { onboardingCompleted?: boolean };
+            onboardingCompleted = Boolean(payload.onboardingCompleted);
+          }
+        }
+      } catch {
+        // Bootstrap is best-effort; middleware will finish profile setup after redirect.
+      }
+
+      const destination = onboardingCompleted ? DISCOVERY_ROUTES.explore : DISCOVERY_ROUTES.onboarding;
+      window.location.assign(destination);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to sign in. Please try again.");
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    const bootstrapResponse = await fetch("/api/discovery/bootstrap", { method: "POST" });
-    const payload = (await bootstrapResponse.json().catch(() => ({}))) as { onboardingCompleted?: boolean };
-    router.push(payload.onboardingCompleted ? DISCOVERY_ROUTES.explore : DISCOVERY_ROUTES.onboarding);
   }
 
   return (

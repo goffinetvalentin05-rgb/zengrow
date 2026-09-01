@@ -52,7 +52,7 @@ export const LANDING_COPY = {
     example: "Tu es à Paris et tu cherches d’autres builders SaaS ? Tu peux les trouver directement.",
   },
   difference: {
-    title: "Découvre les profils que les algorithmes ne te montrent pas toujours.",
+    title: "Enfin, tu ne passeras plus à côté des profils qui méritent d'être découverts.",
   },
   profile: {
     title: "Sharpz ne s’arrête pas là.",
