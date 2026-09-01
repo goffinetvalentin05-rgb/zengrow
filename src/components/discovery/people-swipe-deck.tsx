@@ -27,24 +27,24 @@ export function PeopleSwipeDeck({
   }, [profiles.length]);
 
   useEffect(() => {
-    const node = scroller.current;
-    if (!node) return;
+    const track = scroller.current;
+    if (!track) return;
 
     let startX = 0;
     let startY = 0;
     let startScroll = 0;
     let axis: "x" | "y" | null = null;
 
-    function onStart(event: TouchEvent) {
+    const onStart = (event: TouchEvent) => {
       const touch = event.touches[0];
       if (!touch) return;
       startX = touch.clientX;
       startY = touch.clientY;
-      startScroll = node.scrollLeft;
+      startScroll = track.scrollLeft;
       axis = null;
-    }
+    };
 
-    function onMove(event: TouchEvent) {
+    const onMove = (event: TouchEvent) => {
       const touch = event.touches[0];
       if (!touch) return;
       const dx = touch.clientX - startX;
@@ -52,28 +52,28 @@ export function PeopleSwipeDeck({
       if (!axis) {
         if (Math.abs(dx) < AXIS_THRESHOLD && Math.abs(dy) < AXIS_THRESHOLD) return;
         axis = Math.abs(dx) > Math.abs(dy) + AXIS_THRESHOLD ? "x" : "y";
-        if (axis === "x") node.style.scrollSnapType = "none";
+        if (axis === "x") track.style.scrollSnapType = "none";
       }
       if (axis !== "x") return;
       event.preventDefault();
-      node.scrollLeft = startScroll - dx;
-    }
+      track.scrollLeft = startScroll - dx;
+    };
 
-    function onEnd() {
-      node.style.scrollSnapType = "";
+    const onEnd = () => {
+      track.style.scrollSnapType = "";
       axis = null;
-    }
+    };
 
-    node.addEventListener("touchstart", onStart, { passive: true });
-    node.addEventListener("touchmove", onMove, { passive: false });
-    node.addEventListener("touchend", onEnd);
-    node.addEventListener("touchcancel", onEnd);
+    track.addEventListener("touchstart", onStart, { passive: true });
+    track.addEventListener("touchmove", onMove, { passive: false });
+    track.addEventListener("touchend", onEnd);
+    track.addEventListener("touchcancel", onEnd);
     return () => {
-      node.style.scrollSnapType = "";
-      node.removeEventListener("touchstart", onStart);
-      node.removeEventListener("touchmove", onMove);
-      node.removeEventListener("touchend", onEnd);
-      node.removeEventListener("touchcancel", onEnd);
+      track.style.scrollSnapType = "";
+      track.removeEventListener("touchstart", onStart);
+      track.removeEventListener("touchmove", onMove);
+      track.removeEventListener("touchend", onEnd);
+      track.removeEventListener("touchcancel", onEnd);
     };
   }, [profiles.length]);
 
