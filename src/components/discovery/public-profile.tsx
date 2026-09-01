@@ -25,6 +25,7 @@ import { FollowButton } from "@/src/components/discovery/follow-button";
 import { FeaturedContentCard } from "@/src/components/discovery/featured-content-card";
 import { ShareProfileButton } from "@/src/components/discovery/share-profile-button";
 import { SocialGlyph } from "@/src/components/discovery/social-glyph";
+import { FadeImg } from "@/src/components/discovery/sz-ui";
 import Button from "@/src/components/ui/button";
 import { initialsFromName } from "@/src/lib/discovery/slug";
 import { cn } from "@/src/lib/utils";
@@ -106,9 +107,7 @@ export function PublicProfileView({
 
   const featuredSection = profile.featuredContent.length ? (
     <section className="px-5">
-      <h2 className="font-[family-name:var(--font-zg-display)] text-[1.65rem] leading-none tracking-tight text-white">
-        Featured
-      </h2>
+      <h2 className="sz-title">Featured</h2>
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {profile.featuredContent.slice(0, 6).map((item) => (
           <FeaturedContentCard
@@ -127,12 +126,11 @@ export function PublicProfileView({
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-[520px] pb-20" style={profileThemeVars(theme, profile.accentColor)}>
+    <div className="sz-app relative mx-auto w-full max-w-[520px] pb-20" style={profileThemeVars(theme, profile.accentColor)}>
       <header className="relative">
         <div className="relative h-[10.5rem] overflow-hidden sm:h-[12rem]">
           {profile.coverImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.coverImageUrl} alt="" className="h-full w-full object-cover" />
+            <FadeImg src={profile.coverImageUrl} alt="" loading="eager" className="h-full w-full object-cover" />
           ) : (
             <div
               className="h-full w-full"
@@ -146,7 +144,7 @@ export function PublicProfileView({
           <div className="absolute inset-0 bg-gradient-to-t from-[#08070b] via-[#08070b]/45 to-transparent" />
           {showOwnerBar ? (
             <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 pt-3">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-white/55">Your page</p>
+              <p className="sz-label text-white/55">Your page</p>
               <div className="flex items-center gap-2">
                 {profile.username ? (
                   <Link href={profileHref(profile.username)} className="text-xs text-white/65 hover:text-white">
@@ -177,7 +175,7 @@ export function PublicProfileView({
             />
           </div>
 
-          <h1 className="mt-3.5 max-w-[18ch] break-words font-[family-name:var(--font-zg-display)] text-[2rem] leading-[0.95] tracking-tight text-white sm:text-[2.35rem]">
+          <h1 className="sz-display mt-3.5 max-w-[18ch] break-words sm:text-[2.35rem]">
             {profile.displayName}
           </h1>
           {profile.username ? <p className="mt-2 text-[14px] text-white/40">@{profile.username}</p> : null}
@@ -251,9 +249,7 @@ export function PublicProfileView({
 
         {profile.socialLinks.length ? (
           <section className="px-5">
-            <h2 className="font-[family-name:var(--font-zg-display)] text-[1.65rem] leading-none tracking-tight text-white">
-              Where to find me
-            </h2>
+            <h2 className="sz-title">Where to find me</h2>
             <div className="mt-4 space-y-2">
               {profile.socialLinks.map((link) => {
                 const handle = parseSocialHandle(link.platform, link.url);
@@ -272,7 +268,7 @@ export function PublicProfileView({
                     target="_blank"
                     rel="noreferrer"
                     onClick={() => track("external_link_click", { platform: link.platform })}
-                    className="flex min-h-14 items-center gap-3 rounded-[1.15rem] bg-white/[0.035] px-3.5 ring-1 ring-white/[0.06] transition hover:bg-white/[0.055]"
+                    className="sz-press flex min-h-14 items-center gap-3 rounded-[1.15rem] bg-white/[0.035] px-3.5 ring-1 ring-white/[0.06] transition-colors duration-150 hover:bg-white/[0.055] hover:ring-white/12"
                     style={{ boxShadow: "inset 0 0 0 1px var(--profile-ring)" }}
                   >
                     <span
@@ -295,9 +291,7 @@ export function PublicProfileView({
 
         {extraNiches.length || otherProjects.length ? (
           <section className="px-5">
-            <h2 className="font-[family-name:var(--font-zg-display)] text-[1.65rem] leading-none tracking-tight text-white">
-              More about
-            </h2>
+            <h2 className="sz-title">More about</h2>
             {extraNiches.length ? (
               <div className="mt-4 flex flex-wrap gap-2">
                 {profile.categories.map((cat) => (
@@ -324,10 +318,19 @@ export function PublicProfileView({
                     href={project.url ? normalizeHttpUrl(project.url) : undefined}
                     target={project.url ? "_blank" : undefined}
                     rel="noreferrer"
-                    className="block rounded-[1.15rem] bg-white/[0.035] px-4 py-3.5 ring-1 ring-white/[0.05]"
+                    className="flex items-start gap-3 rounded-[1.15rem] bg-white/[0.035] px-4 py-3.5 ring-1 ring-white/[0.05] transition-colors duration-150 hover:ring-white/12"
                   >
-                    <p className="text-white">{project.name}</p>
-                    {project.description ? <p className="mt-1 text-sm text-white/45">{project.description}</p> : null}
+                    {project.logoUrl ? (
+                      <FadeImg src={project.logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-xl object-cover ring-1 ring-white/10" />
+                    ) : (
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-sm text-white/50 ring-1 ring-white/10">
+                        {initialsFromName(project.name)}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <p className="text-white">{project.name}</p>
+                      {project.description ? <p className="mt-1 line-clamp-2 text-sm text-white/45">{project.description}</p> : null}
+                    </span>
                   </a>
                 ))}
               </div>
@@ -363,21 +366,20 @@ function BuildingCard({
 
   return (
     <section className="px-5">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-white/38">Currently building</p>
+      <p className="sz-label">Currently building</p>
       <Tag
         href={href}
         target={href ? "_blank" : undefined}
         rel={href ? "noreferrer" : undefined}
         onClick={href ? onOpen : undefined}
-        className="mt-3 block overflow-hidden rounded-[1.6rem] ring-1 ring-white/[0.08]"
+        className="sz-press mt-3 block overflow-hidden rounded-[1.6rem] ring-1 ring-white/[0.08]"
         style={{
           background: `linear-gradient(165deg, color-mix(in srgb, var(--profile-glow) 42%, transparent), rgba(255,255,255,0.03))`,
         }}
       >
         <div className="flex items-center gap-3.5 px-4 pt-4 sm:px-5 sm:pt-5">
           {project.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={project.logoUrl} alt="" className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-white/10" />
+            <FadeImg src={project.logoUrl} alt="" className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-white/10" />
           ) : (
             <span
               className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-medium ring-1 ring-white/10"
@@ -395,9 +397,7 @@ function BuildingCard({
                 {PROJECT_STATUS_LABELS[project.status]}
               </span>
             </div>
-            <h2 className="mt-1 truncate font-[family-name:var(--font-zg-display)] text-[1.7rem] leading-none tracking-tight text-white">
-              {project.name}
-            </h2>
+            <h2 className="sz-name mt-1 truncate">{project.name}</h2>
           </div>
         </div>
         {project.description ? (
@@ -425,7 +425,7 @@ function OwnerCompleteness({
   return (
     <div className="mx-5 mt-7 rounded-[1.25rem] bg-white/[0.035] px-4 py-3.5 ring-1 ring-white/[0.06]">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-white/40">Profile completeness</p>
+        <p className="sz-label">Profile completeness</p>
         <p className="text-sm text-white">{percent}%</p>
       </div>
       <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.08]">

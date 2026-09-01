@@ -41,8 +41,10 @@ export function ShareProfileButton({
   }
 
   return (
-    <Button type="button" variant={variant} size={size} className={cn("rounded-full", className)} onClick={() => void share()}>
-      {copied ? "Copied" : "Share profile"}
+    <Button type="button" variant={variant} size={size} className={cn("sz-press rounded-full", className)} onClick={() => void share()}>
+      <span key={copied ? "copied" : "share"} className="sz-copied inline-block">
+        {copied ? "Copied" : "Share profile"}
+      </span>
       <Share className="h-3.5 w-3.5" />
     </Button>
   );

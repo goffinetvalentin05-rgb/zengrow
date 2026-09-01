@@ -1,4 +1,4 @@
-import { AppAmbientBackground } from "@/src/components/app/app-ambient-background";
+import { DiscoveryAmbientBackground } from "@/src/components/discovery/discovery-ambient";
 import { DiscoveryShell } from "@/src/components/discovery/app-shell";
 import { PublicHeader } from "@/src/components/discovery/public-header";
 import { zgBody } from "@/components/zg-landing/fonts";
@@ -26,8 +26,8 @@ export function DiscoveryPageChrome({
   }
 
   return (
-    <div className={cn(zgBody.className, "relative min-h-dvh bg-[#08070b] text-white")}>
-      <AppAmbientBackground />
+    <div className={cn(zgBody.className, "sz-app relative min-h-dvh bg-[#050506] text-white")}>
+      <DiscoveryAmbientBackground />
       <div className="relative z-10">
         <PublicHeader loggedIn={Boolean(session)} />
         {children}

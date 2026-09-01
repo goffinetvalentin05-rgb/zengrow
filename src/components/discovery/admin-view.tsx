@@ -57,7 +57,7 @@ export function AdminView({
 
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <h1 className="font-[family-name:var(--font-zg-display)] text-4xl text-white">Admin</h1>
+      <h1 className="sz-display">Admin</h1>
       <div className="mt-6 flex flex-wrap gap-2">
         {(["profiles", "categories", "projects", "claims", "reports", "pro"] as const).map((item) => (
           <button

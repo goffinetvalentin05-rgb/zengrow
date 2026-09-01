@@ -106,14 +106,12 @@ export function SharpzLinkEditor({
   return (
     <section id="link" className={cn(compact ? "" : "rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5")}>
       {!compact ? (
-        <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">Your Sharpz link</p>
+        <p className="sz-label">Your Sharpz link</p>
       ) : (
-        <p className="text-xs uppercase tracking-[0.14em] text-white/35">Your Sharpz link</p>
+        <p className="sz-label">Your Sharpz link</p>
       )}
 
-      <p className="mt-3 font-[family-name:var(--font-zg-display)] text-[1.65rem] leading-none tracking-tight text-white">
-        {preview}
-      </p>
+      <p className="sz-title mt-3">{preview}</p>
 
       <div className="mt-5 flex items-center gap-2">
         <div className="relative min-w-0 flex-1">
@@ -134,7 +132,7 @@ export function SharpzLinkEditor({
             <Check className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />
           ) : null}
         </div>
-        <Button type="button" onClick={() => void save()} disabled={!dirty || status !== "available" || saving}>
+        <Button type="button" className="sz-press" onClick={() => void save()} disabled={!dirty || status !== "available" || saving}>
           {saving ? "Saving…" : "Save"}
         </Button>
       </div>

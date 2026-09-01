@@ -50,14 +50,14 @@ export function DiscoverySidebar({
   }
 
   return (
-    <aside className="hidden h-full w-[240px] shrink-0 flex-col border-r border-white/[0.06] bg-[#0d0c12] md:flex">
-      <div className="px-5 pb-2 pt-6">
+    <aside className="hidden h-full w-[232px] shrink-0 flex-col border-r border-white/[0.06] bg-[#0a0a0c] md:flex">
+      <div className="px-5 pb-1 pt-6">
         <Link href={DISCOVERY_ROUTES.explore} className="inline-flex items-center" aria-label="Sharpz">
           <Image src="/sharpz-logo.png" alt="" width={110} height={18} className="h-5 w-auto" />
         </Link>
       </div>
 
-      <nav className="mt-6 flex flex-1 flex-col gap-1 px-3">
+      <nav className="mt-7 flex flex-1 flex-col gap-0.5 px-2.5">
         {NAV.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
@@ -66,11 +66,14 @@ export function DiscoverySidebar({
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition",
-                active ? "bg-white/[0.08] text-white" : "text-white/50 hover:bg-white/[0.04] hover:text-white",
+                "relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[13.5px] transition-colors duration-150",
+                active ? "bg-white/[0.07] text-white" : "text-white/42 hover:bg-white/[0.035] hover:text-white",
               )}
             >
-              <Icon className="h-4 w-4" strokeWidth={1.75} />
+              {active ? (
+                <span className="absolute left-1.5 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-white" />
+              ) : null}
+              <Icon className="h-[15px] w-[15px]" strokeWidth={active ? 2 : 1.6} />
               {item.label}
             </Link>
           );
@@ -80,24 +83,27 @@ export function DiscoverySidebar({
       {completeness < 80 ? (
         <Link
           href={DISCOVERY_ROUTES.meEdit}
-          className="mx-3 mb-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 text-sm text-white/70 hover:text-white"
+          className="mx-3 mb-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 text-sm text-white/65 transition-colors hover:border-white/14 hover:text-white"
         >
           Complete profile
-          <span className="mt-1 block text-xs text-white/35">{completeness}% done</span>
+          <span className="mt-1 block text-xs text-white/32">{completeness}% done</span>
         </Link>
       ) : null}
 
-      <div className="border-t border-white/[0.06] p-3">
-        <Link href={username ? profileHref(username) : DISCOVERY_ROUTES.me} className="flex items-center gap-3 rounded-2xl px-2 py-2">
+      <div className="border-t border-white/[0.06] p-2.5">
+        <Link
+          href={username ? profileHref(username) : DISCOVERY_ROUTES.me}
+          className="flex items-center gap-3 rounded-2xl px-2 py-2 transition-colors hover:bg-white/[0.04]"
+        >
           <DiscoveryAvatar name={displayName} src={avatarUrl} size="sm" />
-          <span className="min-w-0 flex-1 truncate text-sm text-white/80">{displayName}</span>
+          <span className="min-w-0 flex-1 truncate text-[13px] text-white/78">{displayName}</span>
         </Link>
         <button
           type="button"
           onClick={logout}
-          className="mt-1 flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-sm text-white/40 hover:bg-white/[0.04] hover:text-white"
+          className="sz-press mt-0.5 flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-[13px] text-white/35 hover:bg-white/[0.04] hover:text-white"
         >
-          <LogOut className="h-4 w-4" strokeWidth={1.75} />
+          <LogOut className="h-3.5 w-3.5" strokeWidth={1.6} />
           Log out
         </button>
       </div>
@@ -115,8 +121,9 @@ export function DiscoveryBottomNav() {
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0d0c12]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-      <div className="grid grid-cols-4">
+    <nav className="fixed inset-x-0 bottom-0 z-40 md:hidden" aria-label="Primary">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#050506] via-[#050506]/80 to-transparent" />
+      <div className="relative mx-4 mb-[max(0.7rem,env(safe-area-inset-bottom))] flex items-center justify-around rounded-full border border-white/[0.08] bg-[#0c0c0e]/78 px-1.5 py-1.5 shadow-[0_12px_40px_-18px_rgba(0,0,0,0.9)] backdrop-blur-xl">
         {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
@@ -125,11 +132,11 @@ export function DiscoveryBottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center gap-1 py-3 text-[11px]",
-                active ? "text-white" : "text-white/40",
+                "flex min-h-11 min-w-[3.6rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-1.5 text-[10px] tracking-wide transition-colors duration-150",
+                active ? "bg-white/[0.08] text-white" : "text-white/38",
               )}
             >
-              <Icon className="h-5 w-5" strokeWidth={1.75} />
+              <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2 : 1.5} />
               {item.label}
             </Link>
           );

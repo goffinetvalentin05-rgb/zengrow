@@ -10,6 +10,7 @@ import { profileHref } from "@/src/lib/discovery/routes";
 import type { ProfileCardModel } from "@/src/lib/discovery/types";
 import { FollowButton } from "@/src/components/discovery/follow-button";
 import { SocialGlyph } from "@/src/components/discovery/social-glyph";
+import { FadeImg, ProjectStrip } from "@/src/components/discovery/sz-ui";
 import { initialsFromName } from "@/src/lib/discovery/slug";
 import { cn } from "@/src/lib/utils";
 
@@ -22,6 +23,41 @@ function openProfile(profile: ProfileCardModel, source: string) {
       source: "search",
     });
   }
+}
+
+function CardFallback({ profile }: { profile: ProfileCardModel }) {
+  const accent = profile.accentColor || "rgba(255,255,255,0.7)";
+  const initial = initialsFromName(profile.displayName);
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-[#0a0a0c]">
+      <div className="sz-grain absolute inset-0 opacity-[0.14]" />
+      <div
+        className="absolute -right-10 -top-12 h-44 w-44 rounded-full blur-3xl"
+        style={{ background: accent, opacity: 0.22 }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0e] via-[#0c0c0e]/35 to-transparent" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        {profile.avatarUrl ? (
+          <FadeImg
+            src={profile.avatarUrl}
+            alt=""
+            className="h-20 w-20 rounded-full object-cover ring-2 ring-white/10"
+          />
+        ) : (
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.06] font-[family-name:var(--font-zg-display)] text-2xl text-white/80 ring-2 ring-white/10">
+            {initial}
+          </span>
+        )}
+      </div>
+      {profile.featuredProject?.logoUrl ? (
+        <FadeImg
+          src={profile.featuredProject.logoUrl}
+          alt=""
+          className="absolute bottom-4 right-4 h-11 w-11 rounded-2xl object-cover ring-1 ring-white/15"
+        />
+      ) : null}
+    </div>
+  );
 }
 
 export function ProfileDiscoveryCard({
@@ -43,26 +79,33 @@ export function ProfileDiscoveryCard({
   const socials = profile.socialLinks.filter((link) => link.platform !== "website").slice(0, 3);
   const media = resolveCardMedia(profile);
   const swipe = variant === "swipe";
+  const accent = profile.accentColor;
 
   return (
     <article
       className={cn(
-        "overflow-hidden bg-[#121118]",
-        swipe
-          ? "rounded-[1.75rem] border border-white/[0.08] shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)]"
-          : variant === "grid"
-            ? "rounded-[1.6rem] border border-white/[0.06]"
-            : "md:rounded-[1.6rem] md:border md:border-white/[0.06]",
+        "sz-card overflow-hidden bg-[#121214]",
+        swipe ? "shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)]" : "sz-card-hover",
       )}
     >
-      <div className={cn("relative overflow-hidden bg-white/[0.04]", swipe ? "aspect-[16/10]" : "h-44 sm:h-48 md:aspect-[16/10] md:h-auto")}>
-        {media.heroUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={media.heroUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
-        ) : (
-          <div className="h-full w-full bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.14),transparent_42%),radial-gradient(circle_at_90%_80%,rgba(96,165,250,0.12),transparent_40%)]" />
+      <div
+        className={cn(
+          "sz-card-media relative bg-[#0a0a0c]",
+          swipe ? "aspect-[16/10]" : "h-44 sm:h-48 md:aspect-[16/10] md:h-auto",
         )}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#121118] via-[#121118]/25 to-transparent" />
+      >
+        {media.heroUrl ? (
+          <FadeImg src={media.heroUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <CardFallback profile={profile} />
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#121214] via-[#121214]/20 to-transparent" />
+        {accent && media.heroUrl ? (
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-px opacity-70"
+            style={{ boxShadow: `0 0 28px 2px ${accent}` }}
+          />
+        ) : null}
 
         {media.heroKind === "youtube" && media.youtubeUrl ? (
           <a
@@ -81,7 +124,7 @@ export function ProfileDiscoveryCard({
             className="absolute inset-0 flex items-center justify-center"
             aria-label="Watch on YouTube"
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-md ring-1 ring-white/20">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-white ring-1 ring-white/20 backdrop-blur-md transition-transform duration-150 active:scale-95">
               <Play className="h-5 w-5 fill-white" />
             </span>
           </a>
@@ -90,66 +133,56 @@ export function ProfileDiscoveryCard({
         )}
 
         {profile.discoveryBadge ? (
-          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium tracking-wide text-zinc-950">
+          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-950">
             {profile.discoveryBadge === "rising" ? "Rising" : "New"}
           </span>
         ) : null}
 
-        <Link
-          href={href}
-          onClick={() => openProfile(profile, source)}
-          className="absolute bottom-3 left-3 z-[1]"
-        >
+        <Link href={href} onClick={() => openProfile(profile, source)} className="absolute bottom-3 left-3 z-[1]">
           {profile.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <FadeImg
               src={profile.avatarUrl}
               alt=""
-              loading="lazy"
-              className="h-12 w-12 rounded-full border-2 border-[#121118] object-cover"
+              className="h-12 w-12 rounded-full border-2 border-[#121214] object-cover"
             />
           ) : (
-            <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#121118] bg-white/[0.08] text-sm text-white/80">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#121214] bg-white/[0.08] text-sm text-white/80">
               {initialsFromName(profile.displayName)}
             </span>
           )}
         </Link>
 
-        {media.projectLogo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+        {media.heroUrl && media.projectLogo ? (
+          <FadeImg
             src={media.projectLogo}
             alt=""
-            loading="lazy"
-            className="pointer-events-none absolute bottom-3 right-3 z-[1] h-11 w-11 rounded-2xl border border-white/15 bg-[#0d0c12] object-cover"
+            className="pointer-events-none absolute bottom-3 right-3 z-[1] h-11 w-11 rounded-2xl border border-white/15 bg-[#0c0c0e] object-cover"
+            style={accent ? { boxShadow: `0 0 0 1px ${accent}55` } : undefined}
           />
         ) : null}
       </div>
 
       <div className={cn("px-4 pb-4 pt-3", swipe ? "md:px-4" : "px-5 pb-5 pt-4")}>
         <Link href={href} onClick={() => openProfile(profile, source)} className="block">
-          <h2 className="font-[family-name:var(--font-zg-display)] text-[1.55rem] leading-none tracking-tight text-white">
-            {profile.displayName}
-          </h2>
-          <p className="mt-2 text-sm text-white/55">
+          <h2 className="sz-name">{profile.displayName}</h2>
+          <p className="sz-body mt-2 text-[0.875rem]">
             {[role, niche && niche !== role ? niche : null].filter(Boolean).join(" · ")}
           </p>
-          {place ? <p className="mt-1 text-sm text-white/35">{place}</p> : null}
+          {place ? <p className="sz-meta mt-1">{place}</p> : null}
         </Link>
 
         {profile.featuredProject ? (
-          <p className="mt-3 flex items-center gap-2 text-[15px] text-white">
-            {media.projectLogo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={media.projectLogo} alt="" className="h-6 w-6 rounded-md object-cover" />
-            ) : null}
-            <span className="text-[11px] uppercase tracking-[0.16em] text-white/35">Building</span>
-            <span className="truncate">{profile.featuredProject.name}</span>
-          </p>
+          <ProjectStrip
+            className="mt-3"
+            name={profile.featuredProject.name}
+            logoUrl={media.heroUrl ? media.projectLogo : profile.featuredProject.logoUrl}
+            status={profile.featuredProject.status}
+            description={profile.featuredProject.description}
+          />
         ) : null}
 
         {profile.bio ? (
-          <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-white/50">{profile.bio}</p>
+          <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-white/48">{profile.bio}</p>
         ) : null}
 
         <div className="mt-4 flex items-center gap-2">
@@ -163,14 +196,14 @@ export function ProfileDiscoveryCard({
           <Link
             href={href}
             onClick={() => openProfile(profile, source)}
-            className="inline-flex min-h-9 items-center rounded-2xl border border-white/[0.1] bg-white/[0.04] px-4 text-[13px] text-white/70 hover:text-white"
+            className="sz-press inline-flex min-h-9 items-center rounded-2xl border border-white/[0.1] bg-white/[0.04] px-4 text-[13px] text-white/70 hover:border-white/18 hover:text-white"
           >
             View profile
           </Link>
         </div>
 
         {socials.length || audience ? (
-          <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/35">
+          <p className="sz-meta mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
             {socials.map((link) => {
               const label =
                 link.platform === "other"

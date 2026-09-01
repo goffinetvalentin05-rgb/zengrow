@@ -40,7 +40,7 @@ export function SaveButton({
       disabled={pending}
       aria-label={saved ? "Unsave profile" : "Save profile"}
       className={cn(
-        "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.1] text-white/50 transition hover:border-white/20 hover:text-white",
+        "sz-press inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.1] text-white/50 transition-colors duration-150 hover:border-white/20 hover:text-white",
         saved && "border-white/25 bg-white/[0.08] text-white",
         className,
       )}

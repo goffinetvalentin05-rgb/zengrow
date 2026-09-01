@@ -1,0 +1,234 @@
+/* Sharpz Discovery — design tokens + motion. Scoped to .sz-app */
+
+.sz-app {
+  --sz-bg: #050506;
+  --sz-surface: #0c0c0e;
+  --sz-elevated: #121214;
+  --sz-fg: #f5f5f5;
+  --sz-muted: #8a8a8e;
+  --sz-faint: #5c5c60;
+  --sz-border: rgb(255 255 255 / 0.08);
+  --sz-border-strong: rgb(255 255 255 / 0.14);
+  --sz-accent: #f5f5f5;
+  --sz-r-sm: 0.5rem;
+  --sz-r-md: 1rem;
+  --sz-r-lg: 1.5rem;
+  --sz-r-xl: 1.75rem;
+  --sz-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sz-hover: 180ms;
+  --sz-press: 120ms;
+  --sz-fade: 260ms;
+  color: var(--sz-fg);
+}
+
+.sz-display {
+  font-family: var(--font-zg-display), system-ui, sans-serif;
+  font-size: clamp(1.85rem, 5vw, 2.45rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: var(--sz-fg, #f5f5f5);
+}
+
+.sz-title {
+  font-family: var(--font-zg-display), system-ui, sans-serif;
+  font-size: 1.55rem;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--sz-fg);
+}
+
+.sz-name {
+  font-family: var(--font-zg-display), system-ui, sans-serif;
+  font-size: 1.45rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--sz-fg);
+}
+
+.sz-body {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: rgb(255 255 255 / 0.55);
+}
+
+.sz-meta {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: rgb(255 255 255 / 0.38);
+}
+
+.sz-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.38);
+}
+
+.sz-sub {
+  margin-top: 0.7rem;
+  max-width: 28rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgb(255 255 255 / 0.42);
+}
+
+.sz-press {
+  transition: transform var(--sz-press) var(--sz-ease), background-color var(--sz-hover) ease, border-color var(--sz-hover) ease, color var(--sz-hover) ease;
+}
+.sz-press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.sz-card {
+  overflow: hidden;
+  border: 1px solid var(--sz-border);
+  border-radius: var(--sz-r-xl);
+  background: var(--sz-elevated);
+  transition: transform var(--sz-hover) var(--sz-ease), border-color var(--sz-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sz-card-hover:hover {
+    transform: translateY(-3px);
+    border-color: var(--sz-border-strong);
+  }
+  .sz-card-hover:hover .sz-card-media img {
+    transform: scale(1.035);
+  }
+}
+
+.sz-card-media {
+  position: relative;
+  overflow: hidden;
+  background: #0a0a0c;
+}
+.sz-card-media img {
+  transition: transform 420ms var(--sz-ease), opacity var(--sz-fade) ease;
+}
+
+.sz-img {
+  opacity: 0;
+  transition: opacity var(--sz-fade) ease;
+}
+.sz-img.is-loaded {
+  opacity: 1;
+}
+
+.sz-crossfade {
+  animation: szFadeSlide var(--sz-fade) var(--sz-ease);
+}
+
+@keyframes szFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sz-sheet {
+  animation: szSheetIn 280ms var(--sz-ease);
+}
+@keyframes szSheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sz-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.04);
+}
+.sz-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+  animation: szShimmer 1.2s ease-in-out infinite;
+}
+@keyframes szShimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+.sz-grain {
+  background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.16) 1px, transparent 0);
+  background-size: 18px 18px;
+}
+
+.sz-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.28);
+}
+
+.sz-swipe-card {
+  transform: scale(0.94);
+  opacity: 0.72;
+  transition: transform 280ms var(--sz-ease), opacity 280ms var(--sz-ease);
+}
+.sz-swipe-card.is-active {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.sz-pill {
+  display: inline-flex;
+  min-height: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  background: rgb(255 255 255 / 0.03);
+  padding: 0 0.9rem;
+  font-size: 0.875rem;
+  color: rgb(255 255 255 / 0.62);
+  transition: background-color var(--sz-hover) ease, border-color var(--sz-hover) ease, color var(--sz-hover) ease, transform var(--sz-press) var(--sz-ease);
+}
+.sz-pill:active {
+  transform: scale(0.97);
+}
+.sz-pill.is-on {
+  border-color: rgb(255 255 255 / 0.2);
+  background: #f5f5f5;
+  color: #09090b;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sz-pill:not(.is-on):hover {
+    border-color: rgb(255 255 255 / 0.16);
+    color: #fff;
+  }
+}
+
+.sz-copied {
+  animation: szFadeSlide 180ms var(--sz-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sz-app *,
+  .sz-app *::before,
+  .sz-app *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .sz-img,
+  .sz-crossfade,
+  .sz-sheet {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}

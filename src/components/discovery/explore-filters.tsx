@@ -18,7 +18,7 @@ import type { ExploreFilters } from "@/src/lib/discovery/types";
 import Button from "@/src/components/ui/button";
 
 const selectClass =
-  "h-11 w-full rounded-2xl border border-white/[0.08] bg-[#0d0c12] px-3 text-sm text-white";
+  "sz-focus h-11 w-full rounded-2xl border border-white/[0.08] bg-[#0c0c0e] px-3 text-sm text-white outline-none";
 
 const ROLE_FILTERS = PROFILE_TYPES.filter((type) => type !== "coach" && type !== "other");
 
@@ -26,10 +26,12 @@ export function DiscoveryFiltersSheet({
   filters,
   extraLocations = [],
   hrefFor,
+  onNavigate,
 }: {
   filters: ExploreFilters;
   extraLocations?: string[];
   hrefFor?: (next: ExploreFilters) => string;
+  onNavigate?: () => void;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -45,12 +47,13 @@ export function DiscoveryFiltersSheet({
 
   function apply(next = draft) {
     setOpen(false);
+    onNavigate?.();
     router.push(toHref(next), { scroll: false });
   }
 
   return (
     <>
-      <Button type="button" variant="secondary" size="sm" onClick={() => setOpen(true)}>
+      <Button type="button" variant="secondary" size="sm" className="sz-press" onClick={() => setOpen(true)}>
         Filters{activeCount ? ` · ${activeCount}` : ""}
       </Button>
       {open ? (
@@ -59,11 +62,11 @@ export function DiscoveryFiltersSheet({
           onClick={() => setOpen(false)}
         >
           <div
-            className="max-h-[86dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-[#121118] p-5 md:rounded-3xl"
+            className="sz-sheet max-h-[86dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-[#121214] p-5 md:rounded-3xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="font-[family-name:var(--font-zg-display)] text-2xl text-white">Filters</h2>
+              <h2 className="sz-title">Filters</h2>
               <button type="button" className="min-h-10 text-sm text-white/40" onClick={() => setOpen(false)}>
                 Close
               </button>
@@ -198,7 +201,7 @@ export function DiscoveryFiltersSheet({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="mb-4 block">
-      <span className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">{label}</span>
+      <span className="sz-label mb-2 block">{label}</span>
       {children}
     </label>
   );

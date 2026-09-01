@@ -10,12 +10,14 @@ export function NichePills({
   favoriteSlugs = [],
   hrefFor,
   forYouLabel = "For you",
+  onNavigate,
 }: {
   categories: Category[];
   activeSlug?: string | null;
   favoriteSlugs?: string[];
   hrefFor: (slug: string | null) => string;
   forYouLabel?: string;
+  onNavigate?: () => void;
 }) {
   const favorites = categories.filter((cat) => favoriteSlugs.includes(cat.slug));
   const rest = categories.filter((cat) => !favoriteSlugs.includes(cat.slug));
@@ -26,12 +28,10 @@ export function NichePills({
       <Link
         href={hrefFor(null)}
         scroll={false}
-        className={cn(
-          "inline-flex min-h-10 shrink-0 items-center rounded-full border px-3.5 text-sm transition active:scale-[0.98]",
-          !activeSlug
-            ? "border-white/20 bg-white text-zinc-950"
-            : "border-white/[0.08] bg-white/[0.03] text-white/65",
-        )}
+        onClick={() => {
+          if (activeSlug) onNavigate?.();
+        }}
+        className={cn("sz-pill", !activeSlug && "is-on")}
       >
         {forYouLabel}
       </Link>
@@ -40,12 +40,10 @@ export function NichePills({
           key={cat.id}
           href={hrefFor(cat.slug)}
           scroll={false}
-          className={cn(
-            "inline-flex min-h-10 shrink-0 items-center rounded-full border px-3.5 text-sm transition active:scale-[0.98]",
-            activeSlug === cat.slug
-              ? "border-white/20 bg-white text-zinc-950"
-              : "border-white/[0.08] bg-white/[0.03] text-white/65",
-          )}
+          onClick={() => {
+            if (activeSlug !== cat.slug) onNavigate?.();
+          }}
+          className={cn("sz-pill", activeSlug === cat.slug && "is-on")}
         >
           {cat.name}
         </Link>

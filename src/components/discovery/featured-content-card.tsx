@@ -4,17 +4,8 @@ import { FEATURED_CTA, FEATURED_PLATFORM_LABELS, type FeaturedPlatform } from "@
 import { normalizeHttpUrl, resolveFeaturedThumbnail } from "@/src/lib/discovery/media";
 import type { FeaturedContent } from "@/src/lib/discovery/types";
 import { SocialGlyph } from "@/src/components/discovery/social-glyph";
+import { FadeImg } from "@/src/components/discovery/sz-ui";
 import { cn } from "@/src/lib/utils";
-
-const FALLBACK: Record<string, string> = {
-  youtube: "from-red-500/25 via-white/[0.04] to-transparent",
-  instagram: "from-fuchsia-500/20 via-orange-400/10 to-transparent",
-  tiktok: "from-cyan-400/20 via-pink-500/10 to-transparent",
-  x: "from-white/15 via-white/[0.04] to-transparent",
-  linkedin: "from-sky-500/25 via-white/[0.04] to-transparent",
-  article: "from-amber-400/20 via-white/[0.04] to-transparent",
-  other: "from-white/10 via-white/[0.04] to-transparent",
-};
 
 export function FeaturedContentCard({
   item,
@@ -36,29 +27,26 @@ export function FeaturedContentCard({
       target="_blank"
       rel="noreferrer"
       onClick={onClick}
-      className={cn(
-        "group relative block overflow-hidden rounded-[1.35rem] bg-white/[0.04] ring-1 ring-white/[0.06] transition hover:ring-white/15",
-        className,
-      )}
+      className={cn("sz-card sz-card-hover group relative block bg-white/[0.04]", className)}
     >
       {thumb ? (
-        <div className="relative">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={thumb} alt="" className="aspect-[16/10] w-full object-cover" />
+        <div className="sz-card-media relative">
+          <FadeImg src={thumb} alt="" className="aspect-[16/10] w-full object-cover" />
           {item.platform === "youtube" ? (
-            <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-1 text-[10px] uppercase tracking-wide text-white backdrop-blur">
+            <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-white backdrop-blur">
               <SocialGlyph platform="youtube" className="h-3 w-3" />
               YouTube
             </span>
           ) : null}
         </div>
       ) : (
-        <div className={cn("flex aspect-[16/10] items-end bg-gradient-to-br px-4 py-4", FALLBACK[item.platform] ?? FALLBACK.other)}>
-          <SocialGlyph platform={glyphPlatform} className="h-7 w-7 text-white/50" />
+        <div className="relative flex aspect-[16/10] items-end overflow-hidden bg-[#0a0a0c] px-4 py-4">
+          <div className="sz-grain absolute inset-0 opacity-[0.12]" />
+          <SocialGlyph platform={glyphPlatform} className="relative h-7 w-7 text-white/45" />
         </div>
       )}
       <div className="px-4 py-3">
-        <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-white/40">
+        <p className="sz-label flex items-center gap-1.5">
           <SocialGlyph platform={glyphPlatform} className="h-3 w-3" />
           {label}
         </p>

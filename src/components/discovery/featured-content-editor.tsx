@@ -166,10 +166,10 @@ function FeaturedModal({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 md:items-center md:p-6">
       <form
         onSubmit={submit}
-        className="w-full max-w-md rounded-t-3xl bg-[#121118] p-5 md:rounded-3xl"
+        className="sz-sheet w-full max-w-md rounded-t-3xl bg-[#121214] p-5 md:rounded-3xl"
       >
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="font-[family-name:var(--font-zg-display)] text-2xl text-white">
+          <h3 className="sz-title">
             {item ? "Edit content" : "Add content"}
           </h3>
           <button type="button" className="text-sm text-white/40" onClick={onClose}>
@@ -180,7 +180,7 @@ function FeaturedModal({
         <select
           value={platform}
           onChange={(event) => setPlatform(event.target.value as FeaturedPlatform)}
-          className="mb-4 h-11 w-full rounded-2xl border border-white/10 bg-[#0d0c12] px-3 text-sm text-white"
+          className="sz-focus mb-4 h-11 w-full rounded-2xl border border-white/[0.08] bg-[#0c0c0e] px-3 text-sm text-white outline-none"
         >
           {FEATURED_PLATFORMS.map((value) => (
             <option key={value} value={value}>

@@ -1,7 +1,7 @@
 "use client";
 
-import { AppAmbientBackground } from "@/src/components/app/app-ambient-background";
 import { DashboardToastProvider } from "@/src/components/dashboard/dashboard-toast-provider";
+import { DiscoveryAmbientBackground } from "@/src/components/discovery/discovery-ambient";
 import { DiscoveryBottomNav, DiscoverySidebar } from "@/src/components/discovery/navigation";
 import { zgBody } from "@/components/zg-landing/fonts";
 import { cn } from "@/src/lib/utils";
@@ -24,8 +24,8 @@ export function DiscoveryShell({
   if (hideChrome) {
     return (
       <DashboardToastProvider>
-        <div className={cn(zgBody.className, "relative min-h-dvh bg-[#08070b] text-white")}>
-          <AppAmbientBackground />
+        <div className={cn(zgBody.className, "sz-app relative min-h-dvh bg-[#050506] text-white")}>
+          <DiscoveryAmbientBackground />
           <main className="relative z-10">{children}</main>
         </div>
       </DashboardToastProvider>
@@ -34,10 +34,10 @@ export function DiscoveryShell({
 
   return (
     <DashboardToastProvider>
-      <div className={cn(zgBody.className, "relative h-dvh overflow-hidden bg-[#08070b] text-white")}>
-        <AppAmbientBackground />
+      <div className={cn(zgBody.className, "sz-app relative h-dvh overflow-hidden bg-[#050506] text-white")}>
+        <DiscoveryAmbientBackground />
         <div className="relative z-10 flex h-full p-0 md:p-3">
-          <div className="flex h-full min-w-0 flex-1 overflow-hidden md:rounded-[1.75rem] md:border md:border-white/[0.06] md:bg-[#0d0c12]/80">
+          <div className="flex h-full min-w-0 flex-1 overflow-hidden md:rounded-[1.75rem] md:border md:border-white/[0.06] md:bg-[#0c0c0e]/85">
             <DiscoverySidebar
               displayName={displayName}
               avatarUrl={avatarUrl}
@@ -45,7 +45,10 @@ export function DiscoveryShell({
               username={username}
             />
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <main id="discovery-scroll" className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-0 pb-24 pt-4 md:px-10 md:pb-14 md:pt-8">
+              <main
+                id="discovery-scroll"
+                className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-0 pb-28 pt-4 md:px-10 md:pb-14 md:pt-8"
+              >
                 {children}
               </main>
             </div>

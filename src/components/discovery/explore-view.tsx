@@ -8,6 +8,7 @@ import { NichePills } from "@/src/components/discovery/niche-pills";
 import { PeopleFeed } from "@/src/components/discovery/profile-discovery-card";
 import { PeopleSwipeDeck } from "@/src/components/discovery/people-swipe-deck";
 import { DiscoverySearchBar } from "@/src/components/discovery/search-bar";
+import { DiscoveryFeedSkeleton } from "@/src/components/discovery/sz-ui";
 import { DISCOVERY_PAGE_SIZE } from "@/src/lib/discovery/constants";
 import { droppedFilterHints } from "@/src/lib/discovery/apply-filters";
 import { categoryDiscoveryHref, exploreHref, feedQueryString } from "@/src/lib/discovery/filters";
@@ -40,6 +41,7 @@ export function ExploreView({
   const [profiles, setProfiles] = useState(initialProfiles);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
+  const [filterPending, setFilterPending] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
   const seen = useRef(new Set(initialProfiles.map((profile) => profile.id)));
   const paging = useRef({ offset: initialNextOffset, hasMore: initialHasMore, loading: false });
@@ -49,7 +51,14 @@ export function ExploreView({
     setHasMore(initialHasMore);
     seen.current = new Set(initialProfiles.map((profile) => profile.id));
     paging.current = { offset: initialNextOffset, hasMore: initialHasMore, loading: false };
+    setFilterPending(false);
   }, [initialProfiles, initialHasMore, initialNextOffset]);
+
+  useEffect(() => {
+    if (!filterPending) return;
+    const timer = window.setTimeout(() => setFilterPending(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [filterPending]);
 
   useEffect(() => {
     const href = `${window.location.pathname}${window.location.search}`;
@@ -137,16 +146,21 @@ export function ExploreView({
   const empty = !profiles.length;
   const hints = droppedFilterHints(filters);
   const nearby = categories.filter((cat) => cat.slug !== filters.niche).slice(0, 4);
+  const filterKey = [
+    filters.niche,
+    filters.location,
+    filters.audience,
+    filters.age,
+    filters.profileType,
+    filters.platform,
+    filters.activity,
+  ].join("|");
 
   return (
     <div className="pb-8">
       <header className="mx-auto w-full max-w-[720px] px-5 md:mx-0 md:max-w-none md:px-0">
-        <h1 className="font-[family-name:var(--font-zg-display)] text-[2.15rem] leading-[0.95] tracking-tight text-white md:text-[2.6rem]">
-          Discover people worth knowing.
-        </h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/45">
-          Find builders, creators and operators in the niches you care about.
-        </p>
+        <h1 className="sz-display">Discover people worth knowing.</h1>
+        <p className="sz-sub">Find builders, creators and operators in the niches you care about.</p>
         <div className="mt-5">
           <DiscoverySearchBar />
         </div>
@@ -156,20 +170,31 @@ export function ExploreView({
             activeSlug={filters.niche}
             favoriteSlugs={favoriteSlugs}
             hrefFor={(slug) => hrefFor({ ...filters, niche: slug })}
+            onNavigate={() => setFilterPending(true)}
           />
           <div className="mt-3">
             <DiscoveryFiltersSheet
               filters={filters}
               extraLocations={extraLocations}
               hrefFor={hrefFor}
+              onNavigate={() => setFilterPending(true)}
             />
           </div>
         </div>
       </header>
 
       <div className="mt-7 px-5 md:px-0">
-        {empty ? (
-          <div>
+        {filterPending ? (
+          <>
+            <div className="md:hidden">
+              <DiscoveryFeedSkeleton swipe />
+            </div>
+            <div className="hidden md:block">
+              <DiscoveryFeedSkeleton />
+            </div>
+          </>
+        ) : empty ? (
+          <div className="sz-crossfade">
             <DiscoveryEmpty
               title="No exact matches yet."
               description="Sharpz is still small in this slice. Try a nearby world, or drop one filter."
@@ -180,7 +205,8 @@ export function ExploreView({
                   <Link
                     key={hint.key}
                     href={hrefFor({ ...filters, [hint.key]: null })}
-                    className="rounded-full border border-white/[0.08] px-3 py-1.5 text-sm text-white/60"
+                    onClick={() => setFilterPending(true)}
+                    className="sz-pill"
                   >
                     Remove {hint.label}
                   </Link>
@@ -189,13 +215,14 @@ export function ExploreView({
             ) : null}
             {nearby.length ? (
               <div className="mt-6">
-                <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-white/35">Browse nearby niches</p>
+                <p className="sz-label mb-3">Browse nearby niches</p>
                 <div className="flex flex-wrap gap-2">
                   {nearby.map((cat) => (
                     <Link
                       key={cat.id}
                       href={hrefFor({ ...filters, niche: cat.slug })}
-                      className="rounded-full bg-white/[0.06] px-3.5 py-1.5 text-sm text-white/70"
+                      onClick={() => setFilterPending(true)}
+                      className="sz-pill"
                     >
                       {cat.name}
                     </Link>
@@ -205,13 +232,13 @@ export function ExploreView({
             ) : null}
             {related.length ? (
               <div className="mt-10">
-                <p className="mb-5 text-[11px] uppercase tracking-[0.16em] text-white/35">People close to these filters</p>
+                <p className="sz-label mb-5">People close to these filters</p>
                 <PeopleFeed profiles={related} source={source} isLoggedIn={isLoggedIn} />
               </div>
             ) : null}
           </div>
         ) : (
-          <>
+          <div key={filterKey} className="sz-crossfade">
             <div className="md:hidden">
               <PeopleSwipeDeck
                 profiles={profiles}
@@ -224,11 +251,20 @@ export function ExploreView({
               <PeopleFeed profiles={profiles} source={source} isLoggedIn={isLoggedIn} />
               <div ref={sentinel} className="h-10" />
             </div>
-            {loading ? <p className="py-6 text-center text-sm text-white/35">Loading more people…</p> : null}
-            {!hasMore && profiles.length ? (
-              <p className="py-8 text-center text-sm text-white/30">That’s everyone in this slice for now.</p>
+            {loading ? (
+              <div className="mt-6">
+                <div className="md:hidden">
+                  <DiscoveryFeedSkeleton swipe count={2} />
+                </div>
+                <div className="hidden md:block">
+                  <DiscoveryFeedSkeleton count={3} />
+                </div>
+              </div>
             ) : null}
-          </>
+            {!hasMore && profiles.length ? (
+              <p className="sz-meta py-8 text-center">That’s everyone in this slice for now.</p>
+            ) : null}
+          </div>
         )}
       </div>
     </div>

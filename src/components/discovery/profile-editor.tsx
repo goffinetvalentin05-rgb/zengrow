@@ -27,7 +27,7 @@ import { SharpzLinkEditor } from "@/src/components/discovery/sharpz-link-editor"
 import { cn } from "@/src/lib/utils";
 
 const selectClass =
-  "h-11 w-full rounded-2xl border border-white/[0.1] bg-[#0d0c12] px-3 text-sm text-white";
+  "sz-focus h-11 w-full rounded-2xl border border-white/[0.08] bg-[#0c0c0e] px-3 text-sm text-white outline-none";
 
 export function ProfileEditor({
   userId,
@@ -87,14 +87,14 @@ export function ProfileEditor({
           <Link href={DISCOVERY_ROUTES.me} className="text-sm text-white/40 hover:text-white">
             ← Preview
           </Link>
-          <h1 className="mt-3 font-[family-name:var(--font-zg-display)] text-4xl text-white">Edit profile</h1>
+          <h1 className="sz-display mt-3">Edit profile</h1>
         </div>
       </header>
 
       {suggestions.length ? (
         <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3.5 ring-1 ring-white/[0.06]">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-white/40">Profile completeness</p>
+            <p className="sz-label">Profile completeness</p>
             <p className="text-sm text-white">{profile.completeness}%</p>
           </div>
           <ul className="mt-3 space-y-1 text-sm text-white/45">
@@ -172,7 +172,7 @@ export function ProfileEditor({
               </Field>
             </div>
           </details>
-          <Button type="submit">Save profile</Button>
+          <Button type="submit" className="sz-press">Save profile</Button>
         </form>
         <div className="mt-8">
           <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Niche</p>
@@ -237,7 +237,7 @@ export function ProfileEditor({
 function EditorSection({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id}>
-      <h2 className="mb-5 font-[family-name:var(--font-zg-display)] text-2xl text-white">{title}</h2>
+      <h2 className="sz-title mb-5">{title}</h2>
       {children}
     </section>
   );
@@ -246,7 +246,7 @@ function EditorSection({ id, title, children }: { id: string; title: string; chi
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">{label}</span>
+      <span className="sz-label mb-2 block">{label}</span>
       {children}
     </label>
   );
@@ -485,7 +485,7 @@ function ProjectList({ userId, projects }: { userId: string; projects: Project[]
           <input type="checkbox" name="featuredProject" className="h-4 w-4" defaultChecked={projects.length === 0} />
           Currently building
         </label>
-        <Button type="submit">Add project</Button>
+        <Button type="submit" className="sz-press">Add project</Button>
       </form>
     </div>
   );
@@ -519,7 +519,7 @@ function SocialEditor({ links }: { links: SocialLink[] }) {
           />
         </Field>
       ))}
-      <Button type="submit">Save links</Button>
+      <Button type="submit" className="sz-press">Save links</Button>
     </form>
   );
 }

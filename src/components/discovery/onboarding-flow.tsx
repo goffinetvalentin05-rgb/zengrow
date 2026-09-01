@@ -94,7 +94,7 @@ export function OnboardingFlow({
       </p>
       {step === 1 ? (
         <>
-          <h1 className="mt-3 font-[family-name:var(--font-zg-display)] text-4xl text-white">Choose your worlds.</h1>
+          <h1 className="sz-display mt-3">Choose your worlds.</h1>
           <p className="mt-2 text-sm text-white/45">Pick 1 to 5 niches. Your favorites come first on Explore.</p>
           <div className="mt-8 flex flex-wrap gap-2">
             {categories.map((cat) => {
@@ -127,7 +127,7 @@ export function OnboardingFlow({
 
       {step === 2 ? (
         <>
-          <h1 className="mt-3 font-[family-name:var(--font-zg-display)] text-4xl text-white">Who are you?</h1>
+          <h1 className="sz-display mt-3">Who are you?</h1>
           <div className="mt-8 grid grid-cols-2 gap-2">
             {PROFILE_TYPES.map((type) => (
               <button
@@ -148,7 +148,7 @@ export function OnboardingFlow({
 
       {step === 3 ? (
         <>
-          <h1 className="mt-3 font-[family-name:var(--font-zg-display)] text-4xl text-white">Build your profile.</h1>
+          <h1 className="sz-display mt-3">Build your profile.</h1>
           <form className="mt-8 space-y-4" onSubmit={onContinue}>
             <Field label="Name">
               <Input value={draft.displayName} onChange={(e) => setDraft({ ...draft, displayName: e.target.value })} required />
@@ -208,7 +208,7 @@ export function OnboardingFlow({
 
       {step === 4 ? (
         <>
-          <h1 className="mt-3 font-[family-name:var(--font-zg-display)] text-4xl text-white">What are you building?</h1>
+          <h1 className="sz-display mt-3">What are you building?</h1>
           <p className="mt-2 text-sm text-white/45">Optional. You can skip this.</p>
           <div className="mt-8 space-y-4">
             <Field label="Project name">
@@ -226,7 +226,7 @@ export function OnboardingFlow({
 
       {step === 5 ? (
         <>
-          <h1 className="mt-3 font-[family-name:var(--font-zg-display)] text-4xl text-white">Where can people find you?</h1>
+          <h1 className="sz-display mt-3">Where can people find you?</h1>
           <div className="mt-8 space-y-4">
             {SOCIAL_PLATFORMS.map((platform) => (
               <Field key={platform} label={SOCIAL_PLATFORM_LABELS[platform]}>
@@ -243,7 +243,7 @@ export function OnboardingFlow({
 
       {step === 6 ? (
         <>
-          <h1 className="mt-3 font-[family-name:var(--font-zg-display)] text-4xl text-white">Your Sharpz is ready.</h1>
+          <h1 className="sz-display mt-3">Your Sharpz is ready.</h1>
           <p className="mt-3 text-sm text-white/50">Go discover people worth knowing.</p>
           <Button className="mt-8" onClick={() => router.push(DISCOVERY_ROUTES.explore)}>
             Start exploring

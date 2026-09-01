@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ProfileDiscoveryCard } from "@/src/components/discovery/profile-discovery-card";
 import type { ProfileCardModel } from "@/src/lib/discovery/types";
+import { cn } from "@/src/lib/utils";
 
 export function PeopleSwipeDeck({
   profiles,
@@ -46,13 +47,13 @@ export function PeopleSwipeDeck({
       <div
         ref={scroller}
         onScroll={updateActive}
-        className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-px-5 px-5 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-px-5 px-5 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
       >
-        {profiles.map((profile) => (
+        {profiles.map((profile, index) => (
           <div
             key={profile.id}
-            className="w-[min(84vw,380px)] shrink-0 snap-start"
+            className={cn("sz-swipe-card w-[min(84vw,380px)] shrink-0 snap-start", index === active && "is-active")}
           >
             <ProfileDiscoveryCard
               profile={profile}
@@ -63,7 +64,7 @@ export function PeopleSwipeDeck({
           </div>
         ))}
       </div>
-      <p className="mt-3 text-center text-[12px] tabular-nums text-white/35">
+      <p className="sz-meta mt-3 text-center tabular-nums">
         {active + 1} / {profiles.length}
       </p>
     </div>
