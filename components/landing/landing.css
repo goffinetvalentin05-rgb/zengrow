@@ -653,13 +653,15 @@
   z-index: 1;
   display: flex;
   align-items: center;
-  min-height: max(clamp(36rem, 100dvh, 54rem), 100dvh);
+  min-height: 100vh;
+  min-height: 100dvh;
   margin-top: calc(-1 * var(--zg-nav-h));
   padding: calc(var(--zg-nav-h) + clamp(3.5rem, 7vw, 6rem)) 0 clamp(3.5rem, 7vw, 5.5rem);
   background: transparent;
   color: #f7f7f5;
   text-align: center;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .go-hero__inner {
@@ -703,8 +705,7 @@
 }
 
 .go-hero__title {
-  --go-hero-title-line-h: 1.12;
-  --go-hero-rotate-slot-h: calc(var(--go-hero-title-line-h) * 3em);
+  --go-hero-title-line-h: 1.18;
   position: relative;
   margin: 0;
   display: flex;
@@ -730,73 +731,66 @@
   color: transparent;
 }
 
+/* In-flow sizer = tallest phrase. Overlay viewport clips only during the slide. */
 .go-hero__title-rotate {
+  position: relative;
   display: block;
   width: 100%;
   max-width: 100%;
   margin-top: 0.12em;
-  background: transparent;
-  border: none;
-  box-shadow: none;
+}
+
+.go-hero__title-sizer {
+  display: grid;
+  width: 100%;
+  min-height: var(--go-hero-rotate-slot-h);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.go-hero__title-phrase {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding-block: 0.12em;
+  text-align: center;
+  text-wrap: wrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.go-hero__title-sizer .go-hero__title-phrase {
+  grid-area: 1 / 1;
+  height: auto;
 }
 
 .go-hero__title-rotate-viewport {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
-  height: var(--go-hero-rotate-slot-h);
   overflow: hidden;
   background: transparent;
-  border: none;
-  box-shadow: none;
 }
 
 .go-hero__title-rotate-track {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
   will-change: transform;
-  background: transparent;
-  border: none;
-  box-shadow: none;
 }
 
 .go-hero__title-rotate-line {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  box-sizing: border-box;
+  flex: 0 0 var(--go-hero-rotate-slot-h);
   width: 100%;
-  max-width: 100%;
   height: var(--go-hero-rotate-slot-h);
-  min-height: var(--go-hero-rotate-slot-h);
-  padding: 0;
-  text-align: center;
-  text-wrap: balance;
-  white-space: normal;
-  overflow-wrap: break-word;
-  color: rgba(255, 255, 255, 0.82);
-  background: none;
-  border: none;
-  box-shadow: none;
-  filter: none;
-}
-
-.go-hero__title-measure {
-  position: absolute;
-  inset: auto 0;
-  top: 0;
-  visibility: hidden;
-  pointer-events: none;
-  width: 100%;
-  height: auto;
   overflow: visible;
-}
-
-.go-hero__title-rotate-line--measure {
-  display: block;
-  height: auto;
-  min-height: 0;
 }
 
 @keyframes go-hero-title-rotate {
@@ -824,14 +818,16 @@
 
 @media (max-width: 767px) {
   .go-hero {
-    min-height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: 100svh;
     padding-top: calc(var(--zg-nav-h) + clamp(2.75rem, 10vw, 4rem));
     padding-bottom: clamp(2.5rem, 8vw, 3.5rem);
   }
 
   .go-hero__title {
-    --go-hero-title-line-h: 1.14;
-    font-size: clamp(1.85rem, 7.4vw, 2.35rem);
+    --go-hero-title-line-h: 1.26;
+    font-size: clamp(1.7rem, 6.3vw, 2.08rem);
   }
 
   .go-hero__title-static {
@@ -846,16 +842,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .go-hero__title-rotate-viewport {
-    height: var(--go-hero-rotate-slot-h);
-  }
-
-  .go-hero__title-rotate-line {
-    min-height: var(--go-hero-rotate-slot-h);
-  }
-
   .go-hero__title-rotate-line:not(:first-child) {
-    display: none;
+    visibility: hidden;
   }
 }
 
