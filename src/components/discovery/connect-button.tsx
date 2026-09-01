@@ -95,7 +95,7 @@ export function ConnectButton({
       onClick={() => run(status === "pending_in" ? "accept" : "request")}
       disabled={pending || connected || requested}
       aria-pressed={connected}
-      className={cn("sz-press min-w-[6.5rem] rounded-2xl", className)}
+      className={cn("sz-press min-h-11 min-w-[6.5rem] rounded-2xl", className)}
     >
       <span key={status} className="sz-copied inline-block">
         {LABELS[status]}

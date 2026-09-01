@@ -87,15 +87,34 @@ export function ProfileEditor({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[560px] flex-col gap-12 px-5 pb-10 md:px-0">
+    <div className="mx-auto flex w-full max-w-[560px] flex-col gap-12 px-5 pb-4 md:px-0">
       <header className="flex items-end justify-between gap-4">
         <div>
-          <Link href={DISCOVERY_ROUTES.me} className="text-sm text-white/40 hover:text-white">
+          <Link href={DISCOVERY_ROUTES.me} className="inline-flex min-h-11 items-center text-sm text-white/40 hover:text-white">
             ← Preview
           </Link>
           <h1 className="sz-display mt-3">Edit profile</h1>
         </div>
       </header>
+
+      <nav
+        aria-label="Edit sections"
+        className="sticky top-0 z-20 -mx-5 flex gap-2 overflow-x-auto overscroll-x-contain bg-[#050506]/92 px-5 py-2 backdrop-blur-md [scrollbar-width:none] md:static md:mx-0 md:bg-transparent md:px-0 md:py-0"
+      >
+        {[
+          { id: "profile", label: "Profile" },
+          { id: "appearance", label: "Look" },
+          { id: "projects", label: "Projects" },
+          { id: "featured", label: "Featured" },
+          { id: "conversion", label: "Conversion" },
+          { id: "social", label: "Socials" },
+          { id: "link", label: "Link" },
+        ].map((item) => (
+          <a key={item.id} href={`#${item.id}`} className="sz-pill">
+            {item.label}
+          </a>
+        ))}
+      </nav>
 
       {suggestions.length ? (
         <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3.5 ring-1 ring-white/[0.06]">
@@ -178,7 +197,7 @@ export function ProfileEditor({
               </Field>
             </div>
           </details>
-          <Button type="submit" className="sz-press">Save profile</Button>
+          <Button type="submit" className="sz-press min-h-11">Save profile</Button>
         </form>
         <div className="mt-8">
           <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Niche</p>
@@ -256,7 +275,7 @@ export function ProfileEditor({
 
 function EditorSection({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id}>
+    <section id={id} className="scroll-mt-16">
       <h2 className="sz-title mb-5">{title}</h2>
       {children}
     </section>
@@ -508,7 +527,7 @@ function ProjectList({ userId, projects }: { userId: string; projects: Project[]
           <input type="checkbox" name="featuredProject" className="h-4 w-4" defaultChecked={projects.length === 0} />
           Currently building
         </label>
-        <Button type="submit" className="sz-press">Add project</Button>
+        <Button type="submit" className="sz-press min-h-11">Add project</Button>
       </form>
     </div>
   );
@@ -542,7 +561,7 @@ function SocialEditor({ links }: { links: SocialLink[] }) {
           />
         </Field>
       ))}
-      <Button type="submit" className="sz-press">Save links</Button>
+        <Button type="submit" className="sz-press min-h-11">Save links</Button>
     </form>
   );
 }

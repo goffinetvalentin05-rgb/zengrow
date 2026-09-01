@@ -7,6 +7,7 @@ import {
   Bookmark,
   Compass,
   LogOut,
+  MoreHorizontal,
   Search,
   Settings,
   UserRound,
@@ -18,6 +19,8 @@ import { createClient } from "@/src/lib/supabase/client";
 import { DISCOVERY_ROUTES, profileHref } from "@/src/lib/discovery/routes";
 import { cn } from "@/src/lib/utils";
 import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
+import { DiscoverySheet } from "@/src/components/discovery/mobile-sheet";
+import { useState } from "react";
 
 const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: DISCOVERY_ROUTES.explore, label: "Explore", icon: Compass },
@@ -113,35 +116,95 @@ export function DiscoverySidebar({
 
 export function DiscoveryBottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [moreOpen, setMoreOpen] = useState(false);
   const items = [
     { href: DISCOVERY_ROUTES.explore, label: "Explore", icon: Compass },
     { href: DISCOVERY_ROUTES.search, label: "Search", icon: Search },
     { href: DISCOVERY_ROUTES.following, label: "Following", icon: Users },
     { href: DISCOVERY_ROUTES.me, label: "Profile", icon: UserRound },
   ];
+  const moreHrefs = [DISCOVERY_ROUTES.saved, DISCOVERY_ROUTES.analytics, DISCOVERY_ROUTES.settings, DISCOVERY_ROUTES.admin];
+  const moreActive = moreHrefs.some((href) => pathname === href || pathname.startsWith(`${href}/`));
+
+  async function logout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push(DISCOVERY_ROUTES.login);
+  }
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 md:hidden" aria-label="Primary">
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#050506] via-[#050506]/80 to-transparent" />
-      <div className="relative mx-4 mb-[max(0.7rem,env(safe-area-inset-bottom))] flex items-center justify-around rounded-full border border-white/[0.08] bg-[#0c0c0e]/78 px-1.5 py-1.5 shadow-[0_12px_40px_-18px_rgba(0,0,0,0.9)] backdrop-blur-xl">
-        {items.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex min-h-11 min-w-[3.6rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-1.5 text-[10px] tracking-wide transition-colors duration-150",
-                active ? "bg-white/[0.08] text-white" : "text-white/38",
-              )}
-            >
-              <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2 : 1.5} />
-              {item.label}
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+    <>
+      <nav className="sz-bottom-nav fixed inset-x-0 bottom-0 z-40 md:hidden" aria-label="Primary">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#050506] via-[#050506]/80 to-transparent" />
+        <div className="relative mx-3 mb-[var(--sz-bottom-nav-offset)] flex items-center justify-around rounded-full border border-white/[0.08] bg-[#0c0c0e]/78 px-1 py-1.5 shadow-[0_12px_40px_-18px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+          {items.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 text-[10px] tracking-wide transition-colors duration-150",
+                  active ? "bg-white/[0.08] text-white" : "text-white/38",
+                )}
+              >
+                <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2 : 1.5} />
+                <span className="max-w-full truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={moreOpen}
+            className={cn(
+              "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 text-[10px] tracking-wide transition-colors duration-150",
+              moreActive ? "bg-white/[0.08] text-white" : "text-white/38",
+            )}
+          >
+            <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={moreActive ? 2 : 1.5} />
+            More
+          </button>
+        </div>
+      </nav>
+      <DiscoverySheet open={moreOpen} title="More" onClose={() => setMoreOpen(false)} labelledBy="sz-more-title">
+        <nav className="flex flex-col gap-1 pb-2" aria-labelledby="sz-more-title">
+          {[
+            { href: DISCOVERY_ROUTES.saved, label: "Saved", icon: Bookmark },
+            { href: DISCOVERY_ROUTES.analytics, label: "Analytics", icon: BarChart3 },
+            { href: DISCOVERY_ROUTES.settings, label: "Settings", icon: Settings },
+            { href: DISCOVERY_ROUTES.meEdit, label: "Edit profile", icon: UserRound },
+          ].map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMoreOpen(false)}
+                className={cn(
+                  "flex min-h-12 items-center gap-3 rounded-2xl px-3 text-[15px]",
+                  active ? "bg-white/[0.07] text-white" : "text-white/70",
+                )}
+              >
+                <Icon className="h-4 w-4" strokeWidth={1.7} />
+                {item.label}
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-[15px] text-white/45"
+          >
+            <LogOut className="h-4 w-4" strokeWidth={1.7} />
+            Log out
+          </button>
+        </nav>
+      </DiscoverySheet>
+    </>
   );
 }

@@ -18,6 +18,11 @@
   --sz-hover: 180ms;
   --sz-press: 120ms;
   --sz-fade: 260ms;
+  --sz-bottom-nav-bar: 4.35rem;
+  --sz-bottom-nav-offset: max(0.7rem, env(safe-area-inset-bottom, 0px));
+  --sz-bottom-nav-height: calc(var(--sz-bottom-nav-bar) + var(--sz-bottom-nav-offset));
+  --sz-nav-pad: calc(var(--sz-bottom-nav-height) + 1rem);
+  --sz-sheet-pad: max(1rem, env(safe-area-inset-bottom, 0px));
   color: var(--sz-fg);
 }
 
@@ -210,6 +215,11 @@
 
 .sz-copied {
   animation: szFadeSlide 180ms var(--sz-ease);
+}
+
+body.sz-sheet-open .sz-bottom-nav {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .sz-step-fwd {

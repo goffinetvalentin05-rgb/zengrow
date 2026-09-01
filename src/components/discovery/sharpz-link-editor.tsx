@@ -127,7 +127,7 @@ export function SharpzLinkEditor({
 
       <p className="sz-title mt-3">{preview}</p>
 
-      <div className="mt-5 flex items-center gap-2">
+      <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative min-w-0 flex-1">
           <Input
             value={value}
@@ -146,7 +146,7 @@ export function SharpzLinkEditor({
             <Check className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />
           ) : null}
         </div>
-        <Button type="button" className="sz-press" onClick={() => void save()} disabled={!dirty || status !== "available" || saving}>
+        <Button type="button" className="sz-press min-h-11 w-full sm:w-auto" onClick={() => void save()} disabled={!dirty || status !== "available" || saving}>
           {saving ? "Saving…" : "Save"}
         </Button>
       </div>
@@ -186,13 +186,13 @@ export function SharpzLinkEditor({
           <p className="mt-2 text-sm text-white/40">
             Copy a tracked link for each platform. Analytics will credit the visit to that source.
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
             {TRACKED_BIO_PLATFORMS.map((platform) => (
               <Button
                 key={platform}
                 type="button"
                 variant="secondary"
-                size="sm"
+                className="min-h-11 w-full justify-between sm:w-auto"
                 onClick={() => void copyTracked(platform)}
               >
                 {copiedFor === platform ? "Copied" : `Copy for ${TRAFFIC_SOURCE_LABELS[platform]}`}

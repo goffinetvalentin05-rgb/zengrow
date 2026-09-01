@@ -62,12 +62,12 @@ export function AnalyticsView({
     <div className="mx-auto w-full max-w-4xl pb-10">
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-[family-name:var(--font-zg-display)] text-4xl text-white">Analytics</h1>
+          <h1 className="sz-display">Analytics</h1>
           <p className="mt-2 max-w-md text-sm text-white/45">
             Aggregated visibility only. We never show who visited your profile.
           </p>
         </div>
-        <div className="flex rounded-full border border-white/[0.08] bg-white/[0.03] p-1">
+        <div className="flex flex-wrap rounded-full border border-white/[0.08] bg-white/[0.03] p-1">
           {ANALYTICS_RANGES.map((item) => (
             <button
               key={item}
@@ -75,7 +75,7 @@ export function AnalyticsView({
               onClick={() => setRange(item)}
               disabled={pending}
               className={cn(
-                "min-w-12 rounded-full px-3 py-1.5 text-xs tracking-[0.12em] text-white/40 transition-colors",
+                "min-h-11 min-w-12 rounded-full px-3 text-xs tracking-[0.12em] text-white/40 transition-colors",
                 range === item && "bg-white text-zinc-950",
               )}
             >

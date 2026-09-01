@@ -47,7 +47,7 @@ export function DiscoveryShell({
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <main
                 id="discovery-scroll"
-                className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-0 pb-28 pt-4 md:px-10 md:pb-14 md:pt-8"
+                className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-0 pb-[var(--sz-nav-pad)] pt-[max(1rem,env(safe-area-inset-top))] md:px-10 md:pb-14 md:pt-8"
               >
                 {children}
               </main>

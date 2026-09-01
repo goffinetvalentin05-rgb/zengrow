@@ -215,7 +215,7 @@ export function OnboardingFlow({
           ) : (
             <span />
           )}
-          <Button type="button" className="sz-press min-w-[9.5rem]" disabled={!canContinue || pending} onClick={continueStep}>
+          <Button type="button" className="sz-press min-h-11 min-w-[9.5rem]" disabled={!canContinue || pending} onClick={continueStep}>
             {pending ? "Saving…" : draft.step === "appearance" ? "Start discovering" : "Continue"}
           </Button>
         </div>

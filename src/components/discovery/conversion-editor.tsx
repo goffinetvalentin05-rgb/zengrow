@@ -206,32 +206,32 @@ function BlockList({ blocks, isPro }: { blocks: ProfileBlock[]; isPro: boolean }
     <div className="space-y-3">
       {blocks.map((block, index) => (
         <div key={block.id} className="rounded-[1.25rem] bg-white/[0.03] px-4 py-3.5 ring-1 ring-white/[0.06]">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
+        <div className="flex flex-col gap-2">
+          <div className="min-w-0">
               <p className="text-sm text-white">{block.title || PROFILE_BLOCK_TYPE_LABELS[block.blockType as ProfileBlockType] || block.blockType}</p>
               <p className="mt-1 text-xs text-white/40">
                 {PROFILE_BLOCK_TYPE_LABELS[block.blockType as ProfileBlockType] ?? block.blockType}
                 {block.isActive ? " · Active" : " · Off"}
               </p>
             </div>
-            <div className="flex shrink-0 flex-wrap justify-end gap-3 text-xs text-white/40">
-              <button type="button" onClick={() => setEditing(block)} disabled={!isPro}>
+            <div className="flex flex-wrap gap-1 text-xs text-white/40">
+              <button type="button" className="min-h-11 px-2" onClick={() => setEditing(block)} disabled={!isPro}>
                 Edit
               </button>
               {index > 0 ? (
-                <button type="button" onClick={() => void move(block.id, -1)} disabled={!isPro}>
+                <button type="button" className="min-h-11 px-2" onClick={() => void move(block.id, -1)} disabled={!isPro}>
                   Up
                 </button>
               ) : null}
               {index < blocks.length - 1 ? (
-                <button type="button" onClick={() => void move(block.id, 1)} disabled={!isPro}>
+                <button type="button" className="min-h-11 px-2" onClick={() => void move(block.id, 1)} disabled={!isPro}>
                   Down
                 </button>
               ) : null}
-              <button type="button" onClick={() => void toggle(block)} disabled={!isPro && !block.isActive}>
+              <button type="button" className="min-h-11 px-2" onClick={() => void toggle(block)} disabled={!isPro && !block.isActive}>
                 {block.isActive ? "Disable" : "Enable"}
               </button>
-              <button type="button" onClick={() => void remove(block.id)}>
+              <button type="button" className="min-h-11 px-2" onClick={() => void remove(block.id)}>
                 Delete
               </button>
             </div>

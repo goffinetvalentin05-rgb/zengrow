@@ -147,7 +147,7 @@ export function PublicProfileView({
   return (
     <div className="relative isolate min-h-[calc(100dvh-5.5rem)] w-full md:min-h-[calc(100dvh-3.5rem)]">
       <ProfilePageBackdrop pageKey={profile.pageBackgroundKey} imageUrl={profile.pageBackgroundImageUrl} />
-      <div className="sz-app relative z-10 mx-auto w-full max-w-[520px] pb-20" style={profileThemeVars(theme, profile.accentColor)}>
+      <div className="sz-app relative z-10 mx-auto w-full max-w-[520px] pb-[var(--sz-nav-pad)]" style={profileThemeVars(theme, profile.accentColor)}>
       <header className="relative">
         <div className="relative h-[10.5rem] overflow-hidden sm:h-[12rem]">
           {profile.coverImageUrl ? (

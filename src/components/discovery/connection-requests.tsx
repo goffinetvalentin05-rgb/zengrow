@@ -44,22 +44,24 @@ export function ConnectionRequests({
           const href = profile.username ? profileHref(profile.username) : "#";
           const role = profile.roleLabel || profile.primaryCategory?.name;
           return (
-            <li key={id} className="flex items-center gap-3">
-              <Link href={href} className="shrink-0">
-                <DiscoveryAvatar name={profile.displayName} src={profile.avatarUrl} size="md" />
-              </Link>
-              <Link href={href} className="min-w-0 flex-1">
-                <p className="truncate text-[15px] text-white">{profile.displayName}</p>
-                {role ? <p className="truncate text-sm text-white/40">{role}</p> : null}
-              </Link>
+            <li key={id} className="flex flex-col gap-3 border-b border-white/[0.05] pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:border-0 sm:pb-0">
+              <div className="flex min-w-0 items-center gap-3">
+                <Link href={href} className="shrink-0">
+                  <DiscoveryAvatar name={profile.displayName} src={profile.avatarUrl} size="md" />
+                </Link>
+                <Link href={href} className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] text-white">{profile.displayName}</p>
+                  {role ? <p className="truncate text-sm text-white/40">{role}</p> : null}
+                </Link>
+              </div>
               <div className="flex shrink-0 items-center gap-2">
-                <Button type="button" size="sm" onClick={() => void respond(profile.id, id, "accept")}>
+                <Button type="button" className="min-h-11 flex-1 sm:flex-none" onClick={() => void respond(profile.id, id, "accept")}>
                   Accept
                 </Button>
                 <Button
                   type="button"
-                  size="sm"
                   variant="secondary"
+                  className="min-h-11 flex-1 sm:flex-none"
                   onClick={() => void respond(profile.id, id, "decline")}
                 >
                   Decline

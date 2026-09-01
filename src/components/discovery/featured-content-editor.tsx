@@ -13,6 +13,7 @@ import {
 import { resolveFeaturedThumbnail, youtubeThumbnailUrl } from "@/src/lib/discovery/media";
 import type { FeaturedContent } from "@/src/lib/discovery/types";
 import { FeaturedContentCard } from "@/src/components/discovery/featured-content-card";
+import { DiscoverySheet } from "@/src/components/discovery/mobile-sheet";
 import { createClient } from "@/src/lib/supabase/client";
 
 export function FeaturedContentEditor({ profileId, items }: { profileId: string; items: FeaturedContent[] }) {
@@ -54,21 +55,21 @@ export function FeaturedContentEditor({ profileId, items }: { profileId: string;
       {items.map((item, index) => (
         <div key={item.id} className="space-y-2">
           <FeaturedContentCard item={item} />
-          <div className="flex gap-3 text-xs text-white/40">
-            <button type="button" onClick={() => { setEditing(item); setOpen(true); }}>
+          <div className="flex flex-wrap gap-1 text-xs text-white/40">
+            <button type="button" className="min-h-11 px-2" onClick={() => { setEditing(item); setOpen(true); }}>
               Edit
             </button>
             {index > 0 ? (
-              <button type="button" onClick={() => move(item.id, -1)}>
+              <button type="button" className="min-h-11 px-2" onClick={() => move(item.id, -1)}>
                 Up
               </button>
             ) : null}
             {index < items.length - 1 ? (
-              <button type="button" onClick={() => move(item.id, 1)}>
+              <button type="button" className="min-h-11 px-2" onClick={() => move(item.id, 1)}>
                 Down
               </button>
             ) : null}
-            <button type="button" onClick={() => remove(item.id)}>
+            <button type="button" className="min-h-11 px-2" onClick={() => remove(item.id)}>
               Delete
             </button>
           </div>
@@ -78,6 +79,7 @@ export function FeaturedContentEditor({ profileId, items }: { profileId: string;
         <Button
           type="button"
           variant="secondary"
+          className="min-h-11"
           onClick={() => {
             setEditing(null);
             setOpen(true);
@@ -163,24 +165,23 @@ function FeaturedModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 md:items-center md:p-6">
-      <form
-        onSubmit={submit}
-        className="sz-sheet w-full max-w-md rounded-t-3xl bg-[#121214] p-5 md:rounded-3xl"
-      >
-        <div className="mb-5 flex items-center justify-between">
-          <h3 className="sz-title">
-            {item ? "Edit content" : "Add content"}
-          </h3>
-          <button type="button" className="text-sm text-white/40" onClick={onClose}>
-            Close
-          </button>
-        </div>
-        <label className="mb-3 block text-[11px] uppercase tracking-[0.14em] text-white/40">Platform</label>
+    <DiscoverySheet
+      open
+      title={item ? "Edit content" : "Add content"}
+      onClose={onClose}
+      labelledBy="sz-featured-title"
+      footer={
+        <Button type="submit" form="sz-featured-form" className="min-h-11 w-full" disabled={pending}>
+          {pending ? "Saving…" : "Save"}
+        </Button>
+      }
+    >
+      <form id="sz-featured-form" onSubmit={submit} className="space-y-3 pb-2">
+        <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">Platform</label>
         <select
           value={platform}
           onChange={(event) => setPlatform(event.target.value as FeaturedPlatform)}
-          className="sz-focus mb-4 h-11 w-full rounded-2xl border border-white/[0.08] bg-[#0c0c0e] px-3 text-sm text-white outline-none"
+          className="sz-focus h-11 w-full rounded-2xl border border-white/[0.08] bg-[#0c0c0e] px-3 text-sm text-white outline-none"
         >
           {FEATURED_PLATFORMS.map((value) => (
             <option key={value} value={value}>
@@ -190,9 +191,9 @@ function FeaturedModal({
         </select>
         <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">URL</label>
         <Input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://" required />
-        <label className="mb-2 mt-4 block text-[11px] uppercase tracking-[0.14em] text-white/40">Title</label>
+        <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">Title</label>
         <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Optional" />
-        <label className="mb-2 mt-4 block text-[11px] uppercase tracking-[0.14em] text-white/40">
+        <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">
           Thumbnail {platform === "youtube" ? "(auto from YouTube)" : "(optional)"}
         </label>
         <input
@@ -211,19 +212,16 @@ function FeaturedModal({
             onChange={(event) => setThumbnailUrl(event.target.value)}
             placeholder={autoThumb ? "Using YouTube thumbnail" : "Upload or paste URL"}
           />
-          <Button type="button" variant="secondary" onClick={() => fileRef.current?.click()}>
+          <Button type="button" variant="secondary" className="min-h-11 shrink-0" onClick={() => fileRef.current?.click()}>
             Upload
           </Button>
         </div>
-        {uploadError ? <p className="mt-2 text-sm text-red-300">{uploadError}</p> : null}
+        {uploadError ? <p className="text-sm text-red-300">{uploadError}</p> : null}
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="" className="mt-4 aspect-video w-full rounded-2xl object-cover" />
+          <img src={preview} alt="" className="aspect-video w-full rounded-2xl object-cover" />
         ) : null}
-        <Button type="submit" className="mt-5 w-full" disabled={pending}>
-          {pending ? "Saving…" : "Save"}
-        </Button>
       </form>
-    </div>
+    </DiscoverySheet>
   );
 }

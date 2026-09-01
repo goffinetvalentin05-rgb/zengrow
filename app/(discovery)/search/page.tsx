@@ -31,7 +31,7 @@ export default async function SearchPage({
       <h1 className="sz-display">Search</h1>
       <p className="sz-sub">Find a person, a project, or a niche.</p>
       <div className="mt-6">
-        <DiscoverySearchBar defaultValue={q} autoFocus />
+        <DiscoverySearchBar defaultValue={q} />
       </div>
 
       {idle ? (

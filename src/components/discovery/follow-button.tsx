@@ -67,7 +67,7 @@ export function FollowButton({
       disabled={pending}
       aria-pressed={following}
       style={following ? undefined : style}
-      className={cn("sz-press min-w-[5.5rem] rounded-2xl", className)}
+      className={cn("sz-press min-h-11 min-w-[5.5rem] rounded-2xl", className)}
     >
       <span key={following ? "on" : "off"} className="sz-copied inline-block">
         {following ? "Following" : "Follow"}

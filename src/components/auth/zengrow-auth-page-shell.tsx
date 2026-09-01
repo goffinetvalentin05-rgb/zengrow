@@ -71,7 +71,7 @@ export function AuthVisualPanel({ intent = "login" }: { intent?: AuthLayoutInten
   const copy = VISUAL[intent];
 
   return (
-    <aside className="zg-auth-visual flex flex-col justify-start gap-8 px-6 py-8 sm:px-9 sm:py-10 lg:gap-8 lg:px-11 lg:py-14">
+    <aside className="zg-auth-visual hidden flex-col justify-start gap-6 px-6 py-5 sm:gap-8 sm:px-9 sm:py-10 lg:flex lg:gap-8 lg:px-11 lg:py-14">
       <div className="zg-auth-visual__inner flex flex-col items-start">
         <Link href="/" className="inline-flex w-fit items-center" aria-label="Sharpz — accueil">
           <LandingWordmark className="zg-auth-visual__logo" priority />

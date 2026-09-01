@@ -230,7 +230,7 @@ export function ProfileDiscoveryCard({
           <Link
             href={href}
             onClick={() => openProfile(profile, source)}
-            className="sz-press inline-flex min-h-9 items-center rounded-2xl border border-white/[0.1] bg-white/[0.04] px-4 text-[13px] text-white/70 hover:border-white/18 hover:text-white"
+            className="sz-press inline-flex min-h-11 items-center rounded-2xl border border-white/[0.1] bg-white/[0.04] px-4 text-[13px] text-white/70 hover:border-white/18 hover:text-white"
           >
             View profile
           </Link>
