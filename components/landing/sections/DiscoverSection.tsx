@@ -1,43 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { NicheExploreScene } from "../mockups/NicheExploreScene";
 import { useLocale } from "../locale-provider";
 import { Container, Eyebrow, ScrollReveal, Section, SectionLead, SectionTitle } from "../ui";
 
 export function DiscoverSection() {
   const { t } = useLocale();
-  const [niche, setNiche] = useState(0);
   const [filter, setFilter] = useState(2);
 
   return (
     <Section id="explore">
       <Container>
-        <ScrollReveal className="go-section-head">
-          <Eyebrow>{t.discover.label}</Eyebrow>
-          <SectionTitle>{t.discover.title}</SectionTitle>
-          <SectionLead>{t.discover.subtitle}</SectionLead>
-        </ScrollReveal>
+        <div className="go-explore" id="categories">
+          <ScrollReveal className="go-explore__copy">
+            <Eyebrow>{t.discover.label}</Eyebrow>
+            <SectionTitle>{t.discover.title}</SectionTitle>
+            <SectionLead>{t.discover.subtitle}</SectionLead>
+          </ScrollReveal>
 
-        <ScrollReveal className="go-discover" y={22}>
-          <div className="go-discover__niches" id="categories">
-            <span className="go-discover__niches-label">{t.discover.categoryLabel}</span>
-            <div className="go-discover__niches-track" role="tablist" aria-label={t.discover.categoryLabel}>
-              {t.discover.niches.map((item, index) => (
-                <button
-                  key={item}
-                  type="button"
-                  role="tab"
-                  aria-selected={index === niche}
-                  className={index === niche ? "is-on" : undefined}
-                  onClick={() => setNiche(index)}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
+          <ScrollReveal className="go-explore__visual" delay={0.1} y={24}>
+            <NicheExploreScene />
+          </ScrollReveal>
+        </div>
 
+        <ScrollReveal className="go-discover go-discover--preview" y={22}>
           <div className="go-discover__bar">
+            <div className="go-discover__category">
+              <span>{t.discover.categoryLabel}</span>
+              <strong>{t.discover.categoryValue}</strong>
+            </div>
             <div className="go-discover__filters" aria-label="Filters">
               {t.discover.filters.map((item, index) => (
                 <button

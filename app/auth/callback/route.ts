@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get("code");
   const oauthError = url.searchParams.get("error");
   const loginError = new URL("/pro/login?error=oauth", origin);
-  const dashboardUrl = new URL("/dashboard", origin);
+  const dashboardUrl = new URL("/explore", origin);
 
   if (oauthError || !code) {
     return NextResponse.redirect(loginError);

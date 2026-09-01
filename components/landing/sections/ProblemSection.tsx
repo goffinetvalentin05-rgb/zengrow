@@ -27,7 +27,7 @@ export function ProblemSection() {
         <ScrollReveal className="go-mind" y={22}>
           <figure className="go-mind__frame">
             <Image
-              src="/landing/problem-mind-names.png"
+              src="/landing/problem-mind-ref.png"
               alt={t.problem.visualAlt}
               fill
               sizes="(max-width: 880px) 100vw, 72rem"

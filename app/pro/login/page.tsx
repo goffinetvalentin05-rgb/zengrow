@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthCard, ZenGrowAuthLayout } from "@/src/components/auth/zengrow-auth-page-shell";
 import { createClient } from "@/src/lib/supabase/client";
+import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
 import {
   authErrorClassName,
   authFieldLabel,
@@ -40,20 +41,9 @@ export default function LoginPage() {
       return;
     }
 
-    const bootstrapResponse = await fetch("/api/bootstrap-restaurant", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    });
-
-    if (!bootstrapResponse.ok) {
-      const data = (await bootstrapResponse.json().catch(() => ({}))) as { error?: string };
-      setError(data.error ?? "Impossible de préparer votre espace.");
-      setIsLoading(false);
-      return;
-    }
-
-    router.push("/dashboard");
+    const bootstrapResponse = await fetch("/api/discovery/bootstrap", { method: "POST" });
+    const payload = (await bootstrapResponse.json().catch(() => ({}))) as { onboardingCompleted?: boolean };
+    router.push(payload.onboardingCompleted ? DISCOVERY_ROUTES.explore : DISCOVERY_ROUTES.onboarding);
   }
 
   return (
@@ -61,10 +51,10 @@ export default function LoginPage() {
       <AuthCard>
         <div className="mb-8">
           <h1 className="font-[family-name:var(--font-zg-display)] text-[1.75rem] font-semibold tracking-tight text-white sm:text-[2rem]">
-            Connexion
+            Log in
           </h1>
           <p className="mt-3 max-w-[38ch] text-pretty text-sm leading-relaxed text-white/50">
-            Accédez à votre Growth Operating System Sharpz.
+            Continue discovering people worth knowing.
           </p>
         </div>
 
@@ -77,7 +67,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="vous@restaurant.ch"
+              placeholder="you@email.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
@@ -87,7 +77,7 @@ export default function LoginPage() {
 
           <div className="mt-5">
             <label htmlFor="password" className={authFieldLabel}>
-              Mot de passe
+              Password
             </label>
             <Input
               id="password"
@@ -101,14 +91,14 @@ export default function LoginPage() {
             />
             <div className="mt-2.5 flex justify-end">
               <Link href="/pro/forgot-password" className={cn("text-xs", authLinkClassName)}>
-                Mot de passe oublié ?
+                Forgot password?
               </Link>
             </div>
           </div>
 
           <div className="mt-8">
             <Button type="submit" disabled={isLoading} size="lg" variant="ghost" className={authSubmitClassName}>
-              {isLoading ? "Connexion en cours…" : "Se connecter"}
+              {isLoading ? "Signing in…" : "Log in"}
             </Button>
           </div>
         </form>
@@ -118,9 +108,9 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-6 text-sm text-white/45">
-          Pas encore de compte ?{" "}
-          <Link href="/pro/signup" className={authLinkClassName}>
-            Créer mon espace
+          No account yet?{" "}
+          <Link href={DISCOVERY_ROUTES.signup} className={authLinkClassName}>
+            Create your Sharpz
           </Link>
         </p>
       </AuthCard>

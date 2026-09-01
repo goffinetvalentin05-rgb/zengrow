@@ -73,6 +73,8 @@ export type LandingDictionary = {
     title: string;
     subtitle: string;
     categoryLabel: string;
+    categoryValue: string;
+    /** Order drives dome placement: first 8 on the back ring, last 4 in front. */
     niches: string[];
     filters: string[];
     viewProfile: string;

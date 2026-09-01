@@ -1,20 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isOwnerEmail } from "@/src/lib/access";
+import { DISCOVERY_ROUTES, isDiscoveryAuthPath } from "@/src/lib/discovery/routes";
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request: { headers: request.headers },
   });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return response;
-  }
+  if (!supabaseUrl || !supabaseAnonKey) return response;
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -33,51 +28,27 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const isRestaurantPath = pathname.startsWith("/dashboard") || pathname === "/billing" || pathname.startsWith("/billing/");
+  const isLegacyApp = pathname.startsWith("/dashboard") || pathname === "/billing" || pathname.startsWith("/billing/");
+  const needsAuth = isDiscoveryAuthPath(pathname) || isLegacyApp;
 
-  if (!isRestaurantPath) {
-    return response;
-  }
+  if (!needsAuth) return response;
 
   if (!user) {
-    return NextResponse.redirect(new URL("/pro/login", request.url));
+    return NextResponse.redirect(new URL(DISCOVERY_ROUTES.login, request.url));
   }
 
-  const isBillingPage = pathname.startsWith("/billing");
-
-  const { data: restaurant } = await supabase
-    .from("restaurants")
-    .select("id, subscription_status, trial_end_date, stripe_subscription_id")
-    .eq("owner_id", user.id)
-    .maybeSingle();
-
-  if (!restaurant) {
-    return response;
+  if (isLegacyApp) {
+    return NextResponse.redirect(new URL(DISCOVERY_ROUTES.explore, request.url));
   }
 
-  let status = restaurant.subscription_status;
-  const trialEndDateMs = restaurant.trial_end_date ? new Date(restaurant.trial_end_date).getTime() : null;
-  const shouldExpireTrial =
-    status === "trial" && Boolean(trialEndDateMs && trialEndDateMs <= Date.now() && !restaurant.stripe_subscription_id);
-
-  if (shouldExpireTrial) {
-    status = "expired";
-    await supabase.from("restaurants").update({ subscription_status: "expired" }).eq("id", restaurant.id);
-  }
-
-  if (status === "expired" && !isBillingPage && !isOwnerEmail(user.email)) {
-    return NextResponse.redirect(new URL("/billing", request.url));
-  }
-
-  if (pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/onboarding")) {
-    const { data: saas, error: saasError } = await supabase
-      .from("user_saas")
+  if (pathname !== DISCOVERY_ROUTES.onboarding && !pathname.startsWith(`${DISCOVERY_ROUTES.onboarding}/`)) {
+    const { data: profile, error } = await supabase
+      .from("profiles")
       .select("onboarding_completed")
-      .eq("restaurant_id", restaurant.id)
+      .eq("user_id", user.id)
       .maybeSingle();
-
-    if (!saasError && (!saas || saas.onboarding_completed !== true)) {
-      return NextResponse.redirect(new URL("/dashboard/onboarding", request.url));
+    if (!error && (!profile || profile.onboarding_completed !== true)) {
+      return NextResponse.redirect(new URL(DISCOVERY_ROUTES.onboarding, request.url));
     }
   }
 
@@ -85,5 +56,26 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/billing"],
+  matcher: [
+    "/dashboard/:path*",
+    "/billing",
+    "/explore/:path*",
+    "/explore",
+    "/following/:path*",
+    "/following",
+    "/saved/:path*",
+    "/saved",
+    "/me/:path*",
+    "/me",
+    "/analytics/:path*",
+    "/analytics",
+    "/settings/:path*",
+    "/settings",
+    "/onboarding/:path*",
+    "/onboarding",
+    "/search/:path*",
+    "/search",
+    "/admin/:path*",
+    "/admin",
+  ],
 };

@@ -20,7 +20,7 @@ export function getPriceIdForPlan(plan: SubscriptionPlan) {
     return process.env.STRIPE_STARTER_PRICE_ID ?? "";
   }
   if (plan === "pro") {
-    return process.env.STRIPE_PRO_PRICE_ID ?? "";
+    return process.env.STRIPE_SHARPZ_PRO_PRICE_ID || process.env.STRIPE_PRO_PRICE_ID || "";
   }
   return "";
 }
@@ -28,6 +28,7 @@ export function getPriceIdForPlan(plan: SubscriptionPlan) {
 export function getPlanFromPriceId(priceId: string): SubscriptionPlan {
   if (!priceId) return null;
   if (priceId === process.env.STRIPE_STARTER_PRICE_ID) return "starter";
+  if (priceId === process.env.STRIPE_SHARPZ_PRO_PRICE_ID) return "pro";
   if (priceId === process.env.STRIPE_PRO_PRICE_ID) return "pro";
   return null;
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthCard, ZenGrowAuthLayout } from "@/src/components/auth/zengrow-auth-page-shell";
 import { createClient } from "@/src/lib/supabase/client";
-import { slugifyRestaurantName } from "@/src/lib/utils";
+import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
 import {
   authErrorClassName,
   authFieldLabel,
@@ -18,7 +18,7 @@ import Input from "@/src/components/ui/input";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [restaurantName, setRestaurantName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -32,16 +32,11 @@ export default function SignupPage() {
     setInfo(null);
     setIsLoading(true);
 
-    const slug = slugifyRestaurantName(restaurantName);
-
     const { data: signupData, error: signupError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          restaurant_name: restaurantName,
-          restaurant_slug: slug,
-        },
+        data: { full_name: fullName.trim() },
       },
     });
 
@@ -52,29 +47,13 @@ export default function SignupPage() {
     }
 
     if (!signupData.session) {
-      setInfo("Compte créé. Confirmez votre e-mail puis connectez-vous pour accéder à votre espace.");
+      setInfo("Account created. Confirm your email, then log in to finish your Sharpz profile.");
       setIsLoading(false);
       return;
     }
 
-    const bootstrapResponse = await fetch("/api/bootstrap-restaurant", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        restaurantName,
-        requestedSlug: slug,
-        email,
-      }),
-    });
-
-    if (!bootstrapResponse.ok) {
-      const data = (await bootstrapResponse.json().catch(() => ({}))) as { error?: string };
-      setError(data.error ?? "Impossible de créer le restaurant.");
-      setIsLoading(false);
-      return;
-    }
-
-    router.push("/dashboard/onboarding");
+    await fetch("/api/discovery/bootstrap", { method: "POST" });
+    router.push(DISCOVERY_ROUTES.onboarding);
   }
 
   return (
@@ -82,34 +61,30 @@ export default function SignupPage() {
       <AuthCard>
         <div className="mb-8">
           <h1 className="font-[family-name:var(--font-zg-display)] text-[1.75rem] font-semibold tracking-tight text-white sm:text-[2rem]">
-            Créer votre espace
+            Create your Sharpz
           </h1>
           <p className="mt-3 max-w-[38ch] text-pretty text-sm leading-relaxed text-white/50">
-            Trois champs suffisent pour démarrer. Sharpz analysera ensuite votre SaaS.
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-white/35">
-            Aucune carte bancaire requise. Essai gratuit de 14 jours.
+            A public profile for what you’re building — and a way to discover people in your world.
           </p>
         </div>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="restaurantName" className={authFieldLabel}>
-              Nom de votre SaaS
+            <label htmlFor="fullName" className={authFieldLabel}>
+              Name
             </label>
             <Input
-              id="restaurantName"
-              value={restaurantName}
-              onChange={(event) => setRestaurantName(event.target.value)}
+              id="fullName"
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
               className={authInputClassName}
-              placeholder="Mon SaaS"
+              placeholder="Maya Chen"
               required
             />
           </div>
-
           <div>
             <label htmlFor="email" className={authFieldLabel}>
-              Email professionnel
+              Email
             </label>
             <Input
               id="email"
@@ -118,14 +93,13 @@ export default function SignupPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className={authInputClassName}
-              placeholder="vous@startup.com"
+              placeholder="you@email.com"
               required
             />
           </div>
-
           <div>
             <label htmlFor="password" className={authFieldLabel}>
-              Mot de passe
+              Password
             </label>
             <Input
               id="password"
@@ -134,20 +108,15 @@ export default function SignupPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className={authInputClassName}
-              placeholder="Au moins 6 caractères"
+              placeholder="At least 6 characters"
               required
               minLength={6}
             />
           </div>
-
           <Button type="submit" disabled={isLoading} size="lg" variant="ghost" className={authSubmitClassName}>
-            {isLoading ? "Création…" : "Créer mon espace"}
+            {isLoading ? "Creating…" : "Create account"}
           </Button>
         </form>
-
-        <p className="mt-5 text-xs leading-relaxed text-white/35">
-          Canaux, objectifs et analyse : tout se complète ensuite dans l’onboarding Sharpz.
-        </p>
 
         {error ? <p className={authErrorClassName + " mt-4"}>{error}</p> : null}
         {info ? (
@@ -157,9 +126,9 @@ export default function SignupPage() {
         ) : null}
 
         <p className="mt-6 text-sm text-white/45">
-          Déjà un compte ?{" "}
-          <Link href="/pro/login" className={authLinkClassName}>
-            Se connecter
+          Already have an account?{" "}
+          <Link href={DISCOVERY_ROUTES.login} className={authLinkClassName}>
+            Log in
           </Link>
         </p>
       </AuthCard>

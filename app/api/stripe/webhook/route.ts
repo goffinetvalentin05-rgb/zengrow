@@ -11,6 +11,11 @@ function getWebhookSecret() {
   return secret;
 }
 
+function periodEnd(subscription: Stripe.Subscription) {
+  const raw = (subscription as Stripe.Subscription & { current_period_end?: number }).current_period_end;
+  return typeof raw === "number" ? raw : null;
+}
+
 async function markRestaurantActive(input: {
   restaurantId: string;
   subscriptionId: string;
@@ -29,7 +34,7 @@ async function markRestaurantActive(input: {
     .eq("id", input.restaurantId);
 }
 
-async function markSubscriptionStatus(input: {
+async function markRestaurantSubscriptionStatus(input: {
   subscriptionId: string;
   customerId: string | null;
   plan: "starter" | "pro" | null;
@@ -45,6 +50,28 @@ async function markSubscriptionStatus(input: {
       stripe_subscription_id: input.subscriptionId,
     })
     .eq("stripe_subscription_id", input.subscriptionId);
+}
+
+async function markDiscoverySubscription(input: {
+  userId?: string | null;
+  subscriptionId: string;
+  customerId: string | null;
+  status: "active" | "canceled" | "past_due" | "inactive";
+  periodEnd?: number | null;
+}) {
+  const supabase = createAdminClient();
+  const patch = {
+    plan: (input.status === "active" ? "pro" : "free") as "pro" | "free",
+    status: input.status,
+    stripe_customer_id: input.customerId,
+    stripe_subscription_id: input.subscriptionId,
+    current_period_end: input.periodEnd ? new Date(input.periodEnd * 1000).toISOString() : null,
+  };
+  if (input.userId) {
+    await supabase.from("user_subscriptions").upsert({ user_id: input.userId, ...patch }, { onConflict: "user_id" });
+    return;
+  }
+  await supabase.from("user_subscriptions").update(patch).eq("stripe_subscription_id", input.subscriptionId);
 }
 
 export async function POST(request: Request) {
@@ -70,22 +97,27 @@ export async function POST(request: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const subscriptionId = typeof session.subscription === "string" ? session.subscription : null;
     const customerId = typeof session.customer === "string" ? session.customer : null;
-    const restaurantId = session.metadata?.restaurant_id ?? session.client_reference_id ?? null;
-    const planRaw = session.metadata?.selected_plan;
-    let plan: "starter" | "pro" | null = planRaw === "starter" || planRaw === "pro" ? planRaw : null;
+    const product = session.metadata?.product;
+    const userId = session.metadata?.user_id ?? null;
 
-    if (!plan && session.mode === "subscription" && session.line_items?.data?.length) {
-      const priceId = session.line_items.data[0]?.price?.id ?? "";
-      plan = getPlanFromPriceId(priceId);
-    }
-
-    if (restaurantId && subscriptionId && customerId) {
-      await markRestaurantActive({
-        restaurantId,
+    if (product === "sharpz_discovery" && subscriptionId && customerId && userId) {
+      await markDiscoverySubscription({
+        userId,
         subscriptionId,
         customerId,
-        plan,
+        status: "active",
       });
+    } else {
+      const restaurantId = session.metadata?.restaurant_id ?? session.client_reference_id ?? null;
+      const planRaw = session.metadata?.selected_plan;
+      let plan: "starter" | "pro" | null = planRaw === "starter" || planRaw === "pro" ? planRaw : null;
+      if (!plan && session.mode === "subscription" && session.line_items?.data?.length) {
+        const priceId = session.line_items.data[0]?.price?.id ?? "";
+        plan = getPlanFromPriceId(priceId);
+      }
+      if (restaurantId && subscriptionId && customerId) {
+        await markRestaurantActive({ restaurantId, subscriptionId, customerId, plan });
+      }
     }
   }
 
@@ -93,17 +125,32 @@ export async function POST(request: Request) {
     const subscription = event.data.object as Stripe.Subscription;
     const subscriptionId = subscription.id;
     const customerId = typeof subscription.customer === "string" ? subscription.customer : null;
-    const priceId = subscription.items.data[0]?.price?.id ?? "";
-    const plan = getPlanFromPriceId(priceId);
-    const status =
-      subscription.status === "active" || subscription.status === "trialing" ? "active" : "expired";
+    const product = subscription.metadata?.product;
+    const userId = subscription.metadata?.user_id ?? null;
+    const mapped =
+      subscription.status === "active" || subscription.status === "trialing"
+        ? "active"
+        : subscription.status === "past_due"
+          ? "past_due"
+          : subscription.status === "canceled"
+            ? "canceled"
+            : "inactive";
 
-    await markSubscriptionStatus({
-      subscriptionId,
-      customerId,
-      plan,
-      status,
-    });
+    if (product === "sharpz_discovery" || userId) {
+      await markDiscoverySubscription({
+        userId,
+        subscriptionId,
+        customerId,
+        status: mapped,
+        periodEnd: periodEnd(subscription),
+      });
+    } else {
+      const priceId = subscription.items.data[0]?.price?.id ?? "";
+      const plan = getPlanFromPriceId(priceId);
+      const status =
+        subscription.status === "active" || subscription.status === "trialing" ? "active" : "expired";
+      await markRestaurantSubscriptionStatus({ subscriptionId, customerId, plan, status });
+    }
   }
 
   return NextResponse.json({ received: true });

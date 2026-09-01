@@ -41,12 +41,11 @@ const dancingScript = Dancing_Script({
 
 export const metadata: Metadata = {
   title: {
-    default: "ZenGrow",
-    template: "%s | ZenGrow",
+    default: "Sharpz",
+    template: "%s | Sharpz",
   },
-  description:
-    "ZenGrow — plateforme IA pour restaurants : plus de réservations, relances clients, campagnes marketing et avis Google automatisés.",
-  applicationName: "ZenGrow",
+  description: "Discover people worth knowing, organized by niche.",
+  applicationName: "Sharpz",
 };
 
 export default function RootLayout({

@@ -19,26 +19,26 @@ type AuthVisualCopy = {
 
 const VISUAL: Record<AuthLayoutIntent, AuthVisualCopy> = {
   login: {
-    badge: "Growth OS",
-    title: "Sachez quoi faire ensuite.",
+    badge: "Discovery",
+    title: "People worth knowing, by niche.",
     subtitle:
-      "Sharpz comprend votre SaaS, priorise vos actions et mesure ce qui fonctionne vraiment.",
+      "Sharpz organizes builders, creators and operators so you can discover them before they are everywhere.",
     steps: [
-      "Connectez-vous à votre espace",
-      "Retrouvez votre dashboard Sharpz",
-      "Agissez sur vos priorités du jour",
+      "Log in to your Sharpz",
+      "Explore niches that matter to you",
+      "Follow people who are actually building",
     ],
     activeStep: 0,
   },
   signup: {
-    badge: "Nouveau compte",
-    title: "Votre système de croissance, en quelques minutes.",
+    badge: "New profile",
+    title: "Create your Sharpz in a few minutes.",
     subtitle:
-      "Onboarding guidé, analyse de votre site, puis un plan d’actions priorisé.",
+      "Choose your worlds, say what you’re building, and get discovered.",
     steps: [
-      "Créez votre espace",
-      "Analysez votre SaaS",
-      "Recevez vos premières actions",
+      "Create your account",
+      "Pick your niches",
+      "Start exploring people",
     ],
     activeStep: 0,
   },
