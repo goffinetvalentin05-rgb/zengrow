@@ -4,6 +4,8 @@ export const PROFILE_TYPES = [
   "creator",
   "operator",
   "freelancer",
+  "marketer",
+  "developer",
   "coach",
   "investor",
   "other",
@@ -17,10 +19,23 @@ export const PROFILE_TYPE_LABELS: Record<ProfileType, string> = {
   creator: "Creator",
   operator: "Operator",
   freelancer: "Freelancer",
+  marketer: "Marketer",
+  developer: "Developer",
   coach: "Coach",
   investor: "Investor",
   other: "Other",
 };
+
+export const ONBOARDING_ROLES = [
+  "founder",
+  "creator",
+  "operator",
+  "freelancer",
+  "marketer",
+  "investor",
+  "developer",
+  "other",
+] as const;
 
 export const SOCIAL_PLATFORMS = [
   "instagram",
@@ -74,15 +89,19 @@ export const FEATURED_CTA: Record<FeaturedPlatform, string> = {
   other: "Open link",
 };
 
-export const PROJECT_STATUSES = ["building", "launched", "paused", "exited"] as const;
+export const PROJECT_STATUSES = ["building", "launched", "growing", "exploring", "paused", "exited"] as const;
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   building: "Building",
   launched: "Launched",
+  growing: "Growing",
+  exploring: "Exploring",
   paused: "Paused",
   exited: "Exited",
 };
+
+export const ONBOARDING_PROJECT_STATUSES = ["building", "launched", "growing", "exploring"] as const;
 
 export const AUDIENCE_RANGES = [
   { id: "under-1k", label: "Under 1k", min: 0, max: 999 },

@@ -13,6 +13,7 @@ import { DISCOVERY_PAGE_SIZE } from "@/src/lib/discovery/constants";
 import { droppedFilterHints } from "@/src/lib/discovery/apply-filters";
 import { categoryDiscoveryHref, exploreHref, feedQueryString } from "@/src/lib/discovery/filters";
 import { readExploreScroll, rememberExploreCount, restoreExploreScroll } from "@/src/lib/discovery/track";
+import { consumeOnboardingJustFinished } from "@/src/lib/discovery/onboarding";
 import type { Category, ExploreFilters, ProfileCardModel } from "@/src/lib/discovery/types";
 
 export function ExploreView({
@@ -42,9 +43,18 @@ export function ExploreView({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
   const [filterPending, setFilterPending] = useState(false);
+  const [feedReady, setFeedReady] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
   const seen = useRef(new Set(initialProfiles.map((profile) => profile.id)));
   const paging = useRef({ offset: initialNextOffset, hasMore: initialHasMore, loading: false });
+
+  useEffect(() => {
+    if (source !== "explore") return;
+    if (!consumeOnboardingJustFinished()) return;
+    setFeedReady(true);
+    const timer = window.setTimeout(() => setFeedReady(false), 2800);
+    return () => window.clearTimeout(timer);
+  }, [source]);
 
   useEffect(() => {
     setProfiles(initialProfiles);
@@ -160,6 +170,7 @@ export function ExploreView({
     <div className="pb-8">
       <header className="mx-auto w-full max-w-[720px] px-5 md:mx-0 md:max-w-none md:px-0">
         <h1 className="sz-display">Discover people worth knowing.</h1>
+        {feedReady ? <p className="sz-copied mt-3 text-sm text-white/50">Your feed is ready.</p> : null}
         <p className="sz-sub">Find builders, creators and operators in the niches you care about.</p>
         <div className="mt-5">
           <DiscoverySearchBar />

@@ -9,6 +9,8 @@ export function defaultRoleLabel(profileType: ProfileType | null, categoryName: 
     if (profileType === "coach") return `${categoryName} Coach`;
     if (profileType === "investor") return `${categoryName} Investor`;
     if (profileType === "freelancer") return `${categoryName} Freelancer`;
+    if (profileType === "marketer") return `${categoryName} Marketer`;
+    if (profileType === "developer") return `${categoryName} Developer`;
   }
   if (profileType) return PROFILE_TYPE_LABELS[profileType];
   return categoryName;

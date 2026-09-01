@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import { isOwnerEmail } from "@/src/lib/access";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
+import { profileHasMinimumOnboarding } from "@/src/lib/discovery/onboarding";
 import { mapProfile, mapSubscription } from "@/src/lib/discovery/mappers";
 import type { Profile, UserSubscription } from "@/src/lib/discovery/types";
 import { createClient } from "@/src/lib/supabase/server";
-import type { User } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 export type DiscoverySession = {
   user: User;
@@ -26,6 +27,34 @@ export async function requireDiscoveryUser() {
   return user;
 }
 
+export async function maybeGrandfatherOnboarding(supabase: SupabaseClient, profile: Profile): Promise<Profile> {
+  if (profile.onboardingCompleted) return profile;
+  const { count } = await supabase
+    .from("profile_categories")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profile.id);
+  if (
+    !profileHasMinimumOnboarding({
+      onboardingCompleted: profile.onboardingCompleted,
+      username: profile.username,
+      profileType: profile.profileType,
+      nicheCount: count ?? 0,
+    })
+  ) {
+    return profile;
+  }
+  const now = new Date().toISOString();
+  await supabase
+    .from("profiles")
+    .update({
+      onboarding_completed: true,
+      onboarding_completed_at: now,
+      onboarding_step: "done",
+    })
+    .eq("id", profile.id);
+  return { ...profile, onboardingCompleted: true, onboardingStep: "done" };
+}
+
 export async function ensureDiscoveryProfile(user: User): Promise<Profile> {
   const supabase = await createClient();
   const { data: existing } = await supabase
@@ -37,9 +66,9 @@ export async function ensureDiscoveryProfile(user: User): Promise<Profile> {
   if (existing) {
     if (isOwnerEmail(user.email) && !existing.is_admin) {
       await supabase.from("profiles").update({ is_admin: true }).eq("id", existing.id);
-      return mapProfile({ ...existing, is_admin: true });
+      return maybeGrandfatherOnboarding(supabase, mapProfile({ ...existing, is_admin: true }));
     }
-    return mapProfile(existing);
+    return maybeGrandfatherOnboarding(supabase, mapProfile(existing));
   }
 
   const displayName =

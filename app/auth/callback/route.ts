@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
@@ -7,7 +8,6 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get("code");
   const oauthError = url.searchParams.get("error");
   const loginError = new URL("/pro/login?error=oauth", origin);
-  const dashboardUrl = new URL("/explore", origin);
 
   if (oauthError || !code) {
     return NextResponse.redirect(loginError);
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(loginError);
   }
 
-  const redirectResponse = NextResponse.redirect(dashboardUrl);
+  const redirectResponse = NextResponse.redirect(new URL(DISCOVERY_ROUTES.onboarding, origin));
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -37,6 +37,20 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     return NextResponse.redirect(loginError);
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (profile?.onboarding_completed === true) {
+      redirectResponse.headers.set("location", new URL(DISCOVERY_ROUTES.explore, origin).toString());
+    }
   }
 
   return redirectResponse;

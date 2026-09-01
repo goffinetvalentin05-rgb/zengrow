@@ -44,12 +44,32 @@ export async function middleware(request: NextRequest) {
   if (pathname !== DISCOVERY_ROUTES.onboarding && !pathname.startsWith(`${DISCOVERY_ROUTES.onboarding}/`)) {
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("onboarding_completed")
+      .select("id, onboarding_completed, username, profile_type")
       .eq("user_id", user.id)
       .maybeSingle();
-    if (!error && (!profile || profile.onboarding_completed !== true)) {
+    if (error) return response;
+    if (!profile) {
       return NextResponse.redirect(new URL(DISCOVERY_ROUTES.onboarding, request.url));
     }
+    if (profile.onboarding_completed === true) return response;
+    if (profile.username && profile.profile_type) {
+      const { count } = await supabase
+        .from("profile_categories")
+        .select("id", { count: "exact", head: true })
+        .eq("profile_id", profile.id);
+      if ((count ?? 0) > 0) {
+        await supabase
+          .from("profiles")
+          .update({
+            onboarding_completed: true,
+            onboarding_completed_at: new Date().toISOString(),
+            onboarding_step: "done",
+          })
+          .eq("id", profile.id);
+        return response;
+      }
+    }
+    return NextResponse.redirect(new URL(DISCOVERY_ROUTES.onboarding, request.url));
   }
 
   return response;

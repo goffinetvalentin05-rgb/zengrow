@@ -212,6 +212,23 @@
   animation: szFadeSlide 180ms var(--sz-ease);
 }
 
+.sz-step-fwd {
+  animation: szFadeSlide var(--sz-fade, 260ms) var(--sz-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.sz-step-back {
+  animation: szFadeSlideBack var(--sz-fade, 260ms) var(--sz-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+@keyframes szFadeSlideBack {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sz-app *,
   .sz-app *::before,
@@ -223,7 +240,9 @@
   }
   .sz-img,
   .sz-crossfade,
-  .sz-sheet {
+  .sz-sheet,
+  .sz-step-fwd,
+  .sz-step-back {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
