@@ -13,6 +13,12 @@ import {
   publicSlugStatusMessage,
   type PublicSlugStatus,
 } from "@/src/lib/discovery/public-link";
+import {
+  getWorkingTrackedProfileUrl,
+  TRACKED_BIO_PLATFORMS,
+  TRAFFIC_SOURCE_LABELS,
+  type TrackedBioPlatform,
+} from "@/src/lib/discovery/attribution";
 import { profileHref } from "@/src/lib/discovery/routes";
 import { normalizePublicSlug } from "@/src/lib/discovery/slug";
 import { cn } from "@/src/lib/utils";
@@ -30,6 +36,7 @@ export function SharpzLinkEditor({
   const [status, setStatus] = useState<PublicSlugStatus>(initial ? "current" : "invalid");
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedFor, setCopiedFor] = useState<TrackedBioPlatform | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -79,6 +86,13 @@ export function SharpzLinkEditor({
     await navigator.clipboard.writeText(getWorkingProfileUrl(username));
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
+  }
+
+  async function copyTracked(platform: TrackedBioPlatform) {
+    if (!username) return;
+    await navigator.clipboard.writeText(getWorkingTrackedProfileUrl(username, platform));
+    setCopiedFor(platform);
+    window.setTimeout(() => setCopiedFor((current) => (current === platform ? null : current)), 1600);
   }
 
   async function save() {
@@ -165,6 +179,30 @@ export function SharpzLinkEditor({
       <p className="mt-4 text-sm text-white/40">
         Use this link in your Instagram, TikTok, YouTube or X bio.
       </p>
+
+      {username ? (
+        <div className="mt-6 border-t border-white/[0.06] pt-5">
+          <p className="sz-label">Track your traffic</p>
+          <p className="mt-2 text-sm text-white/40">
+            Copy a tracked link for each platform. Analytics will credit the visit to that source.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {TRACKED_BIO_PLATFORMS.map((platform) => (
+              <Button
+                key={platform}
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => void copyTracked(platform)}
+              >
+                {copiedFor === platform ? "Copied" : `Copy for ${TRAFFIC_SOURCE_LABELS[platform]}`}
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {saveMessage ? <p className="mt-2 text-sm text-white/50">{saveMessage}</p> : null}
     </section>
   );

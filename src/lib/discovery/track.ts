@@ -1,4 +1,5 @@
-import { readUtmMedium, readUtmSource, referrerHostFromUrl, sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
+import { readUtmCampaign, readUtmMedium, readUtmSource, referrerHostFromUrl, sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
+import { normalizeStoredSource } from "@/src/lib/discovery/attribution";
 import type { DiscoveryEventInput } from "@/src/lib/discovery/types";
 
 const VISITOR_TOKEN_KEY = "sz_vid";
@@ -36,10 +37,14 @@ function setSessionFlag(key: string) {
 
 export function trackDiscoveryEvent(input: DiscoveryEventInput) {
   if (typeof window === "undefined") return;
-  if (input.eventType === "profile_view" && sessionFlag(`sz_view:${input.profileId}`)) return;
-  if (input.eventType === "profile_impression" && sessionFlag(`sz_imp:${input.profileId}`)) return;
-  if (input.eventType === "profile_view") setSessionFlag(`sz_view:${input.profileId}`);
-  if (input.eventType === "profile_impression") setSessionFlag(`sz_imp:${input.profileId}`);
+  const source = normalizeStoredSource(input.source);
+  const utmSource = input.utmSource ?? sanitizeTrackingPlatform(readUtmSource(window.location.search));
+  const viewKey = `sz_view:${input.profileId}:${source}:${utmSource ?? ""}`;
+  const impKey = `sz_imp:${input.profileId}:${source}`;
+  if (input.eventType === "profile_view" && sessionFlag(viewKey)) return;
+  if (input.eventType === "profile_impression" && sessionFlag(impKey)) return;
+  if (input.eventType === "profile_view") setSessionFlag(viewKey);
+  if (input.eventType === "profile_impression") setSessionFlag(impKey);
 
   const search = window.location.search;
   void fetch("/api/discovery/events", {
@@ -47,9 +52,11 @@ export function trackDiscoveryEvent(input: DiscoveryEventInput) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ...input,
+      source,
       visitorToken: getAnonymousVisitorToken(),
-      utmSource: input.utmSource ?? sanitizeTrackingPlatform(readUtmSource(search)),
+      utmSource,
       utmMedium: input.utmMedium ?? sanitizeTrackingPlatform(readUtmMedium(search)),
+      utmCampaign: input.utmCampaign ?? sanitizeTrackingPlatform(readUtmCampaign(search)),
       referrerHost: referrerHostFromUrl(document.referrer, window.location.hostname),
     }),
   });

@@ -13,6 +13,7 @@ type EventBody = {
   visitorToken?: string;
   utmSource?: string;
   utmMedium?: string;
+  utmCampaign?: string;
   referrerHost?: string;
 };
 
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
       destination: body.destination,
       utmSource: body.utmSource,
       utmMedium: body.utmMedium,
+      utmCampaign: body.utmCampaign,
       referrerHost: body.referrerHost,
     });
     if (!result.ok && batch.length === 1) {

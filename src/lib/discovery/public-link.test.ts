@@ -5,6 +5,7 @@ import {
   getBrandedProfilePreview,
   getProfileShareText,
   publicSlugStatusMessage,
+  readUtmCampaign,
   readUtmMedium,
   readUtmSource,
   referrerHostFromUrl,
@@ -48,6 +49,7 @@ describe("public Sharpz slug", () => {
   it("keeps UTM source for later analytics", () => {
     expect(readUtmSource("utm_source=instagram&utm_medium=bio")).toBe("instagram");
     expect(readUtmMedium("utm_source=instagram&utm_medium=bio")).toBe("bio");
+    expect(readUtmCampaign("utm_source=instagram&utm_campaign=launch")).toBe("launch");
     expect(readUtmSource({ utm_source: "tiktok", utm_medium: "bio" })).toBe("tiktok");
     expect(sanitizeTrackingPlatform("Instagram")).toBe("instagram");
     expect(sanitizeTrackingPlatform("not a source!")).toBeNull();

@@ -24,7 +24,7 @@ import type { Project, PublicProfileModel } from "@/src/lib/discovery/types";
 import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 import { FollowButton } from "@/src/components/discovery/follow-button";
 import { SaveButton } from "@/src/components/discovery/save-button";
-import { ConnectButton } from "@/src/components/discovery/connect-button";
+import { ConnectionActions } from "@/src/components/discovery/connection-actions";
 import { FeaturedContentCard } from "@/src/components/discovery/featured-content-card";
 import { ShareProfileButton } from "@/src/components/discovery/share-profile-button";
 import { SocialGlyph } from "@/src/components/discovery/social-glyph";
@@ -59,13 +59,11 @@ export function PublicProfileView({
     if (isOwner) return;
     const fromQuery = sanitizeTrackingPlatform(readUtmSource(window.location.search));
     const medium = sanitizeTrackingPlatform(readUtmMedium(window.location.search));
-    const platform = utmSource || fromQuery || undefined;
     trackDiscoveryEvent({
       profileId: profile.id,
       eventType: "profile_view",
       source,
-      platform,
-      utmSource: platform,
+      utmSource: utmSource || fromQuery,
       utmMedium: medium,
     });
   }, [isOwner, profile.id, source, utmSource]);
@@ -260,12 +258,16 @@ export function PublicProfileView({
                     className="h-11 w-11 rounded-full"
                   />
                 </div>
-                <ConnectButton
+                <ConnectionActions
                   profileId={profile.id}
                   initialStatus={profile.connectionStatus ?? "none"}
+                  socialLinks={profile.socialLinks}
+                  email={profile.email}
                   isLoggedIn={isLoggedIn}
                   size="md"
-                  className="w-full min-h-11 rounded-full"
+                  className="w-full"
+                  connectClassName="min-h-11 flex-1 rounded-full"
+                  contactClassName="min-h-11 flex-1 rounded-full"
                 />
               </div>
             )}

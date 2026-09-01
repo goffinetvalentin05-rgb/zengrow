@@ -1,26 +1,9 @@
-import { ANALYTICS_RANGES, SOCIAL_PLATFORM_LABELS, type AnalyticsRange, type SocialPlatform } from "@/src/lib/discovery/constants";
+import { ANALYTICS_RANGES, SOCIAL_PLATFORM_LABELS, type AnalyticsRange } from "@/src/lib/discovery/constants";
+import {
+  splitTrafficSources,
+  trafficSourceLabel as attributionTrafficLabel,
+} from "@/src/lib/discovery/attribution";
 import type { ProfileAnalytics } from "@/src/lib/discovery/types";
-
-export const TRAFFIC_SOURCE_LABELS: Record<string, string> = {
-  explore: "Sharpz Explore",
-  search: "Sharpz Search",
-  category: "Category",
-  direct: "Direct link",
-  following: "Following",
-  saved: "Saved",
-  instagram: "Instagram",
-  instagram_bio: "Instagram bio",
-  youtube: "YouTube",
-  youtube_bio: "YouTube",
-  tiktok: "TikTok",
-  tiktok_bio: "TikTok",
-  x: "X",
-  x_bio: "X",
-  linkedin: "LinkedIn",
-  linkedin_bio: "LinkedIn bio",
-  website: "Website",
-  other: "Other",
-};
 
 export const PLATFORM_LABELS: Record<string, string> = {
   ...SOCIAL_PLATFORM_LABELS,
@@ -49,6 +32,7 @@ const EMPTY_ANALYTICS: ProfileAnalytics = {
   clicks_by_platform: {},
   sources: {},
   traffic_sources: [],
+  traffic_split: { discovery: 0, external: 0, discoveryShare: 0, externalShare: 0 },
   visitor_niches: [],
   new_followers_7d: 0,
   new_followers_30d: 0,
@@ -98,7 +82,7 @@ export function formatDelta(delta: number | null) {
 }
 
 export function trafficSourceLabel(key: string) {
-  return TRAFFIC_SOURCE_LABELS[key] ?? (SOCIAL_PLATFORM_LABELS[key as SocialPlatform] ?? key);
+  return attributionTrafficLabel(key);
 }
 
 export function platformLabel(key: string) {
@@ -148,6 +132,7 @@ export function mapProfileAnalytics(raw: unknown, rangeDays: AnalyticsRange = 30
     clicks_by_platform: (row.clicks_by_platform as Record<string, number>) ?? {},
     sources: (row.sources as Record<string, number>) ?? {},
     traffic_sources: traffic,
+    traffic_split: splitTrafficSources(traffic),
     visitor_niches: Array.isArray(row.visitor_niches)
       ? (row.visitor_niches as ProfileAnalytics["visitor_niches"])
       : [],

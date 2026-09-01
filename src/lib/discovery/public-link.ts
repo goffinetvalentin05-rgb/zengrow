@@ -100,6 +100,10 @@ export function readUtmMedium(search: string | URLSearchParams | Record<string, 
   return readSearchParam(search, "utm_medium");
 }
 
+export function readUtmCampaign(search: string | URLSearchParams | Record<string, string | string[] | undefined> | null | undefined) {
+  return readSearchParam(search, "utm_campaign");
+}
+
 export function referrerHostFromUrl(referrer: string | null | undefined, currentHost?: string | null) {
   if (!referrer) return null;
   try {

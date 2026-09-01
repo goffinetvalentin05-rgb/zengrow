@@ -134,19 +134,51 @@ export function AnalyticsView({
           </div>
 
           <div className="mt-3 grid gap-3 lg:grid-cols-2">
-            <ListCard
-              title="Traffic sources"
-              empty="No traffic sources yet."
-              items={analytics.traffic_sources.map((item) => ({
-                label: trafficSourceLabel(item.key),
-                value: item.share != null ? `${item.share}%` : String(item.count),
-                count: item.count,
-              }))}
-            />
+            <section className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5 lg:col-span-2">
+              <p className="sz-label">Traffic sources</p>
+              {analytics.traffic_sources.length ? (
+                <>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <p className="text-sm text-white/70">
+                      Sharpz Discovery
+                      <span className="ml-2 tabular-nums text-white/40">{analytics.traffic_split.discoveryShare}%</span>
+                    </p>
+                    <p className="text-sm text-white/70">
+                      External
+                      <span className="ml-2 tabular-nums text-white/40">{analytics.traffic_split.externalShare}%</span>
+                    </p>
+                  </div>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div
+                      className="h-full rounded-full bg-white/80"
+                      style={{ width: `${analytics.traffic_split.discoveryShare}%` }}
+                    />
+                  </div>
+                  <ul className="mt-5 space-y-3">
+                    {analytics.traffic_sources.map((item) => {
+                      const max = Math.max(1, ...analytics.traffic_sources.map((row) => row.count));
+                      return (
+                        <li key={item.key}>
+                          <div className="mb-1 flex justify-between gap-3 text-sm text-white/70">
+                            <span className="min-w-0 truncate">{trafficSourceLabel(item.key)}</span>
+                            <span className="shrink-0 tabular-nums text-white/50">
+                              {item.count}
+                              {item.share != null ? ` · ${item.share}%` : ""}
+                            </span>
+                          </div>
+                          <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                            <div className="h-full rounded-full bg-white/70" style={{ width: `${(item.count / max) * 100}%` }} />
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              ) : (
+                <p className="mt-4 text-sm text-white/35">No traffic sources yet.</p>
+              )}
+            </section>
             <BarCard title="Clicks by platform" data={analytics.clicks_by_platform} labelFor={platformLabel} />
-          </div>
-
-          <div className="mt-3 grid gap-3 lg:grid-cols-2">
             <ListCard
               title="Top clicked links"
               empty="No external clicks yet."

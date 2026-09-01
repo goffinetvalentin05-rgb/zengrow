@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { DISCOVERY_EVENT_TYPES, DISCOVERY_SOURCES } from "@/src/lib/discovery/constants";
+import { DISCOVERY_EVENT_TYPES } from "@/src/lib/discovery/constants";
+import { normalizeStoredSource } from "@/src/lib/discovery/attribution";
 import { sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
 
 const VISITOR_SALT = process.env.DISCOVERY_VISITOR_SALT?.trim() || "sharpz-discovery-visitor-v1";
@@ -12,13 +13,7 @@ export function hashVisitorKey(token: string, profileId: string) {
 }
 
 export function normalizeDiscoverySource(value: string | null | undefined) {
-  if (!value) return "direct";
-  const cleaned = value.trim().toLowerCase();
-  if (DISCOVERY_SOURCES.includes(cleaned as (typeof DISCOVERY_SOURCES)[number])) return cleaned;
-  if (["instagram", "youtube", "tiktok", "x", "linkedin", "website", "other"].includes(cleaned)) {
-    return cleaned;
-  }
-  return "direct";
+  return normalizeStoredSource(value);
 }
 
 type TrackInput = {
@@ -32,6 +27,7 @@ type TrackInput = {
   destination?: string | null;
   utmSource?: string | null;
   utmMedium?: string | null;
+  utmCampaign?: string | null;
   referrerHost?: string | null;
 };
 
@@ -51,6 +47,7 @@ export async function recordDiscoveryEvent(supabase: SupabaseClient, input: Trac
     p_utm_source: sanitizeTrackingPlatform(input.utmSource),
     p_utm_medium: sanitizeTrackingPlatform(input.utmMedium),
     p_referrer_host: input.referrerHost?.slice(0, 120) ?? null,
+    p_utm_campaign: sanitizeTrackingPlatform(input.utmCampaign),
   });
   if (!error) {
     const payload = data as { ok?: boolean; skipped?: string; error?: string } | null;

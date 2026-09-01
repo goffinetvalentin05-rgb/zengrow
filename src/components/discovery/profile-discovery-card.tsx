@@ -11,7 +11,7 @@ import { profileHref } from "@/src/lib/discovery/routes";
 import type { ProfileCardModel } from "@/src/lib/discovery/types";
 import { FollowButton } from "@/src/components/discovery/follow-button";
 import { SaveButton } from "@/src/components/discovery/save-button";
-import { ConnectButton } from "@/src/components/discovery/connect-button";
+import { ConnectionActions } from "@/src/components/discovery/connection-actions";
 import { SocialGlyph } from "@/src/components/discovery/social-glyph";
 import { FadeImg, ProjectStrip } from "@/src/components/discovery/sz-ui";
 import { initialsFromName } from "@/src/lib/discovery/slug";
@@ -219,9 +219,11 @@ export function ProfileDiscoveryCard({
             silent
             isLoggedIn={isLoggedIn}
           />
-          <ConnectButton
+          <ConnectionActions
             profileId={profile.id}
             initialStatus={profile.connectionStatus ?? "none"}
+            socialLinks={profile.socialLinks}
+            email={profile.email}
             isLoggedIn={isLoggedIn}
             silent
           />

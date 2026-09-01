@@ -37,9 +37,9 @@ describe("analytics helpers", () => {
   });
 
   it("labels traffic sources including UTM bios", () => {
-    expect(trafficSourceLabel("instagram_bio")).toBe("Instagram bio");
+    expect(trafficSourceLabel("instagram_bio")).toBe("Instagram");
     expect(trafficSourceLabel("explore")).toBe("Sharpz Explore");
-    expect(trafficSourceLabel("direct")).toBe("Direct link");
+    expect(trafficSourceLabel("direct")).toBe("Direct");
     const shares = withTrafficShares([
       { key: "instagram_bio", count: 43 },
       { key: "direct", count: 28 },

@@ -129,6 +129,7 @@ export type DiscoveryEventInput = {
   destination?: string | null;
   utmSource?: string | null;
   utmMedium?: string | null;
+  utmCampaign?: string | null;
 };
 
 export type AnalyticsPoint = {
@@ -169,6 +170,12 @@ export type ProfileAnalytics = {
   clicks_by_platform: Record<string, number>;
   sources: Record<string, number>;
   traffic_sources: AnalyticsTrafficSource[];
+  traffic_split: {
+    discovery: number;
+    external: number;
+    discoveryShare: number;
+    externalShare: number;
+  };
   visitor_niches: { slug: string; name?: string; share: number; count?: number }[];
   new_followers_7d: number;
   new_followers_30d: number;

@@ -578,10 +578,20 @@ export async function getProfileAnalytics(
     p_profile_id: profileId,
     p_range_days: days,
   });
-  if (!primary.error && primary.data) return mapProfileAnalytics(primary.data, days);
-  const fallback = await supabase.rpc("discovery_profile_analytics", { p_profile_id: profileId });
-  if (fallback.error || !fallback.data) return null;
-  return mapProfileAnalytics(fallback.data, days);
+  let raw = !primary.error ? primary.data : null;
+  if (!raw) {
+    const fallback = await supabase.rpc("discovery_profile_analytics", { p_profile_id: profileId });
+    if (fallback.error || !fallback.data) return null;
+    raw = fallback.data;
+  }
+  const traffic = await supabase.rpc("discovery_profile_traffic_sources", {
+    p_profile_id: profileId,
+    p_range_days: days,
+  });
+  if (!traffic.error && traffic.data && typeof traffic.data === "object") {
+    raw = { ...(raw as object), ...(traffic.data as object) };
+  }
+  return mapProfileAnalytics(raw, days);
 }
 
 export async function getRecentViewSignals(supabase: SupabaseClient, profileIds: string[]) {

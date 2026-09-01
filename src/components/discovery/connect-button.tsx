@@ -21,6 +21,7 @@ export function ConnectButton({
   className,
   isLoggedIn = true,
   silent = false,
+  onStatusChange,
 }: {
   profileId: string;
   initialStatus?: ConnectionUiStatus;
@@ -28,6 +29,7 @@ export function ConnectButton({
   className?: string;
   isLoggedIn?: boolean;
   silent?: boolean;
+  onStatusChange?: (status: ConnectionUiStatus) => void;
 }) {
   const router = useRouter();
   const [status, setStatus] = useState<ConnectionUiStatus>(initialStatus);
@@ -47,6 +49,7 @@ export function ConnectButton({
     const optimistic: ConnectionUiStatus =
       action === "cancel" ? "none" : action === "accept" || status === "pending_in" ? "accepted" : "pending_out";
     setStatus(optimistic);
+    onStatusChange?.(optimistic);
     const response = await fetch("/api/discovery/connect", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -54,6 +57,7 @@ export function ConnectButton({
     });
     if (response.status === 401) {
       setStatus(previous);
+      onStatusChange?.(previous);
       const dest = encodeURIComponent(window.location.pathname + window.location.search);
       router.push(`${DISCOVERY_ROUTES.login}?next=${dest}`);
       setPending(false);
@@ -62,12 +66,20 @@ export function ConnectButton({
     const payload = (await response.json().catch(() => ({}))) as { status?: string; error?: string };
     if (!response.ok) {
       setStatus(previous);
+      onStatusChange?.(previous);
       setPending(false);
       return;
     }
-    if (payload.status === "accepted") setStatus("accepted");
-    else if (payload.status === "pending") setStatus("pending_out");
-    else if (payload.status === "none" || payload.status === "declined") setStatus("none");
+    const next: ConnectionUiStatus =
+      payload.status === "accepted"
+        ? "accepted"
+        : payload.status === "pending"
+          ? "pending_out"
+          : payload.status === "none" || payload.status === "declined"
+            ? "none"
+            : optimistic;
+    setStatus(next);
+    onStatusChange?.(next);
     setPending(false);
     if (!silent) router.refresh();
   }
