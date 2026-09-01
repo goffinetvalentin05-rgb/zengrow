@@ -1,5 +1,6 @@
 import { ProfileEditor } from "@/src/components/discovery/profile-editor";
 import { requireOnboardedSession } from "@/src/lib/discovery/auth";
+import { discoveryHasPro } from "@/src/lib/discovery/pro";
 import { getCategories, getOwnedRelations } from "@/src/lib/discovery/queries";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -20,6 +21,12 @@ export default async function MeEditPage() {
       projects={relations.projects}
       socialLinks={relations.socialLinks}
       featuredContent={relations.featuredContent}
+      blocks={relations.blocks}
+      isPro={discoveryHasPro({
+        plan: session.subscription.plan,
+        status: session.subscription.status,
+        isOwnerDev: session.isOwnerDev,
+      })}
     />
   );
 }

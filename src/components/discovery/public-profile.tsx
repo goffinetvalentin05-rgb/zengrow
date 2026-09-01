@@ -17,6 +17,7 @@ import {
   resolveProfileLayout,
   resolveProfileTheme,
 } from "@/src/lib/discovery/appearance";
+import { resolveProfileCta } from "@/src/lib/discovery/conversion";
 import { readUtmMedium, readUtmSource, sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
 import { completenessSuggestions } from "@/src/lib/discovery/completeness";
 import { trackDiscoveryEvent } from "@/src/lib/discovery/track";
@@ -28,6 +29,7 @@ import { ConnectionActions } from "@/src/components/discovery/connection-actions
 import { FeaturedContentCard } from "@/src/components/discovery/featured-content-card";
 import { ShareProfileButton } from "@/src/components/discovery/share-profile-button";
 import { ProfilePageBackdrop } from "@/src/components/discovery/profile-page-backdrop";
+import { ProfilePremiumBlocks } from "@/src/components/discovery/profile-premium-blocks";
 import { SocialMark } from "@/src/components/discovery/social-glyph";
 import { FadeImg } from "@/src/components/discovery/sz-ui";
 import Button from "@/src/components/ui/button";
@@ -273,6 +275,7 @@ export function PublicProfileView({
                 />
               </div>
             )}
+            <ProfilePrimaryCta profile={profile} source={source} />
           </div>
         </div>
       </header>
@@ -289,6 +292,8 @@ export function PublicProfileView({
         {order.map((key) => (
           <div key={key}>{sections[key]}</div>
         ))}
+
+        <ProfilePremiumBlocks profileId={profile.id} blocks={profile.blocks ?? []} source={source} />
 
         {profile.socialLinks.length ? (
           <section className="px-5">
@@ -413,6 +418,37 @@ function ProjectLogoMark({
         </span>
       )}
     </span>
+  );
+}
+
+function ProfilePrimaryCta({ profile, source }: { profile: PublicProfileModel; source: string }) {
+  const cta = resolveProfileCta(profile);
+  if (!cta) return null;
+  const href = normalizeHttpUrl(cta.url);
+  if (!href) return null;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      onClick={() =>
+        trackDiscoveryEvent({
+          profileId: profile.id,
+          eventType: "profile_cta_click",
+          source,
+          platform: cta.type,
+          destination: href,
+        })
+      }
+      className="sz-press mt-2 flex min-h-11 w-full items-center justify-center rounded-full px-4 text-[15px] font-medium"
+      style={{
+        color: "var(--profile-accent)",
+        background: "color-mix(in srgb, var(--profile-accent) 12%, transparent)",
+        boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--profile-accent) 38%, transparent)",
+      }}
+    >
+      {cta.label}
+    </a>
   );
 }
 

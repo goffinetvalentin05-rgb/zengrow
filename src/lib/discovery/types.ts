@@ -55,8 +55,23 @@ export type Profile = {
   featuredFirst: boolean;
   accentColor: string | null;
   layoutVariant: string;
+  ctaLabel: string | null;
+  ctaUrl: string | null;
+  ctaType: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ProfileBlock = {
+  id: string;
+  profileId: string;
+  blockType: string;
+  title: string | null;
+  description: string | null;
+  ctaLabel: string | null;
+  url: string | null;
+  sortIndex: number;
+  isActive: boolean;
 };
 
 export type Project = {
@@ -112,6 +127,7 @@ export type PublicProfileModel = ProfileCardModel & {
   categories: Category[];
   projects: Project[];
   featuredContent: FeaturedContent[];
+  blocks: ProfileBlock[];
 };
 
 export type UserSubscription = {
@@ -187,6 +203,10 @@ export type ProfileAnalytics = {
   followers_over_time: AnalyticsPoint[];
   top_links: AnalyticsTopLink[];
   most_clicked_content: { content_id: string; clicks: number }[];
+  cta_clicks: number;
+  cta_ctr: number | null;
+  block_clicks: { key: string; label: string; count: number }[];
+  top_converting_block: { key: string; label: string; count: number } | null;
 };
 
 export type ExploreFilters = {

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AUDIENCE_RANGES, DISCOVERY_PAGE_SIZE, PROFILE_TYPE_LABELS, PROFILE_TYPES } from "@/src/lib/discovery/constants";
 import { mapProfileAnalytics, parseAnalyticsRange } from "@/src/lib/discovery/analytics";
+import { blockStatLabel, mapConversionMetrics } from "@/src/lib/discovery/conversion";
 import { connectionStatusForViewer } from "@/src/lib/discovery/connections";
 import { applyDiscoveryFilters } from "@/src/lib/discovery/apply-filters";
 import { birthDateBounds, sanitizeIlike } from "@/src/lib/discovery/media";
@@ -8,6 +9,7 @@ import {
   mapCategory,
   mapFeaturedContent,
   mapProfile,
+  mapProfileBlock,
   mapProject,
   mapSocialLink,
 } from "@/src/lib/discovery/mappers";
@@ -351,11 +353,17 @@ async function assemblePublicProfile(
   viewerId?: string | null,
 ): Promise<PublicProfileModel | null> {
   if (profile.isDisabled && profile.id !== viewerId) return null;
-  const [cards, catsRes, projectsRes, featuredRes] = await Promise.all([
+  const [cards, catsRes, projectsRes, featuredRes, blocksRes] = await Promise.all([
     hydrateCards(supabase, [profile], viewerId),
     supabase.from("profile_categories").select("categories(*)").eq("profile_id", profile.id),
     supabase.from("projects").select("*").eq("owner_id", profile.id).order("sort_index"),
     supabase.from("featured_content").select("*").eq("profile_id", profile.id).order("sort_index"),
+    supabase
+      .from("profile_blocks")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .eq("is_active", true)
+      .order("sort_index"),
   ]);
   const card = cards[0];
   if (!card) return null;
@@ -370,6 +378,7 @@ async function assemblePublicProfile(
     categories,
     projects: (projectsRes.data ?? []).map((row) => mapProject(row as Record<string, unknown>)),
     featuredContent: (featuredRes.data ?? []).map((row) => mapFeaturedContent(row as Record<string, unknown>)),
+    blocks: (blocksRes.data ?? []).map((row) => mapProfileBlock(row as Record<string, unknown>)),
   };
 }
 
@@ -394,17 +403,19 @@ export async function getPublicProfileById(
 }
 
 export async function getOwnedRelations(supabase: SupabaseClient, profileId: string) {
-  const [projects, social, featured, categories] = await Promise.all([
+  const [projects, social, featured, categories, blocks] = await Promise.all([
     supabase.from("projects").select("*").eq("owner_id", profileId).order("sort_index"),
     supabase.from("social_links").select("*").eq("profile_id", profileId).order("sort_index"),
     supabase.from("featured_content").select("*").eq("profile_id", profileId).order("sort_index"),
     supabase.from("profile_categories").select("category_id, is_favorite").eq("profile_id", profileId),
+    supabase.from("profile_blocks").select("*").eq("profile_id", profileId).order("sort_index"),
   ]);
   return {
     projects: (projects.data ?? []).map((row) => mapProject(row as Record<string, unknown>)),
     socialLinks: (social.data ?? []).map((row) => mapSocialLink(row as Record<string, unknown>)),
     featuredContent: (featured.data ?? []).map((row) => mapFeaturedContent(row as Record<string, unknown>)),
     categoryLinks: (categories.data ?? []) as { category_id: string; is_favorite: boolean }[],
+    blocks: (blocks.data ?? []).map((row) => mapProfileBlock(row as Record<string, unknown>)),
   };
 }
 
@@ -591,7 +602,72 @@ export async function getProfileAnalytics(
   if (!traffic.error && traffic.data && typeof traffic.data === "object") {
     raw = { ...(raw as object), ...(traffic.data as object) };
   }
+  const conversions = await loadConversionMetrics(supabase, profileId, days, asNumberViews(raw));
+  raw = { ...(raw as object), ...conversions };
   return mapProfileAnalytics(raw, days);
+}
+
+function asNumberViews(raw: unknown) {
+  if (!raw || typeof raw !== "object") return 0;
+  const row = raw as Record<string, unknown>;
+  const n = typeof row.views === "number" ? row.views : Number(row.views ?? row.views_30d ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+async function loadConversionMetrics(
+  supabase: SupabaseClient,
+  profileId: string,
+  days: number,
+  views: number,
+) {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const [eventsRes, blocksRes] = await Promise.all([
+    supabase
+      .from("discovery_events")
+      .select("event_type, platform, content_id")
+      .eq("profile_id", profileId)
+      .in("event_type", ["profile_cta_click", "premium_block_click"])
+      .gte("created_at", since),
+    supabase.from("profile_blocks").select("id, block_type, title").eq("profile_id", profileId),
+  ]);
+  const blocks = new Map(
+    (blocksRes.data ?? []).map((row) => [
+      String((row as { id: string }).id),
+      {
+        type: String((row as { block_type?: string }).block_type ?? "custom"),
+        title: ((row as { title?: string | null }).title as string | null) ?? null,
+      },
+    ]),
+  );
+  let ctaClicks = 0;
+  const blockCounts = new Map<string, { key: string; label: string; count: number }>();
+  for (const row of eventsRes.data ?? []) {
+    const eventType = String((row as { event_type?: string }).event_type ?? "");
+    if (eventType === "profile_cta_click") {
+      ctaClicks += 1;
+      continue;
+    }
+    if (eventType !== "premium_block_click") continue;
+    const contentId = (row as { content_id?: string | null }).content_id
+      ? String((row as { content_id: string }).content_id)
+      : "";
+    const platform = String((row as { platform?: string | null }).platform ?? "custom");
+    const meta = contentId ? blocks.get(contentId) : undefined;
+    const key = contentId || platform;
+    const label = blockStatLabel(meta?.type || platform, meta?.title);
+    const current = blockCounts.get(key) ?? { key, label, count: 0 };
+    current.count += 1;
+    blockCounts.set(key, current);
+  }
+  const mapped = mapConversionMetrics({
+    views,
+    ctaClicks,
+    blockClicks: [...blockCounts.values()],
+  });
+  return {
+    cta_clicks: mapped.ctaClicks,
+    block_clicks: mapped.blockClicks,
+  };
 }
 
 export async function getRecentViewSignals(supabase: SupabaseClient, profileIds: string[]) {

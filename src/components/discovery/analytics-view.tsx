@@ -204,12 +204,73 @@ export function AnalyticsView({
               )}
             </section>
           </div>
+
+          <section className="mt-3 rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5">
+            <p className="sz-label">Conversions</p>
+            <p className="mt-2 text-sm text-white/40">Clicks from your primary CTA and premium blocks.</p>
+            <div className="mt-4 grid gap-5 sm:grid-cols-2">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">CTA clicks</p>
+                <p className="mt-2 font-[family-name:var(--font-zg-display)] text-3xl text-white">{analytics.cta_clicks}</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">CTA conversion</p>
+                <p className="mt-2 font-[family-name:var(--font-zg-display)] text-3xl text-white">
+                  {analytics.cta_ctr == null ? "—" : `${analytics.cta_ctr}%`}
+                </p>
+                <p className="mt-1 text-xs text-white/35">CTA clicks / views</p>
+              </div>
+            </div>
+            {analytics.cta_clicks === 0 && analytics.block_clicks.length === 0 ? (
+              <p className="mt-5 text-sm text-white/35">No conversion clicks yet.</p>
+            ) : (
+              <div className="mt-5 grid gap-6 lg:grid-cols-2">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">Top converting block</p>
+                  {analytics.top_converting_block ? (
+                    <p className="mt-2 text-sm text-white/70">
+                      {analytics.top_converting_block.label}
+                      <span className="ml-2 tabular-nums text-white/45">{analytics.top_converting_block.count}</span>
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-sm text-white/35">No block clicks yet.</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">Clicks by block</p>
+                  {analytics.block_clicks.length ? (
+                    <ul className="mt-3 space-y-3">
+                      {analytics.block_clicks.map((item) => {
+                        const max = Math.max(1, ...analytics.block_clicks.map((row) => row.count));
+                        return (
+                          <li key={item.key}>
+                            <div className="mb-1 flex justify-between gap-3 text-sm text-white/70">
+                              <span className="min-w-0 truncate">{item.label}</span>
+                              <span className="shrink-0 tabular-nums text-white/50">{item.count}</span>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                              <div
+                                className="h-full rounded-full bg-white/70"
+                                style={{ width: `${(item.count / max) * 100}%` }}
+                              />
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-sm text-white/35">No block clicks yet.</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </section>
         </>
       ) : (
         <div className="mt-6 rounded-[1.6rem] border border-white/[0.08] bg-[#0d0c12] p-6 text-center">
           <p className="font-[family-name:var(--font-zg-display)] text-2xl text-white">Unlock the full picture</p>
           <p className="mx-auto mt-2 max-w-sm text-sm text-white/50">
-            Traffic sources, top links, discovery conversion and visitor niches. {SHARPZ_PRO_PRICE_LABEL}.
+            Traffic sources, top links, discovery conversion, visitor niches and CTA conversions. {SHARPZ_PRO_PRICE_LABEL}.
           </p>
           <Button className="mt-5" onClick={() => void upgrade()} disabled={upgrading}>
             Upgrade to Pro

@@ -3,6 +3,7 @@ import {
   splitTrafficSources,
   trafficSourceLabel as attributionTrafficLabel,
 } from "@/src/lib/discovery/attribution";
+import { mapConversionMetrics } from "@/src/lib/discovery/conversion";
 import type { ProfileAnalytics } from "@/src/lib/discovery/types";
 
 export const PLATFORM_LABELS: Record<string, string> = {
@@ -42,6 +43,10 @@ const EMPTY_ANALYTICS: ProfileAnalytics = {
   followers_over_time: [],
   top_links: [],
   most_clicked_content: [],
+  cta_clicks: 0,
+  cta_ctr: null,
+  block_clicks: [],
+  top_converting_block: null,
 };
 
 function asNumber(value: unknown, fallback = 0) {
@@ -148,6 +153,25 @@ export function mapProfileAnalytics(raw: unknown, rangeDays: AnalyticsRange = 30
     most_clicked_content: Array.isArray(row.most_clicked_content)
       ? (row.most_clicked_content as ProfileAnalytics["most_clicked_content"])
       : [],
+    ...mapConversionFields(row),
+  };
+}
+
+function mapConversionFields(row: Record<string, unknown>): Pick<
+  ProfileAnalytics,
+  "cta_clicks" | "cta_ctr" | "block_clicks" | "top_converting_block"
+> {
+  const views = asNumber(row.views, asNumber(row.views_30d));
+  const ctaClicks = asNumber(row.cta_clicks);
+  const blockClicks = Array.isArray(row.block_clicks)
+    ? (row.block_clicks as ProfileAnalytics["block_clicks"]).filter((item) => item && typeof item.key === "string")
+    : [];
+  const mapped = mapConversionMetrics({ views, ctaClicks, blockClicks });
+  return {
+    cta_clicks: mapped.ctaClicks,
+    cta_ctr: mapped.ctaCtr,
+    block_clicks: mapped.blockClicks,
+    top_converting_block: mapped.topConvertingBlock,
   };
 }
 

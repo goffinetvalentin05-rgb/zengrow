@@ -61,6 +61,24 @@ describe("analytics helpers", () => {
     expect(mapped.unique_visitors).toBe(4);
     expect(mapped.followers_total).toBe(0);
     expect(mapped.traffic_sources[0]?.share).toBe(100);
+    expect(mapped.cta_clicks).toBe(0);
+    expect(mapped.cta_ctr).toBe(0);
+    expect(mapped.top_converting_block).toBeNull();
+  });
+
+  it("maps conversion stats from stored event counts", () => {
+    const mapped = mapProfileAnalytics({
+      views: 84,
+      cta_clicks: 10,
+      block_clicks: [
+        { key: "booking", label: "Book a call", count: 7 },
+        { key: "newsletter", label: "Newsletter", count: 4 },
+      ],
+    });
+    expect(mapped.cta_clicks).toBe(10);
+    expect(mapped.cta_ctr).toBe(11.9);
+    expect(mapped.top_converting_block?.label).toBe("Book a call");
+    expect(mapped.block_clicks[0]?.count).toBe(7);
   });
 
   it("formats top links from stored titles", () => {

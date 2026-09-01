@@ -146,6 +146,8 @@ export const DISCOVERY_EVENT_TYPES = [
   "profile_open_from_discovery",
   "profile_external_click",
   "connection_contact_click",
+  "profile_cta_click",
+  "premium_block_click",
 ] as const;
 
 export type DiscoveryEventType = (typeof DISCOVERY_EVENT_TYPES)[number];

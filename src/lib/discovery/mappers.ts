@@ -3,6 +3,7 @@ import type {
   Category,
   FeaturedContent,
   Profile,
+  ProfileBlock,
   Project,
   SocialLink,
   UserSubscription,
@@ -68,8 +69,25 @@ export function mapProfile(row: Row): Profile {
     featuredFirst: Boolean(row.featured_first),
     accentColor: str(row.accent_color),
     layoutVariant: str(row.layout_variant) ?? (row.featured_first ? "content_first" : "default"),
+    ctaLabel: str(row.cta_label),
+    ctaUrl: str(row.cta_url),
+    ctaType: str(row.cta_type) ?? "custom",
     createdAt: String(row.created_at ?? new Date().toISOString()),
     updatedAt: String(row.updated_at ?? new Date().toISOString()),
+  };
+}
+
+export function mapProfileBlock(row: Row): ProfileBlock {
+  return {
+    id: String(row.id),
+    profileId: String(row.profile_id),
+    blockType: String(row.block_type ?? "custom"),
+    title: str(row.title),
+    description: str(row.description),
+    ctaLabel: str(row.cta_label),
+    url: str(row.url),
+    sortIndex: Number(row.sort_index ?? 0),
+    isActive: row.is_active !== false,
   };
 }
 

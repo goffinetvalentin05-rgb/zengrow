@@ -18,10 +18,11 @@ import { completenessSuggestions } from "@/src/lib/discovery/completeness";
 import { COUNTRY_PRESETS } from "@/src/lib/discovery/media";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
 import { PROFILE_THEMES, PROFILE_THEME_KEYS, PROFILE_LAYOUT_VARIANTS, PROFILE_LAYOUT_LABELS, isPageBackgroundKey, type ProfileLayoutVariant, type ProfileThemeKey } from "@/src/lib/discovery/appearance";
-import type { Category, FeaturedContent, Profile, Project, SocialLink } from "@/src/lib/discovery/types";
+import type { Category, FeaturedContent, Profile, ProfileBlock, Project, SocialLink } from "@/src/lib/discovery/types";
 import { AvatarUpload } from "@/src/components/discovery/avatar-upload";
 import { CoverUpload } from "@/src/components/discovery/cover-upload";
 import { PageBackgroundPicker } from "@/src/components/discovery/page-background-picker";
+import { ConversionEditor } from "@/src/components/discovery/conversion-editor";
 import { FeaturedContentEditor } from "@/src/components/discovery/featured-content-editor";
 import { ProjectLogoUpload } from "@/src/components/discovery/project-logo-upload";
 import { SharpzLinkEditor } from "@/src/components/discovery/sharpz-link-editor";
@@ -38,6 +39,8 @@ export function ProfileEditor({
   projects,
   socialLinks,
   featuredContent,
+  blocks,
+  isPro,
 }: {
   userId: string;
   profile: Profile;
@@ -46,6 +49,8 @@ export function ProfileEditor({
   projects: Project[];
   socialLinks: SocialLink[];
   featuredContent: FeaturedContent[];
+  blocks: ProfileBlock[];
+  isPro: boolean;
 }) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
@@ -230,6 +235,10 @@ export function ProfileEditor({
 
       <EditorSection id="featured" title="Featured content">
         <FeaturedContentEditor profileId={profile.id} items={featuredContent} />
+      </EditorSection>
+
+      <EditorSection id="conversion" title="Conversion">
+        <ConversionEditor profile={profile} blocks={blocks} isPro={isPro} />
       </EditorSection>
 
       <EditorSection id="social" title="Social links">

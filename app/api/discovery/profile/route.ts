@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { getDiscoveryApiSession, isApiError } from "@/src/lib/discovery/api-session";
 import { MAX_NICHES, PROFILE_TYPES } from "@/src/lib/discovery/constants";
-import { isAdultBirthDate } from "@/src/lib/discovery/media";
+import { isAdultBirthDate, normalizeHttpUrl } from "@/src/lib/discovery/media";
 import {
   isPageBackgroundKey,
   isProfileLayoutVariant,
   isProfileThemeKey,
   sanitizeAccentColor,
 } from "@/src/lib/discovery/appearance";
+import { isProfileCtaType, MAX_CTA_LABEL } from "@/src/lib/discovery/conversion";
+import { discoveryHasPro } from "@/src/lib/discovery/pro";
 import { classifyPublicSlug } from "@/src/lib/discovery/public-link";
 import { normalizePublicSlug } from "@/src/lib/discovery/slug";
 import { syncProfileDerived } from "@/src/lib/discovery/sync-profile";
@@ -93,14 +95,35 @@ export async function PATCH(request: Request) {
     }
     patch.username = username;
   }
-  if (body.audienceSize === "" || body.audienceSize == null) {
-    patch.audience_size = null;
-    patch.audience_size_source = null;
-  } else if (body.audienceSize !== undefined) {
-    const n = Number(body.audienceSize);
-    if (Number.isFinite(n) && n >= 0) {
-      patch.audience_size = Math.trunc(n);
-      patch.audience_size_source = "self_reported";
+  if ("ctaLabel" in body || "ctaUrl" in body || "ctaType" in body) {
+    const nextLabel =
+      typeof body.ctaLabel === "string" ? body.ctaLabel.trim().slice(0, MAX_CTA_LABEL) : profile.ctaLabel ?? "";
+    const nextUrlRaw = typeof body.ctaUrl === "string" ? body.ctaUrl.trim() : profile.ctaUrl ?? "";
+    const nextUrl = nextUrlRaw ? normalizeHttpUrl(nextUrlRaw) : "";
+    const nextType = typeof body.ctaType === "string" && isProfileCtaType(body.ctaType) ? body.ctaType : profile.ctaType;
+    const clearing = !nextLabel && !nextUrl;
+    const isPro = discoveryHasPro({
+      plan: session.subscription.plan,
+      status: session.subscription.status,
+      isOwnerDev: session.isOwnerDev,
+    });
+    if (!clearing && !isPro) {
+      return NextResponse.json({ error: "Custom CTA is a Pro feature." }, { status: 403 });
+    }
+    patch.cta_label = nextLabel || null;
+    patch.cta_url = nextUrl || null;
+    patch.cta_type = isProfileCtaType(nextType) ? nextType : "custom";
+  }
+  if ("audienceSize" in body) {
+    if (body.audienceSize === "" || body.audienceSize == null) {
+      patch.audience_size = null;
+      patch.audience_size_source = null;
+    } else {
+      const n = Number(body.audienceSize);
+      if (Number.isFinite(n) && n >= 0) {
+        patch.audience_size = Math.trunc(n);
+        patch.audience_size_source = "self_reported";
+      }
     }
   }
 

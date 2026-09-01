@@ -32,3 +32,11 @@ export function discoveryAnalyticsTier(input: {
 }): DiscoveryAnalyticsTier {
   return isSharpzProActive(input) ? "full" : "limited";
 }
+
+export function discoveryHasPro(input: {
+  plan: "free" | "pro";
+  status: "inactive" | "active" | "canceled" | "past_due" | "trialing";
+  isOwnerDev?: boolean;
+}) {
+  return isSharpzProActive(input);
+}
