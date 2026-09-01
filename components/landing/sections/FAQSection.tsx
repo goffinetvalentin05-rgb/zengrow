@@ -1,18 +1,19 @@
 "use client";
 
 import { useLocale } from "../locale-provider";
-import { Container, Eyebrow, ScrollReveal, Section, SectionTitle } from "../ui";
+import { Container, Eyebrow, Section, SectionLead, SectionTitle } from "../ui";
 
 export function FAQSection() {
   const { t } = useLocale();
 
   return (
-    <Section id="faq">
+    <Section id="faq" className="go-faq-section">
       <Container>
-        <ScrollReveal className="go-section-head">
+        <div className="go-section-head go-faq-section__head">
           <Eyebrow>{t.faq.label}</Eyebrow>
           <SectionTitle>{t.faq.title}</SectionTitle>
-        </ScrollReveal>
+          <SectionLead className="go-faq-section__lead">{t.faq.subtitle}</SectionLead>
+        </div>
 
         <div className="go-faq">
           {t.faq.items.map((item) => (

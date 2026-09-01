@@ -5,9 +5,12 @@ import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { PageCanvas } from "./PageCanvas";
 import { Hero } from "./sections/Hero";
+import { NicheBand } from "./NicheBand";
 import { ProblemSection } from "./sections/ProblemSection";
-import { DiscoverSection } from "./sections/DiscoverSection";
-import { HowItWorksSection } from "./sections/HowItWorksSection";
+import { AnswerSection } from "./sections/AnswerSection";
+import { DifferenceSection } from "./sections/DifferenceSection";
+import { ProfileSection } from "./sections/ProfileSection";
+import { PricingSection } from "./sections/PricingSection";
 import { FAQSection } from "./sections/FAQSection";
 import { FinalCtaSection } from "./sections/FinalCtaSection";
 import "./landing.css";
@@ -20,9 +23,12 @@ export function LandingPageClient() {
         <Navbar />
         <main>
           <Hero />
+          <NicheBand />
           <ProblemSection />
-          <DiscoverSection />
-          <HowItWorksSection />
+          <AnswerSection />
+          <DifferenceSection />
+          <ProfileSection />
+          <PricingSection />
           <FAQSection />
           <FinalCtaSection />
         </main>

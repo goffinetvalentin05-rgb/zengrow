@@ -10,33 +10,53 @@ import { Container } from "./ui";
 export function Footer({ variant = "default" }: { variant?: "default" | "close" }) {
   const { t } = useLocale();
 
-  const links =
-    variant === "close"
-      ? [
-          { href: ROUTES.home, label: t.footer.product },
-          { href: ROUTES.privacy, label: t.footer.privacy },
-          { href: ROUTES.terms, label: t.footer.terms },
-        ]
-      : [
-          { href: ROUTES.home, label: t.footer.product },
-          { href: ROUTES.faq, label: t.footer.faq },
-          { href: ROUTES.privacy, label: t.footer.privacy },
-          { href: ROUTES.terms, label: t.footer.terms },
-        ];
+  if (variant === "close") {
+    return (
+      <footer className="go-footer go-footer--close">
+        <Container wide>
+          <div className="go-footer__row">
+            <ul className="go-footer__links">
+              <li>
+                <Link href={ROUTES.home}>{t.brand.name}</Link>
+              </li>
+              <li>
+                <Link href={ROUTES.privacy}>{t.footer.privacy}</Link>
+              </li>
+              <li>
+                <Link href={ROUTES.terms}>{t.footer.terms}</Link>
+              </li>
+            </ul>
+            <div className="go-footer__meta">
+              <LanguageSwitch />
+            </div>
+          </div>
+        </Container>
+      </footer>
+    );
+  }
+
+  const links = [
+    { href: ROUTES.privacy, label: t.footer.privacy },
+    { href: ROUTES.terms, label: t.footer.terms },
+    { href: ROUTES.contact, label: t.footer.contact },
+    { href: ROUTES.pricing, label: t.footer.pricing },
+  ];
 
   return (
-    <footer className={variant === "close" ? "go-footer go-footer--close" : "go-footer"}>
+    <footer className="go-footer">
       <Container wide>
-        <div className="go-footer__row">
-          {variant === "default" ? (
+        <div className="go-footer__top">
+          <div className="go-footer__brand">
             <Link href={ROUTES.home} className="go-wordmark" aria-label={t.nav.homeAria}>
               <LandingWordmark />
             </Link>
-          ) : null}
+            <p className="go-footer__tagline">{t.footer.tagline}</p>
+          </div>
+
           <ul className="go-footer__links">
             {links.map((link) => (
-              <li key={`${link.href}-${link.label}`}>
-                {link.href.startsWith("#") ? (
+              <li key={link.href}>
+                {link.href.startsWith("#") || link.href.startsWith("mailto:") ? (
                   <a href={link.href}>{link.label}</a>
                 ) : (
                   <Link href={link.href}>{link.label}</Link>
@@ -44,12 +64,11 @@ export function Footer({ variant = "default" }: { variant?: "default" | "close" 
               </li>
             ))}
           </ul>
-          <div className="go-footer__meta">
-            {variant === "default" ? (
-              <p className="go-footer__tagline">{t.footer.tagline}</p>
-            ) : null}
-            <LanguageSwitch />
-          </div>
+        </div>
+
+        <div className="go-footer__bottom">
+          <p className="go-footer__copyright">{t.footer.copyright}</p>
+          <LanguageSwitch />
         </div>
       </Container>
     </footer>
