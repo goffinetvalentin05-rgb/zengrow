@@ -47,6 +47,9 @@ export type Profile = {
   followersCount: number;
   followingCount: number;
   birthDate: string | null;
+  themeKey: string;
+  coverImageUrl: string | null;
+  featuredFirst: boolean;
   createdAt: string;
   updatedAt: string;
 };

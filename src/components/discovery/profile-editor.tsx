@@ -17,8 +17,10 @@ import {
 import { completenessSuggestions } from "@/src/lib/discovery/completeness";
 import { COUNTRY_PRESETS } from "@/src/lib/discovery/media";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
+import { PROFILE_THEMES, PROFILE_THEME_KEYS, type ProfileThemeKey } from "@/src/lib/discovery/appearance";
 import type { Category, FeaturedContent, Profile, Project, SocialLink } from "@/src/lib/discovery/types";
 import { AvatarUpload } from "@/src/components/discovery/avatar-upload";
+import { CoverUpload } from "@/src/components/discovery/cover-upload";
 import { FeaturedContentEditor } from "@/src/components/discovery/featured-content-editor";
 import { cn } from "@/src/lib/utils";
 
@@ -157,6 +159,35 @@ export function ProfileEditor({
         </form>
       </EditorSection>
 
+      <EditorSection id="appearance" title="Appearance">
+        <p className="mb-5 text-sm text-white/40">A light identity for your profile. The page stays dark.</p>
+        <CoverUpload userId={userId} currentUrl={profile.coverImageUrl} />
+        <div className="mt-8">
+          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Theme</p>
+          <ThemePicker
+            value={(PROFILE_THEME_KEYS.includes(profile.themeKey as ProfileThemeKey)
+              ? profile.themeKey
+              : "obsidian") as ProfileThemeKey}
+            onSaved={() => router.refresh()}
+          />
+        </div>
+        <label className="mt-8 flex items-center gap-3 text-sm text-white/70">
+          <input
+            type="checkbox"
+            defaultChecked={profile.featuredFirst}
+            onChange={(event) => {
+              void fetch("/api/discovery/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ featuredFirst: event.target.checked }),
+              }).then(() => router.refresh());
+            }}
+            className="h-4 w-4 rounded border-white/20 bg-transparent"
+          />
+          Show featured content before the project
+        </label>
+      </EditorSection>
+
       <EditorSection id="niches" title="Niches">
         <p className="mb-4 text-sm text-white/40">Primary niche is the first one you select.</p>
         <NichePicker categories={categories} selected={selectedCategoryIds} onSave={saveNiches} />
@@ -194,6 +225,46 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">{label}</span>
       {children}
     </label>
+  );
+}
+
+function ThemePicker({ value, onSaved }: { value: ProfileThemeKey; onSaved: () => void }) {
+  const [current, setCurrent] = useState(value);
+
+  async function select(key: ProfileThemeKey) {
+    setCurrent(key);
+    await fetch("/api/discovery/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ themeKey: key }),
+    });
+    onSaved();
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {PROFILE_THEME_KEYS.map((key) => {
+        const theme = PROFILE_THEMES[key];
+        const active = current === key;
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={() => void select(key)}
+            className={cn(
+              "flex items-center gap-3 rounded-2xl px-3 py-3 text-left ring-1 transition",
+              active ? "bg-white/[0.08] ring-white/25" : "bg-white/[0.03] ring-white/[0.06]",
+            )}
+          >
+            <span className="h-8 w-8 rounded-full" style={{ background: theme.swatch }} />
+            <span>
+              <span className="block text-sm text-white">{theme.label}</span>
+              {theme.plan === "pro" ? <span className="text-[11px] text-white/35">Pro later</span> : null}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

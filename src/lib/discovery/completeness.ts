@@ -3,7 +3,7 @@ import type { FeaturedContent, Profile, Project, SocialLink } from "@/src/lib/di
 export type CompletenessInput = {
   profile: Pick<
     Profile,
-    "avatarUrl" | "displayName" | "username" | "bio" | "location" | "profileType" | "primaryCategoryId"
+    "avatarUrl" | "displayName" | "username" | "bio" | "location" | "profileType" | "primaryCategoryId" | "coverImageUrl"
   >;
   hasProject: boolean;
   socialCount: number;
@@ -57,6 +57,9 @@ export function completenessSuggestions(input: {
   }
   if (!input.featuredContent.length) {
     suggestions.push({ key: "featured", label: "Feature a piece of content", href: "/me/edit#featured" });
+  }
+  if (!input.profile.coverImageUrl) {
+    suggestions.push({ key: "cover", label: "Add a cover image", href: "/me/edit#appearance" });
   }
   return suggestions.slice(0, 4);
 }

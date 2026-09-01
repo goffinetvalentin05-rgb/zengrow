@@ -3,16 +3,32 @@
 import { FEATURED_CTA, FEATURED_PLATFORM_LABELS, type FeaturedPlatform } from "@/src/lib/discovery/constants";
 import { normalizeHttpUrl, resolveFeaturedThumbnail } from "@/src/lib/discovery/media";
 import type { FeaturedContent } from "@/src/lib/discovery/types";
+import { SocialGlyph } from "@/src/components/discovery/social-glyph";
+import { cn } from "@/src/lib/utils";
+
+const FALLBACK: Record<string, string> = {
+  youtube: "from-red-500/25 via-white/[0.04] to-transparent",
+  instagram: "from-fuchsia-500/20 via-orange-400/10 to-transparent",
+  tiktok: "from-cyan-400/20 via-pink-500/10 to-transparent",
+  x: "from-white/15 via-white/[0.04] to-transparent",
+  linkedin: "from-sky-500/25 via-white/[0.04] to-transparent",
+  article: "from-amber-400/20 via-white/[0.04] to-transparent",
+  other: "from-white/10 via-white/[0.04] to-transparent",
+};
 
 export function FeaturedContentCard({
   item,
   onClick,
+  className,
 }: {
   item: FeaturedContent;
   onClick?: () => void;
+  className?: string;
 }) {
   const thumb = resolveFeaturedThumbnail(item);
   const cta = FEATURED_CTA[item.platform] ?? "Open link";
+  const label = FEATURED_PLATFORM_LABELS[item.platform as FeaturedPlatform] ?? item.platform;
+  const glyphPlatform = item.platform === "article" || item.platform === "other" ? "website" : item.platform;
 
   return (
     <a
@@ -20,22 +36,26 @@ export function FeaturedContentCard({
       target="_blank"
       rel="noreferrer"
       onClick={onClick}
-      className="group block overflow-hidden rounded-[1.4rem] bg-white/[0.04]"
+      className={cn(
+        "group relative block overflow-hidden rounded-[1.35rem] bg-white/[0.04] ring-1 ring-white/[0.06] transition hover:ring-white/15",
+        className,
+      )}
     >
       {thumb ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumb} alt="" className="aspect-video w-full object-cover" />
+        <img src={thumb} alt="" className="aspect-[16/10] w-full object-cover" />
       ) : (
-        <div className="flex aspect-video items-end bg-white/[0.03] px-4 py-4">
-          <p className="text-sm text-white/35">{FEATURED_PLATFORM_LABELS[item.platform]}</p>
+        <div className={cn("flex aspect-[16/10] items-end bg-gradient-to-br px-4 py-4", FALLBACK[item.platform] ?? FALLBACK.other)}>
+          <SocialGlyph platform={glyphPlatform} className="h-7 w-7 text-white/50" />
         </div>
       )}
-      <div className="px-4 py-3">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">
-          {FEATURED_PLATFORM_LABELS[item.platform as FeaturedPlatform] ?? item.platform}
+      <div className="px-4 py-3.5">
+        <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-white/40">
+          <SocialGlyph platform={glyphPlatform} className="h-3 w-3" />
+          {label}
         </p>
-        <p className="mt-1 line-clamp-2 text-[15px] text-white">{item.title || cta}</p>
-        <p className="mt-2 text-sm text-white/40 group-hover:text-white">{cta} →</p>
+        <p className="mt-1.5 line-clamp-2 text-[15px] leading-snug text-white">{item.title || cta}</p>
+        <p className="mt-2 text-sm text-white/40 transition group-hover:text-white/70">{cta} →</p>
       </div>
     </a>
   );

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDiscoveryApiSession, isApiError } from "@/src/lib/discovery/api-session";
 import { MAX_NICHES, PROFILE_TYPES, USERNAME_PATTERN } from "@/src/lib/discovery/constants";
 import { isAdultBirthDate } from "@/src/lib/discovery/media";
+import { isProfileThemeKey } from "@/src/lib/discovery/appearance";
 import { slugifyUsername } from "@/src/lib/discovery/slug";
 import { syncProfileDerived } from "@/src/lib/discovery/sync-profile";
 import { createClient } from "@/src/lib/supabase/server";
@@ -36,6 +37,11 @@ export async function PATCH(request: Request) {
   if (typeof body.location === "string") patch.location = body.location.trim() || null;
   if (typeof body.country === "string") patch.country = body.country.trim() || null;
   if (typeof body.avatarUrl === "string") patch.avatar_url = body.avatarUrl.trim() || null;
+  if (typeof body.coverImageUrl === "string") patch.cover_image_url = body.coverImageUrl.trim() || null;
+  if (typeof body.themeKey === "string" && isProfileThemeKey(body.themeKey)) {
+    patch.theme_key = body.themeKey;
+  }
+  if (typeof body.featuredFirst === "boolean") patch.featured_first = body.featuredFirst;
   if (typeof body.profileType === "string" && PROFILE_TYPES.includes(body.profileType as (typeof PROFILE_TYPES)[number])) {
     patch.profile_type = body.profileType;
   }

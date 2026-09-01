@@ -61,6 +61,9 @@ export function mapProfile(row: Row): Profile {
     followersCount: Number(row.followers_count ?? 0),
     followingCount: Number(row.following_count ?? 0),
     birthDate: str(row.birth_date),
+    themeKey: str(row.theme_key) ?? "obsidian",
+    coverImageUrl: str(row.cover_image_url),
+    featuredFirst: Boolean(row.featured_first),
     createdAt: String(row.created_at ?? new Date().toISOString()),
     updatedAt: String(row.updated_at ?? new Date().toISOString()),
   };
