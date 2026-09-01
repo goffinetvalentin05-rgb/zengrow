@@ -87,30 +87,33 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
 export const AUDIENCE_RANGES = [
   { id: "under-1k", label: "Under 1k", min: 0, max: 999 },
   { id: "1k-5k", label: "1k–5k", min: 1000, max: 4999 },
-  { id: "5k-20k", label: "5k–20k", min: 5000, max: 19999 },
-  { id: "20k-plus", label: "20k+", min: 20000, max: null },
+  { id: "under-5k", label: "Under 5k", min: 0, max: 4999 },
+  { id: "5k-25k", label: "5k–25k", min: 5000, max: 24999 },
+  { id: "25k-plus", label: "25k+", min: 25000, max: null },
 ] as const;
 
 export type AudienceRangeId = (typeof AUDIENCE_RANGES)[number]["id"];
 
 export const AGE_RANGES = [
   { id: "18-20", label: "18–20", min: 18, max: 20 },
-  { id: "21-25", label: "21–25", min: 21, max: 25 },
-  { id: "26-30", label: "26–30", min: 26, max: 30 },
-  { id: "31-plus", label: "31+", min: 31, max: null },
+  { id: "21-24", label: "21–24", min: 21, max: 24 },
+  { id: "25-34", label: "25–34", min: 25, max: 34 },
+  { id: "35-plus", label: "35+", min: 35, max: null },
 ] as const;
 
 export type AgeRangeId = (typeof AGE_RANGES)[number]["id"];
 
-export const ACTIVITY_FILTERS = ["rising", "new", "most-followed", "recently-active"] as const;
+export const ACTIVITY_FILTERS = ["recommended", "rising", "new", "most-followed"] as const;
 export type ActivityFilter = (typeof ACTIVITY_FILTERS)[number];
 
 export const ACTIVITY_LABELS: Record<ActivityFilter, string> = {
+  recommended: "Recommended",
   rising: "Rising",
   new: "New",
   "most-followed": "Most followed",
-  "recently-active": "Recently active",
 };
+
+export const DISCOVERY_PAGE_SIZE = 16;
 
 export const DISCOVERY_EVENT_TYPES = [
   "profile_view",

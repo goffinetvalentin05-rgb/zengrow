@@ -61,6 +61,13 @@ export function formatLocation(location?: string | null, country?: string | null
   return location || country || null;
 }
 
+export function formatAudienceSize(n: number | null | undefined) {
+  if (n == null) return null;
+  if (n < 1000) return String(n);
+  if (n < 10_000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return `${Math.round(n / 1000)}k`;
+}
+
 export function ageFromBirthDate(birthDate: string | null | undefined): number | null {
   if (!birthDate) return null;
   const date = new Date(`${birthDate}T00:00:00`);

@@ -7,11 +7,13 @@ export function NichePills({
   activeSlug,
   favoriteSlugs = [],
   hrefFor,
+  forYouLabel = "For you",
 }: {
   categories: Category[];
   activeSlug?: string | null;
   favoriteSlugs?: string[];
   hrefFor: (slug: string | null) => string;
+  forYouLabel?: string;
 }) {
   const favorites = categories.filter((cat) => favoriteSlugs.includes(cat.slug));
   const rest = categories.filter((cat) => !favoriteSlugs.includes(cat.slug));
@@ -28,7 +30,7 @@ export function NichePills({
             : "border-white/[0.08] bg-white/[0.03] text-white/65 hover:text-white",
         )}
       >
-        All
+        {forYouLabel}
       </Link>
       {ordered.map((cat) => (
         <Link

@@ -14,7 +14,7 @@ select * from (
   values
   ('Maya Chen', 'mayachen', 'Building tools for indie SaaS founders who want cleaner analytics.', 'Singapore', 'Singapore', 'builder', 'SaaS Builder', 2400, 'self_reported', 'unclaimed', true, true, true, 80, true, true, 1, 'https://api.dicebear.com/9.x/notionists/svg?seed=MayaChen'),
   ('Jonas Hale', 'jonashale', 'Onboarding systems for B2B products that still feel human.', 'Berlin', 'Germany', 'founder', 'SaaS Founder', 1800, 'self_reported', 'unclaimed', true, true, true, 78, true, false, 2, 'https://api.dicebear.com/9.x/notionists/svg?seed=JonasHale'),
-  ('Priya Shah', 'priyashah', 'Simplifying invoicing for tiny software teams.', 'London', 'United Kingdom', 'builder', 'SaaS Builder', 900, 'self_reported', 'unclaimed', true, true, true, 74, false, true, null, 'https://api.dicebear.com/9.x/notionists/svg?seed=PriyaShah'),
+  ('Priya Shah', 'priyashah', 'Simplifying invoicing for tiny software teams.', 'Basel', 'Switzerland', 'builder', 'SaaS Builder', 820, 'self_reported', 'unclaimed', true, true, true, 74, false, true, null, 'https://api.dicebear.com/9.x/notionists/svg?seed=PriyaShah'),
   ('Luca Ferrer', 'lucaferrer', 'Status pages and incident notes for small product teams.', 'Barcelona', 'Spain', 'operator', 'SaaS Operator', 4200, 'self_reported', 'unclaimed', true, true, true, 70, false, false, null, 'https://api.dicebear.com/9.x/notionists/svg?seed=LucaFerrer'),
   ('Nora Vidal', 'noravidal', 'Home goods brand built around slow, useful objects.', 'Lisbon', 'Portugal', 'founder', 'E-commerce Founder', 3100, 'self_reported', 'unclaimed', true, true, true, 82, true, false, 3, 'https://api.dicebear.com/9.x/notionists/svg?seed=NoraVidal'),
   ('Samir Benali', 'samirbenali', 'Fashion ops without the chaos. Inventory, suppliers, shipping.', 'Paris', 'France', 'operator', 'E-commerce Operator', 760, 'self_reported', 'unclaimed', true, true, true, 68, false, true, null, 'https://api.dicebear.com/9.x/notionists/svg?seed=SamirBenali'),
@@ -166,3 +166,15 @@ join (
   on p.username = v.username
 where p.is_seed = true
 on conflict do nothing;
+
+-- Enrich an existing SaaS seed so Explore can test:
+-- SaaS + Switzerland + 18–20 + Under 5k
+update public.profiles
+set
+  location = 'Basel',
+  country = 'Switzerland',
+  audience_size = 820,
+  birth_date = (current_date - interval '19 years')::date
+where is_seed = true
+  and username = 'priyashah';
+

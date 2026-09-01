@@ -1,4 +1,5 @@
 import type {
+  ActivityFilter,
   DiscoveryEventType,
   DiscoverySource,
   FeaturedPlatform,
@@ -99,6 +100,7 @@ export type ProfileCardModel = Profile & {
   categorySlugs?: string[];
   followedByMe?: boolean;
   savedByMe?: boolean;
+  discoveryBadge?: "rising" | "new" | null;
 };
 
 export type PublicProfileModel = ProfileCardModel & {
@@ -143,6 +145,6 @@ export type ExploreFilters = {
   profileType?: ProfileType | null;
   audience?: string | null;
   platform?: SocialPlatform | null;
-  activity?: "rising" | "new" | "most-followed" | "recently-active" | null;
+  activity?: ActivityFilter | "recently-active" | null;
   age?: string | null;
 };

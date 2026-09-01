@@ -1,9 +1,10 @@
 "use client";
 
-import { ButtonHTMLAttributes, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState, type CSSProperties } from "react";
 import Button from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
+import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
 
 export function FollowButton({
   profileId,
@@ -12,13 +13,17 @@ export function FollowButton({
   size = "sm",
   className,
   style,
+  silent = false,
+  isLoggedIn = true,
 }: {
   profileId: string;
   initialFollowing?: boolean;
   source?: string;
   size?: "sm" | "md";
   className?: string;
-  style?: ButtonHTMLAttributes<HTMLButtonElement>["style"];
+  style?: CSSProperties;
+  silent?: boolean;
+  isLoggedIn?: boolean;
 }) {
   const router = useRouter();
   const [following, setFollowing] = useState(Boolean(initialFollowing));
@@ -26,6 +31,13 @@ export function FollowButton({
 
   async function toggle() {
     if (pending) return;
+    if (!isLoggedIn) {
+      const next = encodeURIComponent(
+        typeof window === "undefined" ? DISCOVERY_ROUTES.explore : window.location.pathname + window.location.search,
+      );
+      router.push(`${DISCOVERY_ROUTES.login}?next=${next}`);
+      return;
+    }
     setPending(true);
     const next = !following;
     setFollowing(next);
@@ -34,9 +46,16 @@ export function FollowButton({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ profileId, source }),
     });
+    if (response.status === 401) {
+      setFollowing(!next);
+      const dest = encodeURIComponent(window.location.pathname + window.location.search);
+      router.push(`${DISCOVERY_ROUTES.login}?next=${dest}`);
+      setPending(false);
+      return;
+    }
     if (!response.ok) setFollowing(!next);
     setPending(false);
-    router.refresh();
+    if (!silent) router.refresh();
   }
 
   return (

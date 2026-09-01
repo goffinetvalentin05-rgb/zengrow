@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { AGE_RANGES, AUDIENCE_RANGES } from "@/src/lib/discovery/constants";
-import { ageFromBirthDate, birthDateBounds, sanitizeIlike } from "@/src/lib/discovery/media";
+import { AUDIENCE_RANGES, DISCOVERY_PAGE_SIZE, PROFILE_TYPE_LABELS, PROFILE_TYPES } from "@/src/lib/discovery/constants";
+import { applyDiscoveryFilters } from "@/src/lib/discovery/apply-filters";
+import { birthDateBounds, sanitizeIlike } from "@/src/lib/discovery/media";
 import {
   mapCategory,
   mapFeaturedContent,
@@ -9,6 +10,7 @@ import {
   mapSocialLink,
 } from "@/src/lib/discovery/mappers";
 import { mixDiscoverFeed } from "@/src/lib/discovery/mix";
+import { relaxExploreFilters, sortDiscoveryFeed } from "@/src/lib/discovery/sort-feed";
 import { sortByRising } from "@/src/lib/discovery/scoring";
 import type {
   Category,
@@ -123,39 +125,54 @@ async function hydrateCards(
   }));
 }
 
-function applyFilters(cards: ProfileCardModel[], filters: ExploreFilters): ProfileCardModel[] {
-  return cards.filter((card) => {
-    if (filters.niche) {
-      const slugs = card.categorySlugs?.length
-        ? card.categorySlugs
-        : card.primaryCategory
-          ? [card.primaryCategory.slug]
-          : [];
-      if (!slugs.includes(filters.niche)) return false;
+export type DiscoveryFeedPage = {
+  profiles: ProfileCardModel[];
+  related: ProfileCardModel[];
+  hasMore: boolean;
+  nextOffset: number;
+  total: number;
+};
+
+export async function getDiscoveryFeedPage(
+  supabase: SupabaseClient,
+  input: {
+    filters: ExploreFilters;
+    favoriteSlugs?: string[];
+    viewerId?: string | null;
+    offset?: number;
+    limit?: number;
+  },
+): Promise<DiscoveryFeedPage> {
+  const offset = Math.max(0, input.offset ?? 0);
+  const limit = Math.min(80, Math.max(1, input.limit ?? DISCOVERY_PAGE_SIZE));
+  const favoriteSlugs = input.favoriteSlugs ?? [];
+  const pool = (await listDiscoverableProfiles(supabase, input.viewerId)).filter(
+    (card) => card.id !== input.viewerId,
+  );
+  const exact = applyDiscoveryFilters(pool, input.filters);
+  const sorted = sortDiscoveryFeed(exact, input.filters.activity, favoriteSlugs, input.filters.niche);
+  const profiles = sorted.slice(offset, offset + limit);
+
+  let related: ProfileCardModel[] = [];
+  if (!sorted.length && offset === 0) {
+    for (const relaxed of relaxExploreFilters(input.filters)) {
+      const next = applyDiscoveryFilters(pool, relaxed);
+      if (!next.length) continue;
+      related = sortDiscoveryFeed(next, input.filters.activity, favoriteSlugs, relaxed.niche).slice(0, 8);
+      break;
     }
-    if (filters.location) {
-      const loc = `${card.location ?? ""} ${card.country ?? ""}`.toLowerCase();
-      if (!loc.includes(filters.location.toLowerCase())) return false;
+    if (!related.length) {
+      related = mixDiscoverFeed(pool, favoriteSlugs).slice(0, 8);
     }
-    if (filters.profileType && card.profileType !== filters.profileType) return false;
-    if (filters.platform && !card.socialLinks.some((link) => link.platform === filters.platform)) {
-      return false;
-    }
-    if (filters.audience) {
-      const range = AUDIENCE_RANGES.find((item) => item.id === filters.audience);
-      if (!range || card.audienceSize == null) return false;
-      if (card.audienceSize < range.min) return false;
-      if (range.max != null && card.audienceSize > range.max) return false;
-    }
-    if (filters.age) {
-      const range = AGE_RANGES.find((item) => item.id === filters.age);
-      const age = ageFromBirthDate(card.birthDate);
-      if (!range || age == null) return false;
-      if (age < range.min) return false;
-      if (range.max != null && age > range.max) return false;
-    }
-    return true;
-  });
+  }
+
+  return {
+    profiles,
+    related,
+    hasMore: offset + profiles.length < sorted.length,
+    nextOffset: offset + profiles.length,
+    total: sorted.length,
+  };
 }
 
 export async function listDiscoverableProfiles(
@@ -252,21 +269,17 @@ export async function getExplorePayload(
     viewerLocation?: string | null;
   },
 ) {
-  const all = applyFilters(
+  const all = applyDiscoveryFilters(
     await listDiscoverableProfiles(supabase, input.viewer?.id),
     input.filters,
   ).filter((card) => card.id !== input.viewer?.id);
 
-  const activitySorted =
-    input.filters.activity === "new"
-      ? [...all].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
-      : input.filters.activity === "most-followed"
-        ? [...all].sort((a, b) => b.followersCount - a.followersCount)
-        : input.filters.activity === "rising"
-          ? sortByRising(all)
-          : input.filters.activity === "recently-active"
-            ? [...all].sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt))
-            : all;
+  const activitySorted = sortDiscoveryFeed(
+    all,
+    input.filters.activity,
+    input.favoriteSlugs,
+    input.filters.niche,
+  );
 
   const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
   const nearYou = input.viewerLocation
@@ -292,7 +305,7 @@ export async function getExplorePayload(
     under5k: pick(activitySorted.filter((card) => card.audienceSize != null && card.audienceSize < 5000)),
     nearYou: pick(nearYou),
     recentlyJoined: pick(activitySorted.filter((card) => +new Date(card.createdAt) >= fourteenDaysAgo)),
-    feed: mixDiscoverFeed(activitySorted, input.favoriteSlugs),
+    feed: activitySorted,
     favoriteSlugs: input.favoriteSlugs,
   };
 }
@@ -409,8 +422,27 @@ export async function getSavedProfiles(supabase: SupabaseClient, viewerId: strin
 export async function searchDiscovery(supabase: SupabaseClient, query: string, viewerId?: string | null) {
   const q = query.trim().replace(/[%_,()]/g, " ").slice(0, 80);
   if (q.length < 2) {
-    return { people: [] as ProfileCardModel[], projects: [] as (Project & { ownerUsername: string | null; ownerName: string })[], categories: [] as Category[] };
+    const suggestions = mixDiscoverFeed(await listDiscoverableProfiles(supabase, viewerId), []).slice(0, 8);
+    return {
+      people: suggestions,
+      projects: [] as (Project & { ownerUsername: string | null; ownerName: string })[],
+      categories: [] as Category[],
+      idle: true as const,
+    };
   }
+
+  const typeMatch = PROFILE_TYPES.find(
+    (type) => type === q.toLowerCase() || PROFILE_TYPE_LABELS[type].toLowerCase() === q.toLowerCase(),
+  );
+  const peopleOr = [
+    `display_name.ilike.%${q}%`,
+    `username.ilike.%${q}%`,
+    `bio.ilike.%${q}%`,
+    `role_label.ilike.%${q}%`,
+    typeMatch ? `profile_type.eq.${typeMatch}` : null,
+  ]
+    .filter(Boolean)
+    .join(",");
 
   const [peopleRes, projectRes, catRes] = await Promise.all([
     supabase
@@ -418,19 +450,45 @@ export async function searchDiscovery(supabase: SupabaseClient, query: string, v
       .select("*")
       .eq("is_public", true)
       .eq("is_disabled", false)
-      .or(`display_name.ilike.%${q}%,username.ilike.%${q}%,bio.ilike.%${q}%`)
-      .limit(20),
+      .or(peopleOr)
+      .limit(24),
     supabase.from("projects").select("*").ilike("name", `%${q}%`).limit(12),
     supabase.from("categories").select("*").eq("is_active", true).or(`name.ilike.%${q}%,slug.ilike.%${q}%,description.ilike.%${q}%`).limit(8),
   ]);
 
-  const people = await hydrateCards(
+  let people = await hydrateCards(
     supabase,
     (peopleRes.data ?? []).map((row) => mapProfile(row as Record<string, unknown>)),
     viewerId,
   );
 
   const ownerIds = [...new Set((projectRes.data ?? []).map((row) => String((row as { owner_id: string }).owner_id)))];
+  const missingOwnerIds = ownerIds.filter((id) => !people.some((profile) => profile.id === id));
+  if (missingOwnerIds.length) {
+    const { data: extraOwners } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("is_public", true)
+      .eq("is_disabled", false)
+      .in("id", missingOwnerIds);
+    const extra = await hydrateCards(
+      supabase,
+      (extraOwners ?? []).map((row) => mapProfile(row as Record<string, unknown>)),
+      viewerId,
+    );
+    people = [...people, ...extra];
+  }
+
+  const categories = (catRes.data ?? []).map((row) => mapCategory(row as Record<string, unknown>));
+  const nicheMatch = categories[0];
+  if (nicheMatch && !people.some((profile) => profile.categorySlugs?.includes(nicheMatch.slug))) {
+    const nichePeople = applyDiscoveryFilters(await listDiscoverableProfiles(supabase, viewerId), {
+      niche: nicheMatch.slug,
+    }).slice(0, 8);
+    const seen = new Set(people.map((profile) => profile.id));
+    people = [...people, ...nichePeople.filter((profile) => !seen.has(profile.id))];
+  }
+
   const { data: owners } = ownerIds.length
     ? await supabase.from("profiles").select("id, username, display_name, is_public, is_disabled").in("id", ownerIds)
     : { data: [] as Record<string, unknown>[] };
@@ -457,7 +515,8 @@ export async function searchDiscovery(supabase: SupabaseClient, query: string, v
   return {
     people,
     projects,
-    categories: (catRes.data ?? []).map((row) => mapCategory(row as Record<string, unknown>)),
+    categories,
+    idle: false as const,
   };
 }
 

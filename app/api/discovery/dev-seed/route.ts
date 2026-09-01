@@ -75,5 +75,18 @@ export async function POST() {
     }
   }
 
+  const nineteen = new Date();
+  nineteen.setFullYear(nineteen.getFullYear() - 19);
+  await supabase
+    .from("profiles")
+    .update({
+      location: "Basel",
+      country: "Switzerland",
+      audience_size: 820,
+      birth_date: nineteen.toISOString().slice(0, 10),
+    })
+    .eq("username", "priyashah")
+    .eq("is_seed", true);
+
   return NextResponse.json({ ok: true, created });
 }
