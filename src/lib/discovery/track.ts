@@ -73,6 +73,8 @@ export type ExploreScrollState = {
 };
 
 function scrollElement(): HTMLElement | null {
+  const feed = document.getElementById("explore-feed-scroll");
+  if (feed instanceof HTMLElement) return feed;
   const node = document.getElementById("discovery-scroll") ?? document.scrollingElement;
   return node instanceof HTMLElement ? node : null;
 }

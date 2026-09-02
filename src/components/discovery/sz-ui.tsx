@@ -56,28 +56,29 @@ export function DiscoveryPageHeader({
   );
 }
 
-export function DiscoveryFeedSkeleton({ swipe = false, count = 6 }: { swipe?: boolean; count?: number }) {
-  if (swipe) {
+export function DiscoveryFeedSkeleton({
+  swipe = false,
+  person = false,
+  count = 6,
+}: {
+  swipe?: boolean;
+  person?: boolean;
+  count?: number;
+}) {
+  if (person || swipe) {
     return (
-      <div className="-mx-5 flex gap-3 overflow-hidden px-5">
-        {Array.from({ length: Math.min(count, 2) }).map((_, index) => (
-          <div
-            key={index}
-            className={cn(
-              "w-[min(84vw,380px)] shrink-0 overflow-hidden rounded-[1.75rem] border border-white/[0.06]",
-              index > 0 && "opacity-50",
-            )}
-          >
-            <div className="sz-skeleton aspect-[16/10]" />
-            {index === 0 ? (
-              <div className="space-y-3 p-4">
-                <div className="sz-skeleton h-6 w-2/3 rounded-md" />
-                <div className="sz-skeleton h-3 w-1/2 rounded-md" />
-                <div className="sz-skeleton h-3 w-full rounded-md" />
-              </div>
-            ) : null}
+      <div className="flex h-full min-h-[min(78dvh,52rem)] flex-col overflow-hidden md:mx-auto md:max-w-[32.5rem] md:min-h-[min(78dvh,52rem)] md:rounded-[1.25rem] md:border md:border-white/[0.06]">
+        <div className="sz-skeleton min-h-0 flex-1" />
+        <div className="space-y-3 px-5 py-4">
+          <div className="sz-skeleton h-7 w-2/3 rounded-md" />
+          <div className="sz-skeleton h-3 w-1/2 rounded-md" />
+          <div className="sz-skeleton h-3 w-full rounded-md" />
+          <div className="flex gap-2 pt-2">
+            <div className="sz-skeleton h-11 flex-1 rounded-2xl" />
+            <div className="sz-skeleton h-11 flex-1 rounded-2xl" />
+            <div className="sz-skeleton h-11 w-11 shrink-0 rounded-full" />
           </div>
-        ))}
+        </div>
       </div>
     );
   }
@@ -114,12 +115,7 @@ export function DiscoveryPageSkeleton({
         </div>
       </div>
       <div className="mt-7 px-5 md:px-0">
-        <div className="md:hidden">
-          <DiscoveryFeedSkeleton swipe />
-        </div>
-        <div className="hidden md:block">
-          <DiscoveryFeedSkeleton />
-        </div>
+        <DiscoveryFeedSkeleton />
       </div>
     </div>
   );

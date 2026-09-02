@@ -214,6 +214,9 @@ export const appFr = {
     nearby: "Explorer des niches proches",
     related: "Personnes proches de ces filtres",
     end: "C’est tout pour ce filtre, pour le moment.",
+    openProfile: "Ouvrir le profil de {name}",
+    playVideo: "Lire la vidéo",
+    followersShort: "abonnés",
   },
   search: {
     title: "Recherche",

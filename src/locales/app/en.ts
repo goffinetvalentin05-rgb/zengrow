@@ -216,6 +216,9 @@ export const appEn: AppDictionary = {
     nearby: "Browse nearby niches",
     related: "People close to these filters",
     end: "That’s everyone in this slice for now.",
+    openProfile: "Open {name}’s profile",
+    playVideo: "Play video",
+    followersShort: "followers",
   },
   search: {
     title: "Search",

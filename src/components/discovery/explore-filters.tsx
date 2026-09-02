@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import {
   ACTIVITY_FILTERS,
   AGE_RANGES,
@@ -29,11 +30,13 @@ export function DiscoveryFiltersSheet({
   extraLocations = [],
   hrefFor,
   onNavigate,
+  compact = false,
 }: {
   filters: ExploreFilters;
   extraLocations?: string[];
   hrefFor?: (next: ExploreFilters) => string;
   onNavigate?: () => void;
+  compact?: boolean;
 }) {
   const router = useRouter();
   const { t } = useI18n();
@@ -70,10 +73,26 @@ export function DiscoveryFiltersSheet({
 
   return (
     <>
-      <Button type="button" variant="secondary" size="sm" className="sz-press min-h-11" onClick={() => setOpen(true)}>
-        {t.filters.button}
-        {activeCount ? ` · ${activeCount}` : ""}
-      </Button>
+      {compact ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={t.filters.button}
+          className="sz-press relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/12 bg-black/45 text-white backdrop-blur-md"
+        >
+          <SlidersHorizontal className="h-4 w-4" strokeWidth={1.75} />
+          {activeCount ? (
+            <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-medium text-zinc-950">
+              {activeCount}
+            </span>
+          ) : null}
+        </button>
+      ) : (
+        <Button type="button" variant="secondary" size="sm" className="sz-press min-h-11" onClick={() => setOpen(true)}>
+          {t.filters.button}
+          {activeCount ? ` · ${activeCount}` : ""}
+        </Button>
+      )}
       <DiscoverySheet
         open={open}
         title={t.filters.title}

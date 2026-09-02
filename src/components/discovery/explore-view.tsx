@@ -6,7 +6,7 @@ import { DiscoveryFiltersSheet } from "@/src/components/discovery/explore-filter
 import { DiscoveryEmpty } from "@/src/components/discovery/empty-state";
 import { NichePills } from "@/src/components/discovery/niche-pills";
 import { PeopleFeed } from "@/src/components/discovery/profile-discovery-card";
-import { PeopleSwipeDeck } from "@/src/components/discovery/people-swipe-deck";
+import { PeopleProfileFeed } from "@/src/components/discovery/people-profile-feed";
 import { DiscoverySearchBar } from "@/src/components/discovery/search-bar";
 import { DiscoveryFeedSkeleton } from "@/src/components/discovery/sz-ui";
 import { DISCOVERY_PAGE_SIZE } from "@/src/lib/discovery/constants";
@@ -47,7 +47,6 @@ export function ExploreView({
   const [loading, setLoading] = useState(false);
   const [filterPending, setFilterPending] = useState(false);
   const [feedReady, setFeedReady] = useState(false);
-  const sentinel = useRef<HTMLDivElement>(null);
   const seen = useRef(new Set(initialProfiles.map((profile) => profile.id)));
   const paging = useRef({ offset: initialNextOffset, hasMore: initialHasMore, loading: false });
 
@@ -113,20 +112,16 @@ export function ExploreView({
     };
   }, [filters.niche, filters.location, filters.audience, filters.age, filters.profileType, filters.platform, filters.activity]);
 
+  const empty = !profiles.length;
+  const feedMode = !empty || filterPending;
+
   useEffect(() => {
-    const node = sentinel.current;
-    if (!node) return;
+    if (!feedMode) return;
     const root = document.getElementById("discovery-scroll");
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries[0]?.isIntersecting) return;
-        void loadMore();
-      },
-      { root: root ?? null, rootMargin: "560px" },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [filters]);
+    if (!root) return;
+    root.classList.add("sz-feed-root");
+    return () => root.classList.remove("sz-feed-root");
+  }, [feedMode]);
 
   async function loadMore() {
     if (paging.current.loading || !paging.current.hasMore) return;
@@ -156,7 +151,6 @@ export function ExploreView({
     source === "category" && next.niche
       ? categoryDiscoveryHref(next.niche, next)
       : exploreHref(next);
-  const empty = !profiles.length;
   const hints = droppedFilterHints(filters);
   const nearby = categories.filter((cat) => cat.slug !== filters.niche).slice(0, 4);
   const filterKey = [
@@ -169,117 +163,141 @@ export function ExploreView({
     filters.activity,
   ].join("|");
 
-  return (
-    <div className="pb-8 max-md:pb-12">
-      <header className="mx-auto w-full max-w-[720px] px-5 md:mx-0 md:max-w-none md:px-0">
-        <h1 className="sz-display">{t.explore.title}</h1>
-        {feedReady ? <p className="sz-copied mt-3 text-sm text-white/50">{t.explore.feedReady}</p> : null}
-        <p className="sz-sub">{t.explore.subtitle}</p>
-        <div className="mt-5">
-          <DiscoverySearchBar />
-        </div>
-        <div className="mt-5">
-          <NichePills
-            categories={categories}
-            activeSlug={filters.niche}
-            favoriteSlugs={favoriteSlugs}
-            hrefFor={(slug) => hrefFor({ ...filters, niche: slug })}
-            forYouLabel={t.explore.forYou}
+  const nichePills = (
+    <NichePills
+      categories={categories}
+      activeSlug={filters.niche}
+      favoriteSlugs={favoriteSlugs}
+      hrefFor={(slug) => hrefFor({ ...filters, niche: slug })}
+      forYouLabel={t.explore.forYou}
+      onNavigate={() => setFilterPending(true)}
+    />
+  );
+
+  const desktopHeader = (
+    <header className="mx-auto hidden w-full max-w-[720px] px-5 md:mx-0 md:block md:max-w-none md:px-0">
+      <h1 className="sz-display">{t.explore.title}</h1>
+      {feedReady ? <p className="sz-copied mt-3 text-sm text-white/50">{t.explore.feedReady}</p> : null}
+      <p className="sz-sub">{t.explore.subtitle}</p>
+      <div className="mt-5">
+        <DiscoverySearchBar />
+      </div>
+      <div className="mt-5">
+        {nichePills}
+        <div className="mt-3">
+          <DiscoveryFiltersSheet
+            filters={filters}
+            extraLocations={extraLocations}
+            hrefFor={hrefFor}
             onNavigate={() => setFilterPending(true)}
           />
-          <div className="mt-3">
-            <DiscoveryFiltersSheet
-              filters={filters}
-              extraLocations={extraLocations}
-              hrefFor={hrefFor}
-              onNavigate={() => setFilterPending(true)}
-            />
-          </div>
         </div>
-      </header>
+      </div>
+    </header>
+  );
 
-      <div className="mt-7 px-5 md:px-0">
-        {filterPending ? (
-          <>
-            <div className="md:hidden">
-              <DiscoveryFeedSkeleton swipe />
+  const mobileOverlay = (
+    <div className="pt-[max(0.45rem,env(safe-area-inset-top))]">
+      <div className="flex items-center gap-2 bg-gradient-to-b from-[#050506]/90 via-[#050506]/45 to-transparent px-3 pb-4 pt-1">
+        <div className="pointer-events-auto min-w-0 flex-1">{nichePills}</div>
+        <div className="pointer-events-auto shrink-0">
+          <DiscoveryFiltersSheet
+            compact
+            filters={filters}
+            extraLocations={extraLocations}
+            hrefFor={hrefFor}
+            onNavigate={() => setFilterPending(true)}
+          />
+        </div>
+      </div>
+      {feedReady ? (
+        <p className="px-5 pb-2 text-center text-xs text-white/50">{t.explore.feedReady}</p>
+      ) : null}
+    </div>
+  );
+
+  if (!feedMode) {
+    return (
+      <div className="pb-8 max-md:pb-12">
+        <header className="mx-auto w-full max-w-[720px] px-5 md:mx-0 md:max-w-none md:px-0">
+          <h1 className="sz-display">{t.explore.title}</h1>
+          <p className="sz-sub">{t.explore.subtitle}</p>
+          <div className="mt-5">
+            <DiscoverySearchBar />
+          </div>
+          <div className="mt-5">
+            {nichePills}
+            <div className="mt-3">
+              <DiscoveryFiltersSheet
+                filters={filters}
+                extraLocations={extraLocations}
+                hrefFor={hrefFor}
+                onNavigate={() => setFilterPending(true)}
+              />
             </div>
-            <div className="hidden md:block">
-              <DiscoveryFeedSkeleton />
+          </div>
+        </header>
+        <div className="mt-7 px-5 md:px-0">
+          <DiscoveryEmpty title={t.explore.emptyTitle} description={t.explore.emptyDescription} />
+          {hints.length ? (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {hints.map((hint) => (
+                <Link
+                  key={hint.key}
+                  href={hrefFor({ ...filters, [hint.key]: null })}
+                  onClick={() => setFilterPending(true)}
+                  className="sz-pill"
+                >
+                  {interpolate(t.explore.removeFilter, { label: t.filters[hint.filter] })}
+                </Link>
+              ))}
             </div>
-          </>
-        ) : empty ? (
-          <div className="sz-crossfade">
-            <DiscoveryEmpty
-              title={t.explore.emptyTitle}
-              description={t.explore.emptyDescription}
-            />
-            {hints.length ? (
-              <div className="mt-5 flex flex-wrap gap-2">
-                {hints.map((hint) => (
+          ) : null}
+          {nearby.length ? (
+            <div className="mt-6">
+              <p className="sz-label mb-3">{t.explore.nearby}</p>
+              <div className="flex flex-wrap gap-2">
+                {nearby.map((cat) => (
                   <Link
-                    key={hint.key}
-                    href={hrefFor({ ...filters, [hint.key]: null })}
+                    key={cat.id}
+                    href={hrefFor({ ...filters, niche: cat.slug })}
                     onClick={() => setFilterPending(true)}
                     className="sz-pill"
                   >
-                    {interpolate(t.explore.removeFilter, { label: t.filters[hint.filter] })}
+                    {cat.name}
                   </Link>
                 ))}
               </div>
-            ) : null}
-            {nearby.length ? (
-              <div className="mt-6">
-                <p className="sz-label mb-3">{t.explore.nearby}</p>
-                <div className="flex flex-wrap gap-2">
-                  {nearby.map((cat) => (
-                    <Link
-                      key={cat.id}
-                      href={hrefFor({ ...filters, niche: cat.slug })}
-                      onClick={() => setFilterPending(true)}
-                      className="sz-pill"
-                    >
-                      {cat.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {related.length ? (
-              <div className="mt-10">
-                <p className="sz-label mb-5">{t.explore.related}</p>
-                <PeopleFeed profiles={related} source={source} isLoggedIn={isLoggedIn} />
-              </div>
-            ) : null}
+            </div>
+          ) : null}
+          {related.length ? (
+            <div className="mt-10">
+              <p className="sz-label mb-5">{t.explore.related}</p>
+              <PeopleFeed profiles={related} source={source} isLoggedIn={isLoggedIn} />
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-md:absolute max-md:inset-0 max-md:overflow-hidden md:pb-8">
+      {desktopHeader}
+      <div key={filterKey} className="relative h-full min-h-0 md:mt-7 md:h-auto">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 md:hidden">{mobileOverlay}</div>
+        {filterPending ? (
+          <div className="h-full pb-[var(--sz-bottom-nav-height)] md:pb-0">
+            <DiscoveryFeedSkeleton person />
           </div>
         ) : (
-          <div key={filterKey} className="sz-crossfade">
-            <div className="md:hidden">
-              <PeopleSwipeDeck
-                profiles={profiles}
-                source={source}
-                isLoggedIn={isLoggedIn}
-                onNearEnd={() => void loadMore()}
-              />
-            </div>
-            <div className="hidden md:block">
-              <PeopleFeed profiles={profiles} source={source} isLoggedIn={isLoggedIn} />
-              <div ref={sentinel} className="h-10" />
-            </div>
-            {loading ? (
-              <div className="mt-6">
-                <div className="md:hidden">
-                  <DiscoveryFeedSkeleton swipe count={2} />
-                </div>
-                <div className="hidden md:block">
-                  <DiscoveryFeedSkeleton count={3} />
-                </div>
-              </div>
-            ) : null}
-            {!hasMore && profiles.length ? (
-              <p className="sz-meta py-8 text-center">{t.explore.end}</p>
-            ) : null}
-          </div>
+          <PeopleProfileFeed
+            profiles={profiles}
+            source={source}
+            isLoggedIn={isLoggedIn}
+            hasMore={hasMore || loading}
+            onNearEnd={() => void loadMore()}
+          />
         )}
       </div>
     </div>
