@@ -1,6 +1,14 @@
 import { AGE_RANGES, AUDIENCE_RANGES } from "@/src/lib/discovery/constants";
+import { geoMatchesFilter } from "@/src/lib/discovery/geo";
 import { ageFromBirthDate } from "@/src/lib/discovery/media";
 import type { ExploreFilters, ProfileCardModel } from "@/src/lib/discovery/types";
+
+function matchesLocation(card: ProfileCardModel, location: string) {
+  if (geoMatchesFilter(card.country, location) || geoMatchesFilter(card.location, location)) return true;
+  const combined = `${card.location ?? ""} ${card.country ?? ""}`.trim();
+  if (geoMatchesFilter(combined, location)) return true;
+  return combined.toLowerCase().includes(location.toLowerCase());
+}
 
 export function applyDiscoveryFilters(cards: ProfileCardModel[], filters: ExploreFilters): ProfileCardModel[] {
   return cards.filter((card) => {
@@ -12,14 +20,7 @@ export function applyDiscoveryFilters(cards: ProfileCardModel[], filters: Explor
           : [];
       if (!slugs.includes(filters.niche)) return false;
     }
-    if (filters.location) {
-      const loc = `${card.location ?? ""} ${card.country ?? ""}`.toLowerCase();
-      const q = filters.location.toLowerCase();
-      const swiss =
-        (q === "switzerland" && loc.includes("suisse")) ||
-        (q === "suisse" && (loc.includes("switzerland") || loc.includes("swiss")));
-      if (!loc.includes(q) && !swiss) return false;
-    }
+    if (filters.location && !matchesLocation(card, filters.location)) return false;
     if (filters.profileType && card.profileType !== filters.profileType) return false;
     if (filters.platform && !card.socialLinks.some((link) => link.platform === filters.platform)) {
       return false;

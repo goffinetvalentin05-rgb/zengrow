@@ -270,6 +270,13 @@ export const appEn: AppDictionary = {
     audienceUnder5k: "Under 5k",
     audience5k25k: "5k–25k",
     audience25kPlus: "25k+",
+    openGlobe: "Globe",
+    globeTitle: "Location",
+    choosePlace: "Spin the globe and tap a point to see who’s there.",
+    applyPlace: "See these profiles",
+    clearPlace: "Anywhere",
+    peopleHere: "{n} person here",
+    peopleHerePlural: "{n} people here",
   },
   activity: {
     recommended: "Recommended",

@@ -51,6 +51,7 @@ export default async function CategoryPage({
         hasMore={page.hasMore}
         nextOffset={page.nextOffset}
         extraLocations={extraLocations}
+        worldPoints={page.worldPoints}
         isLoggedIn={Boolean(session)}
         source="category"
       />

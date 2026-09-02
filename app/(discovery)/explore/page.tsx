@@ -44,6 +44,7 @@ export default async function ExplorePage({
       hasMore={page.hasMore}
       nextOffset={page.nextOffset}
       extraLocations={extraLocations}
+      worldPoints={page.worldPoints}
       isLoggedIn
       source="explore"
     />

@@ -268,6 +268,13 @@ export const appFr = {
     audienceUnder5k: "Moins de 5k",
     audience5k25k: "5k–25k",
     audience25kPlus: "25k+",
+    openGlobe: "Globe",
+    globeTitle: "Localisation",
+    choosePlace: "Tourne le globe et touche un point pour voir qui est là.",
+    applyPlace: "Voir ces profils",
+    clearPlace: "Monde entier",
+    peopleHere: "{n} personne ici",
+    peopleHerePlural: "{n} personnes ici",
   },
   activity: {
     recommended: "Recommandés",

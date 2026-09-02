@@ -7,7 +7,7 @@ import { resolveCardMedia } from "@/src/lib/discovery/card-visual";
 import { formatAudienceSize, formatLocation, normalizeHttpUrl, parseYoutubeId } from "@/src/lib/discovery/media";
 import { persistExploreScroll, trackDiscoveryEvent } from "@/src/lib/discovery/track";
 import { profileHref } from "@/src/lib/discovery/routes";
-import type { ProfileCardModel, SocialLink } from "@/src/lib/discovery/types";
+import type { ProfileCardModel, Project, SocialLink } from "@/src/lib/discovery/types";
 import { FollowButton } from "@/src/components/discovery/follow-button";
 import { SaveButton } from "@/src/components/discovery/save-button";
 import { ConnectButton } from "@/src/components/discovery/connect-button";
@@ -103,6 +103,69 @@ function FeedSocialLinks({
   );
 }
 
+function FeedProjectBlock({
+  project,
+  fallbackType,
+  profileId,
+  source,
+}: {
+  project: Project;
+  fallbackType?: string | null;
+  profileId: string;
+  source: string;
+}) {
+  const type = project.category || fallbackType || null;
+  const tagline = project.description?.trim() || null;
+  const meta = [type, tagline].filter(Boolean).join(" · ");
+  const inner = (
+    <>
+      {project.logoUrl ? (
+        <FadeImg
+          src={project.logoUrl}
+          alt=""
+          draggable={false}
+          className="h-10 w-10 shrink-0 rounded-xl object-cover ring-1 ring-white/12"
+        />
+      ) : (
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-sm text-white/70 ring-1 ring-white/12">
+          {project.name.slice(0, 1)}
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[15px] text-white">{project.name}</span>
+        {meta ? <span className="mt-0.5 block truncate text-[12px] text-white/42">{meta}</span> : null}
+      </span>
+    </>
+  );
+  const className =
+    "mt-3 flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-3 py-2";
+
+  if (!project.url) {
+    return <div className={className}>{inner}</div>;
+  }
+
+  return (
+    <a
+      href={normalizeHttpUrl(project.url)}
+      target="_blank"
+      rel="noreferrer"
+      onClick={() =>
+        trackDiscoveryEvent({
+          profileId,
+          eventType: "project_click",
+          source,
+          platform: "project",
+          contentId: project.id,
+          destination: project.url,
+        })
+      }
+      className={`sz-press ${className} hover:border-white/16`}
+    >
+      {inner}
+    </a>
+  );
+}
+
 function YoutubeStage({
   youtubeUrl,
   posterUrl,
@@ -179,7 +242,6 @@ export function ProfileFeedCard({
   const openAria = interpolate(t.explore.openProfile, { name: profile.displayName });
   const metaLine = [role, niche && niche !== role ? niche : null].filter(Boolean).join(" · ");
   const project = profile.featuredProject;
-  const story = project?.description || (!project ? profile.bio : null);
   const stats = [followers ? `${followers} ${t.explore.followersShort}` : null, niche].filter(Boolean);
 
   return (
@@ -216,7 +278,7 @@ export function ProfileFeedCard({
         ) : null}
 
         {profile.discoveryBadge ? (
-          <span className="pointer-events-none absolute left-4 top-[max(5.7rem,calc(env(safe-area-inset-top)+4.5rem))] rounded-full bg-white px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-950 md:top-4">
+          <span className="pointer-events-none absolute left-4 top-[max(4.85rem,calc(env(safe-area-inset-top)+3.6rem))] rounded-full bg-white px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-950 md:top-4">
             {profile.discoveryBadge === "rising" ? t.badges.rising : t.badges.new}
           </span>
         ) : null}
@@ -240,16 +302,6 @@ export function ProfileFeedCard({
             </span>
           )}
         </Link>
-
-        {media.heroUrl && media.projectLogo ? (
-          <FadeImg
-            src={media.projectLogo}
-            alt=""
-            draggable={false}
-            className="pointer-events-none absolute bottom-3 right-4 z-[1] h-11 w-11 rounded-2xl border border-white/15 bg-[#0c0c0e] object-cover md:bottom-4"
-            style={accent ? { boxShadow: `0 0 0 1px ${accent}55` } : undefined}
-          />
-        ) : null}
       </div>
 
       <div className="min-w-0 shrink-0 px-5 pb-3 pt-3.5 md:px-6 md:pb-5">
@@ -259,16 +311,17 @@ export function ProfileFeedCard({
           {place ? <p className="sz-meta mt-0.5 truncate">{place}</p> : null}
         </Link>
 
+        {profile.bio ? (
+          <p className="mt-3 line-clamp-2 text-[13.5px] leading-relaxed text-white/48">{profile.bio}</p>
+        ) : null}
+
         {project ? (
-          <div className="mt-3 min-w-0">
-            <p className="sz-label">{t.profile.currentlyBuilding}</p>
-            <p className="mt-1 truncate text-[1.05rem] leading-tight text-white">{project.name}</p>
-            {story ? (
-              <p className="mt-1.5 line-clamp-2 text-[13.5px] leading-relaxed text-white/48">{story}</p>
-            ) : null}
-          </div>
-        ) : profile.bio ? (
-          <p className="mt-3 line-clamp-3 text-[13.5px] leading-relaxed text-white/48">{profile.bio}</p>
+          <FeedProjectBlock
+            project={project}
+            fallbackType={niche}
+            profileId={profile.id}
+            source={source}
+          />
         ) : null}
 
         <FeedSocialLinks links={profile.socialLinks} profileId={profile.id} source={source} />

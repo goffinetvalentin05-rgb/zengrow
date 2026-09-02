@@ -192,6 +192,14 @@ describe("discovery filters", () => {
     expect(applyDiscoveryFilters(profiles, { location: "Switzerland" }).map((item) => item.id)).toEqual(["v"]);
   });
 
+  it("matches globe country aliases like Allemagne", () => {
+    const profiles = [
+      card({ id: "j", displayName: "Jonas", country: "Allemagne", categorySlugs: ["saas"] }),
+      card({ id: "p", displayName: "Priya", country: "Switzerland", categorySlugs: ["saas"] }),
+    ];
+    expect(applyDiscoveryFilters(profiles, { location: "Germany" }).map((item) => item.id)).toEqual(["j"]);
+  });
+
   it("never creates an under-18 age filter", () => {
     const filters = parseExploreFilters({ age: "16-17" });
     expect(filters.age).toBeNull();

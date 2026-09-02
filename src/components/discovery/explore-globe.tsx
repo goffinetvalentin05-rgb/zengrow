@@ -129,12 +129,14 @@ export function ExploreGlobe({
   activeLocation = null,
   onSelect,
   size = 56,
+  toggleOnReselect = true,
   className,
 }: {
   points: WorldPoint[];
   activeLocation?: string | null;
   onSelect: (filter: string | null) => void;
   size?: number;
+  toggleOnReselect?: boolean;
   className?: string;
 }) {
   const { t } = useI18n();
@@ -253,7 +255,8 @@ export function ExploreGlobe({
       const x = r + p.x * (r - 3.5);
       const y = r - p.y * (r - 3.5);
       const dist = Math.hypot(px - x, py - y);
-      if (dist < 14 && (!best || dist < best.dist)) best = { point, dist };
+      const reach = Math.max(22, size * 0.12);
+      if (dist < reach && (!best || dist < best.dist)) best = { point, dist };
     }
     return best?.point ?? null;
   }
@@ -286,7 +289,8 @@ export function ExploreGlobe({
     if (last.current.moved < 10) {
       const point = hit(event.clientX, event.clientY);
       if (point) {
-        onSelectRef.current(geoMatchesFilter(point.filter, activeRef.current) ? null : point.filter);
+        const same = geoMatchesFilter(point.filter, activeRef.current);
+        onSelectRef.current(toggleOnReselect && same ? null : point.filter);
       }
       idle.current = !reduced;
     } else {

@@ -4,6 +4,7 @@ import { mapProfileAnalytics, parseAnalyticsRange } from "@/src/lib/discovery/an
 import { blockStatLabel, mapConversionMetrics } from "@/src/lib/discovery/conversion";
 import { connectionStatusForViewer } from "@/src/lib/discovery/connections";
 import { applyDiscoveryFilters } from "@/src/lib/discovery/apply-filters";
+import { collectWorldPoints, type WorldPoint } from "@/src/lib/discovery/geo";
 import { birthDateBounds, sanitizeIlike } from "@/src/lib/discovery/media";
 import {
   mapCategory,
@@ -73,7 +74,7 @@ async function hydrateCards(
   const categoryIds = [...new Set(profiles.map((p) => p.primaryCategoryId).filter(Boolean))] as string[];
 
   const [projectsRes, linksRes, catsRes, followsRes, savedRes, featuredRes, membershipRes, connectionsRes] = await Promise.all([
-    supabase.from("projects").select("*").in("owner_id", ids).eq("featured_project", true),
+    supabase.from("projects").select("*").in("owner_id", ids).order("sort_index"),
     supabase.from("social_links").select("*").in("profile_id", ids).order("sort_index"),
     categoryIds.length
       ? supabase.from("categories").select("*").in("id", categoryIds)
@@ -95,9 +96,13 @@ async function hydrateCards(
   ]);
 
   const featuredByOwner = new Map<string, Project>();
+  const fallbackByOwner = new Map<string, Project>();
   for (const row of projectsRes.data ?? []) {
     const project = mapProject(row as Record<string, unknown>);
-    featuredByOwner.set(project.ownerId, project);
+    if (project.featuredProject && !featuredByOwner.has(project.ownerId)) {
+      featuredByOwner.set(project.ownerId, project);
+    }
+    if (!fallbackByOwner.has(project.ownerId)) fallbackByOwner.set(project.ownerId, project);
   }
   const linksByProfile = new Map<string, SocialLink[]>();
   for (const row of linksRes.data ?? []) {
@@ -138,7 +143,7 @@ async function hydrateCards(
   return profiles.map((profile) => ({
     ...profile,
     primaryCategory: profile.primaryCategoryId ? cats.get(profile.primaryCategoryId) ?? null : null,
-    featuredProject: featuredByOwner.get(profile.id) ?? null,
+    featuredProject: featuredByOwner.get(profile.id) ?? fallbackByOwner.get(profile.id) ?? null,
     featuredPreview: featuredPreviewByProfile.get(profile.id) ?? null,
     socialLinks: linksByProfile.get(profile.id) ?? [],
     categorySlugs: slugsByProfile.get(profile.id) ?? [],
@@ -154,6 +159,7 @@ export type DiscoveryFeedPage = {
   hasMore: boolean;
   nextOffset: number;
   total: number;
+  worldPoints: WorldPoint[];
 };
 
 export async function getDiscoveryFeedPage(
@@ -195,6 +201,7 @@ export async function getDiscoveryFeedPage(
     hasMore: offset + profiles.length < sorted.length,
     nextOffset: offset + profiles.length,
     total: sorted.length,
+    worldPoints: collectWorldPoints(pool),
   };
 }
 
