@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { USERNAME_PATTERN } from "@/src/lib/discovery/constants";
 import {
   classifyPublicSlug,
   getBrandedProfilePreview,
   getProfileShareText,
+  getWorkingProfileUrl,
   publicSlugStatusMessage,
   readUtmCampaign,
   readUtmMedium,
@@ -33,7 +34,20 @@ describe("public Sharpz slug", () => {
   });
 
   it("marks product routes as reserved", () => {
-    for (const slug of ["explore", "search", "settings", "admin", "api", "me", "login"]) {
+    for (const slug of [
+      "explore",
+      "search",
+      "saved",
+      "following",
+      "analytics",
+      "settings",
+      "me",
+      "onboarding",
+      "pro",
+      "login",
+      "admin",
+      "api",
+    ]) {
       expect(isReservedProfileSlug(slug)).toBe(true);
       expect(classifyPublicSlug(slug)).toBe("reserved");
       expect(isValidPublicSlug(slug)).toBe(false);
@@ -60,5 +74,16 @@ describe("public Sharpz slug", () => {
   it("builds a branded share preview", () => {
     expect(getBrandedProfilePreview("valentin")).toBe("sharpz.me/valentin");
     expect(getProfileShareText("valentin")).toContain("sharpz.me/valentin");
+  });
+
+  it("opens working profile URLs on localhost in development", () => {
+    expect(getWorkingProfileUrl("valentin", "http://localhost:3000")).toBe("http://localhost:3000/valentin");
+    expect(getWorkingProfileUrl("valentin", "http://127.0.0.1:3000")).toBe("http://127.0.0.1:3000/valentin");
+  });
+
+  it("builds production working URLs from the public site URL", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://sharpz.me");
+    expect(getWorkingProfileUrl("valentin")).toBe("https://sharpz.me/valentin");
+    vi.unstubAllEnvs();
   });
 });

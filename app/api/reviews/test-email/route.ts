@@ -5,6 +5,7 @@ import { isRestaurantExpiredForUser } from "@/src/lib/access";
 import { expireTrialIfNeeded } from "@/src/lib/subscription";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 import { createClient } from "@/src/lib/supabase/server";
+import { getPublicSiteUrl } from "@/src/lib/site-url";
 
 function errorMessageFromUnknown(err: unknown): string {
   if (err && typeof err === "object" && "message" in err && typeof (err as { message: string }).message === "string") {
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: reservationError?.message ?? "Impossible de créer une réservation de test." }, { status: 400 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || new URL(request.url).origin;
+  const appUrl = getPublicSiteUrl() || new URL(request.url).origin;
   const recipient = restaurant.email || user.email;
   if (!recipient) {
     return NextResponse.json({ error: "Aucune adresse e-mail de destination trouvée." }, { status: 400 });

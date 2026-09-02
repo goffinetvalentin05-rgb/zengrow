@@ -1,5 +1,6 @@
 "use client";
 
+import { getBrandedProfilePreview } from "@/src/lib/discovery/public-link";
 import { FEATURED_PERSON } from "../landing-people";
 import { useLocale } from "../locale-provider";
 import { Container, Section, SectionLead, SectionTitle } from "../ui";
@@ -47,7 +48,7 @@ export function ProfileSection() {
 
               <div className="go-profile__latest">
                 <p className="go-profile__label">Lien public</p>
-                <p className="go-profile__latest-title">sharpz.me/{person.username}</p>
+                <p className="go-profile__latest-title">{getBrandedProfilePreview(person.username)}</p>
                 <div className="go-profile-public__platforms">
                   {person.platforms.map((platform) => (
                     <span key={platform}>{platform}</span>

@@ -1,4 +1,5 @@
 import type { WebsiteExtract } from "@/src/lib/sharpz/types";
+import { getSharpzBotUserAgent } from "@/src/lib/site-url";
 
 const PRIVATE_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1"]);
 const PRIVATE_IP =
@@ -79,7 +80,7 @@ export async function extractWebsite(inputUrl: string): Promise<WebsiteExtract> 
       signal: controller.signal,
       redirect: "follow",
       headers: {
-        "User-Agent": "SharpzBot/1.0 (+https://sharpz.app)",
+        "User-Agent": getSharpzBotUserAgent(),
         Accept: "text/html,application/xhtml+xml",
       },
     });

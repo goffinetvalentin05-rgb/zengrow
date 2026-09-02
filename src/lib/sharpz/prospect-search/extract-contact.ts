@@ -1,5 +1,6 @@
 import { normalizeSaasUrl } from "@/src/lib/sharpz/website-extract";
 import type { ExtractedProspectContact, SourcedField } from "@/src/lib/sharpz/prospect-search/types";
+import { getSharpzBotUserAgent } from "@/src/lib/site-url";
 
 const EMAIL_RE =
   /\b[a-z0-9][a-z0-9._%+-]{0,62}@[a-z0-9][a-z0-9.-]{0,62}\.[a-z]{2,}\b/gi;
@@ -132,7 +133,7 @@ async function fetchHtml(url: string) {
       signal: controller.signal,
       redirect: "follow",
       headers: {
-        "User-Agent": "SharpzBot/1.0 (+https://sharpz.app)",
+        "User-Agent": getSharpzBotUserAgent(),
         Accept: "text/html,application/xhtml+xml",
       },
     });

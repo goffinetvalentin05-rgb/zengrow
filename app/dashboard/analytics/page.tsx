@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { requireRestaurant } from "@/src/lib/auth";
 import { createClient } from "@/src/lib/supabase/server";
 import { AnalyticsView } from "@/src/components/sharpz/analytics/analytics-view";
@@ -15,13 +14,7 @@ import {
   getLatestAudit,
 } from "@/src/lib/sharpz/queries";
 import { parseAnalyticsTab } from "@/src/lib/sharpz/routes";
-
-function resolveAppOrigin(host: string | null) {
-  const env = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-  if (env) return env;
-  if (host) return `https://${host}`;
-  return "http://localhost:3000";
-}
+import { getPublicSiteUrl } from "@/src/lib/site-url";
 
 export default async function AnalyticsPage({
   searchParams,
@@ -31,8 +24,7 @@ export default async function AnalyticsPage({
   const restaurant = await requireRestaurant();
   const supabase = await createClient();
   const tab = parseAnalyticsTab((await searchParams).tab);
-  const host = (await headers()).get("host");
-  const origin = resolveAppOrigin(host);
+  const origin = getPublicSiteUrl();
 
   const [
     lastAudit,

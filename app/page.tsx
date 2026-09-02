@@ -3,15 +3,14 @@ import { redirect } from "next/navigation";
 import { LandingPage } from "@/components/landing/LandingPage";
 import { getMessages } from "@/src/locales/app";
 import { getRequestLocale } from "@/src/i18n/server";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+import { getPublicSiteUrl } from "@/src/lib/site-url";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const t = getMessages(locale).landing;
   const ogLocale = locale === "en" ? "en_US" : "fr_CH";
   return {
-    ...(siteUrl ? { metadataBase: new URL(siteUrl.replace(/\/$/, "")) } : {}),
+    metadataBase: new URL(getPublicSiteUrl()),
     title: { absolute: t.meta.title },
     description: t.meta.description,
     applicationName: t.brand.name,
@@ -28,6 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: ogLocale,
       alternateLocale: locale === "en" ? ["fr_CH"] : ["en_US"],
       siteName: t.brand.name,
+      url: getPublicSiteUrl(),
     },
     twitter: {
       card: "summary_large_image",

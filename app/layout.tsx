@@ -4,6 +4,7 @@ import { Cormorant_Garamond, Dancing_Script, Geist, Geist_Mono, Inter, Instrumen
 import { AppI18nTree } from "@/src/i18n/app-i18n-tree";
 import { getRequestLocale } from "@/src/i18n/server";
 import { getMessages } from "@/src/locales/app";
+import { getPublicSiteUrl } from "@/src/lib/site-url";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,6 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const t = getMessages(locale);
   return {
+    metadataBase: new URL(getPublicSiteUrl()),
     title: {
       default: "Sharpz",
       template: "%s | Sharpz",

@@ -9,6 +9,7 @@ import { getProfileByUsername } from "@/src/lib/discovery/queries";
 import { readUtmMedium, readUtmSource, sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
 import { DISCOVERY_ROUTES, profileHref } from "@/src/lib/discovery/routes";
 import { isReservedProfileSlug, normalizePublicSlug } from "@/src/lib/discovery/slug";
+import { absoluteUrl } from "@/src/lib/site-url";
 import { createClient } from "@/src/lib/supabase/server";
 import { getRequestLocale } from "@/src/i18n/server";
 import { getMessages, interpolate } from "@/src/locales/app";
@@ -37,10 +38,18 @@ export async function generatePublicProfileMetadata(rawUsername: string): Promis
     .maybeSingle();
   if (!data?.username) return { title: t.seo.profile };
   const name = data.display_name ?? `@${data.username}`;
+  const description = data.bio || interpolate(t.seo.onSharpz, { name });
+  const canonical = absoluteUrl(profileHref(data.username));
   return {
     title: name,
-    description: data.bio || interpolate(t.seo.onSharpz, { name }),
-    alternates: { canonical: profileHref(data.username) },
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title: name,
+      description,
+      url: canonical,
+      type: "profile",
+    },
   };
 }
 

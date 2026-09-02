@@ -3,8 +3,9 @@ import { requireDiscoverySession } from "@/src/lib/discovery/auth";
 import { getSharpzProPriceId } from "@/src/lib/discovery/pro";
 import { getStripeClient } from "@/src/lib/stripe";
 import { createClient } from "@/src/lib/supabase/server";
+import { getPublicSiteUrl } from "@/src/lib/site-url";
 
-export async function POST(request: Request) {
+export async function POST() {
   const { user, profile } = await requireDiscoverySession();
   const priceId = getSharpzProPriceId();
   if (!priceId) {
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const origin = new URL(request.url).origin;
+  const origin = getPublicSiteUrl();
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,

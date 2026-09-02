@@ -1,3 +1,5 @@
+import { getSharpzContactMailto } from "@/src/lib/site-url";
+
 export const ROUTES = {
   home: "/",
   signup: "/pro/signup",
@@ -10,7 +12,7 @@ export const ROUTES = {
   pricing: "#pricing",
   faq: "#faq",
   start: "#start",
-  contact: "mailto:contact@zengrow.ch",
+  contact: getSharpzContactMailto(),
 } as const;
 
 /** @deprecated Prefer locale dictionaries for SEO copy. Kept for legal pages. */

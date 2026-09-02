@@ -5,6 +5,7 @@ import { devOwnerBypassesPublicBookingBlock } from "@/src/lib/access";
 import { assertCronAuthorized } from "@/src/lib/cron-auth";
 import { isRestaurantExpired, type SubscriptionStatus } from "@/src/lib/subscription";
 import { createAdminClient } from "@/src/lib/supabase/admin";
+import { getPublicSiteUrl } from "@/src/lib/site-url";
 
 function toCompletedAt(date: string, time: string) {
   return new Date(`${date}T${time}:00`);
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient();
   const now = new Date();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || request.nextUrl.origin;
+  const appUrl = getPublicSiteUrl() || request.nextUrl.origin;
 
   const { data: reservations, error: reservationsError } = await supabase
     .from("reservations")

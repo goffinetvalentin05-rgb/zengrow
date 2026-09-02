@@ -1,19 +1,20 @@
 import { USERNAME_PATTERN } from "@/src/lib/discovery/constants";
 import { isReservedProfileSlug, normalizePublicSlug } from "@/src/lib/discovery/slug";
-import { getPublicSiteUrl } from "@/src/lib/site-url";
+import { getPublicSiteUrl, getSharpzLinkHost, isLocalHostname } from "@/src/lib/site-url";
 
 export type PublicSlugStatus = "available" | "taken" | "invalid" | "reserved" | "current";
 
-const DEFAULT_LINK_HOST = "sharpz.me";
+export { getSharpzLinkHost };
 
-function stripHost(value: string) {
-  return value.replace(/^https?:\/\//, "").replace(/\/+$/, "");
-}
-
-export function getSharpzLinkHost() {
-  const fromEnv = process.env.NEXT_PUBLIC_SHARPZ_LINK_HOST?.trim();
-  if (fromEnv) return stripHost(fromEnv);
-  return DEFAULT_LINK_HOST;
+function originFromValue(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  try {
+    const url = new URL(trimmed.includes("://") ? trimmed : `http://${trimmed}`);
+    return { origin: `${url.protocol}//${url.host}`.replace(/\/+$/, ""), hostname: url.hostname };
+  } catch {
+    return null;
+  }
 }
 
 export function profilePath(username: string) {
@@ -24,32 +25,29 @@ export function getBrandedProfilePreview(username: string) {
   return `${getSharpzLinkHost()}${profilePath(username)}`;
 }
 
-function isLocalHostname(hostname: string) {
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
-}
-
 /** URL that actually opens the profile in the current environment. */
 export function getWorkingProfileUrl(username: string, origin?: string) {
   const path = profilePath(username);
-  const host = process.env.NEXT_PUBLIC_SHARPZ_LINK_HOST?.trim();
+
+  if (typeof window !== "undefined" && isLocalHostname(window.location.hostname)) {
+    return `${window.location.origin}${path}`;
+  }
+
+  const explicit = origin ? originFromValue(origin) : null;
+  if (explicit && isLocalHostname(explicit.hostname)) {
+    return `${explicit.origin}${path}`;
+  }
 
   if (typeof window !== "undefined") {
-    if (isLocalHostname(window.location.hostname) || !host) {
-      return `${window.location.origin}${path}`;
-    }
-    const cleaned = stripHost(host);
-    const protocol = cleaned.startsWith("localhost") ? window.location.protocol : "https:";
-    return `${protocol}//${cleaned}${path}`;
+    const site = originFromValue(getPublicSiteUrl());
+    if (site && !isLocalHostname(site.hostname)) return `${site.origin}${path}`;
+    return `${window.location.origin}${path}`;
   }
 
-  if (origin && !host) return `${origin.replace(/\/+$/, "")}${path}`;
-  if (host) {
-    const cleaned = stripHost(host);
-    const protocol = cleaned.startsWith("localhost") ? "http:" : "https:";
-    return `${protocol}//${cleaned}${path}`;
-  }
-  const site = getPublicSiteUrl();
-  return site ? `${site}${path}` : path;
+  const site = originFromValue(getPublicSiteUrl());
+  if (site) return `${site.origin}${path}`;
+  if (explicit) return `${explicit.origin}${path}`;
+  return path;
 }
 
 export function getProfileShareText(username: string) {

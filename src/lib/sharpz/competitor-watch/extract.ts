@@ -4,6 +4,7 @@ import {
 } from "@/src/lib/sharpz/website-extract";
 import type { CompetitorPlan, CompetitorSnapshotData } from "@/src/lib/sharpz/competitor-watch/diff";
 import { hashSnapshot } from "@/src/lib/sharpz/competitor-watch/diff";
+import { getSharpzBotUserAgent } from "@/src/lib/site-url";
 
 function decode(value: string) {
   return value
@@ -52,7 +53,7 @@ async function fetchHtml(inputUrl: string): Promise<{ url: string; finalUrl: str
       signal: controller.signal,
       redirect: "follow",
       headers: {
-        "User-Agent": "SharpzBot/1.0 (+https://sharpz.app; competitor-watch)",
+        "User-Agent": getSharpzBotUserAgent("competitor-watch"),
         Accept: "text/html,application/xhtml+xml",
       },
     });

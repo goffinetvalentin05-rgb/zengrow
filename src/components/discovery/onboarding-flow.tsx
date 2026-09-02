@@ -283,7 +283,9 @@ function IdentityStep({
   usernameTaken: boolean;
 }) {
   const { t } = useI18n();
-  const preview = draft.username ? getBrandedProfilePreview(slugifyUsername(draft.username)) : "sharpz.me/username";
+  const preview = draft.username
+    ? getBrandedProfilePreview(slugifyUsername(draft.username))
+    : getBrandedProfilePreview("username");
   const slugMessage =
     usernameStatus === "taken"
       ? t.slug.taken

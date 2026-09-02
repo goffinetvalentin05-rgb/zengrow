@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AuthCard, ZenGrowAuthLayout } from "@/src/components/auth/zengrow-auth-page-shell";
 import { createClient } from "@/src/lib/supabase/client";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
+import { getAuthCallbackUrl } from "@/src/lib/site-url";
 import {
   authErrorClassName,
   authFieldLabel,
@@ -40,6 +41,7 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: fullName.trim() },
+        emailRedirectTo: getAuthCallbackUrl(),
       },
     });
 
