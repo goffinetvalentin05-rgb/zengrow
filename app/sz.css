@@ -254,6 +254,29 @@
   }
 }
 
+.sz-globe {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #07090b;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 16px -3px rgba(92, 210, 200, 0.38);
+  touch-action: none;
+}
+.sz-globe.is-on {
+  box-shadow:
+    0 0 0 1px rgba(150, 230, 220, 0.4),
+    0 0 22px -2px rgba(92, 210, 200, 0.55);
+}
+.sz-globe canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
 .sz-pill {
   display: inline-flex;
   min-height: 2.5rem;

@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { DiscoveryFiltersSheet } from "@/src/components/discovery/explore-filters";
 import { DiscoveryEmpty } from "@/src/components/discovery/empty-state";
 import { NichePills } from "@/src/components/discovery/niche-pills";
 import { PeopleFeed } from "@/src/components/discovery/profile-discovery-card";
 import { PeopleProfileFeed } from "@/src/components/discovery/people-profile-feed";
+import { ExploreGlobe } from "@/src/components/discovery/explore-globe";
 import { DiscoverySearchBar } from "@/src/components/discovery/search-bar";
 import { DiscoveryFeedSkeleton } from "@/src/components/discovery/sz-ui";
 import { DISCOVERY_PAGE_SIZE } from "@/src/lib/discovery/constants";
 import { droppedFilterHints } from "@/src/lib/discovery/apply-filters";
 import { categoryDiscoveryHref, exploreHref, feedQueryString } from "@/src/lib/discovery/filters";
+import { collectWorldPoints } from "@/src/lib/discovery/geo";
 import { readExploreScroll, rememberExploreCount, restoreExploreScroll } from "@/src/lib/discovery/track";
 import { consumeOnboardingJustFinished } from "@/src/lib/discovery/onboarding";
 import type { Category, ExploreFilters, ProfileCardModel } from "@/src/lib/discovery/types";
@@ -42,6 +45,7 @@ export function ExploreView({
   source?: string;
 }) {
   const { t } = useI18n();
+  const router = useRouter();
   const [profiles, setProfiles] = useState(initialProfiles);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
@@ -162,6 +166,15 @@ export function ExploreView({
     filters.platform,
     filters.activity,
   ].join("|");
+  const worldPoints = useMemo(
+    () => collectWorldPoints(profiles.concat(related), extraLocations),
+    [profiles, related, extraLocations],
+  );
+
+  function goToFilters(next: ExploreFilters) {
+    setFilterPending(true);
+    router.push(hrefFor(next), { scroll: false });
+  }
 
   const nichePills = (
     <NichePills
@@ -182,24 +195,50 @@ export function ExploreView({
       <div className="mt-5">
         <DiscoverySearchBar />
       </div>
-      <div className="mt-5">
-        {nichePills}
-        <div className="mt-3">
-          <DiscoveryFiltersSheet
-            filters={filters}
-            extraLocations={extraLocations}
-            hrefFor={hrefFor}
-            onNavigate={() => setFilterPending(true)}
-          />
+      <div className="mt-5 flex items-center gap-3">
+        <ExploreGlobe
+          points={worldPoints}
+          activeLocation={filters.location}
+          onSelect={(location) => goToFilters({ ...filters, location })}
+          size={64}
+        />
+        <div className="min-w-0 flex-1">
+          {nichePills}
+          {filters.location ? (
+            <Link
+              href={hrefFor({ ...filters, location: null })}
+              scroll={false}
+              onClick={() => setFilterPending(true)}
+              className="sz-pill is-on mt-2"
+            >
+              {filters.location} ×
+            </Link>
+          ) : null}
         </div>
+        <DiscoveryFiltersSheet
+          filters={filters}
+          extraLocations={extraLocations}
+          hrefFor={hrefFor}
+          onNavigate={() => setFilterPending(true)}
+        />
       </div>
     </header>
   );
 
   const mobileOverlay = (
     <div className="pt-[max(0.45rem,env(safe-area-inset-top))]">
-      <div className="flex items-center gap-2 bg-gradient-to-b from-[#050506]/90 via-[#050506]/45 to-transparent px-3 pb-4 pt-1">
-        <div className="pointer-events-auto min-w-0 flex-1">{nichePills}</div>
+      <div className="flex items-center gap-2.5 bg-gradient-to-b from-[#050506]/92 via-[#050506]/55 to-transparent px-3 pb-5 pt-1">
+        <div className="pointer-events-auto shrink-0">
+          <ExploreGlobe
+            points={worldPoints}
+            activeLocation={filters.location}
+            onSelect={(location) => goToFilters({ ...filters, location })}
+            size={56}
+          />
+        </div>
+        <div className="pointer-events-auto min-w-0 flex-1">
+          {nichePills}
+        </div>
         <div className="pointer-events-auto shrink-0">
           <DiscoveryFiltersSheet
             compact
@@ -210,6 +249,18 @@ export function ExploreView({
           />
         </div>
       </div>
+      {filters.location ? (
+        <div className="pointer-events-auto -mt-1.5 flex px-3 pb-2">
+          <Link
+            href={hrefFor({ ...filters, location: null })}
+            scroll={false}
+            onClick={() => setFilterPending(true)}
+            className="sz-pill is-on text-[12px]"
+          >
+            {filters.location} ×
+          </Link>
+        </div>
+      ) : null}
       {feedReady ? (
         <p className="px-5 pb-2 text-center text-xs text-white/50">{t.explore.feedReady}</p>
       ) : null}
@@ -225,15 +276,23 @@ export function ExploreView({
           <div className="mt-5">
             <DiscoverySearchBar />
           </div>
-          <div className="mt-5">
-            {nichePills}
-            <div className="mt-3">
-              <DiscoveryFiltersSheet
-                filters={filters}
-                extraLocations={extraLocations}
-                hrefFor={hrefFor}
-                onNavigate={() => setFilterPending(true)}
-              />
+          <div className="mt-5 flex items-start gap-3">
+            <ExploreGlobe
+              points={worldPoints}
+              activeLocation={filters.location}
+              onSelect={(location) => goToFilters({ ...filters, location })}
+              size={56}
+            />
+            <div className="min-w-0 flex-1">
+              {nichePills}
+              <div className="mt-3">
+                <DiscoveryFiltersSheet
+                  filters={filters}
+                  extraLocations={extraLocations}
+                  hrefFor={hrefFor}
+                  onNavigate={() => setFilterPending(true)}
+                />
+              </div>
             </div>
           </div>
         </header>
@@ -284,21 +343,23 @@ export function ExploreView({
   return (
     <div className="max-md:absolute max-md:inset-0 max-md:overflow-hidden md:pb-8">
       {desktopHeader}
-      <div key={filterKey} className="relative h-full min-h-0 md:mt-7 md:h-auto">
+      <div className="relative h-full min-h-0 md:mt-7 md:h-auto">
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 md:hidden">{mobileOverlay}</div>
-        {filterPending ? (
-          <div className="h-full pb-[var(--sz-bottom-nav-height)] md:pb-0">
-            <DiscoveryFeedSkeleton person />
-          </div>
-        ) : (
-          <PeopleProfileFeed
-            profiles={profiles}
-            source={source}
-            isLoggedIn={isLoggedIn}
-            hasMore={hasMore || loading}
-            onNearEnd={() => void loadMore()}
-          />
-        )}
+        <div key={filterKey} className="h-full min-h-0">
+          {filterPending ? (
+            <div className="h-full pb-[var(--sz-bottom-nav-height)] md:pb-0">
+              <DiscoveryFeedSkeleton person />
+            </div>
+          ) : (
+            <PeopleProfileFeed
+              profiles={profiles}
+              source={source}
+              isLoggedIn={isLoggedIn}
+              hasMore={hasMore || loading}
+              onNearEnd={() => void loadMore()}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

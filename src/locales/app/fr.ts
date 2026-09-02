@@ -217,6 +217,8 @@ export const appFr = {
     openProfile: "Ouvrir le profil de {name}",
     playVideo: "Lire la vidéo",
     followersShort: "abonnés",
+    globeAria: "Explorer le monde",
+    globeHint: "Fais tourner le globe. Touche un point pour filtrer par pays.",
   },
   search: {
     title: "Recherche",

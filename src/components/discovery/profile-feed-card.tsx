@@ -4,18 +4,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { resolveCardMedia } from "@/src/lib/discovery/card-visual";
-import { formatAudienceSize, formatLocation, parseYoutubeId } from "@/src/lib/discovery/media";
+import { formatAudienceSize, formatLocation, normalizeHttpUrl, parseYoutubeId } from "@/src/lib/discovery/media";
 import { persistExploreScroll, trackDiscoveryEvent } from "@/src/lib/discovery/track";
 import { profileHref } from "@/src/lib/discovery/routes";
-import type { ProfileCardModel } from "@/src/lib/discovery/types";
+import type { ProfileCardModel, SocialLink } from "@/src/lib/discovery/types";
 import { FollowButton } from "@/src/components/discovery/follow-button";
 import { SaveButton } from "@/src/components/discovery/save-button";
 import { ConnectButton } from "@/src/components/discovery/connect-button";
+import { SocialGlyph } from "@/src/components/discovery/social-glyph";
 import { FadeImg } from "@/src/components/discovery/sz-ui";
 import { initialsFromName } from "@/src/lib/discovery/slug";
 import { useI18n } from "@/src/i18n/provider";
 import { interpolate } from "@/src/locales/app";
-import type { ProfileType } from "@/src/lib/discovery/constants";
+import { SOCIAL_PLATFORM_LABELS, type ProfileType, type SocialPlatform } from "@/src/lib/discovery/constants";
 
 function openProfile(profile: ProfileCardModel, source: string) {
   persistExploreScroll(`${window.location.pathname}${window.location.search}`);
@@ -51,6 +52,53 @@ function MediaFallback({ profile }: { profile: ProfileCardModel }) {
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+function FeedSocialLinks({
+  links,
+  profileId,
+  source,
+}: {
+  links: SocialLink[];
+  profileId: string;
+  source: string;
+}) {
+  const { t } = useI18n();
+  const visible = links.filter((link) => link.url).slice(0, 6);
+  if (!visible.length) return null;
+
+  return (
+    <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+      {visible.map((link) => {
+        const label =
+          link.platform === "website" || link.platform === "other"
+            ? t.common.web
+            : SOCIAL_PLATFORM_LABELS[link.platform as SocialPlatform] ?? link.platform;
+        return (
+          <a
+            key={link.id}
+            href={normalizeHttpUrl(link.url)}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={label}
+            onClick={() =>
+              trackDiscoveryEvent({
+                profileId,
+                eventType: "external_link_click",
+                source,
+                platform: link.platform,
+                contentId: link.id,
+                destination: link.url,
+              })
+            }
+            className="sz-press inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.05] text-white/72 hover:border-white/18 hover:text-white"
+          >
+            <SocialGlyph platform={link.platform} className="h-4 w-4" />
+          </a>
+        );
+      })}
     </div>
   );
 }
@@ -168,7 +216,7 @@ export function ProfileFeedCard({
         ) : null}
 
         {profile.discoveryBadge ? (
-          <span className="pointer-events-none absolute left-4 top-[max(4.85rem,calc(env(safe-area-inset-top)+3.6rem))] rounded-full bg-white px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-950 md:top-4">
+          <span className="pointer-events-none absolute left-4 top-[max(5.7rem,calc(env(safe-area-inset-top)+4.5rem))] rounded-full bg-white px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-950 md:top-4">
             {profile.discoveryBadge === "rising" ? t.badges.rising : t.badges.new}
           </span>
         ) : null}
@@ -222,6 +270,8 @@ export function ProfileFeedCard({
         ) : profile.bio ? (
           <p className="mt-3 line-clamp-3 text-[13.5px] leading-relaxed text-white/48">{profile.bio}</p>
         ) : null}
+
+        <FeedSocialLinks links={profile.socialLinks} profileId={profile.id} source={source} />
 
         <div className="mt-3.5 flex min-w-0 items-center gap-2">
           <FollowButton

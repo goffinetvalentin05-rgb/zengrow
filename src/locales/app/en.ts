@@ -219,6 +219,8 @@ export const appEn: AppDictionary = {
     openProfile: "Open {name}’s profile",
     playVideo: "Play video",
     followersShort: "followers",
+    globeAria: "Explore the world",
+    globeHint: "Drag to spin. Tap a point to filter by country.",
   },
   search: {
     title: "Search",
