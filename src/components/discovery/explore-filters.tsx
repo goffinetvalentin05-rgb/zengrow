@@ -74,7 +74,7 @@ export function DiscoveryFiltersSheet({
   }, [open, filters]);
 
   useEffect(() => {
-    if (globeOpen) setPicked(draft.location);
+    if (globeOpen) setPicked(draft.location ?? null);
   }, [globeOpen, draft.location]);
 
   function apply(next = draft) {
