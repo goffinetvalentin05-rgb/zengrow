@@ -68,6 +68,20 @@ export const LANDING_COPY = {
       "Projets, contenus, réseaux et infos restent centralisés au même endroit — dans Sharpz comme en dehors.",
     note: "Pas un outil à part. Directement intégré à ton profil.",
   },
+  tomorrow: {
+    label: "Et demain ?",
+    title: "Demain, ce ne sera plus seulement toi qui chercheras les bons profils.",
+    text: "À terme, les marques, agences et entreprises pourront rechercher directement les créateurs, fondateurs et profils qui correspondent à leurs besoins. Niche, localisation, audience, expertise : ton profil pourra apparaître dans les recherches qui comptent vraiment pour toi.",
+    badge: "À venir",
+    kicker: "Recherche de profils",
+    search: "SaaS · Suisse · Fondateur",
+    filters: {
+      niche: "Niche",
+      location: "Localisation",
+      audience: "Audience",
+      role: "Rôle",
+    },
+  },
   how: {
     title: "Comment ça marche",
     steps: [

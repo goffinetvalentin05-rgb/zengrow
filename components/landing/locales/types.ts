@@ -57,6 +57,15 @@ export type LandingDictionary = {
   };
   difference: { title: string };
   profile: { title: string; text1: string; text2: string; note: string };
+  tomorrow: {
+    label: string;
+    title: string;
+    text: string;
+    badge: string;
+    kicker: string;
+    search: string;
+    filters: { niche: string; location: string; audience: string; role: string };
+  };
   how: { title: string; steps: ReadonlyArray<{ title: string; text: string }> };
   pricing: {
     label: string;

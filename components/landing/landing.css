@@ -6513,3 +6513,245 @@
     will-change: auto;
   }
 }
+
+/* ——— Tomorrow: profile × brand match ——— */
+
+.go-tomorrow-section.go-section {
+  padding: clamp(3.75rem, 7vw, 5.75rem) 0;
+}
+
+.go-tomorrow-section .go-explore {
+  margin-bottom: 0;
+}
+
+.go-tomorrow-section .go-explore__copy .go-lead {
+  max-width: 32rem;
+}
+
+.go-tomorrow__copy,
+.go-tomorrow__visual {
+  opacity: 0;
+  transform: translateY(1.15rem);
+  transition:
+    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.go-tomorrow.is-in .go-tomorrow__copy,
+.go-tomorrow.is-in .go-tomorrow__visual {
+  opacity: 1;
+  transform: none;
+}
+
+.go-tomorrow.is-in .go-tomorrow__visual {
+  transition-delay: 0.12s;
+}
+
+.go-tomorrow__visual {
+  overflow: visible;
+}
+
+@media (min-width: 960px) {
+  .go-tomorrow-section .go-tomorrow.go-explore {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  }
+
+  .go-tomorrow__visual {
+    order: -1;
+  }
+}
+
+.go-tomorrow-scene {
+  position: relative;
+  width: min(100%, 24.5rem);
+  min-height: clamp(16.5rem, 42vw, 20.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.go-tomorrow-scene__glow {
+  position: absolute;
+  inset: 12% 8%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse 70% 62% at 50% 48%,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.05) 42%,
+    transparent 72%
+  );
+  filter: blur(18px);
+}
+
+.go-tomorrow-scene__stage {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 21.5rem);
+  height: clamp(14.5rem, 38vw, 17.75rem);
+}
+
+.go-tomorrow-card {
+  position: absolute;
+  width: clamp(8.6rem, 28vw, 11.4rem);
+  aspect-ratio: 1;
+  border-radius: 1.85rem;
+  overflow: hidden;
+}
+
+.go-tomorrow-card--profile {
+  left: 0;
+  top: 52%;
+  transform: translateY(-54%) rotate(-7deg);
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #070708;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 28px 50px -28px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.go-tomorrow-card__photo {
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+.go-tomorrow-card__veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 28%, transparent 62%, rgba(0, 0, 0, 0.28) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.go-tomorrow-card--brand {
+  right: 0;
+  top: 48%;
+  transform: translateY(-46%) rotate(8deg);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 46%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 30px 54px -30px rgba(0, 0, 0, 0.88);
+}
+
+.go-tomorrow-card--brand p {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.4vw, 1.2rem);
+  font-weight: 620;
+  letter-spacing: -0.04em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.go-tomorrow-card__glyph {
+  display: grid;
+  grid-template-columns: repeat(3, 0.42rem);
+  gap: 0.28rem;
+  align-items: end;
+  height: 1.15rem;
+}
+
+.go-tomorrow-card__glyph i {
+  display: block;
+  width: 0.42rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.go-tomorrow-card__glyph i:nth-child(1) {
+  height: 52%;
+}
+
+.go-tomorrow-card__glyph i:nth-child(2) {
+  height: 100%;
+}
+
+.go-tomorrow-card__glyph i:nth-child(3) {
+  height: 72%;
+}
+
+.go-tomorrow-link {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.05rem;
+  height: 3.05rem;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(18, 18, 20, 0.72) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 6px rgba(0, 0, 0, 0.28),
+    0 12px 28px -12px rgba(0, 0, 0, 0.8),
+    0 0 24px rgba(255, 255, 255, 0.12);
+}
+
+.go-tomorrow-link svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+@media (min-width: 600px) {
+  .go-tomorrow-scene {
+    width: min(100%, 26.5rem);
+  }
+
+  .go-tomorrow-scene__stage {
+    width: min(100%, 23.25rem);
+  }
+}
+
+@media (max-width: 479px) {
+  .go-tomorrow-scene {
+    min-height: 15.25rem;
+  }
+
+  .go-tomorrow-scene__stage {
+    width: min(100%, 18.5rem);
+    height: 13.75rem;
+  }
+
+  .go-tomorrow-card {
+    width: 7.65rem;
+    border-radius: 1.5rem;
+  }
+
+  .go-tomorrow-link {
+    width: 2.7rem;
+    height: 2.7rem;
+  }
+
+  .go-tomorrow-link svg {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .go-tomorrow__copy,
+  .go-tomorrow__visual {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

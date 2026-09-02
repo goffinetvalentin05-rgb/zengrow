@@ -10,6 +10,7 @@ export const en: LandingDictionary = {
   answer: C.answer,
   difference: C.difference,
   profile: C.profile,
+  tomorrow: C.tomorrow,
   how: C.how,
   pricing: C.pricing,
   faq: C.faq,

@@ -10,6 +10,7 @@ import { ProblemSection } from "./sections/ProblemSection";
 import { AnswerSection } from "./sections/AnswerSection";
 import { DifferenceSection } from "./sections/DifferenceSection";
 import { ProfileSection } from "./sections/ProfileSection";
+import { TomorrowSection } from "./sections/TomorrowSection";
 import { PricingSection } from "./sections/PricingSection";
 import { FAQSection } from "./sections/FAQSection";
 import { FinalCtaSection } from "./sections/FinalCtaSection";
@@ -28,6 +29,7 @@ export function LandingPageClient() {
           <AnswerSection />
           <DifferenceSection />
           <ProfileSection />
+          <TomorrowSection />
           <PricingSection />
           <FAQSection />
           <FinalCtaSection />

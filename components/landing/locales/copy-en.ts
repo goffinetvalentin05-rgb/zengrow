@@ -64,6 +64,20 @@ export const LANDING_COPY_EN = {
     text2: "Projects, content, socials and details stay in one place — inside Sharpz and beyond.",
     note: "Not a separate tool. Built directly into your profile.",
   },
+  tomorrow: {
+    label: "And tomorrow?",
+    title: "Tomorrow, you won’t be the only one looking for the right profiles.",
+    text: "Eventually, brands, agencies and companies will be able to search directly for the creators, founders and profiles that match what they need. Niche, location, audience, expertise: your profile will be able to show up in the searches that actually matter to you.",
+    badge: "Coming soon",
+    kicker: "Profile search",
+    search: "SaaS · Switzerland · Founder",
+    filters: {
+      niche: "Niche",
+      location: "Location",
+      audience: "Audience",
+      role: "Role",
+    },
+  },
   how: {
     title: "How it works",
     steps: [
