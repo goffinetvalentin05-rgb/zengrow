@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { zgBody, zgDisplay } from "@/components/zg-landing/fonts";
 import { Cormorant_Garamond, Dancing_Script, Geist, Geist_Mono, Inter, Instrument_Serif } from "next/font/google";
+import { AppI18nTree } from "@/src/i18n/app-i18n-tree";
+import { getRequestLocale } from "@/src/i18n/server";
+import { getMessages } from "@/src/locales/app";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,14 +42,18 @@ const dancingScript = Dancing_Script({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Sharpz",
-    template: "%s | Sharpz",
-  },
-  description: "Discover people worth knowing, organized by niche.",
-  applicationName: "Sharpz",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const t = getMessages(locale);
+  return {
+    title: {
+      default: "Sharpz",
+      template: "%s | Sharpz",
+    },
+    description: t.landing.meta.description,
+    applicationName: "Sharpz",
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -55,13 +62,14 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
   return (
-    <html lang="fr" className="scroll-smooth">
+    <html lang={locale} className="scroll-smooth">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -73,7 +81,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${instrumentSerif.variable} ${cormorant.variable} ${dancingScript.variable} ${zgDisplay.variable} ${zgBody.variable} antialiased`}
       >
-        {children}
+        <AppI18nTree initialLocale={locale}>{children}</AppI18nTree>
       </body>
     </html>
   );

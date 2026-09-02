@@ -4,19 +4,20 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ACTIVITY_FILTERS,
-  ACTIVITY_LABELS,
   AGE_RANGES,
   AUDIENCE_RANGES,
-  PROFILE_TYPE_LABELS,
   PROFILE_TYPES,
   SOCIAL_PLATFORM_LABELS,
   SOCIAL_PLATFORMS,
+  type ActivityFilter,
+  type ProfileType,
 } from "@/src/lib/discovery/constants";
 import { countActiveFilters, categoryDiscoveryHref, exploreHref } from "@/src/lib/discovery/filters";
 import { COUNTRY_PRESETS } from "@/src/lib/discovery/media";
 import type { ExploreFilters } from "@/src/lib/discovery/types";
 import Button from "@/src/components/ui/button";
 import { DiscoverySheet } from "@/src/components/discovery/mobile-sheet";
+import { useI18n } from "@/src/i18n/provider";
 
 const selectClass =
   "sz-focus h-11 w-full rounded-2xl border border-white/[0.08] bg-[#0c0c0e] px-3 text-sm text-white outline-none";
@@ -35,12 +36,27 @@ export function DiscoveryFiltersSheet({
   onNavigate?: () => void;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<ExploreFilters>(filters);
   const locations = [...new Set([...COUNTRY_PRESETS, ...extraLocations])];
   const activeCount = countActiveFilters(filters);
   const toHref =
     hrefFor ?? ((next: ExploreFilters) => (next.niche ? categoryDiscoveryHref(next.niche, next) : exploreHref(next)));
+
+  const audienceLabels: Record<string, string> = {
+    "under-1k": t.filters.audienceUnder1k,
+    "1k-5k": t.filters.audience1k5k,
+    "under-5k": t.filters.audienceUnder5k,
+    "5k-25k": t.filters.audience5k25k,
+    "25k-plus": t.filters.audience25kPlus,
+  };
+  const activityLabels: Record<ActivityFilter, string> = {
+    recommended: t.activity.recommended,
+    rising: t.activity.rising,
+    new: t.activity.new,
+    "most-followed": t.activity.mostFollowed,
+  };
 
   useEffect(() => {
     if (open) setDraft(filters);
@@ -55,17 +71,18 @@ export function DiscoveryFiltersSheet({
   return (
     <>
       <Button type="button" variant="secondary" size="sm" className="sz-press min-h-11" onClick={() => setOpen(true)}>
-        Filters{activeCount ? ` · ${activeCount}` : ""}
+        {t.filters.button}
+        {activeCount ? ` · ${activeCount}` : ""}
       </Button>
       <DiscoverySheet
         open={open}
-        title="Filters"
+        title={t.filters.title}
         onClose={() => setOpen(false)}
         labelledBy="sz-filters-title"
         footer={
           <div className="flex items-center gap-3">
             <Button type="button" className="min-h-11 flex-1" onClick={() => apply()}>
-              Apply filters
+              {t.filters.apply}
             </Button>
             <button
               type="button"
@@ -82,18 +99,18 @@ export function DiscoveryFiltersSheet({
                 })
               }
             >
-              Clear
+              {t.filters.clear}
             </button>
           </div>
         }
       >
-        <Field label="Location">
+        <Field label={t.filters.location}>
           <select
             className={selectClass}
             value={draft.location ?? ""}
             onChange={(event) => setDraft((current) => ({ ...current, location: event.target.value || null }))}
           >
-            <option value="">Anywhere</option>
+            <option value="">{t.common.anywhere}</option>
             {locations.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -101,7 +118,7 @@ export function DiscoveryFiltersSheet({
             ))}
           </select>
         </Field>
-        <Field label="Role">
+        <Field label={t.filters.role}>
           <select
             className={selectClass}
             value={draft.profileType ?? ""}
@@ -112,21 +129,21 @@ export function DiscoveryFiltersSheet({
               }))
             }
           >
-            <option value="">All</option>
+            <option value="">{t.common.all}</option>
             {ROLE_FILTERS.map((type) => (
               <option key={type} value={type}>
-                {PROFILE_TYPE_LABELS[type]}
+                {t.roles[type as ProfileType]}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Age">
+        <Field label={t.filters.age}>
           <select
             className={selectClass}
             value={draft.age ?? ""}
             onChange={(event) => setDraft((current) => ({ ...current, age: event.target.value || null }))}
           >
-            <option value="">Any</option>
+            <option value="">{t.common.any}</option>
             {AGE_RANGES.map((range) => (
               <option key={range.id} value={range.id}>
                 {range.label}
@@ -134,21 +151,21 @@ export function DiscoveryFiltersSheet({
             ))}
           </select>
         </Field>
-        <Field label="Audience">
+        <Field label={t.filters.audience}>
           <select
             className={selectClass}
             value={draft.audience ?? ""}
             onChange={(event) => setDraft((current) => ({ ...current, audience: event.target.value || null }))}
           >
-            <option value="">Any</option>
+            <option value="">{t.common.any}</option>
             {AUDIENCE_RANGES.map((range) => (
               <option key={range.id} value={range.id}>
-                {range.label}
+                {audienceLabels[range.id] ?? range.label}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Platform">
+        <Field label={t.filters.platform}>
           <select
             className={selectClass}
             value={draft.platform ?? ""}
@@ -159,7 +176,7 @@ export function DiscoveryFiltersSheet({
               }))
             }
           >
-            <option value="">Any</option>
+            <option value="">{t.common.any}</option>
             {SOCIAL_PLATFORMS.filter((platform) => platform !== "website").map((platform) => (
               <option key={platform} value={platform}>
                 {SOCIAL_PLATFORM_LABELS[platform]}
@@ -167,7 +184,7 @@ export function DiscoveryFiltersSheet({
             ))}
           </select>
         </Field>
-        <Field label="Sort">
+        <Field label={t.filters.sort}>
           <select
             className={selectClass}
             value={draft.activity ?? "recommended"}
@@ -180,7 +197,7 @@ export function DiscoveryFiltersSheet({
           >
             {ACTIVITY_FILTERS.map((activity) => (
               <option key={activity} value={activity}>
-                {ACTIVITY_LABELS[activity]}
+                {activityLabels[activity]}
               </option>
             ))}
           </select>

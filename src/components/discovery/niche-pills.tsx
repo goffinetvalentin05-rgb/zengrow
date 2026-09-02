@@ -3,13 +3,14 @@
 import Link from "next/link";
 import type { Category } from "@/src/lib/discovery/types";
 import { cn } from "@/src/lib/utils";
+import { useI18n } from "@/src/i18n/provider";
 
 export function NichePills({
   categories,
   activeSlug,
   favoriteSlugs = [],
   hrefFor,
-  forYouLabel = "For you",
+  forYouLabel,
   onNavigate,
 }: {
   categories: Category[];
@@ -19,6 +20,8 @@ export function NichePills({
   forYouLabel?: string;
   onNavigate?: () => void;
 }) {
+  const { t } = useI18n();
+  const forYou = forYouLabel ?? t.explore.forYou;
   const favorites = categories.filter((cat) => favoriteSlugs.includes(cat.slug));
   const rest = categories.filter((cat) => !favoriteSlugs.includes(cat.slug));
   const ordered = [...favorites, ...rest];
@@ -33,7 +36,7 @@ export function NichePills({
         }}
         className={cn("sz-pill", !activeSlug && "is-on")}
       >
-        {forYouLabel}
+        {forYou}
       </Link>
       {ordered.map((cat) => (
         <Link

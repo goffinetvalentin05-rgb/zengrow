@@ -46,6 +46,7 @@ function card(partial: Partial<ProfileCardModel> & { id: string; displayName: st
     ctaLabel: null,
     ctaUrl: null,
     ctaType: "custom",
+    preferredLanguage: null,
     createdAt: daysAgo(10),
     updatedAt: daysAgo(10),
     primaryCategory: { id: "saas", name: "SaaS", slug: "saas", description: null, imageUrl: null, sortIndex: 1, isFeatured: true },

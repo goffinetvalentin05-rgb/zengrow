@@ -4,6 +4,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { LandingWordmark } from "@/components/landing/BrandLogo";
+import { LanguageSwitch } from "@/src/i18n/language-switch";
+import { useI18n } from "@/src/i18n/provider";
 import { cn } from "@/src/lib/utils";
 import "./auth-layout.css";
 
@@ -15,45 +17,6 @@ type AuthVisualCopy = {
   subtitle: string;
   steps: readonly string[];
   activeStep: number;
-};
-
-const VISUAL: Record<AuthLayoutIntent, AuthVisualCopy> = {
-  login: {
-    badge: "Discovery",
-    title: "People worth knowing, by niche.",
-    subtitle:
-      "Sharpz organizes builders, creators and operators so you can discover them before they are everywhere.",
-    steps: [
-      "Log in to your Sharpz",
-      "Explore niches that matter to you",
-      "Follow people who are actually building",
-    ],
-    activeStep: 0,
-  },
-  signup: {
-    badge: "New profile",
-    title: "Create your Sharpz in a few minutes.",
-    subtitle:
-      "Choose your worlds, say what you’re building, and get discovered.",
-    steps: [
-      "Create your account",
-      "Pick your niches",
-      "Start exploring people",
-    ],
-    activeStep: 0,
-  },
-  recover: {
-    badge: "Sécurité du compte",
-    title: "Retrouvez l’accès à votre espace.",
-    subtitle:
-      "Un lien sécurisé pour réinitialiser votre mot de passe et revenir à Sharpz.",
-    steps: [
-      "Indiquez votre e-mail",
-      "Ouvrez le lien reçu",
-      "Choisissez un nouveau mot de passe",
-    ],
-    activeStep: 0,
-  },
 };
 
 type ZenGrowAuthLayoutProps = {
@@ -68,12 +31,18 @@ type ZenGrowAuthLayoutProps = {
 };
 
 export function AuthVisualPanel({ intent = "login" }: { intent?: AuthLayoutIntent }) {
-  const copy = VISUAL[intent];
+  const { t } = useI18n();
+  const copy: AuthVisualCopy =
+    intent === "signup"
+      ? { badge: t.auth.signup.visualBadge, title: t.auth.signup.visualTitle, subtitle: t.auth.signup.visualSubtitle, steps: t.auth.signup.steps, activeStep: 0 }
+      : intent === "recover"
+        ? { badge: t.auth.forgot.visualBadge, title: t.auth.forgot.visualTitle, subtitle: t.auth.forgot.visualSubtitle, steps: t.auth.forgot.steps, activeStep: 0 }
+        : { badge: t.auth.login.visualBadge, title: t.auth.login.visualTitle, subtitle: t.auth.login.visualSubtitle, steps: t.auth.login.steps, activeStep: 0 };
 
   return (
     <aside className="zg-auth-visual hidden flex-col justify-start gap-6 px-6 py-5 sm:gap-8 sm:px-9 sm:py-10 lg:flex lg:gap-8 lg:px-11 lg:py-14">
       <div className="zg-auth-visual__inner flex flex-col items-start">
-        <Link href="/" className="inline-flex w-fit items-center" aria-label="Sharpz — accueil">
+        <Link href="/" className="inline-flex w-fit items-center" aria-label={t.auth.home}>
           <LandingWordmark className="zg-auth-visual__logo" priority />
         </Link>
         <span className="mt-5 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-white/90 backdrop-blur-md">
@@ -111,6 +80,7 @@ export function ZenGrowAuthLayout({
   intent = "login",
   showHomeLink = true,
 }: ZenGrowAuthLayoutProps) {
+  const { t } = useI18n();
   return (
     <main className="zg-auth-page relative flex min-h-dvh flex-col overflow-x-hidden font-[family-name:var(--font-zg-body)]">
       <div className="zg-auth-page__glow" aria-hidden />
@@ -125,12 +95,15 @@ export function ZenGrowAuthLayout({
           <AuthVisualPanel intent={intent} />
 
           <section className="zg-auth-form relative flex flex-col justify-start px-5 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-14 lg:pt-[4.25rem]">
+            <div className="mb-4 flex items-center justify-between gap-3 lg:absolute lg:top-8 lg:right-12 lg:mb-0">
+              <LanguageSwitch variant="auth" />
+            </div>
             {showHomeLink ? (
               <Link
                 href="/"
                 className="mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-white/45 transition hover:text-white/80 lg:absolute lg:top-8 lg:left-12 lg:mb-0"
               >
-                ← Retour à l&apos;accueil
+                ← {t.auth.home}
               </Link>
             ) : null}
             {children}

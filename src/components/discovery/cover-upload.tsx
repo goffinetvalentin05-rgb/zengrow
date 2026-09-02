@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/src/components/ui/button";
 import { createClient } from "@/src/lib/supabase/client";
+import { useI18n } from "@/src/i18n/provider";
 
 function cropCover(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -51,6 +52,7 @@ function cropCover(file: File): Promise<Blob> {
 }
 
 export function CoverUpload({ userId, currentUrl }: { userId: string; currentUrl: string | null }) {
+  const { t } = useI18n();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export function CoverUpload({ userId, currentUrl }: { userId: string; currentUrl
 
   async function onFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      setError("Choose an image.");
+      setError(t.common.chooseImage);
       return;
     }
     setError(null);
@@ -86,7 +88,7 @@ export function CoverUpload({ userId, currentUrl }: { userId: string; currentUrl
     });
     setPending(false);
     if (!response.ok) {
-      setError("Uploaded, but profile could not be updated.");
+      setError(t.media.uploadedButNotSaved);
       return;
     }
     router.refresh();
@@ -130,15 +132,15 @@ export function CoverUpload({ userId, currentUrl }: { userId: string; currentUrl
       />
       <div className="mt-3 flex flex-wrap gap-2">
         <Button type="button" variant="secondary" disabled={pending} onClick={() => inputRef.current?.click()}>
-          {pending ? "Uploading…" : shown ? "Replace cover" : "Upload cover"}
+          {pending ? t.common.uploading : shown ? t.media.replaceCover : t.media.uploadCover}
         </Button>
         {currentUrl || preview ? (
           <Button type="button" variant="ghost" disabled={pending} onClick={() => void remove()}>
-            Remove
+            {t.common.remove}
           </Button>
         ) : null}
       </div>
-      <p className="mt-2 text-xs text-white/35">Wide crop is applied automatically.</p>
+      <p className="mt-2 text-xs text-white/35">{t.media.wideCrop}</p>
       {error ? <p className="mt-1 text-sm text-red-300">{error}</p> : null}
     </div>
   );

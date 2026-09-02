@@ -1,17 +1,15 @@
+"use client";
+
 import Link from "next/link";
-import { SOCIAL_PLATFORM_LABELS, type SocialPlatform } from "@/src/lib/discovery/constants";
+import { SOCIAL_PLATFORM_LABELS, type SocialPlatform, type ProfileType } from "@/src/lib/discovery/constants";
 import { profileHref } from "@/src/lib/discovery/routes";
 import type { ProfileCardModel } from "@/src/lib/discovery/types";
 import { FollowButton } from "@/src/components/discovery/follow-button";
 import { SaveButton } from "@/src/components/discovery/save-button";
 import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 import { cn } from "@/src/lib/utils";
-
-function formatFollowers(count: number) {
-  if (count <= 0) return null;
-  if (count < 1000) return `${count} on Sharpz`;
-  return `${(count / 1000).toFixed(count >= 10000 ? 0 : 1)}k on Sharpz`;
-}
+import { useI18n } from "@/src/i18n/provider";
+import { formatFollowers } from "@/src/i18n/format";
 
 export function ProfileCard({
   profile,
@@ -24,8 +22,13 @@ export function ProfileCard({
   variant?: "default" | "featured" | "compact";
   showActions?: boolean;
 }) {
+  const { t, locale } = useI18n();
   const href = profile.username ? profileHref(profile.username) : "#";
   const featured = variant === "featured";
+  const role =
+    profile.profileType && t.roles[profile.profileType as ProfileType]
+      ? t.roles[profile.profileType as ProfileType]
+      : null;
 
   return (
     <article
@@ -54,16 +57,16 @@ export function ProfileCard({
             {profile.primaryCategory.name}
           </span>
         ) : null}
-        {profile.roleLabel ? (
+        {role ? (
           <span className="rounded-full border border-white/[0.06] px-2.5 py-1 text-[11px] text-white/45">
-            {profile.roleLabel}
+            {role}
           </span>
         ) : null}
       </div>
 
       {profile.featuredProject ? (
         <p className="mt-4 text-sm leading-relaxed text-white/70">
-          <span className="text-[11px] uppercase tracking-[0.14em] text-white/35">Building </span>
+          <span className="text-[11px] uppercase tracking-[0.14em] text-white/35">{t.profile.currentlyBuilding} </span>
           <span className="font-medium text-white">{profile.featuredProject.name}</span>
         </p>
       ) : profile.bio ? (
@@ -82,8 +85,8 @@ export function ProfileCard({
               </span>
             ))}
           </div>
-          {formatFollowers(profile.followersCount) ? (
-            <p className="mt-1 text-[11px] text-white/35">{formatFollowers(profile.followersCount)}</p>
+          {formatFollowers(profile.followersCount, locale) ? (
+            <p className="mt-1 text-[11px] text-white/35">{formatFollowers(profile.followersCount, locale)}</p>
           ) : null}
         </div>
         {showActions ? (

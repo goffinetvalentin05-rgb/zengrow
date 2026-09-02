@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import {
-  FEATURED_PLATFORM_LABELS,
   FEATURED_PLATFORMS,
   MAX_FEATURED_CONTENT,
   type FeaturedPlatform,
@@ -15,8 +14,11 @@ import type { FeaturedContent } from "@/src/lib/discovery/types";
 import { FeaturedContentCard } from "@/src/components/discovery/featured-content-card";
 import { DiscoverySheet } from "@/src/components/discovery/mobile-sheet";
 import { createClient } from "@/src/lib/supabase/client";
+import { useI18n } from "@/src/i18n/provider";
+import { interpolate } from "@/src/locales/app";
 
 export function FeaturedContentEditor({ profileId, items }: { profileId: string; items: FeaturedContent[] }) {
+  const { t } = useI18n();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<FeaturedContent | null>(null);
@@ -50,27 +52,27 @@ export function FeaturedContentEditor({ profileId, items }: { profileId: string;
   return (
     <div className="space-y-4">
       <p className="text-sm text-white/40">
-        Link to content that already lives on YouTube, Instagram, TikTok… Sharpz never rehosts it. Max {MAX_FEATURED_CONTENT}.
+        {interpolate(t.featuredEditor.intro, { n: MAX_FEATURED_CONTENT })}
       </p>
       {items.map((item, index) => (
         <div key={item.id} className="space-y-2">
           <FeaturedContentCard item={item} />
           <div className="flex flex-wrap gap-1 text-xs text-white/40">
             <button type="button" className="min-h-11 px-2" onClick={() => { setEditing(item); setOpen(true); }}>
-              Edit
+              {t.common.edit}
             </button>
             {index > 0 ? (
               <button type="button" className="min-h-11 px-2" onClick={() => move(item.id, -1)}>
-                Up
+                {t.featuredEditor.up}
               </button>
             ) : null}
             {index < items.length - 1 ? (
               <button type="button" className="min-h-11 px-2" onClick={() => move(item.id, 1)}>
-                Down
+                {t.featuredEditor.down}
               </button>
             ) : null}
             <button type="button" className="min-h-11 px-2" onClick={() => remove(item.id)}>
-              Delete
+              {t.common.delete}
             </button>
           </div>
         </div>
@@ -85,7 +87,7 @@ export function FeaturedContentEditor({ profileId, items }: { profileId: string;
             setOpen(true);
           }}
         >
-          Add content
+          {t.featuredEditor.add}
         </Button>
       ) : null}
       {open ? (
@@ -114,6 +116,7 @@ function FeaturedModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [platform, setPlatform] = useState<FeaturedPlatform>(item?.platform ?? "youtube");
   const [url, setUrl] = useState(item?.url ?? "");
   const [title, setTitle] = useState(item?.title ?? "");
@@ -126,7 +129,7 @@ function FeaturedModal({
 
   async function uploadThumb(file: File) {
     if (!file.type.startsWith("image/")) {
-      setUploadError("Choose an image.");
+      setUploadError(t.common.chooseImage);
       return;
     }
     setUploadError(null);
@@ -167,17 +170,17 @@ function FeaturedModal({
   return (
     <DiscoverySheet
       open
-      title={item ? "Edit content" : "Add content"}
+      title={item ? t.featuredEditor.edit : t.featuredEditor.add}
       onClose={onClose}
       labelledBy="sz-featured-title"
       footer={
         <Button type="submit" form="sz-featured-form" className="min-h-11 w-full" disabled={pending}>
-          {pending ? "Saving…" : "Save"}
+          {pending ? t.common.saving : t.common.save}
         </Button>
       }
     >
       <form id="sz-featured-form" onSubmit={submit} className="space-y-3 pb-2">
-        <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">Platform</label>
+        <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">{t.featuredEditor.platform}</label>
         <select
           value={platform}
           onChange={(event) => setPlatform(event.target.value as FeaturedPlatform)}
@@ -185,16 +188,16 @@ function FeaturedModal({
         >
           {FEATURED_PLATFORMS.map((value) => (
             <option key={value} value={value}>
-              {FEATURED_PLATFORM_LABELS[value]}
+              {t.featuredPlatform[value]}
             </option>
           ))}
         </select>
-        <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">URL</label>
+        <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">{t.featuredEditor.url}</label>
         <Input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://" required />
-        <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">Title</label>
-        <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Optional" />
+        <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">{t.featuredEditor.title}</label>
+        <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={t.common.optional} />
         <label className="mb-2 block text-[11px] uppercase tracking-[0.14em] text-white/40">
-          Thumbnail {platform === "youtube" ? "(auto from YouTube)" : "(optional)"}
+          {t.featuredEditor.thumbnail} {platform === "youtube" ? t.featuredEditor.thumbnailAuto : t.featuredEditor.thumbnailOptional}
         </label>
         <input
           ref={fileRef}
@@ -210,10 +213,10 @@ function FeaturedModal({
           <Input
             value={thumbnailUrl}
             onChange={(event) => setThumbnailUrl(event.target.value)}
-            placeholder={autoThumb ? "Using YouTube thumbnail" : "Upload or paste URL"}
+            placeholder={autoThumb ? t.featuredEditor.autoThumb : t.featuredEditor.uploadOrPaste}
           />
           <Button type="button" variant="secondary" className="min-h-11 shrink-0" onClick={() => fileRef.current?.click()}>
-            Upload
+            {t.featuredEditor.upload}
           </Button>
         </div>
         {uploadError ? <p className="text-sm text-red-300">{uploadError}</p> : null}

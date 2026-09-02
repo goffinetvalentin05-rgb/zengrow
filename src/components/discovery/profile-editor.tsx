@@ -7,17 +7,24 @@ import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
 import {
   MAX_NICHES,
-  PROFILE_TYPE_LABELS,
   PROFILE_TYPES,
-  PROJECT_STATUS_LABELS,
   PROJECT_STATUSES,
   SOCIAL_PLATFORM_LABELS,
   SOCIAL_PLATFORMS,
+  type ProfileType,
+  type ProjectStatus,
 } from "@/src/lib/discovery/constants";
 import { completenessSuggestions } from "@/src/lib/discovery/completeness";
 import { COUNTRY_PRESETS } from "@/src/lib/discovery/media";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
-import { PROFILE_THEMES, PROFILE_THEME_KEYS, PROFILE_LAYOUT_VARIANTS, PROFILE_LAYOUT_LABELS, isPageBackgroundKey, type ProfileLayoutVariant, type ProfileThemeKey } from "@/src/lib/discovery/appearance";
+import {
+  PROFILE_THEMES,
+  PROFILE_THEME_KEYS,
+  PROFILE_LAYOUT_VARIANTS,
+  isPageBackgroundKey,
+  type ProfileLayoutVariant,
+  type ProfileThemeKey,
+} from "@/src/lib/discovery/appearance";
 import type { Category, FeaturedContent, Profile, ProfileBlock, Project, SocialLink } from "@/src/lib/discovery/types";
 import { AvatarUpload } from "@/src/components/discovery/avatar-upload";
 import { CoverUpload } from "@/src/components/discovery/cover-upload";
@@ -27,6 +34,8 @@ import { FeaturedContentEditor } from "@/src/components/discovery/featured-conte
 import { ProjectLogoUpload } from "@/src/components/discovery/project-logo-upload";
 import { SharpzLinkEditor } from "@/src/components/discovery/sharpz-link-editor";
 import { cn } from "@/src/lib/utils";
+import { useI18n } from "@/src/i18n/provider";
+import { translateDiscoveryError } from "@/src/lib/discovery/error-i18n";
 
 const selectClass =
   "sz-focus h-11 w-full rounded-2xl border border-white/[0.08] bg-[#0c0c0e] px-3 text-sm text-white outline-none";
@@ -53,6 +62,7 @@ export function ProfileEditor({
   isPro: boolean;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [message, setMessage] = useState<string | null>(null);
   const suggestions = completenessSuggestions({ profile, projects, socialLinks, featuredContent });
 
@@ -73,7 +83,7 @@ export function ProfileEditor({
       }),
     });
     const payload = (await response.json().catch(() => ({}))) as { error?: string };
-    setMessage(response.ok ? "Saved." : payload.error ?? "Could not save.");
+    setMessage(response.ok ? t.common.saved : translateDiscoveryError(payload.error, t));
     if (response.ok) router.refresh();
   }
 
@@ -91,24 +101,24 @@ export function ProfileEditor({
       <header className="flex items-end justify-between gap-4">
         <div>
           <Link href={DISCOVERY_ROUTES.me} className="inline-flex min-h-11 items-center text-sm text-white/40 hover:text-white">
-            ← Preview
+            ← {t.profile.preview}
           </Link>
-          <h1 className="sz-display mt-3">Edit profile</h1>
+          <h1 className="sz-display mt-3">{t.profile.editTitle}</h1>
         </div>
       </header>
 
       <nav
-        aria-label="Edit sections"
+        aria-label={t.profile.editSections}
         className="sticky top-0 z-20 -mx-5 flex gap-2 overflow-x-auto overscroll-x-contain bg-[#050506]/92 px-5 py-2 backdrop-blur-md [scrollbar-width:none] md:static md:mx-0 md:bg-transparent md:px-0 md:py-0"
       >
         {[
-          { id: "profile", label: "Profile" },
-          { id: "appearance", label: "Look" },
-          { id: "projects", label: "Projects" },
-          { id: "featured", label: "Featured" },
-          { id: "conversion", label: "Conversion" },
-          { id: "social", label: "Socials" },
-          { id: "link", label: "Link" },
+          { id: "profile", label: t.nav.profile },
+          { id: "appearance", label: t.profile.look },
+          { id: "projects", label: t.profile.projects },
+          { id: "featured", label: t.profile.featuredNav },
+          { id: "conversion", label: t.profile.conversion },
+          { id: "social", label: t.profile.socials },
+          { id: "link", label: t.profile.link },
         ].map((item) => (
           <a key={item.id} href={`#${item.id}`} className="sz-pill">
             {item.label}
@@ -119,14 +129,14 @@ export function ProfileEditor({
       {suggestions.length ? (
         <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3.5 ring-1 ring-white/[0.06]">
           <div className="flex items-center justify-between">
-            <p className="sz-label">Profile completeness</p>
+            <p className="sz-label">{t.profile.completeness}</p>
             <p className="text-sm text-white">{profile.completeness}%</p>
           </div>
           <ul className="mt-3 space-y-1 text-sm text-white/45">
             {suggestions.map((item) => (
               <li key={item.key}>
                 <a href={item.href} className="hover:text-white">
-                  {item.label}
+                  {t.completeness[item.key]}
                 </a>
               </li>
             ))}
@@ -134,33 +144,33 @@ export function ProfileEditor({
         </div>
       ) : null}
 
-      <EditorSection id="profile" title="Profile">
+      <EditorSection id="profile" title={t.nav.profile}>
         <div className="mb-6">
           <AvatarUpload userId={userId} name={profile.displayName} currentUrl={profile.avatarUrl} />
         </div>
         <form className="space-y-4" onSubmit={saveProfile}>
-          <Field label="Name">
+          <Field label={t.editor.name}>
             <Input name="displayName" defaultValue={profile.displayName} required />
           </Field>
           {profile.username ? (
             <p className="text-sm text-white/40">
               @{profile.username}{" "}
               <a href="#link" className="text-white/60 hover:text-white">
-                Change link
+                {t.editor.changeLink}
               </a>
             </p>
           ) : null}
-          <Field label="Role">
+          <Field label={t.editor.role}>
             <select name="profileType" defaultValue={profile.profileType ?? ""} className={selectClass}>
-              <option value="">Select</option>
+              <option value="">{t.common.select}</option>
               {PROFILE_TYPES.map((type) => (
                 <option key={type} value={type}>
-                  {PROFILE_TYPE_LABELS[type]}
+                  {t.roles[type as ProfileType]}
                 </option>
               ))}
             </select>
           </Field>
-          <Field label="Bio">
+          <Field label={t.editor.bio}>
             <textarea
               name="bio"
               defaultValue={profile.bio ?? ""}
@@ -169,12 +179,12 @@ export function ProfileEditor({
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="City">
-              <Input name="location" defaultValue={profile.location ?? ""} placeholder="Optional" />
+            <Field label={t.editor.city}>
+              <Input name="location" defaultValue={profile.location ?? ""} placeholder={t.common.optional} />
             </Field>
-            <Field label="Country">
+            <Field label={t.editor.country}>
               <select name="country" defaultValue={profile.country ?? ""} className={selectClass}>
-                <option value="">Select</option>
+                <option value="">{t.common.select}</option>
                 {COUNTRY_PRESETS.map((country) => (
                   <option key={country} value={country}>
                     {country}
@@ -187,29 +197,29 @@ export function ProfileEditor({
             </Field>
           </div>
           <details className="rounded-2xl bg-white/[0.02] px-3 py-2">
-            <summary className="cursor-pointer text-sm text-white/40">More</summary>
+            <summary className="cursor-pointer text-sm text-white/40">{t.editor.more}</summary>
             <div className="mt-3 space-y-4">
-              <Field label="Birthday (optional, 18+)">
+              <Field label={t.editor.birthday}>
                 <Input name="birthDate" type="date" defaultValue={profile.birthDate ?? ""} />
               </Field>
-              <Field label="Audience size (optional)">
+              <Field label={t.editor.audienceSize}>
                 <Input name="audienceSize" type="number" min={0} defaultValue={profile.audienceSize ?? ""} />
               </Field>
             </div>
           </details>
-          <Button type="submit" className="sz-press min-h-11">Save profile</Button>
+          <Button type="submit" className="sz-press min-h-11">{t.editor.saveProfile}</Button>
         </form>
         <div className="mt-8">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Niche</p>
-          <p className="mb-3 text-sm text-white/40">Primary niche is the first one you select.</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">{t.editor.niche}</p>
+          <p className="mb-3 text-sm text-white/40">{t.editor.nicheHint}</p>
           <NichePicker categories={categories} selected={selectedCategoryIds} onSave={saveNiches} />
         </div>
       </EditorSection>
 
-      <EditorSection id="appearance" title="Appearance">
-        <p className="mb-5 text-sm text-white/40">A light identity for your public page. The page stays dark.</p>
-        <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Page background</p>
-        <p className="mb-4 text-sm text-white/40">Shown behind the whole profile. Header cover stays a separate strip at the top.</p>
+      <EditorSection id="appearance" title={t.editor.appearance}>
+        <p className="mb-5 text-sm text-white/40">{t.editor.appearanceHint}</p>
+        <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">{t.editor.pageBackground}</p>
+        <p className="mb-4 text-sm text-white/40">{t.editor.pageBackgroundHint}</p>
         <PageBackgroundPicker
           userId={userId}
           value={isPageBackgroundKey(profile.pageBackgroundKey) ? profile.pageBackgroundKey : "void"}
@@ -217,11 +227,11 @@ export function ProfileEditor({
           onSaved={() => router.refresh()}
         />
         <div className="mt-8">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Header cover</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">{t.editor.headerCover}</p>
           <CoverUpload userId={userId} currentUrl={profile.coverImageUrl} />
         </div>
         <div className="mt-8">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Theme</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">{t.editor.theme}</p>
           <ThemePicker
             value={(PROFILE_THEME_KEYS.includes(profile.themeKey as ProfileThemeKey)
               ? profile.themeKey
@@ -230,11 +240,11 @@ export function ProfileEditor({
           />
         </div>
         <div className="mt-8">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Accent color</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">{t.editor.accent}</p>
           <AccentPicker value={profile.accentColor} onSaved={() => router.refresh()} />
         </div>
         <div className="mt-8">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">Content layout</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-white/40">{t.editor.contentLayout}</p>
           <LayoutPicker
             value={
               PROFILE_LAYOUT_VARIANTS.includes(profile.layoutVariant as ProfileLayoutVariant)
@@ -248,23 +258,23 @@ export function ProfileEditor({
         </div>
       </EditorSection>
 
-      <EditorSection id="projects" title="Projects">
+      <EditorSection id="projects" title={t.profile.projects}>
         <ProjectList userId={userId} projects={projects} />
       </EditorSection>
 
-      <EditorSection id="featured" title="Featured content">
+      <EditorSection id="featured" title={t.editor.featuredContent}>
         <FeaturedContentEditor profileId={profile.id} items={featuredContent} />
       </EditorSection>
 
-      <EditorSection id="conversion" title="Conversion">
+      <EditorSection id="conversion" title={t.profile.conversion}>
         <ConversionEditor profile={profile} blocks={blocks} isPro={isPro} />
       </EditorSection>
 
-      <EditorSection id="social" title="Social links">
+      <EditorSection id="social" title={t.editor.socialLinks}>
         <SocialEditor links={socialLinks} />
       </EditorSection>
 
-      <EditorSection id="link" title="Sharpz link">
+      <EditorSection id="link" title={t.editor.sharpzLink}>
         <SharpzLinkEditor username={profile.username} />
       </EditorSection>
 
@@ -331,6 +341,7 @@ function ThemePicker({ value, onSaved }: { value: ProfileThemeKey; onSaved: () =
 }
 
 function AccentPicker({ value, onSaved }: { value: string | null; onSaved: () => void }) {
+  const { t } = useI18n();
   const [color, setColor] = useState(value ?? "#f4f4f5");
 
   async function save(next: string | null) {
@@ -350,7 +361,7 @@ function AccentPicker({ value, onSaved }: { value: string | null; onSaved: () =>
         onChange={(event) => setColor(event.target.value)}
         onBlur={() => void save(color)}
         className="h-10 w-14 cursor-pointer rounded-xl border border-white/10 bg-transparent p-1"
-        aria-label="Accent color"
+        aria-label={t.editor.accentAria}
       />
       <Input
         value={color}
@@ -360,13 +371,14 @@ function AccentPicker({ value, onSaved }: { value: string | null; onSaved: () =>
         spellCheck={false}
       />
       <Button type="button" variant="ghost" size="sm" onClick={() => { setColor("#f4f4f5"); void save(null); }}>
-        Theme default
+        {t.editor.themeDefault}
       </Button>
     </div>
   );
 }
 
 function LayoutPicker({ value, onSaved }: { value: ProfileLayoutVariant; onSaved: () => void }) {
+  const { t } = useI18n();
   const [current, setCurrent] = useState(value);
 
   async function select(next: ProfileLayoutVariant) {
@@ -393,7 +405,11 @@ function LayoutPicker({ value, onSaved }: { value: ProfileLayoutVariant; onSaved
               active ? "bg-white/[0.08] text-white ring-white/25" : "bg-white/[0.03] text-white/70 ring-white/[0.06]",
             )}
           >
-            {PROFILE_LAYOUT_LABELS[key]}
+            {key === "content_first"
+              ? t.editor.layoutContentFirst
+              : key === "project_first"
+                ? t.editor.layoutProjectFirst
+                : t.editor.layoutDefault}
           </button>
         );
       })}
@@ -410,6 +426,7 @@ function NichePicker({
   selected: string[];
   onSave: (ids: string[]) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const [ids, setIds] = useState(selected);
   return (
     <div>
@@ -438,13 +455,14 @@ function NichePicker({
         })}
       </div>
       <Button className="mt-4" type="button" onClick={() => onSave(ids)}>
-        Save niches
+        {t.editor.saveNiches}
       </Button>
     </div>
   );
 }
 
 function ProjectList({ userId, projects }: { userId: string; projects: Project[] }) {
+  const { t } = useI18n();
   const router = useRouter();
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -489,51 +507,52 @@ function ProjectList({ userId, projects }: { userId: string; projects: Project[]
             <div className="min-w-0">
               <p className="text-sm font-medium text-white">{project.name}</p>
               <p className="text-xs text-white/40">
-                {PROJECT_STATUS_LABELS[project.status]}
-                {project.featuredProject ? " · Currently building" : ""}
+                {t.projectStatus[project.status as ProjectStatus] ?? project.status}
+                {project.featuredProject ? ` · ${t.editor.currentlyBuilding}` : ""}
               </p>
             </div>
             <div className="flex shrink-0 gap-3 text-xs text-white/40">
               {!project.featuredProject ? (
                 <button type="button" onClick={() => void setFeatured(project.id)}>
-                  Feature
+                  {t.editor.feature}
                 </button>
               ) : null}
               <button type="button" onClick={() => remove(project.id)}>
-                Remove
+                {t.common.remove}
               </button>
             </div>
           </div>
           <div>
-            <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-white/40">Project logo</p>
+            <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-white/40">{t.editor.projectLogo}</p>
             <ProjectLogoUpload userId={userId} projectId={project.id} currentUrl={project.logoUrl} />
           </div>
         </div>
       ))}
       <form className="space-y-3" onSubmit={create}>
-        <Input name="name" placeholder="Project name" required />
+        <Input name="name" placeholder={t.editor.projectName} required />
         <Input name="url" placeholder="https://" />
-        <Input name="description" placeholder="Short description" />
-        <Input name="category" placeholder="Category (optional)" />
-        <Input name="logoUrl" placeholder="Logo URL (optional)" />
+        <Input name="description" placeholder={t.editor.shortDescription} />
+        <Input name="category" placeholder={t.editor.categoryOptional} />
+        <Input name="logoUrl" placeholder={t.editor.logoUrlOptional} />
         <select name="status" className={selectClass}>
           {PROJECT_STATUSES.map((status) => (
             <option key={status} value={status}>
-              {PROJECT_STATUS_LABELS[status]}
+              {t.projectStatus[status]}
             </option>
           ))}
         </select>
         <label className="flex items-center gap-2 text-sm text-white/55">
           <input type="checkbox" name="featuredProject" className="h-4 w-4" defaultChecked={projects.length === 0} />
-          Currently building
+          {t.editor.currentlyBuilding}
         </label>
-        <Button type="submit" className="sz-press min-h-11">Add project</Button>
+        <Button type="submit" className="sz-press min-h-11">{t.editor.addProject}</Button>
       </form>
     </div>
   );
 }
 
 function SocialEditor({ links }: { links: SocialLink[] }) {
+  const { t } = useI18n();
   const router = useRouter();
   const byPlatform = Object.fromEntries(links.map((link) => [link.platform, link.url]));
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -561,7 +580,7 @@ function SocialEditor({ links }: { links: SocialLink[] }) {
           />
         </Field>
       ))}
-        <Button type="submit" className="sz-press min-h-11">Save links</Button>
+        <Button type="submit" className="sz-press min-h-11">{t.editor.saveLinks}</Button>
     </form>
   );
 }

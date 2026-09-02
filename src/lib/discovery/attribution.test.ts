@@ -4,7 +4,11 @@ import {
   getBrandedTrackedProfileUrl,
   getWorkingTrackedProfileUrl,
   normalizeStoredSource,
+  readTrackedSourceFromPathname,
+  resolveTrackedBioFromSourceCode,
   splitTrafficSources,
+  trackedBioSourceCode,
+  trackedProfilePath,
   trackedProfileQuery,
   trafficSourceLabel,
 } from "@/src/lib/discovery/attribution";
@@ -41,15 +45,50 @@ describe("traffic attribution", () => {
     expect(classifyTrafficSource({ source: "direct", referrerHost: "random.example" })).toBe("other");
   });
 
-  it("builds tracked bio URLs without extra params", () => {
+  it("builds short tracked bio URLs without visible UTM params", () => {
     expect(trackedProfileQuery("instagram")).toBe("utm_source=instagram&utm_medium=bio");
-    expect(getBrandedTrackedProfileUrl("valentin", "instagram")).toBe(
-      "sharpz.me/valentin?utm_source=instagram&utm_medium=bio",
-    );
-    expect(getWorkingTrackedProfileUrl("valentin", "linkedin", "http://localhost:3000")).toContain(
-      "utm_source=linkedin&utm_medium=bio",
-    );
+    expect(trackedBioSourceCode("instagram")).toBe("ig");
+    expect(trackedBioSourceCode("tiktok")).toBe("tt");
+    expect(trackedBioSourceCode("youtube")).toBe("yt");
+    expect(trackedBioSourceCode("linkedin")).toBe("in");
+    expect(trackedBioSourceCode("x")).toBe("x");
+    expect(getBrandedTrackedProfileUrl("valentin", "instagram")).toBe("sharpz.me/valentin/ig");
+    expect(getBrandedTrackedProfileUrl("valentin", "tiktok")).toBe("sharpz.me/valentin/tt");
+    expect(getBrandedTrackedProfileUrl("valentin", "youtube")).toBe("sharpz.me/valentin/yt");
+    expect(getBrandedTrackedProfileUrl("valentin", "linkedin")).toBe("sharpz.me/valentin/in");
+    expect(getBrandedTrackedProfileUrl("valentin", "x")).toBe("sharpz.me/valentin/x");
+    expect(getBrandedTrackedProfileUrl("valentin", "instagram")).not.toContain("utm_");
+    expect(getBrandedTrackedProfileUrl("valentin", "instagram")).not.toContain("?");
+    expect(trackedProfilePath("valentin", "instagram")).toBe("/valentin/ig");
+    expect(getWorkingTrackedProfileUrl("valentin", "linkedin", "http://localhost:3000")).toMatch(/\/valentin\/in$/);
+    expect(getWorkingTrackedProfileUrl("valentin", "linkedin", "http://localhost:3000")).not.toContain("utm_");
     expect(trafficSourceLabel("sharpz_explore")).toBe("Sharpz Explore");
+  });
+
+  it("maps only known short source codes to bio attribution", () => {
+    expect(resolveTrackedBioFromSourceCode("ig")).toEqual({
+      code: "ig",
+      platform: "instagram",
+      utmSource: "instagram",
+      utmMedium: "bio",
+    });
+    expect(resolveTrackedBioFromSourceCode("TT")).toMatchObject({ platform: "tiktok", utmSource: "tiktok" });
+    expect(resolveTrackedBioFromSourceCode("yt")).toMatchObject({ platform: "youtube" });
+    expect(resolveTrackedBioFromSourceCode("in")).toMatchObject({ platform: "linkedin" });
+    expect(resolveTrackedBioFromSourceCode("x")).toMatchObject({ platform: "x" });
+    expect(resolveTrackedBioFromSourceCode("instagram")).toBeNull();
+    expect(resolveTrackedBioFromSourceCode("foo")).toBeNull();
+    expect(resolveTrackedBioFromSourceCode("")).toBeNull();
+  });
+
+  it("reads tracked source from a profile pathname and ignores product routes", () => {
+    expect(readTrackedSourceFromPathname("/valentin/ig")?.utmSource).toBe("instagram");
+    expect(readTrackedSourceFromPathname("/valentin/tt")?.utmMedium).toBe("bio");
+    expect(readTrackedSourceFromPathname("/valentin")).toBeNull();
+    expect(readTrackedSourceFromPathname("/valentin/nope")).toBeNull();
+    expect(readTrackedSourceFromPathname("/explore/ig")).toBeNull();
+    expect(readTrackedSourceFromPathname("/search/tt")).toBeNull();
+    expect(readTrackedSourceFromPathname("/settings/yt")).toBeNull();
   });
 
   it("splits Sharpz discovery vs external traffic", () => {

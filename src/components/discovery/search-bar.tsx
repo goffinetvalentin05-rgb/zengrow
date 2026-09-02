@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { cn } from "@/src/lib/utils";
+import { useI18n } from "@/src/i18n/provider";
 
 export function DiscoverySearchBar({
   defaultValue = "",
@@ -15,6 +16,7 @@ export function DiscoverySearchBar({
   autoFocus?: boolean;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [value, setValue] = useState(defaultValue);
 
   function onSubmit(event: FormEvent) {
@@ -29,7 +31,7 @@ export function DiscoverySearchBar({
       <input
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        placeholder="Search people, projects, niches"
+        placeholder={t.search.placeholder}
         autoFocus={autoFocus}
         enterKeyHint="search"
         className="sz-focus h-12 w-full rounded-full border border-white/[0.08] bg-white/[0.05] pl-11 pr-[3.75rem] text-sm text-white outline-none placeholder:text-white/30 transition-colors duration-150 hover:border-white/14 focus:border-white/22"
@@ -37,9 +39,9 @@ export function DiscoverySearchBar({
       <button
         type="submit"
         className="absolute right-1.5 top-1/2 inline-flex h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full px-3 text-sm text-white/70"
-        aria-label="Search"
+        aria-label={t.search.aria}
       >
-        Go
+        {t.search.go}
       </button>
     </form>
   );

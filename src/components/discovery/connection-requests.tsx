@@ -7,6 +7,7 @@ import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 import Button from "@/src/components/ui/button";
 import { profileHref } from "@/src/lib/discovery/routes";
 import type { ProfileCardModel } from "@/src/lib/discovery/types";
+import { useI18n } from "@/src/i18n/provider";
 
 export function ConnectionRequests({
   requests,
@@ -14,6 +15,7 @@ export function ConnectionRequests({
   requests: { id: string; profile: ProfileCardModel }[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const visible = requests.filter((item) => !hidden.has(item.id));
   if (!visible.length) return null;
@@ -38,11 +40,14 @@ export function ConnectionRequests({
 
   return (
     <section className="mb-10 rounded-[1.6rem] border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
-      <p className="sz-label">Connection requests</p>
+      <p className="sz-label">{t.followingPage.requests}</p>
       <ul className="mt-4 space-y-3">
         {visible.map(({ id, profile }) => {
           const href = profile.username ? profileHref(profile.username) : "#";
-          const role = profile.roleLabel || profile.primaryCategory?.name;
+          const role =
+            profile.profileType && t.roles[profile.profileType]
+              ? t.roles[profile.profileType]
+              : profile.primaryCategory?.name;
           return (
             <li key={id} className="flex flex-col gap-3 border-b border-white/[0.05] pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:border-0 sm:pb-0">
               <div className="flex min-w-0 items-center gap-3">
@@ -56,7 +61,7 @@ export function ConnectionRequests({
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <Button type="button" className="min-h-11 flex-1 sm:flex-none" onClick={() => void respond(profile.id, id, "accept")}>
-                  Accept
+                  {t.actions.accept}
                 </Button>
                 <Button
                   type="button"
@@ -64,7 +69,7 @@ export function ConnectionRequests({
                   className="min-h-11 flex-1 sm:flex-none"
                   onClick={() => void respond(profile.id, id, "decline")}
                 >
-                  Decline
+                  {t.actions.decline}
                 </Button>
               </div>
             </li>

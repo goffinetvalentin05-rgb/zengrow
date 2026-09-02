@@ -8,8 +8,6 @@ import {
   MAX_NICHES,
   ONBOARDING_PROJECT_STATUSES,
   ONBOARDING_ROLES,
-  PROFILE_TYPE_LABELS,
-  PROJECT_STATUS_LABELS,
   SOCIAL_PLATFORM_LABELS,
   SOCIAL_PLATFORMS,
   type ProfileType,
@@ -17,7 +15,7 @@ import {
 } from "@/src/lib/discovery/constants";
 import { COUNTRY_PRESETS } from "@/src/lib/discovery/media";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
-import { getBrandedProfilePreview, publicSlugStatusMessage, type PublicSlugStatus } from "@/src/lib/discovery/public-link";
+import { getBrandedProfilePreview, type PublicSlugStatus } from "@/src/lib/discovery/public-link";
 import { slugifyUsername } from "@/src/lib/discovery/slug";
 import { PROFILE_THEME_KEYS, PROFILE_THEMES, profileThemeVars, resolveProfileTheme } from "@/src/lib/discovery/appearance";
 import {
@@ -35,6 +33,9 @@ import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 import { FadeImg } from "@/src/components/discovery/sz-ui";
 import type { Category, Profile, Project, SocialLink } from "@/src/lib/discovery/types";
 import { cn } from "@/src/lib/utils";
+import { useI18n } from "@/src/i18n/provider";
+import { interpolate } from "@/src/locales/app";
+import { translateDiscoveryError } from "@/src/lib/discovery/error-i18n";
 
 const inputClass =
   "sz-focus h-12 w-full rounded-2xl border border-white/[0.08] bg-[#0c0c0e] px-3.5 text-sm text-white outline-none placeholder:text-white/28";
@@ -55,6 +56,7 @@ export function OnboardingFlow({
   initialSocials: SocialLink[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const seeded = useMemo(
     () =>
       emptyOnboardingDraft(profile.id, {
@@ -164,7 +166,7 @@ export function OnboardingFlow({
     const payload = (await response.json().catch(() => ({}))) as { error?: string };
     setPending(false);
     if (!response.ok) {
-      setError(payload.error ?? "Could not save your profile.");
+      setError(translateDiscoveryError(payload.error, t));
       if (payload.error?.toLowerCase().includes("taken") || response.status === 409) {
         go("identity", "back");
       }
@@ -210,13 +212,13 @@ export function OnboardingFlow({
               className="min-h-11 text-sm text-white/40"
               onClick={() => go(ONBOARDING_STEPS[stepIndex - 1], "back")}
             >
-              Back
+              {t.common.back}
             </button>
           ) : (
             <span />
           )}
           <Button type="button" className="sz-press min-h-11 min-w-[9.5rem]" disabled={!canContinue || pending} onClick={continueStep}>
-            {pending ? "Saving…" : draft.step === "appearance" ? "Start discovering" : "Continue"}
+            {pending ? t.common.saving : draft.step === "appearance" ? t.onboarding.startDiscovering : t.common.continue}
           </Button>
         </div>
       </div>
@@ -233,10 +235,11 @@ function InterestsStep({
   draft: OnboardingDraft;
   setDraft: (next: OnboardingDraft | ((current: OnboardingDraft) => OnboardingDraft)) => void;
 }) {
+  const { t } = useI18n();
   return (
     <>
-      <h1 className="sz-display">What are you into?</h1>
-      <p className="sz-sub">Choose the niches you want to discover.</p>
+      <h1 className="sz-display">{t.onboarding.interestsTitle}</h1>
+      <p className="sz-sub">{t.onboarding.interestsSub}</p>
       <div className="mt-8 grid grid-cols-2 gap-2.5">
         {categories.map((cat) => {
           const active = draft.niches.includes(cat.id);
@@ -263,7 +266,7 @@ function InterestsStep({
           );
         })}
       </div>
-      <p className="sz-meta mt-4">{draft.niches.length}/{MAX_NICHES} selected</p>
+      <p className="sz-meta mt-4">{interpolate(t.onboarding.selected, { n: draft.niches.length, max: MAX_NICHES })}</p>
     </>
   );
 }
@@ -279,13 +282,22 @@ function IdentityStep({
   usernameStatus: PublicSlugStatus | null;
   usernameTaken: boolean;
 }) {
+  const { t } = useI18n();
   const preview = draft.username ? getBrandedProfilePreview(slugifyUsername(draft.username)) : "sharpz.me/username";
+  const slugMessage =
+    usernameStatus === "taken"
+      ? t.slug.taken
+      : usernameStatus === "reserved"
+        ? t.slug.reserved
+        : usernameStatus === "invalid"
+          ? t.slug.invalid
+          : t.slug.available;
   return (
     <>
-      <h1 className="sz-display">Who are you?</h1>
-      <p className="sz-sub">Just the essentials — this also creates your page.</p>
+      <h1 className="sz-display">{t.onboarding.identityTitle}</h1>
+      <p className="sz-sub">{t.onboarding.identitySub}</p>
       <div className="mt-8 space-y-5">
-        <Field label="Name">
+        <Field label={t.onboarding.name}>
           <Input
             value={draft.displayName}
             onChange={(event) => setDraft({ ...draft, displayName: event.target.value })}
@@ -293,7 +305,7 @@ function IdentityStep({
             autoComplete="name"
           />
         </Field>
-        <Field label="Your Sharpz link">
+        <Field label={t.onboarding.sharpzLink}>
           <Input
             value={draft.username}
             onChange={(event) =>
@@ -308,14 +320,14 @@ function IdentityStep({
           <p className={cn("mt-2 text-sm", usernameTaken ? "text-red-300" : "text-white/40")}>
             {preview}
             {usernameStatus && usernameStatus !== "available" && usernameStatus !== "current"
-              ? ` · ${publicSlugStatusMessage(usernameStatus)}`
+              ? ` · ${slugMessage}`
               : usernameStatus === "available" || usernameStatus === "current"
-                ? " · Available"
+                ? ` · ${t.onboarding.available}`
                 : null}
           </p>
         </Field>
         <div>
-          <p className="sz-label mb-3">Role</p>
+          <p className="sz-label mb-3">{t.onboarding.role}</p>
           <div className="grid grid-cols-2 gap-2">
             {ONBOARDING_ROLES.map((role) => {
               const active = draft.profileType === role;
@@ -329,19 +341,19 @@ function IdentityStep({
                     active ? "border-white bg-white text-zinc-950" : "border-white/[0.08] bg-white/[0.03] text-white/70",
                   )}
                 >
-                  {PROFILE_TYPE_LABELS[role as ProfileType]}
+                  {t.roles[role as ProfileType]}
                 </button>
               );
             })}
           </div>
         </div>
-        <Field label="Country">
+        <Field label={t.onboarding.country}>
           <select
             value={draft.country}
             onChange={(event) => setDraft({ ...draft, country: event.target.value })}
             className={inputClass}
           >
-            <option value="">Optional</option>
+            <option value="">{t.common.optional}</option>
             {COUNTRY_PRESETS.map((country) => (
               <option key={country} value={country}>
                 {country}
@@ -349,20 +361,20 @@ function IdentityStep({
             ))}
           </select>
         </Field>
-        <Field label="City">
+        <Field label={t.onboarding.city}>
           <Input
             value={draft.location}
             onChange={(event) => setDraft({ ...draft, location: event.target.value })}
             className={inputClass}
-            placeholder="Optional"
+            placeholder={t.common.optional}
           />
         </Field>
-        <Field label="Short bio">
+        <Field label={t.onboarding.bio}>
           <textarea
             value={draft.bio}
             onChange={(event) => setDraft({ ...draft, bio: event.target.value.slice(0, 160) })}
             rows={3}
-            placeholder="Building things people actually use."
+            placeholder={t.onboarding.bioPlaceholder}
             className="sz-focus w-full rounded-2xl border border-white/[0.08] bg-[#0c0c0e] px-3.5 py-3 text-sm text-white outline-none placeholder:text-white/28"
           />
         </Field>
@@ -382,22 +394,23 @@ function ProjectStep({
   draft: OnboardingDraft;
   setDraft: (next: OnboardingDraft | ((current: OnboardingDraft) => OnboardingDraft)) => void;
 }) {
+  const { t } = useI18n();
   return (
     <>
-      <h1 className="sz-display">What are you building?</h1>
-      <p className="sz-sub">Show people what you’re working on.</p>
+      <h1 className="sz-display">{t.onboarding.projectTitle}</h1>
+      <p className="sz-sub">{t.onboarding.projectSub}</p>
       <button
         type="button"
         onClick={() => setDraft({ ...draft, skipProject: !draft.skipProject })}
         className="mt-5 text-sm text-white/40 underline-offset-4 hover:text-white/70 hover:underline"
       >
-        {draft.skipProject ? "I am building something" : "I’m not building anything right now"}
+        {draft.skipProject ? t.onboarding.unskipProject : t.onboarding.skipProject}
       </button>
       {draft.skipProject ? (
-        <p className="sz-body mt-8">You can add a project later from your profile.</p>
+        <p className="sz-body mt-8">{t.onboarding.skipHint}</p>
       ) : (
         <div className="mt-8 space-y-5">
-          <Field label="Project name">
+          <Field label={t.onboarding.projectName}>
             <Input
               value={draft.projectName}
               onChange={(event) => setDraft({ ...draft, projectName: event.target.value })}
@@ -405,37 +418,37 @@ function ProjectStep({
               placeholder="Northloop"
             />
           </Field>
-          <Field label="Short description">
+          <Field label={t.onboarding.projectDescription}>
             <Input
               value={draft.projectDescription}
               onChange={(event) => setDraft({ ...draft, projectDescription: event.target.value })}
               className={inputClass}
-              placeholder="Optional"
+              placeholder={t.common.optional}
             />
           </Field>
-          <Field label="Project URL">
+          <Field label={t.onboarding.projectUrl}>
             <Input
               value={draft.projectUrl}
               onChange={(event) => setDraft({ ...draft, projectUrl: event.target.value })}
               className={inputClass}
-              placeholder="Optional"
+              placeholder={t.common.optional}
             />
           </Field>
           <div>
-            <p className="sz-label mb-3">Logo</p>
+            <p className="sz-label mb-3">{t.common.logo}</p>
             <OnboardingLogoPick
               userId={userId}
               url={draft.projectLogoUrl}
               onChange={(projectLogoUrl) => setDraft({ ...draft, projectLogoUrl })}
             />
           </div>
-          <Field label="Category">
+          <Field label={t.onboarding.category}>
             <select
               value={draft.projectCategory}
               onChange={(event) => setDraft({ ...draft, projectCategory: event.target.value })}
               className={inputClass}
             >
-              <option value="">Optional</option>
+              <option value="">{t.common.optional}</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.name}>
                   {cat.name}
@@ -444,7 +457,7 @@ function ProjectStep({
             </select>
           </Field>
           <div>
-            <p className="sz-label mb-3">Status</p>
+            <p className="sz-label mb-3">{t.onboarding.status}</p>
             <div className="grid grid-cols-2 gap-2">
               {ONBOARDING_PROJECT_STATUSES.map((status) => {
                 const active = draft.projectStatus === status;
@@ -458,7 +471,7 @@ function ProjectStep({
                       active ? "border-white bg-white text-zinc-950" : "border-white/[0.08] bg-white/[0.03] text-white/70",
                     )}
                   >
-                    {PROJECT_STATUS_LABELS[status]}
+                    {t.projectStatus[status]}
                   </button>
                 );
               })}
@@ -479,11 +492,12 @@ function AppearanceStep({
   draft: OnboardingDraft;
   setDraft: (next: OnboardingDraft | ((current: OnboardingDraft) => OnboardingDraft)) => void;
 }) {
+  const { t } = useI18n();
   const theme = resolveProfileTheme(draft.themeKey);
   return (
     <>
-      <h1 className="sz-display">Make it yours</h1>
-      <p className="sz-sub">Add the places people can find you.</p>
+      <h1 className="sz-display">{t.onboarding.appearanceTitle}</h1>
+      <p className="sz-sub">{t.onboarding.appearanceSub}</p>
       <div className="mt-7 overflow-hidden rounded-[1.5rem] ring-1 ring-white/[0.08]" style={profileThemeVars(theme)}>
         <div className="relative h-24">
           {draft.coverImageUrl ? (
@@ -498,10 +512,10 @@ function AppearanceStep({
           )}
         </div>
         <div className="relative -mt-7 flex items-end gap-3 px-4 pb-4">
-          <DiscoveryAvatar name={draft.displayName || "You"} src={draft.avatarUrl || null} size="lg" className="ring-[3px] ring-[#050506]" />
+          <DiscoveryAvatar name={draft.displayName || t.common.you} src={draft.avatarUrl || null} size="lg" className="ring-[3px] ring-[#050506]" />
           <div className="min-w-0 pb-0.5">
             <p className="truncate font-[family-name:var(--font-zg-display)] text-xl leading-none text-white">
-              {draft.displayName || "Your name"}
+              {draft.displayName || t.common.yourName}
             </p>
             <p className="mt-1 truncate text-sm text-white/40">@{slugifyUsername(draft.username) || "username"}</p>
           </div>
@@ -509,16 +523,16 @@ function AppearanceStep({
       </div>
       <div className="mt-8 space-y-6">
         <div>
-          <p className="sz-label mb-3">Avatar</p>
+          <p className="sz-label mb-3">{t.onboarding.avatar}</p>
           <OnboardingAvatarPick
             userId={userId}
-            name={draft.displayName || "You"}
+            name={draft.displayName || t.common.you}
             url={draft.avatarUrl}
             onChange={(avatarUrl) => setDraft({ ...draft, avatarUrl })}
           />
         </div>
         <div>
-          <p className="sz-label mb-3">Cover</p>
+          <p className="sz-label mb-3">{t.onboarding.cover}</p>
           <OnboardingCoverPick
             userId={userId}
             url={draft.coverImageUrl}
@@ -526,7 +540,7 @@ function AppearanceStep({
           />
         </div>
         <div>
-          <p className="sz-label mb-3">Theme</p>
+          <p className="sz-label mb-3">{t.onboarding.theme}</p>
           <div className="grid grid-cols-5 gap-2">
             {PROFILE_THEME_KEYS.map((key) => {
               const item = PROFILE_THEMES[key];
@@ -549,7 +563,7 @@ function AppearanceStep({
           </div>
         </div>
         <div>
-          <p className="sz-label mb-3">Socials</p>
+          <p className="sz-label mb-3">{t.onboarding.socials}</p>
           <div className="space-y-3">
             {SOCIAL_PLATFORMS.map((platform) => (
               <Field key={platform} label={SOCIAL_PLATFORM_LABELS[platform]}>
@@ -559,7 +573,7 @@ function AppearanceStep({
                     setDraft({ ...draft, links: { ...draft.links, [platform]: event.target.value } })
                   }
                   className={inputClass}
-                  placeholder="Optional"
+                  placeholder={t.common.optional}
                 />
               </Field>
             ))}

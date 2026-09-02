@@ -5,14 +5,8 @@ import { useState } from "react";
 import Button from "@/src/components/ui/button";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
 import type { ConnectionUiStatus } from "@/src/lib/discovery/types";
+import { useI18n } from "@/src/i18n/provider";
 import { cn } from "@/src/lib/utils";
-
-const LABELS: Record<ConnectionUiStatus, string> = {
-  none: "Connect",
-  pending_out: "Requested",
-  pending_in: "Accept",
-  accepted: "Connected",
-};
 
 export function ConnectButton({
   profileId,
@@ -31,6 +25,13 @@ export function ConnectButton({
   silent?: boolean;
   onStatusChange?: (status: ConnectionUiStatus) => void;
 }) {
+  const { t } = useI18n();
+  const labels: Record<ConnectionUiStatus, string> = {
+    none: t.actions.connect,
+    pending_out: t.actions.requested,
+    pending_in: t.actions.accept,
+    accepted: t.actions.connected,
+  };
   const router = useRouter();
   const [status, setStatus] = useState<ConnectionUiStatus>(initialStatus);
   const [pending, setPending] = useState(false);
@@ -98,7 +99,7 @@ export function ConnectButton({
       className={cn("sz-press min-h-11 min-w-[6.5rem] rounded-2xl", className)}
     >
       <span key={status} className="sz-copied inline-block">
-        {LABELS[status]}
+        {labels[status]}
       </span>
     </Button>
   );

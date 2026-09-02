@@ -9,9 +9,10 @@ export type CompletenessInput = {
   socialCount: number;
 };
 
+export type CompletenessKey = "photo" | "cover" | "project" | "youtube" | "featured" | "social" | "bio";
+
 export type CompletenessSuggestion = {
-  key: string;
-  label: string;
+  key: CompletenessKey;
   href: string;
 };
 
@@ -41,25 +42,25 @@ export function completenessSuggestions(input: {
 }): CompletenessSuggestion[] {
   const suggestions: CompletenessSuggestion[] = [];
   if (!input.profile.avatarUrl) {
-    suggestions.push({ key: "photo", label: "Add a profile picture", href: "/me/edit#profile" });
+    suggestions.push({ key: "photo", href: "/me/edit#profile" });
   }
   if (!input.profile.coverImageUrl) {
-    suggestions.push({ key: "cover", label: "Add a cover", href: "/me/edit#appearance" });
+    suggestions.push({ key: "cover", href: "/me/edit#appearance" });
   }
   if (!input.projects.length) {
-    suggestions.push({ key: "project", label: "Add your project", href: "/me/edit#projects" });
+    suggestions.push({ key: "project", href: "/me/edit#projects" });
   }
   if (!input.socialLinks.some((link) => link.platform === "youtube")) {
-    suggestions.push({ key: "youtube", label: "Add YouTube", href: "/me/edit#social" });
+    suggestions.push({ key: "youtube", href: "/me/edit#social" });
   }
   if (!input.featuredContent.length) {
-    suggestions.push({ key: "featured", label: "Add featured content", href: "/me/edit#featured" });
+    suggestions.push({ key: "featured", href: "/me/edit#featured" });
   }
   if (!input.socialLinks.length) {
-    suggestions.push({ key: "social", label: "Add where people can find you", href: "/me/edit#social" });
+    suggestions.push({ key: "social", href: "/me/edit#social" });
   }
   if ((input.profile.bio ?? "").trim().length < 12) {
-    suggestions.push({ key: "bio", label: "Write a short bio", href: "/me/edit#profile" });
+    suggestions.push({ key: "bio", href: "/me/edit#profile" });
   }
   return suggestions.slice(0, 4);
 }

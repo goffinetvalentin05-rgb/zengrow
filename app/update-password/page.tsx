@@ -4,7 +4,9 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthCard, ZenGrowAuthLayout } from "@/src/components/auth/zengrow-auth-page-shell";
-import { authErrorMessageFr } from "@/src/lib/auth-error-fr";
+import { translateAuthError } from "@/src/lib/auth-error-fr";
+import { useI18n } from "@/src/i18n/provider";
+import { interpolate } from "@/src/locales/app";
 import {
   authErrorClassName,
   authFieldLabel,
@@ -23,6 +25,7 @@ const MIN_LENGTH = 8;
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [phase, setPhase] = useState<LinkPhase>("checking");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -80,11 +83,11 @@ export default function UpdatePasswordPage() {
     setError(null);
 
     if (password.length < MIN_LENGTH) {
-      setError(`Le mot de passe doit contenir au moins ${MIN_LENGTH} caractères.`);
+      setError(interpolate(t.auth.reset.tooShort, { n: MIN_LENGTH }));
       return;
     }
     if (password !== confirm) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(t.auth.reset.mismatch);
       return;
     }
 
@@ -96,10 +99,7 @@ export default function UpdatePasswordPage() {
 
     if (updateError) {
       setError(
-        authErrorMessageFr(
-          updateError,
-          "Impossible de mettre à jour le mot de passe. Réessayez ou demandez un nouveau lien.",
-        ),
+        translateAuthError(updateError, t.auth.errors, t.auth.errors.updateFailed),
       );
       setIsLoading(false);
       return;
@@ -119,28 +119,28 @@ export default function UpdatePasswordPage() {
       <AuthCard>
         <div className="mb-8">
           <h1 className="text-balance font-[family-name:var(--font-zg-display)] text-[1.75rem] font-semibold tracking-tight text-white sm:text-[2rem] sm:leading-tight">
-            Nouveau mot de passe
+            {t.auth.reset.title}
           </h1>
           <p className="mt-3 max-w-[36ch] text-pretty text-sm leading-relaxed text-white/50">
-            Choisissez un nouveau mot de passe sécurisé.
+            {t.auth.reset.subtitle}
           </p>
         </div>
 
         {phase === "checking" ? (
-          <p className="py-6 text-sm text-white/50">Vérification du lien…</p>
+          <p className="py-6 text-sm text-white/50">{t.auth.reset.checking}</p>
         ) : null}
 
         {phase === "invalid" ? (
           <div className="space-y-5">
             <p className="rounded-xl border border-amber-500/30 bg-amber-950/40 px-3.5 py-3 text-sm leading-relaxed text-amber-100/90">
-              Ce lien est invalide ou a expiré. Demandez un nouveau lien de réinitialisation.
+              {t.auth.reset.invalid}
             </p>
             <div className="flex flex-col gap-2 text-sm">
               <Link href="/pro/forgot-password" className={authLinkClassName}>
-                Demander un nouveau lien
+                {t.auth.reset.requestNew}
               </Link>
               <Link href="/pro/login" className="text-white/45 transition hover:text-white/80">
-                Retour à la connexion
+                {t.auth.forgot.back}
               </Link>
             </div>
           </div>
@@ -150,13 +150,13 @@ export default function UpdatePasswordPage() {
           <form className="relative space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <label htmlFor="new-password" className={authFieldLabel}>
-                Nouveau mot de passe
+                {t.auth.reset.newPassword}
               </label>
               <Input
                 id="new-password"
                 type="password"
                 autoComplete="new-password"
-                placeholder="Au moins 8 caractères"
+                placeholder={t.auth.reset.placeholder}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
@@ -167,13 +167,13 @@ export default function UpdatePasswordPage() {
 
             <div className="space-y-2">
               <label htmlFor="confirm-password" className={authFieldLabel}>
-                Confirmer le mot de passe
+                {t.auth.reset.confirm}
               </label>
               <Input
                 id="confirm-password"
                 type="password"
                 autoComplete="new-password"
-                placeholder="Répétez le mot de passe"
+                placeholder={t.auth.reset.repeat}
                 value={confirm}
                 onChange={(event) => setConfirm(event.target.value)}
                 required
@@ -183,14 +183,14 @@ export default function UpdatePasswordPage() {
             </div>
 
             <Button type="submit" disabled={isLoading} size="lg" variant="ghost" className={authSubmitClassName}>
-              {isLoading ? "Enregistrement en cours…" : "Enregistrer le nouveau mot de passe"}
+              {isLoading ? t.auth.reset.submitting : t.auth.reset.submit}
             </Button>
           </form>
         ) : null}
 
         {phase === "ready" && success ? (
           <p className={authSuccessClassName} role="status">
-            Votre mot de passe a été mis à jour avec succès. Vous pouvez maintenant vous connecter.
+            {t.auth.reset.success}
           </p>
         ) : null}
 
@@ -203,7 +203,7 @@ export default function UpdatePasswordPage() {
         {phase === "ready" ? (
           <p className="mt-6 text-sm text-white/45">
             <Link href="/pro/login" className={authLinkClassName}>
-              Retour à la connexion
+              {t.auth.forgot.back}
             </Link>
           </p>
         ) : null}

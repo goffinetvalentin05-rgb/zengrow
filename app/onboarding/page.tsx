@@ -4,11 +4,14 @@ import { requireDiscoverySession } from "@/src/lib/discovery/auth";
 import { getCategories, getOwnedRelations } from "@/src/lib/discovery/queries";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
 import { createClient } from "@/src/lib/supabase/server";
+import { getMessagesForRequest } from "@/src/i18n/server";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Set up Sharpz",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getMessagesForRequest();
+  return { title: t.onboarding.setupTitle };
+}
 
 export default async function OnboardingPage() {
   const session = await requireDiscoverySession();
@@ -27,6 +30,7 @@ export default async function OnboardingPage() {
       avatarUrl={session.profile.avatarUrl}
       completeness={session.profile.completeness}
       username={session.profile.username}
+      preferredLanguage={session.profile.preferredLanguage}
       hideChrome
     >
       <OnboardingFlow

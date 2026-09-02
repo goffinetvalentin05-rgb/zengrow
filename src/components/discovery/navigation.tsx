@@ -20,17 +20,10 @@ import { DISCOVERY_ROUTES, profileHref } from "@/src/lib/discovery/routes";
 import { cn } from "@/src/lib/utils";
 import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 import { DiscoverySheet } from "@/src/components/discovery/mobile-sheet";
+import { LanguageSwitch } from "@/src/i18n/language-switch";
+import { useI18n } from "@/src/i18n/provider";
+import { interpolate } from "@/src/locales/app";
 import { useState } from "react";
-
-const NAV: { href: string; label: string; icon: LucideIcon }[] = [
-  { href: DISCOVERY_ROUTES.explore, label: "Explore", icon: Compass },
-  { href: DISCOVERY_ROUTES.search, label: "Search", icon: Search },
-  { href: DISCOVERY_ROUTES.following, label: "Following", icon: Users },
-  { href: DISCOVERY_ROUTES.saved, label: "Saved", icon: Bookmark },
-  { href: DISCOVERY_ROUTES.me, label: "My profile", icon: UserRound },
-  { href: DISCOVERY_ROUTES.analytics, label: "Analytics", icon: BarChart3 },
-  { href: DISCOVERY_ROUTES.settings, label: "Settings", icon: Settings },
-];
 
 export function DiscoverySidebar({
   displayName,
@@ -45,6 +38,16 @@ export function DiscoverySidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useI18n();
+  const nav: { href: string; label: string; icon: LucideIcon }[] = [
+    { href: DISCOVERY_ROUTES.explore, label: t.nav.explore, icon: Compass },
+    { href: DISCOVERY_ROUTES.search, label: t.nav.search, icon: Search },
+    { href: DISCOVERY_ROUTES.following, label: t.nav.following, icon: Users },
+    { href: DISCOVERY_ROUTES.saved, label: t.nav.saved, icon: Bookmark },
+    { href: DISCOVERY_ROUTES.me, label: t.nav.myProfile, icon: UserRound },
+    { href: DISCOVERY_ROUTES.analytics, label: t.nav.analytics, icon: BarChart3 },
+    { href: DISCOVERY_ROUTES.settings, label: t.nav.settings, icon: Settings },
+  ];
 
   async function logout() {
     const supabase = createClient();
@@ -61,7 +64,7 @@ export function DiscoverySidebar({
       </div>
 
       <nav className="mt-7 flex flex-1 flex-col gap-0.5 px-2.5">
-        {NAV.map((item) => {
+        {nav.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
           return (
@@ -88,12 +91,15 @@ export function DiscoverySidebar({
           href={DISCOVERY_ROUTES.meEdit}
           className="mx-3 mb-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 text-sm text-white/65 transition-colors hover:border-white/14 hover:text-white"
         >
-          Complete profile
-          <span className="mt-1 block text-xs text-white/32">{completeness}% done</span>
+          {t.nav.completeProfile}
+          <span className="mt-1 block text-xs text-white/32">{interpolate(t.nav.percentDone, { n: completeness })}</span>
         </Link>
       ) : null}
 
       <div className="border-t border-white/[0.06] p-2.5">
+        <div className="mb-2 px-1">
+          <LanguageSwitch />
+        </div>
         <Link
           href={username ? profileHref(username) : DISCOVERY_ROUTES.me}
           className="flex items-center gap-3 rounded-2xl px-2 py-2 transition-colors hover:bg-white/[0.04]"
@@ -107,7 +113,7 @@ export function DiscoverySidebar({
           className="sz-press mt-0.5 flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-[13px] text-white/35 hover:bg-white/[0.04] hover:text-white"
         >
           <LogOut className="h-3.5 w-3.5" strokeWidth={1.6} />
-          Log out
+          {t.nav.logOut}
         </button>
       </div>
     </aside>
@@ -117,12 +123,13 @@ export function DiscoverySidebar({
 export function DiscoveryBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useI18n();
   const [moreOpen, setMoreOpen] = useState(false);
   const items = [
-    { href: DISCOVERY_ROUTES.explore, label: "Explore", icon: Compass },
-    { href: DISCOVERY_ROUTES.search, label: "Search", icon: Search },
-    { href: DISCOVERY_ROUTES.following, label: "Following", icon: Users },
-    { href: DISCOVERY_ROUTES.me, label: "Profile", icon: UserRound },
+    { href: DISCOVERY_ROUTES.explore, label: t.nav.explore, icon: Compass },
+    { href: DISCOVERY_ROUTES.search, label: t.nav.search, icon: Search },
+    { href: DISCOVERY_ROUTES.following, label: t.nav.following, icon: Users },
+    { href: DISCOVERY_ROUTES.me, label: t.nav.profile, icon: UserRound },
   ];
   const moreHrefs = [DISCOVERY_ROUTES.saved, DISCOVERY_ROUTES.analytics, DISCOVERY_ROUTES.settings, DISCOVERY_ROUTES.admin];
   const moreActive = moreHrefs.some((href) => pathname === href || pathname.startsWith(`${href}/`));
@@ -135,7 +142,7 @@ export function DiscoveryBottomNav() {
 
   return (
     <>
-      <nav className="sz-bottom-nav fixed inset-x-0 bottom-0 z-40 md:hidden" aria-label="Primary">
+      <nav className="sz-bottom-nav fixed inset-x-0 bottom-0 z-40 md:hidden" aria-label={t.nav.primaryAria}>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#050506] via-[#050506]/80 to-transparent" />
         <div className="relative mx-3 mb-[var(--sz-bottom-nav-offset)] flex items-center justify-around rounded-full border border-white/[0.08] bg-[#0c0c0e]/78 px-1 py-1.5 shadow-[0_12px_40px_-18px_rgba(0,0,0,0.9)] backdrop-blur-xl">
           {items.map((item) => {
@@ -166,17 +173,17 @@ export function DiscoveryBottomNav() {
             )}
           >
             <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={moreActive ? 2 : 1.5} />
-            More
+            {t.nav.more}
           </button>
         </div>
       </nav>
-      <DiscoverySheet open={moreOpen} title="More" onClose={() => setMoreOpen(false)} labelledBy="sz-more-title">
+      <DiscoverySheet open={moreOpen} title={t.nav.moreTitle} onClose={() => setMoreOpen(false)} labelledBy="sz-more-title">
         <nav className="flex flex-col gap-1 pb-2" aria-labelledby="sz-more-title">
           {[
-            { href: DISCOVERY_ROUTES.saved, label: "Saved", icon: Bookmark },
-            { href: DISCOVERY_ROUTES.analytics, label: "Analytics", icon: BarChart3 },
-            { href: DISCOVERY_ROUTES.settings, label: "Settings", icon: Settings },
-            { href: DISCOVERY_ROUTES.meEdit, label: "Edit profile", icon: UserRound },
+            { href: DISCOVERY_ROUTES.saved, label: t.nav.saved, icon: Bookmark },
+            { href: DISCOVERY_ROUTES.analytics, label: t.nav.analytics, icon: BarChart3 },
+            { href: DISCOVERY_ROUTES.settings, label: t.nav.settings, icon: Settings },
+            { href: DISCOVERY_ROUTES.meEdit, label: t.nav.editProfile, icon: UserRound },
           ].map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -195,13 +202,16 @@ export function DiscoveryBottomNav() {
               </Link>
             );
           })}
+          <div className="mt-3 px-3">
+            <LanguageSwitch />
+          </div>
           <button
             type="button"
             onClick={() => void logout()}
             className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-[15px] text-white/45"
           >
             <LogOut className="h-4 w-4" strokeWidth={1.7} />
-            Log out
+            {t.nav.logOut}
           </button>
         </nav>
       </DiscoverySheet>

@@ -1,5 +1,5 @@
 import { readUtmCampaign, readUtmMedium, readUtmSource, referrerHostFromUrl, sanitizeTrackingPlatform } from "@/src/lib/discovery/public-link";
-import { normalizeStoredSource } from "@/src/lib/discovery/attribution";
+import { normalizeStoredSource, readTrackedSourceFromPathname } from "@/src/lib/discovery/attribution";
 import type { DiscoveryEventInput } from "@/src/lib/discovery/types";
 
 const VISITOR_TOKEN_KEY = "sz_vid";
@@ -37,8 +37,11 @@ function setSessionFlag(key: string) {
 
 export function trackDiscoveryEvent(input: DiscoveryEventInput) {
   if (typeof window === "undefined") return;
+  const search = window.location.search;
+  const fromPath = readTrackedSourceFromPathname(window.location.pathname);
   const source = normalizeStoredSource(input.source);
-  const utmSource = input.utmSource ?? sanitizeTrackingPlatform(readUtmSource(window.location.search));
+  const utmSource =
+    input.utmSource ?? fromPath?.utmSource ?? sanitizeTrackingPlatform(readUtmSource(search));
   const viewKey = `sz_view:${input.profileId}:${source}:${utmSource ?? ""}`;
   const impKey = `sz_imp:${input.profileId}:${source}`;
   if (input.eventType === "profile_view" && sessionFlag(viewKey)) return;
@@ -46,7 +49,6 @@ export function trackDiscoveryEvent(input: DiscoveryEventInput) {
   if (input.eventType === "profile_view") setSessionFlag(viewKey);
   if (input.eventType === "profile_impression") setSessionFlag(impKey);
 
-  const search = window.location.search;
   void fetch("/api/discovery/events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -55,7 +57,7 @@ export function trackDiscoveryEvent(input: DiscoveryEventInput) {
       source,
       visitorToken: getAnonymousVisitorToken(),
       utmSource,
-      utmMedium: input.utmMedium ?? sanitizeTrackingPlatform(readUtmMedium(search)),
+      utmMedium: input.utmMedium ?? fromPath?.utmMedium ?? sanitizeTrackingPlatform(readUtmMedium(search)),
       utmCampaign: input.utmCampaign ?? sanitizeTrackingPlatform(readUtmCampaign(search)),
       referrerHost: referrerHostFromUrl(document.referrer, window.location.hostname),
     }),

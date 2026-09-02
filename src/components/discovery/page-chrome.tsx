@@ -19,6 +19,7 @@ export function DiscoveryPageChrome({
         avatarUrl={session.profile.avatarUrl}
         completeness={session.profile.completeness}
         username={session.profile.username}
+        preferredLanguage={session.profile.preferredLanguage}
       >
         {children}
       </DiscoveryShell>

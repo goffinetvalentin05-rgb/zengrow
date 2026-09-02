@@ -15,6 +15,8 @@ import { categoryDiscoveryHref, exploreHref, feedQueryString } from "@/src/lib/d
 import { readExploreScroll, rememberExploreCount, restoreExploreScroll } from "@/src/lib/discovery/track";
 import { consumeOnboardingJustFinished } from "@/src/lib/discovery/onboarding";
 import type { Category, ExploreFilters, ProfileCardModel } from "@/src/lib/discovery/types";
+import { useI18n } from "@/src/i18n/provider";
+import { interpolate } from "@/src/locales/app";
 
 export function ExploreView({
   categories,
@@ -39,6 +41,7 @@ export function ExploreView({
   isLoggedIn?: boolean;
   source?: string;
 }) {
+  const { t } = useI18n();
   const [profiles, setProfiles] = useState(initialProfiles);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
@@ -169,9 +172,9 @@ export function ExploreView({
   return (
     <div className="pb-8 max-md:pb-12">
       <header className="mx-auto w-full max-w-[720px] px-5 md:mx-0 md:max-w-none md:px-0">
-        <h1 className="sz-display">Discover people worth knowing.</h1>
-        {feedReady ? <p className="sz-copied mt-3 text-sm text-white/50">Your feed is ready.</p> : null}
-        <p className="sz-sub">Find builders, creators and operators in the niches you care about.</p>
+        <h1 className="sz-display">{t.explore.title}</h1>
+        {feedReady ? <p className="sz-copied mt-3 text-sm text-white/50">{t.explore.feedReady}</p> : null}
+        <p className="sz-sub">{t.explore.subtitle}</p>
         <div className="mt-5">
           <DiscoverySearchBar />
         </div>
@@ -181,6 +184,7 @@ export function ExploreView({
             activeSlug={filters.niche}
             favoriteSlugs={favoriteSlugs}
             hrefFor={(slug) => hrefFor({ ...filters, niche: slug })}
+            forYouLabel={t.explore.forYou}
             onNavigate={() => setFilterPending(true)}
           />
           <div className="mt-3">
@@ -207,8 +211,8 @@ export function ExploreView({
         ) : empty ? (
           <div className="sz-crossfade">
             <DiscoveryEmpty
-              title="No exact matches yet."
-              description="Sharpz is still small in this slice. Try a nearby world, or drop one filter."
+              title={t.explore.emptyTitle}
+              description={t.explore.emptyDescription}
             />
             {hints.length ? (
               <div className="mt-5 flex flex-wrap gap-2">
@@ -219,14 +223,14 @@ export function ExploreView({
                     onClick={() => setFilterPending(true)}
                     className="sz-pill"
                   >
-                    Remove {hint.label}
+                    {interpolate(t.explore.removeFilter, { label: t.filters[hint.filter] })}
                   </Link>
                 ))}
               </div>
             ) : null}
             {nearby.length ? (
               <div className="mt-6">
-                <p className="sz-label mb-3">Browse nearby niches</p>
+                <p className="sz-label mb-3">{t.explore.nearby}</p>
                 <div className="flex flex-wrap gap-2">
                   {nearby.map((cat) => (
                     <Link
@@ -243,7 +247,7 @@ export function ExploreView({
             ) : null}
             {related.length ? (
               <div className="mt-10">
-                <p className="sz-label mb-5">People close to these filters</p>
+                <p className="sz-label mb-5">{t.explore.related}</p>
                 <PeopleFeed profiles={related} source={source} isLoggedIn={isLoggedIn} />
               </div>
             ) : null}
@@ -273,7 +277,7 @@ export function ExploreView({
               </div>
             ) : null}
             {!hasMore && profiles.length ? (
-              <p className="sz-meta py-8 text-center">That’s everyone in this slice for now.</p>
+              <p className="sz-meta py-8 text-center">{t.explore.end}</p>
             ) : null}
           </div>
         )}

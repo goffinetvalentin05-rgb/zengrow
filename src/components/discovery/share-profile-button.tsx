@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Share } from "lucide-react";
 import Button from "@/src/components/ui/button";
-import { getProfileShareText, getWorkingProfileUrl } from "@/src/lib/discovery/public-link";
+import { getWorkingProfileUrl } from "@/src/lib/discovery/public-link";
+import { useI18n } from "@/src/i18n/provider";
 import { cn } from "@/src/lib/utils";
 
 function isLikelyMobile() {
@@ -22,11 +23,12 @@ export function ShareProfileButton({
   variant?: "secondary" | "ghost";
   size?: "sm" | "md";
 }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
   async function share() {
     const url = getWorkingProfileUrl(username);
-    const text = getProfileShareText(username);
+    const text = `${t.actions.shareText}\n${url}`;
     if (typeof navigator.share === "function" && isLikelyMobile()) {
       try {
         await navigator.share({ title: "Sharpz", text, url });
@@ -43,7 +45,7 @@ export function ShareProfileButton({
   return (
     <Button type="button" variant={variant} size={size} className={cn("sz-press rounded-full", className)} onClick={() => void share()}>
       <span key={copied ? "copied" : "share"} className="sz-copied inline-block">
-        {copied ? "Copied" : "Share profile"}
+        {copied ? t.common.copied : t.actions.shareProfile}
       </span>
       <Share className="h-3.5 w-3.5" />
     </Button>

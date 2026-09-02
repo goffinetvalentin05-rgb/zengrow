@@ -16,6 +16,8 @@ import { SocialGlyph } from "@/src/components/discovery/social-glyph";
 import { FadeImg, ProjectStrip } from "@/src/components/discovery/sz-ui";
 import { initialsFromName } from "@/src/lib/discovery/slug";
 import { cn } from "@/src/lib/utils";
+import { useI18n } from "@/src/i18n/provider";
+import type { ProfileType } from "@/src/lib/discovery/constants";
 
 function openProfile(profile: ProfileCardModel, source: string) {
   persistExploreScroll(`${window.location.pathname}${window.location.search}`);
@@ -72,9 +74,13 @@ export function ProfileDiscoveryCard({
   variant?: "feed" | "grid" | "swipe";
   isLoggedIn?: boolean;
 }) {
+  const { t } = useI18n();
   const href = profile.username ? `${profileHref(profile.username)}?from=${source}` : "#";
   const place = formatLocation(profile.location, profile.country);
-  const role = profile.roleLabel || profile.primaryCategory?.name;
+  const role =
+    profile.profileType && t.roles[profile.profileType as ProfileType]
+      ? t.roles[profile.profileType as ProfileType]
+      : profile.primaryCategory?.name;
   const niche = profile.primaryCategory?.name;
   const audience = formatAudienceSize(profile.audienceSize);
   const socials = profile.socialLinks.filter((link) => link.platform !== "website").slice(0, 3);
@@ -148,7 +154,7 @@ export function ProfileDiscoveryCard({
               })
             }
             className="absolute inset-0 flex items-center justify-center"
-            aria-label="Watch on YouTube"
+            aria-label={t.featuredCta.youtube}
           >
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-white ring-1 ring-white/20 backdrop-blur-md transition-transform duration-150 active:scale-95">
               <Play className="h-5 w-5 fill-white" />
@@ -160,7 +166,7 @@ export function ProfileDiscoveryCard({
 
         {profile.discoveryBadge ? (
           <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-950">
-            {profile.discoveryBadge === "rising" ? "Rising" : "New"}
+            {profile.discoveryBadge === "rising" ? t.badges.rising : t.badges.new}
           </span>
         ) : null}
 

@@ -42,6 +42,7 @@ function card(partial: Partial<ProfileCardModel>): ProfileCardModel {
     ctaLabel: null,
     ctaUrl: null,
     ctaType: "custom",
+    preferredLanguage: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     primaryCategory: null,

@@ -35,6 +35,8 @@ import { FadeImg } from "@/src/components/discovery/sz-ui";
 import Button from "@/src/components/ui/button";
 import { initialsFromName } from "@/src/lib/discovery/slug";
 import { cn } from "@/src/lib/utils";
+import { useI18n } from "@/src/i18n/provider";
+import { formatFollowers } from "@/src/i18n/format";
 
 const accentCta = {
   background: "var(--profile-accent)",
@@ -47,6 +49,7 @@ export function PublicProfileView({
   isLoggedIn,
   source = "direct",
   utmSource,
+  utmMedium,
   editHref,
   showOwnerBar = false,
 }: {
@@ -55,9 +58,11 @@ export function PublicProfileView({
   isLoggedIn: boolean;
   source?: string;
   utmSource?: string | null;
+  utmMedium?: string | null;
   editHref?: string;
   showOwnerBar?: boolean;
 }) {
+  const { t, locale } = useI18n();
   useEffect(() => {
     if (isOwner) return;
     const fromQuery = sanitizeTrackingPlatform(readUtmSource(window.location.search));
@@ -67,9 +72,9 @@ export function PublicProfileView({
       eventType: "profile_view",
       source,
       utmSource: utmSource || fromQuery,
-      utmMedium: medium,
+      utmMedium: utmMedium || medium,
     });
-  }, [isOwner, profile.id, source, utmSource]);
+  }, [isOwner, profile.id, source, utmSource, utmMedium]);
 
   const theme = resolveProfileTheme(profile.themeKey);
   const layout = resolveProfileLayout(profile.layoutVariant, profile.featuredFirst);
@@ -79,8 +84,8 @@ export function PublicProfileView({
   const place = formatLocation(profile.location, profile.country);
   const niche = profile.primaryCategory?.name;
   const role =
-    profile.profileType && PROFILE_TYPE_LABELS[profile.profileType as ProfileType]
-      ? PROFILE_TYPE_LABELS[profile.profileType as ProfileType]
+    profile.profileType && t.roles[profile.profileType as ProfileType]
+      ? t.roles[profile.profileType as ProfileType]
       : profile.roleLabel;
   const order = profileSectionOrder(layout, Boolean(featured), profile.featuredContent.length > 0);
   const suggestions = isOwner
@@ -120,7 +125,7 @@ export function PublicProfileView({
 
   const featuredSection = profile.featuredContent.length ? (
     <section className="px-5">
-      <h2 className="sz-title">Featured</h2>
+      <h2 className="sz-title">{t.profile.featured}</h2>
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {profile.featuredContent.slice(0, 6).map((item) => (
           <FeaturedContentCard
@@ -164,16 +169,16 @@ export function PublicProfileView({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           {showOwnerBar ? (
             <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 pt-3">
-              <p className="sz-label text-white/55">Your page</p>
+              <p className="sz-label text-white/55">{t.profile.yourPage}</p>
               <div className="flex items-center gap-2">
                 {profile.username ? (
                   <Link href={profileHref(profile.username)} className="text-xs text-white/65 hover:text-white">
-                    Public
+                    {t.profile.public}
                   </Link>
                 ) : null}
                 <Link href={editHref || DISCOVERY_ROUTES.meEdit}>
                   <Button variant="secondary" size="sm" className="rounded-full bg-black/40 backdrop-blur">
-                    Edit profile
+                    {t.profile.editProfile}
                   </Button>
                 </Link>
               </div>
@@ -212,7 +217,7 @@ export function PublicProfileView({
 
           {profile.followersCount > 0 ? (
             <p className="mt-3 text-sm text-white/35">
-              {profile.followersCount} follower{profile.followersCount === 1 ? "" : "s"}
+              {formatFollowers(profile.followersCount, locale)}
             </p>
           ) : null}
 
@@ -229,7 +234,7 @@ export function PublicProfileView({
                   ) : null}
                   <Link href={editHref || DISCOVERY_ROUTES.meEdit} className="flex-1">
                     <Button variant="secondary" className="w-full min-h-11 rounded-full">
-                      Edit profile
+                      {t.profile.editProfile}
                     </Button>
                   </Link>
                 </div>
@@ -249,7 +254,7 @@ export function PublicProfileView({
                   ) : (
                     <Link href={DISCOVERY_ROUTES.signup} className="block flex-1">
                       <Button className="w-full min-h-11 rounded-full border-0" style={accentCta}>
-                        Follow
+                        {t.actions.follow}
                       </Button>
                     </Link>
                   )}
@@ -285,7 +290,7 @@ export function PublicProfileView({
       ) : null}
 
       {profile.claimStatus === "unclaimed" ? (
-        <p className="mt-6 px-5 text-center text-sm text-white/45">This profile is unclaimed.</p>
+        <p className="mt-6 px-5 text-center text-sm text-white/45">{t.profile.unclaimed}</p>
       ) : null}
 
       <div className="mt-9 flex flex-col gap-10">
@@ -297,18 +302,18 @@ export function PublicProfileView({
 
         {profile.socialLinks.length ? (
           <section className="px-5">
-            <h2 className="sz-title">Where to find me</h2>
+            <h2 className="sz-title">{t.profile.whereToFindMe}</h2>
             <div className="mt-4 space-y-2">
               {profile.socialLinks.map((link) => {
                 const handle = parseSocialHandle(link.platform, link.url);
                 const label =
-                  link.platform === "other" ? "Web" : SOCIAL_PLATFORM_LABELS[link.platform as SocialPlatform] ?? link.platform;
+                  link.platform === "other" ? t.common.web : SOCIAL_PLATFORM_LABELS[link.platform as SocialPlatform] ?? link.platform;
                 const subtitle =
                   link.platform === "website" || link.platform === "other"
-                    ? handle || "Open"
+                    ? handle || t.common.open
                     : handle
                       ? `@${handle}`
-                      : "Open";
+                      : t.common.open;
                 return (
                   <a
                     key={link.id}
@@ -340,7 +345,7 @@ export function PublicProfileView({
 
         {extraNiches.length || otherProjects.length ? (
           <section className="px-5">
-            <h2 className="sz-title">More about</h2>
+            <h2 className="sz-title">{t.profile.moreAbout}</h2>
             {extraNiches.length ? (
               <div className="mt-4 flex flex-wrap gap-2">
                 {profile.categories.map((cat) => (
@@ -469,13 +474,14 @@ function BuildingCard({
   fallbackCategory?: string | null;
   onOpen: () => void;
 }) {
+  const { t } = useI18n();
   const href = project.url ? normalizeHttpUrl(project.url) : undefined;
   const Tag = href ? "a" : "div";
   const category = project.category || fallbackCategory;
 
   return (
     <section className="px-5">
-      <p className="sz-label">Currently building</p>
+      <p className="sz-label">{t.profile.currentlyBuilding}</p>
       <Tag
         href={href}
         target={href ? "_blank" : undefined}
@@ -494,7 +500,7 @@ function BuildingCard({
                 <span className="text-[11px] uppercase tracking-[0.14em] text-white/45">{category}</span>
               ) : null}
               <span className="rounded-full bg-white/[0.08] px-2 py-0.5 text-[11px] text-white/60">
-                {PROJECT_STATUS_LABELS[project.status]}
+                {t.projectStatus[project.status] ?? PROJECT_STATUS_LABELS[project.status]}
               </span>
             </div>
             <h2 className="sz-name mt-1 truncate">{project.name}</h2>
@@ -505,7 +511,7 @@ function BuildingCard({
         ) : null}
         {href ? (
           <p className="px-4 pb-4 pt-3 text-sm sm:px-5" style={{ color: "var(--profile-accent)" }}>
-            Open project →
+            {t.profile.openProject} →
           </p>
         ) : (
           <div className="h-4" />
@@ -520,12 +526,13 @@ function OwnerCompleteness({
   suggestions,
 }: {
   percent: number;
-  suggestions: { key: string; label: string; href: string }[];
+  suggestions: { key: string; href: string }[];
 }) {
+  const { t } = useI18n();
   return (
     <div className="mx-5 mt-7 rounded-[1.25rem] bg-black/35 px-4 py-3.5 ring-1 ring-white/[0.08] backdrop-blur-md">
       <div className="flex items-center justify-between gap-3">
-        <p className="sz-label">Profile completeness</p>
+        <p className="sz-label">{t.profile.completeness}</p>
         <p className="text-sm text-white">{percent}%</p>
       </div>
       <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.08]">
@@ -539,7 +546,7 @@ function OwnerCompleteness({
           {suggestions.slice(0, 3).map((item) => (
             <li key={item.key}>
               <a href={item.href} className="text-sm text-white/50 hover:text-white">
-                {item.label}
+                  {t.completeness[item.key as keyof typeof t.completeness] ?? item.key}
               </a>
             </li>
           ))}

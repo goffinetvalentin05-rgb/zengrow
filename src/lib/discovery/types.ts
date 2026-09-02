@@ -58,6 +58,7 @@ export type Profile = {
   ctaLabel: string | null;
   ctaUrl: string | null;
   ctaType: string;
+  preferredLanguage: "fr" | "en" | null;
   createdAt: string;
   updatedAt: string;
 };

@@ -8,6 +8,7 @@ import { DiscoverySheet } from "@/src/components/discovery/mobile-sheet";
 import { connectionContactMethods } from "@/src/lib/discovery/contact";
 import { trackDiscoveryEvent } from "@/src/lib/discovery/track";
 import type { SocialLink } from "@/src/lib/discovery/types";
+import { useI18n } from "@/src/i18n/provider";
 import { cn } from "@/src/lib/utils";
 
 export function ContactButton({
@@ -24,8 +25,11 @@ export function ContactButton({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const { t } = useI18n();
   const labelId = useId();
-  const methods = connectionContactMethods({ socialLinks, email });
+  const methods = connectionContactMethods({ socialLinks, email }).map((method) =>
+    method.platform === "email" ? { ...method, label: t.common.email } : method,
+  );
 
   return (
     <>
@@ -38,9 +42,9 @@ export function ContactButton({
         onClick={() => setOpen(true)}
         className={cn("sz-press min-h-11 min-w-[6.5rem] rounded-2xl", className)}
       >
-        Contact
+        {t.actions.contact}
       </Button>
-      <DiscoverySheet open={open} title="Contact" onClose={() => setOpen(false)} labelledBy={labelId}>
+      <DiscoverySheet open={open} title={t.actions.contact} onClose={() => setOpen(false)} labelledBy={labelId}>
         {methods.length ? (
           <ul className="space-y-1 pb-2">
             {methods.map((method) => (
@@ -71,7 +75,7 @@ export function ContactButton({
             ))}
           </ul>
         ) : (
-          <p className="pb-4 text-sm text-white/40">No contact method available.</p>
+          <p className="pb-4 text-sm text-white/40">{t.actions.noContact}</p>
         )}
       </DiscoverySheet>
     </>

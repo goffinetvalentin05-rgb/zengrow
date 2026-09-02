@@ -79,5 +79,5 @@ export const OBJECTIVE_PRIORITY_CATEGORIES: Record<ObjectiveKey, ActionCategory[
   other: ["acquisition", "conversion", "content"],
 };
 
-export const DASHBOARD_LOCALE_COOKIE = "sharpz_dashboard_locale";
-export const DASHBOARD_LOCALE_STORAGE = "sharpz_dashboard_locale";
+export const DASHBOARD_LOCALE_COOKIE = "sharpz_locale";
+export const DASHBOARD_LOCALE_STORAGE = "sharpz_locale";

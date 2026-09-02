@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bookmark } from "lucide-react";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
+import { useI18n } from "@/src/i18n/provider";
 import { cn } from "@/src/lib/utils";
 
 export function SaveButton({
@@ -24,6 +25,7 @@ export function SaveButton({
   onChange?: (saved: boolean) => void;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [saved, setSaved] = useState(Boolean(initialSaved));
   const [pending, setPending] = useState(false);
 
@@ -66,7 +68,7 @@ export function SaveButton({
       type="button"
       onClick={toggle}
       disabled={pending}
-      aria-label={saved ? "Unsave profile" : "Save profile"}
+      aria-label={saved ? t.actions.unsaveProfile : t.actions.saveProfile}
       aria-pressed={saved}
       className={cn(
         "sz-press inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.1] text-white/50 transition-colors duration-150 hover:border-white/20 hover:text-white",

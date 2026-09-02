@@ -5,6 +5,7 @@ import { useState, type CSSProperties } from "react";
 import Button from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
+import { useI18n } from "@/src/i18n/provider";
 
 export function FollowButton({
   profileId,
@@ -26,6 +27,7 @@ export function FollowButton({
   isLoggedIn?: boolean;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [following, setFollowing] = useState(Boolean(initialFollowing));
   const [pending, setPending] = useState(false);
 
@@ -70,7 +72,7 @@ export function FollowButton({
       className={cn("sz-press min-h-11 min-w-[5.5rem] rounded-2xl", className)}
     >
       <span key={following ? "on" : "off"} className="sz-copied inline-block">
-        {following ? "Following" : "Follow"}
+        {following ? t.actions.following : t.actions.follow}
       </span>
     </Button>
   );

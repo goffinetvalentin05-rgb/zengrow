@@ -15,9 +15,12 @@ import {
 } from "@/src/lib/auth/auth-form-styles";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
+import { translateAuthError } from "@/src/lib/auth-error-fr";
+import { useI18n } from "@/src/i18n/provider";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,13 +44,13 @@ export default function SignupPage() {
     });
 
     if (signupError) {
-      setError(signupError.message);
+      setError(translateAuthError(signupError, t.auth.errors, t.auth.errors.generic));
       setIsLoading(false);
       return;
     }
 
     if (!signupData.session) {
-      setInfo("Account created. Confirm your email, then log in to finish your Sharpz profile.");
+      setInfo(t.auth.signup.confirmEmail);
       setIsLoading(false);
       return;
     }
@@ -61,30 +64,30 @@ export default function SignupPage() {
       <AuthCard>
         <div className="mb-8">
           <h1 className="font-[family-name:var(--font-zg-display)] text-[1.75rem] font-semibold tracking-tight text-white sm:text-[2rem]">
-            Create your Sharpz
+            {t.auth.signup.title}
           </h1>
           <p className="mt-3 max-w-[38ch] text-pretty text-sm leading-relaxed text-white/50">
-            A public profile for what you’re building — and a way to discover people in your world.
+            {t.auth.signup.subtitle}
           </p>
         </div>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="fullName" className={authFieldLabel}>
-              Name
+              {t.auth.name}
             </label>
             <Input
               id="fullName"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
               className={authInputClassName}
-              placeholder="Maya Chen"
+              placeholder={t.auth.signup.namePlaceholder}
               required
             />
           </div>
           <div>
             <label htmlFor="email" className={authFieldLabel}>
-              Email
+              {t.auth.email}
             </label>
             <Input
               id="email"
@@ -99,7 +102,7 @@ export default function SignupPage() {
           </div>
           <div>
             <label htmlFor="password" className={authFieldLabel}>
-              Password
+              {t.auth.password}
             </label>
             <Input
               id="password"
@@ -108,13 +111,13 @@ export default function SignupPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className={authInputClassName}
-              placeholder="At least 6 characters"
+              placeholder={t.auth.signup.passwordPlaceholder}
               required
               minLength={6}
             />
           </div>
           <Button type="submit" disabled={isLoading} size="lg" variant="ghost" className={authSubmitClassName}>
-            {isLoading ? "Creating…" : "Create account"}
+            {isLoading ? t.auth.signup.submitting : t.auth.signup.submit}
           </Button>
         </form>
 
@@ -126,9 +129,9 @@ export default function SignupPage() {
         ) : null}
 
         <p className="mt-6 text-sm text-white/45">
-          Already have an account?{" "}
+          {t.auth.signup.hasAccount}{" "}
           <Link href={DISCOVERY_ROUTES.login} className={authLinkClassName}>
-            Log in
+            {t.auth.signup.logIn}
           </Link>
         </p>
       </AuthCard>

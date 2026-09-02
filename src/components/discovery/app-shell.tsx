@@ -1,10 +1,23 @@
 "use client";
 
+import { useEffect } from "react";
 import { DashboardToastProvider } from "@/src/components/dashboard/dashboard-toast-provider";
 import { DiscoveryAmbientBackground } from "@/src/components/discovery/discovery-ambient";
 import { DiscoveryBottomNav, DiscoverySidebar } from "@/src/components/discovery/navigation";
 import { zgBody } from "@/components/zg-landing/fonts";
+import { useI18n } from "@/src/i18n/provider";
+import { isLocale, type Locale } from "@/src/i18n/locale";
 import { cn } from "@/src/lib/utils";
+
+function ProfileLocaleHydrate({ locale }: { locale: Locale | null }) {
+  const { locale: current, setLocale } = useI18n();
+  useEffect(() => {
+    if (locale && locale !== current) setLocale(locale);
+    // Apply stored profile preference once when the app shell mounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale]);
+  return null;
+}
 
 export function DiscoveryShell({
   children,
@@ -13,6 +26,7 @@ export function DiscoveryShell({
   completeness,
   username,
   hideChrome = false,
+  preferredLanguage = null,
 }: {
   children: React.ReactNode;
   displayName: string;
@@ -20,10 +34,13 @@ export function DiscoveryShell({
   completeness: number;
   username: string | null;
   hideChrome?: boolean;
+  preferredLanguage?: string | null;
 }) {
+  const profileLocale = isLocale(preferredLanguage) ? preferredLanguage : null;
   if (hideChrome) {
     return (
       <DashboardToastProvider>
+        <ProfileLocaleHydrate locale={profileLocale} />
         <div className={cn(zgBody.className, "sz-app relative min-h-dvh bg-[#050506] text-white")}>
           <DiscoveryAmbientBackground />
           <main className="relative z-10">{children}</main>
@@ -34,6 +51,7 @@ export function DiscoveryShell({
 
   return (
     <DashboardToastProvider>
+      <ProfileLocaleHydrate locale={profileLocale} />
       <div className={cn(zgBody.className, "sz-app relative h-dvh overflow-hidden bg-[#050506] text-white")}>
         <DiscoveryAmbientBackground />
         <div className="relative z-10 flex h-full p-0 md:p-3">

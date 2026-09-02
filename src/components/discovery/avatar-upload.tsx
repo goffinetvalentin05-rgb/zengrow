@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/src/components/ui/button";
 import { createClient } from "@/src/lib/supabase/client";
 import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
+import { useI18n } from "@/src/i18n/provider";
 
 function cropToSquare(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -50,6 +51,7 @@ export function AvatarUpload({
   name: string;
   currentUrl: string | null;
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export function AvatarUpload({
 
   async function onFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      setError("Choose an image.");
+      setError(t.common.chooseImage);
       return;
     }
     setError(null);
@@ -85,7 +87,7 @@ export function AvatarUpload({
     });
     setPending(false);
     if (!response.ok) {
-      setError("Uploaded, but profile could not be updated.");
+      setError(t.media.uploadedButNotSaved);
       return;
     }
     router.refresh();
@@ -106,9 +108,9 @@ export function AvatarUpload({
           }}
         />
         <Button type="button" variant="secondary" disabled={pending} onClick={() => inputRef.current?.click()}>
-          {pending ? "Uploading…" : "Upload photo"}
+          {pending ? t.common.uploading : t.media.uploadPhoto}
         </Button>
-        <p className="mt-2 text-xs text-white/35">Square crop is applied automatically.</p>
+        <p className="mt-2 text-xs text-white/35">{t.media.squareCrop}</p>
         {error ? <p className="mt-1 text-sm text-red-300">{error}</p> : null}
       </div>
     </div>

@@ -10,6 +10,7 @@ export default async function DiscoveryLayout({ children }: { children: React.Re
       avatarUrl={session.profile.avatarUrl}
       completeness={session.profile.completeness}
       username={session.profile.username}
+      preferredLanguage={session.profile.preferredLanguage}
     >
       {children}
     </DiscoveryShell>

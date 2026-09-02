@@ -36,13 +36,14 @@ export const LANDING_COPY = {
   },
   problem: {
     label: "01 — LE CONSTAT",
-    title: "Les algorithmes te montrent toujours les mêmes.",
+    title: "Découvrir les bonnes personnes repose encore trop sur le hasard.",
     aside:
-      "Pendant que des milliers de personnes brillantes construisent, créent et partagent dans l’ombre.",
-    stat: "92%",
-    statCaption: "DES PROFILS RECOMMANDÉS SONT DÉJÀ ULTRA-VISIBLES.",
+      "Tu peux tomber sur d’excellents profils dans ton feed. Mais trouver précisément des créateurs, builders ou fondateurs selon ta niche, leur localisation, leur rôle ou leur audience reste compliqué.",
+    stat: "1 FEED",
+    statCaption:
+      "NE TE MONTRE QU’UNE PARTIE DES PROFILS QUI POURRAIENT T’INTÉRESSER.",
     quote:
-      "Le prochain profil qui changera ta façon de travailler n’est probablement pas encore dans ton feed.",
+      "La bonne personne existe peut-être déjà. Encore faut-il pouvoir la chercher.",
   },
   answer: {
     label: "La solution",
@@ -154,11 +155,11 @@ export const LANDING_COPY = {
     ],
   },
   finalCta: {
-    label: "Commencer",
-    titleLine1: "Les prochains profils incontournables sont déjà là.",
-    titleLine2: "Trouve-les avant tout le monde.",
+    label: "Découvre autrement",
+    titleLine1: "Ne laisse plus tes prochaines découvertes",
+    titleLine2: "au hasard.",
     subtitle:
-      "Découvre les bons créateurs, builders et opérateurs par niche, crée ton profil public et partage ton univers depuis un seul endroit.",
+      "Trouve les créateurs, fondateurs, builders et opérateurs qui correspondent vraiment à ton univers. Explore les profils qui t’intéressent ou crée le tien pour être découvert à ton tour.",
     ctaPrimary: "Créer mon profil gratuitement",
     ctaSecondary: "Explorer les profils",
     note: "Gratuit pour commencer. Pas de carte requise.",

@@ -9,7 +9,7 @@ import {
 
 export async function getDashboardLocale(): Promise<DashboardLocale> {
   const store = await cookies();
-  const raw = store.get(DASHBOARD_LOCALE_COOKIE)?.value;
+  const raw = store.get(DASHBOARD_LOCALE_COOKIE)?.value ?? store.get("sharpz_dashboard_locale")?.value;
   return isDashboardLocale(raw) ? raw : DEFAULT_DASHBOARD_LOCALE;
 }
 

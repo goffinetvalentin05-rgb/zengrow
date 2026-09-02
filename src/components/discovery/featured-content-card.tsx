@@ -1,6 +1,7 @@
 "use client";
 
-import { FEATURED_CTA, FEATURED_PLATFORM_LABELS, type FeaturedPlatform } from "@/src/lib/discovery/constants";
+import { useI18n } from "@/src/i18n/provider";
+import type { FeaturedPlatform } from "@/src/lib/discovery/constants";
 import { normalizeHttpUrl, resolveFeaturedThumbnail } from "@/src/lib/discovery/media";
 import type { FeaturedContent } from "@/src/lib/discovery/types";
 import { SocialGlyph } from "@/src/components/discovery/social-glyph";
@@ -16,9 +17,11 @@ export function FeaturedContentCard({
   onClick?: () => void;
   className?: string;
 }) {
+  const { t } = useI18n();
   const thumb = resolveFeaturedThumbnail(item);
-  const cta = FEATURED_CTA[item.platform] ?? "Open link";
-  const label = FEATURED_PLATFORM_LABELS[item.platform as FeaturedPlatform] ?? item.platform;
+  const platform = item.platform as FeaturedPlatform;
+  const cta = t.featuredCta[platform] ?? t.featuredCta.other;
+  const label = t.featuredPlatform[platform] ?? item.platform;
   const glyphPlatform = item.platform === "article" || item.platform === "other" ? "website" : item.platform;
 
   return (

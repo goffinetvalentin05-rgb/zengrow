@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/src/components/ui/button";
 import { createClient } from "@/src/lib/supabase/client";
+import { useI18n } from "@/src/i18n/provider";
 
 function cropToSquarePng(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -49,6 +50,7 @@ export function ProjectLogoUpload({
   projectId: string;
   currentUrl: string | null;
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export function ProjectLogoUpload({
 
   async function onFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      setError("Choose an image.");
+      setError(t.common.chooseImage);
       return;
     }
     setError(null);
@@ -112,13 +114,13 @@ export function ProjectLogoUpload({
         type="button"
         onClick={() => inputRef.current?.click()}
         className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-black/40 ring-1 ring-white/10"
-        aria-label="Upload project logo"
+        aria-label={t.media.uploadLogoAria}
       >
         {shown ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={shown} alt="" className="h-full w-full object-contain p-1.5" />
         ) : (
-          <span className="text-[10px] text-white/35">Logo</span>
+          <span className="text-[10px] text-white/35">{t.common.logo}</span>
         )}
       </button>
       <input
@@ -133,11 +135,11 @@ export function ProjectLogoUpload({
       />
       <div className="flex min-w-0 flex-1 flex-wrap gap-2">
         <Button type="button" variant="secondary" size="sm" disabled={pending} onClick={() => inputRef.current?.click()}>
-          {pending ? "Uploading…" : shown ? "Replace logo" : "Upload logo"}
+          {pending ? t.common.uploading : shown ? t.media.replaceLogo : t.media.addLogo}
         </Button>
         {shown ? (
           <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={() => void remove()}>
-            Remove
+            {t.common.remove}
           </Button>
         ) : null}
         {error ? <p className="w-full text-xs text-red-300">{error}</p> : null}

@@ -16,9 +16,12 @@ import {
 } from "@/src/lib/auth/auth-form-styles";
 import Button from "@/src/components/ui/button";
 import Input from "@/src/components/ui/input";
+import { translateAuthError } from "@/src/lib/auth-error-fr";
+import { useI18n } from "@/src/i18n/provider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,12 +40,12 @@ export default function LoginPage() {
       });
 
       if (signInError) {
-        setError(signInError.message);
+        setError(translateAuthError(signInError, t.auth.errors, t.auth.errors.signInFailed));
         return;
       }
 
       if (!data.session) {
-        setError("Unable to sign in. Check your email and password.");
+        setError(t.auth.errors.signInFailed);
         return;
       }
 
@@ -79,7 +82,7 @@ export default function LoginPage() {
       const destination = onboardingCompleted ? DISCOVERY_ROUTES.explore : DISCOVERY_ROUTES.onboarding;
       window.location.assign(destination);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to sign in. Please try again.");
+      setError(err instanceof Error ? err.message : t.auth.errors.generic);
     } finally {
       setIsLoading(false);
     }
@@ -90,17 +93,17 @@ export default function LoginPage() {
       <AuthCard>
         <div className="mb-8">
           <h1 className="font-[family-name:var(--font-zg-display)] text-[1.75rem] font-semibold tracking-tight text-white sm:text-[2rem]">
-            Log in
+            {t.auth.login.title}
           </h1>
           <p className="mt-3 max-w-[38ch] text-pretty text-sm leading-relaxed text-white/50">
-            Continue discovering people worth knowing.
+            {t.auth.login.subtitle}
           </p>
         </div>
 
         <form className="relative" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email" className={authFieldLabel}>
-              Email
+              {t.auth.email}
             </label>
             <Input
               id="email"
@@ -116,7 +119,7 @@ export default function LoginPage() {
 
           <div className="mt-5">
             <label htmlFor="password" className={authFieldLabel}>
-              Password
+              {t.auth.password}
             </label>
             <Input
               id="password"
@@ -130,14 +133,14 @@ export default function LoginPage() {
             />
             <div className="mt-2.5 flex justify-end">
               <Link href="/pro/forgot-password" className={cn("text-xs", authLinkClassName)}>
-                Forgot password?
+                {t.auth.login.forgot}
               </Link>
             </div>
           </div>
 
           <div className="mt-8">
             <Button type="submit" disabled={isLoading} size="lg" variant="ghost" className={authSubmitClassName}>
-              {isLoading ? "Signing in…" : "Log in"}
+              {isLoading ? t.auth.login.submitting : t.auth.login.submit}
             </Button>
           </div>
         </form>
@@ -147,9 +150,9 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-6 text-sm text-white/45">
-          No account yet?{" "}
+          {t.auth.login.noAccount}{" "}
           <Link href={DISCOVERY_ROUTES.signup} className={authLinkClassName}>
-            Create your Sharpz
+            {t.auth.login.create}
           </Link>
         </p>
       </AuthCard>

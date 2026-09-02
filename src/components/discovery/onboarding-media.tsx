@@ -5,6 +5,7 @@ import { createClient } from "@/src/lib/supabase/client";
 import { FadeImg } from "@/src/components/discovery/sz-ui";
 import { DiscoveryAvatar } from "@/src/components/discovery/avatar";
 import { cn } from "@/src/lib/utils";
+import { useI18n } from "@/src/i18n/provider";
 
 function cropImage(file: File, width: number, height: number, mime: "image/jpeg" | "image/png" = "image/jpeg"): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -94,6 +95,7 @@ function FilePick({
   pending: boolean;
   error: string | null;
 }) {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div>
@@ -113,7 +115,7 @@ function FilePick({
         onClick={() => inputRef.current?.click()}
         className="sz-press min-h-11 rounded-full border border-white/[0.1] px-4 text-sm text-white/70 hover:text-white"
       >
-        {pending ? "Uploading…" : label}
+        {pending ? t.common.uploading : label}
       </button>
       {error ? <p className="mt-2 text-sm text-red-300">{error}</p> : null}
     </div>
@@ -131,12 +133,13 @@ export function OnboardingAvatarPick({
   url: string;
   onChange: (url: string) => void;
 }) {
+  const { t } = useI18n();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      setError("Choose an image.");
+      setError(t.common.chooseImage);
       return;
     }
     setPending(true);
@@ -144,8 +147,8 @@ export function OnboardingAvatarPick({
     try {
       const next = await uploadCropped(userId, file, `${userId}/avatar.jpg`, 800, 800, "avatars");
       onChange(next);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Upload failed.");
+    } catch {
+      setError(t.common.uploadFailed);
     }
     setPending(false);
   }
@@ -153,7 +156,7 @@ export function OnboardingAvatarPick({
   return (
     <div className="flex items-center gap-4">
       <DiscoveryAvatar name={name} src={url || null} size="xl" />
-      <FilePick label={url ? "Replace photo" : "Add a photo"} onFile={(file) => void onFile(file)} pending={pending} error={error} />
+      <FilePick label={url ? t.media.replacePhoto : t.media.addPhoto} onFile={(file) => void onFile(file)} pending={pending} error={error} />
     </div>
   );
 }
@@ -167,12 +170,13 @@ export function OnboardingCoverPick({
   url: string;
   onChange: (url: string) => void;
 }) {
+  const { t } = useI18n();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      setError("Choose an image.");
+      setError(t.common.chooseImage);
       return;
     }
     setPending(true);
@@ -180,8 +184,8 @@ export function OnboardingCoverPick({
     try {
       const next = await uploadCropped(userId, file, `${userId}/cover.jpg`, 1600, 640, "covers");
       onChange(next);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Upload failed.");
+    } catch {
+      setError(t.common.uploadFailed);
     }
     setPending(false);
   }
@@ -192,11 +196,11 @@ export function OnboardingCoverPick({
         {url ? (
           <FadeImg src={url} alt="" className="h-28 w-full object-cover" />
         ) : (
-          <div className="flex h-28 items-center justify-center text-sm text-white/35">Optional cover</div>
+          <div className="flex h-28 items-center justify-center text-sm text-white/35">{t.media.optionalCover}</div>
         )}
       </div>
       <div className="mt-3">
-        <FilePick label={url ? "Replace cover" : "Add a cover"} onFile={(file) => void onFile(file)} pending={pending} error={error} />
+        <FilePick label={url ? t.media.replaceCover : t.media.addCover} onFile={(file) => void onFile(file)} pending={pending} error={error} />
       </div>
     </div>
   );
@@ -211,12 +215,13 @@ export function OnboardingLogoPick({
   url: string;
   onChange: (url: string) => void;
 }) {
+  const { t } = useI18n();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      setError("Choose an image.");
+      setError(t.common.chooseImage);
       return;
     }
     setPending(true);
@@ -224,8 +229,8 @@ export function OnboardingLogoPick({
     try {
       const next = await uploadSquarePng(file, `${userId}/onboarding/project-logo.png`);
       onChange(next);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Upload failed.");
+    } catch {
+      setError(t.common.uploadFailed);
     }
     setPending(false);
   }
@@ -233,9 +238,9 @@ export function OnboardingLogoPick({
   return (
     <div className="flex items-center gap-3">
       <div className={cn("flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/[0.06] ring-1 ring-white/10")}>
-        {url ? <FadeImg src={url} alt="" className="h-full w-full object-contain p-1.5" /> : <span className="text-[10px] text-white/35">Logo</span>}
+        {url ? <FadeImg src={url} alt="" className="h-full w-full object-contain p-1.5" /> : <span className="text-[10px] text-white/35">{t.common.logo}</span>}
       </div>
-      <FilePick label={url ? "Replace logo" : "Add logo"} onFile={(file) => void onFile(file)} pending={pending} error={error} />
+      <FilePick label={url ? t.media.replaceLogo : t.media.addLogo} onFile={(file) => void onFile(file)} pending={pending} error={error} />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { cn } from "@/src/lib/utils";
+import { useI18n } from "@/src/i18n/provider";
 
 export function useDiscoverySheetLock(open: boolean) {
   useEffect(() => {
@@ -40,6 +41,7 @@ export function DiscoverySheet({
   footer?: React.ReactNode;
   labelledBy?: string;
 }) {
+  const { t } = useI18n();
   useDiscoverySheetLock(open);
 
   useEffect(() => {
@@ -74,9 +76,9 @@ export function DiscoverySheet({
             type="button"
             className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-sm text-white/45"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t.common.close}
           >
-            Close
+            {t.common.close}
           </button>
         </header>
         <div className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain px-5", !footer && "pb-[var(--sz-sheet-pad)]")}>

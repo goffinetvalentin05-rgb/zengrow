@@ -72,6 +72,7 @@ export function mapProfile(row: Row): Profile {
     ctaLabel: str(row.cta_label),
     ctaUrl: str(row.cta_url),
     ctaType: str(row.cta_type) ?? "custom",
+    preferredLanguage: row.preferred_language === "en" || row.preferred_language === "fr" ? row.preferred_language : null,
     createdAt: String(row.created_at ?? new Date().toISOString()),
     updatedAt: String(row.updated_at ?? new Date().toISOString()),
   };

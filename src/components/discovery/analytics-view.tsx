@@ -17,6 +17,8 @@ import {
 import { ANALYTICS_RANGES, type AnalyticsRange } from "@/src/lib/discovery/constants";
 import { SHARPZ_PRO_PRICE_LABEL } from "@/src/lib/discovery/pro";
 import type { ProfileAnalytics } from "@/src/lib/discovery/types";
+import { useI18n } from "@/src/i18n/provider";
+import { interpolate } from "@/src/locales/app";
 import { cn } from "@/src/lib/utils";
 
 export function AnalyticsView({
@@ -29,6 +31,7 @@ export function AnalyticsView({
   tier: "full" | "limited";
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [pending, startTransition] = useTransition();
   const [upgrading, setUpgrading] = useState(false);
   const full = tier === "full";
@@ -55,16 +58,16 @@ export function AnalyticsView({
       window.location.href = payload.url;
       return;
     }
-    alert(payload.error ?? "Stripe is not configured yet. Set STRIPE_SHARPZ_PRO_PRICE_ID.");
+    alert(payload.error ?? t.settingsPage.stripeMissing);
   }
 
   return (
     <div className="mx-auto w-full max-w-4xl pb-10">
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="sz-display">Analytics</h1>
+          <h1 className="sz-display">{t.analyticsPage.title}</h1>
           <p className="mt-2 max-w-md text-sm text-white/45">
-            Aggregated visibility only. We never show who visited your profile.
+            {t.analyticsPage.subtitle}
           </p>
         </div>
         <div className="flex flex-wrap rounded-full border border-white/[0.08] bg-white/[0.03] p-1">
@@ -79,7 +82,7 @@ export function AnalyticsView({
                 range === item && "bg-white text-zinc-950",
               )}
             >
-              {item}D
+              {interpolate(t.analyticsPage.rangeD, { n: item })}
             </button>
           ))}
         </div>
@@ -87,29 +90,29 @@ export function AnalyticsView({
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Profile views"
+          label={t.analyticsPage.profileViews}
           value={views}
-          hint={`${analytics.views_today} today`}
+          hint={interpolate(t.analyticsPage.viewsToday, { n: analytics.views_today })}
           delta={percentChange(views, analytics.views_prev)}
           range={range}
         />
         <Stat
-          label="Unique visitors"
+          label={t.analyticsPage.uniqueVisitors}
           value={unique}
           delta={percentChange(unique, analytics.unique_visitors_prev)}
           range={range}
         />
         <Stat
-          label="External clicks"
+          label={t.analyticsPage.externalClicks}
           value={clicks}
           delta={percentChange(clicks, analytics.external_clicks_prev)}
           range={range}
         />
-        <Stat label="External CTR" value={ctr == null ? "—" : `${ctr}%`} hint="Clicks / views" />
+        <Stat label={t.analyticsPage.externalCtr} value={ctr == null ? "—" : `${ctr}%`} hint={t.analyticsPage.clicksPerViews} />
       </div>
 
       <section className="mt-6 rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5">
-        <p className="sz-label">Profile views over time</p>
+        <p className="sz-label">{t.analyticsPage.viewsOverTime}</p>
         <AnalyticsViewsChart data={analytics.views_over_time} />
       </section>
 
@@ -117,34 +120,34 @@ export function AnalyticsView({
         <>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <Stat
-              label="Followers"
+              label={t.analyticsPage.followers}
               value={analytics.followers_total}
-              hint={`${analytics.new_followers} new this period`}
+              hint={interpolate(t.analyticsPage.newThisPeriod, { n: analytics.new_followers })}
             />
             <Stat
-              label="Profile opens"
+              label={t.analyticsPage.profileOpens}
               value={analytics.profile_opens}
-              hint={followRate != null ? `${followRate}% follow conversion` : "From Explore & Search"}
+              hint={followRate != null ? interpolate(t.analyticsPage.followConversion, { n: followRate }) : t.analyticsPage.fromExploreSearch}
             />
             <Stat
-              label="Discovery impressions"
+              label={t.analyticsPage.discoveryImpressions}
               value={analytics.impressions}
-              hint={discoveryRate != null ? `${discoveryRate}% open rate` : "Cards seen in Sharpz"}
+              hint={discoveryRate != null ? interpolate(t.analyticsPage.openRate, { n: discoveryRate }) : t.analyticsPage.cardsSeen}
             />
           </div>
 
           <div className="mt-3 grid gap-3 lg:grid-cols-2">
             <section className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5 lg:col-span-2">
-              <p className="sz-label">Traffic sources</p>
+              <p className="sz-label">{t.analyticsPage.trafficSources}</p>
               {analytics.traffic_sources.length ? (
                 <>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <p className="text-sm text-white/70">
-                      Sharpz Discovery
+                      {t.analyticsPage.sharpzDiscovery}
                       <span className="ml-2 tabular-nums text-white/40">{analytics.traffic_split.discoveryShare}%</span>
                     </p>
                     <p className="text-sm text-white/70">
-                      External
+                      {t.analyticsPage.external}
                       <span className="ml-2 tabular-nums text-white/40">{analytics.traffic_split.externalShare}%</span>
                     </p>
                   </div>
@@ -160,7 +163,7 @@ export function AnalyticsView({
                       return (
                         <li key={item.key}>
                           <div className="mb-1 flex justify-between gap-3 text-sm text-white/70">
-                            <span className="min-w-0 truncate">{trafficSourceLabel(item.key)}</span>
+                            <span className="min-w-0 truncate">{t.traffic[item.key as keyof typeof t.traffic] ?? trafficSourceLabel(item.key)}</span>
                             <span className="shrink-0 tabular-nums text-white/50">
                               {item.count}
                               {item.share != null ? ` · ${item.share}%` : ""}
@@ -175,13 +178,17 @@ export function AnalyticsView({
                   </ul>
                 </>
               ) : (
-                <p className="mt-4 text-sm text-white/35">No traffic sources yet.</p>
+                <p className="mt-4 text-sm text-white/35">{t.analyticsPage.noSources}</p>
               )}
             </section>
-            <BarCard title="Clicks by platform" data={analytics.clicks_by_platform} labelFor={platformLabel} />
+            <BarCard
+              title={t.analyticsPage.clicksByPlatform}
+              data={analytics.clicks_by_platform}
+              labelFor={(key) => t.analyticsPage.platforms[key as keyof typeof t.analyticsPage.platforms] ?? platformLabel(key)}
+            />
             <ListCard
-              title="Top clicked links"
-              empty="No external clicks yet."
+              title={t.analyticsPage.topLinks}
+              empty={t.analyticsPage.noClicks}
               items={analytics.top_links.map((item) => ({
                 label: topLinkLabel(item),
                 value: `${item.clicks}`,
@@ -189,7 +196,7 @@ export function AnalyticsView({
               }))}
             />
             <section className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5">
-              <p className="sz-label">Visitor niches</p>
+              <p className="sz-label">{t.analyticsPage.visitorNiches}</p>
               {analytics.visitor_niches.length ? (
                 <ul className="mt-4 space-y-3">
                   {analytics.visitor_niches.map((item) => (
@@ -200,44 +207,44 @@ export function AnalyticsView({
                   ))}
                 </ul>
               ) : (
-                <p className="mt-4 text-sm text-white/35">Not enough signed-in visitors yet.</p>
+                <p className="mt-4 text-sm text-white/35">{t.analyticsPage.notEnoughVisitors}</p>
               )}
             </section>
           </div>
 
           <section className="mt-3 rounded-[1.6rem] border border-white/[0.07] bg-white/[0.02] p-5">
-            <p className="sz-label">Conversions</p>
-            <p className="mt-2 text-sm text-white/40">Clicks from your primary CTA and premium blocks.</p>
+            <p className="sz-label">{t.analyticsPage.conversions}</p>
+            <p className="mt-2 text-sm text-white/40">{t.analyticsPage.conversionsHint}</p>
             <div className="mt-4 grid gap-5 sm:grid-cols-2">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">CTA clicks</p>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">{t.analyticsPage.ctaClicks}</p>
                 <p className="mt-2 font-[family-name:var(--font-zg-display)] text-3xl text-white">{analytics.cta_clicks}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">CTA conversion</p>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">{t.analyticsPage.ctaConversion}</p>
                 <p className="mt-2 font-[family-name:var(--font-zg-display)] text-3xl text-white">
                   {analytics.cta_ctr == null ? "—" : `${analytics.cta_ctr}%`}
                 </p>
-                <p className="mt-1 text-xs text-white/35">CTA clicks / views</p>
+                <p className="mt-1 text-xs text-white/35">{t.analyticsPage.ctaClicksPerViews}</p>
               </div>
             </div>
             {analytics.cta_clicks === 0 && analytics.block_clicks.length === 0 ? (
-              <p className="mt-5 text-sm text-white/35">No conversion clicks yet.</p>
+              <p className="mt-5 text-sm text-white/35">{t.analyticsPage.noConversionClicks}</p>
             ) : (
               <div className="mt-5 grid gap-6 lg:grid-cols-2">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">Top converting block</p>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">{t.analyticsPage.topBlock}</p>
                   {analytics.top_converting_block ? (
                     <p className="mt-2 text-sm text-white/70">
                       {analytics.top_converting_block.label}
                       <span className="ml-2 tabular-nums text-white/45">{analytics.top_converting_block.count}</span>
                     </p>
                   ) : (
-                    <p className="mt-2 text-sm text-white/35">No block clicks yet.</p>
+                    <p className="mt-2 text-sm text-white/35">{t.analyticsPage.noBlockClicks}</p>
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">Clicks by block</p>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">{t.analyticsPage.clicksByBlock}</p>
                   {analytics.block_clicks.length ? (
                     <ul className="mt-3 space-y-3">
                       {analytics.block_clicks.map((item) => {
@@ -259,7 +266,7 @@ export function AnalyticsView({
                       })}
                     </ul>
                   ) : (
-                    <p className="mt-2 text-sm text-white/35">No block clicks yet.</p>
+                    <p className="mt-2 text-sm text-white/35">{t.analyticsPage.noBlockClicks}</p>
                   )}
                 </div>
               </div>
@@ -268,12 +275,12 @@ export function AnalyticsView({
         </>
       ) : (
         <div className="mt-6 rounded-[1.6rem] border border-white/[0.08] bg-[#0d0c12] p-6 text-center">
-          <p className="font-[family-name:var(--font-zg-display)] text-2xl text-white">Unlock the full picture</p>
+          <p className="font-[family-name:var(--font-zg-display)] text-2xl text-white">{t.analyticsPage.unlockTitle}</p>
           <p className="mx-auto mt-2 max-w-sm text-sm text-white/50">
-            Traffic sources, top links, discovery conversion, visitor niches and CTA conversions. {SHARPZ_PRO_PRICE_LABEL}.
+            {interpolate(t.analyticsPage.unlockText, { price: SHARPZ_PRO_PRICE_LABEL })}
           </p>
           <Button className="mt-5" onClick={() => void upgrade()} disabled={upgrading}>
-            Upgrade to Pro
+            {t.analyticsPage.upgrade}
           </Button>
         </div>
       )}
@@ -294,6 +301,7 @@ function Stat({
   delta?: number | null;
   range?: AnalyticsRange;
 }) {
+  const { t } = useI18n();
   const deltaLabel = formatDelta(delta ?? null);
   return (
     <div className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.025] p-5">
@@ -303,7 +311,7 @@ function Stat({
         {deltaLabel ? (
           <span className={cn(delta && delta > 0 ? "text-white/70" : "text-white/40")}>
             {deltaLabel}
-            {range ? ` vs previous ${range}d` : ""}
+            {range ? ` ${interpolate(t.analyticsPage.vsPrevious, { n: range })}` : ""}
           </span>
         ) : null}
         {hint ? <span>{hint}</span> : null}
@@ -321,6 +329,7 @@ function BarCard({
   data: Record<string, number>;
   labelFor: (key: string) => string;
 }) {
+  const { t } = useI18n();
   const entries = Object.entries(data)
     .map(([key, n]) => [labelFor(key), n] as const)
     .sort((a, b) => b[1] - a[1]);
@@ -343,7 +352,7 @@ function BarCard({
           ))}
         </ul>
       ) : (
-        <p className="mt-4 text-sm text-white/35">No data yet.</p>
+        <p className="mt-4 text-sm text-white/35">{t.analyticsPage.noData}</p>
       )}
     </section>
   );

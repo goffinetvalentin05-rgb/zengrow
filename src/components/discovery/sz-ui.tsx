@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, type ImgHTMLAttributes } from "react";
-import { PROJECT_STATUS_LABELS } from "@/src/lib/discovery/constants";
 import type { ProjectStatus } from "@/src/lib/discovery/constants";
 import { cn } from "@/src/lib/utils";
+import { useI18n } from "@/src/i18n/provider";
 
 export function FadeImg({
   className,
@@ -140,10 +140,11 @@ export function ProjectStrip({
   className?: string;
   showLabel?: boolean;
 }) {
+  const { t } = useI18n();
   const statusLabel =
-    status && status !== "building" && status in PROJECT_STATUS_LABELS
-      ? PROJECT_STATUS_LABELS[status as ProjectStatus]
-      : status && status !== "building" && !(status in PROJECT_STATUS_LABELS)
+    status && status !== "building" && status in t.projectStatus
+      ? t.projectStatus[status as ProjectStatus]
+      : status && status !== "building"
         ? status
         : null;
   return (
@@ -157,7 +158,7 @@ export function ProjectStrip({
       )}
       <div className="min-w-0 flex-1">
         <p className="flex min-w-0 items-center gap-2 text-[15px] text-white">
-          {showLabel ? <span className="sz-label shrink-0">Building</span> : null}
+          {showLabel ? <span className="sz-label shrink-0">{t.profile.currentlyBuilding}</span> : null}
           <span className="truncate">{name}</span>
         </p>
         {statusLabel || description ? (

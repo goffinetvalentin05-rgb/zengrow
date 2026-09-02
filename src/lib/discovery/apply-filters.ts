@@ -42,11 +42,11 @@ export function applyDiscoveryFilters(cards: ProfileCardModel[], filters: Explor
 }
 
 export function droppedFilterHints(filters: ExploreFilters) {
-  const hints: { key: keyof ExploreFilters; label: string }[] = [];
-  if (filters.age) hints.push({ key: "age", label: "Age" });
-  if (filters.audience) hints.push({ key: "audience", label: "Audience" });
-  if (filters.location) hints.push({ key: "location", label: "Location" });
-  if (filters.profileType) hints.push({ key: "profileType", label: "Role" });
-  if (filters.platform) hints.push({ key: "platform", label: "Platform" });
+  const hints: { key: keyof ExploreFilters; filter: "age" | "audience" | "location" | "role" | "platform" }[] = [];
+  if (filters.age) hints.push({ key: "age", filter: "age" });
+  if (filters.audience) hints.push({ key: "audience", filter: "audience" });
+  if (filters.location) hints.push({ key: "location", filter: "location" });
+  if (filters.profileType) hints.push({ key: "profileType", filter: "role" });
+  if (filters.platform) hints.push({ key: "platform", filter: "platform" });
   return hints;
 }

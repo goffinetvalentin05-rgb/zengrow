@@ -3,7 +3,8 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { AuthCard, ZenGrowAuthLayout } from "@/src/components/auth/zengrow-auth-page-shell";
-import { authErrorMessageFr } from "@/src/lib/auth-error-fr";
+import { translateAuthError } from "@/src/lib/auth-error-fr";
+import { useI18n } from "@/src/i18n/provider";
 import {
   authErrorClassName,
   authFieldLabel,
@@ -19,6 +20,7 @@ import Input from "@/src/components/ui/input";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +34,7 @@ export default function ForgotPasswordPage() {
 
     const redirectTo = getPasswordRecoveryRedirectUrl();
     if (!redirectTo) {
-      setError("Configuration du site incomplète. Contactez le support.");
+      setError(t.auth.forgot.configError);
       setIsLoading(false);
       return;
     }
@@ -45,10 +47,7 @@ export default function ForgotPasswordPage() {
 
     if (resetError) {
       setError(
-        authErrorMessageFr(
-          resetError,
-          "Impossible d'envoyer l'e-mail de réinitialisation. Réessayez plus tard.",
-        ),
+        translateAuthError(resetError, t.auth.errors, t.auth.errors.resetFailed),
       );
       return;
     }
@@ -61,28 +60,28 @@ export default function ForgotPasswordPage() {
       <AuthCard>
         <div className="mb-8">
           <h1 className="text-balance font-[family-name:var(--font-zg-display)] text-[1.75rem] font-semibold tracking-tight text-white sm:text-[2rem] sm:leading-tight">
-            Mot de passe oublié
+            {t.auth.forgot.title}
           </h1>
           <p className="mt-3 max-w-[36ch] text-pretty text-sm leading-relaxed text-white/50">
-            Entrez votre adresse email pour recevoir un lien de réinitialisation.
+            {t.auth.forgot.subtitle}
           </p>
         </div>
 
         {success ? (
           <div className={authSuccessClassName} role="status">
-            Si un compte existe avec cette adresse, un email de réinitialisation a été envoyé.
+            {t.auth.forgot.success}
           </div>
         ) : (
           <form className="relative space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <label htmlFor="forgot-email" className={authFieldLabel}>
-                Email
+                {t.auth.email}
               </label>
               <Input
                 id="forgot-email"
                 type="email"
                 autoComplete="email"
-                placeholder="vous@restaurant.ch"
+                placeholder={t.auth.forgot.placeholder}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 required
@@ -91,7 +90,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             <Button type="submit" disabled={isLoading} size="lg" variant="ghost" className={authSubmitClassName}>
-              {isLoading ? "Envoi en cours…" : "Envoyer le lien"}
+              {isLoading ? t.auth.forgot.submitting : t.auth.forgot.submit}
             </Button>
           </form>
         )}
@@ -102,7 +101,7 @@ export default function ForgotPasswordPage() {
 
         <p className="mt-6 text-sm text-white/45">
           <Link href="/pro/login" className={authLinkClassName}>
-            Retour à la connexion
+            {t.auth.forgot.back}
           </Link>
         </p>
       </AuthCard>

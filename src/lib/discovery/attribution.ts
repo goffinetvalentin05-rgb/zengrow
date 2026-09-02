@@ -1,8 +1,35 @@
 import { SOCIAL_PLATFORM_LABELS, type SocialPlatform } from "@/src/lib/discovery/constants";
 import { getBrandedProfilePreview, getWorkingProfileUrl, profilePath } from "@/src/lib/discovery/public-link";
+import { isReservedProfileSlug } from "@/src/lib/discovery/slug";
 
 export const TRACKED_BIO_PLATFORMS = ["instagram", "tiktok", "youtube", "linkedin", "x"] as const;
 export type TrackedBioPlatform = (typeof TRACKED_BIO_PLATFORMS)[number];
+
+/** Short path codes copied into bios. Closed set — never accept arbitrary segments. */
+export const TRACKED_BIO_SOURCE_CODES = {
+  ig: "instagram",
+  tt: "tiktok",
+  yt: "youtube",
+  in: "linkedin",
+  x: "x",
+} as const satisfies Record<string, TrackedBioPlatform>;
+
+export type TrackedBioSourceCode = keyof typeof TRACKED_BIO_SOURCE_CODES;
+
+const PLATFORM_TO_SOURCE_CODE: Record<TrackedBioPlatform, TrackedBioSourceCode> = {
+  instagram: "ig",
+  tiktok: "tt",
+  youtube: "yt",
+  linkedin: "in",
+  x: "x",
+};
+
+export type TrackedBioAttribution = {
+  code: TrackedBioSourceCode;
+  platform: TrackedBioPlatform;
+  utmSource: TrackedBioPlatform;
+  utmMedium: "bio";
+};
 
 export const SHARPZ_INTERNAL_SOURCES = [
   "sharpz_explore",
@@ -140,18 +167,41 @@ export function splitTrafficSources(rows: { key: string; count: number }[]) {
   };
 }
 
+export function trackedBioSourceCode(platform: TrackedBioPlatform): TrackedBioSourceCode {
+  return PLATFORM_TO_SOURCE_CODE[platform];
+}
+
+export function resolveTrackedBioFromSourceCode(code: string | null | undefined): TrackedBioAttribution | null {
+  if (!code) return null;
+  const cleaned = code.trim().toLowerCase();
+  if (!(cleaned in TRACKED_BIO_SOURCE_CODES)) return null;
+  const typed = cleaned as TrackedBioSourceCode;
+  const platform = TRACKED_BIO_SOURCE_CODES[typed];
+  return { code: typed, platform, utmSource: platform, utmMedium: "bio" };
+}
+
+export function readTrackedSourceFromPathname(pathname: string | null | undefined): TrackedBioAttribution | null {
+  if (!pathname) return null;
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length < 2) return null;
+  const first = segments[0]?.toLowerCase() ?? "";
+  if (isReservedProfileSlug(first)) return null;
+  return resolveTrackedBioFromSourceCode(segments[segments.length - 1]);
+}
+
+/** Stored UTM pair for a bio link. Not shown in the public URL. */
 export function trackedProfileQuery(platform: TrackedBioPlatform) {
   return `utm_source=${platform}&utm_medium=bio`;
 }
 
 export function getBrandedTrackedProfileUrl(username: string, platform: TrackedBioPlatform) {
-  return `${getBrandedProfilePreview(username)}?${trackedProfileQuery(platform)}`;
+  return `${getBrandedProfilePreview(username)}/${trackedBioSourceCode(platform)}`;
 }
 
 export function getWorkingTrackedProfileUrl(username: string, platform: TrackedBioPlatform, origin?: string) {
-  return `${getWorkingProfileUrl(username, origin)}?${trackedProfileQuery(platform)}`;
+  return `${getWorkingProfileUrl(username, origin)}/${trackedBioSourceCode(platform)}`;
 }
 
 export function trackedProfilePath(username: string, platform: TrackedBioPlatform) {
-  return `${profilePath(username)}?${trackedProfileQuery(platform)}`;
+  return `${profilePath(username)}/${trackedBioSourceCode(platform)}`;
 }
