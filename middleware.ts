@@ -105,7 +105,6 @@ export const config = {
     "/library",
     "/library/:path*",
     "/review",
-    "/review/:path*",
     "/week",
     "/week/:path*",
     "/progress",

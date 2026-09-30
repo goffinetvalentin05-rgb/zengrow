@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { LEARN_ROUTES } from "@/src/lib/learn/routes";
+import { destinationAfterAuth } from "@/src/lib/learn/routing";
 
 export async function pathAfterAuth(supabase: SupabaseClient) {
   const {
@@ -13,5 +14,5 @@ export async function pathAfterAuth(supabase: SupabaseClient) {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  return data?.onboarding_completed ? LEARN_ROUTES.today : LEARN_ROUTES.onboarding;
+  return destinationAfterAuth(data?.onboarding_completed);
 }

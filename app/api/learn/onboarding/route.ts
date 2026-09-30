@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "@/src/lib/auth/user-session";
+import { calendarDateInTimezone, weekStartIso } from "@/src/lib/learn/calendar";
+import { ensureStarterCategories, ensureWeekGoal } from "@/src/lib/learn/db";
 import { onboardingInputSchema } from "@/src/lib/learn/onboarding";
 
 export async function POST(request: Request) {
@@ -32,13 +34,31 @@ export async function POST(request: Request) {
       weekly_minutes: input.weeklyMinutes,
       preferred_activities: input.preferredActivities,
       timezone: input.timezone ?? null,
-      onboarding_completed: true,
+      onboarding_completed: false,
     },
     { onConflict: "user_id" },
   );
 
   if (error) {
     return NextResponse.json({ error: "Could not save your profile. Apply the learner migration first." }, { status: 500 });
+  }
+
+  const learnDb = { supabase: session.supabase, userId: session.user.id };
+  try {
+    await ensureStarterCategories(learnDb);
+    const zone = input.timezone || "UTC";
+    await ensureWeekGoal(learnDb, weekStartIso(calendarDateInTimezone(new Date(), zone)), input.weeklyMinutes);
+  } catch (seedError) {
+    const message = seedError instanceof Error ? seedError.message : "Could not prepare your library.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+
+  const { error: completeError } = await session.supabase
+    .from("learner_profiles")
+    .update({ onboarding_completed: true })
+    .eq("user_id", session.user.id);
+  if (completeError) {
+    return NextResponse.json({ error: "Could not finish onboarding." }, { status: 500 });
   }
 
   const { data: existingSub } = await session.supabase
