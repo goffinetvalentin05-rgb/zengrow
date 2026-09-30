@@ -85,7 +85,7 @@ export default function BillingPlans({ status, plan, trialEndDate, isOwnerDev = 
     setLoadingPlan(selectedPlan);
     setMessage(null);
 
-    const response = await fetch("/api/billing/checkout", {
+    const response = await fetch("/api/billing/restaurant-checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ plan: selectedPlan }),

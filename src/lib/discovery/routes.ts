@@ -5,13 +5,13 @@ export const DISCOVERY_ROUTES = {
   me: "/me",
   meEdit: "/me/edit",
   analytics: "/analytics",
-  settings: "/settings",
-  onboarding: "/onboarding",
+  settings: "/discovery-settings",
+  onboarding: "/discovery-onboarding",
   search: "/search",
   categories: "/categories",
   admin: "/admin",
-  login: "/pro/login",
-  signup: "/pro/signup",
+  login: "/login",
+  signup: "/signup",
 } as const;
 
 export function categoryHref(slug: string) {

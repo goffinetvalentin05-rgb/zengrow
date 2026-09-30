@@ -1,6 +1,5 @@
 import { createLearnPortal } from "@/src/lib/billing/checkout";
 
-/** Legacy Discovery URL. Same customer portal as /api/billing/portal. */
 export async function POST(request: Request) {
   return createLearnPortal(request);
 }

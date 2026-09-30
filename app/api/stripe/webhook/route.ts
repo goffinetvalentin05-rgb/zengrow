@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { NextResponse } from "next/server";
+import { isUserCheckoutProduct, shouldSyncUserSubscription } from "@/src/lib/billing/user-plan";
 import { getPlanFromPriceId, getStripeClient } from "@/src/lib/stripe";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 
@@ -52,7 +53,7 @@ async function markRestaurantSubscriptionStatus(input: {
     .eq("stripe_subscription_id", input.subscriptionId);
 }
 
-async function markDiscoverySubscription(input: {
+async function markUserSubscription(input: {
   userId?: string | null;
   subscriptionId: string;
   customerId: string | null;
@@ -100,8 +101,8 @@ export async function POST(request: Request) {
     const product = session.metadata?.product;
     const userId = session.metadata?.user_id ?? null;
 
-    if (product === "sharpz_discovery" && subscriptionId && customerId && userId) {
-      await markDiscoverySubscription({
+    if (isUserCheckoutProduct(product) && subscriptionId && customerId && userId) {
+      await markUserSubscription({
         userId,
         subscriptionId,
         customerId,
@@ -136,8 +137,8 @@ export async function POST(request: Request) {
             ? "canceled"
             : "inactive";
 
-    if (product === "sharpz_discovery" || userId) {
-      await markDiscoverySubscription({
+    if (shouldSyncUserSubscription({ product, userId })) {
+      await markUserSubscription({
         userId,
         subscriptionId,
         customerId,

@@ -1,16 +1,15 @@
 /**
- * Sharpz Pro — price is configured here so it is easy to change
- * without hunting through UI copy.
- *
- * Stripe: set STRIPE_SHARPZ_PRO_PRICE_ID (preferred) in env.
- * Fallback: STRIPE_PRO_PRICE_ID (legacy restaurant Pro — do not assume the amount).
+ * Discovery still calls these helpers. Price and active-plan rules live in
+ * src/lib/billing/user-plan.ts so the new app does not depend on Discovery.
  */
-export const SHARPZ_PRO_PRICE_AMOUNT = 9.9;
-export const SHARPZ_PRO_PRICE_LABEL = "€9.90 / month";
+import { getLearnProPriceId, isUserProActive, LEARN_PRO_PRICE_AMOUNT, LEARN_PRO_PRICE_LABEL } from "@/src/lib/billing/user-plan";
+
+export const SHARPZ_PRO_PRICE_AMOUNT = LEARN_PRO_PRICE_AMOUNT;
+export const SHARPZ_PRO_PRICE_LABEL = LEARN_PRO_PRICE_LABEL;
 export const SHARPZ_PRO_PLAN_KEY = "pro" as const;
 
 export function getSharpzProPriceId() {
-  return process.env.STRIPE_SHARPZ_PRO_PRICE_ID?.trim() || process.env.STRIPE_PRO_PRICE_ID?.trim() || "";
+  return getLearnProPriceId();
 }
 
 export function isSharpzProActive(input: {
@@ -19,7 +18,7 @@ export function isSharpzProActive(input: {
   isOwnerDev?: boolean;
 }) {
   if (input.isOwnerDev) return true;
-  return input.plan === "pro" && (input.status === "active" || input.status === "trialing");
+  return isUserProActive(input);
 }
 
 /** Gating point for discovery analytics. Full dashboard is Pro; owner/dev is never blocked. */

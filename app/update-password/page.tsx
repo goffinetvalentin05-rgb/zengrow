@@ -136,10 +136,10 @@ export default function UpdatePasswordPage() {
               {t.auth.reset.invalid}
             </p>
             <div className="flex flex-col gap-2 text-sm">
-              <Link href="/pro/forgot-password" className={authLinkClassName}>
+              <Link href="/forgot-password" className={authLinkClassName}>
                 {t.auth.reset.requestNew}
               </Link>
-              <Link href="/pro/login" className="text-white/45 transition hover:text-white/80">
+              <Link href="/login" className="text-white/45 transition hover:text-white/80">
                 {t.auth.forgot.back}
               </Link>
             </div>
@@ -202,7 +202,7 @@ export default function UpdatePasswordPage() {
 
         {phase === "ready" ? (
           <p className="mt-6 text-sm text-white/45">
-            <Link href="/pro/login" className={authLinkClassName}>
+            <Link href="/login" className={authLinkClassName}>
               {t.auth.forgot.back}
             </Link>
           </p>

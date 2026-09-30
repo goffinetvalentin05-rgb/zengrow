@@ -1,46 +1,23 @@
-import { DiscoveryShell } from "@/src/components/discovery/app-shell";
-import { OnboardingFlow } from "@/src/components/discovery/onboarding-flow";
-import { requireDiscoverySession } from "@/src/lib/discovery/auth";
-import { getCategories, getOwnedRelations } from "@/src/lib/discovery/queries";
-import { DISCOVERY_ROUTES } from "@/src/lib/discovery/routes";
-import { createClient } from "@/src/lib/supabase/server";
-import { getMessagesForRequest } from "@/src/i18n/server";
 import { redirect } from "next/navigation";
-import type { Metadata } from "next";
-
-export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getMessagesForRequest();
-  return { title: t.onboarding.setupTitle };
-}
+import OnboardingForm from "@/src/components/learn/onboarding-form";
+import { getAuthSession } from "@/src/lib/auth/user-session";
+import { LEARN_ROUTES } from "@/src/lib/learn/routes";
 
 export default async function OnboardingPage() {
-  const session = await requireDiscoverySession();
-  if (session.profile.onboardingCompleted) redirect(DISCOVERY_ROUTES.explore);
-  const supabase = await createClient();
-  const [categories, relations] = await Promise.all([
-    getCategories(supabase),
-    getOwnedRelations(supabase, session.profile.id),
-  ]);
-  const featured =
-    relations.projects.find((project) => project.featuredProject) ?? relations.projects[0] ?? null;
+  const { supabase, user } = await getAuthSession();
+  if (!user) redirect(LEARN_ROUTES.login);
+
+  const { data: profile } = await supabase
+    .from("learner_profiles")
+    .select("onboarding_completed")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (profile?.onboarding_completed) redirect(LEARN_ROUTES.today);
 
   return (
-    <DiscoveryShell
-      displayName={session.profile.displayName}
-      avatarUrl={session.profile.avatarUrl}
-      completeness={session.profile.completeness}
-      username={session.profile.username}
-      preferredLanguage={session.profile.preferredLanguage}
-      hideChrome
-    >
-      <OnboardingFlow
-        userId={session.user.id}
-        profile={session.profile}
-        categories={categories}
-        initialNicheIds={relations.categoryLinks.map((item) => item.category_id)}
-        initialProject={featured}
-        initialSocials={relations.socialLinks}
-      />
-    </DiscoveryShell>
+    <div className="min-h-dvh bg-[var(--zg-app)] px-5 py-12 text-[var(--zg-fg)]">
+      <OnboardingForm />
+    </div>
   );
 }
